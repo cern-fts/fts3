@@ -1,0 +1,312 @@
+*** Release glite-data-transfer-cli_R_4_0_2 2011-10-14
+	#109 	glite-transfer-submit man page issues https://svnweb.cern.ch/trac/glitefts/ticket/109
+
+*** Release glite-data-transfer-cli_R_4_0_0 2011-03-07
+
+    o glite-transfer-channel-audit fails with Segmentation Fault  (bug#68524)
+    o Tool to modified automatically the state of the channels given an SE  (bug#61780)    
+
+
+*** Release glite-data-transfer-cli_R_3_7_5_1 2010-11-29
+
+    o changed util.c to output from stdout to stderr  (bug#75722)
+
+*** Release glite-data-transfer-cli_R_3_7_4_1 2010-01-22
+
+    o added glite-transfer-se-set (bug#61780)
+
+*** Release glite-data-transfer-cli_R_3_7_3_1 2009-12-17
+
+	o Fix for bug #52416: Bad error treatment for ExistsException on the client	side
+	o Minimal Python API with test.
+
+*** Release glite-data-transfer-cli_R_3_7_2_1 2009-08-28
+
+    o bug #41584: [delegation] IPv6 bug: non compliant name resolving 
+      function in source code (gethostbyname_r)
+      This bug also applies to this component. 
+
+*** Release glite-data-transfer-cli_R_3_7_1_1 2009-08-05
+
+	o Fixing a regression: overwrite flag (-o) should not require an argument
+    o Updated the test suite to the latest FTS service.
+
+*** Release glite-data-transfer-cli_R_3_7_0_1 2009-07-03
+
+	o v3.7.0 of the interface with checksum support.
+
+	  glite-transfer-submit can take the -K option for checksum comparison
+	  and can pass on optional checksums (algorithm:hexadecimal-numbers)
+	  for each source-destination SURL pair given by the command line or
+	  in a job description file.
+
+*** Release glite-data-transfer-cli_R_3_6_3_1 2009-03-30
+	o fixed bug #48684: transfer-cli should obsolete transter-api-c and srm-cli packages
+
+*** Release glite-data-transfer-cli_R_3_6_2_1 2009-03-22
+    
+	o Fixed Savannah bug #35997:  FTS cli: if an invalid value is passed
+	  with -s option, the default is used
+    o Removed obsolete commands: glite-transfer-placement-submit
+      and glite-transfer-discovery
+
+*** Release glite-data-transfer-cli_R_3_6_0_1 2009-01-09
+    o fixed bug 45167
+    o fixed bug 28212
+    o fixed bug #39819
+	o added site group management tools
+	o Fixed the seg fault for --tx-log-level and --srmcopy-direction options
+	o Fixed the option --urlcopy-tx-to-per-mb that was executing --urlcopy-no-prog-to
+	o Fixed libraries build order (avoid relinking and appending U to .so file names)
+
+*** Release glite-data-transfer-cli_R_3_5_2_1 2008-12-04
+	o Fixed bug 41682
+
+*** Release glite-data-transfer-cli_R_3_5_1_1 2008-12-03
+	o slc5 fixes
+
+*** Release glite-data-transfer-cli_R_3_5_0_1 2008-11-27
+    o Merged transfer-api-c into transfer-cli.
+    o updated to schema version 3.5.0
+
+*** Release glite-data-transfer-cli_R_3_4_5_1 2008-08-11
+    o fixed bug #40064 
+	o fixed bug #39538
+    o refactored options parsing 
+    o modified help messages
+
+*** Release glite-data-transfer-cli_R_3_4_4_3 2008-06-17
+    o Added dependency from gsoap
+
+*** Release glite-data-transfer-cli_R_3_4_4_2 2008-05-08
+	o Fix bug #33406
+
+*** Release glite-data-transfer-cli_R_3_4_3_2 2008-03-20
+	o changes to command line help in submit - clearer token handling
+
+*** Release glite-data-transfer-cli_R_3_4_3_1 2008-03-18
+	 #30034: FTS: cannot set numerical channel properties to zero
+	 #33406: FTS: CLI version string is not reported correctly in verbose option
+	 #28524: Missing -o parameter from glite-transfer-submit help
+	 Interface changes related to the latest schema changes 3.2.0
+	 Number of undocumented bugs fixed related to the marshalling.
+
+*** Release glite-data-transfer-cli_R_3_4_2_2 2007-06-06
+    o lib64 changes
+
+*** Release glite-data-transfer-cli_R_3_4_2 2007-06-01
+
+   o Added overwrite flag for SRM 2.2. Proper name for space token description.
+
+*** Release glite-data-transfer-cli_R_3_4_1-1 2007-04-20
+
+   o Fixed SLC4 build error and a few compiler warnings.
+
+*** Release glite-data-transfer-cli_R_3_3_0-4 2007-03-02
+   o Compile with gsoap 2.7.6b and 2.7.9b 
+
+*** Release glite-data-transfer-cli_R_3_3_0-1 2006-08-22
+   o Add option -x to the glite-transfer-discovery tool in order to display all the 
+     FTS service information
+   o Add option --all to the glite-transfer-discovery tool in order to return
+     all the FTS services that are able to manage a transfer between the given two sites
+   o Fix for #19196: FTS: cli should support site names in teh -s option
+
+*** Release glite-data-transfer-cli_R_3_2_3_4 2006-07-06
+
+   o Fix for #17975 - service info interface version bad
+   o Fix for #16546 - bad error on addChannel
+   o Make interesting states (default serach) only Active, Submitted and Pending
+   o Better date format on stats
+   o Fix for #16581 - unclear manpage for addManager
+
+*** Release glite-data-transfer-cli_R_3_2_3-3 2006-06-21
+
+	o Merge changes from 3.2.2-3
+
+*** Release glite-data-transfer-cli_R_3_2_2-3 2006-06-21
+    Fixed Bugs:
+     o #17608: FTS: glite-transfer-stats-vo segfaults
+
+*** Release glite-data-transfer-cli_R_3_2_3-2 2006-06-14
+
+	o Merge changes from 3.2.2-2
+
+*** Release glite-data-transfer-cli_R_3_2_2-2 2006-06-14
+    Fixed Bugs:
+     o #17460: FTS: glite-transfer-discovery display the wrong destination site when the --verbose option is used
+
+*** Release glite-data-transfer-cli_R_3_2_3 2006-05-02
+
+	o Added Doxygen API documentation for the simple transfer API.
+
+*** Release glite-data-transfer-cli_R_3_2_2 2006-04-28
+    Add command line options -T and -S to glite-transfer-discovery
+    Fixed Bugs:
+     o #16424 FTS: BDII service discovery should work 
+     o #16215: fix man page of glite-transfer-channel-list 
+
+*** Release glite-data-transfer-cli_R_3_2_1 2006-03-23
+
+    o CGSI_gSOAP library location has changed from ${repository}/${ext.cgsi-gsoap.subdir} to ${with.cgsi-gsoap.prefix}
+
+*** Release glite-data-transfer-cli_R_3_2_0 2006-02-22
+    Add glite-transfer-discovery tool for returning the endpoint of an
+       FTS service that manage a channel between two sites
+    Fixed bugs:
+     o #14765 FTS: Logical name is not displayed for placement jobs
+
+*** Release glite-data-transfer-cli_R_3_1_2_2 2005-10-04
+
+    Fixed bugs:
+     o #10953 FTS: glite-transfer-stats-agents segfaults if last_active is missing
+     o #11472 FTS: transfer-cli man pages do not build - missing xml files
+
+
+*** Release glite-data-transfer-cli_R_3_1_2 2005-09-28
+
+    Added --source and --dest flags to fts tools (associated services stuff)
+    Use submit method, not transferSubmit in glite-transfer-submit
+    Less compile-time warning messages
+    Fixed VO and Channel activity period time issues
+    In glite-transfer-status duration was printed like a string, not like an int
+    Updated docs
+
+
+*** Release glite-data-transfer-cli_R_3_1_1_2 2005-09-22
+
+    No more redundant interface version/endpoint queries.
+    Fixed bugs:
+     #10705 overview: CLI shall check interface version compatibility
+     #10704 overview: CLI shall also print its version numbers with -v
+
+*** Release glite-data-transfer-cli_R_3_1_1_1 2005-09-05
+
+    o Display duration in status
+   Fixed bugs:
+    #10279 FTS: glite-transfer-submit produce out of memory if the job description file is empty
+    #10280 FTS: glite-transfer-submit does not detect absence of destination SURL
+    #10436 FTS: errors in FTS CLI not signalled as such
+    #9578 (partly): Data modules use incorrect service types
+
+*** Release glite-data-transfer-cli_R_3_1_0 2005-08-15
+
+    o Command for FileTransferStats: glite-transfer-stats-{agents,channel,vo}
+    o Removed placement commands
+    o Updated channel add command docs and usage (DOMAIN->SITE)
+    o Check interface version
+   Fixed Bugs:
+     #9952 FTS: submit client should ask for MyProxy password twice
+     #9879 FTS: submit command always prompts for the myproxy password
+
+
+*** Release glite-data-transfer-cli_R_3_0_1 2005-08-01
+ 
+    o made the getroles output more chatty
+    o Wrong data handling during getRoles reply conversion.
+   Fixed Bugs:
+     #9811 FTS: getRoles method segfaults
+
+*** Release glite-data-transfer-cli_R_3_0_0 2005-07-25
+
+    o Update to cancel bulk operation
+    o Fixed a long option bug
+    o Updated placement service listing functionality
+
+*** Release glite-data-transfer-cli_R_1_4_0 2005-07-25
+
+    o Catch up with interface 3.0.0: new command line tools
+	- glite-placement-addvomanager
+	- glite-placement-getroles
+	- glite-placement-listvomanagers
+	- glite-placement-removevomanager
+	- glite-placement-setpriority
+	- glite-transfer-addvomanager
+	- glite-transfer-getroles
+	- glite-transfer-listvomanagers
+	- glite-transfer-removevomanager
+	- glite-transfer-channel-addmanager
+	- glite-transfer-channel-listmanagers
+	- glite-transfer-channel-removemanager
+	- glite-transfer-channel-setvoshare
+	- glite-transfer-setpriority
+    o CLI options change:
+    	- "-v": verbose output only about server
+	- "--verbose": verbose output about client side
+    o Disabled status polling in glite-placement-submit
+    o New command line tool and man page: glite-placement-submit
+    o Man page correction: glite-transfer-submit
+    
+*** Release glite-data-transfer-cli_R_1_3_8 2005-06-30
+
+    o Fixed Bug #9237 - Give interesting states by default in transfer-list. Added -a flag to list transfers in all states.
+
+*** Release glite-data-transfer-cli_R_1_3_7 2005-06-29
+
+    o Fixed Bugs:
+      #9166 - output of glite-transfer-list should be less verbose
+      #9191 - clients should have a timeout (default set to 60 seconds)
+      
+*** Release glite-data-transfer-cli_R_1_3_6_2 2005-06-09
+
+    o New dependencies on service-discovery modules/plugins
+    
+*** Release glite-data-transfer-cli_R_1_3_6 2005-06-06
+
+    o Fixed Bug #8913 - Missing Halted state for Channels
+
+*** Release glite-data-transfer-cli_R_1_3_5 2005-06-03
+
+    o Fixed Bug #8708 - transfer-cli should not depend on catalog-cli
+
+*** Release glite-data-transfer-cli_R_1_3_4 2005-05-31
+
+    o Fixed Bug #8795 - channel-set sets state to Active even when no state change is given
+
+*** Release glite-data-transfer-cli_R_1_3_3 2005-05-30
+    
+    o Fixed Bug #8711 - missing Hold, Waiting and FinishedDirty states
+    o TransferFailed state is now Failed in all operations (FTS and Channel) 
+
+*** Release glite-data-transfer-cli_R_1_3_2 2005-05-23
+
+    o Fixed Bugs:
+      #8538 - channel-set -S Active does not work
+      #8503 - detailed transfer-status commandline doesn't work correctly
+      #8588 - CLI transfer-submit option -g produces Out of memory
+      #8589 - transfer-submit -f FILE doesn't recognize newline as delimiter
+      #8486 - submit commandline doesn't accept myproxy password
+      #8592 - command-line and java service mispelling of Canceling and Canceled
+
+*** Release glite-data-transfer-cli_R_1_3_1 2005-04-15
+
+    o Updated for interface version 2.9.0
+
+*** Release glite-data-transfer-cli_R_1_3_0 2005-03-29
+
+    o Use the org.glite.data.transfer.fts interface instead of
+      org.glite.data.transfer.placement
+    o New tool: glite-transfer-channel-signal
+
+*** Release glite-data-transfer-cli_R_1_2_1 2005-03-09
+
+    o Use service discovery helpers from libglite_data_util
+    o Add explicit dependencies on libglite_data_util
+
+*** Release glite-data-transfer-cli_R_1_2_0 2005-03-08
+
+    o New implementation.
+    o Channel management tools: glite-channel-add, glite-channel-drop,
+      glite-channel-list, glite-channel-set
+    o File placement tools: glite-transfer-cancel, glite-transfer-list,
+      glite-transfer-status, glite-transfer-submit
+
+*** Release glite-data-transfer-cli_R_1_0_1
+    
+    o use gSOAP 2.6 to build (build-fix)
+
+*** Release glite-data-transfer-cli_R_1_0_0
+
+    o First released version.
+
+    1.0.2: adhere to interface change from 1.0.0 to 2.0.0

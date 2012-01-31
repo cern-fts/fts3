@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Unfortunately the localinit target runs _after_ the init-autotools target,
+# so we cannot do this from ant
+version=`grep ^module.version project/version.properties | cut -d= -f2 | sed -e 's/[         ]//g'`
+echo "AC_DEFUN([GLITE_MODULE_VERSION],[$version])" > project/module-version.m4
+
+mkdir -p src/autogen
+set -x
+aclocal -I project
+libtoolize --force
+autoheader
+automake --foreign --add-missing --copy
+autoconf
