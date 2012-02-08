@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____submitResponse" kind="struct" prot="public">
+    <compoundname>fts__submitResponse</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____submitResponse_1a7ae4632b696a372f085b2aaed2470892" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__submitResponse::_submitReturn</definition>
+        <argsstring></argsstring>
+        <name>_submitReturn</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="949" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="949" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation response struct &quot;fts__submitResponse&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__submit&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="948" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="947" bodyend="950"/>
+    <listofallmembers>
+      <member refid="structfts____submitResponse_1a7ae4632b696a372f085b2aaed2470892" prot="public" virt="non-virtual"><scope>fts__submitResponse</scope><name>_submitReturn</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____removeVOManagerResponse" kind="struct" prot="public">
+    <compoundname>fts__removeVOManagerResponse</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+    <briefdescription>
+<para>Operation response struct &quot;fts__removeVOManagerResponse&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__removeVOManager&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1712" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1711" bodyend="1713"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

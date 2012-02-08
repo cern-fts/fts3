@@ -1,0 +1,123 @@
+\section{transfer\_\-\_\-PlacementJob Class Reference}
+\label{classtransfer____PlacementJob}\index{transfer\_\-\_\-PlacementJob@{transfer\_\-\_\-PlacementJob}}
+
+
+\char`\"{}http://transfer.data.glite.org\char`\"{}:PlacementJob is a complexType.  
+
+
+
+
+{\ttfamily \#include $<$fts3-\/transfer-\/submit.h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual int {\bfseries soap\_\-type} () const \label{classtransfer____PlacementJob_a0be56c445df6d33a69ed8781ec40d4fa}
+
+\item 
+virtual void {\bfseries soap\_\-default} (struct {\bf soap} $\ast$)\label{classtransfer____PlacementJob_a448e5b078c6d6fe135dd7da6949b64b5}
+
+\item 
+virtual void {\bfseries soap\_\-serialize} (struct {\bf soap} $\ast$) const \label{classtransfer____PlacementJob_aa11688cb486a61b02c7639268eeba9ae}
+
+\item 
+virtual int {\bfseries soap\_\-put} (struct {\bf soap} $\ast$, const char $\ast$, const char $\ast$) const \label{classtransfer____PlacementJob_a39ef8874307babb95c085758e667cfef}
+
+\item 
+virtual int {\bfseries soap\_\-out} (struct {\bf soap} $\ast$, const char $\ast$, int, const char $\ast$) const \label{classtransfer____PlacementJob_a55cf5be328877c60a55a9242a51577de}
+
+\item 
+virtual void $\ast$ {\bfseries soap\_\-get} (struct {\bf soap} $\ast$, const char $\ast$, const char $\ast$)\label{classtransfer____PlacementJob_a162fa1b623c41a226ecb230f97aed102}
+
+\item 
+virtual void $\ast$ {\bfseries soap\_\-in} (struct {\bf soap} $\ast$, const char $\ast$, const char $\ast$)\label{classtransfer____PlacementJob_a948213e07ff28d0457a91250fa572891}
+
+\end{DoxyCompactItemize}
+\subsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+std::vector$<$ std::string $>$ {\bf logicalFiles}
+\begin{DoxyCompactList}\small\item\em Vector of std::string with length 1..unbounded. \item\end{DoxyCompactList}\item 
+std::string $\ast$ {\bf sourceSE}
+\begin{DoxyCompactList}\small\item\em Element sourceSE of type xs:string. \item\end{DoxyCompactList}\item 
+std::string $\ast$ {\bf destSE}
+\begin{DoxyCompactList}\small\item\em Element destSE of type xs:string. \item\end{DoxyCompactList}\item 
+{\bf transfer\_\-\_\-TransferParams} $\ast$ {\bf jobParams}
+\begin{DoxyCompactList}\small\item\em Element jobParams of type \char`\"{}http://transfer.data.glite.org\char`\"{}:TransferParams. \item\end{DoxyCompactList}\item 
+std::string $\ast$ {\bf credential}
+\begin{DoxyCompactList}\small\item\em Element credential of type xs:string. \item\end{DoxyCompactList}\item 
+struct {\bf soap} $\ast$ {\bf soap}\label{classtransfer____PlacementJob_a443d5a1ce3cca0448d6ce22479df4425}
+
+\begin{DoxyCompactList}\small\item\em A handle to the soap struct that manages this instance (automatically set) \item\end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\char`\"{}http://transfer.data.glite.org\char`\"{}:PlacementJob is a complexType. 
+
+Definition at line 164 of file fts3-\/transfer-\/submit.h.
+
+
+
+\subsection{Field Documentation}
+\index{transfer\_\-\_\-PlacementJob@{transfer\_\-\_\-PlacementJob}!credential@{credential}}
+\index{credential@{credential}!transfer__PlacementJob@{transfer\_\-\_\-PlacementJob}}
+\subsubsection[{credential}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-PlacementJob::credential}}\label{classtransfer____PlacementJob_af222e324ccaea32471d6e69e90bb8858}
+
+
+Element credential of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 175 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-PlacementJob@{transfer\_\-\_\-PlacementJob}!destSE@{destSE}}
+\index{destSE@{destSE}!transfer__PlacementJob@{transfer\_\-\_\-PlacementJob}}
+\subsubsection[{destSE}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-PlacementJob::destSE}}\label{classtransfer____PlacementJob_aacb6f1571bc8045734ad8aa27c138c8a}
+
+
+Element destSE of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 171 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-PlacementJob@{transfer\_\-\_\-PlacementJob}!jobParams@{jobParams}}
+\index{jobParams@{jobParams}!transfer__PlacementJob@{transfer\_\-\_\-PlacementJob}}
+\subsubsection[{jobParams}]{\setlength{\rightskip}{0pt plus 5cm}{\bf transfer\_\-\_\-TransferParams} $\ast$ {\bf transfer\_\-\_\-PlacementJob::jobParams}}\label{classtransfer____PlacementJob_a83805591f9851821d2d4da834e0b1685}
+
+
+Element jobParams of type \char`\"{}http://transfer.data.glite.org\char`\"{}:TransferParams. 
+
+Nullable pointer. 
+
+Definition at line 173 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-PlacementJob@{transfer\_\-\_\-PlacementJob}!logicalFiles@{logicalFiles}}
+\index{logicalFiles@{logicalFiles}!transfer__PlacementJob@{transfer\_\-\_\-PlacementJob}}
+\subsubsection[{logicalFiles}]{\setlength{\rightskip}{0pt plus 5cm}std::vector$<$ std::string $>$ {\bf transfer\_\-\_\-PlacementJob::logicalFiles}}\label{classtransfer____PlacementJob_a180ff8c7361bddcbed146216faa8fbeb}
+
+
+Vector of std::string with length 1..unbounded. 
+
+Nullable pointer. 
+
+Definition at line 167 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-PlacementJob@{transfer\_\-\_\-PlacementJob}!sourceSE@{sourceSE}}
+\index{sourceSE@{sourceSE}!transfer__PlacementJob@{transfer\_\-\_\-PlacementJob}}
+\subsubsection[{sourceSE}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-PlacementJob::sourceSE}}\label{classtransfer____PlacementJob_adc36949266a8e6b451fc7d9c244f7a61}
+
+
+Element sourceSE of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 169 of file fts3-\/transfer-\/submit.h.
+
+
+
+The documentation for this class was generated from the following files:\begin{DoxyCompactItemize}
+\item 
+src/CLI/fts3-\/transfer-\/submit.h\item 
+src/CLI/ftsStub.h\item 
+src/CLI/ftsC.cpp\end{DoxyCompactItemize}

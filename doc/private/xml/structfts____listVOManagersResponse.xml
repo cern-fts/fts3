@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____listVOManagersResponse" kind="struct" prot="public">
+    <compoundname>fts__listVOManagersResponse</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____listVOManagersResponse_1a5a94ca1c86419b42c4b7cfa9dd6168c6" prot="public" static="no" mutable="no">
+        <type><ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring" kindref="compound">fts__ArrayOf_USCOREsoapenc_USCOREstring</ref> *</type>
+        <definition>fts__ArrayOf_USCOREsoapenc_USCOREstring * fts__listVOManagersResponse::_listVOManagersReturn</definition>
+        <argsstring></argsstring>
+        <name>_listVOManagersReturn</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1782" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1782" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation response struct &quot;fts__listVOManagersResponse&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__listVOManagers&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="94">
+        <label>fts__ArrayOf_USCOREsoapenc_USCOREstring</label>
+        <link refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring"/>
+      </node>
+      <node id="93">
+        <label>fts__listVOManagersResponse</label>
+        <link refid="structfts____listVOManagersResponse"/>
+        <childnode refid="94" relation="usage">
+          <edgelabel>_listVOManagersReturn</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1781" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1780" bodyend="1783"/>
+    <listofallmembers>
+      <member refid="structfts____listVOManagersResponse_1a5a94ca1c86419b42c4b7cfa9dd6168c6" prot="public" virt="non-virtual"><scope>fts__listVOManagersResponse</scope><name>_listVOManagersReturn</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

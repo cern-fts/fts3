@@ -1,0 +1,246 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="classtransfer____TransferJobElement" kind="class" prot="public">
+    <compoundname>transfer__TransferJobElement</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtransfer____TransferJobElement_1a705f3b30aa519c3f9f7ceca37c9120c0" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__TransferJobElement::source</definition>
+        <argsstring></argsstring>
+        <name>source</name>
+        <briefdescription>
+<para>Element source of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="193" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="193" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____TransferJobElement_1aa6ad4c72af630c766d440187a81f8f68" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__TransferJobElement::dest</definition>
+        <argsstring></argsstring>
+        <name>dest</name>
+        <briefdescription>
+<para>Element dest of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="195" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="195" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" prot="public" static="no" mutable="no">
+        <type>struct <ref refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" kindref="member">soap</ref> *</type>
+        <definition>struct soap * transfer__TransferJobElement::soap</definition>
+        <argsstring></argsstring>
+        <name>soap</name>
+        <briefdescription>
+<para>A handle to the soap struct that manages this instance (automatically set) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="197" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="197" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1aabd7d06ef5e049122f207607d1815048" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>int</type>
+        <definition>virtual int transfer__TransferJobElement::soap_type</definition>
+        <argsstring>() const </argsstring>
+        <name>soap_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="123" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="123" bodyend="123"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1acca82e2a7d135705dbd2f2599bfa4a6d" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__TransferJobElement::soap_default</definition>
+        <argsstring>(struct soap *)</argsstring>
+        <name>soap_default</name>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="124" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="5092" bodyend="5098"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1ac64c93da6a0bc5c8b194208d1911cdd0" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__TransferJobElement::soap_serialize</definition>
+        <argsstring>(struct soap *) const </argsstring>
+        <name>soap_serialize</name>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="125" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="5100" bodyend="5106"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1ae9c11deaf7ab43f4a5f45a542b0d8f8d" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__TransferJobElement::soap_put</definition>
+        <argsstring>(struct soap *, const char *, const char *) const </argsstring>
+        <name>soap_put</name>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="126" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="5108" bodyend="5114"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1aea76fb30df6904dcc6142550622efed7" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__TransferJobElement::soap_out</definition>
+        <argsstring>(struct soap *, const char *, int, const char *) const </argsstring>
+        <name>soap_out</name>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>id</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="127" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="5116" bodyend="5119"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1a22d2f480e751707d8a64efd768eabea4" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__TransferJobElement::soap_get</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_get</name>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="128" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="5133" bodyend="5136"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1a966e5798fc9acc069d5723da0b75ed4d" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__TransferJobElement::soap_in</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_in</name>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="129" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="5146" bodyend="5148"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1a09db65d3cc0b82b73bf6eae12cc48f11" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>transfer__TransferJobElement::transfer__TransferJobElement</definition>
+        <argsstring>()</argsstring>
+        <name>transfer__TransferJobElement</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="130" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="130" bodyend="130"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____TransferJobElement_1a8f41f5ac77c90cb09670880906a82f18" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual transfer__TransferJobElement::~transfer__TransferJobElement</definition>
+        <argsstring>()</argsstring>
+        <name>~transfer__TransferJobElement</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="131" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="131" bodyend="131"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>&quot;http://transfer.data.glite.org&quot;:TransferJobElement is a complexType. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="191" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="190" bodyend="198"/>
+    <listofallmembers>
+      <member refid="classtransfer____TransferJobElement_1aa6ad4c72af630c766d440187a81f8f68" prot="public" virt="non-virtual"><scope>transfer__TransferJobElement</scope><name>dest</name></member>
+      <member refid="classtransfer____TransferJobElement_1a6d4439616ecd6bcee00929a501572abd" prot="public" virt="non-virtual"><scope>transfer__TransferJobElement</scope><name>soap</name></member>
+      <member refid="classtransfer____TransferJobElement_1acca82e2a7d135705dbd2f2599bfa4a6d" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>soap_default</name></member>
+      <member refid="classtransfer____TransferJobElement_1a22d2f480e751707d8a64efd768eabea4" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>soap_get</name></member>
+      <member refid="classtransfer____TransferJobElement_1a966e5798fc9acc069d5723da0b75ed4d" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>soap_in</name></member>
+      <member refid="classtransfer____TransferJobElement_1aea76fb30df6904dcc6142550622efed7" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>soap_out</name></member>
+      <member refid="classtransfer____TransferJobElement_1ae9c11deaf7ab43f4a5f45a542b0d8f8d" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>soap_put</name></member>
+      <member refid="classtransfer____TransferJobElement_1ac64c93da6a0bc5c8b194208d1911cdd0" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>soap_serialize</name></member>
+      <member refid="classtransfer____TransferJobElement_1aabd7d06ef5e049122f207607d1815048" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>soap_type</name></member>
+      <member refid="classtransfer____TransferJobElement_1a705f3b30aa519c3f9f7ceca37c9120c0" prot="public" virt="non-virtual"><scope>transfer__TransferJobElement</scope><name>source</name></member>
+      <member refid="classtransfer____TransferJobElement_1a09db65d3cc0b82b73bf6eae12cc48f11" prot="public" virt="non-virtual"><scope>transfer__TransferJobElement</scope><name>transfer__TransferJobElement</name></member>
+      <member refid="classtransfer____TransferJobElement_1a8f41f5ac77c90cb09670880906a82f18" prot="public" virt="virtual"><scope>transfer__TransferJobElement</scope><name>~transfer__TransferJobElement</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

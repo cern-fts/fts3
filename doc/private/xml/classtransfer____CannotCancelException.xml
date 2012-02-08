@@ -1,0 +1,243 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="classtransfer____CannotCancelException" kind="class" prot="public">
+    <compoundname>transfer__CannotCancelException</compoundname>
+    <basecompoundref refid="classtransfer____TransferException" prot="public" virt="non-virtual">transfer__TransferException</basecompoundref>
+    <basecompoundref refid="classtransfer____TransferException" prot="public" virt="non-virtual">transfer__TransferException</basecompoundref>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1ab953cb376a836476fb23c9bf855401ff" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>int</type>
+        <definition>virtual int transfer__CannotCancelException::soap_type</definition>
+        <argsstring>() const </argsstring>
+        <name>soap_type</name>
+        <reimplements refid="classtransfer____TransferException_1ada3774e051f2702ea4ef9434a411ac3a">soap_type</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="566" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="566" bodyend="566"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1a717c02200f3bfb47785935cb8fa8bf2b" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__CannotCancelException::soap_default</definition>
+        <argsstring>(struct soap *)</argsstring>
+        <name>soap_default</name>
+        <reimplements refid="classtransfer____TransferException_1afdd7f3fc6f29d1dff82ae4e0106a70b3">soap_default</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="567" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="3162" bodyend="3167"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1ac86bfb9ea965616548caaf04d533c5ad" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__CannotCancelException::soap_serialize</definition>
+        <argsstring>(struct soap *) const </argsstring>
+        <name>soap_serialize</name>
+        <reimplements refid="classtransfer____TransferException_1a5e2fe20a5322406aa67613a34df3d465">soap_serialize</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="568" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="3169" bodyend="3174"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1a69850bc3a5b33935700e2046815a0b4f" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__CannotCancelException::soap_put</definition>
+        <argsstring>(struct soap *, const char *, const char *) const </argsstring>
+        <name>soap_put</name>
+        <reimplements refid="classtransfer____TransferException_1a238c3881c3d2d21f720251015dd215a2">soap_put</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="569" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="3176" bodyend="3182"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1aeebb2aa0681ea673fcba0ca672bf1563" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__CannotCancelException::soap_out</definition>
+        <argsstring>(struct soap *, const char *, int, const char *) const </argsstring>
+        <name>soap_out</name>
+        <reimplements refid="classtransfer____TransferException_1a90076fe6913f429688bdab161422e464">soap_out</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>id</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="570" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="3184" bodyend="3187"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1a2b777f0e87d99d5ba1b872fbb0c30877" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__CannotCancelException::soap_get</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_get</name>
+        <reimplements refid="classtransfer____TransferException_1a39a79a991cccec1ebd6b07d58aaf5dc4">soap_get</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="571" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="3199" bodyend="3202"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1adb888139043e643b36e42b719dc293df" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__CannotCancelException::soap_in</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_in</name>
+        <reimplements refid="classtransfer____TransferException_1a9e5d42911f2b8455de991d16ba4294fe">soap_in</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="572" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="3212" bodyend="3214"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1ab744b2ffa90d75b59db38b624dfc0921" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>transfer__CannotCancelException::transfer__CannotCancelException</definition>
+        <argsstring>()</argsstring>
+        <name>transfer__CannotCancelException</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="573" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="573" bodyend="573"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____CannotCancelException_1a6a79d26e3da44ce522c6ca61a0badc57" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual transfer__CannotCancelException::~transfer__CannotCancelException</definition>
+        <argsstring>()</argsstring>
+        <name>~transfer__CannotCancelException</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="574" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="574" bodyend="574"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>&quot;http://transfer.data.glite.org&quot;:CannotCancelException is a complexType with complexContent extension of &quot;http://transfer.data.glite.org&quot;:TransferException. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="160">
+        <label>transfer__CannotCancelException</label>
+        <link refid="classtransfer____CannotCancelException"/>
+        <childnode refid="161" relation="public-inheritance">
+        </childnode>
+        <childnode refid="161" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="161">
+        <label>transfer__TransferException</label>
+        <link refid="classtransfer____TransferException"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="162">
+        <label>transfer__CannotCancelException</label>
+        <link refid="classtransfer____CannotCancelException"/>
+        <childnode refid="163" relation="public-inheritance">
+        </childnode>
+        <childnode refid="163" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="163">
+        <label>transfer__TransferException</label>
+        <link refid="classtransfer____TransferException"/>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="501" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="500" bodyend="506"/>
+    <listofallmembers>
+      <member refid="classtransfer____TransferException_1ab7d44de4ff3d40739362d125663eeb09" prot="public" virt="non-virtual"><scope>transfer__CannotCancelException</scope><name>message</name></member>
+      <member refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" prot="public" virt="non-virtual"><scope>transfer__CannotCancelException</scope><name>soap</name></member>
+      <member refid="classtransfer____CannotCancelException_1a717c02200f3bfb47785935cb8fa8bf2b" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>soap_default</name></member>
+      <member refid="classtransfer____CannotCancelException_1a2b777f0e87d99d5ba1b872fbb0c30877" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>soap_get</name></member>
+      <member refid="classtransfer____CannotCancelException_1adb888139043e643b36e42b719dc293df" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>soap_in</name></member>
+      <member refid="classtransfer____CannotCancelException_1aeebb2aa0681ea673fcba0ca672bf1563" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>soap_out</name></member>
+      <member refid="classtransfer____CannotCancelException_1a69850bc3a5b33935700e2046815a0b4f" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>soap_put</name></member>
+      <member refid="classtransfer____CannotCancelException_1ac86bfb9ea965616548caaf04d533c5ad" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>soap_serialize</name></member>
+      <member refid="classtransfer____CannotCancelException_1ab953cb376a836476fb23c9bf855401ff" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>soap_type</name></member>
+      <member refid="classtransfer____CannotCancelException_1ab744b2ffa90d75b59db38b624dfc0921" prot="public" virt="non-virtual"><scope>transfer__CannotCancelException</scope><name>transfer__CannotCancelException</name></member>
+      <member refid="classtransfer____TransferException_1aa9051246dd93bd38d7476c370c33cd88" prot="public" virt="non-virtual"><scope>transfer__CannotCancelException</scope><name>transfer__TransferException</name></member>
+      <member refid="classtransfer____CannotCancelException_1a6a79d26e3da44ce522c6ca61a0badc57" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>~transfer__CannotCancelException</name></member>
+      <member refid="classtransfer____TransferException_1a4aaf765b3fe5df5705989ff62097566c" prot="public" virt="virtual"><scope>transfer__CannotCancelException</scope><name>~transfer__TransferException</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

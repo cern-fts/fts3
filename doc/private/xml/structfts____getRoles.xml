@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____getRoles" kind="struct" prot="public">
+    <compoundname>fts__getRoles</compoundname>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="987" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="986" bodyend="992"/>
+    <listofallmembers>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

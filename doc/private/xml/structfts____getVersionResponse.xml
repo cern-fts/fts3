@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____getVersionResponse" kind="struct" prot="public">
+    <compoundname>fts__getVersionResponse</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____getVersionResponse_1aa57e2ffd35d3a996bb2dfeb21d79a2b7" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__getVersionResponse::getVersionReturn</definition>
+        <argsstring></argsstring>
+        <name>getVersionReturn</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1972" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1972" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation response struct &quot;fts__getVersionResponse&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__getVersion&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1971" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1970" bodyend="1973"/>
+    <listofallmembers>
+      <member refid="structfts____getVersionResponse_1aa57e2ffd35d3a996bb2dfeb21d79a2b7" prot="public" virt="non-virtual"><scope>fts__getVersionResponse</scope><name>getVersionReturn</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

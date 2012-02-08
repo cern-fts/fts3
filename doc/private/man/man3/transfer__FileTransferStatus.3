@@ -1,0 +1,131 @@
+.TH "transfer__FileTransferStatus" 3 "Wed Feb 8 2012" "Version 0.0.0" "EMI File Transfer Service (FTS 3)" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+transfer__FileTransferStatus \- 
+.PP
+'http://transfer.data.glite.org':FileTransferStatus is a complexType.  
+
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <fts3-transfer-submit.h>\fP
+.PP
+Inherited by \fBtransfer__FileTransferStatus2\fP, and \fBtransfer__FileTransferStatus2\fP.
+.SS "Public Member Functions"
+
+.in +1c
+.ti -1c
+.RI "virtual int \fBsoap_type\fP () const "
+.br
+.ti -1c
+.RI "virtual void \fBsoap_default\fP (struct \fBsoap\fP *)"
+.br
+.ti -1c
+.RI "virtual void \fBsoap_serialize\fP (struct \fBsoap\fP *) const "
+.br
+.ti -1c
+.RI "virtual int \fBsoap_put\fP (struct \fBsoap\fP *, const char *, const char *) const "
+.br
+.ti -1c
+.RI "virtual int \fBsoap_out\fP (struct \fBsoap\fP *, const char *, int, const char *) const "
+.br
+.ti -1c
+.RI "virtual void * \fBsoap_get\fP (struct \fBsoap\fP *, const char *, const char *)"
+.br
+.ti -1c
+.RI "virtual void * \fBsoap_in\fP (struct \fBsoap\fP *, const char *, const char *)"
+.br
+.in -1c
+.SS "Data Fields"
+
+.in +1c
+.ti -1c
+.RI "std::string * \fBlogicalName\fP"
+.br
+.RI "\fIElement logicalName of type xs:string. \fP"
+.ti -1c
+.RI "std::string * \fBsourceSURL\fP"
+.br
+.RI "\fIElement sourceSURL of type xs:string. \fP"
+.ti -1c
+.RI "std::string * \fBdestSURL\fP"
+.br
+.RI "\fIElement destSURL of type xs:string. \fP"
+.ti -1c
+.RI "std::string * \fBtransferFileState\fP"
+.br
+.RI "\fIElement transferFileState of type xs:string. \fP"
+.ti -1c
+.RI "int \fBnumFailures\fP"
+.br
+.RI "\fIElement numFailures of type xs:int. \fP"
+.ti -1c
+.RI "std::string * \fBreason\fP"
+.br
+.RI "\fIElement reason of type xs:string. \fP"
+.ti -1c
+.RI "std::string * \fBreason_USCOREclass\fP"
+.br
+.RI "\fIElement reason_class of type xs:string. \fP"
+.ti -1c
+.RI "LONG64 \fBduration\fP"
+.br
+.RI "\fIElement duration of type xs:long. \fP"
+.ti -1c
+.RI "struct \fBsoap\fP * \fBsoap\fP"
+.br
+.RI "\fIA handle to the soap struct that manages this instance (automatically set) \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+'http://transfer.data.glite.org':FileTransferStatus is a complexType. 
+.PP
+Definition at line 263 of file fts3-transfer-submit.h.
+.SH "Field Documentation"
+.PP 
+.SS "std::string * \fBtransfer__FileTransferStatus::destSURL\fP"
+.PP
+Element destSURL of type xs:string. Nullable pointer. 
+.PP
+Definition at line 270 of file fts3-transfer-submit.h.
+.SS "LONG64 \fBtransfer__FileTransferStatus::duration\fP"
+.PP
+Element duration of type xs:long. Required element. 
+.PP
+Definition at line 280 of file fts3-transfer-submit.h.
+.SS "std::string * \fBtransfer__FileTransferStatus::logicalName\fP"
+.PP
+Element logicalName of type xs:string. Nullable pointer. 
+.PP
+Definition at line 266 of file fts3-transfer-submit.h.
+.SS "int \fBtransfer__FileTransferStatus::numFailures\fP"
+.PP
+Element numFailures of type xs:int. Required element. 
+.PP
+Definition at line 274 of file fts3-transfer-submit.h.
+.SS "std::string * \fBtransfer__FileTransferStatus::reason\fP"
+.PP
+Element reason of type xs:string. Nullable pointer. 
+.PP
+Definition at line 276 of file fts3-transfer-submit.h.
+.SS "std::string * \fBtransfer__FileTransferStatus::reason_USCOREclass\fP"
+.PP
+Element reason_class of type xs:string. Nullable pointer. 
+.PP
+Definition at line 278 of file fts3-transfer-submit.h.
+.SS "std::string * \fBtransfer__FileTransferStatus::sourceSURL\fP"
+.PP
+Element sourceSURL of type xs:string. Nullable pointer. 
+.PP
+Definition at line 268 of file fts3-transfer-submit.h.
+.SS "std::string * \fBtransfer__FileTransferStatus::transferFileState\fP"
+.PP
+Element transferFileState of type xs:string. Nullable pointer. 
+.PP
+Definition at line 272 of file fts3-transfer-submit.h.
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for EMI File Transfer Service (FTS 3) from the source code.

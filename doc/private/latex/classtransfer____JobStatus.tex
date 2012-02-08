@@ -1,0 +1,162 @@
+\section{transfer\_\-\_\-JobStatus Class Reference}
+\label{classtransfer____JobStatus}\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}}
+
+
+\char`\"{}http://transfer.data.glite.org\char`\"{}:JobStatus is a complexType.  
+
+
+
+
+{\ttfamily \#include $<$fts3-\/transfer-\/submit.h$>$}
+
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual int {\bfseries soap\_\-type} () const \label{classtransfer____JobStatus_adf3c576598572fc4ef23425136034da6}
+
+\item 
+virtual void {\bfseries soap\_\-default} (struct {\bf soap} $\ast$)\label{classtransfer____JobStatus_ab2066b2d6e93b4ddbdb494dc00957411}
+
+\item 
+virtual void {\bfseries soap\_\-serialize} (struct {\bf soap} $\ast$) const \label{classtransfer____JobStatus_a59955cd1d7800231b9e1bb42a4c8fe74}
+
+\item 
+virtual int {\bfseries soap\_\-put} (struct {\bf soap} $\ast$, const char $\ast$, const char $\ast$) const \label{classtransfer____JobStatus_aea9fe3403040242176130c4b5cbb78bf}
+
+\item 
+virtual int {\bfseries soap\_\-out} (struct {\bf soap} $\ast$, const char $\ast$, int, const char $\ast$) const \label{classtransfer____JobStatus_a31bacb77f8ced8a26ef3c3ad9c2cf7c1}
+
+\item 
+virtual void $\ast$ {\bfseries soap\_\-get} (struct {\bf soap} $\ast$, const char $\ast$, const char $\ast$)\label{classtransfer____JobStatus_a173df825f18c08ec4d828834aac7f890}
+
+\item 
+virtual void $\ast$ {\bfseries soap\_\-in} (struct {\bf soap} $\ast$, const char $\ast$, const char $\ast$)\label{classtransfer____JobStatus_a379591ad7d9c0468b358d3ad8f0e31c1}
+
+\end{DoxyCompactItemize}
+\subsection*{Data Fields}
+\begin{DoxyCompactItemize}
+\item 
+std::string $\ast$ {\bf jobID}
+\begin{DoxyCompactList}\small\item\em Element jobID of type xs:string. \item\end{DoxyCompactList}\item 
+std::string $\ast$ {\bf jobStatus}
+\begin{DoxyCompactList}\small\item\em Element jobStatus of type xs:string. \item\end{DoxyCompactList}\item 
+std::string $\ast$ {\bf clientDN}
+\begin{DoxyCompactList}\small\item\em Element clientDN of type xs:string. \item\end{DoxyCompactList}\item 
+std::string $\ast$ {\bf reason}
+\begin{DoxyCompactList}\small\item\em Element reason of type xs:string. \item\end{DoxyCompactList}\item 
+std::string $\ast$ {\bf voName}
+\begin{DoxyCompactList}\small\item\em Element voName of type xs:string. \item\end{DoxyCompactList}\item 
+LONG64 {\bf submitTime}
+\begin{DoxyCompactList}\small\item\em Element submitTime of type xs:long. \item\end{DoxyCompactList}\item 
+int {\bf numFiles}
+\begin{DoxyCompactList}\small\item\em Element numFiles of type xs:int. \item\end{DoxyCompactList}\item 
+int {\bf priority}
+\begin{DoxyCompactList}\small\item\em Element priority of type xs:int. \item\end{DoxyCompactList}\item 
+struct {\bf soap} $\ast$ {\bf soap}\label{classtransfer____JobStatus_ad58a9cf654b293b8f5115aef6da414f5}
+
+\begin{DoxyCompactList}\small\item\em A handle to the soap struct that manages this instance (automatically set) \item\end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\char`\"{}http://transfer.data.glite.org\char`\"{}:JobStatus is a complexType. 
+
+Definition at line 240 of file fts3-\/transfer-\/submit.h.
+
+
+
+\subsection{Field Documentation}
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!clientDN@{clientDN}}
+\index{clientDN@{clientDN}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{clientDN}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-JobStatus::clientDN}}\label{classtransfer____JobStatus_a61202a8e6fd62cd46631b7001981931e}
+
+
+Element clientDN of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 247 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!jobID@{jobID}}
+\index{jobID@{jobID}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{jobID}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-JobStatus::jobID}}\label{classtransfer____JobStatus_af0df3912849c67971cd3148872b8016a}
+
+
+Element jobID of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 243 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!jobStatus@{jobStatus}}
+\index{jobStatus@{jobStatus}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{jobStatus}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-JobStatus::jobStatus}}\label{classtransfer____JobStatus_a7ed5dedbffd7ae5c141b5de6a9220b07}
+
+
+Element jobStatus of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 245 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!numFiles@{numFiles}}
+\index{numFiles@{numFiles}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{numFiles}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf transfer\_\-\_\-JobStatus::numFiles}}\label{classtransfer____JobStatus_a969570f12524471b1d9a7dbc30daf7e6}
+
+
+Element numFiles of type xs:int. 
+
+Required element. 
+
+Definition at line 255 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!priority@{priority}}
+\index{priority@{priority}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{priority}]{\setlength{\rightskip}{0pt plus 5cm}int {\bf transfer\_\-\_\-JobStatus::priority}}\label{classtransfer____JobStatus_a458195eec1320d9c94b3f2a36183b72f}
+
+
+Element priority of type xs:int. 
+
+Required element. 
+
+Definition at line 257 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!reason@{reason}}
+\index{reason@{reason}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{reason}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-JobStatus::reason}}\label{classtransfer____JobStatus_aa9c0c83f99ebff125f9852cbb24b40aa}
+
+
+Element reason of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 249 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!submitTime@{submitTime}}
+\index{submitTime@{submitTime}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{submitTime}]{\setlength{\rightskip}{0pt plus 5cm}LONG64 {\bf transfer\_\-\_\-JobStatus::submitTime}}\label{classtransfer____JobStatus_a335aedfcdd9f3cc3fbf7eca50f9a246e}
+
+
+Element submitTime of type xs:long. 
+
+Required element. 
+
+Definition at line 253 of file fts3-\/transfer-\/submit.h.
+
+\index{transfer\_\-\_\-JobStatus@{transfer\_\-\_\-JobStatus}!voName@{voName}}
+\index{voName@{voName}!transfer__JobStatus@{transfer\_\-\_\-JobStatus}}
+\subsubsection[{voName}]{\setlength{\rightskip}{0pt plus 5cm}std::string $\ast$ {\bf transfer\_\-\_\-JobStatus::voName}}\label{classtransfer____JobStatus_ada3a67df82deaa29e7cf200e9d9615fe}
+
+
+Element voName of type xs:string. 
+
+Nullable pointer. 
+
+Definition at line 251 of file fts3-\/transfer-\/submit.h.
+
+
+
+The documentation for this class was generated from the following files:\begin{DoxyCompactItemize}
+\item 
+src/CLI/fts3-\/transfer-\/submit.h\item 
+src/CLI/ftsStub.h\item 
+src/CLI/ftsC.cpp\end{DoxyCompactItemize}

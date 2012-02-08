@@ -1,0 +1,243 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="classtransfer____NotExistsException" kind="class" prot="public">
+    <compoundname>transfer__NotExistsException</compoundname>
+    <basecompoundref refid="classtransfer____TransferException" prot="public" virt="non-virtual">transfer__TransferException</basecompoundref>
+    <basecompoundref refid="classtransfer____TransferException" prot="public" virt="non-virtual">transfer__TransferException</basecompoundref>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtransfer____NotExistsException_1a81787f77cb069acf938460e5c6c9f7cc" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>int</type>
+        <definition>virtual int transfer__NotExistsException::soap_type</definition>
+        <argsstring>() const </argsstring>
+        <name>soap_type</name>
+        <reimplements refid="classtransfer____TransferException_1ada3774e051f2702ea4ef9434a411ac3a">soap_type</reimplements>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="501" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="501" bodyend="501"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1ae8aec49cc33ebc4bc7084c08ab3cbd6f" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__NotExistsException::soap_default</definition>
+        <argsstring>(struct soap *)</argsstring>
+        <name>soap_default</name>
+        <reimplements refid="classtransfer____TransferException_1afdd7f3fc6f29d1dff82ae4e0106a70b3">soap_default</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="502" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4087" bodyend="4092"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1a91e1dc82a7f3f0dc759a709e33b50a19" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__NotExistsException::soap_serialize</definition>
+        <argsstring>(struct soap *) const </argsstring>
+        <name>soap_serialize</name>
+        <reimplements refid="classtransfer____TransferException_1a5e2fe20a5322406aa67613a34df3d465">soap_serialize</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="503" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4094" bodyend="4099"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1a52bee29e71eeb837d717717a4da0e96c" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__NotExistsException::soap_put</definition>
+        <argsstring>(struct soap *, const char *, const char *) const </argsstring>
+        <name>soap_put</name>
+        <reimplements refid="classtransfer____TransferException_1a238c3881c3d2d21f720251015dd215a2">soap_put</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="504" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4101" bodyend="4107"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1ada44a95281a7f9759ed32a83bcb953aa" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__NotExistsException::soap_out</definition>
+        <argsstring>(struct soap *, const char *, int, const char *) const </argsstring>
+        <name>soap_out</name>
+        <reimplements refid="classtransfer____TransferException_1a90076fe6913f429688bdab161422e464">soap_out</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>id</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="505" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4109" bodyend="4112"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1a76ab93e4b37c61e2748ce66a5ee57965" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__NotExistsException::soap_get</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_get</name>
+        <reimplements refid="classtransfer____TransferException_1a39a79a991cccec1ebd6b07d58aaf5dc4">soap_get</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="506" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4124" bodyend="4127"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1ada347ffb0653a04752a3de024d266af7" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__NotExistsException::soap_in</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_in</name>
+        <reimplements refid="classtransfer____TransferException_1a9e5d42911f2b8455de991d16ba4294fe">soap_in</reimplements>
+        <param>
+          <type>struct <ref refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="507" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4137" bodyend="4139"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1aeba1c928fc1050066772bf656d462ac1" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>transfer__NotExistsException::transfer__NotExistsException</definition>
+        <argsstring>()</argsstring>
+        <name>transfer__NotExistsException</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="508" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="508" bodyend="508"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____NotExistsException_1a62fc495e6c30c161d690fd61cc1306d5" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual transfer__NotExistsException::~transfer__NotExistsException</definition>
+        <argsstring>()</argsstring>
+        <name>~transfer__NotExistsException</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="509" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="509" bodyend="509"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>&quot;http://transfer.data.glite.org&quot;:NotExistsException is a complexType with complexContent extension of &quot;http://transfer.data.glite.org&quot;:TransferException. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="185">
+        <label>transfer__NotExistsException</label>
+        <link refid="classtransfer____NotExistsException"/>
+        <childnode refid="186" relation="public-inheritance">
+        </childnode>
+        <childnode refid="186" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="186">
+        <label>transfer__TransferException</label>
+        <link refid="classtransfer____TransferException"/>
+      </node>
+    </inheritancegraph>
+    <collaborationgraph>
+      <node id="187">
+        <label>transfer__NotExistsException</label>
+        <link refid="classtransfer____NotExistsException"/>
+        <childnode refid="188" relation="public-inheritance">
+        </childnode>
+        <childnode refid="188" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="188">
+        <label>transfer__TransferException</label>
+        <link refid="classtransfer____TransferException"/>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="418" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="417" bodyend="423"/>
+    <listofallmembers>
+      <member refid="classtransfer____TransferException_1ab7d44de4ff3d40739362d125663eeb09" prot="public" virt="non-virtual"><scope>transfer__NotExistsException</scope><name>message</name></member>
+      <member refid="classtransfer____TransferException_1adcfb27ab8b2b611134e14c45825c89d2" prot="public" virt="non-virtual"><scope>transfer__NotExistsException</scope><name>soap</name></member>
+      <member refid="classtransfer____NotExistsException_1ae8aec49cc33ebc4bc7084c08ab3cbd6f" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>soap_default</name></member>
+      <member refid="classtransfer____NotExistsException_1a76ab93e4b37c61e2748ce66a5ee57965" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>soap_get</name></member>
+      <member refid="classtransfer____NotExistsException_1ada347ffb0653a04752a3de024d266af7" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>soap_in</name></member>
+      <member refid="classtransfer____NotExistsException_1ada44a95281a7f9759ed32a83bcb953aa" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>soap_out</name></member>
+      <member refid="classtransfer____NotExistsException_1a52bee29e71eeb837d717717a4da0e96c" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>soap_put</name></member>
+      <member refid="classtransfer____NotExistsException_1a91e1dc82a7f3f0dc759a709e33b50a19" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>soap_serialize</name></member>
+      <member refid="classtransfer____NotExistsException_1a81787f77cb069acf938460e5c6c9f7cc" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>soap_type</name></member>
+      <member refid="classtransfer____NotExistsException_1aeba1c928fc1050066772bf656d462ac1" prot="public" virt="non-virtual"><scope>transfer__NotExistsException</scope><name>transfer__NotExistsException</name></member>
+      <member refid="classtransfer____TransferException_1aa9051246dd93bd38d7476c370c33cd88" prot="public" virt="non-virtual"><scope>transfer__NotExistsException</scope><name>transfer__TransferException</name></member>
+      <member refid="classtransfer____NotExistsException_1a62fc495e6c30c161d690fd61cc1306d5" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>~transfer__NotExistsException</name></member>
+      <member refid="classtransfer____TransferException_1a4aaf765b3fe5df5705989ff62097566c" prot="public" virt="virtual"><scope>transfer__NotExistsException</scope><name>~transfer__TransferException</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

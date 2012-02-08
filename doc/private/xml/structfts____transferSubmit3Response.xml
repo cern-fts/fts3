@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____transferSubmit3Response" kind="struct" prot="public">
+    <compoundname>fts__transferSubmit3Response</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____transferSubmit3Response_1a721effc3fd7d254aaa5117f036ff56b0" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__transferSubmit3Response::_transferSubmit3Return</definition>
+        <argsstring></argsstring>
+        <name>_transferSubmit3Return</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="882" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="882" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation response struct &quot;fts__transferSubmit3Response&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__transferSubmit3&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="881" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="880" bodyend="883"/>
+    <listofallmembers>
+      <member refid="structfts____transferSubmit3Response_1a721effc3fd7d254aaa5117f036ff56b0" prot="public" virt="non-virtual"><scope>fts__transferSubmit3Response</scope><name>_transferSubmit3Return</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

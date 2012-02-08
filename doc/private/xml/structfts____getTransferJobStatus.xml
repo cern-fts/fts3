@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____getTransferJobStatus" kind="struct" prot="public">
+    <compoundname>fts__getTransferJobStatus</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____getTransferJobStatus_1a7b46b0970e302d39e6cc9984d2a6c3b9" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__getTransferJobStatus::_requestID</definition>
+        <argsstring></argsstring>
+        <name>_requestID</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="818" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="818" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="816" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="815" bodyend="819"/>
+    <listofallmembers>
+      <member refid="structfts____getTransferJobStatus_1a7b46b0970e302d39e6cc9984d2a6c3b9" prot="public" virt="non-virtual"><scope>fts__getTransferJobStatus</scope><name>_requestID</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

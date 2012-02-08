@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____transferSubmitResponse" kind="struct" prot="public">
+    <compoundname>fts__transferSubmitResponse</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____transferSubmitResponse_1a840c41e4d951b839c19977a0aa0af7bc" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__transferSubmitResponse::_transferSubmitReturn</definition>
+        <argsstring></argsstring>
+        <name>_transferSubmitReturn</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="748" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="748" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation response struct &quot;fts__transferSubmitResponse&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__transferSubmit&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="747" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="746" bodyend="749"/>
+    <listofallmembers>
+      <member refid="structfts____transferSubmitResponse_1a840c41e4d951b839c19977a0aa0af7bc" prot="public" virt="non-virtual"><scope>fts__transferSubmitResponse</scope><name>_transferSubmitReturn</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

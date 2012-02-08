@@ -1,0 +1,232 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="classfts____ArrayOf__USCOREsoapenc__USCOREstring" kind="class" prot="public">
+    <compoundname>fts__ArrayOf_USCOREsoapenc_USCOREstring</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1abef4aabd2a0f7f81cabf2fc91156d72d" prot="public" static="no" mutable="no">
+        <type>std::vector&lt; std::string &gt;</type>
+        <definition>std::vector&lt; std::string &gt; fts__ArrayOf_USCOREsoapenc_USCOREstring::item</definition>
+        <argsstring></argsstring>
+        <name>item</name>
+        <briefdescription>
+<para>Vector of std::string with length 0..unbounded. </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="348" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="348" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" prot="public" static="no" mutable="no">
+        <type>struct <ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" kindref="member">soap</ref> *</type>
+        <definition>struct soap * fts__ArrayOf_USCOREsoapenc_USCOREstring::soap</definition>
+        <argsstring></argsstring>
+        <name>soap</name>
+        <briefdescription>
+<para>A handle to the soap struct that manages this instance (automatically set) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="350" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="350" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1ad9e80dc42321a192e2d7d18372b6debd" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>int</type>
+        <definition>virtual int fts__ArrayOf_USCOREsoapenc_USCOREstring::soap_type</definition>
+        <argsstring>() const </argsstring>
+        <name>soap_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="348" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="348" bodyend="348"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a2e77fb7275031041e548e0986b0600fd" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void fts__ArrayOf_USCOREsoapenc_USCOREstring::soap_default</definition>
+        <argsstring>(struct soap *)</argsstring>
+        <name>soap_default</name>
+        <param>
+          <type>struct <ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="349" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2604" bodyend="2609"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a2a9e0d4c20aa84974b5b42e78c36cb73" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void fts__ArrayOf_USCOREsoapenc_USCOREstring::soap_serialize</definition>
+        <argsstring>(struct soap *) const </argsstring>
+        <name>soap_serialize</name>
+        <param>
+          <type>struct <ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="350" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2611" bodyend="2616"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a729745acae41ca40c548729641c8bc53" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int fts__ArrayOf_USCOREsoapenc_USCOREstring::soap_put</definition>
+        <argsstring>(struct soap *, const char *, const char *) const </argsstring>
+        <name>soap_put</name>
+        <param>
+          <type>struct <ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="351" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2618" bodyend="2624"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a5bfca77925e70faeac867a42ea94527e" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int fts__ArrayOf_USCOREsoapenc_USCOREstring::soap_out</definition>
+        <argsstring>(struct soap *, const char *, int, const char *) const </argsstring>
+        <name>soap_out</name>
+        <param>
+          <type>struct <ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>id</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="352" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2626" bodyend="2629"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a3ffdb1b8825144c6abe07c6c6aa876ba" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * fts__ArrayOf_USCOREsoapenc_USCOREstring::soap_get</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_get</name>
+        <param>
+          <type>struct <ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="353" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2641" bodyend="2644"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a9d96c85a19c6d47ac366cee17fc93336" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * fts__ArrayOf_USCOREsoapenc_USCOREstring::soap_in</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_in</name>
+        <param>
+          <type>struct <ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="354" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2654" bodyend="2656"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a3e41449563d9adaa28f7f0e1226568ab" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>fts__ArrayOf_USCOREsoapenc_USCOREstring::fts__ArrayOf_USCOREsoapenc_USCOREstring</definition>
+        <argsstring>()</argsstring>
+        <name>fts__ArrayOf_USCOREsoapenc_USCOREstring</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="355" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="355" bodyend="355"/>
+      </memberdef>
+      <memberdef kind="function" id="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1ac42447cc9c364f371fa83290317107e0" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual fts__ArrayOf_USCOREsoapenc_USCOREstring::~fts__ArrayOf_USCOREsoapenc_USCOREstring</definition>
+        <argsstring>()</argsstring>
+        <name>~fts__ArrayOf_USCOREsoapenc_USCOREstring</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="356" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="356" bodyend="356"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>&quot;http://glite.org/wsdl/services/org.glite.data.transfer.fts&quot;:ArrayOf_soapenc_string is a complexType. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="346" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="345" bodyend="351"/>
+    <listofallmembers>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a3e41449563d9adaa28f7f0e1226568ab" prot="public" virt="non-virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>fts__ArrayOf_USCOREsoapenc_USCOREstring</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1abef4aabd2a0f7f81cabf2fc91156d72d" prot="public" virt="non-virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>item</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a0312a3f874005cd3716776ec9c55ca8b" prot="public" virt="non-virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a2e77fb7275031041e548e0986b0600fd" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap_default</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a3ffdb1b8825144c6abe07c6c6aa876ba" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap_get</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a9d96c85a19c6d47ac366cee17fc93336" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap_in</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a5bfca77925e70faeac867a42ea94527e" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap_out</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a729745acae41ca40c548729641c8bc53" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap_put</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1a2a9e0d4c20aa84974b5b42e78c36cb73" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap_serialize</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1ad9e80dc42321a192e2d7d18372b6debd" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>soap_type</name></member>
+      <member refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring_1ac42447cc9c364f371fa83290317107e0" prot="public" virt="virtual"><scope>fts__ArrayOf_USCOREsoapenc_USCOREstring</scope><name>~fts__ArrayOf_USCOREsoapenc_USCOREstring</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

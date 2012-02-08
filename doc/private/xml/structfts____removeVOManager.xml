@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____removeVOManager" kind="struct" prot="public">
+    <compoundname>fts__removeVOManager</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____removeVOManager_1a9debf894f8cbe85c6b066f36a119bc80" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__removeVOManager::_VOName</definition>
+        <argsstring></argsstring>
+        <name>_VOName</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="948" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="948" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structfts____removeVOManager_1aec59ca72e36f6c7a4421ba4295f90a95" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__removeVOManager::_principal</definition>
+        <argsstring></argsstring>
+        <name>_principal</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="949" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="949" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="946" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="945" bodyend="950"/>
+    <listofallmembers>
+      <member refid="structfts____removeVOManager_1aec59ca72e36f6c7a4421ba4295f90a95" prot="public" virt="non-virtual"><scope>fts__removeVOManager</scope><name>_principal</name></member>
+      <member refid="structfts____removeVOManager_1a9debf894f8cbe85c6b066f36a119bc80" prot="public" virt="non-virtual"><scope>fts__removeVOManager</scope><name>_VOName</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

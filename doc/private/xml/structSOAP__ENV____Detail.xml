@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structSOAP__ENV____Detail" kind="struct" prot="public">
+    <compoundname>SOAP_ENV__Detail</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structSOAP__ENV____Detail_1ae21be5af0f3f6dc47f2dbf4e35e22300" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int SOAP_ENV__Detail::__type</definition>
+        <argsstring></argsstring>
+        <name>__type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="1130" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="1130" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structSOAP__ENV____Detail_1a159d344759c06f82eae1949aea10a1cf" prot="public" static="no" mutable="no">
+        <type>void *</type>
+        <definition>void* SOAP_ENV__Detail::fault</definition>
+        <argsstring></argsstring>
+        <name>fault</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="1131" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="1131" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structSOAP__ENV____Detail_1aec8be27bbc4e83f9f8d7ea97c034f822" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* SOAP_ENV__Detail::__any</definition>
+        <argsstring></argsstring>
+        <name>__any</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="1132" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="1132" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="1128" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="1127" bodyend="1133"/>
+    <listofallmembers>
+      <member refid="structSOAP__ENV____Detail_1aec8be27bbc4e83f9f8d7ea97c034f822" prot="public" virt="non-virtual"><scope>SOAP_ENV__Detail</scope><name>__any</name></member>
+      <member refid="structSOAP__ENV____Detail_1ae21be5af0f3f6dc47f2dbf4e35e22300" prot="public" virt="non-virtual"><scope>SOAP_ENV__Detail</scope><name>__type</name></member>
+      <member refid="structSOAP__ENV____Detail_1a159d344759c06f82eae1949aea10a1cf" prot="public" virt="non-virtual"><scope>SOAP_ENV__Detail</scope><name>fault</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

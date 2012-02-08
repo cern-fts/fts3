@@ -1,0 +1,93 @@
+.TH "transfer__Roles" 3 "Wed Feb 8 2012" "Version 0.0.0" "EMI File Transfer Service (FTS 3)" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+transfer__Roles \- 
+.PP
+'http://transfer.data.glite.org':Roles is a complexType.  
+
+.SH SYNOPSIS
+.br
+.PP
+.PP
+\fC#include <fts3-transfer-submit.h>\fP
+.SS "Public Member Functions"
+
+.in +1c
+.ti -1c
+.RI "virtual int \fBsoap_type\fP () const "
+.br
+.ti -1c
+.RI "virtual void \fBsoap_default\fP (struct \fBsoap\fP *)"
+.br
+.ti -1c
+.RI "virtual void \fBsoap_serialize\fP (struct \fBsoap\fP *) const "
+.br
+.ti -1c
+.RI "virtual int \fBsoap_put\fP (struct \fBsoap\fP *, const char *, const char *) const "
+.br
+.ti -1c
+.RI "virtual int \fBsoap_out\fP (struct \fBsoap\fP *, const char *, int, const char *) const "
+.br
+.ti -1c
+.RI "virtual void * \fBsoap_get\fP (struct \fBsoap\fP *, const char *, const char *)"
+.br
+.ti -1c
+.RI "virtual void * \fBsoap_in\fP (struct \fBsoap\fP *, const char *, const char *)"
+.br
+.in -1c
+.SS "Data Fields"
+
+.in +1c
+.ti -1c
+.RI "std::string * \fBclientDN\fP"
+.br
+.RI "\fIElement clientDN of type xs:string. \fP"
+.ti -1c
+.RI "std::string * \fBserviceAdmin\fP"
+.br
+.RI "\fIElement serviceAdmin of type xs:string. \fP"
+.ti -1c
+.RI "std::string * \fBsubmitter\fP"
+.br
+.RI "\fIElement submitter of type xs:string. \fP"
+.ti -1c
+.RI "std::vector< \fBtransfer__StringPair\fP * > \fBVOManager\fP"
+.br
+.RI "\fIVector of transfer__StringPair* with length 1..unbounded. \fP"
+.ti -1c
+.RI "struct \fBsoap\fP * \fBsoap\fP"
+.br
+.RI "\fIA handle to the soap struct that manages this instance (automatically set) \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+'http://transfer.data.glite.org':Roles is a complexType. 
+.PP
+Definition at line 330 of file fts3-transfer-submit.h.
+.SH "Field Documentation"
+.PP 
+.SS "std::string * \fBtransfer__Roles::clientDN\fP"
+.PP
+Element clientDN of type xs:string. Nullable pointer. 
+.PP
+Definition at line 333 of file fts3-transfer-submit.h.
+.SS "std::string * \fBtransfer__Roles::serviceAdmin\fP"
+.PP
+Element serviceAdmin of type xs:string. Nullable pointer. 
+.PP
+Definition at line 335 of file fts3-transfer-submit.h.
+.SS "std::string * \fBtransfer__Roles::submitter\fP"
+.PP
+Element submitter of type xs:string. Nullable pointer. 
+.PP
+Definition at line 337 of file fts3-transfer-submit.h.
+.SS "std::vector< \fBtransfer__StringPair\fP * > \fBtransfer__Roles::VOManager\fP"
+.PP
+Vector of transfer__StringPair* with length 1..unbounded. Nullable pointer. 
+.PP
+Definition at line 339 of file fts3-transfer-submit.h.
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for EMI File Transfer Service (FTS 3) from the source code.

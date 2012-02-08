@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____transferSubmit3" kind="struct" prot="public">
+    <compoundname>fts__transferSubmit3</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____transferSubmit3_1a8e8ca6daaeb4a7fb0fea6d960eee5414" prot="public" static="no" mutable="no">
+        <type><ref refid="classtransfer____TransferJob2" kindref="compound">transfer__TransferJob2</ref> *</type>
+        <definition>transfer__TransferJob2* fts__transferSubmit3::_job</definition>
+        <argsstring></argsstring>
+        <name>_job</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="692" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="692" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="134">
+        <label>transfer__TransferParams</label>
+        <link refid="classtransfer____TransferParams"/>
+      </node>
+      <node id="132">
+        <label>fts__transferSubmit3</label>
+        <link refid="structfts____transferSubmit3"/>
+        <childnode refid="133" relation="usage">
+          <edgelabel>_job</edgelabel>
+        </childnode>
+      </node>
+      <node id="133">
+        <label>transfer__TransferJob2</label>
+        <link refid="classtransfer____TransferJob2"/>
+        <childnode refid="134" relation="usage">
+          <edgelabel>jobParams</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="690" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="689" bodyend="693"/>
+    <listofallmembers>
+      <member refid="structfts____transferSubmit3_1a8e8ca6daaeb4a7fb0fea6d960eee5414" prot="public" virt="non-virtual"><scope>fts__transferSubmit3</scope><name>_job</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

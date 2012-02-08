@@ -1,0 +1,577 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="classCliManager" kind="class" prot="public">
+    <compoundname>CliManager</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classCliManager_1a6b85959ca6e7f83a2dc1080810f54742" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_GRIDFTP</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_GRIDFTP</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="23" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="23" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a5138b724bb7cdad2ece461f461418d42" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_MYPROXY</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_MYPROXY</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="24" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="24" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1ab7bdb8836e0d3789f6acb1fd4f4d7eca" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_DELEGATIONID</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_DELEGATIONID</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="25" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="25" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a0bb93b6fc6e7dbfa1219934d8ba37265" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_SPACETOKEN</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_SPACETOKEN</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="26" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="26" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a0a14ec3c952e0891b8a3351933b4d47e" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_SPACETOKEN_SOURCE</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_SPACETOKEN_SOURCE</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="27" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="27" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a510a7710137bfa97a113b4684f266424" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_COPY_PIN_LIFETIME</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_COPY_PIN_LIFETIME</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="28" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="28" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a3e92365401259a3cc13268baee5eaffa" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_LAN_CONNECTION</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_LAN_CONNECTION</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="29" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="29" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a5942426466438df29420acbfd6c48709" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_FAIL_NEARLINE</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_FAIL_NEARLINE</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="30" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="30" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a5648f2bf1d8746b8632d2b3072ba8c08" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_OVERWRITEFLAG</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_OVERWRITEFLAG</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="31" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="31" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a2708547972dcbcc46622b923543ba3f7" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_PARAM_CHECKSUM_METHOD</definition>
+        <argsstring></argsstring>
+        <name>FTS3_PARAM_CHECKSUM_METHOD</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="32" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="32" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a34048663a89b917fa76f20bc2e283923" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_CA_SD_TYPE</definition>
+        <argsstring></argsstring>
+        <name>FTS3_CA_SD_TYPE</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="34" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="34" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a787d355931904bcedba4f0345ac1ec27" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_SD_ENV</definition>
+        <argsstring></argsstring>
+        <name>FTS3_SD_ENV</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="35" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="35" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1ade03c3d47c10811aaaa6e0368392fa80" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_SD_TYPE</definition>
+        <argsstring></argsstring>
+        <name>FTS3_SD_TYPE</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="36" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="36" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a83f99d6ccb12638730d9ee3d18e1edee" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_IFC_VERSION</definition>
+        <argsstring></argsstring>
+        <name>FTS3_IFC_VERSION</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="37" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="37" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1a10f9907c34a192bc8cc796de2d2d8591" prot="public" static="no" mutable="no">
+        <type>string</type>
+        <definition>string CliManager::FTS3_INTERFACE_VERSION</definition>
+        <argsstring></argsstring>
+        <name>FTS3_INTERFACE_VERSION</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="38" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="38" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-static-attrib">
+      <memberdef kind="variable" id="classCliManager_1a5d5f88d5e3e783d06c6ee7053744f9f4" prot="private" static="yes" mutable="no">
+        <type><ref refid="classCliManager" kindref="compound">CliManager</ref> *</type>
+        <definition>CliManager * CliManager::manager</definition>
+        <argsstring></argsstring>
+        <name>manager</name>
+        <initializer> 0</initializer>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="58" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="58" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-attrib">
+      <memberdef kind="variable" id="classCliManager_1ad4a1db2340386c74935d89dd84fc57f8" prot="private" static="no" mutable="no">
+        <type>long</type>
+        <definition>long CliManager::major</definition>
+        <argsstring></argsstring>
+        <name>major</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="59" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="59" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1ae808572f8362c5032ec07867d869ddf1" prot="private" static="no" mutable="no">
+        <type>long</type>
+        <definition>long CliManager::minor</definition>
+        <argsstring></argsstring>
+        <name>minor</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="60" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="60" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classCliManager_1ab8c242f4536541e08a936be2fd19bcec" prot="private" static="no" mutable="no">
+        <type>long</type>
+        <definition>long CliManager::patch</definition>
+        <argsstring></argsstring>
+        <name>patch</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="61" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="61" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-static-func">
+      <memberdef kind="function" id="classCliManager_1af57b7314f1b46545d3d07055a9a96578" prot="public" static="yes" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classCliManager" kindref="compound">CliManager</ref> *</type>
+        <definition>CliManager * CliManager::getInstance</definition>
+        <argsstring>()</argsstring>
+        <name>getInstance</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="17" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="50" bodyend="56"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classCliManager_1a362f47ca25168806db204e66fbf4ef56" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type></type>
+        <definition>CliManager::~CliManager</definition>
+        <argsstring>()</argsstring>
+        <name>~CliManager</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="18" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="44" bodyend="46"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a608657d968ef29d26ca94b648ce31f21" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>void</type>
+        <definition>void CliManager::setInterface</definition>
+        <argsstring>(string interface)</argsstring>
+        <name>setInterface</name>
+        <param>
+          <type>string</type>
+          <declname>interface</declname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="20" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="58" bodyend="81"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a1120fd8ff83eced525df8c1d9b6f5808" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>string</type>
+        <definition>string CliManager::getPassword</definition>
+        <argsstring>()</argsstring>
+        <name>getPassword</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="21" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="83" bodyend="113"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a6a8aa8dd522167c43a869baf2c637ce4" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isChecksumSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isChecksumSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="40" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="115" bodyend="117"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a207cc6e6311fe97c9b9a2d1a068ae916" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isDelegationSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isDelegationSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="41" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="119" bodyend="121"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1ab6f5ece0cd572e80fc17abee344cd54e" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isRolesOfSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isRolesOfSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="42" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="123" bodyend="125"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a680689bce96ce643070b45c0fb909eec" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isSetTCPBufferSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isSetTCPBufferSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="43" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="127" bodyend="129"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a44116782069f1ab850b141f18be6b663" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isExtendedChannelListSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isExtendedChannelListSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="44" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="131" bodyend="133"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a2c8f5f265a9e59fc8c536de77a47794b" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isChannelMessageSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isChannelMessageSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="45" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="135" bodyend="137"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a79e6f679e6720ac08a6384cfbc5aaa94" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isUserVoRestrictListingSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isUserVoRestrictListingSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="46" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="139" bodyend="141"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1ab07e406b612ba34b3e0cb473427395e5" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isVersion330StatesSupported</definition>
+        <argsstring>()</argsstring>
+        <name>isVersion330StatesSupported</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="47" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="143" bodyend="145"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a52b71857143a64320b869225aad3402f" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isItVersion330</definition>
+        <argsstring>()</argsstring>
+        <name>isItVersion330</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="48" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="149" bodyend="151"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a6bee47c816344138811a7665054b8f60" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isItVersion340</definition>
+        <argsstring>()</argsstring>
+        <name>isItVersion340</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="49" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="153" bodyend="155"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a7f7fd2ff29c5a95b3ddb5c2dd2240d48" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isItVersion350</definition>
+        <argsstring>()</argsstring>
+        <name>isItVersion350</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="50" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="157" bodyend="159"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a2a2705c7296217728ab0c4c93151c972" prot="public" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type>int</type>
+        <definition>int CliManager::isItVersion370</definition>
+        <argsstring>()</argsstring>
+        <name>isItVersion370</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="51" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="161" bodyend="163"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="private-func">
+      <memberdef kind="function" id="classCliManager_1a6b42e1e579518f1255bf890cca280a47" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CliManager::CliManager</definition>
+        <argsstring>()</argsstring>
+        <name>CliManager</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="54" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="16" bodyend="34"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1abe95e7d19bef5c023ee6f978aa293760" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type></type>
+        <definition>CliManager::CliManager</definition>
+        <argsstring>(CliManager const &amp;)</argsstring>
+        <name>CliManager</name>
+        <param>
+          <type><ref refid="classCliManager" kindref="compound">CliManager</ref> const &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="55" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="36" bodyend="38"/>
+      </memberdef>
+      <memberdef kind="function" id="classCliManager_1a6acdff10d2fc1882dbae487da55d3eb0" prot="private" static="no" const="no" explicit="no" inline="no" virt="non-virtual">
+        <type><ref refid="classCliManager" kindref="compound">CliManager</ref> &amp;</type>
+        <definition>CliManager &amp; CliManager::operator=</definition>
+        <argsstring>(CliManager const &amp;)</argsstring>
+        <name>operator=</name>
+        <param>
+          <type><ref refid="classCliManager" kindref="compound">CliManager</ref> const &amp;</type>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="56" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.cpp" bodystart="40" bodyend="42"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="4">
+        <label>CliManager</label>
+        <link refid="classCliManager"/>
+        <childnode refid="4" relation="usage">
+          <edgelabel>manager</edgelabel>
+        </childnode>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" line="14" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/CliManager.h" bodystart="14" bodyend="62"/>
+    <listofallmembers>
+      <member refid="classCliManager_1a6b42e1e579518f1255bf890cca280a47" prot="private" virt="non-virtual"><scope>CliManager</scope><name>CliManager</name></member>
+      <member refid="classCliManager_1abe95e7d19bef5c023ee6f978aa293760" prot="private" virt="non-virtual"><scope>CliManager</scope><name>CliManager</name></member>
+      <member refid="classCliManager_1a34048663a89b917fa76f20bc2e283923" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_CA_SD_TYPE</name></member>
+      <member refid="classCliManager_1a83f99d6ccb12638730d9ee3d18e1edee" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_IFC_VERSION</name></member>
+      <member refid="classCliManager_1a10f9907c34a192bc8cc796de2d2d8591" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_INTERFACE_VERSION</name></member>
+      <member refid="classCliManager_1a2708547972dcbcc46622b923543ba3f7" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_CHECKSUM_METHOD</name></member>
+      <member refid="classCliManager_1a510a7710137bfa97a113b4684f266424" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_COPY_PIN_LIFETIME</name></member>
+      <member refid="classCliManager_1ab7bdb8836e0d3789f6acb1fd4f4d7eca" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_DELEGATIONID</name></member>
+      <member refid="classCliManager_1a5942426466438df29420acbfd6c48709" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_FAIL_NEARLINE</name></member>
+      <member refid="classCliManager_1a6b85959ca6e7f83a2dc1080810f54742" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_GRIDFTP</name></member>
+      <member refid="classCliManager_1a3e92365401259a3cc13268baee5eaffa" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_LAN_CONNECTION</name></member>
+      <member refid="classCliManager_1a5138b724bb7cdad2ece461f461418d42" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_MYPROXY</name></member>
+      <member refid="classCliManager_1a5648f2bf1d8746b8632d2b3072ba8c08" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_OVERWRITEFLAG</name></member>
+      <member refid="classCliManager_1a0bb93b6fc6e7dbfa1219934d8ba37265" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_SPACETOKEN</name></member>
+      <member refid="classCliManager_1a0a14ec3c952e0891b8a3351933b4d47e" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_PARAM_SPACETOKEN_SOURCE</name></member>
+      <member refid="classCliManager_1a787d355931904bcedba4f0345ac1ec27" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_SD_ENV</name></member>
+      <member refid="classCliManager_1ade03c3d47c10811aaaa6e0368392fa80" prot="public" virt="non-virtual"><scope>CliManager</scope><name>FTS3_SD_TYPE</name></member>
+      <member refid="classCliManager_1af57b7314f1b46545d3d07055a9a96578" prot="public" virt="non-virtual"><scope>CliManager</scope><name>getInstance</name></member>
+      <member refid="classCliManager_1a1120fd8ff83eced525df8c1d9b6f5808" prot="public" virt="non-virtual"><scope>CliManager</scope><name>getPassword</name></member>
+      <member refid="classCliManager_1a2c8f5f265a9e59fc8c536de77a47794b" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isChannelMessageSupported</name></member>
+      <member refid="classCliManager_1a6a8aa8dd522167c43a869baf2c637ce4" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isChecksumSupported</name></member>
+      <member refid="classCliManager_1a207cc6e6311fe97c9b9a2d1a068ae916" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isDelegationSupported</name></member>
+      <member refid="classCliManager_1a44116782069f1ab850b141f18be6b663" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isExtendedChannelListSupported</name></member>
+      <member refid="classCliManager_1a52b71857143a64320b869225aad3402f" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isItVersion330</name></member>
+      <member refid="classCliManager_1a6bee47c816344138811a7665054b8f60" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isItVersion340</name></member>
+      <member refid="classCliManager_1a7f7fd2ff29c5a95b3ddb5c2dd2240d48" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isItVersion350</name></member>
+      <member refid="classCliManager_1a2a2705c7296217728ab0c4c93151c972" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isItVersion370</name></member>
+      <member refid="classCliManager_1ab6f5ece0cd572e80fc17abee344cd54e" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isRolesOfSupported</name></member>
+      <member refid="classCliManager_1a680689bce96ce643070b45c0fb909eec" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isSetTCPBufferSupported</name></member>
+      <member refid="classCliManager_1a79e6f679e6720ac08a6384cfbc5aaa94" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isUserVoRestrictListingSupported</name></member>
+      <member refid="classCliManager_1ab07e406b612ba34b3e0cb473427395e5" prot="public" virt="non-virtual"><scope>CliManager</scope><name>isVersion330StatesSupported</name></member>
+      <member refid="classCliManager_1ad4a1db2340386c74935d89dd84fc57f8" prot="private" virt="non-virtual"><scope>CliManager</scope><name>major</name></member>
+      <member refid="classCliManager_1a5d5f88d5e3e783d06c6ee7053744f9f4" prot="private" virt="non-virtual"><scope>CliManager</scope><name>manager</name></member>
+      <member refid="classCliManager_1ae808572f8362c5032ec07867d869ddf1" prot="private" virt="non-virtual"><scope>CliManager</scope><name>minor</name></member>
+      <member refid="classCliManager_1a6acdff10d2fc1882dbae487da55d3eb0" prot="private" virt="non-virtual"><scope>CliManager</scope><name>operator=</name></member>
+      <member refid="classCliManager_1ab8c242f4536541e08a936be2fd19bcec" prot="private" virt="non-virtual"><scope>CliManager</scope><name>patch</name></member>
+      <member refid="classCliManager_1a608657d968ef29d26ca94b648ce31f21" prot="public" virt="non-virtual"><scope>CliManager</scope><name>setInterface</name></member>
+      <member refid="classCliManager_1a362f47ca25168806db204e66fbf4ef56" prot="public" virt="virtual"><scope>CliManager</scope><name>~CliManager</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

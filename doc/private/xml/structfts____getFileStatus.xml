@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____getFileStatus" kind="struct" prot="public">
+    <compoundname>fts__getFileStatus</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____getFileStatus_1a7c03a6e67ce64d1bccd4c66def041918" prot="public" static="no" mutable="no">
+        <type>std::string</type>
+        <definition>std::string fts__getFileStatus::_requestID</definition>
+        <argsstring></argsstring>
+        <name>_requestID</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="774" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="774" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structfts____getFileStatus_1aa341cdce02c6c5dbaffa2da567eab1dd" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int fts__getFileStatus::_offset</definition>
+        <argsstring></argsstring>
+        <name>_offset</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="775" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="775" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="structfts____getFileStatus_1a6fc6c63c1aef69c50a5f5b53b1c3ffc6" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int fts__getFileStatus::_limit</definition>
+        <argsstring></argsstring>
+        <name>_limit</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="776" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="776" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="772" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="771" bodyend="777"/>
+    <listofallmembers>
+      <member refid="structfts____getFileStatus_1a6fc6c63c1aef69c50a5f5b53b1c3ffc6" prot="public" virt="non-virtual"><scope>fts__getFileStatus</scope><name>_limit</name></member>
+      <member refid="structfts____getFileStatus_1aa341cdce02c6c5dbaffa2da567eab1dd" prot="public" virt="non-virtual"><scope>fts__getFileStatus</scope><name>_offset</name></member>
+      <member refid="structfts____getFileStatus_1a7c03a6e67ce64d1bccd4c66def041918" prot="public" virt="non-virtual"><scope>fts__getFileStatus</scope><name>_requestID</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

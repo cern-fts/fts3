@@ -1,0 +1,353 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="classtransfer____FileTransferStatus" kind="class" prot="public">
+    <compoundname>transfer__FileTransferStatus</compoundname>
+    <derivedcompoundref refid="classtransfer____FileTransferStatus2" prot="public" virt="non-virtual">transfer__FileTransferStatus2</derivedcompoundref>
+    <derivedcompoundref refid="classtransfer____FileTransferStatus2" prot="public" virt="non-virtual">transfer__FileTransferStatus2</derivedcompoundref>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1ae28af9f2eadc5038ab3b4858bcd74a46" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__FileTransferStatus::logicalName</definition>
+        <argsstring></argsstring>
+        <name>logicalName</name>
+        <briefdescription>
+<para>Element logicalName of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="266" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="266" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1a290772d67cc660d332400efa839b2081" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__FileTransferStatus::sourceSURL</definition>
+        <argsstring></argsstring>
+        <name>sourceSURL</name>
+        <briefdescription>
+<para>Element sourceSURL of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="268" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="268" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1a350d3ba3d24685a4decd929d2c0deab7" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__FileTransferStatus::destSURL</definition>
+        <argsstring></argsstring>
+        <name>destSURL</name>
+        <briefdescription>
+<para>Element destSURL of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="270" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="270" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1a87df9ec0e5ec3d6881ef5b95088a77e7" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__FileTransferStatus::transferFileState</definition>
+        <argsstring></argsstring>
+        <name>transferFileState</name>
+        <briefdescription>
+<para>Element transferFileState of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="272" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="272" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1a5ff74ed73072e23d7ccb64c6adfbd7be" prot="public" static="no" mutable="no">
+        <type>int</type>
+        <definition>int transfer__FileTransferStatus::numFailures</definition>
+        <argsstring></argsstring>
+        <name>numFailures</name>
+        <briefdescription>
+<para>Element numFailures of type xs:int. </para>        </briefdescription>
+        <detaileddescription>
+<para>Required element. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="274" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="274" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1a6731977e9f161be9dd2b0d5643d62b3c" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__FileTransferStatus::reason</definition>
+        <argsstring></argsstring>
+        <name>reason</name>
+        <briefdescription>
+<para>Element reason of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="276" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="276" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1a0b9fa91c980937fa104d377a84147dd7" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__FileTransferStatus::reason_USCOREclass</definition>
+        <argsstring></argsstring>
+        <name>reason_USCOREclass</name>
+        <briefdescription>
+<para>Element reason_class of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="278" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="278" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1a8b0726ff54bc997e0ad3b55c62da196a" prot="public" static="no" mutable="no">
+        <type>LONG64</type>
+        <definition>LONG64 transfer__FileTransferStatus::duration</definition>
+        <argsstring></argsstring>
+        <name>duration</name>
+        <briefdescription>
+<para>Element duration of type xs:long. </para>        </briefdescription>
+        <detaileddescription>
+<para>Required element. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="280" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="280" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" prot="public" static="no" mutable="no">
+        <type>struct <ref refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" kindref="member">soap</ref> *</type>
+        <definition>struct soap * transfer__FileTransferStatus::soap</definition>
+        <argsstring></argsstring>
+        <name>soap</name>
+        <briefdescription>
+<para>A handle to the soap struct that manages this instance (automatically set) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="282" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="282" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1a642ad3383ab927add4be60c6f333598a" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>int</type>
+        <definition>virtual int transfer__FileTransferStatus::soap_type</definition>
+        <argsstring>() const </argsstring>
+        <name>soap_type</name>
+        <reimplementedby refid="classtransfer____FileTransferStatus2_1ade3559547f4e61deb23e63e1b3266cc9">soap_type</reimplementedby>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="248" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="248" bodyend="248"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1a888fcc282ac6ee23e00f9a5f8ee03a97" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__FileTransferStatus::soap_default</definition>
+        <argsstring>(struct soap *)</argsstring>
+        <name>soap_default</name>
+        <reimplementedby refid="classtransfer____FileTransferStatus2_1a90c52f3be885acd7affb97629787774e">soap_default</reimplementedby>
+        <param>
+          <type>struct <ref refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="249" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4218" bodyend="4230"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1a84c43b07cef43be53d63cd90fe18fa8c" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__FileTransferStatus::soap_serialize</definition>
+        <argsstring>(struct soap *) const </argsstring>
+        <name>soap_serialize</name>
+        <reimplementedby refid="classtransfer____FileTransferStatus2_1a9bf9d6304a7d975516e2db07f4bfd883">soap_serialize</reimplementedby>
+        <param>
+          <type>struct <ref refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="250" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4232" bodyend="4242"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1adb8ca349c5e0c04e5848729f4d8dafb7" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__FileTransferStatus::soap_put</definition>
+        <argsstring>(struct soap *, const char *, const char *) const </argsstring>
+        <name>soap_put</name>
+        <reimplementedby refid="classtransfer____FileTransferStatus2_1a1812dcece75c2acba545ea6b93134108">soap_put</reimplementedby>
+        <param>
+          <type>struct <ref refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="251" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4244" bodyend="4250"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1a6320b08bede2ce96dc59d3de61d95a96" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__FileTransferStatus::soap_out</definition>
+        <argsstring>(struct soap *, const char *, int, const char *) const </argsstring>
+        <name>soap_out</name>
+        <reimplementedby refid="classtransfer____FileTransferStatus2_1a43e1179a6657b04e56b0b27c9e389e3e">soap_out</reimplementedby>
+        <param>
+          <type>struct <ref refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>id</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="252" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4252" bodyend="4255"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1a8d67affe727870fea60c679ccf0207bb" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__FileTransferStatus::soap_get</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_get</name>
+        <reimplementedby refid="classtransfer____FileTransferStatus2_1ab298f85f3d52ff1b06785606b1381b7c">soap_get</reimplementedby>
+        <param>
+          <type>struct <ref refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="253" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4281" bodyend="4284"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1aee03aa44cbdbf4606d21109433facaae" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__FileTransferStatus::soap_in</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_in</name>
+        <reimplementedby refid="classtransfer____FileTransferStatus2_1ae618347ccaf53da1a223cb52b42138f7">soap_in</reimplementedby>
+        <param>
+          <type>struct <ref refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="254" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="4294" bodyend="4296"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1a9631d1e0936e51b65cdf6a2ceb1d0100" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>transfer__FileTransferStatus::transfer__FileTransferStatus</definition>
+        <argsstring>()</argsstring>
+        <name>transfer__FileTransferStatus</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="255" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="255" bodyend="255"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____FileTransferStatus_1aef84f890b380e7526d2214414b4b0dfe" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual transfer__FileTransferStatus::~transfer__FileTransferStatus</definition>
+        <argsstring>()</argsstring>
+        <name>~transfer__FileTransferStatus</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="256" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="256" bodyend="256"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>&quot;http://transfer.data.glite.org&quot;:FileTransferStatus is a complexType. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <inheritancegraph>
+      <node id="169">
+        <label>transfer__FileTransferStatus2</label>
+        <link refid="classtransfer____FileTransferStatus2"/>
+        <childnode refid="168" relation="public-inheritance">
+        </childnode>
+        <childnode refid="168" relation="public-inheritance">
+        </childnode>
+      </node>
+      <node id="168">
+        <label>transfer__FileTransferStatus</label>
+        <link refid="classtransfer____FileTransferStatus"/>
+      </node>
+    </inheritancegraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="264" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="263" bodyend="283"/>
+    <listofallmembers>
+      <member refid="classtransfer____FileTransferStatus_1a350d3ba3d24685a4decd929d2c0deab7" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>destSURL</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a8b0726ff54bc997e0ad3b55c62da196a" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>duration</name></member>
+      <member refid="classtransfer____FileTransferStatus_1ae28af9f2eadc5038ab3b4858bcd74a46" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>logicalName</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a5ff74ed73072e23d7ccb64c6adfbd7be" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>numFailures</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a6731977e9f161be9dd2b0d5643d62b3c" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>reason</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a0b9fa91c980937fa104d377a84147dd7" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>reason_USCOREclass</name></member>
+      <member refid="classtransfer____FileTransferStatus_1ac370aec106125a2bdca5ef67bed75868" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>soap</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a888fcc282ac6ee23e00f9a5f8ee03a97" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>soap_default</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a8d67affe727870fea60c679ccf0207bb" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>soap_get</name></member>
+      <member refid="classtransfer____FileTransferStatus_1aee03aa44cbdbf4606d21109433facaae" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>soap_in</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a6320b08bede2ce96dc59d3de61d95a96" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>soap_out</name></member>
+      <member refid="classtransfer____FileTransferStatus_1adb8ca349c5e0c04e5848729f4d8dafb7" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>soap_put</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a84c43b07cef43be53d63cd90fe18fa8c" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>soap_serialize</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a642ad3383ab927add4be60c6f333598a" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>soap_type</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a290772d67cc660d332400efa839b2081" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>sourceSURL</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a9631d1e0936e51b65cdf6a2ceb1d0100" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>transfer__FileTransferStatus</name></member>
+      <member refid="classtransfer____FileTransferStatus_1a87df9ec0e5ec3d6881ef5b95088a77e7" prot="public" virt="non-virtual"><scope>transfer__FileTransferStatus</scope><name>transferFileState</name></member>
+      <member refid="classtransfer____FileTransferStatus_1aef84f890b380e7526d2214414b4b0dfe" prot="public" virt="virtual"><scope>transfer__FileTransferStatus</scope><name>~transfer__FileTransferStatus</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

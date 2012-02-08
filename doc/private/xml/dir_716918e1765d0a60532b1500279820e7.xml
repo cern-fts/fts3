@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="dir_716918e1765d0a60532b1500279820e7" kind="dir">
+    <compoundname>src/</compoundname>
+    <innerdir refid="dir_e13fc966f77d2e46ba2894f6ef292b65">src/CLI/</innerdir>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/"/>
+  </compounddef>
+</doxygen>

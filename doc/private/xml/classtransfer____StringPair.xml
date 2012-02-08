@@ -1,0 +1,246 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="classtransfer____StringPair" kind="class" prot="public">
+    <compoundname>transfer__StringPair</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="classtransfer____StringPair_1a007d23397bea7f93904fb80e81ab50a5" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__StringPair::string1</definition>
+        <argsstring></argsstring>
+        <name>string1</name>
+        <briefdescription>
+<para>Element string1 of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="322" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="322" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____StringPair_1a2aa408d34b32e657c4f5bbdddb862814" prot="public" static="no" mutable="no">
+        <type>std::string *</type>
+        <definition>std::string * transfer__StringPair::string2</definition>
+        <argsstring></argsstring>
+        <name>string2</name>
+        <briefdescription>
+<para>Element string2 of type xs:string. </para>        </briefdescription>
+        <detaileddescription>
+<para>Nullable pointer. </para>        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="324" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="324" bodyend="-1"/>
+      </memberdef>
+      <memberdef kind="variable" id="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" prot="public" static="no" mutable="no">
+        <type>struct <ref refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" kindref="member">soap</ref> *</type>
+        <definition>struct soap * transfer__StringPair::soap</definition>
+        <argsstring></argsstring>
+        <name>soap</name>
+        <briefdescription>
+<para>A handle to the soap struct that manages this instance (automatically set) </para>        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="326" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="326" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+      <sectiondef kind="public-func">
+      <memberdef kind="function" id="classtransfer____StringPair_1a9cd1e400332a0a45cec0229570dc36f7" prot="public" static="no" const="yes" explicit="no" inline="yes" virt="virtual">
+        <type>int</type>
+        <definition>virtual int transfer__StringPair::soap_type</definition>
+        <argsstring>() const </argsstring>
+        <name>soap_type</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="303" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="303" bodyend="303"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1a7d34c028f43bcb89013da38ed91d2863" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__StringPair::soap_default</definition>
+        <argsstring>(struct soap *)</argsstring>
+        <name>soap_default</name>
+        <param>
+          <type>struct <ref refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="304" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2890" bodyend="2896"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1a8deebc2de84a4e7b692e87580d37864e" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>void</type>
+        <definition>void transfer__StringPair::soap_serialize</definition>
+        <argsstring>(struct soap *) const </argsstring>
+        <name>soap_serialize</name>
+        <param>
+          <type>struct <ref refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="305" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2898" bodyend="2904"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1ae019859f493b0fb229d35bbac12fb544" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__StringPair::soap_put</definition>
+        <argsstring>(struct soap *, const char *, const char *) const </argsstring>
+        <name>soap_put</name>
+        <param>
+          <type>struct <ref refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="306" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2906" bodyend="2912"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1ae491675d9ba8508dc8c3faefba5fef9d" prot="public" static="no" const="yes" explicit="no" inline="no" virt="virtual">
+        <type>int</type>
+        <definition>int transfer__StringPair::soap_out</definition>
+        <argsstring>(struct soap *, const char *, int, const char *) const </argsstring>
+        <name>soap_out</name>
+        <param>
+          <type>struct <ref refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>int</type>
+          <defname>id</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="307" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2914" bodyend="2917"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1a3db494369b625f9d05f739b78897d9f5" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__StringPair::soap_get</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_get</name>
+        <param>
+          <type>struct <ref refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="308" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2931" bodyend="2934"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1a25af095ae8bad4a7d2ca38f546e21c22" prot="public" static="no" const="no" explicit="no" inline="no" virt="virtual">
+        <type>void *</type>
+        <definition>void * transfer__StringPair::soap_in</definition>
+        <argsstring>(struct soap *, const char *, const char *)</argsstring>
+        <name>soap_in</name>
+        <param>
+          <type>struct <ref refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" kindref="member">soap</ref> *</type>
+          <defname>soap</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>tag</defname>
+        </param>
+        <param>
+          <type>const char *</type>
+          <defname>type</defname>
+        </param>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="309" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsC.cpp" bodystart="2944" bodyend="2946"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1a50cbb5b383a794223d6db53b9bcdd33b" prot="public" static="no" const="no" explicit="no" inline="yes" virt="non-virtual">
+        <type></type>
+        <definition>transfer__StringPair::transfer__StringPair</definition>
+        <argsstring>()</argsstring>
+        <name>transfer__StringPair</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="310" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="310" bodyend="310"/>
+      </memberdef>
+      <memberdef kind="function" id="classtransfer____StringPair_1a7e68b6c7156f2dba1cd185289ff57437" prot="public" static="no" const="no" explicit="no" inline="yes" virt="virtual">
+        <type></type>
+        <definition>virtual transfer__StringPair::~transfer__StringPair</definition>
+        <argsstring>()</argsstring>
+        <name>~transfer__StringPair</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="311" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="311" bodyend="311"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>&quot;http://transfer.data.glite.org&quot;:StringPair is a complexType. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="320" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="319" bodyend="327"/>
+    <listofallmembers>
+      <member refid="classtransfer____StringPair_1a476511de19ad330c660dd803c0da2025" prot="public" virt="non-virtual"><scope>transfer__StringPair</scope><name>soap</name></member>
+      <member refid="classtransfer____StringPair_1a7d34c028f43bcb89013da38ed91d2863" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>soap_default</name></member>
+      <member refid="classtransfer____StringPair_1a3db494369b625f9d05f739b78897d9f5" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>soap_get</name></member>
+      <member refid="classtransfer____StringPair_1a25af095ae8bad4a7d2ca38f546e21c22" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>soap_in</name></member>
+      <member refid="classtransfer____StringPair_1ae491675d9ba8508dc8c3faefba5fef9d" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>soap_out</name></member>
+      <member refid="classtransfer____StringPair_1ae019859f493b0fb229d35bbac12fb544" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>soap_put</name></member>
+      <member refid="classtransfer____StringPair_1a8deebc2de84a4e7b692e87580d37864e" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>soap_serialize</name></member>
+      <member refid="classtransfer____StringPair_1a9cd1e400332a0a45cec0229570dc36f7" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>soap_type</name></member>
+      <member refid="classtransfer____StringPair_1a007d23397bea7f93904fb80e81ab50a5" prot="public" virt="non-virtual"><scope>transfer__StringPair</scope><name>string1</name></member>
+      <member refid="classtransfer____StringPair_1a2aa408d34b32e657c4f5bbdddb862814" prot="public" virt="non-virtual"><scope>transfer__StringPair</scope><name>string2</name></member>
+      <member refid="classtransfer____StringPair_1a50cbb5b383a794223d6db53b9bcdd33b" prot="public" virt="non-virtual"><scope>transfer__StringPair</scope><name>transfer__StringPair</name></member>
+      <member refid="classtransfer____StringPair_1a7e68b6c7156f2dba1cd185289ff57437" prot="public" virt="virtual"><scope>transfer__StringPair</scope><name>~transfer__StringPair</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____listRequests" kind="struct" prot="public">
+    <compoundname>fts__listRequests</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____listRequests_1a3491df3334cd6ab0dc8be174560859dd" prot="public" static="no" mutable="no">
+        <type><ref refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring" kindref="compound">fts__ArrayOf_USCOREsoapenc_USCOREstring</ref> *</type>
+        <definition>fts__ArrayOf_USCOREsoapenc_USCOREstring* fts__listRequests::_inGivenStates</definition>
+        <argsstring></argsstring>
+        <name>_inGivenStates</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="732" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="732" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="79">
+        <label>fts__listRequests</label>
+        <link refid="structfts____listRequests"/>
+        <childnode refid="80" relation="usage">
+          <edgelabel>_inGivenStates</edgelabel>
+        </childnode>
+      </node>
+      <node id="80">
+        <label>fts__ArrayOf_USCOREsoapenc_USCOREstring</label>
+        <link refid="classfts____ArrayOf__USCOREsoapenc__USCOREstring"/>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="730" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="729" bodyend="733"/>
+    <listofallmembers>
+      <member refid="structfts____listRequests_1a3491df3334cd6ab0dc8be174560859dd" prot="public" virt="non-virtual"><scope>fts__listRequests</scope><name>_inGivenStates</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

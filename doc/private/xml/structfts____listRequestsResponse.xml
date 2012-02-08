@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____listRequestsResponse" kind="struct" prot="public">
+    <compoundname>fts__listRequestsResponse</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____listRequestsResponse_1a70bf4c12419e1121dec645c322e0468a" prot="public" static="no" mutable="no">
+        <type><ref refid="classfts____ArrayOf__USCOREtns3__USCOREJobStatus" kindref="compound">fts__ArrayOf_USCOREtns3_USCOREJobStatus</ref> *</type>
+        <definition>fts__ArrayOf_USCOREtns3_USCOREJobStatus * fts__listRequestsResponse::_listRequestsReturn</definition>
+        <argsstring></argsstring>
+        <name>_listRequestsReturn</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1016" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1016" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation response struct &quot;fts__listRequestsResponse&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__listRequests&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="88">
+        <label>fts__listRequestsResponse</label>
+        <link refid="structfts____listRequestsResponse"/>
+        <childnode refid="89" relation="usage">
+          <edgelabel>_listRequestsReturn</edgelabel>
+        </childnode>
+      </node>
+      <node id="89">
+        <label>fts__ArrayOf_USCOREtns3_USCOREJobStatus</label>
+        <link refid="classfts____ArrayOf__USCOREtns3__USCOREJobStatus"/>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1015" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1014" bodyend="1017"/>
+    <listofallmembers>
+      <member refid="structfts____listRequestsResponse_1a70bf4c12419e1121dec645c322e0468a" prot="public" virt="non-virtual"><scope>fts__listRequestsResponse</scope><name>_listRequestsReturn</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

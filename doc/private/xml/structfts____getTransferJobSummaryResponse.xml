@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structfts____getTransferJobSummaryResponse" kind="struct" prot="public">
+    <compoundname>fts__getTransferJobSummaryResponse</compoundname>
+    <includes refid="fts3-transfer-submit_8h" local="no">fts3-transfer-submit.h</includes>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structfts____getTransferJobSummaryResponse_1acad860e381fa91fd042835b543b0fb4a" prot="public" static="no" mutable="no">
+        <type><ref refid="classtransfer____TransferJobSummary" kindref="compound">transfer__TransferJobSummary</ref> *</type>
+        <definition>transfer__TransferJobSummary * fts__getTransferJobSummaryResponse::_getTransferJobSummaryReturn</definition>
+        <argsstring></argsstring>
+        <name>_getTransferJobSummaryReturn</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1369" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1369" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+<para>Operation response struct &quot;fts__getTransferJobSummaryResponse&quot; of service binding &quot;FileTransferSoapBinding&quot; operation &quot;fts__getTransferJobSummary&quot;. </para>    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <collaborationgraph>
+      <node id="71">
+        <label>fts__getTransferJobSummaryResponse</label>
+        <link refid="structfts____getTransferJobSummaryResponse"/>
+        <childnode refid="72" relation="usage">
+          <edgelabel>_getTransferJobSummaryReturn</edgelabel>
+        </childnode>
+      </node>
+      <node id="72">
+        <label>transfer__TransferJobSummary</label>
+        <link refid="classtransfer____TransferJobSummary"/>
+        <childnode refid="73" relation="usage">
+          <edgelabel>jobStatus</edgelabel>
+        </childnode>
+      </node>
+      <node id="73">
+        <label>transfer__JobStatus</label>
+        <link refid="classtransfer____JobStatus"/>
+      </node>
+    </collaborationgraph>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" line="1368" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/fts3-transfer-submit.h" bodystart="1367" bodyend="1370"/>
+    <listofallmembers>
+      <member refid="structfts____getTransferJobSummaryResponse_1acad860e381fa91fd042835b543b0fb4a" prot="public" virt="non-virtual"><scope>fts__getTransferJobSummaryResponse</scope><name>_getTransferJobSummaryReturn</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>

@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.7.3">
+  <compounddef id="structSOAP__ENV____Reason" kind="struct" prot="public">
+    <compoundname>SOAP_ENV__Reason</compoundname>
+      <sectiondef kind="public-attrib">
+      <memberdef kind="variable" id="structSOAP__ENV____Reason_1a4e7a5850ce6987bf6d15bf9fea780ecd" prot="public" static="no" mutable="no">
+        <type>char *</type>
+        <definition>char* SOAP_ENV__Reason::SOAP_ENV__Text</definition>
+        <argsstring></argsstring>
+        <name>SOAP_ENV__Text</name>
+        <briefdescription>
+        </briefdescription>
+        <detaileddescription>
+        </detaileddescription>
+        <inbodydescription>
+        </inbodydescription>
+        <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="1142" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="1142" bodyend="-1"/>
+      </memberdef>
+      </sectiondef>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+    </detaileddescription>
+    <location file="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" line="1140" bodyfile="/media/d1/home/molnarzs/workspace/fts3/src/CLI/ftsStub.h" bodystart="1139" bodyend="1143"/>
+    <listofallmembers>
+      <member refid="structSOAP__ENV____Reason_1a4e7a5850ce6987bf6d15bf9fea780ecd" prot="public" virt="non-virtual"><scope>SOAP_ENV__Reason</scope><name>SOAP_ENV__Text</name></member>
+    </listofallmembers>
+  </compounddef>
+</doxygen>
