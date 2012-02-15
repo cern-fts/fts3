@@ -1,0 +1,110 @@
+/********************************************//**
+ * Copyright @ Members of the EMI Collaboration, 2010.
+ * See www.eu-emi.eu for details on the copyright holders.
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
+ * limitations under the License.
+ ***********************************************/
+
+/**
+ * @file TransferJobSummary.h
+ * @brief transfer job summary object model
+ * @author Michail Salichos
+ * @date 09/02/2012
+ * 
+ **/
+
+
+#pragma once
+
+#include <iostream>
+#include <vector>
+#include "JobStatus.h"
+
+class TransferJobSummary{
+
+public:
+	TransferJobSummary(){}
+	~TransferJobSummary(){}	
+
+    int numReady;
+    int numFinishing;
+    int numAwaitingPrestage;
+    int numPrestaging;
+    int numWaitingCatalogRegistration;
+    int numWaitingCatalogResolution;
+    int numWaitingPrestage;	
+	/**
+	 * String containing the current state of the job.
+	 */
+    JobStatus* jobStatus;
+
+    /**
+     * Number of files belonging to the job that are currently in the 'Done' state.
+     */
+    int numDone;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Active' state.
+     */    
+    int numActive;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Pending' state.
+     */    
+    int numPending;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Canceled' state.
+     */    
+    int numCanceled;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Canceling' state.
+     */    
+    int numCanceling;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Failed' state.
+     */    
+    int numFailed;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Finished' state.
+     */    
+    int numFinished;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Submitted' state.
+     */    
+    int numSubmitted;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Hold' state.
+     */    
+    int numHold;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Waiting' state.
+     */    
+    int numWaiting;
+    
+    /**
+     * Number of files belonging to the job that are currently in the 'Done' state.
+     */    
+    int numCatalogFailed;
+
+    /**
+     * Indicates how many files belonging to the job have had to be retried (numRetries > 0).
+     */
+    int numRestarted;
+};
