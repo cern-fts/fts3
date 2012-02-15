@@ -21,10 +21,10 @@
 DBLIBNAME=libfts3_db_oracle.so
 
 #DB username
-DBUSERNAME=msalicho
+DBUSERNAME=
 
 #DB password
-DBPASSWORD=Msal1973
+DBPASSWORD=
 
 #DB connection string
 DBCONNSTRING=oradev10.cern.ch:10520/D10
