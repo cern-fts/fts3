@@ -17,18 +17,21 @@
 cmake_minimum_required(VERSION 2.6)
 project(FTS3)
 
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
+
+set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
+
 ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
-add_subdirectory(test)
-add_subdirectory(src)
-
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
-set(CMAKE_BUILD_TYPE Debug)
-set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    MESSAGE ("Building with Debug settings...")
+    find_package(CppUnit)
+    add_definitions (-DFTS3_COMPILE_WITH_UNITTEST)
+ENDIF ()
 
 find_package(OCCI)
 find_package(Boost)
 find_package(Log4CPP)
-find_package(CppUnit)
 
+add_subdirectory(test)
+add_subdirectory(src)
