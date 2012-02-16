@@ -40,7 +40,7 @@ function usage
 
 # Ubuntu machine
 function ubuntu_install_tools {
-	apt-get install subversion-tools doxygen davfs2
+	apt-get install subversion-tools doxygen davfs2 libcppunit-dev
 }
 
 function ubuntu_setup_tools {
