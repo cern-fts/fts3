@@ -26,5 +26,3 @@ add_executable (fts3_unittest ${sources})
 
 target_link_libraries(fts3_unittest ${CPPUNIT_LIBRARY} )
 
-MESSAGE( STATUS "CPPUNIT_LIBRARY: " ${CPPUNIT_LIBRARY} )
-MESSAGE( STATUS "CPPUNIT_INCLUDE_DIR: " ${CPPUNIT_INCLUDE_DIR} )

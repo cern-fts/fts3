@@ -8,8 +8,9 @@ add_subdirectory(db)
 add_subdirectory(server)
 add_subdirectory(ws-ifce)
 add_subdirectory(cli)
+add_subdirectory(config)
 
-if(UNIT_ON)
+if(FTS3_COMPILE_WITH_UNITTEST)
 	add_subdirectory(unittest)
 endif()
 

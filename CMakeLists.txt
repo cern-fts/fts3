@@ -29,7 +29,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE ("Building with Debug settings...")
     find_package(CppUnit)
     add_definitions (-DFTS3_COMPILE_WITH_UNITTEST)
-    OPTION(UNIT_ON "Build with unit test" ON)
+    OPTION(FTS3_COMPILE_WITH_UNITTEST "Build with unit test" ON)
 ENDIF ()
 
 
