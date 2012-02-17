@@ -5,7 +5,6 @@ include_directories (../../common)
 include_directories(BEFORE ${LOG4CPP_INCLUDE_DIR})
 
 
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts3_db_generic_SOURCES SingleDbInstance.cpp DynamicLibraryManager.cpp DynamicLibraryManagerException.cpp)
 

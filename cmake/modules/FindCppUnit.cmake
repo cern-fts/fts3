@@ -31,7 +31,7 @@ find_library(CPPUNIT_LIBRARY
 	ENV LD_LIBRARY_PATH
 	"~/usr/lib"
 	"/usr/local/lib"
-	"/usr/lib"
+	"/usr/lib64"
 )
 
 # locate header files
