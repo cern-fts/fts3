@@ -20,6 +20,7 @@ project(FTS3)
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
 link_directories (${PROJECT_BINARY_DIR}/src/common) 
+link_directories (${PROJECT_BINARY_DIR}/src/config) 
 
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 

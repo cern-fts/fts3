@@ -1,0 +1,12 @@
+@startuml thread_design.png
+title Thread design for FTS 3\n\n
+
+abstract class ThreadTraits << Strategy >>
+class BoostThreadTraits ..|> ThreadTraits
+
+class MonitorObject << Monitor >> ..> ThreadTraits
+
+
+
+@enduml
+
