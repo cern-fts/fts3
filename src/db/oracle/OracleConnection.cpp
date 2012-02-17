@@ -7,7 +7,7 @@ OracleConnection::OracleConnection(std::string username, std::string password, s
         env = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::THREADED_MUTEXED);
         if (env) {
             conn = env->createConnection(username, password, connectString);
-	    conn->setStmtCacheSize(100);
+	    conn->setStmtCacheSize(500);
         }
     } catch (oracle::occi::SQLException const &e) {
         Logger::instance().error(e.what());        
@@ -35,10 +35,10 @@ oracle::occi::ResultSet* OracleConnection::createResultset(oracle::occi::Stateme
   
 }
 
-oracle::occi::Statement* OracleConnection::createStatement(std::string sql) {
+oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std::string tag) {
     
         if (conn)
-            s = conn->createStatement(sql);
+            s = conn->createStatement(sql, tag);
         else
             s = NULL;
     
@@ -51,9 +51,9 @@ void OracleConnection::destroyResultset(oracle::occi::Statement* s, oracle::occi
   
 }
 
-void OracleConnection::destroyStatement(oracle::occi::Statement* s) {
+void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string tag) {
    
-        conn->terminateStatement(s);
+        conn->terminateStatement(s, tag);
    
 }
 

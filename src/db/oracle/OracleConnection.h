@@ -61,7 +61,7 @@ public:
 /**
  * OracleConnection create a statement
  **/    
-    oracle::occi::Statement* createStatement(std::string sql);
+    oracle::occi::Statement* createStatement(std::string sql, std::string tag);
 
 /**
  * OracleConnection destroy a resultset
@@ -71,7 +71,7 @@ public:
 /**
  * OracleConnection destroy a statement
  **/        
-    void destroyStatement(oracle::occi::Statement* s);
+    void destroyStatement(oracle::occi::Statement* s, std::string tag);
     
 /**
  * OracleConnection commit row in the database

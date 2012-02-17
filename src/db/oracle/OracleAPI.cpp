@@ -42,7 +42,8 @@ JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
 
     std::string query = "SELECT job_id, job_state, se_pair_name, user_dn, reason, submit_time, priority, vo_name, "
             "(SELECT count(*) from t_file where t_file.job_id = t_job.job_id) "
-            "FROM t_job WHERE job_id = '" + requestID + "'";
+            "FROM t_job WHERE job_id = :1";
+    std::string tag = "getTransferJobStatus";	    
 
     JobStatus* js = NULL;
     try {
@@ -50,7 +51,8 @@ JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
 	js->priority = 0;
 	js->numFiles = 0;	
 	js->submitTime = (std::time_t)-1;	
-        oracle::occi::Statement* s = conn->createStatement(query);
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+	s->setString(1, requestID);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             js->jobID = r->getString(1);
@@ -64,7 +66,7 @@ JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
 	    js->numFiles = r->getInt(9);	    	    	    	    	    	    	    	    	                
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s);        
+        conn->destroyStatement(s, tag);        
     } catch (oracle::occi::SQLException const &e) {
         Logger::instance().error(e.what());
 	if(js)
@@ -224,17 +226,18 @@ void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int
 
 std::vector<std::string> OracleAPI::getSiteGroupNames() {
     std::string query = "SELECT distinct group_name FROM t_site_group";
+    std::string tag = "getSiteGroupNames";
     std::vector<std::string> groups;
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query);
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             std::string groupName = r->getString(1);
             groups.push_back(groupName);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s);
+        conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
         Logger::instance().error(e.what());
 	throw std::string(e.what());
@@ -243,18 +246,20 @@ std::vector<std::string> OracleAPI::getSiteGroupNames() {
 }
 
 std::vector<std::string> OracleAPI::getSiteGroupMembers(std::string GroupName) {
-    std::string query = "SELECT site_Name FROM t_site_group where group_Name = '" + GroupName + "' ";
+    std::string query = "SELECT site_Name FROM t_site_group where group_Name = :1";
+    std::string tag = "getSiteGroupMembers";
     std::vector<std::string> groups;
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query);
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+	s->setString(1, GroupName);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             std::string groupName = r->getString(1);
             groups.push_back(groupName);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s);        
+        conn->destroyStatement(s, tag);        
     } catch (oracle::occi::SQLException const &e) {
         Logger::instance().error(e.what());
 	throw std::string(e.what());
@@ -263,13 +268,16 @@ std::vector<std::string> OracleAPI::getSiteGroupMembers(std::string GroupName) {
 }
 
 void OracleAPI::removeGroupMember(std::string groupName, std::string siteName) {
-    std::string query = "DELETE FROM t_site_group WHERE group_Name = '" + groupName + "' AND site_Name = '" + siteName + "'";
+    std::string query = "DELETE FROM t_site_group WHERE group_Name = :1 AND site_Name = :2";
+    std::string tag = "removeGroupMember";
     try {
-        oracle::occi::Statement* s = conn->createStatement(query);
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+	s->setString(1,groupName);
+	s->setString(2,siteName);		
         oracle::occi::ResultSet* r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s);
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -280,13 +288,16 @@ void OracleAPI::removeGroupMember(std::string groupName, std::string siteName) {
 
 void OracleAPI::addGroupMember(std::string groupName, std::string siteName) {
 
-    std::string query = "INSERT INTO t_site_group (group_Name, site_Name) VALUES ('" + groupName + "','" + siteName + "')";
+    std::string query = "INSERT INTO t_site_group (group_Name, site_Name) VALUES (:1,:2)";
+    std::string tag = "addGroupMember";
     try {
-        oracle::occi::Statement* s = conn->createStatement(query);
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+	s->setString(1,groupName);
+	s->setString(2,siteName);	
         oracle::occi::ResultSet* r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s);
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
