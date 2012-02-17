@@ -34,14 +34,19 @@ FTS3_COMMON_NAMESPACE_START
  * constructs provided by this class. Only those methods must be protected that
  * need synchronization. The best practice if the protection covers the entire 
  * method body like the example:
- * 
- * int MyClass::mySynchronizedMethod ()
- * {
- * FTS3_COMMON_MONITOR_START_CRITICAL
- *     // Do something
- *     return 0;
- * FTS3_COMMON_MONITOR_END_CRITICAL
- * }
+ *
+ * \code
+ *
+ * class MyClass : public Common::MonitorObject {
+ *     int mySynchronizedMethod ()
+ *     {
+ *         FTS3_COMMON_MONITOR_START_CRITICAL
+ *         // Do something
+ *         return 0;
+ *         FTS3_COMMON_MONITOR_END_CRITICAL
+ *     }
+ * };
+ * \endcode
  *
  * Monitor pattern: http://en.wikipedia.org/wiki/Monitor_(synchronization)
  */

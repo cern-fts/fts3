@@ -30,7 +30,7 @@ struct MonitorObject_Test : public MonitorObject {};
 
 /* -------------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_SUITE (s, MonitorObject_Test)
+BOOST_FIXTURE_TEST_SUITE (MonitorObject_TestSuite, MonitorObject_Test)
 
 BOOST_AUTO_TEST_CASE (test)
 {
