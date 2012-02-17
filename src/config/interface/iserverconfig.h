@@ -18,11 +18,11 @@ limitations under the License. */
 
 /** \file iserverconfig.h Interface for accessing server configuration data. */
 
-#include "common/dev.h"
+#include "config_dev.h"
 
 #include <boost/lexical_cast.hpp>
 
-FTS3_START_NAMESPACE
+FTS3_CONFIG_NAMESPACE_START
 
 /* ========================================================================== */
 
@@ -63,11 +63,27 @@ IServerConfig& theServerConfig();
 
 /* ========================================================================== */
 
-FTS3_END_NAMESPACE
-
 #ifdef FTS3_COMPILE_WITH_UNITTESTS
 
+#define TEST_NAMES (test)
+
+class IServerConfigTest : 
+    public CPPUNIT_NS::TestFixture, 
+    public IServerConfig
+{
+    CPPUNIT_TEST_SUITE (IServerConfigTest);
+    BOOST_PP_SEQ_FOR_EACH(TESTBASE_TESTDEF, ~, TEST_NAMES);
+    CPPUNIT_TEST_SUITE_END ();
+
+protected:
+    BOOST_PP_SEQ_FOR_EACH(TESTBASE_METHODEF, ~, TEST_NAMES)
+};
+
+#undef TEST_NAMES
+
 #endif // FTS3_COMPILE_WITH_UNITTESTS
+
+FTS3_CONFIG_NAMESPACE_END
 
 #endif // FTS3_CONFIG_INTERFACE_SERVERCONFIG_H
 
