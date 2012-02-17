@@ -56,7 +56,7 @@ public:
             std::string delegationID, std::string spaceToken, std::string overwrite, std::string sourceSpaceToken,
             std::string sourceSpaceTokenDescription,
             int copyPingLifeTime, std::string failNearLine,
-            std::vector<std::string> checksum, std::string checksumMode) = 0;
+            std::string checksum, std::string checksumMode) = 0;
 
 /**
  * Submit a transfer request to be stored in the database

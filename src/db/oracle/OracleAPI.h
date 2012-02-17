@@ -40,7 +40,7 @@ public:
             std::string delegationID, std::string spaceToken, std::string overwrite, std::string sourceSpaceToken,
             std::string sourceSpaceTokenDescription,
              int copyPingLifeTime, std::string failNearLine,
-            std::vector<std::string> checksum, std::string checksumMode);
+             std::string checksum, std::string checksumMode);
 
     virtual std::vector<JobStatus> listRequests(std::vector<std::string> inGivenStates, std::string channelName, std::string restrictToClientDN, std::string forDN, std::string VOname);
 

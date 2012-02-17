@@ -20,8 +20,7 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 void OracleAPI::submitPhysical(std::string jobId, std::map<std::string, std::string> src_dest_pair, std::string paramFTP, std::string DN, std::string cred, std::string voName,
             std::string delegationID, std::string spaceToken, std::string overwrite, std::string sourceSpaceToken,
             std::string sourceSpaceTokenDescription,
-             int copyPingLifeTime, std::string failNearLine,
-            std::vector<std::string> checksum, std::string checksumMode) {
+             int copyPingLifeTime, std::string failNearLine, std::string checksum, std::string checksumMode) {
 
    std::string tag_job_statement = "tag_job_statement";	    
    std::string tag_file_statement = "tag_file_statement";	       
