@@ -36,7 +36,7 @@ public:
     
     virtual void init(std::string username, std::string password, std::string connectString);    
 
-    virtual std::string submitPhysical(std::string jobId, std::map<std::string, std::string> src_dest_pair, std::string paramFTP, std::string DN, std::string cred, std::string voName,
+    virtual void submitPhysical(std::string jobId, std::map<std::string, std::string> src_dest_pair, std::string paramFTP, std::string DN, std::string cred, std::string voName,
             std::string delegationID, std::string spaceToken, std::string overwrite, std::string sourceSpaceToken,
             std::string sourceSpaceTokenDescription,
              int copyPingLifeTime, std::string failNearLine,

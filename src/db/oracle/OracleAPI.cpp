@@ -12,23 +12,41 @@ OracleAPI::~OracleAPI() {
 		delete conn;
 }
 
-
 void OracleAPI::init(std::string username, std::string password, std::string connectString){
-
 	if(!conn)
 		conn = new OracleConnection(username, password, connectString);
-
 }
 
-std::string OracleAPI::submitPhysical(std::string jobId, std::map<std::string, std::string> src_dest_pair, std::string paramFTP, std::string DN, std::string cred, std::string voName,
+void OracleAPI::submitPhysical(std::string jobId, std::map<std::string, std::string> src_dest_pair, std::string paramFTP, std::string DN, std::string cred, std::string voName,
             std::string delegationID, std::string spaceToken, std::string overwrite, std::string sourceSpaceToken,
             std::string sourceSpaceTokenDescription,
              int copyPingLifeTime, std::string failNearLine,
             std::vector<std::string> checksum, std::string checksumMode) {
+
+   std::string tag_job_statement = "tag_job_statement";	    
+   std::string tag_file_statement = "tag_file_statement";	       
+   std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, vo_name, submit_time, internal_job_params,submit_host, cred_id, myproxy_server, storage_class, overwrite_flag, source_token_description,copy_pin_lifetime, lan_connection, fail_nearline, checksum_method) VALUES (?,?,?,?,?,?,?, SYSTIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
+   std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (?,?,?,?,?)";
 	    
-	    /*
+    try {
+        std::map<std::string, std::string>::iterator iter;
+        oracle::occi::Statement* s_job_statement = conn->createStatement(job_statement, tag_job_statement);
+        oracle::occi::Statement* s_file_statement = conn->createStatement(file_statement, tag_file_statement);	
+	s_job_statement->executeUpdate();
+	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
+                std::string source = std::string(iter->first);
+		std::string destination = std::string(iter->second);
+   		s_file_statement->executeUpdate();
+        }
+        conn->commit();
+        conn->destroyStatement(s_job_statement, tag_job_statement);
+        conn->destroyStatement(s_file_statement, tag_file_statement);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        Logger::instance().error(e.what());	
+	throw std::string(e.what());
+    }	    
 	    
-	    */
 }
 
 std::vector<JobStatus> OracleAPI::listRequests(std::vector<std::string> inGivenStates,
