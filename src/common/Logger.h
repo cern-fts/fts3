@@ -63,7 +63,7 @@ public:
 private:
 	Logger();  // Private so that it can  not be called
 	Logger(Logger const&){};             // copy constructor is private
-	Logger& operator=(Logger const&){};  // assignment operator is private
+	Logger& operator=(Logger const&);  // assignment operator is private
 	
 	log4cpp::Appender *appender;
 	log4cpp::Layout *layout;

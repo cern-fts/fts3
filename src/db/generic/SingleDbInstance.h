@@ -48,6 +48,8 @@
 
 #pragma once
 
+
+
 #include <pthread.h>
 #include <iostream>
 #include <boost/scoped_ptr.hpp>
@@ -55,7 +57,8 @@
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 
-
+using namespace std;
+namespace db{
 /**
  * DBSingleton class declaration
  **/ 
@@ -90,8 +93,8 @@ private:
     DBSingleton(DBSingleton const&) {
     }; // copy constructor is private
 
-    DBSingleton & operator=(DBSingleton const&) {
-    }; // assignment operator is private
+    DBSingleton & operator=(DBSingleton const&);
+    // assignment operator is private
     static boost::scoped_ptr<DBSingleton> i;
     static Mutex m;
 
@@ -103,4 +106,4 @@ private:
     std::string libraryFileName;
 };
 
-
+}

@@ -50,7 +50,7 @@ ReadConfigFile::ReadConfigFile() {
         getline(in, line);
         line = strip_space(line);
         if (line.length() && line[0] != '#') {
-            int pos = line.find("=");
+            size_t pos = line.find("=");
             if (pos != string::npos) {
                 string key = strip_space(line.substr(0, pos));
                 string value = strip_space(line.substr(pos + 1));

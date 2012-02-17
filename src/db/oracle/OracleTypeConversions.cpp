@@ -43,6 +43,7 @@ time_t OracleTypeConversions::toTimeT(const ::oracle::occi::Timestamp& timestamp
                 t -= timezone;             
             }            
         }
+	return t;	
 }
 
 oracle::occi::Timestamp OracleTypeConversions::toTimestamp(time_t t, oracle::occi::Environment* m_env){

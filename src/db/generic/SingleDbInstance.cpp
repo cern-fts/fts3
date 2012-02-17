@@ -1,8 +1,9 @@
 #include "SingleDbInstance.h"
-#include <iostream>
 #include <fstream>
 #include "Logger.h"
 #include "ReadConfigFile.h"
+
+namespace db{
 
 boost::scoped_ptr<DBSingleton> DBSingleton::i;
 Mutex DBSingleton::m;
@@ -44,4 +45,4 @@ DBSingleton::~DBSingleton() {
     if (dlm)
         delete dlm;
 }
-
+}

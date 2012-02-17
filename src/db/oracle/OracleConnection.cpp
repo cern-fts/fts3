@@ -1,7 +1,7 @@
 #include "OracleConnection.h"
 #include "Logger.h"
 
-OracleConnection::OracleConnection(std::string username, std::string password, std::string connectString) : conn(NULL), env(NULL) {
+OracleConnection::OracleConnection(std::string username, std::string password, std::string connectString) {
 
     try {
         env = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::THREADED_MUTEXED);
@@ -10,7 +10,8 @@ OracleConnection::OracleConnection(std::string username, std::string password, s
 	    conn->setStmtCacheSize(500);
         }
     } catch (oracle::occi::SQLException const &e) {
-        Logger::instance().error(e.what());        
+        Logger::instance().error(e.what());  
+	throw std::string(e.what());      
     }
 }
 
@@ -22,6 +23,7 @@ OracleConnection::~OracleConnection() {
             oracle::occi::Environment::terminateEnvironment(env);
     } catch (oracle::occi::SQLException const &e) {
         Logger::instance().error(e.what());
+	throw std::string(e.what());
     }
 
 }
@@ -41,7 +43,7 @@ oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std:
             s = conn->createStatement(sql, tag);
         else
             s = NULL;
-    
+	return s;	    
 }
 
 void OracleConnection::destroyResultset(oracle::occi::Statement* s, oracle::occi::ResultSet* r) {

@@ -22,16 +22,28 @@ void OracleAPI::submitPhysical(std::string jobId, std::map<std::string, std::str
             std::string sourceSpaceTokenDescription,
              int copyPingLifeTime, std::string failNearLine, std::string checksum, std::string checksumMode) {
 
+/*
+	Required fields
+	JOB_ID 				   NOT NULL CHAR(36)
+	JOB_STATE			   NOT NULL VARCHAR2(32)
+	USER_DN				   NOT NULL VARCHAR2(1024)
+*/
+
    std::string tag_job_statement = "tag_job_statement";	    
    std::string tag_file_statement = "tag_file_statement";	       
    std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, vo_name, submit_time, internal_job_params,submit_host, cred_id, myproxy_server, storage_class, overwrite_flag, source_token_description,copy_pin_lifetime, lan_connection, fail_nearline, checksum_method) VALUES (?,?,?,?,?,?,?, SYSTIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)";
    std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (?,?,?,?,?)";
 	    
     try {
-        std::map<std::string, std::string>::iterator iter;
+    	//insert job first
         oracle::occi::Statement* s_job_statement = conn->createStatement(job_statement, tag_job_statement);
-        oracle::occi::Statement* s_file_statement = conn->createStatement(file_statement, tag_file_statement);	
+	
 	s_job_statement->executeUpdate();
+	
+	//now insert each src/dest pair for this job id
+        std::map<std::string, std::string>::iterator iter;
+        oracle::occi::Statement* s_file_statement = conn->createStatement(file_statement, tag_file_statement);	
+
 	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
                 std::string source = std::string(iter->first);
 		std::string destination = std::string(iter->second);
@@ -50,9 +62,13 @@ void OracleAPI::submitPhysical(std::string jobId, std::map<std::string, std::str
 
 std::vector<JobStatus> OracleAPI::listRequests(std::vector<std::string> inGivenStates,
         std::string channelName, std::string restrictToClientDN, std::string forDN, std::string VOname) {
+	std::vector<JobStatus> test;
+	return test;
 }
 
 std::vector<FileTransferStatus> OracleAPI::getFileStatus(std::string requestID, int offset, int limit) {
+	std::vector<FileTransferStatus> test;
+	return test;
 }
 
 JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
@@ -94,9 +110,11 @@ JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
 }
 
 TransferJobSummary* OracleAPI::getTransferJobSummary(std::string requestID) {
+	return new TransferJobSummary;
 }
 
 SePair* OracleAPI::getSEPairName(std::string sePairName) {
+	return new SePair;
 }
 
 void OracleAPI::cancel(std::vector<std::string> requestIDs) {
@@ -116,6 +134,8 @@ void OracleAPI::setState(std::string channelName, std::string state, std::string
 }
 
 std::vector<std::string> OracleAPI::listChannels() {
+	std::vector<std::string> test;
+	return test;
 }
 
 void OracleAPI::setNumberOfStreams(std::string channelName, int numberOfStreams, std::string message) {
@@ -146,9 +166,13 @@ void OracleAPI::removeChannelManager(std::string channelName, std::string princi
 }
 
 std::vector<std::string> OracleAPI::listChannelManagers(std::string channelName) {
+	std::vector<std::string> test;
+	return test;
 }
 
 std::map<std::string, std::string> OracleAPI::getChannelManager(std::string channelName, std::vector<std::string> principals) {
+	std::map<std::string, std::string> test;
+	return test;
 }
 
 void OracleAPI::addVOManager(std::string VOName, std::string principal) {
@@ -158,12 +182,18 @@ void OracleAPI::removeVOManager(std::string VOName, std::string principal) {
 }
 
 std::vector<std::string> OracleAPI::listVOManagers(std::string VOName) {
+	std::vector<std::string> test;
+	return test;
+
 }
 
 std::map<std::string, std::string> OracleAPI::getVOManager(std::string VOName, std::vector<std::string> principals) {
+	std::map<std::string, std::string> test;
+	return test;
 }
 
 bool OracleAPI::isRequestManager(std::string requestID, std::string clientDN, std::vector<std::string> principals, bool includeOwner) {
+	return true;
 }
 
 void OracleAPI::removeVOShare(std::string channelName, std::string VOName) {
@@ -173,9 +203,11 @@ void OracleAPI::setVOShare(std::string channelName, std::string VOName, int shar
 }
 
 bool OracleAPI::isAgentAvailable(std::string name, std::string type) {
+	return true;
 }
 
 std::string OracleAPI::getSchemaVersion() {
+	return std::string("");
 }
 
 void OracleAPI::setTcpBufferSize(std::string channelName, std::string bufferSize, std::string message) {
@@ -331,6 +363,7 @@ void OracleAPI::addSe( std::string ENDPOINT, std::string SE_TYPE, std::string SI
 
 Se* OracleAPI::getSeInfo(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
     std::string  SE_TRANSFER_TYPE, std::string   SE_TRANSFER_PROTOCOL, std::string   SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
+	return new Se;
 }
 
 void OracleAPI::updateSe( std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,

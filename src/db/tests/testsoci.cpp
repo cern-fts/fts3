@@ -5,6 +5,8 @@
 #include <vector>
 #include "ReadConfigFile.h"
 
+using namespace db;
+
 int main()
 {
 try{
