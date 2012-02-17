@@ -15,26 +15,7 @@ limitations under the License. */
 
 /** \file testsuite.cpp FTS3 test suite runner. */
 
-#include "common/dev.h"
-#include "cppunit_wrapper.h"
+#include "testsuite.h"
 
-int main ()
-{
-    CPPUNIT_NS::TestResult testresult;
-    CPPUNIT_NS::TestResultCollector collectedresults;
-    testresult.addListener (&collectedresults);
-    CPPUNIT_NS::BriefTestProgressListener progress;
-    testresult.addListener (&progress);
-    CPPUNIT_NS::TestRunner testrunner;
-    
-    testrunner.addTest
-    (
-        CPPUNIT_NS::TestFactoryRegistry::getRegistry().makeTest ()
-    );
-    
-    testrunner.run(testresult);
-    CPPUNIT_NS::CompilerOutputter compileroutputter (&collectedresults, std::cerr);
-    compileroutputter.write();
+/** Yes, it quite empty... BOOST magic! */
 
-    return collectedresults.wasSuccessful() ? 0 : 1;
-}

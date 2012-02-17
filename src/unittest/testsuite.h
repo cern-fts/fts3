@@ -13,9 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and 
 limitations under the License. */
 
-/** \file testsuite.h FTS3 unit test suite interface. Include thsi file
+/** \file testsuite.h FTS3 unit test suite interface. Include this file
  * in each component test suites. */
 
+#pragma once
+
 #include "common/dev.h"
-#include "cppunit_wrapper.h"
+
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE FTS3_APPLICATION_LABEL
+#include <boost/test/unit_test.hpp>
 

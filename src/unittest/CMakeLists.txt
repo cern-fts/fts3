@@ -24,5 +24,6 @@ include_directories (${fts3_include_dir})
 
 add_executable (fts3_unittest ${sources})
 
-target_link_libraries(fts3_unittest ${CPPUNIT_LIBRARY} )
+#target_link_libraries(fts3_unittest ${CPPUNIT_LIBRARY} )
+target_link_libraries(fts3_unittest  -lboost_unit_test_framework)
 

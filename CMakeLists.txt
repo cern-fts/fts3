@@ -27,7 +27,6 @@ ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE ("Building with Debug settings...")
-    find_package(CppUnit)
     add_definitions (-DFTS3_COMPILE_WITH_UNITTEST)
     OPTION(FTS3_COMPILE_WITH_UNITTEST "Build with unit test" ON)
 ENDIF ()
@@ -35,7 +34,6 @@ ENDIF ()
 
 find_package(OCCI)
 find_package(Boost)
-find_package(Log4CPP)
 
 add_subdirectory(test)
 add_subdirectory(src)
