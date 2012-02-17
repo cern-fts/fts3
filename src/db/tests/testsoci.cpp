@@ -3,7 +3,6 @@
 #include <string>
 #include <exception>
 #include <vector>
-#include "GenericDbIfce.h"
 #include "ReadConfigFile.h"
 
 int main()

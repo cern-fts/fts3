@@ -4,7 +4,7 @@
 #include "Logger.h"
 #include "OracleTypeConversions.h"
 
-OracleAPI::OracleAPI()  {
+OracleAPI::OracleAPI(): conn(NULL)  {
 }
 
 OracleAPI::~OracleAPI() {
@@ -14,7 +14,9 @@ OracleAPI::~OracleAPI() {
 
 
 void OracleAPI::init(std::string username, std::string password, std::string connectString){
-	conn = new OracleConnection(username, password, connectString);
+
+	if(!conn)
+		conn = new OracleConnection(username, password, connectString);
 
 }
 
