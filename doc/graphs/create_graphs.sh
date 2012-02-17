@@ -1,6 +1,6 @@
 #! /bin/bash
 
-ACTUAL_IMAGE=thread_design.txt
+ACTUAL_IMAGE=synchronization_framework.txt
 
 IMAGES="$ACTUAL_IMAGE"
 
