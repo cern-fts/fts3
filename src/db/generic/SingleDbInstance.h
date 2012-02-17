@@ -33,10 +33,17 @@
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 
+
+/**
+ * DBSingleton class declaration
+ **/ 
 class DBSingleton {
 public:
     ~DBSingleton();
 
+/**
+ * DBSingleton thread-safe upon init singleton
+ **/ 
     static DBSingleton & instance() {
         if (i.get() == 0) {
             MutexLocker obtain_lock(m);
@@ -47,7 +54,9 @@ public:
         return *i;
     }
 
-    /*used by the client to obtain access to the backend instance*/
+/**
+ * used by the client to obtain access to the backend instance
+ **/ 
     GenericDbIfce* getDBObjectInstance() {
         return dbBackend;
     }

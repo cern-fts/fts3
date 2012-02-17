@@ -28,24 +28,64 @@
 #include <iostream>
 #include <occi.h>
 
+/**
+ * OracleConnection class declaration
+ **/
+
 class OracleConnection {
 public:
 
+/**
+ * OracleConnection class ctr with parameters
+ **/
+
     OracleConnection(std::string username, std::string password, std::string connectString);
 
+/**
+ * OracleConnection class ctr
+ **/
     OracleConnection() {
     }
+    
+/**
+ * OracleConnection class dctr
+ **/    
     ~OracleConnection();
 
+
+/**
+ * OracleConnection get resultset
+ **/
     oracle::occi::ResultSet* createResultset(oracle::occi::Statement* s);
+    
+/**
+ * OracleConnection create a statement
+ **/    
     oracle::occi::Statement* createStatement(std::string sql);
 
+/**
+ * OracleConnection destroy a resultset
+ **/    
     void destroyResultset(oracle::occi::Statement* s, oracle::occi::ResultSet* r);
+    
+/**
+ * OracleConnection destroy a statement
+ **/        
     void destroyStatement(oracle::occi::Statement* s);
+    
+/**
+ * OracleConnection commit row in the database
+ **/        
     void commit();
+    
+/**
+ * OracleConnection rollback in case of an error
+ **/        
     void rollback();
     
-    
+/**
+ * OracleConnection return the environment used in oracle
+ **/        
     oracle::occi::Environment* getEnv(){
     	return env;
 	}

@@ -44,6 +44,9 @@ public:
   ~DynamicLibraryManager();
 
 
+/**
+ * Find symbol inside the dynamic loaded library
+ **/
   Symbol findSymbol( const std::string &symbol );
 
 private:

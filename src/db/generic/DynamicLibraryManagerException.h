@@ -30,8 +30,8 @@
 #include <stdexcept>
 #include <string>
 
-/*! \brief Exception thrown by DynamicLibraryManager when a failure occurs.
- *
+/* 
+ * Exception thrown by DynamicLibraryManager when a failure occurs.
  * Use getCause() to know what function caused the failure.
  *
  */
@@ -45,7 +45,9 @@ public:
         symbolNotFound
     };
 
-    /// Failed to load the dynamic library or Symbol not found in the dynamic library.
+    /*
+     * Failed to load the dynamic library or Symbol not found in the dynamic library.
+     */ 
     DynamicLibraryManagerException(const std::string &libraryName,
             const std::string &errorDetail,
             Cause cause);

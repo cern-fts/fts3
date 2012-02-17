@@ -4,7 +4,7 @@
 OracleConnection::OracleConnection(std::string username, std::string password, std::string connectString) : conn(NULL), env(NULL) {
 
     try {
-        env = oracle::occi::Environment::createEnvironment();
+        env = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::THREADED_MUTEXED);
         if (env) {
             conn = env->createConnection(username, password, connectString);
 	    conn->setStmtCacheSize(100);

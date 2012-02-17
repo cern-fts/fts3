@@ -23,6 +23,12 @@
  * 
  **/
 
+
+/*
+ * MySqlAPI
+ *
+ * This is just a placeholder, MySqlAPI will be implemented later
+ */
 #pragma once
 
 #include "GenericDbIfce.h"

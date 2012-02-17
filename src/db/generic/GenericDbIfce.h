@@ -36,17 +36,31 @@
 #include "TransferJobSummary.h"
 #include "Se.h"
 
+/**
+ * GenericDbIfce class declaration
+ **/
+ 
 class GenericDbIfce {
 public:
 
+/**
+ * Intialize database connection  by providing information from fts3config file
+ **/
+ 
     virtual void init(std::string username, std::string password, std::string connectString) = 0;
 
+/**
+ * Submit a transfer request to be stored in the database
+ **/ 
     virtual std::string submitPhysical(std::string jobId, std::map<std::string, std::string> src_dest_pair, std::string paramFTP, std::string DN, std::string cred, std::string voName,
             std::string delegationID, std::string spaceToken, std::string overwrite, std::string sourceSpaceToken,
             std::string sourceSpaceTokenDescription,
             int copyPingLifeTime, std::string failNearLine,
             std::vector<std::string> checksum, std::string checksumMode) = 0;
 
+/**
+ * Submit a transfer request to be stored in the database
+ **/
     virtual std::vector<JobStatus> listRequests(std::vector<std::string> inGivenStates, std::string channelName, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
 
     virtual std::vector<FileTransferStatus> getFileStatus(std::string requestID, int offset, int limit) = 0;
@@ -210,7 +224,9 @@ public:
 };
 
 
-// the types of the class factories
+/**
+ * The types of the database class factories
+ **/
 typedef GenericDbIfce* create_t();
 typedef void destroy_t(GenericDbIfce*);
 
