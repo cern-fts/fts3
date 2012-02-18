@@ -1,5 +1,4 @@
-@startuml synchronization_framework.png
-title Synchronization framework for FTS 3\n\n
+@startuml common_synchronization_framework.png
 
 package Boost {
 	class Thread

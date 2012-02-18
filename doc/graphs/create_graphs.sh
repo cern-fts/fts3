@@ -1,7 +1,7 @@
 #! /bin/bash
 
-ACTUAL_IMAGE=synchronization_framework.txt
+ACTUAL_IMAGE=common_logger.txt
 
-IMAGES="$ACTUAL_IMAGE"
+IMAGES="common_synchronization_framework.txt $ACTUAL_IMAGE"
 
 java -jar plantuml.jar $IMAGES

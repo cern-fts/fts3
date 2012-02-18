@@ -1,0 +1,15 @@
+@startuml common_logger.png
+
+abstract class LoggerTraits << Policy >>
+class LoggerTraits_Syslog --|> LoggerTraits
+
+class GenericLogger << (T,yellow) generic>>
+class Logger << (D,orange) typedef >>
+class LoggerBase
+GenericLogger --> LoggerTraits : <<bind>>
+GenericLogger --|> LoggerBase
+GenericLogger --|> MonitorObject
+Logger ..> GenericLogger : << bind LoggerTraits_Syslog >>
+Logger ..> LoggerTraits_Syslog : << bind to GenericLogger >>
+
+@enduml
