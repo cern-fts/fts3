@@ -16,15 +16,8 @@ limitations under the License. */
 /** \file testsuite.h FTS3 unit test suite interface. Include this file
  * in each component test suites. */
 
-//#pragma once
-
-#ifndef GUARD
-#define GUARD
-
-#include "common/dev.h"
+#pragma once
 
 #define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE FTS3_APPLICATION_LABEL
 #include <boost/test/unit_test.hpp>
 
-#endif

@@ -1,4 +1,3 @@
-
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
@@ -14,8 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and 
 limitations under the License. */
 
-#ifndef FTS3_COMMON_MONITOROBJECT_H
-#define FTS3_COMMON_MONITOROBJECT_H
+#pragma once
 
 /** \file monitorobject.h Interface of MonitorObject class. */
 
@@ -92,6 +90,4 @@ protected:
 #define FTS3_COMMON_MONITOR_END_CRITICAL }
 
 FTS3_COMMON_NAMESPACE_END
-
-#endif /* FTS3_COMMON_MONITOROBJECT_H */
 

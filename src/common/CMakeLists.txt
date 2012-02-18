@@ -20,9 +20,9 @@ set(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts3_include_dir})
 
 file(GLOB fts3_common_sources "*.cpp")
-
+#add_definitions(-E)
 add_library(fts3_common SHARED ${fts3_common_sources})
 target_link_libraries(fts3_common ${LOG4CPP_LIBRARIES} )
-target_link_libraries(fts3_common -lpthread )
+target_link_libraries(fts3_common -lboost_thread )
 
 
