@@ -1,0 +1,97 @@
+/* Copyright @ Members of the EMI Collaboration, 2010.
+See www.eu-emi.eu for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License"); 
+you may not use this file except in compliance with the License. 
+You may obtain a copy of the License at 
+
+    http://www.apache.org/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the License is distributed on an "AS IS" BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+See the License for the specific language governing permissions and 
+limitations under the License. */
+
+/** \file error.cpp Implmentation of FTS3 error handling component. */
+
+#include "error.h"
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+    #include "unittest/testsuite.h"
+    #include <boost/algorithm/string/find.hpp>
+#endif // FTS3_COMPILE_WITH_UNITTESTS
+
+FTS3_COMMON_NAMESPACE_START
+
+/* -------------------------------------------------------------------------- */
+
+template<>
+void Error<true>::_logSystemError()
+{
+    theLogger() << " (System reported: \"" << addErr << "\")";
+}
+
+/* -------------------------------------------------------------------------- */
+
+template<>
+const char* Error<false, Err::e_detailedReport>::what() const throw()
+{
+    return _description().c_str();
+}
+
+/* -------------------------------------------------------------------------- */
+
+void Err::log(const char* aFile, const char* aFunc, const int aLineNo)
+{
+    theLogger().newLog<Logger::type_traits::DEBUG>(aFile, aFunc, aLineNo) << _description();
+    _logSystemError();
+    theLogger() << commit;
+} 
+
+/* -------------------------------------------------------------------------- */
+
+const char* Err::what() const throw()
+{
+    return "Unknown error";
+}
+
+/* -------------------------------------------------------------------------- */
+
+std::string Err_System::_description() const
+{
+    return _userDesc;
+}
+
+/* -------------------------------------------------------------------------- */
+
+std::string Err_Custom::_description() const
+{
+    return _desc;
+}
+
+/* ========================================================================== */
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+
+bool Common__Error_Macros_chekMessage (const Err_Custom& ex)
+{
+    return true;
+}
+
+/* -------------------------------------------------------------------------- */
+
+BOOST_AUTO_TEST_CASE (Common__Error_Macros)
+{
+    BOOST_CHECK_EXCEPTION
+    (
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Error message")),
+        Err_Custom, 
+        Common__Error_Macros_chekMessage
+    );
+}
+
+#endif // FTS3_COMPILE_WITH_UNITTESTS
+
+FTS3_COMMON_NAMESPACE_END
+

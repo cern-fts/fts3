@@ -1,0 +1,15 @@
+@startuml common_error.png
+
+class Err 
+
+class Error << (T,yellow) generic>> {
+    bool SystemError << generic parameter >>
+    ErrorType <<generic parameter>>
+}
+
+Error --|> Err
+
+class Err_System ..> Error : <<bind SystemError(true), ErrorType(default)>>
+class Err_Custom ..> Error : <<bind SystemError(false), ErrorType(default)>>
+
+@enduml
