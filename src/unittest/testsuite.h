@@ -21,3 +21,10 @@ limitations under the License. */
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
+/** An always true predicate, for BOOST_CHECK_EXCEPTION */
+template <class T>
+bool fts3_unittest_always_true (const T&)
+{
+    return true;
+}
+

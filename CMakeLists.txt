@@ -22,7 +22,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 link_directories (${PROJECT_BINARY_DIR}/src/common) 
 link_directories (${PROJECT_BINARY_DIR}/src/config) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -g")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic")
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 
 ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
@@ -31,7 +31,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE ("Building with Debug settings...")
     add_definitions (-DFTS3_COMPILE_WITH_UNITTEST)
     OPTION(FTS3_COMPILE_WITH_UNITTEST "Build with unit test" ON)
-ENDIF ()
+endif ()
 
 find_package(OCCI)
 find_package(Boost)

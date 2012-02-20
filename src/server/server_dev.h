@@ -49,9 +49,9 @@ limitations under the License. */
     FTS3_NAMESPACE_END } 
 #endif
 
-#ifndef FTS3_SERVER_NAMESPACE_NAME
+#ifndef FTS3_SERVER_NAMESPACE
   /** Defines FTS3 server namespace name. */
-  #define FTS3_NAMESPACE_NAME fts3::server
+  #define FTS3_SERVER_NAMESPACE FTS3_NAMESPACE::server
 #endif
 
 #endif // FTS3_SERVER_DEV_H
