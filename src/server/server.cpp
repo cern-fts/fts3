@@ -15,13 +15,11 @@ limitations under the License. */
 
 /** \file server.cpp Implementation of FTS3 server logic. */
 
-//#include "statisticscollector.h"
 #include "common/error.h"
 //#include "ThreadPool.h"
 #include "config/serverconfig.h"
 //#include "dispatcher.h"
 //#include "CoralDataAcceptor.h"
-//#include "DebugController.h"
 #include "server.h"
 
 FTS3_SERVER_NAMESPACE_START
@@ -33,9 +31,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 void Server::start()
 {
 #if 0
-	unsigned int port = theEnvironment().get<unsigned int>("port");
-	const std::string& ip = theEnvironment().get<std::string>("ip");
-	DebugController::Instance().start();
 	typedef Dispatcher<CORALMESSAGING_NAMESPACE_NAME::Tcp::TcpSocketSelector> DispatcherType;
 	DispatcherType portDisp("for incoming TCP connections");
 	Pointer<ICoralIOHandler>::Shared dataChannel = CORALMESSAGING_NAMESPACE_NAME::Tcp::TcpSocketFactory::CreateListeningSocket(port, ip);
@@ -51,9 +46,7 @@ void Server::start()
 void Server::stop()
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS3 server stopping...";
-    //DebugController::Instance().stop();
     //ThreadPool::ThreadPool::instance().stop();
-    //CORALMESSAGING_NAMESPACE_NAME::StatisticsCollector::Instance().print();
     theLogger() << commit;
 }
 
