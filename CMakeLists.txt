@@ -22,7 +22,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 link_directories (${PROJECT_BINARY_DIR}/src/common) 
 link_directories (${PROJECT_BINARY_DIR}/src/config) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -g")
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 
 ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)

@@ -224,9 +224,4 @@ public:
 };
 
 
-/**
- * The types of the database class factories
- **/
-typedef GenericDbIfce* create_t();
-typedef void destroy_t(GenericDbIfce*);
 

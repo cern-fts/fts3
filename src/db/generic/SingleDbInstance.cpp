@@ -3,6 +3,10 @@
 #include "Logger.h"
 #include "ReadConfigFile.h"
 
+
+
+
+
 namespace db{
 
 boost::scoped_ptr<DBSingleton> DBSingleton::i;
@@ -26,9 +30,9 @@ DBSingleton::DBSingleton() {
 
         DynamicLibraryManager::Symbol symbolDestroy = dlm->findSymbol("destroy");
 
-        create_db = (create_t*) symbolInstatiate;
+        *(void**)( &create_db ) =  symbolInstatiate;
 
-        destroy_db = (destroy_t*) symbolDestroy;
+        *(void**)( &destroy_db ) = symbolDestroy;
 
         // create an instance of the DB class
         dbBackend = create_db();

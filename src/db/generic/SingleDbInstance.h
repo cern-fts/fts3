@@ -97,13 +97,16 @@ private:
     // assignment operator is private
     static boost::scoped_ptr<DBSingleton> i;
     static Mutex m;
-
-    GenericDbIfce* dbBackend;
-
-    create_t* create_db;
-    destroy_t* destroy_db;
     DynamicLibraryManager *dlm;
     std::string libraryFileName;
+    
+/**
+ * The types of the database class factories
+ **/
+    GenericDbIfce* dbBackend;
+    GenericDbIfce* (*create_db)();
+    void (*destroy_db)(void *);
+    
 };
 
 }
