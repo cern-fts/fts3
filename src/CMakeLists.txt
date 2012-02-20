@@ -19,7 +19,7 @@ set(CMAKE_BUILD_TYPE Debug)
 ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
 add_subdirectory(common)
-#add_subdirectory(db)
+add_subdirectory(db)
 add_subdirectory(ws-ifce)
 add_subdirectory(cli)
 add_subdirectory(config)
