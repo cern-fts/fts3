@@ -46,6 +46,8 @@ po::options_description ServerConfigReader::_defineGenericOptions()
 	generic.add_options()
 	    ("help,h", "Display this help page")
         ("version,v", "Display server version")
+        ("no-daemon,n", "Do not daemonize")
+
         (
             "configfile,c",  
             po::value<std::string>( &(_vars["configfile"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT),
@@ -341,6 +343,7 @@ struct TestServerConfigReader : public ServerConfigReader
         argv[0] = const_cast<char*> ("executable");
         testDesc.add_options()("help,h", "Description");
         testDesc.add_options()("version", "Description");
+        testDesc.add_options()("no-daemon,n", "Description");
         testDesc.add_options()("other", po::value<std::string>(), "Description");
         testDesc.add_options()("intpar", po::value<int>(), "Description");
     }
@@ -400,6 +403,24 @@ struct TestServerConfigReader : public ServerConfigReader
         _readCommandLineOptions<readCommandLineOptions_TestTraits>(argc, argv, testDesc);
         BOOST_CHECK ( ! readCommandLineOptions_TestTraits::exitCalled);
         BOOST_CHECK ( readCommandLineOptions_TestTraits::processVariablesCalled);
+    }
+
+    /* ---------------------------------------------------------------------- */
+    
+    /** This test checks the effect of nodaemon flags. */
+    void do_noDaemonSpecifiedTest()
+    {
+        _readCommandLineOptions<readCommandLineOptions_TestTraits>(argc, argv, testDesc);
+        BOOST_CHECK_EQUAL (_vars["no-daemon"], std::string("1"));
+    }
+
+    /* ---------------------------------------------------------------------- */
+    
+    /** This test checks the effect of nodaemon flags. */
+    void do_noDaemonNotSpecifiedTest()
+    {
+        _readCommandLineOptions<readCommandLineOptions_TestTraits>(argc, argv, testDesc);
+        BOOST_CHECK_EQUAL (_vars["no-daemon"], std::string("0"));
     }
 
 protected:
@@ -463,6 +484,42 @@ BOOST_FIXTURE_TEST_CASE
     setupParameters("--other=value");
     do_othersTest();
 } 
+
+/* ---------------------------------------------------------------------- */
+
+BOOST_FIXTURE_TEST_CASE 
+(
+    Config_ServerConfigReader_readCommandLineOptions_nodaemon_long, 
+    TestServerConfigReader
+)
+{
+    setupParameters ("--no-daemon" );
+    do_noDaemonSpecifiedTest();
+}
+
+/* ---------------------------------------------------------------------- */
+
+BOOST_FIXTURE_TEST_CASE 
+(
+    Config_ServerConfigReader_readCommandLineOptions_nodaemon_short, 
+    TestServerConfigReader
+)
+{
+    setupParameters ("-n" );
+    do_noDaemonSpecifiedTest();
+}
+
+/* ---------------------------------------------------------------------- */
+
+BOOST_FIXTURE_TEST_CASE 
+(
+    Config_ServerConfigReader_readCommandLineOptions_nodaemon_not_specified, 
+    TestServerConfigReader
+)
+{
+    setupParameters ("--help" );
+    do_noDaemonNotSpecifiedTest();
+}
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
