@@ -20,10 +20,6 @@ limitations under the License. */
 #include "common_dev.h"
 #include "monitorobject.h"
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
-#endif // FTS3_COMPILE_WITH_UNITTESTS
-
 FTS3_COMMON_NAMESPACE_START
 
 /* ========================================================================== */

@@ -49,17 +49,6 @@ limitations under the License. */
 /** FTS 3 application label, can be found in different compile-time generated constructs. */
 #define FTS3_APPLICATION_LABEL FTS3_Server
 
-/** Better assert. It displays more diagnostics. */
-#define FTS3_FORCE_CRASH_HERE EXCEPTION_THROW(CORALMESSAGING_NAMESPACE_NAME::Err_Custom("!!! SOFTWARE CRASH!!!"));
-
-#ifdef NDEBUG
-  /** Assert macro for FTS 3, in no-debug case. Usage: same than system assert macro/function. */
-  #define FTS3_DEBUG_ASSERT(x) 
-#else
-  #include <assert.h>
-  #include <iostream>
-  /** Assert macro for FTS 3, in debug case. Usage: same than system assert macro/function. */
-  #define FTS3_DEBUG_ASSERT(x) if (!(x)) FTS3_FORCE_CRASH_HERE
-#endif
-
+/** FTS3 server version */
+#define FTS3_SERVER_VERSION "0.0.1"
 

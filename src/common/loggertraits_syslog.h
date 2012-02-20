@@ -21,6 +21,7 @@ limitations under the License. */
 #include <syslog.h>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/seq/for_each.hpp>
+#include <string>
 
 FTS3_COMMON_NAMESPACE_START
 

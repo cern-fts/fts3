@@ -20,6 +20,10 @@ limitations under the License. */
 
 #include <boost/scoped_ptr.hpp>
 
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+    #include "unittest/testsuite.h"
+#endif // FTS3_COMPILE_WITH_UNITTESTS
+
 FTS3_COMMON_NAMESPACE_START
 
 /* ========================================================================== */
@@ -346,7 +350,6 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_addErr, GenericLogger_TestClass)
     BOOST_CHECK_EQUAL (_logLine.str(), f_str);
 }
 
-/* -------------------------------------------------------------------------- */
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_COMMON_NAMESPACE_END

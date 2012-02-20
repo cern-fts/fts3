@@ -18,6 +18,7 @@ limitations under the License. */
 #include "loggertraits_syslog.h"
 
 #include <string.h>
+#include <boost/preprocessor/stringize.hpp>
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"

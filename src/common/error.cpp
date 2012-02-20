@@ -74,7 +74,7 @@ std::string Err_Custom::_description() const
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 
-bool Common__Error_Macros_chekMessage (const Err_Custom& ex)
+bool Common__Error_Macros_chekMessage (const Err_Custom&)
 {
     return true;
 }
