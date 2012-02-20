@@ -1,106 +1,137 @@
-#include "ftsFileTransferSoapBindingProxy.h"
-#include "fts.nsmap"
-#include "evn.h"
+/*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use this file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ */
+
+#include "GsoapStubs.h"
 #include "SubmitTransferCli.h"
-#include "CliManager.h"
-
-#include "ServiceDiscoveryIfce.h"
-#include <glite/data/glite-util.h>
-
-#include <cgsi_plugin.h>
-#include <gridsite.h>
-
-
-#include <openssl/x509_vfy.h>
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/asn1.h>
-
-#include <time.h>
+#include "SrvManager.h"
+#include "evn.h"
 
 using namespace std;
+using namespace fts::cli;
 
-long isCertValid ();
 
 int main(int ac, char* av[]) {
 
 	// create service
 	FileTransferSoapBindingProxy service;
+	/*service.soap_endpoint = "localhost:8443/glite-data-transfer-interface/FileTransfer";
+
+
+	transfer__TransferJob job;
+	fts__transferSubmit2Response resp;
+	int ret = service.transferSubmit2(&job, resp);
+	cout << "Submitted request ID: " << resp._transferSubmit2Return << endl;
+
+	return 0;*/
+	// Srv manager
+	SrvManager* manager = SrvManager::getInstance();
 
 	try {
     	SubmitTransferCli cli;
     	cli.initCli(ac, av);
 
+		if (cli.printHelp() || cli.printVersion()) return 0;
+
     	string source = cli.getSource(), destination = cli.getDestination(), endpoint = cli.getService();
+
 		// set endpoint
 		if (endpoint.size() == 0) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
+		service.soap_endpoint = endpoint.c_str();
 
-		service.soap_endpoint = endpoint.c_str();	// https://vtb-generic-32.cern.ch:8443/glite-data-transfer-fts/services/FileTransfer
+		// initialize SOAP
+		if (!manager->initSoap(&service, endpoint)) return 0;
 
-		// init
-		soap_cgsi_init(&service,  CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
-		soap_set_namespaces(&service, fts_namespaces);
-
-		fts__getInterfaceVersionResponse ivresp;
-		service.getInterfaceVersion(ivresp);
-		string interface = ivresp.getInterfaceVersionReturn;
-
-		CliManager::getInstance()->setInterface(interface);
-
-    	if(!cli.performChecks()) return 0;
-
-		if (cli.printHelp() || cli.printVersion()) return 0;
+		// initialize SrvManager
+		if (manager->init(service)) {
+			cout << "Error while init SrvManager." << endl;
+		}
 
 		// produce output
 		if (cli.isVerbose()) {
-			cout << "# Using endpoint" << service.soap_endpoint << endl;
-
-			fts__getVersionResponse version;
-			service.getVersion(version);
-			cout << "# Service version: " << version.getVersionReturn << endl;
-
-			fts__getInterfaceVersionResponse interface;
-			service.getInterfaceVersion(interface);
-			cout << "# Interface version: " << interface.getInterfaceVersionReturn << endl;
-
-			fts__getSchemaVersionResponse schema;
-			service.getSchemaVersion(schema);
-			cout << "# Schema version: " << schema.getSchemaVersionReturn << endl;
-
-			fts__getServiceMetadataResponse metadata;
-			service.getServiceMetadata("feature.string", metadata);
-			cout << "# Service features: " << metadata._getServiceMetadataReturn << endl;
+			cli.printGeneralInfo();
 		}
-		// Job
-		transfer__TransferJob job;
 
+		if(!cli.performChecks()) return 0;
 		// JobElement
-		transfer__TransferJobElement element;
-		element.source = soap_new_std__string(&service, -1);
-		element.dest = soap_new_std__string(&service, -1);
+		if (!cli.createJobElements()) return 0;
 
-		*(element.source) = source;//"srm://lxbra1910.cern.ch:8446/srm/managerv2?SFN=/dpm/cern.ch/home/dteam/file.out";
-		*(element.dest) = destination;//"srm://galway.desy.de:8443/srm/managerv2?SFN=/pnfs/desy.de/data/dteam/file.out.overwrite";
+		string jobId;
 
-		job.transferJobElements.push_back(&element);
+		if (cli.useCheckSum()) {
+			transfer__TransferJob2 job;
+			// Elements
+			job.transferJobElements = cli.getJobElements2(&service);
+			// Params
+			job.jobParams = cli.getParams(&service);
 
-		// Params
-		job.jobParams = cli.getParams(&service);
-/*
-		job.jobParams = soap_new_transfer__TransferParams(&service, -1);
-		job.jobParams->keys.push_back("overwrite");
-		job.jobParams->values.push_back("Y");
-*/
-		// transfer submit
-		fts__transferSubmit2Response resp;
-		int ret = service.transferSubmit2(&job, resp);
+			// always use delegation with checksum TODO check whether it's right!
+			manager->delegateProxyCert(endpoint);
+			// transfer submit
+			fts__transferSubmit3Response resp;
+			int ret = service.transferSubmit3(&job, resp);
 
-		// resp
-		cout << "ret: " << ret << endl;
-		cout << "resp: " << resp._transferSubmit2Return << endl;
+			jobId = resp._transferSubmit3Return;
+
+		} else {
+			// Job
+			transfer__TransferJob job;
+			// Elements
+			job.transferJobElements = cli.getJobElements(&service);
+			// Params
+			job.jobParams = cli.getParams(&service);
+
+			if (cli.useDelegation()) {
+
+				manager->delegateProxyCert(endpoint);
+				// transfer submit
+				fts__transferSubmit2Response resp;
+				int ret = service.transferSubmit2(&job, resp);
+
+				jobId = resp._transferSubmit2Return;
+
+			} else {
+
+				job.credential = soap_new_std__string(&service, -1);
+				*job.credential = cli.getPassword(); // TODO test
+				cout << *job.credential << endl;
+
+				// transfer submit
+				fts__transferSubmitResponse resp;
+				int ret = service.transferSubmit(&job, resp);
+
+				jobId = resp._transferSubmitReturn;
+			}
+		}
+
+		cout << "Submitted request ID: " << jobId << endl;
+
+		if (cli.isBlocking()) {
+			fts__getTransferJobStatusResponse resp;
+			do {
+				sleep(2);
+				service.getTransferJobStatus(jobId, resp);
+			} while (!manager->isTransferReady(*resp._getTransferJobStatusReturn->jobStatus));
+		}
+
     }
     catch(exception& e) {
         cerr << "error: " << e.what() << "\n";
@@ -111,19 +142,4 @@ int main(int ac, char* av[]) {
     }
 
     return 0;
-}
-
-long isCertValid () {
-	string serviceLocation = "https://vtb-generic-32.cern.ch:8443/glite-data-transfer-fts/services/gridsite-delegation";
-
-    char * user_proxy = GRSTx509FindProxyFileName();
-	FILE *fp = fopen(user_proxy , "r");
-    X509 *cert = PEM_read_X509(fp, 0, 0, 0);
-    fclose(fp);
-    char* c_str = (char*) ASN1_STRING_data(X509_get_notAfter(cert));
-    long time = GRSTasn1TimeToTimeT(c_str, 0) - ::time(0);
-
-    cout << "Remaining time for local proxy is " << time / 3600 << " hours and " << time % 3600 / 60 << " minutes." << endl;
-
-    return time;
 }

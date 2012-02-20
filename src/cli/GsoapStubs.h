@@ -17,5 +17,22 @@
  *	limitations under the License.
  */
 
-#include "stdsoap2.h" // autogen
-struct Namespace namespaces[] ={{NULL, NULL}}; // autogen
+/*
+ * GsoapStubs.h
+ *
+ *  Created on: Feb 18, 2012
+ *      Author: simonm
+ */
+
+#ifndef GSOAPSTUBS_H_
+#define GSOAPSTUBS_H_
+
+#include "ftsFileTransferSoapBindingProxy.h"
+#include <stdsoap2.h>
+#include "ftsH.h"
+#include "ftsStub.h"
+
+//#include "fts.nsmap"
+//#include "evn.h"
+
+#endif /* GSOAPSTUBS_H_ */

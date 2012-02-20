@@ -17,5 +17,39 @@
  *	limitations under the License.
  */
 
-#include "stdsoap2.h" // autogen
-struct Namespace namespaces[] ={{NULL, NULL}}; // autogen
+/*
+ * TransferStatusCli.h
+ *
+ *  Created on: Feb 13, 2012
+ *      Author: simonm
+ */
+
+#ifndef TRANSFERSTATUSCLI_H_
+#define TRANSFERSTATUSCLI_H_
+
+#include "CliBase.h"
+#include <vector>
+#include <string>
+
+
+namespace fts { namespace cli {
+
+class TransferStatusCli: public CliBase {
+public:
+	TransferStatusCli();
+	virtual ~TransferStatusCli();
+
+	string getUsageString();
+	vector<string> getJobIds();
+
+	bool list();
+
+private:
+	options_description specific;
+	options_description hidden;
+};
+
+}
+}
+
+#endif /* TRANSFERSTATUSCLI_H_ */

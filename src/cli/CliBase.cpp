@@ -1,4 +1,24 @@
 /*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use this file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ */
+
+
+/*
  * CliBase.cpp
  *
  *  Created on: Feb 2, 2012
@@ -6,32 +26,37 @@
  */
 
 #include "CliBase.h"
-#include  "CliManager.h"
+#include  "SrvManager.h"
 
 #include <iostream>
 
-#include "ServiceDiscoveryIfce.h" // check "" or <>
-#include <glite/data/glite-util.h>
+//#include "ServiceDiscoveryIfce.h" // check "" or <>
+//#include <glite/data/glite-util.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_array.hpp>
 
 using namespace boost;
+using namespace fts::cli;
 
-CliBase::CliBase() : basic("Basic options") {
+
+CliBase::CliBase() : visible("Allowed options") {
+
+	FTS3_CA_SD_TYPE = "org.glite.ChannelAgent";
+	FTS3_SD_ENV = "GLITE_SD_FTS_TYPE";
+	FTS3_SD_TYPE = "org.glite.FileTransfer";
+	FTS3_IFC_VERSION = "GLITE_FTS_IFC_VERSION";
+	FTS3_INTERFACE_VERSION = "3.7.0"; // TODO where it comes from?
+
     basic.add_options()
 			("help,h", "Print this help text and exit.")
 			("quite,q", "Quiet operation.")
 			("verbose,v", "Be more verbose.")
 			("service,s", value<string>(), "Use the transfer service at the specified URL.")
-			("source", value<string>(), "Specify source site name.")
-			("destination", value<string>(), "Specify destination site name.")
 			("version,V", "Print the version number and exit.")
 			;
 
     cli_options.add(basic);
-
-	p.add("source", 1);
-	p.add("destination", 1);
+    visible.add(basic);
 }
 
 CliBase::~CliBase() {
@@ -55,14 +80,17 @@ void CliBase::initCli(int ac, char* av[]) {
 			endpoint.erase();
 		}
 	} else {
-		endpoint = discoverService();
+		if (!vm.count("help") && !vm.count("version")) {
+			endpoint = discoverService();
+		}
 	}
 }
 
 bool CliBase::printHelp() {
 
 	if (vm.count("help")) {
-        cout << cli_options << endl;
+		cout << endl << getUsageString() << endl << endl;
+        cout << visible << endl;
         return true;
     }
 
@@ -79,6 +107,19 @@ bool CliBase::printVersion() {
     return false;
 }
 
+void CliBase::printGeneralInfo() {
+
+	SrvManager* manager = SrvManager::getInstance();
+
+	cout << "# Using endpoint: " << getService() << endl;
+	cout << "# Service version: " << manager->getVersion() << endl;
+	cout << "# Interface version: " << manager->getInterface() << endl;
+	cout << "# Schema version: " << manager->getSchema() << endl;
+	cout << "# Service features: " << manager->getMetadata() << endl;
+	cout << "# Client version: TODO" << endl;
+	cout << "# Client interface version: TODO" << endl;
+}
+
 bool CliBase::isVerbose() {
 	return vm.count("verbose");
 }
@@ -92,35 +133,17 @@ string CliBase::getService() {
 	return endpoint;
 }
 
-string CliBase::getSource() {
-
-	if (vm.count("source")) {
-		return vm["source"].as<string>();
-	}
-	return "";
-}
-
-string CliBase::getDestination() {
-
-	if (vm.count("destination")) {
-		return vm["destination"].as<string>();
-	}
-	return "";
-}
-
 string CliBase::discoverService() {
-
-	CliManager* manager = CliManager::getInstance();
-
-	string source = getSource(), destination = getDestination();
+/*
+	//string source = getSource(), destination = getDestination();
 	SDService *service;
-	scoped_array<char> c_str_arr, error_arr;
+	scoped_array<char> c_strArr, errorArr;
 	char *error, *c_str = 0;
-	const char * fts_srvtype;
-	const char * fts_version;
+	const char * srvtype;
+	const char * version;
 	SDException exc;
-
-	if (source.size() > 0 && destination.size() > 0) {
+*/
+	/*if (source.size() > 0 && destination.size() > 0) {
 
 		SDServiceData datas[] =
 		{
@@ -130,28 +153,28 @@ string CliBase::discoverService() {
 
 		SDServiceDataList datalist = {NULL, 2, datas};
 
-		c_str = glite_discover_service_by_data(manager->FTS3_CA_SD_TYPE.c_str(), &datalist, &error);
+		c_str = glite_discover_service_by_data(FTS3_CA_SD_TYPE.c_str(), &datalist, &error);
 		c_str_arr.reset(c_str);
 		error_arr.reset(error);
-	}
-
-	if (getenv(manager->FTS3_SD_ENV.c_str()))
-		fts_srvtype = getenv(manager->FTS3_SD_ENV.c_str());
+	}*/
+/*
+	if (getenv(FTS3_SD_ENV.c_str()))
+		srvtype = getenv(FTS3_SD_ENV.c_str());
 	else
-		fts_srvtype = manager->FTS3_SD_TYPE.c_str();
+		srvtype = FTS3_SD_TYPE.c_str();
 
-	if(getenv(manager->FTS3_IFC_VERSION.c_str()))
-		fts_version = getenv(manager->FTS3_IFC_VERSION.c_str());
+	if(getenv(FTS3_IFC_VERSION.c_str()))
+		version = getenv(FTS3_IFC_VERSION.c_str());
 	else
-		fts_version = manager->FTS3_INTERFACE_VERSION.c_str();
+		version = FTS3_INTERFACE_VERSION.c_str();
 
 	// Note: glite_discover_service will check if the service name passed
 	// has an associated service of the given type (fts_srvtype), if not
 	// it will check if the name refers to a site name or an host name
 
-	c_str = glite_discover_service_by_version(fts_srvtype, c_str, fts_version, &error);
-	c_str_arr.reset(c_str);
-	error_arr.reset(error);
+	c_str = glite_discover_service_by_version(srvtype, c_str, version, &error);
+	c_strArr.reset(c_str);
+	errorArr.reset(error);
 
 	if (!c_str) {
         cout << "Service discovery: " << error << endl;
@@ -170,6 +193,7 @@ string CliBase::discoverService() {
 		tmp = service->endpoint;
 	}
 	SD_freeService(service);
-
+*/
+	string tmp;
 	return tmp;
 }
