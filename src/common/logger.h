@@ -58,7 +58,7 @@ FTS3_COMMON_NAMESPACE_END
  * The log level labels are system specific, 
  */
 #define FTS3_COMMON_LOGGER_NEWLOG(aLevel)	\
-	FTS3_COMMON_NAMESPACE::theLogger().newLog<Logger::type_traits::aLevel>(__FILE__, __FUNCTION__, __LINE__)
+	FTS3_COMMON_NAMESPACE::theLogger().newLog<FTS3_COMMON_NAMESPACE::Logger::type_traits::aLevel>(__FILE__, __FUNCTION__, __LINE__)
 
 /* -------------------------------------------------------------------------- */
 
