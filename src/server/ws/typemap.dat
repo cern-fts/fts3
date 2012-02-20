@@ -1,0 +1,5 @@
+transfer = http://transfer.data.glite.org
+channel=http://glite.org/wsdl/services/org.glite.data.transfer.channel
+fts=http://glite.org/wsdl/services/org.glite.data.transfer.fts
+transferstats=http://glite.org/wsdl/services/org.glite.data.transfer.stats
+remove=http://glite.org/wsdl/services/org.glite.data.transfer.remove
