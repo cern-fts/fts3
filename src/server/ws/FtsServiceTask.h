@@ -34,14 +34,40 @@ using namespace std;
 
 namespace fts { namespace ws {
 
-
+/**
+ * FtsServiceTask is a functional object meant to serve FTS3 soap requests
+ */
 class FtsServiceTask {
 public:
+	/**
+	 * Default constructor.
+	 */
 	FtsServiceTask();
+
+	/**
+	 * Destructor.
+	 */
 	virtual ~FtsServiceTask();
 
-	void operator()(FileTransferSoapBindingService* dup);
+	/**
+	 * Function call operator.
+	 *
+	 * @param copy - copy of FTS3 service proxy, the object will be deleted after use
+	 */
+	void operator()(FileTransferSoapBindingService* copy);
+
+	/**
+	 * Copy Assignment operator
+	 */
 	FtsServiceTask& operator= (const FtsServiceTask& other);
+
+	/**
+	 * Copies FTS3 proxy.
+	 *
+	 * @param srv - FTS3 proxy object
+	 *
+	 * @return a copy of FTS3 proxy object (the object is not garbage collected!)
+	 */
 	static FileTransferSoapBindingService* copyService(FileTransferSoapBindingService& srv);
 };
 

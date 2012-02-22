@@ -33,15 +33,41 @@ using namespace std;
 
 namespace fts { namespace ws {
 
+/**
+ * UuidGenerator is a static class encapsulating libuuid.
+ *
+ * Its main goal is the generate uuids.
+ */
 class UuidGenerator {
 
 public:
+
+	/**
+	 * Generates uuid
+	 *
+	 * @return uuid (string)
+	 */
 	static string generateUUID();
+
+	/**
+	 * Destructor.
+	 */
 	virtual ~UuidGenerator();
 
 private:
+	/**
+	 * Default constructor (private).
+	 */
 	UuidGenerator();
+
+	/**
+	 * Copy constructor (private).
+	 */
 	UuidGenerator (UuidGenerator const&);
+
+	/**
+	 * Copy assignment operator (private).
+	 */
 	UuidGenerator& operator=(UuidGenerator const&);
 };
 

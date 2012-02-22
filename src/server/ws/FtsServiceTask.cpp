@@ -37,14 +37,16 @@ FtsServiceTask::FtsServiceTask() {
 FtsServiceTask::~FtsServiceTask() {
 }
 
-void FtsServiceTask::operator ()(FileTransferSoapBindingService* dup) {
+void FtsServiceTask::operator ()(FileTransferSoapBindingService* copy) {
 
-	dup->serve();
+	// serve the request
+	copy->serve();
 
-	soap_destroy(dup);
-	soap_end(dup);
-	soap_done(dup);
-	delete dup;
+	// free the resources and memory
+	soap_destroy(copy);
+	soap_end(copy);
+	soap_done(copy);
+	delete copy;
 }
 
 FtsServiceTask& FtsServiceTask::operator= (const FtsServiceTask& other) {
@@ -53,9 +55,13 @@ FtsServiceTask& FtsServiceTask::operator= (const FtsServiceTask& other) {
 
 FileTransferSoapBindingService* FtsServiceTask::copyService(FileTransferSoapBindingService& srv) {
 
+	// allocate memory
 	FileTransferSoapBindingService* copy = new FileTransferSoapBindingService();
+	// copy the object
 	*copy = srv;
+	// indicate that the object is a copy
     copy->state = SOAP_COPY;
+    // set default values
     copy->error = SOAP_OK;
     copy->userid = NULL;
     copy->passwd = NULL;
@@ -68,18 +74,18 @@ FileTransferSoapBindingService* FtsServiceTask::copyService(FileTransferSoapBind
     copy->lablen = 0;
     copy->labidx = 0;
     copy->local_namespaces = NULL;
-    soap_set_namespaces(copy, srv.local_namespaces);
     copy->plugins = NULL;
     copy->cookies = NULL;
     copy->header = NULL;
     copy->fault = NULL;
     copy->action = NULL;
+    // set the namespaces
+    soap_set_namespaces(copy, srv.local_namespaces);
+    // initialize the copy
     copy->FileTransferSoapBindingService_init(srv.imode, srv.omode);
 
 	return copy;
 }
-
-
 
 
 
