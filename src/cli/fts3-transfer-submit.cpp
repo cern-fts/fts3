@@ -25,32 +25,28 @@
 using namespace std;
 using namespace fts::cli;
 
-
+/**
+ * This is the entry point for the fts3-transfer-submit command line tool.
+ */
 int main(int ac, char* av[]) {
 
-	// create service
+	// create FTS3 service client
 	FileTransferSoapBindingProxy service;
-	/*service.soap_endpoint = "localhost:8443/glite-data-transfer-interface/FileTransfer";
-
-
-	transfer__TransferJob job;
-	fts__transferSubmit2Response resp;
-	int ret = service.transferSubmit2(&job, resp);
-	cout << "Submitted request ID: " << resp._transferSubmit2Return << endl;
-
-	return 0;*/
-	// Srv manager
+	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
 	try {
+		// create and initialize the command line utility
     	SubmitTransferCli cli;
     	cli.initCli(ac, av);
 
+    	// if applicable print help or version and exit
 		if (cli.printHelp() || cli.printVersion()) return 0;
 
+		// get the source file, the destination file and the FTS3 service endpoint
     	string source = cli.getSource(), destination = cli.getDestination(), endpoint = cli.getService();
 
-		// set endpoint
+		// set the  endpoint
 		if (endpoint.size() == 0) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
@@ -65,67 +61,76 @@ int main(int ac, char* av[]) {
 			cout << "Error while init SrvManager." << endl;
 		}
 
-		// produce output
+		// if verbose print general info
 		if (cli.isVerbose()) {
 			cli.printGeneralInfo();
 		}
 
+		// perform standard checks in order to determine if the job was well specified
 		if(!cli.performChecks()) return 0;
-		// JobElement
+
+		// prepare job elements
 		if (!cli.createJobElements()) return 0;
 
 		string jobId;
 
+		// checksum requires different request
 		if (cli.useCheckSum()) {
 			transfer__TransferJob2 job;
-			// Elements
+			// set job elements
 			job.transferJobElements = cli.getJobElements2(&service);
-			// Params
+			// set transfer parameters
 			job.jobParams = cli.getParams(&service);
 
 			// always use delegation with checksum TODO check whether it's right!
 			manager->delegateProxyCert(endpoint);
-			// transfer submit
+			// submit the job
 			fts__transferSubmit3Response resp;
 			int ret = service.transferSubmit3(&job, resp);
 
+			// retrieve the job ID
 			jobId = resp._transferSubmit3Return;
 
 		} else {
-			// Job
 			transfer__TransferJob job;
-			// Elements
+			// set job elements
 			job.transferJobElements = cli.getJobElements(&service);
-			// Params
+			// set transfer parameters
 			job.jobParams = cli.getParams(&service);
 
+			// check whether a proxy certificate should be used
 			if (cli.useDelegation()) {
 
 				manager->delegateProxyCert(endpoint);
-				// transfer submit
+				// submit the job
 				fts__transferSubmit2Response resp;
 				int ret = service.transferSubmit2(&job, resp);
 
+				// retrieve the job ID
 				jobId = resp._transferSubmit2Return;
 
 			} else {
 
+				// set the credential (Password)
 				job.credential = soap_new_std__string(&service, -1);
 				*job.credential = cli.getPassword(); // TODO test
-				cout << *job.credential << endl;
+				//cout << *job.credential << endl;
 
-				// transfer submit
+				// submit the job
 				fts__transferSubmitResponse resp;
 				int ret = service.transferSubmit(&job, resp);
 
+				// retrieve the job ID
 				jobId = resp._transferSubmitReturn;
 			}
 		}
 
 		cout << "Submitted request ID: " << jobId << endl;
 
+		// check if the -b option has been used
 		if (cli.isBlocking()) {
 			fts__getTransferJobStatusResponse resp;
+			// wait until the transfer is ready
 			do {
 				sleep(2);
 				service.getTransferJobStatus(jobId, resp);

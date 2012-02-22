@@ -15,13 +15,11 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
+ *
  * SubmitTransferCli.h
  *
  *  Created on: Feb 2, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #ifndef SUBMITTRANSFERCLI_H_
@@ -36,54 +34,243 @@ using namespace std;
 
 namespace fts { namespace cli {
 
+/**
+ * SubmitTransferCli is the command line utility used for the fts3-transfer-submit tool.
+ *
+ * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
+ * 	 	- source (--source), the first positional parameter (passed without any switch option)
+ * 	 		parameter is regarded as source
+ * 	 	- destination (--destination), the second positional parameter is regarded as destination
+ * 	 	- blocking (-b)
+ * 	 	- bulk-job file (-f)
+ * 	 	- grid ftp parameters (-g)
+ * 	 	- interval (-i)
+ * 	 	- MyProxy server (-m)
+ * 	 	- password (-p)
+ * 	 	- ID (-I)
+ * 	 	- expire (-e)
+ * 	 	- overwrite (-o)
+ * 	 	- destination token (-t)
+ * 	 	- source token (-S)
+ * 	 	- compare checksum (-K)
+ * 	 	- pin lifetime (--copy-pin-lifetime)
+ * 	 	- LAN connection (--lan-connection)
+ * 	 	- fail if nearline (--fail-nearline)
+ *
+ * @see CliBase
+ */
 class SubmitTransferCli : public CliBase {
 
+	/**
+	 * Single job element.
+	 *
+	 * Since there are two different classed that represent the job element
+	 * (transfer__TransferJobElement, transfer__TransferJobElement2) this
+	 * structure is used to store job element data until it is known which
+	 * kind of job element should be used
+	 *
+	 */
 	struct Task {
-		string src;
-		string dest;
-		string checksum;
+		string src; ///< source file
+		string dest; ///< destination file
+		string checksum; ///< the checksum
 	};
 
 public:
+
+	/**
+	 * Default constructor.
+	 *
+	 * Initializes string fields corresponding to FTS3 parameters. Moreover, creates
+	 * the transfer-submit specific command line options, source, destination and
+	 * checksum are also market as positional options, checksum is a hidden option
+	 * (not printed in help), other oprions are visible.
+	 */
 	SubmitTransferCli();
+
+	/**
+	 * Destructor
+	 */
 	virtual ~SubmitTransferCli();
 
-
+	/**
+	 * Initializes the object with command line options.
+	 *
+	 * In addition sets delegation flag.
+	 *
+	 * @param ac - argument count
+	 * @param av - argument array
+	 *
+	 * @see CliBase::initCli(int, char*)
+	 */
 	virtual void initCli(int ac, char* av[]);
+
+	/**
+	 * Creates job elements.
+	 *
+	 * The job elements are created based on used command line options
+	 * or based on the given bulk-job file. The created elements are
+	 * stored in an internal vector.
+	 *
+	 * @return true is the internal vector containing job elements is not empty
+	 */
 	bool createJobElements();
+
+	/**
+	 * Performs standard checks.
+	 *
+	 *  	- decides on delegation (checks whether it is supported)
+	 *  	- collects user password if needed
+	 *  	- checks if the job is specified twice (using command line and bulk-job file)
+	 *  	- checks if used options are supported (e.g. checksum)
+	 */
 	bool performChecks();
 
+	/**
+	 * Gives the instruction how to use the command line tool.
+	 *
+	 * @return a string with instruction on how to use the tool
+	 */
 	string getUsageString();
+
+	/**
+	 * Gets the password (if set using -p option or by performChecks()
+	 *
+	 * @return password string
+	 *
+	 * @see SubmitTransferCli::performChecks()
+	 */
 	string getPassword();
+
+	/**
+	 * Gets the source file name (string) for the job.
+	 *
+	 * @return source string if it was given as a CLI option, or an empty string if not
+	 */
 	string getSource();
+
+	/**
+	 * Gets the destination file name (string) for the job.
+	 *
+	 * @return destination string if it was given as a CLI option, or an empty string if not
+	 */
 	string getDestination();
+
+	/**
+	 * Gets the 'transfer__TransferParams' object.
+	 *
+	 * The parameters are set accordingly to the options used with the command line tool.
+	 * The object is created using gsoap memory-allocation utility, it will be garbage
+	 * collected! If there is a need to delete it manually gsoap dedicated functions should
+	 * be used (in particular 'soap_unlink'!)
+	 *
+	 * @param soap - soap object corresponding to FTS3 service
+	 *
+	 * @return transfer__TransferParams object containing name-value pairs
+	 */
 	transfer__TransferParams* getParams(soap* soap);
+
+	/**
+	 * Gets a vector containing 'transfer__TransferJobElement' objects.
+	 *
+	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
+	 * Each of the vector elements is created using gsoap memory-allocation utility, and will
+	 * be garbage collected. If there is a need to delete it manually gsoap dedicated functions should
+	 * be used (in particular 'soap_unlink'!)
+	 *
+	 * @param soap - soap object corresponding to FTS3 service
+	 *
+	 * @return vector of 'transfer__TransferJobElement' objects
+	 *
+	 * @see SubmitTransferCli::createJobElements()
+	 */
 	vector<transfer__TransferJobElement * > getJobElements(soap* soap);
+
+	/**
+	 * Gets a vector containing 'transfer__TransferJobElement2' objects.
+	 *
+	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
+	 * Each of the vector elements is created using gsoap memory-allocation utility, and will
+	 * be garbage collected. If there is a need to delete it manually gsoap dedicated functions should
+	 * be used (in particular 'soap_unlink'!)
+	 *
+	 * @param soap - soap object corresponding to FTS3 service
+	 *
+	 * @return vector of 'transfer__TransferJobElement2' objects
+	 *
+	 * @see SubmitTransferCli::createJobElements()
+	 */
 	vector<transfer__TransferJobElement2 * > getJobElements2(soap* soap);
 
-
+	/**
+	 * Gets the value of delegation flag.
+	 *
+	 * @return true if the proxy certificate should be delegated
+	 */
 	bool useDelegation() {
 		return delegate;
 	}
 
+	/**
+	 * Gets the value of checksum flag.
+	 *
+	 * @return true if checksum is used
+	 */
 	bool useCheckSum() {
 		return checksum;
 	}
 
+	/**
+	 * Check if the blocking mode is on.
+	 *
+	 * @return true if the -b option has been used
+	 */
 	bool isBlocking();
 
 private:
+
+	/**
+	 * command line options specific for fts3-transfer-submit
+	 */
 	options_description specific;
+
+	/**
+	 * hidden command line options (not printed in help)
+	 */
 	options_description hidden;
-	string cfg_file;
+
+	/**
+	 * the name of the file containing bulk-job description
+	 */
+	string bulk_file;
+
+	/**
+	 * user password
+	 */
 	string password;
 
+	/**
+	 * internal vector containing job elements
+	 *
+	 * @see SubmitTransferCli::createJobElements(), SubmitTransferCli::getJobElements(soap*) , SubmitTransferCli::getJobElements2(soap*)
+	 */
 	vector<Task> tasks;
 
+	/**
+	 * checksum flag, determines whether checksum is used
+	 */
 	bool checksum;
+
+	/**
+	 * delegate flag, determines whether the proxy certificate should be used
+	 */
 	bool delegate;
 
-	// parameters names
+	///@{
+	/**
+	 * parameter names
+	 * @see SubmitTransferCli::getParams(soap*)
+	 */
 	string FTS3_PARAM_GRIDFTP;
 	string FTS3_PARAM_MYPROXY;
 	string FTS3_PARAM_DELEGATIONID;
@@ -94,6 +281,7 @@ private:
 	string FTS3_PARAM_FAIL_NEARLINE;
 	string FTS3_PARAM_OVERWRITEFLAG;
 	string FTS3_PARAM_CHECKSUM_METHOD;
+	///@}
 };
 
 }

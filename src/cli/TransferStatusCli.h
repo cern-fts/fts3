@@ -34,18 +34,62 @@
 
 namespace fts { namespace cli {
 
+/**
+ * TransferStatusCli is the command line utility used for the fts3-transfer-status tool.
+ *
+ * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
+ * 		- list (-l)
+ * 		- job ID (--jobid), positional parameter (passed without any switch option)
+ *
+ * @see CliBase
+ */
 class TransferStatusCli: public CliBase {
 public:
+	/**
+	 * Default constructor.
+	 *
+	 * Creates the transfer-status specific command line options. Job ID is
+	 * market as both: hidden and positional
+	 */
 	TransferStatusCli();
+
+	/**
+	 * Destructor.
+	 */
 	virtual ~TransferStatusCli();
 
+	/**
+	 * Gives the instruction how to use the command line tool.
+	 *
+	 * @return a string with instruction on how to use the tool
+	 */
 	string getUsageString();
+
+	/**
+	 * Gets a vector with job IDs.
+	 *
+	 * @return if job IDs were given as command line parameters a
+	 * 			vector containing job IDs otherwise an empty vector
+	 */
 	vector<string> getJobIds();
 
+	/**
+	 * Check if the list mode is on.
+	 *
+	 * @return true if the -l option has been used
+	 */
 	bool list();
 
 private:
+
+	/**
+	 * command line options specific for fts3-transfer-submit
+	 */
 	options_description specific;
+
+	/**
+	 * hidden command line options (not printed in help)
+	 */
 	options_description hidden;
 };
 

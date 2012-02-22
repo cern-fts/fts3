@@ -31,17 +31,23 @@ using namespace std;
 using namespace fts::cli;
 
 TransferStatusCli::TransferStatusCli() {
+
+	// add fts3-transfer-status specific options
 	specific.add_options()
 			("list,l", "List status for all files.")
 			;
 
+	// add hidden options (not printed in help)
 	hidden.add_options()
-			("jobid", value< vector<string> >(), "Specify source site name.")
+			("jobid", value< vector<string> >(), "Specify job ID.")
 			;
 
+	// all positional parameters go to jobid
 	p.add("jobid", -1);
 
-	cli_options.add(specific).add(hidden);
+	// add specific and hidden parameters to all parameters
+	all.add(specific).add(hidden);
+	// add specific parameters to visible parameters (printed in help)
 	visible.add(specific);
 }
 
@@ -53,6 +59,8 @@ string TransferStatusCli::getUsageString() {
 }
 
 vector<string> TransferStatusCli::getJobIds() {
+
+	// check whether jobid has been given as a parameter
 	if (vm.count("jobid")) {
 		return vm["jobid"].as< vector<string> >();
 	}

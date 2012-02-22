@@ -30,25 +30,34 @@ using namespace std;
 using namespace fts::cli;
 
 
+/**
+ * This is the entry point for the fts3-transfer-status command line tool.
+ */
 int main(int ac, char* av[]) {
 
-	// create service
+	// create the service client
 	FileTransferSoapBindingProxy service;
+	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
 	try {
+		// create and the command line utility
 		TransferStatusCli cli;
 		cli.initCli(ac, av);
 
+		// if applicable print help or version and exit
 		if (cli.printHelp() || cli.printVersion()) return 0;
 
+		// get the FTS3 service endpoint
 		string endpoint = cli.getService();
 
+		// check if its not empty
 		if (endpoint.empty()) {
 			cout << "The service has not been defined." << endl;
 			return 0;
 		}
 
+		// get job IDs that have to be check
 		vector<string> jobIds = cli.getJobIds();
 		if (jobIds.empty()) {
 			cout << "No request ID specified." << endl;
@@ -56,21 +65,32 @@ int main(int ac, char* av[]) {
 		}
 
 		//service.soap_endpoint = "https://vtb-generic-32.cern.ch:8443/glite-data-transfer-fts/services/FileTransfer";
+		// set the endpoint
 		service.soap_endpoint = endpoint.c_str();
 
-		// initialize soap
-		manager->initSoap(&service, endpoint);
+		// initialize SOAP
+		if (!manager->initSoap(&service, endpoint)) return 0;
 
+		// check the interface version of the FTS3 service
 		fts__getInterfaceVersionResponse ivresp;
 		service.getInterfaceVersion(ivresp);
 		string interface = ivresp.getInterfaceVersionReturn;
 
+		// set the interface version
 		manager->setInterfaceVersion(interface);
+		/*
+		// initialize SrvManager
+		if (manager->init(service)) {
+			cout << "Error while init SrvManager." << endl;
+		}
+		*/
 
+		// if verbose print general info
 		if (cli.isVerbose()) {
 			cli.printGeneralInfo();
 		}
 
+		// iterate over job IDs
 		vector<string>::iterator it;
 		for (it = jobIds.begin(); it < jobIds.end(); it++) {
 
@@ -79,10 +99,15 @@ int main(int ac, char* av[]) {
 			int ret;
 
 			if (cli.isVerbose()) {
-				if (manager->isItVersion330()) {
 
+				if (manager->isItVersion330()) {
+					// if version higher than 3.3.0 use getTransferJobSummary2
+
+					// do the request
 					fts__getTransferJobSummary2Response resp;
 					ret = service.getTransferJobSummary2(jobId, resp);
+
+					// print the response
 					if (!ret) {
 						cout << "Request ID: " << jobId << endl;
 						cout << "Status: " << *resp._getTransferJobSummary2Return->jobStatus->jobStatus << endl;
@@ -113,9 +138,13 @@ int main(int ac, char* av[]) {
 					}
 
 				} else {
+					// if version higher than 3.3.0 use getTransferJobSummary
 
+					// do the request
 					fts__getTransferJobSummaryResponse resp;
 					ret = service.getTransferJobSummary(jobId, resp);
+
+					// print the response
 					if (!ret) {
 						cout << "Request ID: " << jobId << endl;
 						cout << "Status: " << *resp._getTransferJobSummaryReturn->jobStatus->jobStatus << endl;
@@ -147,36 +176,47 @@ int main(int ac, char* av[]) {
 				}
 			} else {
 
+				// do the request
 				fts__getTransferJobStatusResponse resp;
 		    	ret = service.getTransferJobStatus(jobId, resp);
+
+		    	// print the response
 		    	if (!ret) {
 		    		cout << *resp._getTransferJobStatusReturn->jobStatus << endl;
 		    	}
 			}
 
 			// TODO test!
+			// check if the -l option has been used
 			if (cli.list()) {
 
+				// do the request
 				fts__getFileStatusResponse resp;
-				service.getFileStatus(jobId, 0, 100, resp);
+				ret = service.getFileStatus(jobId, 0, 100, resp);
 
-				std::vector<transfer__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
-				std::vector<transfer__FileTransferStatus * >::iterator it;
+				if (!ret) {
 
-				for (it = vect.begin(); it < vect.end(); it++) {
-					transfer__FileTransferStatus* stat = *it;
+					std::vector<transfer__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
+					std::vector<transfer__FileTransferStatus * >::iterator it;
 
-		            cout << "  Source:      " << *stat->sourceSURL << endl;
-		            cout << "  Destination: " << *stat->destSURL << endl;
-		            cout << "  State:       " << *stat->transferFileState << endl;;
-		            cout << "  Retries:     " << stat->numFailures << endl;
-		            cout << "  Reason:      " << *stat->reason << endl;
-		            cout << "  Duration:    " << stat->duration << endl;
+					// print the response
+					for (it = vect.begin(); it < vect.end(); it++) {
+						transfer__FileTransferStatus* stat = *it;
+
+						cout << "  Source:      " << *stat->sourceSURL << endl;
+						cout << "  Destination: " << *stat->destSURL << endl;
+						cout << "  State:       " << *stat->transferFileState << endl;;
+						cout << "  Retries:     " << stat->numFailures << endl;
+						cout << "  Reason:      " << *stat->reason << endl;
+						cout << "  Duration:    " << stat->duration << endl;
+					}
 				}
 			}
 
+			// print the error message if applicable
 	    	if (ret) {
 	    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
+	    		// TODO check ex first
 	    		cout << "getTransferJobStatus: " << *ex->message << endl;
 	    	}
 		}

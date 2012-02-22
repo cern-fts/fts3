@@ -48,6 +48,7 @@
 using namespace boost;
 using namespace fts::cli;
 
+// define the status name - status id pairs
 SrvManager::TransferState SrvManager::statuses[] = {
 		{ "Submitted",      			FTS3_TRANSFER_SUBMITTED },
 		{ "Pending",        			FTS3_TRANSFER_PENDING },
@@ -72,6 +73,7 @@ SrvManager::TransferState SrvManager::statuses[] = {
 		{ "WaitingCatalogRegistration", FTS3_TRANSFER_WAITING_CATALOG_REGISTRATION}
 	};
 
+// initialize the single SrvManager instance
 SrvManager* SrvManager::manager = 0;
 
 SrvManager::SrvManager() {
@@ -92,6 +94,7 @@ SrvManager::~SrvManager() {
 
 SrvManager* SrvManager::getInstance() {
 
+	// lazy loading
 	if (!manager) {
 		manager = new SrvManager();
 	}
@@ -100,8 +103,10 @@ SrvManager* SrvManager::getInstance() {
 
 bool SrvManager::isTransferReady(string status) {
 
-	for (int i = 0; i < statusCount; i++) {
+	// find the transfer status in statuses table
+	for (int i = 0; i < statusesSize; i++) {
 		if (status.compare(statuses[i].name) == 0) {
+			// check if its ready
 			return statuses[i].id <= 0;
 		}
 	}
@@ -109,10 +114,11 @@ bool SrvManager::isTransferReady(string status) {
 	return FTS3_TRANSFER_UNKNOWN <= 0;
 }
 
+// TODO think if its the right place for this method, maybe it should be moved to SubmitTransferCli!
 string SrvManager::getPassword() {
 
     termios stdt;
-    // get standard cmd settings
+    // get standard command line settings
     tcgetattr(STDIN_FILENO, &stdt);
     termios newt = stdt;
     // turn off echo while typing
@@ -131,8 +137,10 @@ string SrvManager::getPassword() {
     cin >> pass2;
     cout << endl;
 
+    // set the standard command line settings back
     tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
 
+    // compare passwords
     if (pass1.compare(pass2)) {
     	cout << "Entered MyProxy passwords do not match." << endl;
     	return "";
@@ -143,6 +151,7 @@ string SrvManager::getPassword() {
 
 bool SrvManager::initSoap(soap* soap, string endpoint) {
 
+	// initialize CGSI depending on the protocol (https, httpg)
     int  ret = 0;
     if (endpoint.find("https") == 0) {
     	ret = soap_cgsi_init(soap,  CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
@@ -155,6 +164,7 @@ bool SrvManager::initSoap(soap* soap, string endpoint) {
     	return false;
     }
 
+    // set the namespaces
 	if (soap_set_namespaces(soap, fts_namespaces)) {
 		cout << "Failed to set SOAP namespaces." << endl;
 		return false;
@@ -163,7 +173,7 @@ bool SrvManager::initSoap(soap* soap, string endpoint) {
 	return true;
 }
 
-void SrvManager::delegateProxyCert(string service) {
+void SrvManager::delegateProxyCert(string endpoint) {
 
 	// is there a reson for glite_discover_endpoint ???
 
@@ -171,20 +181,23 @@ void SrvManager::delegateProxyCert(string service) {
 	int pos = service.find("/services/FileTransfer");
 	service.replace(pos, replacement.size(), replacement);
 */
-	time_t time_left = isCertValid(service);
+	time_t time_left = isCertValid();
 
 	// TODO
 	// delegation-simple-api not compatible with gsoap++ due to C version of cgsi_plugin
 
 }
 
-long SrvManager::isCertValid (string serviceLocation) {
+long SrvManager::isCertValid () {
 
+	// find user proxy certificate
     char * user_proxy = GRSTx509FindProxyFileName();
 	FILE *fp = fopen(user_proxy , "r");
+	// read the certificate
     X509 *cert = PEM_read_X509(fp, 0, 0, 0);
     fclose(fp);
     char* c_str = (char*) ASN1_STRING_data(X509_get_notAfter(cert));
+    // calculate the time remaing for the proxy certificate
     long time = GRSTasn1TimeToTimeT(c_str, 0) - ::time(0);
 
     cout << "Remaining time for local proxy is " << time / 3600 << " hours and " << time % 3600 / 60 << " minutes." << endl;
@@ -193,6 +206,8 @@ long SrvManager::isCertValid (string serviceLocation) {
 }
 
 bool SrvManager::init(FileTransferSoapBindingProxy& service) {
+
+	// request the information about the FTS3 service
 
 	int err;
 
@@ -229,6 +244,7 @@ void SrvManager::setInterfaceVersion(string interface) {
 	if (interface.empty()) return;
 
 
+	// set the seperator that will be used for tokenizing
 	char_separator<char> sep(".");
 	tokenizer< char_separator<char> > tokens(interface, sep);
 	tokenizer< char_separator<char> >::iterator it = tokens.begin();
@@ -262,14 +278,6 @@ int SrvManager::isRolesOfSupported() {
 }
 
 int SrvManager::isSetTCPBufferSupported() {
-    return isItVersion330();
-}
-
-int SrvManager::isExtendedChannelListSupported() {
-    return isItVersion330();
-}
-
-int SrvManager::isChannelMessageSupported() {
     return isItVersion330();
 }
 

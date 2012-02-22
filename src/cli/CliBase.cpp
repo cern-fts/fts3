@@ -15,14 +15,11 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-
-/*
+ *
  * CliBase.cpp
  *
  *  Created on: Feb 2, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #include "CliBase.h"
@@ -41,12 +38,14 @@ using namespace fts::cli;
 
 CliBase::CliBase() : visible("Allowed options") {
 
+	// initialize variables needed for FTS3 service discovery
 	FTS3_CA_SD_TYPE = "org.glite.ChannelAgent";
 	FTS3_SD_ENV = "GLITE_SD_FTS_TYPE";
 	FTS3_SD_TYPE = "org.glite.FileTransfer";
 	FTS3_IFC_VERSION = "GLITE_FTS_IFC_VERSION";
 	FTS3_INTERFACE_VERSION = "3.7.0"; // TODO where it comes from?
 
+	// add basic command line options
     basic.add_options()
 			("help,h", "Print this help text and exit.")
 			("quite,q", "Quiet operation.")
@@ -55,7 +54,10 @@ CliBase::CliBase() : visible("Allowed options") {
 			("version,V", "Print the version number and exit.")
 			;
 
-    cli_options.add(basic);
+    // add basic options to all command line options
+    all.add(basic);
+
+    // add basic options to options visible in help
     visible.add(basic);
 }
 
@@ -65,21 +67,26 @@ CliBase::~CliBase() {
 
 
 void CliBase::initCli(int ac, char* av[]) {
+
 	// turn off guessing, so --source is not mistaken with --source-token
 	int style = command_line_style::default_style & ~command_line_style::allow_guessing;
 
-	store(command_line_parser(ac, av).options(cli_options).positional(p).style(style).run(), vm);
+	// parse the options that have been used
+	store(command_line_parser(ac, av).options(all).positional(p).style(style).run(), vm);
 	notify(vm);
 
+	// check whether the -s option has been used
 	if (vm.count("service")) {
 		endpoint = vm["service"].as<string>();
 		// check if the endpoint has the right prefix
 		if (endpoint.find("http") != 0 && endpoint.find("https") != 0 && endpoint.find("httpd") != 0) {
-			// if not erase
 			cout << "Wrongly formatted endpoint: " << endpoint << endl;
+			// if not erase
 			endpoint.erase();
 		}
 	} else {
+		// if the -s option has not been used try to discover the endpoint
+		// (but only if -h and -v option were not used)
 		if (!vm.count("help") && !vm.count("version")) {
 			endpoint = discoverService();
 		}
@@ -88,8 +95,11 @@ void CliBase::initCli(int ac, char* av[]) {
 
 bool CliBase::printHelp() {
 
+	// check whether the -h option was used
 	if (vm.count("help")) {
+		// print the usage guigelines
 		cout << endl << getUsageString() << endl << endl;
+		// print the available options
         cout << visible << endl;
         return true;
     }
@@ -99,6 +109,7 @@ bool CliBase::printHelp() {
 
 bool CliBase::printVersion() {
 
+	// check whether the -V option was used
 	if (vm.count("version")) {
         cout << "TODO" << endl;
         return true;
@@ -109,8 +120,10 @@ bool CliBase::printVersion() {
 
 void CliBase::printGeneralInfo() {
 
+	// get the instance of SrvManger
 	SrvManager* manager = SrvManager::getInstance();
 
+	// print the info
 	cout << "# Using endpoint: " << getService() << endl;
 	cout << "# Service version: " << manager->getVersion() << endl;
 	cout << "# Interface version: " << manager->getInterface() << endl;
