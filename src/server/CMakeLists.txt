@@ -29,6 +29,7 @@ file(GLOB fts3_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*
 list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
 add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
 target_link_libraries(fts3_server_lib ${fts3_libs})
+target_link_libraries(fts3_server_lib -lboost_thread-mt)
 
 # Server executable
 add_executable (fts3_server main.cpp)

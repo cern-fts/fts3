@@ -34,11 +34,16 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     OPTION(FTS3_COMPILE_WITH_UNITTEST "Build with unit test" ON)
 endif ()
 
+SET(Boost_DEBUG ON)
+set(BOOST_LIBRARYDIR /usr/lib64)
+SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
+set(Boost_USE_MULTITHREADED ON)
 find_package(OCCI)
 find_package(Boost)
-find_package(Log4CPP) 
+
 
 add_subdirectory(test)
 add_subdirectory(src)
+
 
 

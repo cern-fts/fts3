@@ -1,5 +1,7 @@
 #include "OracleConnection.h"
-#include "Logger.h"
+#include "error.h"
+
+using namespace FTS3_COMMON_NAMESPACE;
 
 OracleConnection::OracleConnection(std::string username, std::string password, std::string connectString) {
 
@@ -10,8 +12,7 @@ OracleConnection::OracleConnection(std::string username, std::string password, s
 	    conn->setStmtCacheSize(500);
         }
     } catch (oracle::occi::SQLException const &e) {
-        Logger::instance().error(e.what());  
-	throw std::string(e.what());      
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));   
     }
 }
 
@@ -22,8 +23,7 @@ OracleConnection::~OracleConnection() {
         if (env)
             oracle::occi::Environment::terminateEnvironment(env);
     } catch (oracle::occi::SQLException const &e) {
-        Logger::instance().error(e.what());
-	throw std::string(e.what());
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));   
     }
 
 }

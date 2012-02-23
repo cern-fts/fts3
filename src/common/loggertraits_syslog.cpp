@@ -16,7 +16,7 @@ limitations under the License. */
 /** \file loggertraits_syslog.cpp Implementation of LoggerTraits_Syslog class. */
 
 #include "loggertraits_syslog.h"
-
+#include "common_dev.h"
 #include <string.h>
 #include <boost/preprocessor/stringize.hpp>
 

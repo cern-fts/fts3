@@ -1,27 +1,20 @@
 #include "SingleDbInstance.h"
 #include <fstream>
-#include "Logger.h"
-#include "ReadConfigFile.h"
-
-
+#include "logger.h"
 
 
 
 namespace db{
 
 boost::scoped_ptr<DBSingleton> DBSingleton::i;
-Mutex DBSingleton::m;
 
 // Implementation
 
 DBSingleton::DBSingleton() {
 
-    if (ReadConfigFile::instance().isDBCfgValid()) {
-        libraryFileName = ReadConfigFile::instance().getDBLibName();
-    } else {
-        Logger::instance().error("Cannot load DB library, check config file");
-        exit(1);
-    }
+  try{
+    //hardcoded for now
+    libraryFileName = "/home/user/workspace/fts3svn/build/src/db/oracle/libfts3_db_oracle.so";
 
     dlm = new DynamicLibraryManager(libraryFileName);
     if (dlm) {
@@ -36,9 +29,10 @@ DBSingleton::DBSingleton() {
 
         // create an instance of the DB class
         dbBackend = create_db();
-    } else {
-        Logger::instance().error("Dynamic library cannot be loaded, check configuration in /etc/fts3config");
-	exit(1);
+    } 
+    
+    }catch(...) {
+        FTS3_COMMON_LOGGER_LOG(ERR,"Dynamic database library cannot be loaded, check configuration file" );       
     }
 
 }

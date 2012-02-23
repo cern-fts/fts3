@@ -52,20 +52,31 @@ public:
 /**
  * Submit a transfer request to be stored in the database
  **/ 
-    virtual void submitPhysical(std::string jobId, std::map<std::string, std::string> src_dest_pair, std::string paramFTP, std::string DN, std::string cred, std::string voName,
-            std::string delegationID, std::string spaceToken, std::string overwrite, std::string sourceSpaceToken,
-            std::string sourceSpaceTokenDescription,
-            int copyPingLifeTime, std::string failNearLine,
-            std::string checksum, std::string checksumMode) = 0;
+    virtual void submitPhysical(const std::string & jobId, std::map<std::string, std::string> src_dest_pair, const std::string & paramFTP,
+                                 const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
+                                 const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
+                                 const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
+                                 const std::string & failNearLine, const std::string & checksum, const std::string & checksumMethod) = 0;
+
+    virtual JobStatus* getTransferJobStatus(std::string requestID) = 0;
+    
+    virtual std::vector<std::string> getSiteGroupNames() = 0;
+
+    virtual std::vector<std::string> getSiteGroupMembers(std::string GroupName) = 0;
+
+    virtual void removeGroupMember(std::string groupName, std::string siteName) = 0;
+
+    virtual void addGroupMember(std::string groupName, std::string siteName) = 0;    
 
 /**
  * Submit a transfer request to be stored in the database
  **/
+ /*
     virtual std::vector<JobStatus> listRequests(std::vector<std::string> inGivenStates, std::string channelName, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
 
     virtual std::vector<FileTransferStatus> getFileStatus(std::string requestID, int offset, int limit) = 0;
 
-    virtual JobStatus* getTransferJobStatus(std::string requestID) = 0;
+
 
     virtual TransferJobSummary* getTransferJobSummary(std::string requestID) = 0;
 
@@ -201,16 +212,12 @@ public:
 
     virtual void setVOLimit(std::string channelUpperName, std::string voName, int limit) = 0;
 
-    virtual std::vector<std::string> getSiteGroupNames() = 0;
+*/
 
-    virtual std::vector<std::string> getSiteGroupMembers(std::string GroupName) = 0;
-
-    virtual void removeGroupMember(std::string groupName, std::string siteName) = 0;
-
-    virtual void addGroupMember(std::string groupName, std::string siteName) = 0;
 
 
     /*NEW API*/
+    /*
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
 
@@ -221,6 +228,7 @@ public:
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
 
     virtual void deleteSe(std::string ENDPOINT, std::string SITE, std::string NAME) = 0;
+    */
 };
 
 

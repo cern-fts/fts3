@@ -3,17 +3,46 @@
 #include <string>
 #include <exception>
 #include <vector>
-#include "ReadConfigFile.h"
+#include "serverconfig.h"
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+    #include "unittest/testsuite.h"
+#endif // FTS3_COMPILE_WITH_UNITTESTS
+
+
 
 using namespace db;
 
 int main()
 {
-try{
-    std::string requestID = "c8f3f3ad-2b34-11e1-9c6e-ca754d097ef6";    
+#ifdef FTS3_COMPILE_WITH_UNITTEST
 
-    DBSingleton::instance().getDBObjectInstance()->init(ReadConfigFile::instance().getDBUsername(), ReadConfigFile::instance().getDBPassword(), ReadConfigFile::instance().getDBConnectionString());
+try{
+    //std::string DbUserName      = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("DbUsername");  
+    //std::cout << DbUserName << std::endl;
+    //std::string DbPassword      = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("DbPassword");      
+    //std::cout << DbPassword << std::endl;    
+    //std::string DbConnectString = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("DbConnectString"); 	 
+
+    DBSingleton::instance().getDBObjectInstance()->init("msalicho", "Msal1973" , "oradev10.cern.ch:10520/D10");
+
+    const std::string temp = std::string("");
+    const std::string requestID = "c8f3f3ad-2b34-11e1-9c6e-ca754d097ef5";
+    const std::string dn ="/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
+    const std::string vo = std::string("dteam");
+
+    std::map<std::string, std::string> src_dest_pair;
+    src_dest_pair.insert(std::make_pair("SE1","SE2"));
+    
+
+    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, src_dest_pair, temp,
+                                 dn, temp, vo, temp,
+                                 temp, temp, temp, 
+                                 temp, temp, temp, 1,
+                                 temp, temp, temp);
+	      
     JobStatus* record =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(requestID);
+    
     if(record){
     	std::cout << "1  " << record->jobID << std::endl;
 	std::cout << "2  "  << record->jobStatus << std::endl;
@@ -27,25 +56,12 @@ try{
 	
 	delete record;
     }
-    
-    DBSingleton::instance().getDBObjectInstance()->removeGroupMember("groupName", "siteName");
-    
-    DBSingleton::instance().getDBObjectInstance()->addGroupMember("groupName", "siteName");
-    DBSingleton::instance().getDBObjectInstance()->addGroupMember("groupName", "siteName");
-    
-    std::vector<std::string> test = DBSingleton::instance().getDBObjectInstance()->getSiteGroupMembers("groupName");
-    std::cout << test.size() << std::endl;
-    
-    
-    std::vector<std::string> test2 = DBSingleton::instance().getDBObjectInstance()->getSiteGroupMembers("groupName");
-    std::cout << test2.size() << std::endl;
-   
   }
 catch (std::string const &e)
   {
     std::cout << e<< std::endl;
   }
   
-      
+#endif      
     return (0);
 }

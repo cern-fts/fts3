@@ -50,19 +50,20 @@
 
 
 
-#include <pthread.h>
+
 #include <iostream>
 #include <boost/scoped_ptr.hpp>
-#include "MutexLocker.h"
+#include "monitorobject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 
 using namespace std;
+using namespace FTS3_COMMON_NAMESPACE;
 namespace db{
 /**
  * DBSingleton class declaration
  **/ 
-class DBSingleton {
+class DBSingleton: public MonitorObject {
 public:
     ~DBSingleton();
 
@@ -71,10 +72,11 @@ public:
  **/ 
     static DBSingleton & instance() {
         if (i.get() == 0) {
-            MutexLocker obtain_lock(m);
+            FTS3_COMMON_MONITOR_START_STATIC_CRITICAL
             if (i.get() == 0) {
                 i.reset(new DBSingleton);
             }
+	    FTS3_COMMON_MONITOR_END_CRITICAL
         }
         return *i;
     }
@@ -96,7 +98,6 @@ private:
     DBSingleton & operator=(DBSingleton const&);
     // assignment operator is private
     static boost::scoped_ptr<DBSingleton> i;
-    static Mutex m;
     DynamicLibraryManager *dlm;
     std::string libraryFileName;
     

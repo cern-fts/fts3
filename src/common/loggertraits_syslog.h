@@ -17,6 +17,7 @@ limitations under the License. */
 
 #pragma once
 
+#include "dev.h"
 #include "common_dev.h"
 #include <syslog.h>
 #include <boost/preprocessor/cat.hpp>

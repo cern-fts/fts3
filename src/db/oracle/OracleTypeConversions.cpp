@@ -1,9 +1,11 @@
 #include "OracleTypeConversions.h"
-#include "Logger.h"
+#include "error.h"
 #include <boost/scoped_ptr.hpp>
 #include <boost/algorithm/string/compare.hpp>
 #include <algorithm>
 #include "StreamPtr.h"
+
+using namespace FTS3_COMMON_NAMESPACE;
 
 const char * const LONGLONG_FMT           = "99999999999999999999";
 const std::string BOOLEAN_TRUE_STR  = "Y";
@@ -63,7 +65,7 @@ oracle::occi::Timestamp OracleTypeConversions::toTimestamp(time_t t, oracle::occ
                                    0);                     // tz minute
         }
     } catch(const oracle::occi::SQLException& e){
-        Logger::instance().error(e.what());
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
     
     return timestamp;
@@ -78,7 +80,7 @@ longlong OracleTypeConversions::toLongLong(const ::oracle::occi::Number& number,
             n = atoll(n_str.c_str());
         }
     } catch(const oracle::occi::SQLException& e){
-        Logger::instance().error(e.what());
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
     return n;
 }
@@ -94,7 +96,7 @@ oracle::occi::Number OracleTypeConversions::toNumber(longlong n, oracle::occi::E
     try{    
         number.fromText(m_env,n_str,LONGLONG_FMT);        
     } catch(const oracle::occi::SQLException& e){
-        Logger::instance().error(e.what()); 
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what())); 
     }
     return number;
 }
@@ -141,7 +143,7 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
             clob.close();
         }catch(...){}
         std::string reason = (std::string)"Failed to read clob: " + exc.getMessage();
-	Logger::instance().error(reason);        
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(reason));        
     }
 }
 
