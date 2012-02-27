@@ -17,6 +17,8 @@ limitations under the License. */
 
 #pragma once
 
+#include <assert.h>
+
 #ifndef FTS3_NAMESPACE_START
   /** Start FTS3 namespace. Example:
       \code

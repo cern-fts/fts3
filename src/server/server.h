@@ -17,26 +17,23 @@ limitations under the License. */
 
 #pragma once
 
-#include "server_dev.h"
-#include <string>
+#include "generic_server.h"
+#include "threadpool.h"
+#include "transfer_web_service.h"
 
 FTS3_SERVER_NAMESPACE_START
 
 /* -------------------------------------------------------------------------- */
 
-/** Class representing the FTS3 server logic. */
-class Server
+struct ServerTraits
 {
-
-public:
-    /** Start the service. */
-    void start();
-
-    /* ---------------------------------------------------------------------- */
-    
-    /** Stop the service. */
-    void stop(); 
+    typedef TransferWebService TransferWebServiceType;
+    typedef ThreadPool::ThreadPool ThreadPoolType; 
 };
+
+/* -------------------------------------------------------------------------- */
+
+typedef GenericServer<ServerTraits> Server; 
 
 /* -------------------------------------------------------------------------- */
 

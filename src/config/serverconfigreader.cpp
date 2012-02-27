@@ -34,9 +34,10 @@ FTS3_CONFIG_NAMESPACE_START
 // Default config values
 #define FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT 8080
 #define FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT "localhost"
-#define FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT 2000
+#define FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT 10
 #define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT "/var/log/fts3"
 #define FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT "/etc/sysconfig/fts3config"
+#define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "oracle"
 
 /* ---------------------------------------------------------------------- */
 
@@ -83,6 +84,12 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         )
 
 	    (
+            "DbType,d", 
+            po::value<std::string>( &(_vars["DbType"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT),
+            "Database backend type. Allowed values: oracle"
+        )
+	    
+        (
             "DbUserName,u", 
             po::value<std::string>( &(_vars["DbUserName"]) )->default_value(""), 
             "Database account user name"
@@ -242,6 +249,80 @@ BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_default, Se
     argv[2] = const_cast<char*> ("--Port=7823682");
     (*this)(argc, argv);
     BOOST_CHECK_EQUAL (_vars["Port"], std::string("7823682"));
+}
+
+/* ========================================================================== */
+
+/** Test class for DbType options. */
+struct Test_DbType_ServerConfigReader : public ServerConfigReader
+{
+    /* -------------------------------------------------------------------- */
+    Test_DbType_ServerConfigReader()
+        : argc (argc_max)
+    {
+        argv[0] = const_cast<char*> ("executable");
+        argv[1] = const_cast<char*> ("--configfile=/dev/null");
+    }
+
+    /* -------------------------------------------------------------------- */
+    
+    void doTest()
+    {
+        (*this)(argc, argv);
+        BOOST_CHECK_EQUAL (_vars["DbType"], label());
+    }
+
+    /* -------------------------------------------------------------------- */
+    
+    static const int argc_max = 4;
+    
+    /* -------------------------------------------------------------------- */
+    
+    static const std::string& label ()
+    {
+        static const std::string str("atyala");
+        return str;
+    }
+    
+    /* -------------------------------------------------------------------- */
+    
+    char* argv[argc_max];
+    
+    /* -------------------------------------------------------------------- */
+    
+    int argc;
+};
+
+/* ------------------------------------------------------------------------- */
+
+/** This test checks if short DbType argument works */
+BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_DbType_short, Test_DbType_ServerConfigReader)
+{
+    argv[2] = const_cast<char*> ("-d");
+    argv[3] = const_cast<char*> (label().c_str());
+    argc = 4;
+    doTest();
+}
+
+/* ------------------------------------------------------------------------- */
+
+/** This test checks if long DbType argument works */
+BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_DbType_long, Test_DbType_ServerConfigReader)
+{
+    std::string opt =  std::string("--DbType=") + label();
+    argv[2] = const_cast<char*> (opt.c_str());
+    argc = 3;
+    doTest();
+}
+
+/* ------------------------------------------------------------------------- */
+
+/** This test checks if default DbType argument works */
+BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_DbType_default, Test_DbType_ServerConfigReader)
+{
+    argc = 2;
+    (*this)(argc, argv);
+    BOOST_CHECK_EQUAL (_vars["DbType"], FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT);
 }
 
 /* ------------------------------------------------------------------------- */

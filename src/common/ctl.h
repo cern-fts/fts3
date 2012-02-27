@@ -13,8 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and 
 limitations under the License. */
 
-#ifndef FTS3_COMMON_CTL_CTL_H
-#define FTS3_COMMON_CTL_CTL_H
+#pragma once
 
 /** \file ctl.h Common template library for FTS3 developent. */
 
@@ -30,6 +29,8 @@ limitations under the License. */
 #include <iosfwd>
 #include <iterator>
 #include <vector>
+
+FTS3_COMMON_NAMESPACE_START
 
 /* -------------------------------------------------------------------------- */
 
@@ -56,8 +57,6 @@ template<class T> inline std::istream& operator >>
 	return is;
 }
 
-FTS3_COMMON_NAMESPACE_START
-
 namespace ctl {
 
 /* -------------------------------------------------------------------------- */
@@ -71,6 +70,11 @@ struct _PtrContainerComparator : std::binary_function<typename Container::value_
 		return lhs && rhs ? *rhs == *lhs : false;
 	}
 };
+
+/* -------------------------------------------------------------------------- */
+
+/** Name explains... No members, no methods. */
+struct EmptyType {};
 
 } // namespace ctl
 
@@ -95,7 +99,7 @@ struct _PtrContainerComparator : std::binary_function<typename Container::value_
 #define CORALMESSAGING_CTL_FOR(start, stop, MACRO) \
 	BOOST_PP_FOR((start, stop), CORALMESSAGING_CTL_FOR_PRED, CORALMESSAGING_CTL_FOR_INC, MACRO);
 
-FTS3_CONFIG_NAMESPACE_END
+/* -------------------------------------------------------------------------- */
 
-#endif // FTS3_COMMON_CTL_CTL_H
+FTS3_COMMON_NAMESPACE_END
 

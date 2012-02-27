@@ -23,6 +23,6 @@ include_directories (${fts3_include_dir})
 file(GLOB fts3_config "*.cpp")
 #add_definitions(-E)
 add_library(fts3_config SHARED ${fts3_config})
-target_link_libraries(fts3_config ${Boost_LIBRARIES} )
+#target_link_libraries(fts3_config ${Boost_LIBRARIES} )
 target_link_libraries(fts3_config -lboost_program_options )
 

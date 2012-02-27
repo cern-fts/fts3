@@ -13,18 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and 
 limitations under the License. */
 
-/** \file server.cpp Implementation of FTS3 server logic. */
-
-#include "server.h"
-
+#include "common/logger.h"
+#include "common/error.h"
+#include "gsoap_method_handler.h"
+ 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_SERVER_NAMESPACE_START
 
+using namespace FTS3_COMMON_NAMESPACE;
+
 /* -------------------------------------------------------------------------- */
 
+void GSoapMethodHandler::handle()
+{
+
+}
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+
+#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_SERVER_NAMESPACE_END
 

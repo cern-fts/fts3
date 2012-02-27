@@ -13,18 +13,40 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and 
 limitations under the License. */
 
-/** \file server.cpp Implementation of FTS3 server logic. */
+#pragma once
 
-#include "server.h"
-
-#ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+#include "server_dev.h"
+#include "common/pointers.h"
+//#include "ws/GsoapStubs.h"
 
 FTS3_SERVER_NAMESPACE_START
 
-/* -------------------------------------------------------------------------- */
+using namespace FTS3_COMMON_NAMESPACE;
 
+class GSoapMethodHandler;
+
+class GSoapAcceptor
+{
+public:
+    GSoapAcceptor
+    (
+        const unsigned int port,
+        const std::string& ip
+    );
+
+    void accept();
+
+    bool isConnectionClosed();
+    
+    bool isNewConnection();
+
+    Pointer<GSoapMethodHandler>::Shared getHandler();
+
+protected:
+
+    bool _isConnectionClosed;
+  //  FileTransferSoapBindingService _srv;
+};
 
 FTS3_SERVER_NAMESPACE_END
 

@@ -67,7 +67,7 @@ int main (int argc, char** argv)
             std::cout << "Going to daemon mode... by by console!" << std::endl;
             daemonize();
         }
-
+        
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
         theServer().start();
     }
