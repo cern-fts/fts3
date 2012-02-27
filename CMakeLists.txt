@@ -23,8 +23,11 @@ link_directories (${PROJECT_BINARY_DIR}/src/common)
 link_directories (${PROJECT_BINARY_DIR}/src/config) 
 link_directories (${PROJECT_BINARY_DIR}/src/server) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector")
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
+# load module
+include(DefineInstallationPaths REQUIRED)
+
 
 ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
@@ -40,7 +43,6 @@ SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
 set(Boost_USE_MULTITHREADED ON)
 find_package(OCCI)
 find_package(Boost)
-
 
 add_subdirectory(test)
 add_subdirectory(src)
