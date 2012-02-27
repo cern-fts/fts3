@@ -15,16 +15,16 @@ limitations under the License. */
 
 #pragma once
 
-#include "common/timeout.h"
-#include "traced.h"
+#include "server_dev.h"
 
-#include <boost/bind.hpp>
+#include "common/timeout.h"
+#include "common/traced.h"
+
+/* ---------------------------------------------------------------------- */
 
 FTS3_SERVER_NAMESPACE_START
 
-using namespace FTS3_NAMESPACE_COMMON;
-
-/* ---------------------------------------------------------------------- */
+using namespace FTS3_COMMON_NAMESPACE;
 
 namespace ThreadPool {
 
@@ -33,7 +33,7 @@ class Worker
 public:
 	Worker(ThreadTraits::THREAD_GROUP& tg, const int id);	
 
-    virtual ~Worker() {};
+	virtual ~Worker() {};
 
 private:
 	void _doWork();
@@ -49,5 +49,4 @@ private:
 
 } // namespace ThreadPool
 
-FTS3_COMMON_NAMESPACE_END
-
+FTS3_SERVER_NAMESPACE_END

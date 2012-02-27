@@ -172,7 +172,7 @@ struct SynchronizedQueueTest
         };
 	};
 };
-
+#if 0
 /** Test if:
  * - The queue maintains the order of the elements 
  * - properly reports if the queue is full or empty */
@@ -258,6 +258,6 @@ BOOST_FIXTURE_TEST_CASE (SynchronizedQueue_Test_notifyIfFullLostElement, Synchro
 }
 
 #endif // FTS3_COMPILE_WITH_UNITTESTS
-
+#endif
 FTS3_SERVER_NAMESPACE_END
 

@@ -24,9 +24,7 @@
  *      Author: simonm
  */
 
-#ifndef GSOAPSTUBS_H_
-#define GSOAPSTUBS_H_
+#pragma once
 
 #include "ftsFileTransferSoapBindingService.h"
 
-#endif /* GSOAPSTUBS_H_ */
