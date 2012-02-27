@@ -24,12 +24,38 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(fts3_libs "-lboost_unit_test_framework ${fts3_libs}")
 endif ()
 
+# GSOAP file generation
+find_package(gSOAP)
+
+set(generated_files_dir "${CMAKE_CURRENT_BINARY_DIR}/ws")
+set(gsoap_typemap "${PROJECT_SOURCE_DIR}/src/server/ws/typemap.dat")
+set(fts3_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-1.0.0.wsdl")
+set(gsoap_header_file "${generated_files_dir}/ftsH.h")
+set(gsoap_source_files "${generated_files_dir}/ftsC.cpp")
+
+file(MAKE_DIRECTORY ${generated_files_dir})
+
+add_custom_command(	OUTPUT  ${gsoap_header_file}
+					DEPENDS  ${gsoap_typemap} ${fts3_wsdl} 
+					COMMAND ${GSOAP_WSDL2H} ${GSOAP_276_COMPAT_FLAGS} -e -y  -t ${gsoap_typemap}  ${fts3_wsdl}  -o ${gsoap_header_file})
+
+
+add_custom_command(	OUTPUT ${gsoap_source_files}
+					DEPENDS ${gsoap_header_file} 
+    				COMMAND ${GSOAP_SOAPCPP2} -n -w -i -S -x -p fts -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_header_file} )
+
+
+# gSOAP web service lib
+set(fts3_server_gsoap_lib_sources "${gsoap_source_files}")
+add_library(fts3_server_gsoap_lib SHARED ${fts3_server_gsoap_lib_sources})
+set_target_properties(fts3_server_gsoap_lib PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
+
 # Server lib
 file(GLOB fts3_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*.cpp")
 list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
-#list(APPEND fts3_server_lib_sources "ws/ftsFileTransferSoapBindingService.cpp")
 add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
 target_link_libraries(fts3_server_lib ${fts3_libs})
+target_link_libraries(fts3_server_lib ${fts3_server_gsoap_lib})
 target_link_libraries(fts3_server_lib -lboost_thread-mt)
 
 # Server executable
