@@ -20,6 +20,7 @@ limitations under the License. */
 #include "common_dev.h"
 #include "common/logger.h"
 #include <sstream>
+#include <string>
 
 FTS3_COMMON_NAMESPACE_START
 
