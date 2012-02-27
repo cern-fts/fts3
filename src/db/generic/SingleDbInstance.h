@@ -45,7 +45,7 @@
 
 #include <iostream>
 #include <boost/scoped_ptr.hpp>
-#include "monitorobject.h"
+#include "common/monitorobject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
 

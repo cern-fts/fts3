@@ -17,5 +17,29 @@
  *	limitations under the License.
  */
 
-#include "stdsoap2.h" // autogen
-struct Namespace namespaces[] ={{NULL, NULL}}; // autogen
+/*
+ * UuidGenerator.cpp
+ *
+ *  Created on: Feb 17, 2012
+ *      Author: simonm
+ */
+
+#include "uuid_generator.h"
+#include <uuid/uuid.h>
+
+using namespace fts::ws;
+
+string UuidGenerator::generateUUID() {
+
+	uuid_t id;
+	char c_str[36];
+
+	uuid_generate(id);
+	// different algorithms:
+	//uuid_generate_random(id);
+	//uuid_generate_time(id);
+	uuid_unparse(id, c_str);
+
+	string str = c_str;
+	return str;
+}

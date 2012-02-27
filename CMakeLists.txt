@@ -22,6 +22,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 link_directories (${PROJECT_BINARY_DIR}/src/common) 
 link_directories (${PROJECT_BINARY_DIR}/src/config) 
 link_directories (${PROJECT_BINARY_DIR}/src/server) 
+link_directories (${PROJECT_BINARY_DIR}/src/db/generic) 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector")
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")

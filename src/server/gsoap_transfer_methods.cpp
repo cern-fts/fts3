@@ -22,6 +22,8 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include <boost/lexical_cast.hpp>
+
 using namespace fts::ws;
 using namespace boost;
 using namespace db;

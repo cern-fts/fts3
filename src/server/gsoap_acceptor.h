@@ -17,7 +17,7 @@ limitations under the License. */
 
 #include "server_dev.h"
 #include "common/pointers.h"
-//#include "ws/GsoapStubs.h"
+#include "gsoap_stubs.h"
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -45,7 +45,7 @@ public:
 protected:
 
     bool _isConnectionClosed;
-  //  FileTransferSoapBindingService _srv;
+    FileTransferSoapBindingService _srv;
 };
 
 FTS3_SERVER_NAMESPACE_END

@@ -17,8 +17,6 @@ limitations under the License. */
 #include "common/error.h"
 #include "gsoap_acceptor.h"
 #include "gsoap_method_handler.h"
-//#include "ws/evn.h"
-//#include "ws/fts.nsmap"
  
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
@@ -32,16 +30,14 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 GSoapAcceptor::GSoapAcceptor
 (
-    const unsigned int,
-    const std::string&
+    const unsigned int port,
+    const std::string& ip
 ) :
     _isConnectionClosed(true)
 {
-#if 0
-    SOAP_SOCKET sock = _srv.bind(ip.c_str(), port, 0);
-    bool isValidSocket = soap_valid_socket(sock);
+    SOAP_SOCKET sock = _srv.bind (ip.c_str(), port, 0);
 
-    if (isValidSocket)
+    if (sock >= 0)
     {
         FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service bound to socket " << sock << commit;
     }
@@ -49,7 +45,6 @@ GSoapAcceptor::GSoapAcceptor
     {
         FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
     }
-#endif
 }
 
 /* -------------------------------------------------------------------------- */

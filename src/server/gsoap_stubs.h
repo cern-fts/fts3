@@ -17,29 +17,7 @@
  *	limitations under the License.
  */
 
-/*
- * UuidGenerator.cpp
- *
- *  Created on: Feb 17, 2012
- *      Author: simonm
- */
+#pragma once
 
-#include "UuidGenerator.h"
-#include <uuid/uuid.h>
+#include "ws/ftsFileTransferSoapBindingService.h"
 
-using namespace fts::ws;
-
-string UuidGenerator::generateUUID() {
-
-	uuid_t id;
-	char c_str[36];
-
-	uuid_generate(id);
-	// different algorithms:
-	//uuid_generate_random(id);
-	//uuid_generate_time(id);
-	uuid_unparse(id, c_str);
-
-	string str = c_str;
-	return str;
-}

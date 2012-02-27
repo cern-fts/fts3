@@ -17,14 +17,7 @@
  *	limitations under the License.
  */
 
-/*
- * GsoapStubs.h
- *
- *  Created on: Feb 18, 2012
- *      Author: simonm
- */
+#include <stdsoap2.h>
 
-#pragma once
-
-#include "ftsFileTransferSoapBindingService.h"
+struct Namespace namespaces[] ={{NULL, NULL}}; 
 
