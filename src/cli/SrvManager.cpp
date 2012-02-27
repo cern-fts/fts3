@@ -15,25 +15,23 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * CliManager.cpp
+ *
+ * SrvManager.cpp
  *
  *  Created on: Feb 7, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #include "SrvManager.h"
 
-#include <openssl/x509_vfy.h>
-#include <openssl/err.h>
-#include <openssl/pem.h>
-#include <openssl/asn1.h>
+//#include <openssl/x509_vfy.h>
+//#include <openssl/err.h>
+//#include <openssl/pem.h>
+//#include <openssl/asn1.h>
 
 #include <termios.h>
 #include <cgsi_plugin.h>
-#include <gridsite.h>
+//#include <gridsite.h>
 
 #include <time.h>
 #include <iostream>
@@ -191,7 +189,7 @@ void SrvManager::delegateProxyCert(string endpoint) {
 long SrvManager::isCertValid () {
 
 	// find user proxy certificate
-    char * user_proxy = GRSTx509FindProxyFileName();
+/*    char * user_proxy = GRSTx509FindProxyFileName();
 	FILE *fp = fopen(user_proxy , "r");
 	// read the certificate
     X509 *cert = PEM_read_X509(fp, 0, 0, 0);
@@ -201,7 +199,8 @@ long SrvManager::isCertValid () {
     long time = GRSTasn1TimeToTimeT(c_str, 0) - ::time(0);
 
     cout << "Remaining time for local proxy is " << time / 3600 << " hours and " << time % 3600 / 60 << " minutes." << endl;
-
+*/
+	long time = 0;
     return time;
 }
 

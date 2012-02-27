@@ -206,12 +206,22 @@ public:
 	}
 	///@}
 
-private:
+protected:
 	/**
 	 * Default constructor (private).
 	 */
 	SrvManager();
 
+	///@{
+	/**
+	 * Interface Version components
+	 */
+	long major;
+	long minor;
+	long patch;
+	///@}
+
+private:
 	/**
 	 * Copy constructor (private).
 	 */
@@ -226,15 +236,6 @@ private:
 	 * SrvManager single instance
 	 */
 	static SrvManager* manager;
-
-	///@{
-	/**
-	 * Interface Version components
-	 */
-	long major;
-	long minor;
-	long patch;
-	///@}
 
 	///@{
 	/**
