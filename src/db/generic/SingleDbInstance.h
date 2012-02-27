@@ -27,21 +27,13 @@
 /**
  * To use the generic database interface one must: 
  *  -include "#include "SingleDbInstance.h"
+ *  -use namespace db
  *  -call DBSingleton::instance().getDBObjectInstance()->init(username, password, connectString)
  *  -call DBSingleton::instance().getDBObjectInstance()->XXX (API available in GenericDbIfce.h)
  *
  * Notes:
  * -always wrap database calls inside a try/catch block
- * -if an exception is raised, the operation is rollbacked and it's up the user/caller to redo it or not
- * -the exception raised is a simple/standard std::string, so your exception handling code should look like:
- try{
-  do database stuff
- }    
- catch (std::string const &e)
-  {
-    use the logger to append the error (e)
-  }
-   
+ * -if an exception is raised, the operation is rollbacked and it's up the user/caller to redo it or not   
  **/
 
 

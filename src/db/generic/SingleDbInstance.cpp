@@ -1,6 +1,9 @@
 #include "SingleDbInstance.h"
 #include <fstream>
 #include "logger.h"
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+    #include "unittest/testsuite.h"
+#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 
 
@@ -44,3 +47,60 @@ DBSingleton::~DBSingleton() {
         delete dlm;
 }
 }
+
+
+
+
+
+
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+BOOST_AUTO_TEST_SUITE(db_test_suite)
+
+BOOST_AUTO_TEST_CASE (test)
+{
+    using namespace db;
+
+    const std::string temp = std::string("");
+    const std::string requestID = "c8f3f3ad-2b34-11e1-9c6e-ca754d097ef5";
+    const std::string dn ="/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
+    const std::string vo = std::string("dteam");
+    std::map<std::string, std::string> src_dest_pair;
+    src_dest_pair.insert(std::make_pair("SE1","SE2"));
+    
+    try{    	
+    	DBSingleton::instance().getDBObjectInstance()->init("msalicho", "Msal1973" , "oradev10.cern.ch:10520/D10");
+    }
+    catch(const std::exception &e){
+    	BOOST_WARN( !e.what() );
+	
+    }
+    
+        try{
+    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, src_dest_pair, temp,
+                                 dn, temp, vo, temp,
+                                 temp, temp, temp, 
+                                 temp, temp, temp, 1,
+                                 temp, temp, temp);
+    }
+    catch(const std::exception &e){
+    	BOOST_WARN( !e.what() );
+	
+    }
+    
+    
+    try{	     
+    JobStatus* record =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(requestID);
+    BOOST_CHECK( !record );
+    delete record;
+    }
+    catch(const std::exception &e){
+    	BOOST_WARN( !e.what() );
+	
+    }
+    
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+#endif      
+
