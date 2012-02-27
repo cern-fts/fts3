@@ -50,9 +50,17 @@ int main(int ac, char* av[]) {
     srv.max_keep_alive = 100; // max keep-alive sequence
 
     ret = srv.bind("localhost", 8443, 0);
-
+    if (ret < 0) {
+    	cout << "busy" << endl;
+    	return 0;
+    }
     do {
 		ret = srv.accept();
+		if (ret < 0) {
+	    	cout << "busy" << endl;
+	    	return 0;
+	    }
+
 		cout << "rqst accepted" << endl;
 		FileTransferSoapBindingService* copy = FtsServiceTask::copyService(srv);
 

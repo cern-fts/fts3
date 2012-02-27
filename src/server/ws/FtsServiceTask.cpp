@@ -28,8 +28,13 @@
 #include "FtsServiceTask.h"
 #include "GsoapStubs.h"
 #include "UuidGenerator.h"
+#include <boost/lexical_cast.hpp>
+
+#include "db/generic/SingleDbInstance.h"
 
 using namespace fts::ws;
+using namespace boost;
+using namespace db;
 
 FtsServiceTask::FtsServiceTask() {
 }
@@ -106,6 +111,75 @@ int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job,
 	}
 
 	string id = UuidGenerator::generateUUID();
+
+	try{
+		DBSingleton::instance().getDBObjectInstance()->init("msalicho", "Msal1973" , "oradev10.cern.ch:10520/D10");
+
+	    const string requestID = id;
+	    const string dn ="/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
+	    const string vo = string("dteam");
+
+	    map<string, string> src_dest_pair;
+	    vector<transfer__TransferJobElement * >::iterator it;
+
+	    for (it = _job->transferJobElements.begin(); it < _job->transferJobElements.end(); it++) {
+	    	src_dest_pair.insert(make_pair(*(*it)->source, *(*it)->dest));
+	    }
+
+	    string checksum = "";
+	    string sourceSpaceTokenDescription = "";
+
+	    string cred = "";
+	    if (_job->credential) {
+	    	cred = *_job->credential;
+	    }
+	    int copyPinLifeTime = 1;
+	    string params[9];
+
+	    if(_job->jobParams) {
+
+	    	vector<string>::iterator key_it = _job->jobParams->keys.begin();
+	    	vector<string>::iterator val_it = _job->jobParams->values.begin();
+
+	    	map<string, int> index;
+	    	index.insert(pair<string, int>("gridftp", 0));
+	    	index.insert(pair<string, int>("myproxy", 1));
+	    	index.insert(pair<string, int>("delegationid", 2));
+	    	index.insert(pair<string, int>("spacetoken", 3));
+	    	index.insert(pair<string, int>("overwrite", 4));
+	    	index.insert(pair<string, int>("source_spacetoken", 5));
+	    	index.insert(pair<string, int>("lan_connection", 6));
+	    	index.insert(pair<string, int>("fail_nearline", 7));
+	    	index.insert(pair<string, int>("checksum_method", 8));
+
+	    	map<string, int>::iterator index_it;
+
+
+	    	for (; key_it < _job->jobParams->keys.end(); key_it++, val_it++) {
+	    		if (key_it->compare("copy_pin_lifetime") == 0) {
+	    			copyPinLifeTime = lexical_cast<int>(*val_it);
+	    		} else {
+	    			index_it = index.find(*key_it);
+
+	    			if (index_it != index.end()) {
+	    				params[index_it->second] = *val_it;
+	    			}
+	    		}
+	    	}
+	    }
+
+
+	    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, src_dest_pair, params[0],
+	                                 dn, cred, vo, params[1],
+	                                 params[2], params[3], params[4],
+	                                 params[5], sourceSpaceTokenDescription, params[6], copyPinLifeTime,
+	                                 params[7], checksum, params[8]);
+	  }
+	catch (string const &e)
+	  {
+	    cout << e << endl;
+	  }
+
 	cout << "Job ID: " << id << endl;
 	_param_4._transferSubmit2Return = id;
 	return SOAP_OK;
@@ -116,6 +190,7 @@ int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job
 	string id = UuidGenerator::generateUUID();
 	cout << "Job ID: " << id << endl;
 	_param_5._transferSubmit3Return = id;
+
 	return SOAP_OK;
 }
 
@@ -127,27 +202,61 @@ int FileTransferSoapBindingService::submit(transfer__TransferJob *_job, struct f
 
 
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getFileStatus(std::string _requestID, int _offset, int _limit, struct fts__getFileStatusResponse &_param_9) {
+int FileTransferSoapBindingService::getFileStatus(string _requestID, int _offset, int _limit, struct fts__getFileStatusResponse &_param_9) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getFileStatus2(std::string _requestID, int _offset, int _limit, struct fts__getFileStatus2Response &_param_10) {
+int FileTransferSoapBindingService::getFileStatus2(string _requestID, int _offset, int _limit, struct fts__getFileStatus2Response &_param_10) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobStatus(std::string _requestID, struct fts__getTransferJobStatusResponse &_param_11) {
+int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, struct fts__getTransferJobStatusResponse &_param_11) {
+
+	try{
+		DBSingleton::instance().getDBObjectInstance()->init("msalicho", "Msal1973" , "oradev10.cern.ch:10520/D10");
+		JobStatus* record =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID);
+
+		if(record){
+
+			_param_11._getTransferJobStatusReturn = soap_new_transfer__JobStatus(this, -1);
+
+			_param_11._getTransferJobStatusReturn->jobID = soap_new_std__string(this, -1);
+			*_param_11._getTransferJobStatusReturn->jobID = record->jobID;
+
+			_param_11._getTransferJobStatusReturn->jobStatus = soap_new_std__string(this, -1);
+			*_param_11._getTransferJobStatusReturn->jobStatus = record->jobStatus;
+
+			_param_11._getTransferJobStatusReturn->clientDN = soap_new_std__string(this, -1);
+			*_param_11._getTransferJobStatusReturn->clientDN = record->clientDN;
+
+			_param_11._getTransferJobStatusReturn->reason = soap_new_std__string(this, -1);
+			*_param_11._getTransferJobStatusReturn->reason = record->reason;
+
+			_param_11._getTransferJobStatusReturn->voName = soap_new_std__string(this, -1);
+			*_param_11._getTransferJobStatusReturn->voName = record->voName;
+
+			_param_11._getTransferJobStatusReturn->submitTime = record->submitTime;
+			_param_11._getTransferJobStatusReturn->numFiles = record->numFiles;
+			_param_11._getTransferJobStatusReturn->priority = record->priority;
+
+			delete record;
+		}
+	} catch (string const &e) {
+		cout << e << endl;
+	}
+
 	return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobSummary(std::string _requestID, struct fts__getTransferJobSummaryResponse &_param_12) {
+int FileTransferSoapBindingService::getTransferJobSummary(string _requestID, struct fts__getTransferJobSummaryResponse &_param_12) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobSummary2(std::string _requestID, struct fts__getTransferJobSummary2Response &_param_13) {
+int FileTransferSoapBindingService::getTransferJobSummary2(string _requestID, struct fts__getTransferJobSummary2Response &_param_13) {
 	return SOAP_OK;
 }
 
@@ -172,7 +281,7 @@ int FileTransferSoapBindingService::getInterfaceVersion(struct fts__getInterface
 }
 
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getServiceMetadata(std::string _key, struct fts__getServiceMetadataResponse &_param_24) {
+int FileTransferSoapBindingService::getServiceMetadata(string _key, struct fts__getServiceMetadataResponse &_param_24) {
 	_param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
 	return SOAP_OK;
 }
@@ -185,7 +294,7 @@ int FileTransferSoapBindingService::listRequests(fts__ArrayOf_USCOREsoapenc_USCO
 }
 
 /// Web service operation 'listRequests2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, std::string _forDN, std::string _forVO, struct fts__listRequests2Response &_param_8) {
+int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct fts__listRequests2Response &_param_8) {
 	return SOAP_OK;
 }
 
@@ -197,22 +306,22 @@ int FileTransferSoapBindingService::cancel(fts__ArrayOf_USCOREsoapenc_USCOREstri
 }
 
 /// Web service operation 'setJobPriority' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::setJobPriority(std::string _requestID, int _priority, struct fts__setJobPriorityResponse &_param_15) {
+int FileTransferSoapBindingService::setJobPriority(string _requestID, int _priority, struct fts__setJobPriorityResponse &_param_15) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'addVOManager' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::addVOManager(std::string _VOName, std::string _principal, struct fts__addVOManagerResponse &_param_16) {
+int FileTransferSoapBindingService::addVOManager(string _VOName, string _principal, struct fts__addVOManagerResponse &_param_16) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'removeVOManager' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::removeVOManager(std::string _VOName, std::string _principal, struct fts__removeVOManagerResponse &_param_17) {
+int FileTransferSoapBindingService::removeVOManager(string _VOName, string _principal, struct fts__removeVOManagerResponse &_param_17) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'listVOManagers' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listVOManagers(std::string _VOName, struct fts__listVOManagersResponse &_param_18) {
+int FileTransferSoapBindingService::listVOManagers(string _VOName, struct fts__listVOManagersResponse &_param_18) {
 	return SOAP_OK;
 }
 
@@ -222,7 +331,7 @@ int FileTransferSoapBindingService::getRoles(struct fts__getRolesResponse &_para
 }
 
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getRolesOf(std::string _otherDN, struct fts__getRolesOfResponse &_param_20) {
+int FileTransferSoapBindingService::getRolesOf(string _otherDN, struct fts__getRolesOfResponse &_param_20) {
 	return SOAP_OK;
 }
 
