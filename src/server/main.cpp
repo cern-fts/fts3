@@ -44,11 +44,9 @@ void _handle_sigint(int)
 
 int main (int argc, char** argv)
 {
-    FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
-
-
     try 
     {
+        FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
         struct sigaction action;
         action.sa_handler = _handle_sigint;
         sigemptyset(&action.sa_mask);

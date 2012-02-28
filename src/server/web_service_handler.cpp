@@ -153,7 +153,6 @@ BOOST_FIXTURE_TEST_CASE (Server_WebServiceHandler_Constructor, Test_WebServiceHa
 /** Test is port and IP are passed to Acceptor */
 BOOST_FIXTURE_TEST_CASE (Server_WebServiceHandler_port_ip, Test_WebServiceHandler)
 {
-    _testHelper.loopOver = false;
     testListen();
     BOOST_CHECK_EQUAL (Test_Acceptor::Port, Port());
     BOOST_CHECK_EQUAL (Test_Acceptor::IP, IP());
