@@ -17,7 +17,7 @@ DBSingleton::DBSingleton() {
 
   try{
     //hardcoded for now
-    libraryFileName = "/home/user/workspace/fts3svn/build/src/db/oracle/libfts3_db_oracle.so";
+    libraryFileName = "fts3_db_oracle.so";
 
     dlm = new DynamicLibraryManager(libraryFileName);
     if (dlm) {
