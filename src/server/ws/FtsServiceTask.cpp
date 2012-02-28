@@ -22,12 +22,21 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include "config/serverconfig.h"
+
 using namespace fts::ws;
 using namespace boost;
 using namespace db;
+using namespace fts3::config;
 
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::transferSubmit(transfer__TransferJob *_job, struct fts__transferSubmitResponse &_param_3) {
+
+	if (_job == 0) {
+		transfer__InvalidArgumentException ex;
+		throw ex;
+	}
+
 	string id = UuidGenerator::generateUUID();
 	cout << "Job ID: " << id << endl;
 	_param_3._transferSubmitReturn = id;
@@ -45,20 +54,20 @@ int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job,
 	string id = UuidGenerator::generateUUID();
 
 	try{
-		DBSingleton::instance().getDBObjectInstance()->init("msalicho", "Msal1973" , "oradev10.cern.ch:10520/D10");
-
 	    const string requestID = id;
 	    const string dn ="/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
 	    const string vo = string("dteam");
 
-	    map<string, string> src_dest_pair;
+	    vector<src_dest_checksum_tupple> jobs;
 	    vector<transfer__TransferJobElement * >::iterator it;
 
 	    for (it = _job->transferJobElements.begin(); it < _job->transferJobElements.end(); it++) {
-	    	src_dest_pair.insert(make_pair(*(*it)->source, *(*it)->dest));
+	    	src_dest_checksum_tupple tupple;
+	    	tupple.source = *(*it)->source;
+	    	tupple.destination = *(*it)->dest;
+	    	jobs.push_back(tupple);
 	    }
 
-	    string checksum = "";
 	    string sourceSpaceTokenDescription = "";
 
 	    string cred = "";
@@ -101,11 +110,11 @@ int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job,
 	    }
 
 
-	    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, src_dest_pair, params[0],
+	    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, jobs, params[0],
 	                                 dn, cred, vo, params[1],
 	                                 params[2], params[3], params[4],
 	                                 params[5], sourceSpaceTokenDescription, params[6], copyPinLifeTime,
-	                                 params[7], checksum, params[8]);
+	                                 params[7], params[8]);
 	  }
 	catch (string const &e)
 	  {
@@ -119,6 +128,15 @@ int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job,
 
 /// Web service operation 'transferSubmit3' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job, struct fts__transferSubmit3Response &_param_5) {
+
+
+	// check sum !
+
+	if (_job == 0) {
+		transfer__InvalidArgumentException ex;
+		throw ex;
+	}
+
 	string id = UuidGenerator::generateUUID();
 	cout << "Job ID: " << id << endl;
 	_param_5._transferSubmit3Return = id;
@@ -196,25 +214,25 @@ int FileTransferSoapBindingService::getTransferJobSummary2(string _requestID, st
 
 /// Web service operation 'getVersion' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getVersion(struct fts__getVersionResponse &_param_21) {
-	_param_21.getVersionReturn = "3.7.6-1";
+	_param_21.getVersionReturn = "0.0.1-1";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getSchemaVersion' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getSchemaVersion(struct fts__getSchemaVersionResponse &_param_22) {
-	_param_22.getSchemaVersionReturn = "3.5.0";
+	_param_22.getSchemaVersionReturn = "0.0.1";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getInterfaceVersion' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getInterfaceVersion(struct fts__getInterfaceVersionResponse &_param_23) {
-	_param_23.getInterfaceVersionReturn = "3.7.0";
+	_param_23.getInterfaceVersionReturn = "0.0.1";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getServiceMetadata(string _key, struct fts__getServiceMetadataResponse &_param_24) {
-	_param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
+	_param_24._getServiceMetadataReturn = "fts3-data-transfer-service-0.0.1-1";
 	return SOAP_OK;
 }
 

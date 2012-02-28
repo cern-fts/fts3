@@ -68,7 +68,7 @@ public:
 	 *
 	 * @return a copy of FTS3 proxy object (the object is not garbage collected!)
 	 */
-	static FileTransferSoapBindingService* copyService(FileTransferSoapBindingService& srv);
+	//static FileTransferSoapBindingService* copyService(FileTransferSoapBindingService& srv);
 };
 
 }
