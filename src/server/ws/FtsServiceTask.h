@@ -31,6 +31,7 @@
 #include <map>
 #include <vector>
 #include "gsoap_stubs.h"
+#include "db/generic/GenericDbIfce.h"
 
 using namespace std;
 
@@ -44,12 +45,12 @@ public:
 	/**
 	 * Default constructor.
 	 */
-	FtsServiceTask();
+	FtsServiceTask(){};
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~FtsServiceTask();
+	virtual ~FtsServiceTask(){};
 
 	/**
 	 * Function call operator.
