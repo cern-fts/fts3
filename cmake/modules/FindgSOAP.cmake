@@ -59,7 +59,7 @@ find_path(GSOAP_INCLUDE_DIR
 # -----------------------------------------------------
 find_path(GSOAP_IMPORT_DIR 
     NAMES stlvector.h
-    HINTS /usr/include/gsoap
+    HINTS /usr/include/gsoap /usr/share/gsoap/import
     DOC "The gsoap include directory"
 )
 
