@@ -53,11 +53,11 @@ DBSingleton::~DBSingleton() {
 
 
 
-
+/*
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 BOOST_AUTO_TEST_SUITE(db_test_suite)
 
-BOOST_AUTO_TEST_CASE (test)
+BOOST_AUTO_TEST_CASE (DB_test)
 {
     using namespace db;
 
@@ -103,4 +103,4 @@ BOOST_AUTO_TEST_CASE (test)
 
 BOOST_AUTO_TEST_SUITE_END()
 #endif      
-
+*/
