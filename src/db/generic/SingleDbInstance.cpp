@@ -1,11 +1,12 @@
 #include "SingleDbInstance.h"
 #include <fstream>
 #include "logger.h"
+#include "error.h"
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
-
+using namespace FTS3_COMMON_NAMESPACE;
 
 namespace db{
 
@@ -17,10 +18,10 @@ DBSingleton::DBSingleton() {
 
   try{
     //hardcoded for now
-    libraryFileName = "fts3_db_oracle.so";
+    libraryFileName = "libfts3_db_oracle.so";
 
     dlm = new DynamicLibraryManager(libraryFileName);
-    if (dlm) {
+    if (dlm && dlm->isLibraryLoaded()) {
 
         DynamicLibraryManager::Symbol symbolInstatiate = dlm->findSymbol("create");
 
@@ -32,10 +33,12 @@ DBSingleton::DBSingleton() {
 
         // create an instance of the DB class
         dbBackend = create_db();
-    } 
+    } else{
+    	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library"));
+    }
     
     }catch(...) {
-        FTS3_COMMON_LOGGER_LOG(ERR,"Dynamic database library cannot be loaded, check configuration file" );       
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library"));       
     }
 
 }

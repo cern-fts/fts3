@@ -49,6 +49,10 @@ public:
  **/
   Symbol findSymbol( const std::string &symbol );
 
+
+  inline bool isLibraryLoaded(){
+  	return m_libraryHandle != NULL? true: false; 
+  }
 private:
 
   void loadLibrary( const std::string &libraryName );
@@ -67,6 +71,7 @@ private:
 
   /// Prevents the use of the copy operator.
   void operator =( const DynamicLibraryManager &copy );
+  
 
 private:
   LibraryHandle m_libraryHandle;
