@@ -36,6 +36,8 @@ set(gsoap_source_files
     "${generated_files_dir}/ftsC.cpp" 
     "${generated_files_dir}/ftsFileTransferSoapBindingService.cpp" 
     "${PROJECT_SOURCE_DIR}/src/server/gsoap.cpp"         
+    "${PROJECT_SOURCE_DIR}/src/server/ws/FtsServiceTask.cpp"         
+    "${PROJECT_SOURCE_DIR}/src/server/gsoap_transfer_methods.cpp"         
 )
 
 include_directories (${generated_files_dir})
@@ -63,6 +65,7 @@ target_link_libraries(fts3_server_gsoap_lib -lgsoap++)
 # Server lib
 file(GLOB fts3_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*.cpp")
 list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
+list(REMOVE_ITEM fts3_server_lib_sources "gsoap_transfer_methods.cpp")
 add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
 add_dependencies(fts3_server_lib fts3_server_gsoap_lib)
 target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_lib -luuid -lboost_thread-mt)

@@ -18,12 +18,14 @@ limitations under the License. */
 #pragma once
 
 #include "config_dev.h"
+#include "common/logger.h"
 #include <boost/program_options.hpp>
 #include <map>
 
 FTS3_CONFIG_NAMESPACE_START
 
 namespace po = boost::program_options;
+using namespace FTS3_COMMON_NAMESPACE;
 
 /* ========================================================================== */
 
@@ -110,6 +112,7 @@ protected:
         assert (config != _vars.end());
         boost::shared_ptr<std::istream> in = DEPENDENCIES::getStream (config->second);
         assert (in.get());
+        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Reading config file " << config->second << commit;
         po::store(po::parse_config_file(*in, desc), _vm);
         po::notify(_vm);
         DEPENDENCIES::processVariables(*this);

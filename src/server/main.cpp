@@ -23,6 +23,7 @@ limitations under the License. */
 #include "common/error.h"
 #include "common/logger.h"
 #include "config/serverconfig.h"
+#include "db/generic/SingleDbInstance.h"
 
 #include "server.h"
 #include "daemonize.h"
@@ -42,11 +43,25 @@ void _handle_sigint(int)
 
 /* -------------------------------------------------------------------------- */
 
+void fts3_initialize_db_backend()
+{
+    std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
+    std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
+    std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
+
+    std::cout << dbConnectString << std::endl;
+
+    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
+}
+
+/* -------------------------------------------------------------------------- */
+
 int main (int argc, char** argv)
 {
     try 
     {
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+        fts3_initialize_db_backend();
         struct sigaction action;
         action.sa_handler = _handle_sigint;
         sigemptyset(&action.sa_mask);
@@ -71,13 +86,13 @@ int main (int argc, char** argv)
     }
     catch(Err e)
     {
-        std::string msg = "Unhandled exception, exiting...";
+        std::string msg = "Fatal error, exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
         return EXIT_FAILURE;
     }
     catch(...)
     {
-        std::string msg = "Unknown exception, exiting...";
+        std::string msg = "Fatal error (unknown origin), exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
         return EXIT_FAILURE;
     }

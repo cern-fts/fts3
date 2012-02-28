@@ -2,11 +2,14 @@
 #include <fstream>
 #include "logger.h"
 #include "error.h"
+#include "config/serverconfig.h"
+
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 using namespace FTS3_COMMON_NAMESPACE;
+using namespace FTS3_CONFIG_NAMESPACE;
 
 namespace db{
 
@@ -17,6 +20,15 @@ boost::scoped_ptr<DBSingleton> DBSingleton::i;
 DBSingleton::DBSingleton() {
 
   try{
+    std::string dbType = theServerConfig().get<std::string>("DbType");
+    
+    if (dbType != "oracle")
+    {   
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(dbType + " backend is not supported."));
+    }
+
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << dbType << " database backend loaded" << commit;
+
     //hardcoded for now
     libraryFileName = "libfts3_db_oracle.so";
 

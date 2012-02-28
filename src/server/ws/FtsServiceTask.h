@@ -28,7 +28,7 @@
 #define FTSSERVICE_H_
 
 #include <string>
-#include "GsoapStubs.h"
+#include "gsoap_stubs.h"
 
 using namespace std;
 
