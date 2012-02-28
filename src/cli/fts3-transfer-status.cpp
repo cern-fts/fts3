@@ -215,9 +215,15 @@ int main(int ac, char* av[]) {
 
 			// print the error message if applicable
 	    	if (ret) {
-	    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
-	    		// TODO check ex first
-	    		cout << "getTransferJobStatus: " << *ex->message << endl;
+	    		if (service.fault) {
+	    			if (service.fault->detail) {
+	    				if (service.fault->detail->fault) {
+	    		    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
+    		    			cout << "getTransferJobStatus: " << ex->message << endl;
+  						}
+	    			}
+	    		}
+
 	    	}
 		}
     }

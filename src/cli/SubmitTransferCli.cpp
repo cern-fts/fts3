@@ -33,6 +33,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace boost::algorithm;
 using namespace boost;
@@ -380,7 +381,7 @@ transfer__TransferParams* SubmitTransferCli::getParams(soap* soap) {
 	}
 
 	if (vm.count("copy-pin-lifetime")) {
-		string value = boost::lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
+		string value = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
 		jobParams->keys.push_back(FTS3_PARAM_COPY_PIN_LIFETIME);
 		jobParams->values.push_back(value);
 	}
