@@ -61,6 +61,11 @@ public:
 	 */
 	FtsServiceTask& operator= (const FtsServiceTask& other);
 
+
+	static map<string, int> index;
+
+	static vector<string> getParams(transfer__TransferJob *_job, int & copyPinLifeTime);
+
 	/**
 	 * Copies FTS3 proxy.
 	 *
