@@ -31,7 +31,8 @@ using namespace db;
 using namespace fts3::config;
 
 
-vector<string> FtsServiceTask::getParams(transfer__TransferJob *_job, int & copyPinLifeTime) {
+
+vector<string> FtsServiceTask::getParams(transfer__TransferParams *jobParams, int & copyPinLifeTime) {
 
 	if (index.empty()) {
     	index.insert(pair<string, int>("gridftp", 0));
@@ -46,13 +47,13 @@ vector<string> FtsServiceTask::getParams(transfer__TransferJob *_job, int & copy
 	}
 
 	vector<string> params (index.size());
-	if (!_job->jobParams) return params;
+	if (!jobParams) return params;
 
-	vector<string>::iterator key_it = _job->jobParams->keys.begin();
-	vector<string>::iterator val_it = _job->jobParams->values.begin();
+	vector<string>::iterator key_it = jobParams->keys.begin();
+	vector<string>::iterator val_it = jobParams->values.begin();
 	map<string, int>::iterator index_it;
 
-	for (; key_it < _job->jobParams->keys.end(); key_it++, val_it++) {
+	for (; key_it < jobParams->keys.end(); key_it++, val_it++) {
 		if (key_it->compare("copy_pin_lifetime") == 0) {
 			copyPinLifeTime = lexical_cast<int>(*val_it);
 		} else {
@@ -66,6 +67,35 @@ vector<string> FtsServiceTask::getParams(transfer__TransferJob *_job, int & copy
 	return params;
 }
 
-map<string, int> FtsServiceTask::index;
+vector<src_dest_checksum_tupple> FtsServiceTask::getJobs(transfer__TransferJob *_job) {
+
+    vector<src_dest_checksum_tupple> jobs;
+    vector<transfer__TransferJobElement * >::iterator it;
+
+    for (it = _job->transferJobElements.begin(); it < _job->transferJobElements.end(); it++) {
+    	src_dest_checksum_tupple tupple;
+    	tupple.source = *(*it)->source;
+    	tupple.destination = *(*it)->dest;
+    	jobs.push_back(tupple);
+    }
+
+    return jobs;
+}
+
+vector<src_dest_checksum_tupple> FtsServiceTask::getJobs2(transfer__TransferJob2 *_job) {
+
+    vector<src_dest_checksum_tupple> jobs;
+    vector<transfer__TransferJobElement2 * >::iterator it;
+
+    for (it = _job->transferJobElements.begin(); it < _job->transferJobElements.end(); it++) {
+    	src_dest_checksum_tupple tupple;
+    	tupple.source = *(*it)->source;
+    	tupple.destination = *(*it)->dest;
+    	tupple.checksum = *(*it)->checksum;
+    	jobs.push_back(tupple);
+    }
+
+    return jobs;
+}
 
 

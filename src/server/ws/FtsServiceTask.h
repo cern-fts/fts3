@@ -28,6 +28,8 @@
 #define FTSSERVICE_H_
 
 #include <string>
+#include <map>
+#include <vector>
 #include "gsoap_stubs.h"
 
 using namespace std;
@@ -62,18 +64,11 @@ public:
 	FtsServiceTask& operator= (const FtsServiceTask& other);
 
 
-	static map<string, int> index;
+	map<string, int> index;
+	vector<string> getParams(transfer__TransferParams *jobParams, int & copyPinLifeTime);
 
-	static vector<string> getParams(transfer__TransferJob *_job, int & copyPinLifeTime);
-
-	/**
-	 * Copies FTS3 proxy.
-	 *
-	 * @param srv - FTS3 proxy object
-	 *
-	 * @return a copy of FTS3 proxy object (the object is not garbage collected!)
-	 */
-	//static FileTransferSoapBindingService* copyService(FileTransferSoapBindingService& srv);
+	vector<src_dest_checksum_tupple> getJobs(transfer__TransferJob *_job);
+	vector<src_dest_checksum_tupple> getJobs2(transfer__TransferJob2 *_job);
 };
 
 }
