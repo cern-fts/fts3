@@ -33,7 +33,7 @@
 # GSOAP Libraries
 # -----------------------------------------------------
 find_library(GSOAP_LIBRARIES
-    NAMES gsoap
+    NAMES gsoap++
     HINTS ${GSOAP_LOCATION}/lib ${GSOAP_LOCATION}/lib64 
           ${GSOAP_LOCATION}/lib32
     DOC "The main gsoap library"
