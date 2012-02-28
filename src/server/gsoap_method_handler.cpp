@@ -16,6 +16,7 @@ limitations under the License. */
 #include "common/logger.h"
 #include "common/error.h"
 #include "gsoap_method_handler.h"
+#include "ftsFileTransferSoapBindingService.h"
  
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
@@ -23,13 +24,16 @@ limitations under the License. */
 
 FTS3_SERVER_NAMESPACE_START
 
-using namespace FTS3_COMMON_NAMESPACE;
-
-/* -------------------------------------------------------------------------- */
+GSoapMethodHandler::GSoapMethodHandler(Pointer<FileTransferSoapBindingService>::Shared service)
+    : _service(service)
+{}
 
 void GSoapMethodHandler::handle()
 {
-
+    assert (_service.get());
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
+    _service->serve();
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
 }
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST

@@ -34,17 +34,10 @@ public:
         const std::string& ip
     );
 
-    void accept();
-
-    bool isConnectionClosed();
-    
-    bool isNewConnection();
-
-    Pointer<GSoapMethodHandler>::Shared getHandler();
+    Pointer<GSoapMethodHandler>::Shared accept();
 
 protected:
 
-    bool _isConnectionClosed;
     FileTransferSoapBindingService _srv;
 };
 

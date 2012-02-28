@@ -96,15 +96,10 @@ protected:
 
 		while(1) 
         {
-            acceptor.accept();
+            typename Pointer<typename TRAITS::Handler>::Shared handler = acceptor.accept();
 
-            if (acceptor.isConnectionClosed())
+            if (handler.get())
             {
-                return;
-            }
-            else if (acceptor.isNewConnection())
-            {   
-                typename Pointer<typename TRAITS::Handler>::Shared handler = acceptor.getHandler();
 		        boost::function<void()> op = boost::bind(&WebServiceHandler::_handle_a, this, handler);
 		        this->_enqueue(op);
             }

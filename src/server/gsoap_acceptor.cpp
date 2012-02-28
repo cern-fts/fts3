@@ -32,8 +32,7 @@ GSoapAcceptor::GSoapAcceptor
 (
     const unsigned int port,
     const std::string& ip
-) :
-    _isConnectionClosed(true)
+) 
 {
     SOAP_SOCKET sock = _srv.bind (ip.c_str(), port, 0);
 
@@ -49,61 +48,23 @@ GSoapAcceptor::GSoapAcceptor
 
 /* -------------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST
-
-struct Test_GSoapAcceptor : public GSoapAcceptor
+Pointer<GSoapMethodHandler>::Shared GSoapAcceptor::accept() 
 {
-    Test_GSoapAcceptor()
-        : GSoapAcceptor (Port(), IP())
-    {}
+    SOAP_SOCKET sock = _srv.accept();
+    Pointer<GSoapMethodHandler>::Shared handler;
 
-    static unsigned int Port()
+    if (sock >= 0) 
     {
-        return 7777;
+        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New connection, bound to socket " << sock << commit;
+        Pointer<FileTransferSoapBindingService>::Shared service(_srv.copy());
+        handler.reset (new GSoapMethodHandler (service));
+    }
+    else
+    {
+        FTS3_COMMON_EXCEPTION_LOGERROR (Err_System ("Unable to accept connection request."));
     }
 
-    static std::string IP()
-    {
-        return "localhost";
-    }
-};
-
-/* -------------------------------------------------------------------------- */
-
-BOOST_FIXTURE_TEST_CASE (Server_GSoapAcceptor_constructor, Test_GSoapAcceptor)
-{
-    BOOST_CHECK(_isConnectionClosed);
-    BOOST_CHECK(isConnectionClosed());
-}
-
-#endif // FTS3_COMPILE_WITH_UNITTESTS
-
-/* -------------------------------------------------------------------------- */
-
-void GSoapAcceptor::accept() 
-{
-}
-
-/* -------------------------------------------------------------------------- */
-
-bool GSoapAcceptor::isConnectionClosed() 
-{
-    return _isConnectionClosed;
-}
-
-/* -------------------------------------------------------------------------- */
-
-Pointer<GSoapMethodHandler>::Shared GSoapAcceptor::getHandler()
-{
-    return Pointer<GSoapMethodHandler>::Shared();
-}
-
-
-/* -------------------------------------------------------------------------- */
-
-bool GSoapAcceptor::isNewConnection()
-{
-    return false;
+    return handler;
 }
 
 FTS3_SERVER_NAMESPACE_END

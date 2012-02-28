@@ -16,13 +16,23 @@ limitations under the License. */
 #pragma once
 
 #include "server_dev.h"
+#include "common/pointers.h"
+
+class FileTransferSoapBindingService;
 
 FTS3_SERVER_NAMESPACE_START
+
+using namespace FTS3_COMMON_NAMESPACE;
 
 class GSoapMethodHandler
 {
 public:
+    GSoapMethodHandler (Pointer<FileTransferSoapBindingService>::Shared service);
+
     void handle();
+
+private:
+    Pointer<FileTransferSoapBindingService>::Shared _service;
 };
 
 FTS3_SERVER_NAMESPACE_END

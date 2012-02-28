@@ -68,10 +68,6 @@ struct Test_Handler
 
 /* -------------------------------------------------------------------------- */
 
-typedef boost::tuple<bool, bool> ScenarioElement;
-
-/* -------------------------------------------------------------------------- */
-
 struct Test_Acceptor
 {
     Test_Acceptor 
@@ -83,62 +79,21 @@ struct Test_Acceptor
         Port = port;
         IP = ip;
         Accepted = false;
-        New = false;
-        Closed = false;
     }
 
-    void accept ()
+    Pointer<Test_Handler>::Shared accept ()
+
     {
-        ScenarioType::iterator element = Scenario.begin();
         Accepted = true;
-
-        if (element != Scenario.end())
-        {   
-            New = element->get<0>();
-            Closed = element->get<1>();
-            Scenario.erase (Scenario.begin());
-        }
-        else 
-        {
-            New = false;
-            Closed = true;
-        }
-    }
-
-    bool isConnectionClosed()
-    {
-        return Closed;
-    }
-
-    
-    bool isNewConnection()
-    {
-        return New;
-    }
-
-    Pointer<Test_Handler>::Shared getHandler()
-    {
-        return Pointer<Test_Handler>::Shared();
-    }
-
-    bool Test_LoopOver()
-    {
-        return Scenario.empty();
+        return Pointer<Test_Handler>::Shared (new Test_Handler);
     }
 
     static bool Accepted;
-    static bool New;
-    static bool Closed;
-    typedef std::vector <ScenarioElement> ScenarioType;
-    static ScenarioType Scenario;
     static unsigned int Port;
     static std::string IP;
 };
 
-Test_Acceptor::ScenarioType Test_Acceptor::Scenario;
 bool Test_Acceptor::Accepted = false;
-bool Test_Acceptor::New = false;
-bool Test_Acceptor::Closed = false;
 unsigned int Test_Acceptor::Port = 0;
 std::string Test_Acceptor::IP;
 
@@ -195,43 +150,9 @@ BOOST_FIXTURE_TEST_CASE (Server_WebServiceHandler_Constructor, Test_WebServiceHa
 
 /* -------------------------------------------------------------------------- */
 
-/** Scenario:
- *
- * 1) New connection accepted
- * 2) Connection not closed
- */
-BOOST_FIXTURE_TEST_CASE (Server_WebServiceHandler_listen_1, Test_WebServiceHandler)
-{
-    Test_Acceptor::Scenario  = boost::assign::tuple_list_of(true, false);
-    testListen();
-    BOOST_CHECK (Test_Acceptor::Accepted);
-    BOOST_CHECK (!Test_Acceptor::Closed);
-    BOOST_CHECK (Test_Acceptor::New);
-    BOOST_CHECK (Enqueued);
-}
-
-/* -------------------------------------------------------------------------- */
-
-/** Scenario:
- *
- * Connection closed
- */
-BOOST_FIXTURE_TEST_CASE (Server_WebServiceHandler_listen_2, Test_WebServiceHandler)
-{
-    Test_Acceptor::Scenario  = boost::assign::tuple_list_of(true, true);
-    _testHelper.loopOver = false;
-    testListen();
-    BOOST_CHECK (Test_Acceptor::Accepted);
-    BOOST_CHECK (!Enqueued);
-    BOOST_CHECK (Test_Acceptor::Closed);
-}
- 
-/* -------------------------------------------------------------------------- */
-
 /** Test is port and IP are passed to Acceptor */
 BOOST_FIXTURE_TEST_CASE (Server_WebServiceHandler_port_ip, Test_WebServiceHandler)
 {
-    Test_Acceptor::Scenario  = boost::assign::tuple_list_of(true, true);
     _testHelper.loopOver = false;
     testListen();
     BOOST_CHECK_EQUAL (Test_Acceptor::Port, Port());
