@@ -36,11 +36,11 @@ public:
     
     virtual void init(std::string username, std::string password, std::string connectString);    
 
-    virtual void submitPhysical(const std::string & jobId, std::map<std::string, std::string> src_dest_pair, const std::string & paramFTP,
+    virtual void submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
                                  const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksum, const std::string & checksumMethod);
+                                 const std::string & failNearLine, const std::string & checksumMethod);
 
     virtual JobStatus* getTransferJobStatus(std::string requestID);
 

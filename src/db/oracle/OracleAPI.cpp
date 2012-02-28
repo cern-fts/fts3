@@ -18,17 +18,18 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 		conn = new OracleConnection(username, password, connectString);
 }
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::map<std::string, std::string> src_dest_pair, const std::string & paramFTP,
+void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
                                  const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksum, const std::string & checksumMethod) {
+                                 const std::string & failNearLine, const std::string & checksumMethod) {
 /*
 	Required fields
 	JOB_ID 				   NOT NULL CHAR(36)
 	JOB_STATE			   NOT NULL VARCHAR2(32)
 	USER_DN				   NOT NULL VARCHAR2(1024)
 */
+
    std::string source;
    std::string destination;
    const std::string initial_state = "SUBMITTED";
@@ -68,17 +69,15 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::map<std::string, 
 	s_job_statement->executeUpdate();
 	
 	//now insert each src/dest pair for this job id
-        std::map<std::string, std::string>::iterator iter;
+        std::vector<src_dest_checksum_tupple>::iterator iter;
         oracle::occi::Statement* s_file_statement = conn->createStatement(file_statement, tag_file_statement);	
 	
 	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
-                source = std::string(iter->first);
-		destination = std::string(iter->second);
 		s_file_statement->setString(1, jobId);
 		s_file_statement->setString(2, initial_state);
-		s_file_statement->setString(3, source);
-		s_file_statement->setString(4, destination);
-		s_file_statement->setString(5, checksum);	                
+		s_file_statement->setString(3, iter->source);
+		s_file_statement->setString(4, iter->destination);
+		s_file_statement->setString(5, iter->checksum);	                
    		s_file_statement->executeUpdate();
         }	
         conn->commit();

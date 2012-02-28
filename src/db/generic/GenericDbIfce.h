@@ -39,6 +39,16 @@
 /**
  * GenericDbIfce class declaration
  **/
+
+
+/**
+ * Map source/destination with the checksum provided
+ **/
+struct src_dest_checksum_tupple{
+    std::string source;
+    std::string destination;
+    std::string checksum;
+};
  
 class GenericDbIfce {
 public:
@@ -52,11 +62,11 @@ public:
 /**
  * Submit a transfer request to be stored in the database
  **/ 
-    virtual void submitPhysical(const std::string & jobId, std::map<std::string, std::string> src_dest_pair, const std::string & paramFTP,
+    virtual void submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
                                  const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksum, const std::string & checksumMethod) = 0;
+                                 const std::string & failNearLine, const std::string & checksumMethod) = 0;
 
     virtual JobStatus* getTransferJobStatus(std::string requestID) = 0;
     
