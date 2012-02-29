@@ -82,4 +82,13 @@ class SrvManager {
 SrvManager o-- SrvManager
 
 
+class FileTransferSoapBindingProxy {
+
+	+transferSubmit()
+	+getTransferJobStatus()
+	+getServerInfo()
+}
+
+SrvManager ..> FileTransferSoapBindingProxy
+
 @enduml
