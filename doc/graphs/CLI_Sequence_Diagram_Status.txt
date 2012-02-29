@@ -1,0 +1,31 @@
+@startuml img/cli_sequence_status.png
+
+title CLI Sequence Diagram for fts3-transfer-status
+
+actor User
+actor CommandlineTools
+
+User -> CommandlineTool: job query
+
+	CommandlineTool -> TransferStatusCli: initCli(job query)
+	CommandlineTool <-- TransferStatusCli: vector<JobId>, endpoint
+	
+	CommandlineTool -> SrvManager: initSoap(endpoint)
+		SrvManager -> FileTransferSoapBindingProxy: soap_cgsi_init()
+		SrvManager <-- FileTransferSoapBindingProxy: TRUE
+	CommandlineTool <-- SrvManager: TRUE
+	
+	CommandlineTool -> SrvManager: init()
+		SrvManager -> FileTransferSoapBindingProxy: getServerInfo()
+		SrvManager <-- FileTransferSoapBindingProxy: {version, interface, schema, metadata}
+		SrvManager -> SrvManager: setServerInfo()
+	CommandlineTool <-- SrvManager: TRUE
+	
+	loop for each jobId in vector<JobId>
+		CommandlineTool -> FileTransferSoapBindingProxy: getTransferJobStatus(jobId)
+		CommandlineTool <-- FileTransferSoapBindingProxy: jobStatus
+		
+User <-- CommandlineTool: jobStatus 
+	end
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml img/cli_sequence_submit.png
+
+title CLI Sequence Diagram for fts3-transfer-submit
+
+actor User
+actor CommandlineTools
+
+User -> CommandlineTool: transfer-job description
+
+	CommandlineTool -> SubmitTransferCli: initCli(transfer-job description)
+	CommandlineTool <-- SubmitTransferCli: source, destination, endpoint
+	
+	CommandlineTool -> SrvManager: initSoap(endpoint)
+		SrvManager -> FileTransferSoapBindingProxy: soap_cgsi_init()
+		SrvManager <-- FileTransferSoapBindingProxy: TRUE
+	CommandlineTool <-- SrvManager: TRUE
+	
+	CommandlineTool -> SrvManager: init()
+		SrvManager -> FileTransferSoapBindingProxy: getServerInfo()
+		SrvManager <-- FileTransferSoapBindingProxy: {version, interface, schema, metadata}
+		SrvManager -> SrvManager: setServerInfo()
+	CommandlineTool <-- SrvManager: TRUE
+
+	CommandlineTool -> SubmitTransferCli: performChecks()
+	CommandlineTool <-- SubmitTransferCli: TRUE
+	
+	CommandlineTool -> SubmitTransferCli: getJobElements()
+	CommandlineTool <-- SubmitTransferCli: jobElements
+	
+	CommandlineTool -> SubmitTransferCli: getParameters()
+	CommandlineTool <-- SubmitTransferCli: parameters
+	
+	CommandlineTool -> FileTransferSoapBindingProxy: transferSubmit()
+	CommandlineTool <-- FileTransferSoapBindingProxy: jobID
+	
+User <-- CommandlineTool: jobId 
+
+@enduml

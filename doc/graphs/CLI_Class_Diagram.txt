@@ -1,0 +1,85 @@
+@startuml img/cli_class.png
+
+title CLI Class Diagram
+
+class CliBase {
+	+void initCli(int, char*)
+	+bool printHelp()
+	+bool printVersion()
+	+bool isVerbose()
+	+bool isQuite()
+	+{abstract}string getUsageString()
+	
+	#variables_map vm
+	#options_description basic
+	#options_description visible
+	#options_description all
+	#positional_options_description p
+}
+
+class SubmitTransferCli {
+
+	+void initCli(int, char*)
+	+bool createJobElements()
+	+string getUsageString()
+	+transfer__TransferParams* getParams(soap*)
+	+vector<transfer__TransferJobElement * > getJobElements(soap*)
+	+vector<transfer__TransferJobElement2 * > getJobElements2(soap*)
+
+	-options_description specific
+	-options_description hidden
+	-string bulk_file
+}
+
+CliBase <|-- SubmitTransferCli
+
+class TransferStatusCli {
+
+	+string getUsageString()
+	+vector<string> getJobIds()
+	+bool list()
+
+	-options_description specific
+	-options_description hidden
+}
+
+CliBase <|-- TransferStatusCli
+
+class SrvManager {
+
+	+{static}SrvManager* getInstance()
+	..
+	+bool initSoap(soap*, string)
+	+bool init(FileTransferSoapBindingProxy&)
+	+long isCertValid ()
+	+bool isTransferReady(string)
+	+void delegateProxyCert(string)
+	..
+	+int isChecksumSupported()
+	+int isDelegationSupported()
+	..
+	+string getInterface()
+	+string getVersion()
+	+string getSchema()
+	+string getMetadata()
+	--
+	#SrvManager()
+	#long major
+	#long minor
+	#long patch
+	--
+	-SrvManager (SrvManager const&);
+	-SrvManager& operator=(SrvManager const&)
+	..
+	-{static} SrvManager* manager
+	..
+	-string interface
+	-string version
+	-string schema
+	-string metadata
+}
+
+SrvManager o-- SrvManager
+
+
+@enduml
