@@ -3,7 +3,7 @@
 title CLI Sequence Diagram for fts3-transfer-submit
 
 actor User
-actor CommandlineTools
+actor CommandlineTool
 
 User -> CommandlineTool: transfer-job description
 

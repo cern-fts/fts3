@@ -3,7 +3,7 @@
 title CLI Sequence Diagram for fts3-transfer-status
 
 actor User
-actor CommandlineTools
+actor CommandlineTool
 
 User -> CommandlineTool: job query
 
