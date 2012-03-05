@@ -20,7 +20,6 @@
 #include "GsoapStubs.h"
 #include "TransferStatusCli.h"
 #include "SrvManager.h"
-#include <cgsi_plugin.h>
 #include "evn.h"
 
 #include <vector>

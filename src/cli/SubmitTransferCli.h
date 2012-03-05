@@ -30,6 +30,7 @@
 #include <vector>
 
 using namespace std;
+using namespace boost;
 
 
 namespace fts { namespace cli {
@@ -70,10 +71,22 @@ class SubmitTransferCli : public CliBase {
 	 * kind of job element should be used
 	 *
 	 */
-	struct Task {
+	struct JobElement {
 		string src; ///< source file
 		string dest; ///< destination file
 		string checksum; ///< the checksum
+
+		static const int size = 3; ///< size of the JobElement (3x string)
+
+		/**
+		 * Subscript operator.
+		 * Since we want to loop over the fields we cannot use boost::tuple.
+		 *
+		 * @return field corresponding to the given index, e.g. 0 - src.
+		 */
+		inline string& operator[] (const int index) {
+			return ((string*)this)[index];
+		}
 	};
 
 public:
@@ -190,7 +203,7 @@ public:
 	 * Gets a vector containing 'transfer__TransferJobElement2' objects.
 	 *
 	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
-	 * Each of the vector elements is created using gsoap memory-allocation utility, and will
+	 * Each of the vector elements is created using gSOAP memory-allocation utility, and will
 	 * be garbage collected. If there is a need to delete it manually gsoap dedicated functions should
 	 * be used (in particular 'soap_unlink'!)
 	 *
@@ -254,7 +267,7 @@ private:
 	 *
 	 * @see SubmitTransferCli::createJobElements(), SubmitTransferCli::getJobElements(soap*) , SubmitTransferCli::getJobElements2(soap*)
 	 */
-	vector<Task> tasks;
+	vector<JobElement> tasks;
 
 	/**
 	 * checksum flag, determines whether checksum is used

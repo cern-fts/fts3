@@ -55,7 +55,7 @@ TransferStatusCli::~TransferStatusCli() {
 }
 
 string TransferStatusCli::getUsageString() {
-	return "Usage: glite-transfer-status [options] JOBID [JOBID...]";
+	return "Usage: fts3-transfer-status [options] JOBID [JOBID...]";
 }
 
 vector<string> TransferStatusCli::getJobIds() {
@@ -65,8 +65,7 @@ vector<string> TransferStatusCli::getJobIds() {
 		return vm["jobid"].as< vector<string> >();
 	}
 
-	vector<string> empty;
-	return empty;
+	return vector<string>();
 }
 
 bool TransferStatusCli::list() {

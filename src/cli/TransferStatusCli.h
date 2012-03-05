@@ -83,7 +83,7 @@ public:
 private:
 
 	/**
-	 * command line options specific for fts3-transfer-submit
+	 * command line options specific for fts3-transfer-status
 	 */
 	options_description specific;
 

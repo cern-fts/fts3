@@ -150,7 +150,7 @@ bool SubmitTransferCli::createJobElements() {
 
     		// we are expecting up to 3 elements in each line
     		// source, destination and optionally the checksum
-    		string elem[3];
+    		JobElement e;
     		// iterate over the tokens (we are interested in up to 3 tokens)
     		for(it = tokens.begin(); it != tokens.end() && count < 3; it++) {
     			string s = *it;
@@ -158,7 +158,7 @@ bool SubmitTransferCli::createJobElements() {
     			if (!s.empty()) {
     				// if the token is not empty after trimming,
     				// it is the element we are interested in
-    				elem[count] = s;
+    				e[count] = s;
     				count++;
     			}
     		}
@@ -175,16 +175,14 @@ bool SubmitTransferCli::createJobElements() {
     		// if the checksum algorithm has been given check if the
     		// format is correct (ALGORITHM:1234af)
     		if (count == 3) {
-    			int colon = elem[2].find(":");
-   				if (colon == string::npos || colon == 0 || colon == elem[2].size() - 1) {
+    			int colon = e[2].find(":");
+   				if (colon == string::npos || colon == 0 || colon == e[2].size() - 1) {
    					cout << "submit: in line " << lineCount << ": checksum format is not valid (ALGORITHM:1234af)." << endl;
    					continue;
    				}
     			checksum = true;
     		}
-
-    		Task t = {elem[0], elem[1], elem[2]};
-        	tasks.push_back(t);
+        	tasks.push_back(e);
 
     	} while (!ifs.eof());
 
@@ -207,8 +205,8 @@ bool SubmitTransferCli::createJobElements() {
 
     	// then if the source and destination have been given create a Task
     	if (!getSource().empty() && !getDestination().empty()) {
-    		Task t = {getSource(), getDestination(), checksum};
-    		tasks.push_back(t);
+    		JobElement e = {getSource(), getDestination(), checksum};
+    		tasks.push_back(e);
     	}
     }
 
@@ -226,7 +224,7 @@ vector<transfer__TransferJobElement * > SubmitTransferCli::getJobElements(soap* 
 	vector<transfer__TransferJobElement * > jobElements;
 
 	transfer__TransferJobElement* element;
-	vector<Task>::iterator it;
+	vector<JobElement>::iterator it;
 
 	// iterate over the internal vector containing Task (job elements)
 	for (it = tasks.begin(); it < tasks.end(); it++) {
@@ -249,7 +247,7 @@ vector<transfer__TransferJobElement2 * > SubmitTransferCli::getJobElements2(soap
 	vector<transfer__TransferJobElement2 * > jobElements;
 
 	transfer__TransferJobElement2* element;
-	vector<Task>::iterator it;
+	vector<JobElement>::iterator it;
 
 	// iterate over the internal vector containing Task (job elements)
 	for (it = tasks.begin(); it < tasks.end(); it++) {
