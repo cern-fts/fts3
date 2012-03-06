@@ -78,15 +78,10 @@ public:
 
     virtual void addGroupMember(std::string groupName, std::string siteName) = 0;    
 
-/**
- * Submit a transfer request to be stored in the database
- **/
+    virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
+ 
  /*
-    virtual std::vector<JobStatus> listRequests(std::vector<std::string> inGivenStates, std::string channelName, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
-
     virtual std::vector<FileTransferStatus> getFileStatus(std::string requestID, int offset, int limit) = 0;
-
-
 
     virtual TransferJobSummary* getTransferJobSummary(std::string requestID) = 0;
 

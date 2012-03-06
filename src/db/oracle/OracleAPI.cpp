@@ -2,92 +2,93 @@
 #include <fstream>
 #include "error.h"
 #include "OracleTypeConversions.h"
+#include <algorithm>
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-OracleAPI::OracleAPI(): conn(NULL)  {
+OracleAPI::OracleAPI() : conn(NULL) {
 }
 
 OracleAPI::~OracleAPI() {
-	if(conn)
-		delete conn;
+    if (conn)
+        delete conn;
 }
 
-void OracleAPI::init(std::string username, std::string password, std::string connectString){
-	if(!conn)
-		conn = new OracleConnection(username, password, connectString);
+void OracleAPI::init(std::string username, std::string password, std::string connectString) {
+    if (!conn)
+        conn = new OracleConnection(username, password, connectString);
 }
 
 void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
-                                 const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                                 const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
-                                 const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksumMethod) {
-/*
-	Required fields
-	JOB_ID 				   NOT NULL CHAR(36)
-	JOB_STATE			   NOT NULL VARCHAR2(32)
-	USER_DN				   NOT NULL VARCHAR2(1024)
-*/
+        const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
+        const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
+        const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
+        const std::string & failNearLine, const std::string & checksumMethod) {
+    /*
+            Required fields
+            JOB_ID 				   NOT NULL CHAR(36)
+            JOB_STATE			   NOT NULL VARCHAR2(32)
+            USER_DN				   NOT NULL VARCHAR2(1024)
+     */
 
-   std::string source;
-   std::string destination;
-   const std::string initial_state = "SUBMITTED";
-   time_t timed = time (NULL);
-   char hostname[512] = {0};
-   gethostname(hostname, 512);
-   const std::string currenthost = hostname; //current hostname
-   const std::string tag_job_statement = "tag_job_statement";	    
-   const std::string tag_file_statement = "tag_file_statement";	       
-   const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, storage_class, overwrite_flag,source_token_description,copy_pin_lifetime, lan_connection,fail_nearline, checksum_method) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19)";
-   const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
-	    
+    std::string source;
+    std::string destination;
+    const std::string initial_state = "SUBMITTED";
+    time_t timed = time(NULL);
+    char hostname[512] = {0};
+    gethostname(hostname, 512);
+    const std::string currenthost = hostname; //current hostname
+    const std::string tag_job_statement = "tag_job_statement";
+    const std::string tag_file_statement = "tag_file_statement";
+    const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, storage_class, overwrite_flag,source_token_description,copy_pin_lifetime, lan_connection,fail_nearline, checksum_method) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19)";
+    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
+
     try {
         oracle::occi::Statement* s_job_statement = conn->createStatement(job_statement, tag_job_statement);
-	s_job_statement->setString(1, jobId); //job_id
-	s_job_statement->setString(2, initial_state); //job_state
-	s_job_statement->setString(3, paramFTP); //job_params
-	s_job_statement->setString(4, DN); //user_dn
-	s_job_statement->setString(5, cred); //user_cred
-	s_job_statement->setInt(6, 3); //priority
-	s_job_statement->setString(7, voName); //vo_name
-	s_job_statement->setTimestamp(8, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); //submit_time
-	s_job_statement->setString(9, ""); //internal_job_params
-	s_job_statement->setString(10, currenthost); //submit_host
-	s_job_statement->setString(11, delegationID); //cred_id
-	s_job_statement->setString(12, myProxyServer); //myproxy_server
-	s_job_statement->setString(13, spaceToken); //storage_class
-	s_job_statement->setString(14, overwrite); //overwrite_flag
-	s_job_statement->setString(15, sourceSpaceToken); //source_token_description
-	s_job_statement->setInt(16, copyPinLifeTime); //copy_pin_lifetime
-	s_job_statement->setString(17, lanConnection); //lan_connection
-	s_job_statement->setString(18, failNearLine); //fail_nearline	
-	if(checksumMethod.length() == 0)
-		s_job_statement->setNull(19, oracle::occi::OCCICHAR); 
-	else
-		s_job_statement->setString(19, "Y"); //checksum_method		
-	s_job_statement->executeUpdate();
-	
-	//now insert each src/dest pair for this job id
+        s_job_statement->setString(1, jobId); //job_id
+        s_job_statement->setString(2, initial_state); //job_state
+        s_job_statement->setString(3, paramFTP); //job_params
+        s_job_statement->setString(4, DN); //user_dn
+        s_job_statement->setString(5, cred); //user_cred
+        s_job_statement->setInt(6, 3); //priority
+        s_job_statement->setString(7, voName); //vo_name
+        s_job_statement->setTimestamp(8, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); //submit_time
+        s_job_statement->setString(9, ""); //internal_job_params
+        s_job_statement->setString(10, currenthost); //submit_host
+        s_job_statement->setString(11, delegationID); //cred_id
+        s_job_statement->setString(12, myProxyServer); //myproxy_server
+        s_job_statement->setString(13, spaceToken); //storage_class
+        s_job_statement->setString(14, overwrite); //overwrite_flag
+        s_job_statement->setString(15, sourceSpaceToken); //source_token_description
+        s_job_statement->setInt(16, copyPinLifeTime); //copy_pin_lifetime
+        s_job_statement->setString(17, lanConnection); //lan_connection
+        s_job_statement->setString(18, failNearLine); //fail_nearline	
+        if (checksumMethod.length() == 0)
+            s_job_statement->setNull(19, oracle::occi::OCCICHAR);
+        else
+            s_job_statement->setString(19, "Y"); //checksum_method		
+        s_job_statement->executeUpdate();
+
+        //now insert each src/dest pair for this job id
         std::vector<src_dest_checksum_tupple>::iterator iter;
-        oracle::occi::Statement* s_file_statement = conn->createStatement(file_statement, tag_file_statement);	
-	
-	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
-		s_file_statement->setString(1, jobId);
-		s_file_statement->setString(2, initial_state);
-		s_file_statement->setString(3, iter->source);
-		s_file_statement->setString(4, iter->destination);
-		s_file_statement->setString(5, iter->checksum);	                
-   		s_file_statement->executeUpdate();
-        }	
+        oracle::occi::Statement* s_file_statement = conn->createStatement(file_statement, tag_file_statement);
+
+        for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
+            s_file_statement->setString(1, jobId);
+            s_file_statement->setString(2, initial_state);
+            s_file_statement->setString(3, iter->source);
+            s_file_statement->setString(4, iter->destination);
+            s_file_statement->setString(5, iter->checksum);
+            s_file_statement->executeUpdate();
+        }
         conn->commit();
         conn->destroyStatement(s_job_statement, tag_job_statement);
-        conn->destroyStatement(s_file_statement, tag_file_statement);	
+        conn->destroyStatement(s_file_statement, tag_file_statement);
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
-	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	    
-	    
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
 }
 
 JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
@@ -95,38 +96,37 @@ JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
     const std::string query = "SELECT job_id, job_state, se_pair_name, user_dn, reason, submit_time, priority, vo_name, "
             "(SELECT count(*) from t_file where t_file.job_id = t_job.job_id) "
             "FROM t_job WHERE job_id = :1";
-    const std::string tag = "getTransferJobStatus";	    
+    const std::string tag = "getTransferJobStatus";
 
     JobStatus* js = NULL;
     try {
         js = new JobStatus();
-	js->priority = 0;
-	js->numFiles = 0;	
-	js->submitTime = (std::time_t)-1;	
+        js->priority = 0;
+        js->numFiles = 0;
+        js->submitTime = (std::time_t) - 1;
         oracle::occi::Statement* s = conn->createStatement(query, tag);
-	s->setString(1, requestID);
+        s->setString(1, requestID);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             js->jobID = r->getString(1);
             js->jobStatus = r->getString(2);
-	    js->channelName = r->getString(3);	    
-	    js->clientDN = r->getString(4);	    	    
-	    js->reason = r->getString(5);	    	    	    
-	    js->submitTime = OracleTypeConversions::toTimeT(r->getTimestamp(6));	    	    	    	    
-	    js->priority = r->getInt(7);	    	    	    	    	    
-	    js->voName = r->getString(8);
-	    js->numFiles = r->getInt(9);	    	    	    	    	    	    	    	    	                
+            js->sePairName = r->getString(3);
+            js->clientDN = r->getString(4);
+            js->reason = r->getString(5);
+            js->submitTime = OracleTypeConversions::toTimeT(r->getTimestamp(6));
+            js->priority = r->getInt(7);
+            js->voName = r->getString(8);
+            js->numFiles = r->getInt(9);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);        
+        conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-	if(js)
-		delete js;
-	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if (js)
+            delete js;
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
     return js;
 }
-
 
 std::vector<std::string> OracleAPI::getSiteGroupNames() {
     std::string query = "SELECT distinct group_name FROM t_site_group";
@@ -143,9 +143,9 @@ std::vector<std::string> OracleAPI::getSiteGroupNames() {
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-       FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    return groups;    
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+    return groups;
 }
 
 std::vector<std::string> OracleAPI::getSiteGroupMembers(std::string GroupName) {
@@ -155,14 +155,14 @@ std::vector<std::string> OracleAPI::getSiteGroupMembers(std::string GroupName) {
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
-	s->setString(1, GroupName);
+        s->setString(1, GroupName);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             std::string groupName = r->getString(1);
             groups.push_back(groupName);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);        
+        conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
@@ -174,8 +174,8 @@ void OracleAPI::removeGroupMember(std::string groupName, std::string siteName) {
     std::string tag = "removeGroupMember";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
-	s->setString(1,groupName);
-	s->setString(2,siteName);		
+        s->setString(1, groupName);
+        s->setString(2, siteName);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
@@ -193,8 +193,8 @@ void OracleAPI::addGroupMember(std::string groupName, std::string siteName) {
     std::string tag = "addGroupMember";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
-	s->setString(1,groupName);
-	s->setString(2,siteName);	
+        s->setString(1, groupName);
+        s->setString(2, siteName);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
@@ -206,26 +206,131 @@ void OracleAPI::addGroupMember(std::string groupName, std::string siteName) {
     }
 }
 
-
 /*
-std::vector<JobStatus> OracleAPI::listRequests(std::vector<std::string> inGivenStates,
-        std::string channelName, std::string restrictToClientDN, std::string forDN, std::string VOname) {
-	std::vector<JobStatus> test;
-	return test;
+ * Return a list of jobs based on the status requested
+ * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
+ * std::vector<std::string> inGivenStates: order doesn't really matter, more than one states supported
+ */
+void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname) {
+
+    JobStatus* j = NULL;
+    bool checkForCanceling = false;
+    int cc = 1;
+    std::string jobStatuses;
+
+    /*this statement cannot be prepared, it's generated dynamically*/
+    std::string tag = std::string("");
+    std::string sel = "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, J.vo_name,(SELECT count(*) from t_file where t_file.job_id = J.job_id), priority, cancel_job FROM t_job J ";
+    //gain the benefit from the statement pooling
+    std::sort(inGivenStates.begin(), inGivenStates.end());
+    std::vector<std::string>::iterator foundCancel;
+
+    if (inGivenStates.size() > 0) {
+        foundCancel = std::find_if(inGivenStates.begin(), inGivenStates.end(), bind2nd(std::equal_to<std::string > (), std::string("Canceling")));
+        if (foundCancel == inGivenStates.end()) { //not found 
+            checkForCanceling = true;
+        }
+    }
+
+    if (inGivenStates.size() > 0) {
+        jobStatuses = "'" + inGivenStates[0] + "'";
+        for (unsigned int i = 1; i < inGivenStates.size(); i++) {
+            jobStatuses += (",'" + inGivenStates[i] + "'");
+        }
+    }
+
+    if (restrictToClientDN.length() > 0) {
+        sel.append(" LEFT OUTER JOIN t_channel_acl C ON J.channel_name = C.channel_name LEFT OUTER JOIN t_vo_acl V ON J.vo_name = V.vo_name ");
+    }
+
+    if (inGivenStates.size() > 0) {
+        sel.append(" WHERE J.job_state IN (" + jobStatuses + ") ");
+    }
+    else{
+    	sel.append(" WHERE J.job_state <> '0' ");
+    }
+
+    if (restrictToClientDN.length() > 0) {
+        sel.append(" AND (J.user_dn = :1 OR V.principal = :2 OR C.principal = :3) ");
+    }
+
+    if (VOname.length() > 0) {
+        sel.append(" AND J.vo_name = :4");
+    }
+
+    if (forDN.length() > 0) {
+        sel.append(" AND J.user_dn = :5");
+    }
+
+    if (!checkForCanceling) {
+        sel.append(" AND NVL(J.cancel_job,'X') <> 'Y'");
+    }
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(sel, tag);
+        if (restrictToClientDN.length() > 0) {
+            s->setString(cc++, restrictToClientDN);
+            s->setString(cc++, restrictToClientDN);
+            s->setString(cc++, restrictToClientDN);
+        }
+
+        if (VOname.length() > 0) {
+            s->setString(cc++, VOname);
+        }
+
+        if (forDN.length() > 0) {
+            s->setString(cc, forDN);
+        }
+
+
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while (r->next()) {
+            std::string jid = r->getString(1);
+            std::string jstate = r->getString(2);
+            std::string reason = r->getString(3);
+            time_t tm = OracleTypeConversions::toTimeT(r->getTimestamp(4));
+            std::string dn = r->getString(5);
+            std::string voName = r->getString(6);
+            int fileCount = r->getInt(7);
+            int priority = r->getInt(8);
+            std::string canceling = r->getString(9);
+
+            j = new JobStatus();
+            if (j) {
+                j->jobID = jid;
+                j->jobStatus = jstate;
+                j->reason = reason;
+                j->numFiles = fileCount;
+                j->voName = voName;
+                j->submitTime = tm;
+                j->clientDN = dn;
+                j->priority = priority;
+                jobs.push_back(j);
+            }
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
 }
 
+/*
 std::vector<FileTransferStatus> OracleAPI::getFileStatus(std::string requestID, int offset, int limit) {
-	std::vector<FileTransferStatus> test;
-	return test;
+        std::vector<FileTransferStatus> test;
+        return test;
 }
 
 
 TransferJobSummary* OracleAPI::getTransferJobSummary(std::string requestID) {
-	return new TransferJobSummary;
+        return new TransferJobSummary;
 }
 
 SePair* OracleAPI::getSEPairName(std::string sePairName) {
-	return new SePair;
+        return new SePair;
 }
 
 void OracleAPI::cancel(std::vector<std::string> requestIDs) {
@@ -245,8 +350,8 @@ void OracleAPI::setState(std::string channelName, std::string state, std::string
 }
 
 std::vector<std::string> OracleAPI::listChannels() {
-	std::vector<std::string> test;
-	return test;
+        std::vector<std::string> test;
+        return test;
 }
 
 void OracleAPI::setNumberOfStreams(std::string channelName, int numberOfStreams, std::string message) {
@@ -277,13 +382,13 @@ void OracleAPI::removeChannelManager(std::string channelName, std::string princi
 }
 
 std::vector<std::string> OracleAPI::listChannelManagers(std::string channelName) {
-	std::vector<std::string> test;
-	return test;
+        std::vector<std::string> test;
+        return test;
 }
 
 std::map<std::string, std::string> OracleAPI::getChannelManager(std::string channelName, std::vector<std::string> principals) {
-	std::map<std::string, std::string> test;
-	return test;
+        std::map<std::string, std::string> test;
+        return test;
 }
 
 void OracleAPI::addVOManager(std::string VOName, std::string principal) {
@@ -293,18 +398,18 @@ void OracleAPI::removeVOManager(std::string VOName, std::string principal) {
 }
 
 std::vector<std::string> OracleAPI::listVOManagers(std::string VOName) {
-	std::vector<std::string> test;
-	return test;
+        std::vector<std::string> test;
+        return test;
 
 }
 
 std::map<std::string, std::string> OracleAPI::getVOManager(std::string VOName, std::vector<std::string> principals) {
-	std::map<std::string, std::string> test;
-	return test;
+        std::map<std::string, std::string> test;
+        return test;
 }
 
 bool OracleAPI::isRequestManager(std::string requestID, std::string clientDN, std::vector<std::string> principals, bool includeOwner) {
-	return true;
+        return true;
 }
 
 void OracleAPI::removeVOShare(std::string channelName, std::string VOName) {
@@ -314,11 +419,11 @@ void OracleAPI::setVOShare(std::string channelName, std::string VOName, int shar
 }
 
 bool OracleAPI::isAgentAvailable(std::string name, std::string type) {
-	return true;
+        return true;
 }
 
 std::string OracleAPI::getSchemaVersion() {
-	return std::string("");
+        return std::string("");
 }
 
 void OracleAPI::setTcpBufferSize(std::string channelName, std::string bufferSize, std::string message) {
@@ -383,7 +488,7 @@ void OracleAPI::removeVOLimit(std::string channelUpperName, std::string voName) 
 
 void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int limit) {
 }
-*/
+ */
 /* ********************************* NEW API FTS3 *********************************/
 /*void OracleAPI::addSe( std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
     std::string  SE_TRANSFER_TYPE, std::string   SE_TRANSFER_PROTOCOL, std::string   SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
@@ -391,7 +496,7 @@ void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int
 
 Se* OracleAPI::getSeInfo(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
     std::string  SE_TRANSFER_TYPE, std::string   SE_TRANSFER_PROTOCOL, std::string   SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
-	return new Se;
+        return new Se;
 }
 
 void OracleAPI::updateSe( std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
@@ -400,10 +505,11 @@ void OracleAPI::updateSe( std::string ENDPOINT, std::string SE_TYPE, std::string
 
 void OracleAPI::deleteSe( std::string ENDPOINT, std::string SITE, std::string NAME){
 }
-*/
+ */
 
 
 // the class factories
+
 extern "C" GenericDbIfce* create() {
     return new OracleAPI;
 }

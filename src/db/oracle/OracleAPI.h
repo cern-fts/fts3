@@ -52,13 +52,12 @@ public:
 
     virtual void addGroupMember(std::string groupName, std::string siteName);
 
+    virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
+
+
     /*virtual void setVOLimit(std::string channelUpperName, std::string voName, int limit);
 
-    virtual std::vector<JobStatus> listRequests(std::vector<std::string> inGivenStates, std::string channelName, std::string restrictToClientDN, std::string forDN, std::string VOname);
-
     virtual std::vector<FileTransferStatus> getFileStatus(std::string requestID, int offset, int limit);
-
-
 
     virtual TransferJobSummary* getTransferJobSummary(std::string requestID);
 

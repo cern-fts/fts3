@@ -28,7 +28,8 @@ DBSingleton::DBSingleton() {
     }
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << dbType << " database backend loaded" << commit;
-
+    
+    
     //hardcoded for now
     libraryFileName = "libfts3_db_oracle.so";
 

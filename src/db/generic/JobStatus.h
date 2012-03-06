@@ -49,7 +49,7 @@ public:
     /**
      * The name of the channel the job was assigned to (null if no channel assigned).
      */
-    std::string channelName;
+    std::string sePairName;
     
     /**
      * Distinguished Name (DN) of client owning job.
