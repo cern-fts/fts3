@@ -16,3 +16,6 @@ target_link_libraries(fts3_db_generic -lpthread )
 target_link_libraries(fts3_db_generic -lfts3_common )
 target_link_libraries(fts3_db_generic -lfts3_config )
 
+install(TARGETS         fts3_db_generic 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )

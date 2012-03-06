@@ -75,3 +75,13 @@ add_executable (fts3_server main.cpp)
 add_dependencies(fts3_server fts3_server_lib)
 target_link_libraries(fts3_server -lfts3_server_lib)
 
+install(TARGETS         fts3_server_gsoap_lib 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+
+install(TARGETS         fts3_server_lib 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+
+install(TARGETS         fts3_server 
+	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )

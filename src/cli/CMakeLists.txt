@@ -44,3 +44,15 @@ target_link_libraries (fts3-transfer-status ${fts3_cli_libs})
 
 add_executable(fts3-transfer-list fts3-transfer-list.cpp ListTransferCli.cpp ${fts3_cli_source_files})
 target_link_libraries (fts3-transfer-list ${fts3_cli_libs})
+
+install(TARGETS         fts3-transfer-submit 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${BIN_INSTALL_DIR} )
+	
+install(TARGETS         fts3-transfer-status 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${BIN_INSTALL_DIR} )	
+	
+install(TARGETS         fts3-transfer-list 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${BIN_INSTALL_DIR} )		

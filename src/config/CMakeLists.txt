@@ -26,3 +26,7 @@ add_library(fts3_config SHARED ${fts3_config})
 #target_link_libraries(fts3_config ${Boost_LIBRARIES} )
 target_link_libraries(fts3_config -lboost_program_options )
 
+install(TARGETS         fts3_config 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+

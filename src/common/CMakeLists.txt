@@ -25,4 +25,8 @@ add_library(fts3_common SHARED ${fts3_common_sources})
 target_link_libraries(fts3_common ${Boost_LIBRARIES} )
 target_link_libraries(fts3_common -lboost_unit_test_framework )
 
+install(TARGETS         fts3_common 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+
 

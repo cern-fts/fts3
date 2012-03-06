@@ -21,5 +21,9 @@ target_link_libraries(fts3-transfer-srv pthread)
 target_link_libraries(fts3-transfer-srv boost_thread)
 target_link_libraries(fts3-transfer-srv fts3_db_generic)
 
+install(TARGETS         fts3-transfer-srv 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${BIN_INSTALL_DIR} )
+
 
 
