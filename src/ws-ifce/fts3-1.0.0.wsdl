@@ -260,12 +260,6 @@
 
    </message>
 
-   <message name="placementSubmit2Request">
-
-      <part name="job" type="tns3:PlacementJob"/>
-
-   </message>
-
    <message name="InvalidArgumentException">
 
       <part name="fault" element="tns3:InvalidArgumentExceptionElement"/>
@@ -275,12 +269,6 @@
    <message name="getTransferJobSummaryResponse">
 
       <part name="getTransferJobSummaryReturn" type="tns3:TransferJobSummary"/>
-
-   </message>
-
-   <message name="placementSubmit2Response">
-
-      <part name="placementSubmit2Return" type="xsd:string"/>
 
    </message>
 
@@ -371,12 +359,6 @@
 
    </message>
 
-   <message name="placementSubmitRequest">
-
-      <part name="job" type="tns3:PlacementJob"/>
-
-   </message>
-
    <message name="setJobPriorityRequest">
 
       <part name="requestID" type="xsd:string"/>
@@ -437,12 +419,6 @@
 
    </message>
 
-   <message name="placementSubmitResponse">
-
-      <part name="placementSubmitReturn" type="xsd:string"/>
-
-   </message>
-
    <message name="getTransferJobSummaryRequest">
 
       <part name="requestID" type="xsd:string"/>
@@ -486,12 +462,6 @@
    <message name="transferSubmit3Request">
 
       <part name="job" type="tns3:TransferJob2"/>
-
-   </message>
-
-   <message name="submitResponse">
-
-      <part name="submitReturn" type="xsd:string"/>
 
    </message>
 
@@ -541,12 +511,6 @@
 
    </message>
 
-   <message name="submitRequest">
-
-      <part name="job" type="tns3:TransferJob"/>
-
-   </message>
-
    <message name="getVersionResponse">
 
       <part name="getVersionReturn" type="xsd:string"/>
@@ -580,37 +544,7 @@
 
    <portType name="FileTransfer">
 
-      <operation name="placementSubmit" parameterOrder="job">
 
-         <input message="impl:placementSubmitRequest" name="placementSubmitRequest"/>
-
-         <output message="impl:placementSubmitResponse" name="placementSubmitResponse"/>
-
-         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
-
-         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
-
-         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
-
-         <fault message="impl:InternalException" name="InternalException"/>
-
-      </operation>
-
-      <operation name="placementSubmit2" parameterOrder="job">
-
-         <input message="impl:placementSubmit2Request" name="placementSubmit2Request"/>
-
-         <output message="impl:placementSubmit2Response" name="placementSubmit2Response"/>
-
-         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
-
-         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
-
-         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
-
-         <fault message="impl:InternalException" name="InternalException"/>
-
-      </operation>
 
       <operation name="transferSubmit" parameterOrder="job">
 
@@ -660,21 +594,6 @@
 
       </operation>
 
-      <operation name="submit" parameterOrder="job">
-
-         <input message="impl:submitRequest" name="submitRequest"/>
-
-         <output message="impl:submitResponse" name="submitResponse"/>
-
-         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
-
-         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
-
-         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
-
-         <fault message="impl:InternalException" name="InternalException"/>
-
-      </operation>
 
       <operation name="listRequests" parameterOrder="inGivenStates">
 
@@ -936,90 +855,6 @@
 
       <wsdlsoap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
 
-      <operation name="placementSubmit">
-
-         <wsdlsoap:operation soapAction=""/>
-
-         <input name="placementSubmitRequest">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </input>
-
-         <output name="placementSubmitResponse">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </output>
-
-         <fault name="AuthorizationException">
-
-            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
-
-         </fault>
-
-         <fault name="ServiceBusyException">
-
-            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
-
-         </fault>
-
-         <fault name="InvalidArgumentException">
-
-            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
-
-         </fault>
-
-         <fault name="InternalException">
-
-            <wsdlsoap:fault name="InternalException" use="literal"/>
-
-         </fault>
-
-      </operation>
-
-      <operation name="placementSubmit2">
-
-         <wsdlsoap:operation soapAction=""/>
-
-         <input name="placementSubmit2Request">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </input>
-
-         <output name="placementSubmit2Response">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </output>
-
-         <fault name="AuthorizationException">
-
-            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
-
-         </fault>
-
-         <fault name="ServiceBusyException">
-
-            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
-
-         </fault>
-
-         <fault name="InvalidArgumentException">
-
-            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
-
-         </fault>
-
-         <fault name="InternalException">
-
-            <wsdlsoap:fault name="InternalException" use="literal"/>
-
-         </fault>
-
-      </operation>
-
       <operation name="transferSubmit">
 
          <wsdlsoap:operation soapAction=""/>
@@ -1115,48 +950,6 @@
          </input>
 
          <output name="transferSubmit3Response">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </output>
-
-         <fault name="AuthorizationException">
-
-            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
-
-         </fault>
-
-         <fault name="ServiceBusyException">
-
-            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
-
-         </fault>
-
-         <fault name="InvalidArgumentException">
-
-            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
-
-         </fault>
-
-         <fault name="InternalException">
-
-            <wsdlsoap:fault name="InternalException" use="literal"/>
-
-         </fault>
-
-      </operation>
-
-      <operation name="submit">
-
-         <wsdlsoap:operation soapAction=""/>
-
-         <input name="submitRequest">
-
-            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
-
-         </input>
-
-         <output name="submitResponse">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 
