@@ -21,68 +21,45 @@
 #include "uuid_generator.h"
 
 #include "db/generic/SingleDbInstance.h"
-
 #include "config/serverconfig.h"
-#include "ws/FtsServiceTask.h"
 
+#include "ws/GSoapExceptionHandler.h"
+#include "ws/JobSubmitter.h"
+#include "ws/RequestLister.h"
+#include "ws/JobStatusCopier.h"
+
+#include "common/JobStatusHandler.h"
 #include "common/logger.h"
 
-using namespace fts::ws;
+
 using namespace boost;
 using namespace db;
 using namespace fts3::config;
+using namespace fts3::ws;
+using namespace fts3::common;
+using namespace std;
 
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::transferSubmit(transfer__TransferJob *_job, struct fts__transferSubmitResponse &_param_3) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
 
-	if (_job == 0) {
+	try {
+		JobSubmitter submitter (this, _job, false);
+		_param_3._transferSubmitReturn = submitter.submit();
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "The job was not defined" << commit;
-		transfer__InvalidArgumentException ex;
-		throw ex;
+	} catch (string const &e) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
+	    return SOAP_SVR_FAULT;
+
+	} catch (transfer__TransferException* ex) {
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler exHandler(this, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
 	}
 
-	string id = UuidGenerator::generateUUID();
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Generated uuid " << id << commit;
-
-	try{
-	    const string requestID = id;
-	    const string dn = "/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
-	    const string vo = string("dteam");
-
-	    FtsServiceTask srvtask;
-
-	    vector<src_dest_checksum_tupple> jobs = srvtask.getJobs(_job);
-	    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
-
-	    string sourceSpaceTokenDescription = "";
-
-	    string cred = "";
-	    if (_job->credential) {
-	    	cred = *_job->credential;
-	    }
-	    int copyPinLifeTime = 1;
-
-	    vector<string> params = srvtask.getParams(_job->jobParams, copyPinLifeTime);
-
-	    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter's vector has been created" << commit;
-
-	    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, jobs, params[0],
-	                                 dn, cred, vo, params[1],
-	                                 params[2], params[3], params[4],
-	                                 params[5], sourceSpaceTokenDescription, params[6], copyPinLifeTime,
-	                                 params[7], params[8]);
-
-	    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
-	  }
-	catch (string const &e)
-	  {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-	    return SOAP_SVR_FAULT;
-	  }
-	_param_3._transferSubmitReturn = id;
 	return SOAP_OK;
 }
 
@@ -91,53 +68,23 @@ int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job,
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
-	if (_job == 0) {
+	try {
+		JobSubmitter submitter (this, _job, true);
+		_param_4._transferSubmit2Return = submitter.submit();
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "The job was not defined" << commit;
-		transfer__InvalidArgumentException ex;
-		throw ex;
+	} catch (string const &e) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
+	    return SOAP_FAULT;
+
+	} catch (transfer__TransferException* ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler exHandler(this, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
 	}
 
-	string id = UuidGenerator::generateUUID();
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Generated uuid " << id << commit;
-
-	try{
-	    const string requestID = id;
-	    const string dn = "/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
-	    const string vo = string("dteam");
-
-	    FtsServiceTask srvtask;
-
-	    vector<src_dest_checksum_tupple> jobs = srvtask.getJobs(_job);
-	    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
-
-	    string sourceSpaceTokenDescription = "";
-
-	    string cred = "";
-	    if (_job->credential) {
-	    	cred = *_job->credential;
-	    }
-
-	    int copyPinLifeTime = 1;
-
-	    vector<string> params = srvtask.getParams(_job->jobParams, copyPinLifeTime);
-	    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter's vector has been created" << commit;
-
-	    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, jobs, params[0],
-	                                 dn, cred, vo, params[1],
-	                                 params[2], params[3], params[4],
-	                                 params[5], sourceSpaceTokenDescription, params[6], copyPinLifeTime,
-	                                 params[7], params[8]);
-
-	    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
-	  }
-	catch (string const &e)
-	  {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-	    return SOAP_SVR_FAULT;
-	  }
-
-	_param_4._transferSubmit2Return = id;
 	return SOAP_OK;
 }
 
@@ -146,60 +93,75 @@ int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
-	if (_job == 0) {
+	try {
+		JobSubmitter submitter (this, _job);
+		_param_5._transferSubmit3Return = submitter.submit();
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "The job was not defined" << commit;
-		transfer__InvalidArgumentException ex;
-		throw ex;
-	}
+	} catch (string const &e) {
 
-	string id = UuidGenerator::generateUUID();
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Generated uuid " << id << commit;
-
-	try{
-	    const string requestID = id;
-	    const string dn = "/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
-	    const string vo = string("dteam");
-
-	    FtsServiceTask srvtask;
-
-	    vector<src_dest_checksum_tupple> jobs = srvtask.getJobs2(_job);
-	    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
-
-	    string sourceSpaceTokenDescription = "";
-
-	    string cred = "";
-	    if (_job->credential) {
-	    	cred = *_job->credential;
-	    }
-	    int copyPinLifeTime = 1;
-
-	    vector<string> params = srvtask.getParams(_job->jobParams, copyPinLifeTime);
-	    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter's vector has been created" << commit;
-
-	    DBSingleton::instance().getDBObjectInstance()->submitPhysical(requestID, jobs, params[0],
-	                                 dn, cred, vo, params[1],
-	                                 params[2], params[3], params[4],
-	                                 params[5], sourceSpaceTokenDescription, params[6], copyPinLifeTime,
-	                                 params[7], params[8]);
-
-	    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
-	  }
-	catch (string const &e)
-	  {
 	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 	    return SOAP_SVR_FAULT;
-	  }
-	_param_5._transferSubmit3Return = id;
+
+	} catch (transfer__TransferException* ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler exHandler(this, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
 
-/// Web service operation 'submit' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::submit(transfer__TransferJob *_job, struct fts__submitResponse &_param_6) {
+/// Web service operation 'listRequests' (returns error code or SOAP_OK)
+int FileTransferSoapBindingService::listRequests(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct fts__listRequestsResponse &_param_7) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
+
+	try {
+		RequestLister lister(this, _inGivenStates);
+		_param_7._listRequestsReturn = lister.list();
+
+	} catch (string const &e) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
+		return SOAP_SVR_FAULT;
+
+	} catch (transfer__TransferException* ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler exHandler(this, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
+	}
+
 	return SOAP_OK;
 }
 
+/// Web service operation 'listRequests2' (returns error code or SOAP_OK)
+int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct fts__listRequests2Response &_param_8) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
+
+	try {
+		RequestLister lister(this, _inGivenStates);
+		_param_8._listRequests2Return = lister.list();
+
+	} catch (string const &e) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
+		return SOAP_SVR_FAULT;
+
+	} catch (transfer__TransferException* ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler exHandler(this, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
+	}
+
+	return SOAP_OK;
+}
 
 
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
@@ -218,39 +180,29 @@ int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, stru
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus' request" << commit;
 
 	try{
-		JobStatus* record =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID);
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job status has been read" << commit;
+		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID);
+		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
-		if(record){
-
-			_param_11._getTransferJobStatusReturn = soap_new_transfer__JobStatus(this, -1);
-
-			_param_11._getTransferJobStatusReturn->jobID = soap_new_std__string(this, -1);
-			*_param_11._getTransferJobStatusReturn->jobID = record->jobID;
-
-			_param_11._getTransferJobStatusReturn->jobStatus = soap_new_std__string(this, -1);
-			*_param_11._getTransferJobStatusReturn->jobStatus = record->jobStatus;
-
-			_param_11._getTransferJobStatusReturn->clientDN = soap_new_std__string(this, -1);
-			*_param_11._getTransferJobStatusReturn->clientDN = record->clientDN;
-
-			_param_11._getTransferJobStatusReturn->reason = soap_new_std__string(this, -1);
-			*_param_11._getTransferJobStatusReturn->reason = record->reason;
-
-			_param_11._getTransferJobStatusReturn->voName = soap_new_std__string(this, -1);
-			*_param_11._getTransferJobStatusReturn->voName = record->voName;
-
-			_param_11._getTransferJobStatusReturn->submitTime = record->submitTime;
-			_param_11._getTransferJobStatusReturn->numFiles = record->numFiles;
-			_param_11._getTransferJobStatusReturn->priority = record->priority;
-
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The response hav been created" << commit;
-
-			delete record;
+		if(status){
+			_param_11._getTransferJobStatusReturn = JobStatusCopier::copyJobStatus(this, status);
+			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
+			delete status;
+		} else {
+			transfer__NotExistsException* ex = GSoapExceptionHandler::createNotExistsException(this,
+					"requestID <" + _requestID + "> was not found");
+			throw ex;
 		}
+
 	} catch (string const &e) {
 	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 	    return SOAP_SVR_FAULT;
+
+	} catch (transfer__TransferException* ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler exHandler(this, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
 	}
 
 	return SOAP_OK;
@@ -297,21 +249,22 @@ int FileTransferSoapBindingService::getServiceMetadata(string _key, struct fts__
 }
 
 
-
-/// Web service operation 'listRequests' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listRequests(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct fts__listRequestsResponse &_param_7) {
-	return SOAP_OK;
-}
-
-/// Web service operation 'listRequests2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct fts__listRequests2Response &_param_8) {
-	return SOAP_OK;
-}
-
-
-
 /// Web service operation 'cancel' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::cancel(fts__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct fts__cancelResponse &_param_14) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancel' request" << commit;
+
+	if (_requestIDs) {
+		vector<string> &jobs = _requestIDs->item;
+		if (!jobs.empty()) {
+			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that have been canceled:" << commit;
+			vector<string>::iterator it;
+			for (it = jobs.begin(); it < jobs.end(); it++) {
+				FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << *it << commit;
+			}
+		}
+	}
+
 	return SOAP_OK;
 }
 
@@ -332,25 +285,59 @@ int FileTransferSoapBindingService::removeVOManager(string _VOName, string _prin
 
 /// Web service operation 'listVOManagers' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::listVOManagers(string _VOName, struct fts__listVOManagersResponse &_param_18) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listVOManagers' request" << commit;
+
+	_param_18._listVOManagersReturn = soap_new_fts__ArrayOf_USCOREsoapenc_USCOREstring(this, -1);
+	_param_18._listVOManagersReturn->item.push_back("default username");
+
 	return SOAP_OK;
 }
 
 /// Web service operation 'getRoles' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getRoles(struct fts__getRolesResponse &_param_19) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRoles' request" << commit;
+
+	_param_19.getRolesReturn = soap_new_transfer__Roles(this, -1);
+
+	_param_19.getRolesReturn->clientDN = soap_new_std__string(this, -1);
+	*_param_19.getRolesReturn->clientDN = "clientDN";
+	_param_19.getRolesReturn->serviceAdmin = soap_new_std__string(this, -1);
+	*_param_19.getRolesReturn->serviceAdmin = "serviceAdmin";
+	_param_19.getRolesReturn->submitter = soap_new_std__string(this, -1);
+	*_param_19.getRolesReturn->submitter = "submitter";
+
+	transfer__StringPair* pair = soap_new_transfer__StringPair(this, -1);
+	pair->string1 = soap_new_std__string(this, -1);
+	*pair->string1 = "string1";
+	pair->string2 = soap_new_std__string(this, -1);
+	*pair->string2 = "string2";
+	_param_19.getRolesReturn->VOManager.push_back(pair);
+
 	return SOAP_OK;
 }
 
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getRolesOf(string _otherDN, struct fts__getRolesOfResponse &_param_20) {
-	return SOAP_OK;
-}
 
-/// Web service operation 'placementSubmit' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::placementSubmit(transfer__PlacementJob *_job, struct fts__placementSubmitResponse &_param_1) {
-	return SOAP_OK;
-}
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRolesOf' request" << commit;
 
-/// Web service operation 'placementSubmit2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::placementSubmit2(transfer__PlacementJob *_job, struct fts__placementSubmit2Response &_param_2) {
+	_param_20._getRolesOfReturn = soap_new_transfer__Roles(this, -1);
+
+	_param_20._getRolesOfReturn->clientDN = soap_new_std__string(this, -1);
+	*_param_20._getRolesOfReturn->clientDN = "clientDN";
+	_param_20._getRolesOfReturn->serviceAdmin = soap_new_std__string(this, -1);
+	*_param_20._getRolesOfReturn->serviceAdmin = "serviceAdmin";
+	_param_20._getRolesOfReturn->submitter = soap_new_std__string(this, -1);
+	*_param_20._getRolesOfReturn->submitter = "submitter";
+
+	transfer__StringPair* pair = soap_new_transfer__StringPair(this, -1);
+	pair->string1 = soap_new_std__string(this, -1);
+	*pair->string1 = "string1";
+	pair->string2 = soap_new_std__string(this, -1);
+	*pair->string2 = "string2";
+	_param_20._getRolesOfReturn->VOManager.push_back(pair);
+
 	return SOAP_OK;
 }

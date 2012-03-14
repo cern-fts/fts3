@@ -6,12 +6,13 @@
  */
 
 #include "WebServerMock.h"
-#include "UuidGenerator.h"
+#include "uuid_generator.h"
 
-using namespace fts::ws;
+using namespace fts3::ws;
 
 
 WebServerMock* WebServerMock::me = 0;
+
 
 WebServerMock::WebServerMock() {
 	tid = 0;

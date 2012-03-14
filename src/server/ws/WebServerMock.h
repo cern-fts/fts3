@@ -30,7 +30,7 @@
 
 using namespace std;
 
-namespace fts { namespace ws {
+namespace fts3 { namespace ws {
 
 /**
  *

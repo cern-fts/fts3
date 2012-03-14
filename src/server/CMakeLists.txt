@@ -16,6 +16,9 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_CXX_FLAGS "-g -Wall")
+
 set(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts3_include_dir})
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
@@ -36,7 +39,9 @@ set(gsoap_source_files
     "${generated_files_dir}/ftsC.cpp" 
     "${generated_files_dir}/ftsFileTransferSoapBindingService.cpp" 
     "${PROJECT_SOURCE_DIR}/src/server/gsoap.cpp"         
-    "${PROJECT_SOURCE_DIR}/src/server/ws/FtsServiceTask.cpp"         
+    "${PROJECT_SOURCE_DIR}/src/server/ws/RequestLister.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapExceptionHandler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"      
     "${PROJECT_SOURCE_DIR}/src/server/gsoap_transfer_methods.cpp"         
 )
 
@@ -74,6 +79,11 @@ target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_lib -luui
 add_executable (fts3_server main.cpp)
 add_dependencies(fts3_server fts3_server_lib)
 target_link_libraries(fts3_server -lfts3_server_lib)
+
+# Test_Server executable
+#add_executable (test_server ws/main.cpp ${gsoap_source_files} uuid_generator.cpp)
+#add_dependencies(test_server gsoap++ uuid fts3_db_generic boost_thread-mt)
+#target_link_libraries(test_server gsoap++ uuid fts3_db_generic boost_thread-mt)
 
 install(TARGETS         fts3_server_gsoap_lib 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

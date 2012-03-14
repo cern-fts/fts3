@@ -15,31 +15,31 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * UuidGenerator.cpp
  *
- *  Created on: Feb 17, 2012
- *      Author: simonm
+ * main.cpp
+ *
+ *  Created on: Mar 8, 2012
+ *      Author: Michal Simon
  */
 
-#include "uuid_generator.h"
-#include <uuid/uuid.h>
+#include "gsoap_stubs.h"
+#include "db/generic/SingleDbInstance.h"
+#include "config/serverconfig.h"
 
-using namespace fts3::ws;
+using namespace db;
 
-string UuidGenerator::generateUUID() {
+int main(int ac, char* av[]) {
 
-	uuid_t id;
-	char c_str[36];
+    static const int argc = 2;
+    char *argv[argc] = {"executable", "--configfile=/etc/sysconfig/fts3config"};
+	fts3::config::theServerConfig().read(argc, argv);
 
-	uuid_generate(id);
-	// different algorithms:
-	//uuid_generate_random(id);
-	//uuid_generate_time(id);
-	uuid_unparse(id, c_str);
+	DBSingleton::instance().getDBObjectInstance()->init(
+			fts3::config::theServerConfig().get<string>("DbUserName"),
+			fts3::config::theServerConfig().get<string>("DbPassword"),
+			fts3::config::theServerConfig().get<string>("DbConnectString")
+	);
 
-	string str = c_str;
-	return str;
+	FileTransferSoapBindingService service;
+	return service.run(8080);
 }
