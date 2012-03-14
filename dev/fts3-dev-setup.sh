@@ -18,6 +18,9 @@
 ## Setup a development machine: install development tools.
 # Execute this script as root (su).
 
+# ================================================================================
+# Process command line parameters
+
 function usage
 {
     echo
@@ -25,8 +28,7 @@ function usage
     echo
     echo "$0 <username> <noask>"
     echo
-    echo -e "  \033[1musername\033[0m: Your cern user name. It may be different, but it may cause"
-    echo "  complications."
+    echo -e "  \033[1musername\033[0m: Your cern user name."
     echo
     echo -e "  \033[1mnoask\033[0m: Optional. If it is set, the script will not ask for key presses. "
     echo "  It means that you know what is going on and why."
@@ -38,60 +40,49 @@ function usage
 
 }
 
-# Ubuntu machine
-function ubuntu_install_tools {
-	apt-get install subversion-tools doxygen davfs2 libboost-test-dev cmake liblog4cpp5-dev libboost-thread-dev libboost-program-options-dev
-}
-
-function ubuntu_setup_tools {
-     sudo chmod +s `which mount.davfs`
-}
-
-CMD_PATH=$(dirname $0)
-source $CMD_PATH/fts3-utils.sh
-
-# Check if command was used with the proper parameters and environment
-USER=$1
-NOASK=$2
-
 # Check the number of command line parameters
 if [ $# -eq 0 -o $# -gt 2 ]; then
     usage
     exit -1
 fi
 
-# We should nod develop under root. Connect your CERN account to the dev. environment. USER should
-# be your CERN account name.
-adduser $USER
+# ================================================================================
+# Set up parameters 
 
-echo
-echo "visudo will be executed. Add a line for your user name \"$USER\", according to your password"
-echo "policy. More info:"
-echo
-echo "   man visudo"
-echo "   man sudoers"
-echo
-echo "Example line: su requires no password for user $USER:"
-echo
-echo "    $USER      ALL=(ALL)       NOPASSWD: ALL"
-echo
+PARAMETER_USER=$1
+PARAMETER_NOASK=$2
+FTS3_USERNAME=fts3
 
-HOME=/home/$USER
-fts3_utils_wait_for_key $NOASK
-visudo
+CMD_PATH=$(dirname $0)
+source ${CMD_PATH}/fts3-dev-setup-common.sh 
 
-echo "Installing the required software..."
-echo
+# ================================================================================
+# Check platform support
 
-# Determine platform 
+fts3_dev_setup_check_platform
 
-fts3_utils_check_platform
+PLATFORM_TOOLS=${CMD_PATH}/${PLATFORM}_tools.sh 
 
-if [$FTS3_PLATFORM == "ubuntu"]; then
-    ubuntu_install_tools 
-    ubuntu_setup_tools 
+if [ -e $PLATFORM_TOOLS ]; then
+    source $PLATFORM_TOOLS 
+else
+    echo
+    echo -e "\033[1m$PLATFORM is not supported\033[0m ($PLATFORM_TOOLS file cannot be found)."
+    exit -1
 fi
 
+# ================================================================================
+# Get the setup functions
 
+source $PLATFORM_TOOLS 
 
+# ================================================================================
+
+fts3_dev_setup_common_user
+fts3_dev_setup_common_home_dir $PARAMETER_USER
+fts3_dev_setup_common_grid_credentials
+fts3_dev_setup_common_ssh_keys
+fts3_dev_setup_common_personal_settings
+#fts3_dev_setup_install_tools
+fts3_dev_setup_common_finalize $FTS3_USERNAME
 
