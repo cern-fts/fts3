@@ -118,11 +118,11 @@ function fts3_dev_setup_common_grid_credentials
     echo "Ensure that .glite and .globus are OK in your AFS root."
     echo
     fts3_dev_setup_wait_for_key
-    klog -principal $PARAMETER_USER
+    kinit $PARAMETER_USER@CERN:CH
 
     if [ ! $? -eq 0 ]; then
         echo "Could not get credentials, exiting."
-        #exit -1
+        exit -1
     fi
 
     cd $HOME
