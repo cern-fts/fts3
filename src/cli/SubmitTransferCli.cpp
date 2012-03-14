@@ -27,9 +27,11 @@
 #include "SubmitTransferCli.h"
 #include "GsoapStubs.h"
 #include "SrvManager.h"
+#include "common/JobParameterHandler.h"
 
 #include <iostream>
 #include <fstream>
+#include <termios.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
@@ -37,21 +39,10 @@
 
 using namespace boost::algorithm;
 using namespace boost;
-using namespace fts::cli;
+using namespace fts3::cli;
+using namespace fts3::common;
 
 SubmitTransferCli::SubmitTransferCli() {
-
-	// set parameter names
-	FTS3_PARAM_GRIDFTP = "gridftp";
-	FTS3_PARAM_MYPROXY = "myproxy";
-	FTS3_PARAM_DELEGATIONID = "delegationid";
-	FTS3_PARAM_SPACETOKEN = "spacetoken";
-	FTS3_PARAM_SPACETOKEN_SOURCE = "source_spacetoken";
-	FTS3_PARAM_COPY_PIN_LIFETIME = "copy_pin_lifetime";
-	FTS3_PARAM_LAN_CONNECTION = "lan_connection";
-	FTS3_PARAM_FAIL_NEARLINE = "fail_nearline";
-	FTS3_PARAM_OVERWRITEFLAG = "overwrite";
-	FTS3_PARAM_CHECKSUM_METHOD = "checksum_method";
 
 	// but default we don't use checksum
 	checksum = false;
@@ -87,10 +78,6 @@ SubmitTransferCli::SubmitTransferCli() {
 	p.add("destination", 1);
 	p.add("checksum", 1);
 
-	// add specific and hidden options to all other options
-	all.add(specific).add(hidden);
-	// add specific options to visible options (printed in help)
-	visible.add(specific);
 }
 
 SubmitTransferCli::~SubmitTransferCli() {
@@ -175,7 +162,7 @@ bool SubmitTransferCli::createJobElements() {
     		// if the checksum algorithm has been given check if the
     		// format is correct (ALGORITHM:1234af)
     		if (count == 3) {
-    			int colon = e[2].find(":");
+    			string::size_type colon = e[2].find(":");
    				if (colon == string::npos || colon == 0 || colon == e[2].size() - 1) {
    					cout << "submit: in line " << lineCount << ": checksum format is not valid (ALGORITHM:1234af)." << endl;
    					continue;
@@ -195,7 +182,7 @@ bool SubmitTransferCli::createJobElements() {
     	string checksum;
     	if (vm.count("checksum")) {
     		checksum = vm["checksum"].as<string>();
-			int colon = checksum.find(":");
+			string::size_type colon = checksum.find(":");
 			if (colon == string::npos || colon == 0 || colon == checksum.size() - 1) {
 				cout << "Checksum format is not valid (ALGORITHM:1234af)." << endl;
 				return false;
@@ -292,7 +279,7 @@ bool SubmitTransferCli::performChecks() {
     	// if not, and delegation mode is not use,
     	// ask the user to give the password
     	if (!delegate) {
-    		password = SrvManager::getInstance()->getPassword();
+    		password = askForPassword();
     	}
     }
 
@@ -327,6 +314,40 @@ bool SubmitTransferCli::performChecks() {
 	return true;
 }
 
+string SubmitTransferCli::askForPassword() {
+
+    termios stdt;
+    // get standard command line settings
+    tcgetattr(STDIN_FILENO, &stdt);
+    termios newt = stdt;
+    // turn off echo while typing
+    newt.c_lflag &= ~ECHO;
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &newt)) {
+    	cout << "submit: could not set terminal attributes" << endl;
+    	tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
+    	return "";
+    }
+
+    string pass1, pass2;
+
+    cout << "Enter MyProxy password: ";
+    cin >> pass1;
+    cout << endl << "Enter MyProxy password again: ";
+    cin >> pass2;
+    cout << endl;
+
+    // set the standard command line settings back
+    tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
+
+    // compare passwords
+    if (pass1.compare(pass2)) {
+    	cout << "Entered MyProxy passwords do not match." << endl;
+    	return "";
+    }
+
+    return pass1;
+}
+
 transfer__TransferParams* SubmitTransferCli::getParams(soap* soap) {
 
 	transfer__TransferParams *jobParams = soap_new_transfer__TransferParams(soap, -1);
@@ -334,53 +355,53 @@ transfer__TransferParams* SubmitTransferCli::getParams(soap* soap) {
 	// check if the parameters were set using CLI, and if yes set them
 
 	if (vm.count("compare-checksum")) {
-		jobParams->keys.push_back(FTS3_PARAM_CHECKSUM_METHOD);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD);
 		jobParams->values.push_back("compare");
 	}
 
 	if (vm.count("overwrite")) {
-		jobParams->keys.push_back(FTS3_PARAM_OVERWRITEFLAG);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG);
 		jobParams->values.push_back("Y");
 	}
 
 	if (vm.count("lan-connection")) {
-		jobParams->keys.push_back(FTS3_PARAM_LAN_CONNECTION);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_LAN_CONNECTION);
 		jobParams->values.push_back("Y");
 	}
 
 	if (vm.count("fail-nearline")) {
-		jobParams->keys.push_back(FTS3_PARAM_FAIL_NEARLINE);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE);
 		jobParams->values.push_back("Y");
 	}
 
 	if (vm.count("gparam")) {
-		jobParams->keys.push_back(FTS3_PARAM_GRIDFTP);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_GRIDFTP);
 		jobParams->values.push_back(vm["gparam"].as<string>());
 	}
 
 	if (vm.count("myproxysrv")) {
-		jobParams->keys.push_back(FTS3_PARAM_MYPROXY);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_MYPROXY);
 		jobParams->values.push_back(vm["myproxysrv"].as<string>());
 	}
 
 	if (vm.count("id")) {
-		jobParams->keys.push_back(FTS3_PARAM_DELEGATIONID);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_DELEGATIONID);
 		jobParams->values.push_back(vm["id"].as<string>());
 	}
 
 	if (vm.count("dest-token")) {
-		jobParams->keys.push_back(FTS3_PARAM_SPACETOKEN);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_SPACETOKEN);
 		jobParams->values.push_back(vm["dest-token"].as<string>());
 	}
 
 	if (vm.count("source-token")) {
-		jobParams->keys.push_back(FTS3_PARAM_SPACETOKEN_SOURCE);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE);
 		jobParams->values.push_back(vm["source-token"].as<string>());
 	}
 
 	if (vm.count("copy-pin-lifetime")) {
 		string value = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
-		jobParams->keys.push_back(FTS3_PARAM_COPY_PIN_LIFETIME);
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME);
 		jobParams->values.push_back(value);
 	}
 
@@ -395,7 +416,7 @@ bool SubmitTransferCli::isBlocking() {
 	return vm.count("blocking");
 }
 
-string SubmitTransferCli::getUsageString() {
-	return "Usage: fts3-transfer-submit [options] SOURCE DEST [CHECKSUM]";
+string SubmitTransferCli::getUsageString(string tool) {
+	return "Usage: " + tool + " [options] SOURCE DEST [CHECKSUM]";
 }
 

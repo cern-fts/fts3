@@ -1,26 +1,42 @@
 /*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use this file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ *
  * ListTransferCli.cpp
  *
  *  Created on: Mar 1, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #include "ListTransferCli.h"
 #include "SrvManager.h"
 
-using namespace fts::cli;
+using namespace fts3::cli;
 
 ListTransferCli::ListTransferCli() {
 
 	// set status names
-	FTS3_STATUS_ACTIVE = "Active";
-	FTS3_STATUS_PENDING = "Pending";
-	FTS3_STATUS_READY = "Ready";
-	FTS3_STATUS_SUBMITTED = "Submitted";
+	FTS3_STATUS_ACTIVE = "ACTIVE";
+	FTS3_STATUS_PENDING = "PENDING";
+	FTS3_STATUS_READY = "READY";
+	FTS3_STATUS_SUBMITTED = "SUBMITTED";
 
 	// add fts3-transfer-status specific options
 	specific.add_options()
-			("userdn,u", value<string>(), "Restrict to specific user DN.")
 			("voname,o", value<string>(), "Restrict to specific VO")
 			;
 
@@ -31,34 +47,20 @@ ListTransferCli::ListTransferCli() {
 
 	// all positional parameters go to state
 	p.add("state", -1);
-
-	// add specific and hidden parameters to all parameters
-	all.add(specific).add(hidden);
-	// add specific parameters to visible parameters (printed in help)
-	visible.add(specific);
 }
 
 ListTransferCli::~ListTransferCli() {
-	// TODO Auto-generated destructor stub
 }
 
-string ListTransferCli::getUsageString() {
-	return "Usage: fts3-transfer-list [options] [STATE...]";
+string ListTransferCli::getUsageString(string tool) {
+
+	return "Usage: " + tool + " [options] [STATE...]";
 }
 
 string ListTransferCli::getVoname() {
 
 	if (vm.count("voname")) {
 		return vm["voname"].as<string>();
-	}
-
-	return string();
-}
-
-string ListTransferCli::getUserdn() {
-
-	if (vm.count("userdn")) {
-		return vm["userdn"].as<string>();
 	}
 
 	return string();

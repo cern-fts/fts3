@@ -15,19 +15,17 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * TransferStatusCli.h
  *
- *  Created on: Feb 13, 2012
- *      Author: simonm
+ * JobIDCli.h
+ *
+ *  Created on: Mar 13, 2012
+ *      Author: Michal Simon
  */
 
-#ifndef TRANSFERSTATUSCLI_H_
-#define TRANSFERSTATUSCLI_H_
+#ifndef JOBIDCLI_H_
+#define JOBIDCLI_H_
 
-#include "JobIDCli.h"
+#include "CliBase.h"
 #include <vector>
 #include <string>
 
@@ -36,39 +34,46 @@ using namespace std;
 namespace fts3 { namespace cli {
 
 /**
- * TransferStatusCli is the command line utility used for the fts3-transfer-status tool.
+ * JobIDCli is the command line utility used for retreiving job IDs.
  *
  * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
- * 		- list (-l)
  * 		- job ID (--jobid), positional parameter (passed without any switch option)
  *
  * @see CliBase
  */
-class TransferStatusCli: public JobIDCli {
+class JobIDCli: public CliBase {
 public:
+
 	/**
 	 * Default constructor.
 	 *
-	 * Creates the transfer-status specific command line options. Job ID is
+	 * Creates the command line interface for retrieving job IDs. Job ID is
 	 * market as both: hidden and positional
 	 */
-	TransferStatusCli();
+	JobIDCli();
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~TransferStatusCli();
+	virtual ~JobIDCli();
 
 	/**
-	 * Check if the list mode is on.
+	 * Gives the instruction how to use the command line tool.
 	 *
-	 * @return true if the -l option has been used
+	 * @return a string with instruction on how to use the tool
 	 */
-	bool list();
+	string getUsageString(string tool);
 
+	/**
+	 * Gets a vector with job IDs.
+	 *
+	 * @return if job IDs were given as command line parameters a
+	 * 			vector containing job IDs otherwise an empty vector
+	 */
+	vector<string> getJobIds();
 };
 
 }
 }
 
-#endif /* TRANSFERSTATUSCLI_H_ */
+#endif /* JOBIDCLI_H_ */

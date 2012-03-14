@@ -21,11 +21,13 @@
 #include "SubmitTransferCli.h"
 #include "SrvManager.h"
 #include "evn.h"
+#include "common/JobStatusHandler.h"
 
 #include <exception>
 
 using namespace std;
-using namespace fts::cli;
+using namespace fts3::cli;
+using namespace fts3::common;
 
 /**
  * This is the entry point for the fts3-transfer-submit command line tool.
@@ -43,7 +45,7 @@ int main(int ac, char* av[]) {
     	cli.initCli(ac, av);
 
     	// if applicable print help or version and exit
-		if (cli.printHelp() || cli.printVersion()) return 0;
+		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
 
 		// get the source file, the destination file and the FTS3 service endpoint
     	string source = cli.getSource(), destination = cli.getDestination(), endpoint = cli.getService();
@@ -59,9 +61,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) {
-			cout << "Error while init SrvManager." << endl;
-		}
+		if (manager->init(service)) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -75,6 +75,7 @@ int main(int ac, char* av[]) {
 		if (!cli.createJobElements()) return 0;
 
 		string jobId;
+		int err;
 
 		// checksum requires different request
 		if (cli.useCheckSum()) {
@@ -88,7 +89,12 @@ int main(int ac, char* av[]) {
 			manager->delegateProxyCert(endpoint);
 			// submit the job
 			fts__transferSubmit3Response resp;
-			int ret = service.transferSubmit3(&job, resp);
+			err = service.transferSubmit3(&job, resp);
+			if (err) {
+				cout << "Failed to submit transfer: transferSubmit3. ";
+				manager->printSoapErr(service);
+				return 0;
+			}
 
 			// retrieve the job ID
 			jobId = resp._transferSubmit3Return;
@@ -106,7 +112,12 @@ int main(int ac, char* av[]) {
 				manager->delegateProxyCert(endpoint);
 				// submit the job
 				fts__transferSubmit2Response resp;
-				int ret = service.transferSubmit2(&job, resp);
+				err = service.transferSubmit2(&job, resp);
+				if (err) {
+					cout << "Failed to submit transfer: transferSubmit2. ";
+					manager->printSoapErr(service);
+					return 0;
+				}
 
 				// retrieve the job ID
 				jobId = resp._transferSubmit2Return;
@@ -120,7 +131,12 @@ int main(int ac, char* av[]) {
 
 				// submit the job
 				fts__transferSubmitResponse resp;
-				int ret = service.transferSubmit(&job, resp);
+				err = service.transferSubmit(&job, resp);
+				if (err) {
+					cout << "Failed to submit transfer: transferSubmit. ";
+					manager->printSoapErr(service);
+					return 0;
+				}
 
 				// retrieve the job ID
 				jobId = resp._transferSubmitReturn;
@@ -136,7 +152,7 @@ int main(int ac, char* av[]) {
 			do {
 				sleep(2);
 				service.getTransferJobStatus(jobId, resp);
-			} while (!manager->isTransferReady(*resp._getTransferJobStatusReturn->jobStatus));
+			} while (!JobStatusHandler::getInstance().isTransferReady(*resp._getTransferJobStatusReturn->jobStatus));
 		}
 
     }

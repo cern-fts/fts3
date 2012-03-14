@@ -33,7 +33,7 @@ using namespace std;
 using namespace boost;
 
 
-namespace fts { namespace cli {
+namespace fts3 { namespace cli {
 
 /**
  * SubmitTransferCli is the command line utility used for the fts3-transfer-submit tool.
@@ -144,7 +144,7 @@ public:
 	 *
 	 * @return a string with instruction on how to use the tool
 	 */
-	string getUsageString();
+	string getUsageString(string tool);
 
 	/**
 	 * Gets the password (if set using -p option or by performChecks()
@@ -173,8 +173,8 @@ public:
 	 * Gets the 'transfer__TransferParams' object.
 	 *
 	 * The parameters are set accordingly to the options used with the command line tool.
-	 * The object is created using gsoap memory-allocation utility, it will be garbage
-	 * collected! If there is a need to delete it manually gsoap dedicated functions should
+	 * The object is created using gSOAP memory-allocation utility, it will be garbage
+	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
 	 * be used (in particular 'soap_unlink'!)
 	 *
 	 * @param soap - soap object corresponding to FTS3 service
@@ -243,14 +243,11 @@ public:
 private:
 
 	/**
-	 * command line options specific for fts3-transfer-submit
+	 * Ask user for password.
+	 *
+	 * @return user password
 	 */
-	options_description specific;
-
-	/**
-	 * hidden command line options (not printed in help)
-	 */
-	options_description hidden;
+	string askForPassword();
 
 	/**
 	 * the name of the file containing bulk-job description
@@ -279,22 +276,6 @@ private:
 	 */
 	bool delegate;
 
-	///@{
-	/**
-	 * parameter names
-	 * @see SubmitTransferCli::getParams(soap*)
-	 */
-	string FTS3_PARAM_GRIDFTP;
-	string FTS3_PARAM_MYPROXY;
-	string FTS3_PARAM_DELEGATIONID;
-	string FTS3_PARAM_SPACETOKEN;
-	string FTS3_PARAM_SPACETOKEN_SOURCE;
-	string FTS3_PARAM_COPY_PIN_LIFETIME;
-	string FTS3_PARAM_LAN_CONNECTION;
-	string FTS3_PARAM_FAIL_NEARLINE;
-	string FTS3_PARAM_OVERWRITEFLAG;
-	string FTS3_PARAM_CHECKSUM_METHOD;
-	///@}
 };
 
 }

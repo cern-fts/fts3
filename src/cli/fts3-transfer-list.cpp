@@ -12,7 +12,7 @@
 #include "evn.h"
 
 using namespace std;
-using namespace fts::cli;
+using namespace fts3::cli;
 
 
 /**
@@ -31,7 +31,7 @@ int main(int ac, char* av[]) {
 		cli.initCli(ac, av);
 
     	// if applicable print help or version and exit
-		if (cli.printHelp() || cli.printVersion()) return 0;
+		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
 
 		// get the FTS3 service endpoint
     	string endpoint = cli.getService();
@@ -47,9 +47,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) {
-			cout << "Error while init SrvManager." << endl;
-		}
+		if (manager->init(service)) return 0;
 
 
 		// if verbose print general info
@@ -69,7 +67,7 @@ int main(int ac, char* av[]) {
 		if (manager->isUserVoRestrictListingSupported()) {
 
 			fts__listRequests2Response resp;
-			err = service.listRequests2(array, cli.getUserdn(), cli.getVoname(), resp);
+			err = service.listRequests2(array, cli.getUserDn(), cli.getVoname(), resp);
 
 			if (err) {
 				//TODO err handle

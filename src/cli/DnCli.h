@@ -15,60 +15,51 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * TransferStatusCli.h
  *
- *  Created on: Feb 13, 2012
+ * DnCli.h
+ *
+ *  Created on: Mar 13, 2012
  *      Author: simonm
  */
 
-#ifndef TRANSFERSTATUSCLI_H_
-#define TRANSFERSTATUSCLI_H_
+#ifndef DNCLI_H_
+#define DNCLI_H_
 
-#include "JobIDCli.h"
-#include <vector>
-#include <string>
-
-using namespace std;
+#include "CliBase.h"
 
 namespace fts3 { namespace cli {
 
-/**
- * TransferStatusCli is the command line utility used for the fts3-transfer-status tool.
- *
- * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
- * 		- list (-l)
- * 		- job ID (--jobid), positional parameter (passed without any switch option)
- *
- * @see CliBase
- */
-class TransferStatusCli: public JobIDCli {
+class DnCli : public CliBase {
 public:
+
 	/**
 	 * Default constructor.
 	 *
-	 * Creates the transfer-status specific command line options. Job ID is
-	 * market as both: hidden and positional
+	 * Creates the DN command line interface.
 	 */
-	TransferStatusCli();
+	DnCli();
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~TransferStatusCli();
+	virtual ~DnCli();
 
 	/**
-	 * Check if the list mode is on.
+	 * Gives the instruction how to use the command line tool.
 	 *
-	 * @return true if the -l option has been used
+	 * @return a string with instruction on how to use the tool
 	 */
-	bool list();
+	string getUsageString(string tool);
 
+	/**
+	 * Gets the user DN, specified by the user.
+	 *
+	 * @return user DN
+	 */
+	string getUserDn();
 };
 
 }
 }
 
-#endif /* TRANSFERSTATUSCLI_H_ */
+#endif /* DNCLI_H_ */

@@ -26,7 +26,7 @@
 #include <string>
 
 using namespace std;
-using namespace fts::cli;
+using namespace fts3::cli;
 
 
 /**
@@ -45,7 +45,7 @@ int main(int ac, char* av[]) {
 		cli.initCli(ac, av);
 
 		// if applicable print help or version and exit
-		if (cli.printHelp() || cli.printVersion()) return 0;
+		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
 
 		// get the FTS3 service endpoint
 		string endpoint = cli.getService();
@@ -70,19 +70,8 @@ int main(int ac, char* av[]) {
 		// initialize SOAP
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
-		// check the interface version of the FTS3 service
-		fts__getInterfaceVersionResponse ivresp;
-		service.getInterfaceVersion(ivresp);
-		string interface = ivresp.getInterfaceVersionReturn;
-
-		// set the interface version
-		manager->setInterfaceVersion(interface);
-		/*
 		// initialize SrvManager
-		if (manager->init(service)) {
-			cout << "Error while init SrvManager." << endl;
-		}
-		*/
+		if (manager->init(service)) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -214,15 +203,8 @@ int main(int ac, char* av[]) {
 
 			// print the error message if applicable
 	    	if (ret) {
-	    		if (service.fault) {
-	    			if (service.fault->detail) {
-	    				if (service.fault->detail->fault) {
-	    		    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
-    		    			cout << "getTransferJobStatus: " << ex->message << endl;
-  						}
-	    			}
-	    		}
-
+	    		cout << "getTransferJobStatus: ";
+	    		manager->printSoapErr(service);
 	    	}
 		}
     }

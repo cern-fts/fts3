@@ -15,32 +15,42 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * TransferStatusCli.cpp
  *
- *  Created on: Feb 13, 2012
- *      Author: simonm
+ * JobIDCli.cpp
+ *
+ *  Created on: Mar 13, 2012
+ *      Author: Michal Simon
  */
 
-#include "TransferStatusCli.h"
-#include <vector>
+#include "JobIDCli.h"
 
 using namespace fts3::cli;
 
-TransferStatusCli::TransferStatusCli() {
+JobIDCli::JobIDCli() {
 
-	// add fts3-transfer-status specific options
-	specific.add_options()
-			("list,l", "List status for all files.")
+	// add hidden options (not printed in help)
+	hidden.add_options()
+			("jobid", value< vector<string> >(), "Specify job ID.")
 			;
+
+	// all positional parameters go to jobid
+	p.add("jobid", -1);
 }
 
-TransferStatusCli::~TransferStatusCli() {
+JobIDCli::~JobIDCli() {
 }
 
-bool TransferStatusCli::list() {
 
-	return vm.count("list");
+string JobIDCli::getUsageString(string tool) {
+	return "Usage: " + tool + " [options] JOBID [JOBID...]";
+}
+
+vector<string> JobIDCli::getJobIds() {
+
+	// check whether jobid has been given as a parameter
+	if (vm.count("jobid")) {
+		return vm["jobid"].as< vector<string> >();
+	}
+
+	return vector<string>();
 }

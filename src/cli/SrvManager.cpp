@@ -29,7 +29,6 @@
 //#include <openssl/pem.h>
 //#include <openssl/asn1.h>
 
-#include <termios.h>
 #include <cgsi_plugin.h>
 //#include <gridsite.h>
 
@@ -44,32 +43,7 @@
 #include "fts.nsmap"
 
 using namespace boost;
-using namespace fts::cli;
-
-// define the status name - status id pairs
-SrvManager::TransferState SrvManager::statuses[] = {
-		{ "Submitted",      			FTS3_TRANSFER_SUBMITTED },
-		{ "Pending",        			FTS3_TRANSFER_PENDING },
-		{ "Active",     				FTS3_TRANSFER_ACTIVE },
-		{ "Canceling",      			FTS3_TRANSFER_CANCELING },
-		{ "Done",       				FTS3_TRANSFER_DONE },
-		{ "Finished",       			FTS3_TRANSFER_FINISHED },
-		{ "FinishedDirty",  			FTS3_TRANSFER_FINISHED_DIRTY },
-		{ "Canceled",       			FTS3_TRANSFER_CANCELED },
-		{ "Waiting",        			FTS3_TRANSFER_WAITING },
-		{ "Hold",       				FTS3_TRANSFER_HOLD },
-		{ "Failed",     				FTS3_TRANSFER_TRANSFERFAILED },
-		{ "CatalogFailed",  			FTS3_TRANSFER_CATALOGFAILED },
-		{ "Ready",   					FTS3_TRANSFER_READY },
-		{ "DoneWithErrors", 			FTS3_TRANSFER_DONEWITHERRORS },
-		{ "Finishing", 					FTS3_TRANSFER_FINISHING },
-		{ "Failed", 					FTS3_TRANSFER_FAILED },
-		{ "AwaitingPrestage" , 			FTS3_TRANSFER_AWAITING_PRESTAGE },
-		{ "Prestaging", 				FTS3_TRANSFER_PRESTAGING },
-		{ "WaitingPrestage", 			FTS3_TRANSFER_WAITING_PRESTAGE },
-		{ "WaitingCatalogResolution", 	FTS3_TRANSFER_WAITING_CATALOG_RESOLUTION },
-		{ "WaitingCatalogRegistration", FTS3_TRANSFER_WAITING_CATALOG_REGISTRATION}
-	};
+using namespace fts3::cli;
 
 // initialize the single SrvManager instance
 SrvManager* SrvManager::manager = 0;
@@ -97,54 +71,6 @@ SrvManager* SrvManager::getInstance() {
 		manager = new SrvManager();
 	}
 	return SrvManager::manager;
-}
-
-bool SrvManager::isTransferReady(string status) {
-
-	// find the transfer status in statuses table
-	for (int i = 0; i < statusesSize; i++) {
-		if (status.compare(statuses[i].name) == 0) {
-			// check if its ready
-			return statuses[i].id <= 0;
-		}
-	}
-
-	return FTS3_TRANSFER_UNKNOWN <= 0;
-}
-
-// TODO think if its the right place for this method, maybe it should be moved to SubmitTransferCli!
-string SrvManager::getPassword() {
-
-    termios stdt;
-    // get standard command line settings
-    tcgetattr(STDIN_FILENO, &stdt);
-    termios newt = stdt;
-    // turn off echo while typing
-    newt.c_lflag &= ~ECHO;
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &newt)) {
-    	cout << "submit: could not set terminal attributes" << endl;
-    	tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
-    	return "";
-    }
-
-    string pass1, pass2;
-
-    cout << "Enter MyProxy password: ";
-    cin >> pass1;
-    cout << endl << "Enter MyProxy password again: ";
-    cin >> pass2;
-    cout << endl;
-
-    // set the standard command line settings back
-    tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
-
-    // compare passwords
-    if (pass1.compare(pass2)) {
-    	cout << "Entered MyProxy passwords do not match." << endl;
-    	return "";
-    }
-
-    return pass1;
 }
 
 bool SrvManager::initSoap(soap* soap, string endpoint) {
@@ -178,9 +104,9 @@ void SrvManager::delegateProxyCert(string endpoint) {
 	/*string replacement = "/services/gridsite-delegation";
 	int pos = service.find("/services/FileTransfer");
 	service.replace(pos, replacement.size(), replacement);
-*/
-	time_t time_left = isCertValid();
 
+	time_t time_left = isCertValid();
+	*/
 	// TODO
 	// delegation-simple-api not compatible with gsoap++ due to C version of cgsi_plugin
 
@@ -204,6 +130,44 @@ long SrvManager::isCertValid () {
     return time;
 }
 
+void SrvManager::printSoapErr(FileTransferSoapBindingProxy& service) {
+
+	if (service.fault->faultstring) {
+		cout << service.fault->faultstring << endl;
+	}
+
+	/*if (service.fault) {
+		if (service.version == 2) {
+			// SOAP 1.2 is used
+			if (service.fault->SOAP_ENV__Detail) {
+
+				if (service.fault->SOAP_ENV__Detail->__any) {
+					cout << "(" << service.fault->detail->__any << ")" << endl;
+				}
+
+				if (service.fault->SOAP_ENV__Detail->fault) {
+		    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
+	    			cout << *ex->message << endl;
+				}
+			}
+		} else {
+			// SOAP 1.1 is used
+
+			if (service.fault->detail) {
+
+				if (service.fault->detail->__any) {
+					cout << "(" << service.fault->detail->__any << ")" << endl;
+				}
+
+				if (service.fault->detail->fault) {
+		    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
+	    			cout << *ex->message << endl;
+				}
+			}
+		}
+	}*/
+}
+
 bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 
 	// request the information about the FTS3 service
@@ -215,27 +179,43 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 	if (!err) {
 		interface = ivresp.getInterfaceVersionReturn;
 		setInterfaceVersion(interface);
+	} else {
+		cout << "Failed to determine the interface version of the service: getInterfaceVersion. ";
+		printSoapErr(service);
+		return err;
 	}
 
 	fts__getVersionResponse vresp;
 	err = service.getVersion(vresp);
 	if (!err) {
 		version = vresp.getVersionReturn;
+	} else {
+		cout << "Failed to determine the version of the service: getVersion. ";
+		printSoapErr(service);
+		return err;
 	}
 
 	fts__getSchemaVersionResponse sresp;
 	err = service.getSchemaVersion(sresp);
 	if (!err) {
 		schema = sresp.getSchemaVersionReturn;
+	} else {
+		cout << "Failed to determine the schema version of the service: getSchemaVersion. ";
+		printSoapErr(service);
+		return err;
 	}
 
 	fts__getServiceMetadataResponse mresp;
 	err = service.getServiceMetadata("feature.string", mresp);
 	if (!err) {
 		metadata = mresp._getServiceMetadataReturn;
+	} else {
+		cout << "Failed to determine the service metadata of the service: getServiceMetadataReturn. ";
+		printSoapErr(service);
+		return err;
 	}
 
-	return err;
+	return SOAP_OK;
 }
 
 void SrvManager::setInterfaceVersion(string interface) {

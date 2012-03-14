@@ -15,32 +15,42 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * TransferStatusCli.cpp
  *
- *  Created on: Feb 13, 2012
- *      Author: simonm
+ * ListVOManager.cpp
+ *
+ *  Created on: Mar 14, 2012
+ *      Author: Michal Simon
  */
 
-#include "TransferStatusCli.h"
-#include <vector>
+#include "ListVOManagersCli.h"
 
 using namespace fts3::cli;
 
-TransferStatusCli::TransferStatusCli() {
+ListVOManagersCli::ListVOManagersCli() {
 
-	// add fts3-transfer-status specific options
-	specific.add_options()
-			("list,l", "List status for all files.")
+	// add hidden options (not printed in help)
+	hidden.add_options()
+			("voname", value<string>(), "Specify VO name.")
 			;
+
+	// the positional parameter goes to voname
+	p.add("voname", 1);
 }
 
-TransferStatusCli::~TransferStatusCli() {
+ListVOManagersCli::~ListVOManagersCli() {
 }
 
-bool TransferStatusCli::list() {
-
-	return vm.count("list");
+string ListVOManagersCli::getUsageString(string tool) {
+	return "Usage: " + tool + " [options] VONAME";
 }
+
+string ListVOManagersCli::getVOName() {
+
+	// check whether jobid has been given as a parameter
+	if (vm.count("voname")) {
+		return vm["voname"].as<string>();
+	}
+
+	return string();
+}
+

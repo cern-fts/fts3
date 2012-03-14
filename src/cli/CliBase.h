@@ -31,7 +31,7 @@ using namespace boost::program_options;
 using namespace std;
 
 
-namespace fts { namespace cli {
+namespace fts3 { namespace cli {
 
 /**
  * CliBase is a base class for developing FTS3 command line tools.
@@ -77,9 +77,11 @@ public:
 	/**
 	 * Prints help message if the -h option has been used.
 	 *
+	 * @param tool - the name of the executive that has been called (in most cases argv[0])
+	 *
 	 * @return true if the help message has been printed
 	 */
-	bool printHelp();
+	bool printHelp(string tool);
 
 	/**
 	 * Prints version if the -V option has been used.
@@ -118,9 +120,11 @@ public:
 	/**
 	 * Pure virtual method, it aim is to give the instruction how to use the command line tool.
 	 *
+	 * @param tool - name of the fts3 tool that is using this utility (e.g. 'fts3-transfer-submit')
+	 *
 	 * @return implementing class should return a string with instruction on how to use the tool
 	 */
-	virtual string getUsageString() = 0;
+	virtual string getUsageString(string tool) = 0;
 
 protected:
 
@@ -157,6 +161,16 @@ protected:
 	 * command line parameters that are passed without any switch option e.g. -p
 	 */
 	positional_options_description p;
+
+	/**
+	 * command line options specific for fts3-transfer-status
+	 */
+	options_description specific;
+
+	/**
+	 * hidden command line options (not printed in help)
+	 */
+	options_description hidden;
 
 	/**
 	 * the endpoint FTS3 service

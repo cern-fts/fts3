@@ -15,32 +15,41 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * TransferStatusCli.cpp
  *
- *  Created on: Feb 13, 2012
- *      Author: simonm
+ * DnCli.cpp
+ *
+ *  Created on: Mar 13, 2012
+ *      Author: Michal Simon
  */
 
-#include "TransferStatusCli.h"
-#include <vector>
+#include "DnCli.h"
+
+#include <iostream>
+using namespace std;
 
 using namespace fts3::cli;
 
-TransferStatusCli::TransferStatusCli() {
+DnCli::DnCli() {
 
 	// add fts3-transfer-status specific options
 	specific.add_options()
-			("list,l", "List status for all files.")
+			("userdn,u", value<string>(), "Restrict to specific user DN.")
 			;
 }
 
-TransferStatusCli::~TransferStatusCli() {
+DnCli::~DnCli() {
 }
 
-bool TransferStatusCli::list() {
-
-	return vm.count("list");
+string DnCli::getUsageString(string tool) {
+	return "Usage: " + tool + " [options]";
 }
+
+string DnCli::getUserDn() {
+
+	if (vm.count("userdn")) {
+		return vm["userdn"].as<string>();
+	}
+
+	return string();
+}
+

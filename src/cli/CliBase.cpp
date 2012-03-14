@@ -33,7 +33,7 @@
 #include <boost/scoped_array.hpp>
 
 using namespace boost;
-using namespace fts::cli;
+using namespace fts3::cli;
 
 
 CliBase::CliBase() : visible("Allowed options") {
@@ -53,12 +53,6 @@ CliBase::CliBase() : visible("Allowed options") {
 			("service,s", value<string>(), "Use the transfer service at the specified URL.")
 			("version,V", "Print the version number and exit.")
 			;
-
-    // add basic options to all command line options
-    all.add(basic);
-
-    // add basic options to options visible in help
-    visible.add(basic);
 }
 
 CliBase::~CliBase() {
@@ -67,6 +61,11 @@ CliBase::~CliBase() {
 
 
 void CliBase::initCli(int ac, char* av[]) {
+
+	// add specific and hidden parameters to all parameters
+	all.add(basic).add(specific).add(hidden);
+	// add specific parameters to visible parameters (printed in help)
+	visible.add(basic).add(specific);
 
 	// turn off guessing, so --source is not mistaken with --source-token
 	int style = command_line_style::default_style & ~command_line_style::allow_guessing;
@@ -93,12 +92,18 @@ void CliBase::initCli(int ac, char* av[]) {
 	}
 }
 
-bool CliBase::printHelp() {
+bool CliBase::printHelp(string tool) {
 
 	// check whether the -h option was used
 	if (vm.count("help")) {
+
+		// remove the path to the executive
+		size_t pos = tool.find_last_of('/');
+		if( pos != string::npos) {
+			tool = tool.substr(pos + 1);
+		}
 		// print the usage guigelines
-		cout << endl << getUsageString() << endl << endl;
+		cout << endl << getUsageString(tool) << endl << endl;
 		// print the available options
         cout << visible << endl;
         return true;

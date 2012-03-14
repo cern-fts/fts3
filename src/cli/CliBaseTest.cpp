@@ -26,7 +26,7 @@
 #include "unittest/testsuite.h"
 #include "evn.h"
 
-using namespace fts::cli;
+using namespace fts3::cli;
 
 
 /*

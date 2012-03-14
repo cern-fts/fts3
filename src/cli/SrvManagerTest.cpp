@@ -26,8 +26,8 @@
 #include "unittest/testsuite.h"
 #include "server/ws/WebServerMock.h"
 
-using namespace fts::cli;
-using namespace fts::ws;
+using namespace fts3::cli;
+using namespace fts3::ws;
 
 class SrvManagerTester : public SrvManager {
 

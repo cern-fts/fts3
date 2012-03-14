@@ -31,7 +31,7 @@
 using namespace std;
 
 
-namespace fts { namespace cli {
+namespace fts3 { namespace cli {
 
 /**
  * SrvManager object stores the information about the FTS3 service that is being used.
@@ -43,46 +43,6 @@ namespace fts { namespace cli {
  */
 class SrvManager {
 public:
-
-	/**
-	 * Possible Job statuses.
-	 *
-	 * Value lower than 0 indicates that the job failed, value equal to 0 indicates
-	 * that the job has been finished, value greater than 0 indicates that the job
-	 * is still being processed
-	 */
-	enum TransferStateEnum {
-	    FTS3_TRANSFER_FAILED = -6,
-	    FTS3_TRANSFER_CATALOGFAILED = -5,
-	    FTS3_TRANSFER_FINISHED_DIRTY = -4,
-	    FTS3_TRANSFER_UNKNOWN = -3,
-	    FTS3_TRANSFER_CANCELED = -2,
-	    FTS3_TRANSFER_TRANSFERFAILED = -1,
-	    FTS3_TRANSFER_FINISHED = 0,
-	    FTS3_TRANSFER_SUBMITTED,
-	    FTS3_TRANSFER_PENDING,
-	    FTS3_TRANSFER_ACTIVE,
-	    FTS3_TRANSFER_CANCELING,
-	    FTS3_TRANSFER_WAITING,
-	    FTS3_TRANSFER_HOLD,
-	    FTS3_TRANSFER_DONE,
-	    FTS3_TRANSFER_READY,
-	    FTS3_TRANSFER_DONEWITHERRORS,
-	    FTS3_TRANSFER_FINISHING,
-	    FTS3_TRANSFER_AWAITING_PRESTAGE,
-	    FTS3_TRANSFER_PRESTAGING,
-	    FTS3_TRANSFER_WAITING_PRESTAGE,
-	    FTS3_TRANSFER_WAITING_CATALOG_RESOLUTION,
-	    FTS3_TRANSFER_WAITING_CATALOG_REGISTRATION
-	};
-
-	/**
-	 * A structure mapping state names into state ids
-	 */
-	struct TransferState {
-		string name;
-		TransferStateEnum id;
-	};
 
 	/**
 	 * Gets the instance of SrvManager singleton.
@@ -130,28 +90,11 @@ public:
 	void setInterfaceVersion(string interface);
 
 	/**
-	 * Ask user for password.
-	 * TODO should be moved to SubmitTransferCli
-	 *
-	 * @return user password
-	 */
-	string getPassword();
-
-	/**
 	 * Check if user's certificate is valid.
 	 *
 	 * @return remaining time for user's certificate in seconds.
 	 */
 	long isCertValid ();
-
-	/**
-	 * check if a job with a given status is ready
-	 *
-	 * @param - status (string)
-	 *
-	 * @return true if the job is ready
-	 */
-	bool isTransferReady(string status);
 
 	/**
 	 * Delegates the proxy certificate.
@@ -162,6 +105,14 @@ public:
 	 *
 	 */
 	void delegateProxyCert(string endpoint);
+
+	/**
+	 * Prints the soap fault message in case there was an error
+	 *
+	 * #param service - proxy to the FTS3 service
+	 *
+	 */
+	void printSoapErr (FileTransferSoapBindingProxy& service);
 
 	///@{
 	/**
@@ -246,16 +197,6 @@ private:
 	string schema;
 	string metadata;
 	///@}
-
-	/**
-	 * array that maps all status names into status ids
-	 */
-	static TransferState statuses[];
-
-	/**
-	 * the size of 'statuses' array
-	 */
-	static const int statusesSize = 21;
 };
 
 }
