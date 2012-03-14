@@ -19,5 +19,14 @@ function fts3_dev_setup_install_tools
 {
     echo "Installing the required software on platform $PLATFORM..."
     echo
+    
+    yum -y --enablerepo slc6-cernonly install \
+        doxygen \
+        cmake \
+        gsoap-devel \
+        oracle-instantclient-devel \
+        oracle-instantclient-sqlplus \
+        oracle-instantclient-basic \
+        libuuid-devel
 }
 
