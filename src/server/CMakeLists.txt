@@ -61,6 +61,10 @@ add_custom_command(
     COMMAND ${GSOAP_SOAPCPP2} -n -w -i -S -x -p fts -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_header_file} )
 
 
+# Find libuuid
+find_package(LibUuid REQUIRED)
+include_directories(${LIBUUID_INCLUDE_DIRS})
+
 # gSOAP web service lib
 set(fts3_server_gsoap_lib_sources "${gsoap_source_files}" )
 add_library(fts3_server_gsoap_lib SHARED ${fts3_server_gsoap_lib_sources})
@@ -73,7 +77,7 @@ list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
 list(REMOVE_ITEM fts3_server_lib_sources "gsoap_transfer_methods.cpp")
 add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
 add_dependencies(fts3_server_lib fts3_server_gsoap_lib)
-target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_lib -luuid -lboost_thread-mt)
+target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_lib ${LIBUUID_LIBRARIES} -lboost_thread-mt)
 
 # Server executable
 add_executable (fts3_server main.cpp)
