@@ -166,11 +166,45 @@ int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USC
 
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getFileStatus(string _requestID, int _offset, int _limit, struct fts__getFileStatusResponse &_param_9) {
+
+	// dummy
+	_param_9._getFileStatusReturn = soap_new_fts__ArrayOf_USCOREtns3_USCOREFileTransferStatus(this, -1);
+
+	transfer__FileTransferStatus* status = soap_new_transfer__FileTransferStatus(this, -1);
+	status->destSURL = soap_new_std__string(this, -1);
+	status->logicalName = soap_new_std__string(this, -1);
+	status->reason = soap_new_std__string(this, -1);
+	status->reason_USCOREclass = soap_new_std__string(this, -1);
+	status->sourceSURL = soap_new_std__string(this, -1);
+	status->transferFileState = soap_new_std__string(this, -1);
+	status->duration = 0;
+	status->numFailures = 0;
+
+	_param_9._getFileStatusReturn->item.push_back(status);
+
 	return SOAP_OK;
 }
 
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getFileStatus2(string _requestID, int _offset, int _limit, struct fts__getFileStatus2Response &_param_10) {
+
+	// dummy
+	_param_10._getFileStatus2Return = soap_new_fts__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(this, -1);
+
+	transfer__FileTransferStatus2* status = soap_new_transfer__FileTransferStatus2(this, -1);
+	status->destSURL = soap_new_std__string(this, -1);
+	status->logicalName = soap_new_std__string(this, -1);
+	status->reason = soap_new_std__string(this, -1);
+	status->reason_USCOREclass = soap_new_std__string(this, -1);
+	status->sourceSURL = soap_new_std__string(this, -1);
+	status->transferFileState = soap_new_std__string(this, -1);
+	status->error_USCOREphase = soap_new_std__string(this, -1);
+	status->error_USCOREscope = soap_new_std__string(this, -1);
+	status->duration = 0;
+	status->numFailures = 0;
+
+	_param_10._getFileStatus2Return->item.push_back(status);
+
 	return SOAP_OK;
 }
 
@@ -210,11 +244,70 @@ int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, stru
 
 /// Web service operation 'getTransferJobSummary' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getTransferJobSummary(string _requestID, struct fts__getTransferJobSummaryResponse &_param_12) {
+
+	// dummy
+	_param_12._getTransferJobSummaryReturn = soap_new_transfer__TransferJobSummary(this, -1);
+	_param_12._getTransferJobSummaryReturn->numActive = 0;
+	_param_12._getTransferJobSummaryReturn->numCanceled = 0;
+	_param_12._getTransferJobSummaryReturn->numCanceling = 0;
+	_param_12._getTransferJobSummaryReturn->numCatalogFailed = 0;
+	_param_12._getTransferJobSummaryReturn->numDone = 0;
+	_param_12._getTransferJobSummaryReturn->numFailed = 0;
+	_param_12._getTransferJobSummaryReturn->numFinished = 0;
+	_param_12._getTransferJobSummaryReturn->numHold = 0;
+	_param_12._getTransferJobSummaryReturn->numPending = 0;
+	_param_12._getTransferJobSummaryReturn->numRestarted = 0;
+	_param_12._getTransferJobSummaryReturn->numSubmitted = 0;
+	_param_12._getTransferJobSummaryReturn->numWaiting = 0;
+
+	_param_12._getTransferJobSummaryReturn->jobStatus = soap_new_transfer__JobStatus(this, -1);
+	_param_12._getTransferJobSummaryReturn->jobStatus->clientDN = soap_new_std__string(this, -1);
+	_param_12._getTransferJobSummaryReturn->jobStatus->jobID = soap_new_std__string(this, -1);
+	_param_12._getTransferJobSummaryReturn->jobStatus->jobStatus = soap_new_std__string(this, -1);
+	_param_12._getTransferJobSummaryReturn->jobStatus->reason = soap_new_std__string(this, -1);
+	_param_12._getTransferJobSummaryReturn->jobStatus->voName = soap_new_std__string(this, -1);
+	_param_12._getTransferJobSummaryReturn->jobStatus->submitTime = 0;
+	_param_12._getTransferJobSummaryReturn->jobStatus->numFiles = 0;
+	_param_12._getTransferJobSummaryReturn->jobStatus->priority = 0;
+
 	return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getTransferJobSummary2(string _requestID, struct fts__getTransferJobSummary2Response &_param_13) {
+
+	// dummy
+	_param_13._getTransferJobSummary2Return = soap_new_transfer__TransferJobSummary2(this, -1);
+	_param_13._getTransferJobSummary2Return->numActive = 0;
+	_param_13._getTransferJobSummary2Return->numAwaitingPrestage = 0;
+	_param_13._getTransferJobSummary2Return->numCanceled = 0;
+	_param_13._getTransferJobSummary2Return->numCanceling = 0;
+	_param_13._getTransferJobSummary2Return->numFinishing = 0;
+	_param_13._getTransferJobSummary2Return->numCatalogFailed = 0;
+	_param_13._getTransferJobSummary2Return->numDone = 0;
+	_param_13._getTransferJobSummary2Return->numFailed = 0;
+	_param_13._getTransferJobSummary2Return->numFinished = 0;
+	_param_13._getTransferJobSummary2Return->numHold = 0;
+	_param_13._getTransferJobSummary2Return->numPrestaging = 0;
+	_param_13._getTransferJobSummary2Return->numPending = 0;
+	_param_13._getTransferJobSummary2Return->numRestarted = 0;
+	_param_13._getTransferJobSummary2Return->numSubmitted = 0;
+	_param_13._getTransferJobSummary2Return->numReady = 0;
+	_param_13._getTransferJobSummary2Return->numWaiting = 0;
+	_param_13._getTransferJobSummary2Return->numWaitingCatalogRegistration = 0;
+	_param_13._getTransferJobSummary2Return->numWaitingCatalogResolution = 0;
+	_param_13._getTransferJobSummary2Return->numWaitingPrestage = 0;
+
+	_param_13._getTransferJobSummary2Return->jobStatus = soap_new_transfer__JobStatus(this, -1);
+	_param_13._getTransferJobSummary2Return->jobStatus->clientDN = soap_new_std__string(this, -1);
+	_param_13._getTransferJobSummary2Return->jobStatus->jobID = soap_new_std__string(this, -1);
+	_param_13._getTransferJobSummary2Return->jobStatus->jobStatus = soap_new_std__string(this, -1);
+	_param_13._getTransferJobSummary2Return->jobStatus->reason = soap_new_std__string(this, -1);
+	_param_13._getTransferJobSummary2Return->jobStatus->voName = soap_new_std__string(this, -1);
+	_param_13._getTransferJobSummary2Return->jobStatus->submitTime = 0;
+	_param_13._getTransferJobSummary2Return->jobStatus->numFiles = 0;
+	_param_13._getTransferJobSummary2Return->jobStatus->priority = 0;
+
 	return SOAP_OK;
 }
 
