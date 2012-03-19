@@ -115,7 +115,7 @@ public:
 	 *
 	 * @return true if the the state is valid
 	 */
-	bool isStateValid(string state);
+	bool isStatusValid(string status);
 
 private :
 
@@ -144,7 +144,7 @@ private :
 	 * JobStatusHandler single instance
 	 */
 	static scoped_ptr<JobStatusHandler> instance;
-
+public:
 	/// maps job status name to job status id
 	const map<string, JobStateEnum> statuses;
 };

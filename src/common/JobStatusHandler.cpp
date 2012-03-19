@@ -7,35 +7,37 @@
 
 #include "JobStatusHandler.h"
 #include <boost/assign.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace boost::assign;
 using namespace fts3::common;
+using namespace boost;
 
 // initialize single instance pointer with 0
 scoped_ptr<JobStatusHandler> JobStatusHandler::instance;
 
 // initialize string constants
-const string JobStatusHandler::FTS3_STATUS_FAILED = "Failed";
-const string JobStatusHandler::FTS3_STATUS_CATALOGFAILED = "CatalogFailed";
-const string JobStatusHandler::FTS3_STATUS_FINISHED_DIRTY = "FinishedDirty";
-const string JobStatusHandler::FTS3_STATUS_CANCELED = "Canceled";
-const string JobStatusHandler::FTS3_STATUS_TRANSFERFAILED = "Failed";
-const string JobStatusHandler::FTS3_STATUS_FINISHED = "Finished";
-const string JobStatusHandler::FTS3_STATUS_SUBMITTED = "Submitted";
-const string JobStatusHandler::FTS3_STATUS_PENDING = "Pending";
-const string JobStatusHandler::FTS3_STATUS_ACTIVE = "Active";
-const string JobStatusHandler::FTS3_STATUS_CANCELING = "Canceling";
-const string JobStatusHandler::FTS3_STATUS_WAITING = "Waiting";
-const string JobStatusHandler::FTS3_STATUS_HOLD = "Hold";
-const string JobStatusHandler::FTS3_STATUS_DONE = "Done";
-const string JobStatusHandler::FTS3_STATUS_READY = "Ready";
-const string JobStatusHandler::FTS3_STATUS_DONEWITHERRORS = "DoneWithErrors";
-const string JobStatusHandler::FTS3_STATUS_FINISHING = "Finishing";
-const string JobStatusHandler::FTS3_STATUS_AWAITING_PRESTAGE = "AwaitingPrestage";
-const string JobStatusHandler::FTS3_STATUS_PRESTAGING = "Prestaging";
-const string JobStatusHandler::FTS3_STATUS_WAITING_PRESTAGE = "WaitingPrestage";
-const string JobStatusHandler::FTS3_STATUS_WAITING_CATALOG_RESOLUTION = "WaitingCatalogResolution";
-const string JobStatusHandler::FTS3_STATUS_WAITING_CATALOG_REGISTRATION = "WaitingCatalogRegistration";
+const string JobStatusHandler::FTS3_STATUS_FAILED = "FAILED";
+const string JobStatusHandler::FTS3_STATUS_CATALOGFAILED = "CATALOGFAILED";
+const string JobStatusHandler::FTS3_STATUS_FINISHED_DIRTY = "FINISHEDDIRTY";
+const string JobStatusHandler::FTS3_STATUS_CANCELED = "CANCELED";
+const string JobStatusHandler::FTS3_STATUS_TRANSFERFAILED = "FAILED";
+const string JobStatusHandler::FTS3_STATUS_FINISHED = "FINISHED";
+const string JobStatusHandler::FTS3_STATUS_SUBMITTED = "SUBMITTED";
+const string JobStatusHandler::FTS3_STATUS_PENDING = "PENDING";
+const string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
+const string JobStatusHandler::FTS3_STATUS_CANCELING = "CANCELING";
+const string JobStatusHandler::FTS3_STATUS_WAITING = "WAITING";
+const string JobStatusHandler::FTS3_STATUS_HOLD = "HOLD";
+const string JobStatusHandler::FTS3_STATUS_DONE = "DONE";
+const string JobStatusHandler::FTS3_STATUS_READY = "READY";
+const string JobStatusHandler::FTS3_STATUS_DONEWITHERRORS = "DONEWITHERRORS";
+const string JobStatusHandler::FTS3_STATUS_FINISHING = "FINISHING";
+const string JobStatusHandler::FTS3_STATUS_AWAITING_PRESTAGE = "AWAITINGPRESTAGE";
+const string JobStatusHandler::FTS3_STATUS_PRESTAGING = "PRESTAGING";
+const string JobStatusHandler::FTS3_STATUS_WAITING_PRESTAGE = "WAITINGPRESTAGE";
+const string JobStatusHandler::FTS3_STATUS_WAITING_CATALOG_RESOLUTION = "WAITINGCATALOGRESOLUTION";
+const string JobStatusHandler::FTS3_STATUS_WAITING_CATALOG_REGISTRATION = "WAITINGCATALOGREGISTRATION";
 
 JobStatusHandler& JobStatusHandler::getInstance() {
 	// thread safe lazy loading
@@ -81,6 +83,7 @@ JobStatusHandler::~JobStatusHandler() {
 
 bool JobStatusHandler::isTransferReady(string status) {
 
+	to_upper(status);
 	map<string, JobStateEnum>::const_iterator it = statuses.find(status);
 
 	if (it == statuses.end()) {
@@ -89,7 +92,8 @@ bool JobStatusHandler::isTransferReady(string status) {
 	return it->second <= 0;
 }
 
-bool JobStatusHandler::isStateValid(string state) {
+bool JobStatusHandler::isStatusValid(string status) {
 
-	return statuses.find(state) != statuses.end();
+	to_upper(status);
+	return statuses.find(status) != statuses.end();
 }

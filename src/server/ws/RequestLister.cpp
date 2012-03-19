@@ -63,7 +63,7 @@ void RequestLister::checkGivenStates(fts__ArrayOf_USCOREsoapenc_USCOREstring* in
 	JobStatusHandler& handler = JobStatusHandler::getInstance();
 	vector<string>::iterator it;
 	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); it++) {
-		if(handler.isStateValid(*it)) {
+		if(!handler.isStatusValid(*it)) {
 			transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap,
 					"Unknown job status: " + *it);
 			throw ex;
