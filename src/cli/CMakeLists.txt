@@ -6,8 +6,9 @@ set(CMAKE_CXX_FLAGS "-g -Wall")
 set(fts3_cli_source_files 
 	ftsC.cpp 
 	ftsFileTransferSoapBindingProxy.cpp 
-	CliBase.cpp 
+	ui/CliBase.cpp 
 	SrvManager.cpp
+	ServiceProxyHolder.cpp
 )
 
 set(fts3_cli_libs 
@@ -55,45 +56,46 @@ add_custom_command(
 
 
 add_executable(fts3-transfer-submit 
-	fts3-transfer-submit.cpp 
-	SubmitTransferCli.cpp 
+	tools/fts3-transfer-submit.cpp 
+	ui/SubmitTransferCli.cpp 
 	${fts3_cli_source_files}
 )
 target_link_libraries (fts3-transfer-submit ${fts3_cli_libs} ${fts3_common_libs})
 
 add_executable(fts3-transfer-status 
-	fts3-transfer-status.cpp 
-	TransferStatusCli.cpp 
-	JobIDCli.cpp	
+	tools/fts3-transfer-status.cpp 
+	ui/TransferStatusCli.cpp 
+	ui/JobIDCli.cpp	
 	${fts3_cli_source_files}
 )
 target_link_libraries (fts3-transfer-status ${fts3_cli_libs})
 
 add_executable(fts3-transfer-list 
-	fts3-transfer-list.cpp
-	DnCli.cpp 
-	ListTransferCli.cpp 
+	tools/fts3-transfer-list.cpp
+	ui/DNCli.cpp 
+	ui/VONameCli.cpp
+	ui/ListTransferCli.cpp 
 	${fts3_cli_source_files}
 )
-target_link_libraries (fts3-transfer-list ${fts3_cli_libs})
+target_link_libraries (fts3-transfer-list ${fts3_cli_libs} ${fts3_common_libs})
 
 add_executable(fts3-transfer-cancel 
-	fts3-transfer-cancel.cpp 
-	JobIDCli.cpp 
+	tools/fts3-transfer-cancel.cpp 
+	ui/JobIDCli.cpp 
 	${fts3_cli_source_files}
 )
 target_link_libraries (fts3-transfer-cancel ${fts3_cli_libs})
 
 add_executable(fts3-transfer-getroles 
-	fts3-transfer-getroles.cpp 
-	DnCli.cpp 
+	tools/fts3-transfer-getroles.cpp 
+	ui/DNCli.cpp 
 	${fts3_cli_source_files}
 )
 target_link_libraries (fts3-transfer-getroles ${fts3_cli_libs})
 
 add_executable(fts3-transfer-listvomanagers 
-	fts3-transfer-listvomanagers.cpp 
-	ListVOManagersCli.cpp 
+	tools/fts3-transfer-listvomanagers.cpp 
+	ui/VONameCli.cpp 
 	${fts3_cli_source_files}
 )
 target_link_libraries (fts3-transfer-listvomanagers ${fts3_cli_libs})
@@ -110,3 +112,5 @@ install(TARGETS         fts3-transfer-status
 install(TARGETS         fts3-transfer-list 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${BIN_INSTALL_DIR} )		
+
+	

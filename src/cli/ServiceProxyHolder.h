@@ -15,24 +15,35 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- */
-
-/*
- * GsoapStubs.h
  *
- *  Created on: Feb 18, 2012
- *      Author: simonm
+ * ListTransferCliTest.cpp
+ *
+ * ServiceProxyHolder.h
+ *
+ *  Created on: Mar 16, 2012
+ *      Author: Michal Simon
  */
 
-#ifndef GSOAPSTUBS_H_
-#define GSOAPSTUBS_H_
+#ifndef SERVICEPROXYHOLDER_H_
+#define SERVICEPROXYHOLDER_H_
 
-#include "ftsFileTransferSoapBindingProxy.h"
-#include <stdsoap2.h>
-#include "ftsH.h"
-#include "ftsStub.h"
+#include "GSoapStubs.h"
 
-//#include "fts.nsmap"
-//#include "evn.h"
+namespace fts3 { namespace cli {
 
-#endif /* GSOAPSTUBS_H_ */
+
+class ServiceProxyHolder {
+
+private:
+	static FileTransferSoapBindingProxy proxy;
+
+public:
+	inline static FileTransferSoapBindingProxy& getServiceProxy() {
+	    return proxy;
+	};
+};
+
+}
+}
+
+#endif /* SERVICEPROXYHOLDER_H_ */

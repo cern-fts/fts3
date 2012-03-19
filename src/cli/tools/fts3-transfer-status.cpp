@@ -17,8 +17,8 @@
  *	limitations under the License.
  */
 
-#include "GsoapStubs.h"
-#include "TransferStatusCli.h"
+#include "ServiceProxyHolder.h"
+#include "ui/TransferStatusCli.h"
 #include "SrvManager.h"
 #include "evn.h"
 
@@ -35,7 +35,7 @@ using namespace fts3::cli;
 int main(int ac, char* av[]) {
 
 	// create the service client
-	FileTransferSoapBindingProxy service;
+	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 

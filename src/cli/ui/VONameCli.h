@@ -32,21 +32,21 @@ using namespace std;
 
 namespace fts3 { namespace cli {
 
-class ListVOManagersCli: public CliBase {
+class VONameCli: virtual public CliBase {
 public:
 
 	/**
-	 * Default constructor.
+	 * Default Constructor.
 	 *
-	 * Creates the command line interface for fts3-transfer-listvomanagers. VONAME is
-	 * market as both: hidden and positional
+	 * @param pos - if true VONAME is market as both: hidden and positional, otherwise it is a tool specific option
+	 *
 	 */
-	ListVOManagersCli();
+	VONameCli(bool pos = true);
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~ListVOManagersCli();
+	virtual ~VONameCli();
 
 	/**
 	 * Gives the instruction how to use the command line tool.

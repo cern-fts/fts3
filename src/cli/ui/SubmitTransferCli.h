@@ -26,7 +26,7 @@
 #define SUBMITTRANSFERCLI_H_
 
 #include "CliBase.h"
-#include "GsoapStubs.h"
+#include "GSoapStubs.h"
 #include <vector>
 
 using namespace std;

@@ -6,8 +6,8 @@
  */
 
 
-#include "GsoapStubs.h"
-#include "ListTransferCli.h"
+#include "ServiceProxyHolder.h"
+#include "ui/ListTransferCli.h"
 #include "SrvManager.h"
 #include "evn.h"
 
@@ -21,7 +21,7 @@ using namespace fts3::cli;
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy service;
+	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
@@ -67,7 +67,7 @@ int main(int ac, char* av[]) {
 		if (manager->isUserVoRestrictListingSupported()) {
 
 			fts__listRequests2Response resp;
-			err = service.listRequests2(array, cli.getUserDn(), cli.getVoname(), resp);
+			err = service.listRequests2(array, cli.getUserDn(), cli.getVOName(), resp);
 
 			if (err) {
 				//TODO err handle

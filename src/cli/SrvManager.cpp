@@ -30,12 +30,12 @@
 //#include <openssl/asn1.h>
 
 #include <cgsi_plugin.h>
+#include <iostream>
+using namespace std;
 //#include <gridsite.h>
 
 #include <time.h>
 #include <iostream>
-
-#include "GsoapStubs.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -61,7 +61,9 @@ SrvManager& SrvManager::operator=(SrvManager const&) {
 }
 
 SrvManager::~SrvManager() {
-	delete manager;
+	if (manager) {
+		delete manager;
+	}
 }
 
 SrvManager* SrvManager::getInstance() {
@@ -71,6 +73,7 @@ SrvManager* SrvManager::getInstance() {
 		manager = new SrvManager();
 	}
 	return SrvManager::manager;
+
 }
 
 bool SrvManager::initSoap(soap* soap, string endpoint) {
@@ -136,7 +139,7 @@ void SrvManager::printSoapErr(FileTransferSoapBindingProxy& service) {
 		cout << service.fault->faultstring << endl;
 	}
 
-	/*if (service.fault) {
+	if (service.fault) {
 		if (service.version == 2) {
 			// SOAP 1.2 is used
 			if (service.fault->SOAP_ENV__Detail) {
@@ -165,7 +168,7 @@ void SrvManager::printSoapErr(FileTransferSoapBindingProxy& service) {
 				}
 			}
 		}
-	}*/
+	}
 }
 
 bool SrvManager::init(FileTransferSoapBindingProxy& service) {
@@ -283,4 +286,3 @@ int SrvManager::isItVersion350() {
 int SrvManager::isItVersion370() {
 	return major >= 3 && minor >= 7 && patch >= 0;
 }
-

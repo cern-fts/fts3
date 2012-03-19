@@ -21,10 +21,11 @@
  *  Created on: Feb 23, 2012
  *      Author: Michal Simon
  */
-#ifdef FTS3_COMPILE_WITH_UNITTEST
-#include "CliBase.h"
+
+
+//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#include "ui/CliBase.h"
 #include "unittest/testsuite.h"
-#include "evn.h"
 
 using namespace fts3::cli;
 
@@ -37,13 +38,14 @@ using namespace fts3::cli;
 class CliBaseTester : public CliBase {
 
 	// implement the pure vitual method
-	string getUsageString() {return "";};
+	string getUsageString(string tool) {return tool;};
 };
 
 BOOST_FIXTURE_TEST_CASE (CliBase_Test1, CliBaseTester) {
 
-	char* av[] = {"prog_name", "-h", "-q", "-v", "-s", "http://hostname:1234/service", "-V"};
-	initCli(7, av);
+	// has to be const otherwise is deprecated
+	const char* av[] = {"prog_name", "-h", "-q", "-v", "-s", "http://hostname:1234/service", "-V"};
+	initCli(7, const_cast<char**>(av));
 	// all 5 parameters should be available in vm variable
 	BOOST_CHECK(vm.count("help") && vm.count("quite") && vm.count("verbose") && vm.count("service") && vm.count("version"));
 	// the endpoint shouldn't be empty since it's starting with http
@@ -52,8 +54,13 @@ BOOST_FIXTURE_TEST_CASE (CliBase_Test1, CliBaseTester) {
 
 BOOST_FIXTURE_TEST_CASE (CliBase_Test2, CliBaseTester) {
 
-	char* av[] = {"prog_name", "--help", "--quite", "--verbose", "--service", "hostname:1234/service", "--version"};
-	initCli(7, av);
+	// has to be const otherwise is deprecated
+	const char* av[] = {"prog_name", "--help", "--quite", "--verbose", "--service", "hostname:1234/service", "--version"};
+
+	mute();
+	initCli(7, const_cast<char**>(av));
+	unmute();
+
 	// all 5 parameters should be available in vm variable
 	BOOST_CHECK(vm.count("help") && vm.count("quite") && vm.count("verbose") && vm.count("service") && vm.count("version"));
 	// the endpoint should be empty since it's not starting with http, https, httpd
@@ -61,4 +68,4 @@ BOOST_FIXTURE_TEST_CASE (CliBase_Test2, CliBaseTester) {
 }
 
 
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+//#endif // FTS3_COMPILE_WITH_UNITTESTS

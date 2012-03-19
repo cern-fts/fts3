@@ -38,6 +38,8 @@ using namespace fts3::cli;
 
 CliBase::CliBase() : visible("Allowed options") {
 
+	cout_sbuf = 0;
+
 	// initialize variables needed for FTS3 service discovery
 	FTS3_CA_SD_TYPE = "org.glite.ChannelAgent";
 	FTS3_SD_ENV = "GLITE_SD_FTS_TYPE";
@@ -215,3 +217,20 @@ string CliBase::discoverService() {
 	string tmp;
 	return tmp;
 }
+
+void CliBase::mute() {
+
+	if (!cout_sbuf) {
+		cout_sbuf = cout.rdbuf(); // save original sbuf
+	}
+
+	if (!fout.is_open()) {
+		fout.open("/dev/null");
+	}
+    cout.rdbuf(fout.rdbuf()); // redirect 'cout' to a 'fout'
+}
+
+void CliBase::unmute() {
+	cout.rdbuf(cout_sbuf); // restore the original stream buffer
+}
+

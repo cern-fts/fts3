@@ -16,40 +16,18 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * DnCli.cpp
+ * ListTransferCliTest.cpp
  *
- *  Created on: Mar 13, 2012
+ * ServiceProxyHolder.cpp
+ *
+ *  Created on: Mar 19, 2012
  *      Author: Michal Simon
  */
 
-#include "DnCli.h"
-
-#include <iostream>
-using namespace std;
+#include "ServiceProxyHolder.h"
 
 using namespace fts3::cli;
 
-DnCli::DnCli() {
+FileTransferSoapBindingProxy ServiceProxyHolder::proxy;
 
-	// add fts3-transfer-status specific options
-	specific.add_options()
-			("userdn,u", value<string>(), "Restrict to specific user DN.")
-			;
-}
-
-DnCli::~DnCli() {
-}
-
-string DnCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options]";
-}
-
-string DnCli::getUserDn() {
-
-	if (vm.count("userdn")) {
-		return vm["userdn"].as<string>();
-	}
-
-	return string();
-}
 

@@ -25,12 +25,13 @@
 #ifndef LISTTRANSFERCLI_H_
 #define LISTTRANSFERCLI_H_
 
-#include "DnCli.h"
-#include "GsoapStubs.h"
+#include "DNCli.h"
+#include "GSoapStubs.h"
+#include "VONameCli.h"
 
 namespace fts3 { namespace cli {
 
-class ListTransferCli : public DnCli {
+class ListTransferCli : public DNCli, public VONameCli {
 public:
 
 	/**
@@ -54,13 +55,6 @@ public:
 	string getUsageString(string tool);
 
 	/**
-	 * Gets the VO name, specified by the user.
-	 *
-	 * @return VO name
-	 */
-	string getVoname();
-
-	/**
 	 * Check if server supports -u and -o options.
 	 *
 	 * @return true if all used options are supported by the FTS3 service
@@ -82,12 +76,6 @@ public:
 	 */
 	fts__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray(soap* soap);
 
-private:
-
-	string FTS3_STATUS_SUBMITTED;
-	string FTS3_STATUS_PENDING;
-	string FTS3_STATUS_READY;
-	string FTS3_STATUS_ACTIVE;
 };
 
 }

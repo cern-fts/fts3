@@ -25,7 +25,7 @@
  */
 
 #include "SubmitTransferCli.h"
-#include "GsoapStubs.h"
+#include "GSoapStubs.h"
 #include "SrvManager.h"
 #include "common/JobParameterHandler.h"
 

@@ -16,50 +16,28 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * DnCli.h
+ * ListVOManagerCliTest.cpp
  *
- *  Created on: Mar 13, 2012
- *      Author: simonm
+ *  Created on: Mar 19, 2012
+ *      Author: Michal Simon
  */
 
-#ifndef DNCLI_H_
-#define DNCLI_H_
 
-#include "CliBase.h"
+//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#include "ui/VONameCli.h"
+#include "unittest/testsuite.h"
 
-namespace fts3 { namespace cli {
+#include <iostream>
 
-class DnCli : public CliBase {
-public:
+using namespace fts3::cli;
+using namespace std;
 
-	/**
-	 * Default constructor.
-	 *
-	 * Creates the DN command line interface.
-	 */
-	DnCli();
+BOOST_FIXTURE_TEST_CASE (VONameCli_Test, VONameCli) {
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~DnCli();
+        // has to be const otherwise is deprecated
+        const char* av[] = {"prog_name", "voname"};
+        initCli(2, const_cast<char**>(av));
 
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
-
-	/**
-	 * Gets the user DN, specified by the user.
-	 *
-	 * @return user DN
-	 */
-	string getUserDn();
-};
-
-}
+        BOOST_CHECK(getVOName().compare("voname") == 0);
 }
 
-#endif /* DNCLI_H_ */

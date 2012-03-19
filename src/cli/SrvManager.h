@@ -26,7 +26,7 @@
 #define SRVMANAGER_H_
 
 #include <string>
-#include "GsoapStubs.h"
+#include "GSoapStubs.h"
 
 using namespace std;
 

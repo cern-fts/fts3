@@ -22,8 +22,8 @@
  *      Author: Michal Simon
  */
 
-#include "GsoapStubs.h"
-#include "DnCli.h"
+#include "ServiceProxyHolder.h"
+#include "ui/DNCli.h"
 #include "SrvManager.h"
 #include "evn.h"
 
@@ -39,13 +39,13 @@ using namespace fts3::cli;
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy service;
+	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
 	try {
 		// create and initialize the command line utility
-    	DnCli cli;
+    	DNCli cli;
     	cli.initCli(ac, av);
 
     	// if applicable print help or version and exit

@@ -21,15 +21,19 @@
  *  Created on: Feb 24, 2012
  *      Author: Michal Simon
  */
-#ifdef FTS3_COMPILE_WITH_UNITTEST
+//#ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "SrvManager.h"
 #include "unittest/testsuite.h"
 #include "server/ws/WebServerMock.h"
+#include "ServiceProxyHolder.h"
+
+#include <iostream>
 
 using namespace fts3::cli;
 using namespace fts3::ws;
+using namespace std;
 
-class SrvManagerTester : public SrvManager {
+class SrvManagerTester: public SrvManager {
 
 public :
 	SrvManagerTester(){};
@@ -45,18 +49,18 @@ BOOST_FIXTURE_TEST_CASE (SrvManager_init, SrvManagerTester) {
 	sleep(2);
 
 	// create and initialize the service-proxy
-	FileTransferSoapBindingProxy service;
+	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
 	service.soap_endpoint = "http://localhost:8899";
 
 	// initialize SrvManager
 	init(service);
 
-	BOOST_CHECK(getVersion().compare(ws->version) == 0);
-	BOOST_CHECK(getInterface().compare(ws->interface) == 0);
-	BOOST_CHECK(getSchema().compare(ws->schema) == 0);
-	BOOST_CHECK(getMetadata().compare(ws->metadata) == 0);
-
+	BOOST_CHECK(getVersion().compare(WebServerMock::VERSION) == 0);
+	BOOST_CHECK(getInterface().compare(WebServerMock::INTERFACE) == 0);
+	BOOST_CHECK(getSchema().compare(WebServerMock::SCHEMA) == 0);
+	BOOST_CHECK(getMetadata().compare(WebServerMock::METADATA) == 0);
 }
+
 
 BOOST_FIXTURE_TEST_CASE (SrvManager_setInterfaceVersion, SrvManagerTester) {
 
@@ -70,10 +74,5 @@ BOOST_FIXTURE_TEST_CASE (SrvManager_setInterfaceVersion, SrvManagerTester) {
 	BOOST_CHECK(major == 3);
 }
 
-BOOST_FIXTURE_TEST_CASE(SrvManager_isTransferReady, SrvManagerTester) {
-	BOOST_CHECK(isTransferReady("Finished"));
-	BOOST_CHECK(!isTransferReady("Active"));
-	BOOST_CHECK(isTransferReady("Not existing state"));
-}
 
-#endif // FTS3_COMPILE_WITH_UNITTESTS
+//#endif // FTS3_COMPILE_WITH_UNITTESTS

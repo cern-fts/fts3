@@ -26,6 +26,7 @@
 #define CLIBASE_H_
 
 #include <boost/program_options.hpp>
+#include <fstream>
 
 using namespace boost::program_options;
 using namespace std;
@@ -72,7 +73,7 @@ public:
 	 * @param ac - argument count
 	 * @param av - argument array
 	 */
-	void initCli(int ac, char* av[]);
+	virtual void initCli(int ac, char* av[]);
 
 	/**
 	 * Prints help message if the -h option has been used.
@@ -91,6 +92,7 @@ public:
 	bool printVersion();
 
 	/**
+	 * TODO should be moved to SrvManager !!!
 	 * Prints general information about the FTS3 service.
 	 * Should be used if the -v option has been used.
 	 */
@@ -136,6 +138,18 @@ protected:
 	 * @return FTS3 service string
 	 */
 	string discoverService();
+
+	/**
+	 * Mutes the cout stream
+	 * 	(used in unit tests)
+	 */
+	void mute();
+
+	/**
+	 * Unmutes the cout stream
+	 * 	(used in unit tests)
+	 */
+	void unmute();
 
 	/**
 	 * a map containing parsed options
@@ -189,6 +203,17 @@ private:
 	string FTS3_IFC_VERSION;
 	string FTS3_INTERFACE_VERSION;
 	///@}
+
+	/**
+	 * standard output stream (cout)
+	 */
+	streambuf* cout_sbuf;
+
+	/**
+	 * replacement output stream
+	 * 	(devours things send to cout)
+	 */
+	ofstream fout;
 };
 
 }

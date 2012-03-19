@@ -22,29 +22,49 @@
  *      Author: Michal Simon
  */
 
-#include "ListVOManagersCli.h"
+#include "VONameCli.h"
 
 using namespace fts3::cli;
 
-ListVOManagersCli::ListVOManagersCli() {
+/*VONameCli::VONameCli() {
 
 	// add hidden options (not printed in help)
 	hidden.add_options()
-			("voname", value<string>(), "Specify VO name.")
+			("voname,o", value<string>(), "Specify VO name.")
 			;
 
 	// the positional parameter goes to voname
 	p.add("voname", 1);
+
+}*/
+
+VONameCli::VONameCli(bool pos) {
+
+	if (pos) {
+		// add hidden options (not printed in help)
+		hidden.add_options()
+				("voname", value<string>(), "Specify VO name.")
+				;
+
+		// the positional parameter goes to voname
+		p.add("voname", 1);
+
+	} else {
+        // add fts3-transfer-status specific options
+        specific.add_options()
+                        ("voname,o", value<string>(), "Restrict to specific VO")
+                        ;
+	}
 }
 
-ListVOManagersCli::~ListVOManagersCli() {
+VONameCli::~VONameCli() {
 }
 
-string ListVOManagersCli::getUsageString(string tool) {
+string VONameCli::getUsageString(string tool) {
 	return "Usage: " + tool + " [options] VONAME";
 }
 
-string ListVOManagersCli::getVOName() {
+string VONameCli::getVOName() {
 
 	// check whether jobid has been given as a parameter
 	if (vm.count("voname")) {
