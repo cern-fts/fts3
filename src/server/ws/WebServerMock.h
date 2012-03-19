@@ -26,7 +26,7 @@
 #define WEBSERVERMOCK_H_
 
 #include <pthread.h>
-#include "GsoapStubs.h"
+#include "gsoap_stubs.h"
 
 using namespace std;
 
@@ -40,11 +40,11 @@ public:
 	virtual ~WebServerMock();
 	void run(int port);
 
-	string interface;
-	string version;
-	string schema;
-	string metadata;
-	string id;
+	static const string INTERFACE;
+	static const string VERSION;
+	static const string SCHEMA;
+	static const string METADATA;
+	static const string ID;
 
 	static WebServerMock* getInstance();
 

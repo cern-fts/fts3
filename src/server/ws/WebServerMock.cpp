@@ -11,6 +11,12 @@
 using namespace fts3::ws;
 
 
+const string WebServerMock::INTERFACE = "3.7.0";
+const string WebServerMock::VERSION = "3.7.6-1";
+const string WebServerMock::SCHEMA = "3.5.0";
+const string WebServerMock::METADATA = "glite-data-fts-service-3.7.6-1";
+const string WebServerMock::ID = "857a1fd8-8ba2-4024-b19f-edc2639e60b9";
+
 WebServerMock* WebServerMock::me = 0;
 
 
@@ -51,6 +57,7 @@ void* WebServerMock::processRequest(void* ptr) {
 
 	WebServerMock* me = getInstance();
 	FileTransferSoapBindingService service;
+	service.accept_flags |= SO_LINGER;
 	service.run(me->port);
 
 	return 0;
@@ -63,46 +70,23 @@ void* WebServerMock::processRequest(void* ptr) {
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::transferSubmit(transfer__TransferJob *_job, struct fts__transferSubmitResponse &_param_3) {
 
-	WebServerMock* me = WebServerMock::getInstance();
-
-	string id = UuidGenerator::generateUUID();
-	_param_3._transferSubmitReturn = id;
-	me->id = id;
+	_param_3._transferSubmitReturn = WebServerMock::ID;
 	return SOAP_OK;
 }
 
 /// Web service operation 'transferSubmit2' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job, struct fts__transferSubmit2Response &_param_4) {
 
-	if (_job == 0) {
-		transfer__InvalidArgumentException ex;
-		throw ex;
-	}
-
-	WebServerMock* me = WebServerMock::getInstance();
-
-	string id = UuidGenerator::generateUUID();
-	_param_4._transferSubmit2Return = id;
-	me->id = id;
+	_param_4._transferSubmit2Return = WebServerMock::ID;
 	return SOAP_OK;
 }
 
 /// Web service operation 'transferSubmit3' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job, struct fts__transferSubmit3Response &_param_5) {
 
-	WebServerMock* me = WebServerMock::getInstance();
-
-	string id = UuidGenerator::generateUUID();
-	_param_5._transferSubmit3Return = id;
-	me->id = id;
+	_param_5._transferSubmit3Return = WebServerMock::ID;
 	return SOAP_OK;
 }
-
-/// Web service operation 'submit' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::submit(transfer__TransferJob *_job, struct fts__submitResponse &_param_6) {
-	return SOAP_OK;
-}
-
 
 
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
@@ -135,40 +119,28 @@ int FileTransferSoapBindingService::getTransferJobSummary2(std::string _requestI
 /// Web service operation 'getVersion' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getVersion(struct fts__getVersionResponse &_param_21) {
 
-	WebServerMock* me = WebServerMock::getInstance();
-
-	_param_21.getVersionReturn = "3.7.6-1";
-	me->version = "3.7.6-1";
+	_param_21.getVersionReturn = WebServerMock::VERSION;
 	return SOAP_OK;
 }
 
 /// Web service operation 'getSchemaVersion' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getSchemaVersion(struct fts__getSchemaVersionResponse &_param_22) {
 
-	WebServerMock* me = WebServerMock::getInstance();
-
-	_param_22.getSchemaVersionReturn = "3.5.0";
-	me->schema = "3.5.0";
+	_param_22.getSchemaVersionReturn = WebServerMock::SCHEMA;
 	return SOAP_OK;
 }
 
 /// Web service operation 'getInterfaceVersion' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getInterfaceVersion(struct fts__getInterfaceVersionResponse &_param_23) {
 
-	WebServerMock* me = WebServerMock::getInstance();
-
-	_param_23.getInterfaceVersionReturn = "3.7.0";
-	me->interface = "3.7.0";
+	_param_23.getInterfaceVersionReturn = WebServerMock::INTERFACE;
 	return SOAP_OK;
 }
 
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getServiceMetadata(std::string _key, struct fts__getServiceMetadataResponse &_param_24) {
 
-	WebServerMock* me = WebServerMock::getInstance();
-
-	_param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
-	me->metadata = "glite-data-fts-service-3.7.6-1";
+	_param_24._getServiceMetadataReturn = WebServerMock::METADATA;
 	return SOAP_OK;
 }
 
@@ -218,16 +190,6 @@ int FileTransferSoapBindingService::getRoles(struct fts__getRolesResponse &_para
 
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
 int FileTransferSoapBindingService::getRolesOf(std::string _otherDN, struct fts__getRolesOfResponse &_param_20) {
-	return SOAP_OK;
-}
-
-/// Web service operation 'placementSubmit' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::placementSubmit(transfer__PlacementJob *_job, struct fts__placementSubmitResponse &_param_1) {
-	return SOAP_OK;
-}
-
-/// Web service operation 'placementSubmit2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::placementSubmit2(transfer__PlacementJob *_job, struct fts__placementSubmit2Response &_param_2) {
 	return SOAP_OK;
 }
 
