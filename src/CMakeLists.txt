@@ -22,7 +22,7 @@ add_subdirectory(common)
 add_subdirectory(config)
 add_subdirectory(db)
 add_subdirectory(ws-ifce)
-#add_subdirectory(cli)
+add_subdirectory(cli)
 add_subdirectory(server)
 
 if(FTS3_COMPILE_WITH_UNITTEST)

@@ -92,7 +92,7 @@ int main(int ac, char* av[]) {
 					// if version higher than 3.3.0 use getTransferJobSummary2
 
 					// do the request
-					fts__getTransferJobSummary2Response resp;
+					impl__getTransferJobSummary2Response resp;
 					ret = service.getTransferJobSummary2(jobId, resp);
 
 					// print the response
@@ -129,7 +129,7 @@ int main(int ac, char* av[]) {
 					// if version higher than 3.3.0 use getTransferJobSummary
 
 					// do the request
-					fts__getTransferJobSummaryResponse resp;
+					impl__getTransferJobSummaryResponse resp;
 					ret = service.getTransferJobSummary(jobId, resp);
 
 					// print the response
@@ -165,7 +165,7 @@ int main(int ac, char* av[]) {
 			} else {
 
 				// do the request
-				fts__getTransferJobStatusResponse resp;
+				impl__getTransferJobStatusResponse resp;
 		    	ret = service.getTransferJobStatus(jobId, resp);
 
 		    	// print the response
@@ -179,17 +179,17 @@ int main(int ac, char* av[]) {
 			if (cli.list()) {
 
 				// do the request
-				fts__getFileStatusResponse resp;
+				impl__getFileStatusResponse resp;
 				ret = service.getFileStatus(jobId, 0, 100, resp);
 
 				if (!ret) {
 
-					std::vector<transfer__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
-					std::vector<transfer__FileTransferStatus * >::iterator it;
+					std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
+					std::vector<tns3__FileTransferStatus * >::iterator it;
 
 					// print the response
 					for (it = vect.begin(); it < vect.end(); it++) {
-						transfer__FileTransferStatus* stat = *it;
+						tns3__FileTransferStatus* stat = *it;
 
 						cout << "  Source:      " << *stat->sourceSURL << endl;
 						cout << "  Destination: " << *stat->destSURL << endl;

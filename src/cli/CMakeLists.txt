@@ -1,18 +1,30 @@
+# Copyright @ Members of the EMI Collaboration, 2010.
+# See www.eu-emi.eu for details on the copyright holders.
+# 
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+#
+#    http://www.apache.org/licenses/LICENSE-2.0 
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License. 
 cmake_minimum_required (VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_FLAGS "-g -Wall")
 
 set(fts3_cli_source_files 
-	ftsC.cpp 
-	ftsFileTransferSoapBindingProxy.cpp 
 	ui/CliBase.cpp 
 	SrvManager.cpp
 	ServiceProxyHolder.cpp
 )
 
 set(fts3_cli_libs 
-	gsoap++ 
+	fts3_ws_ifce_client
 	cgsi_plugin_cpp 
 	boost_program_options
 )
@@ -22,38 +34,11 @@ set(fts3_common_libs
 	boost_thread-mt
 )
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
-
-# GSOAP file generation
-find_package(gSOAP)
-
-set(generated_files_dir "${CMAKE_CURRENT_BINARY_DIR}")
-set(gsoap_typemap "${PROJECT_SOURCE_DIR}/src/gsoap/typemap.dat")
-set(fts3_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-1.0.0.wsdl")
-set(gsoap_header_file "${generated_files_dir}/ftsH.h")
-
-set(gsoap_source_files 
-    "${generated_files_dir}/ftsC.cpp" 
-    "${generated_files_dir}/ftsFileTransferSoapBindingProxy.cpp" 
+set(fts3_include_dir 
+    "${PROJECT_SOURCE_DIR}/src/"
+    "${CMAKE_BINARY_DIR}/src/"
 )
-
-include_directories (${generated_files_dir})
-
-file(MAKE_DIRECTORY ${generated_files_dir})
-
-add_custom_command(	
-    OUTPUT  ${gsoap_header_file}
-	DEPENDS  ${gsoap_typemap} ${fts3_wsdl} 
-	COMMAND ${GSOAP_WSDL2H} ${GSOAP_276_COMPAT_FLAGS} -e -y  -t ${gsoap_typemap}  ${fts3_wsdl}  -o ${gsoap_header_file}
-)
-
-
-add_custom_command(	
-    OUTPUT ${gsoap_source_files}
-	DEPENDS ${gsoap_header_file} 
-    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -C -x -p fts -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_header_file}
-)
-
+include_directories (${fts3_include_dir})
 
 add_executable(fts3-transfer-submit 
 	tools/fts3-transfer-submit.cpp 

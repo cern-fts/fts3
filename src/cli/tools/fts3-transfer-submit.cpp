@@ -79,7 +79,7 @@ int main(int ac, char* av[]) {
 
 		// checksum requires different request
 		if (cli.useCheckSum()) {
-			transfer__TransferJob2 job;
+			tns3__TransferJob2 job;
 			// set job elements
 			job.transferJobElements = cli.getJobElements2(&service);
 			// set transfer parameters
@@ -88,7 +88,7 @@ int main(int ac, char* av[]) {
 			// always use delegation with checksum TODO check whether it's right!
 			manager->delegateProxyCert(endpoint);
 			// submit the job
-			fts__transferSubmit3Response resp;
+			impl__transferSubmit3Response resp;
 			err = service.transferSubmit3(&job, resp);
 			if (err) {
 				cout << "Failed to submit transfer: transferSubmit3. ";
@@ -100,7 +100,7 @@ int main(int ac, char* av[]) {
 			jobId = resp._transferSubmit3Return;
 
 		} else {
-			transfer__TransferJob job;
+			tns3__TransferJob job;
 			// set job elements
 			job.transferJobElements = cli.getJobElements(&service);
 			// set transfer parameters
@@ -111,7 +111,7 @@ int main(int ac, char* av[]) {
 
 				manager->delegateProxyCert(endpoint);
 				// submit the job
-				fts__transferSubmit2Response resp;
+				impl__transferSubmit2Response resp;
 				err = service.transferSubmit2(&job, resp);
 				if (err) {
 					cout << "Failed to submit transfer: transferSubmit2. ";
@@ -130,7 +130,7 @@ int main(int ac, char* av[]) {
 				//cout << *job.credential << endl;
 
 				// submit the job
-				fts__transferSubmitResponse resp;
+				impl__transferSubmitResponse resp;
 				err = service.transferSubmit(&job, resp);
 				if (err) {
 					cout << "Failed to submit transfer: transferSubmit. ";
@@ -147,7 +147,7 @@ int main(int ac, char* av[]) {
 
 		// check if the -b option has been used
 		if (cli.isBlocking()) {
-			fts__getTransferJobStatusResponse resp;
+			impl__getTransferJobStatusResponse resp;
 			// wait until the transfer is ready
 			do {
 				sleep(2);

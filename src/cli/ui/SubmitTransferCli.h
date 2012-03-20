@@ -26,7 +26,7 @@
 #define SUBMITTRANSFERCLI_H_
 
 #include "CliBase.h"
-#include "GSoapStubs.h"
+#include "gsoap_transfer_proxy.h"
 #include <vector>
 
 using namespace std;
@@ -66,7 +66,7 @@ class SubmitTransferCli : public CliBase {
 	 * Single job element.
 	 *
 	 * Since there are two different classed that represent the job element
-	 * (transfer__TransferJobElement, transfer__TransferJobElement2) this
+	 * (tns3__TransferJobElement, transfer__TransferJobElement2) this
 	 * structure is used to store job element data until it is known which
 	 * kind of job element should be used
 	 *
@@ -170,7 +170,7 @@ public:
 	string getDestination();
 
 	/**
-	 * Gets the 'transfer__TransferParams' object.
+	 * Gets the 'tns3__TransferParams' object.
 	 *
 	 * The parameters are set accordingly to the options used with the command line tool.
 	 * The object is created using gSOAP memory-allocation utility, it will be garbage
@@ -179,12 +179,12 @@ public:
 	 *
 	 * @param soap - soap object corresponding to FTS3 service
 	 *
-	 * @return transfer__TransferParams object containing name-value pairs
+	 * @return tns3__TransferParams object containing name-value pairs
 	 */
-	transfer__TransferParams* getParams(soap* soap);
+	tns3__TransferParams* getParams(soap* soap);
 
 	/**
-	 * Gets a vector containing 'transfer__TransferJobElement' objects.
+	 * Gets a vector containing 'tns3__TransferJobElement' objects.
 	 *
 	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
 	 * Each of the vector elements is created using gsoap memory-allocation utility, and will
@@ -193,14 +193,14 @@ public:
 	 *
 	 * @param soap - soap object corresponding to FTS3 service
 	 *
-	 * @return vector of 'transfer__TransferJobElement' objects
+	 * @return vector of 'tns3__TransferJobElement' objects
 	 *
 	 * @see SubmitTransferCli::createJobElements()
 	 */
-	vector<transfer__TransferJobElement * > getJobElements(soap* soap);
+	vector<tns3__TransferJobElement * > getJobElements(soap* soap);
 
 	/**
-	 * Gets a vector containing 'transfer__TransferJobElement2' objects.
+	 * Gets a vector containing 'tns3__TransferJobElement2' objects.
 	 *
 	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
 	 * Each of the vector elements is created using gSOAP memory-allocation utility, and will
@@ -209,11 +209,11 @@ public:
 	 *
 	 * @param soap - soap object corresponding to FTS3 service
 	 *
-	 * @return vector of 'transfer__TransferJobElement2' objects
+	 * @return vector of 'tns3__TransferJobElement2' objects
 	 *
 	 * @see SubmitTransferCli::createJobElements()
 	 */
-	vector<transfer__TransferJobElement2 * > getJobElements2(soap* soap);
+	vector<tns3__TransferJobElement2 * > getJobElements2(soap* soap);
 
 	/**
 	 * Gets the value of delegation flag.

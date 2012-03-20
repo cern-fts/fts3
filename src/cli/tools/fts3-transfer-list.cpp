@@ -59,14 +59,14 @@ int main(int ac, char* av[]) {
 			return 0;
 		}
 
-		fts__ArrayOf_USCOREsoapenc_USCOREstring* array = cli.getStatusArray(&service);
+		impl__ArrayOf_USCOREsoapenc_USCOREstring* array = cli.getStatusArray(&service);
 		int err;
 
-		vector<transfer__JobStatus * > statuses;
+		vector<tns3__JobStatus * > statuses;
 
 		if (manager->isUserVoRestrictListingSupported()) {
 
-			fts__listRequests2Response resp;
+			impl__listRequests2Response resp;
 			err = service.listRequests2(array, cli.getUserDn(), cli.getVOName(), resp);
 
 			if (err) {
@@ -77,7 +77,7 @@ int main(int ac, char* av[]) {
 			statuses = resp._listRequests2Return->item;
 		} else {
 
-			fts__listRequestsResponse resp;
+			impl__listRequestsResponse resp;
 			err = service.listRequests(array, resp);
 
 			if (err) {
@@ -88,11 +88,11 @@ int main(int ac, char* av[]) {
 			statuses = resp._listRequestsReturn->item;
 		}
 
-		vector<transfer__JobStatus * >::iterator it;
+		vector<tns3__JobStatus * >::iterator it;
 		for (it = statuses.begin(); it < statuses.end(); it++) {
 			if (cli.isVerbose()) {
 
-				// TODO make common print for transfer__JobStatus (also used in fts3-transfer-status)!
+				// TODO make common print for tns3__JobStatus (also used in fts3-transfer-status)!
 				cout << "Request ID:\t" << *(*it)->jobID << endl;
 				cout << "Status: " << *(*it)->jobStatus << endl;
 				cout << "Client DN: " << *(*it)->clientDN << endl;

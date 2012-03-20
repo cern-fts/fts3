@@ -26,7 +26,7 @@
 #define SRVMANAGER_H_
 
 #include <string>
-#include "GSoapStubs.h"
+#include "gsoap_transfer_proxy.h"
 
 using namespace std;
 

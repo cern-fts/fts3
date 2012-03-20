@@ -25,7 +25,7 @@
  */
 
 #include "SubmitTransferCli.h"
-#include "GSoapStubs.h"
+#include "gsoap_transfer_proxy.h"
 #include "SrvManager.h"
 #include "common/JobParameterHandler.h"
 
@@ -206,18 +206,18 @@ bool SubmitTransferCli::createJobElements() {
     return true;
 }
 
-vector<transfer__TransferJobElement * > SubmitTransferCli::getJobElements(soap* soap) {
+vector<tns3__TransferJobElement * > SubmitTransferCli::getJobElements(soap* soap) {
 
-	vector<transfer__TransferJobElement * > jobElements;
+	vector<tns3__TransferJobElement * > jobElements;
 
-	transfer__TransferJobElement* element;
+	tns3__TransferJobElement* element;
 	vector<JobElement>::iterator it;
 
 	// iterate over the internal vector containing Task (job elements)
 	for (it = tasks.begin(); it < tasks.end(); it++) {
 
 		// create the job element, and set the source and destination values
-		element = soap_new_transfer__TransferJobElement(soap, -1);
+		element = soap_new_tns3__TransferJobElement(soap, -1);
 		element->source = soap_new_std__string(soap, -1);
 		element->dest = soap_new_std__string(soap, -1);
 		*element->source = it->src;
@@ -229,18 +229,18 @@ vector<transfer__TransferJobElement * > SubmitTransferCli::getJobElements(soap* 
 	return jobElements;
 }
 
-vector<transfer__TransferJobElement2 * > SubmitTransferCli::getJobElements2(soap* soap) {
+vector<tns3__TransferJobElement2 * > SubmitTransferCli::getJobElements2(soap* soap) {
 
-	vector<transfer__TransferJobElement2 * > jobElements;
+	vector<tns3__TransferJobElement2 * > jobElements;
 
-	transfer__TransferJobElement2* element;
+	tns3__TransferJobElement2* element;
 	vector<JobElement>::iterator it;
 
 	// iterate over the internal vector containing Task (job elements)
 	for (it = tasks.begin(); it < tasks.end(); it++) {
 
 		// create the job element, and set the source, destination and checksum values
-		element = soap_new_transfer__TransferJobElement2(soap, -1);
+		element = soap_new_tns3__TransferJobElement2(soap, -1);
 		element->source = soap_new_std__string(soap, -1);
 		element->dest = soap_new_std__string(soap, -1);
 		element->checksum = soap_new_std__string(soap, -1);
@@ -348,9 +348,9 @@ string SubmitTransferCli::askForPassword() {
     return pass1;
 }
 
-transfer__TransferParams* SubmitTransferCli::getParams(soap* soap) {
+tns3__TransferParams* SubmitTransferCli::getParams(soap* soap) {
 
-	transfer__TransferParams *jobParams = soap_new_transfer__TransferParams(soap, -1);
+	tns3__TransferParams *jobParams = soap_new_tns3__TransferParams(soap, -1);
 
 	// check if the parameters were set using CLI, and if yes set them
 

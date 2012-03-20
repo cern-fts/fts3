@@ -75,7 +75,7 @@ int main(int ac, char* av[]) {
 		string dn = cli.getUserDn();
 		int err;
 		if (dn.empty()) {
-			fts__getRolesResponse resp;
+			impl__getRolesResponse resp;
 			err = service.getRoles(resp);
 
 			if (err) {
@@ -84,7 +84,7 @@ int main(int ac, char* av[]) {
 				return 0;
 			}
 
-			transfer__Roles* roles = resp.getRolesReturn;
+			tns3__Roles* roles = resp.getRolesReturn;
 
 	        cout << "Your current clientDN is: " <<  *roles->clientDN << endl;
 
@@ -106,14 +106,14 @@ int main(int ac, char* av[]) {
 
 	        cout << "You are VO manager for " << roles->VOManager.size() << " VOs." << endl;
 
-	        std::vector<transfer__StringPair*>::iterator it;
+	        std::vector<tns3__StringPair*>::iterator it;
 	        for (it = roles->VOManager.begin(); it < roles->VOManager.end(); it++) {
 	            cout << "You are VO manager for VO <" << *(*it)->string1;
 	            cout << "> because your certificate contains the following principal: " << *(*it)->string2 << endl;
 	        }
 
 		} else {
-			fts__getRolesOfResponse resp;
+			impl__getRolesOfResponse resp;
 			err = service.getRolesOf(dn, resp);
 
 			if (err) {
@@ -122,7 +122,7 @@ int main(int ac, char* av[]) {
 				return 0;
 			}
 
-			transfer__Roles* roles = resp._getRolesOfReturn;
+			tns3__Roles* roles = resp._getRolesOfReturn;
 
 	        cout << "The DN of the user you are checking is: " << *roles->clientDN << endl;;
 	        if (roles->serviceAdmin == 0) {
@@ -145,7 +145,7 @@ int main(int ac, char* av[]) {
 
 	        cout << "The user is VO manager for " << roles->VOManager.size() << " VOs.";
 
-	        std::vector<transfer__StringPair*>::iterator it;
+	        std::vector<tns3__StringPair*>::iterator it;
 	        for (it = roles->VOManager.begin(); it < roles->VOManager.end(); it++) {
 	            cout << "The user is VO manager for VO <" << *(*it)->string1 << ">" << endl;
 	        }

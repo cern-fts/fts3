@@ -26,7 +26,7 @@
 #define LISTTRANSFERCLI_H_
 
 #include "DNCli.h"
-#include "GSoapStubs.h"
+#include "gsoap_transfer_proxy.h"
 #include "VONameCli.h"
 
 namespace fts3 { namespace cli {
@@ -62,7 +62,7 @@ public:
 	bool checkIfFeaturesSupported();
 
 	/**
-	 * Gets a pointer to fts__ArrayOf_USCOREsoapenc_USCOREstring object.
+	 * Gets a pointer to impl__ArrayOf_USCOREsoapenc_USCOREstring object.
 	 * The object contains set of statuses of interest. This are the statuses
 	 * that the user passed using command line options. If no statuses were
 	 * passed, the set is determined depending on the version of the FTS3 service.
@@ -72,9 +72,9 @@ public:
 	 *
 	 * @param soap - soap object corresponding to FTS3 service
 	 *
-	 * @return  fts__ArrayOf_USCOREsoapenc_USCOREstring
+	 * @return  impl__ArrayOf_USCOREsoapenc_USCOREstring
 	 */
-	fts__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray(soap* soap);
+	impl__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray(soap* soap);
 
 };
 

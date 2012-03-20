@@ -15,16 +15,16 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- *
- * GsoapStubs.h
- *
- *  Created on: Feb 18, 2012
- *      Author: Michał Simon
  */
 
-#ifndef GSOAPSTUBS_H_
-#define GSOAPSTUBS_H_
+#pragma once
 
-#include "ftsFileTransferSoapBindingProxy.h"
+namespace transfer
+{
+    struct SOAP_ENV__Fault;
+}
 
-#endif /* GSOAPSTUBS_H_ */
+using namespace transfer;
+
+#include "ws-ifce/gsoap/transferFileTransferSoapBindingProxy.h"
+

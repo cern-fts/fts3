@@ -53,7 +53,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${gsoap_transfer_source_files}
     DEPENDS ${gsoap_transfer_header_file}
-    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -S -x -p ${gsoap_transfer_prefix} -q ${gsoap_transfer_prefix} -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_transfer_header_file} 
+    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -x -p ${gsoap_transfer_prefix} -q ${gsoap_transfer_prefix} -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_transfer_header_file} 
 )
 
 # Generate config interface
@@ -76,7 +76,7 @@ add_custom_command(
 add_custom_command(
     OUTPUT ${gsoap_config_source_files}
     DEPENDS ${gsoap_config_header_file}
-    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -S -x -q ${gsoap_config_prefix} -p ${gsoap_config_prefix} -d ${generated_files_dir}  -I ${GSOAP_IMPORT_DIR} ${gsoap_config_header_file}
+    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -x -q ${gsoap_config_prefix} -p ${gsoap_config_prefix} -d ${generated_files_dir}  -I ${GSOAP_IMPORT_DIR} ${gsoap_config_header_file}
 )
 
 add_library(fts3_ws_ifce_server SHARED 
@@ -86,4 +86,16 @@ add_library(fts3_ws_ifce_server SHARED
 )
 set_target_properties(fts3_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
 target_link_libraries(fts3_ws_ifce_server -lgsoap++)
+
+# Client side library 
+add_library(fts3_ws_ifce_client SHARED
+    ${generated_files_dir}/${gsoap_transfer_prefix}C.cpp
+    ${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingProxy.cpp
+    ${generated_files_dir}/envC.cpp
+    ${generated_files_dir}/${gsoap_config_prefix}C.cpp
+    ${generated_files_dir}/${gsoap_config_prefix}SoapBindingProxy.cpp
+)
+
+set_target_properties(fts3_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
+target_link_libraries(fts3_ws_ifce_client -lgsoap++)
 

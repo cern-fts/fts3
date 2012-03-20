@@ -149,7 +149,7 @@ void SrvManager::printSoapErr(FileTransferSoapBindingProxy& service) {
 				}
 
 				if (service.fault->SOAP_ENV__Detail->fault) {
-		    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
+		    		tns3__TransferException* ex = (tns3__TransferException*)service.fault->detail->fault;
 	    			cout << *ex->message << endl;
 				}
 			}
@@ -163,7 +163,7 @@ void SrvManager::printSoapErr(FileTransferSoapBindingProxy& service) {
 				}
 
 				if (service.fault->detail->fault) {
-		    		transfer__TransferException* ex = (transfer__TransferException*)service.fault->detail->fault;
+		    		tns3__TransferException* ex = (tns3__TransferException*)service.fault->detail->fault;
 	    			cout << *ex->message << endl;
 				}
 			}
@@ -177,7 +177,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 
 	int err;
 
-	fts__getInterfaceVersionResponse ivresp;
+	impl__getInterfaceVersionResponse ivresp;
 	err = service.getInterfaceVersion(ivresp);
 	if (!err) {
 		interface = ivresp.getInterfaceVersionReturn;
@@ -188,7 +188,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 		return err;
 	}
 
-	fts__getVersionResponse vresp;
+	impl__getVersionResponse vresp;
 	err = service.getVersion(vresp);
 	if (!err) {
 		version = vresp.getVersionReturn;
@@ -198,7 +198,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 		return err;
 	}
 
-	fts__getSchemaVersionResponse sresp;
+	impl__getSchemaVersionResponse sresp;
 	err = service.getSchemaVersion(sresp);
 	if (!err) {
 		schema = sresp.getSchemaVersionReturn;
@@ -208,7 +208,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 		return err;
 	}
 
-	fts__getServiceMetadataResponse mresp;
+	impl__getServiceMetadataResponse mresp;
 	err = service.getServiceMetadata("feature.string", mresp);
 	if (!err) {
 		metadata = mresp._getServiceMetadataReturn;

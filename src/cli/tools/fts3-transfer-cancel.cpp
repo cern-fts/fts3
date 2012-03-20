@@ -70,7 +70,7 @@ int main(int ac, char* av[]) {
 			cli.printGeneralInfo();
 		}
 
-		fts__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_fts__ArrayOf_USCOREsoapenc_USCOREstring(&service, -1);
+		impl__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impl__ArrayOf_USCOREsoapenc_USCOREstring(&service, -1);
 		vector<string> &jobs = rqst->item;
 		jobs = cli.getJobIds();
 
@@ -80,7 +80,7 @@ int main(int ac, char* av[]) {
 		}
 
 		int err;
-		fts__cancelResponse resp;
+		impl__cancelResponse resp;
 		err = service.cancel(rqst, resp);
 
 		if (err) {

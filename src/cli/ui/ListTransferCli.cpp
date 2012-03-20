@@ -67,9 +67,9 @@ bool ListTransferCli::checkIfFeaturesSupported() {
    return true;
 }
 
-fts__ArrayOf_USCOREsoapenc_USCOREstring* ListTransferCli::getStatusArray(soap* soap) {
+impl__ArrayOf_USCOREsoapenc_USCOREstring* ListTransferCli::getStatusArray(soap* soap) {
 
-	fts__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_fts__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
+	impl__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impl__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
 
 	if (CliBase::vm.count("state")) {
 		array->item = CliBase::vm["state"].as<vector<string> >();

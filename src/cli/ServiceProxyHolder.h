@@ -27,7 +27,7 @@
 #ifndef SERVICEPROXYHOLDER_H_
 #define SERVICEPROXYHOLDER_H_
 
-#include "GSoapStubs.h"
+#include "gsoap_transfer_proxy.h"
 
 namespace fts3 { namespace cli {
 

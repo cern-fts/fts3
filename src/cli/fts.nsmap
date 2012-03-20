@@ -1,4 +1,4 @@
-#include "ftsH.h"
+#include "ws-ifce/gsoap/transferH.h"
 SOAP_NMAC struct Namespace fts_namespaces[] =
 {
 	{"SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/", "http://www.w3.org/*/soap-envelope", NULL},

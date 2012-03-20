@@ -78,7 +78,7 @@ int main(int ac, char* av[]) {
 		}
 
 		int err;
-		fts__listVOManagersResponse resp;
+		impl__listVOManagersResponse resp;
 		err = service.listVOManagers(vo, resp);
 
 		if (err) {

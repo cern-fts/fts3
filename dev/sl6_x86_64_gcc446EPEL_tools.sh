@@ -27,6 +27,7 @@ function fts3_dev_setup_install_tools
         oracle-instantclient-devel \
         oracle-instantclient-sqlplus \
         oracle-instantclient-basic \
-        libuuid-devel
+        libuuid-devel \
+        CGSI-gSOAP-devel
 }
 
