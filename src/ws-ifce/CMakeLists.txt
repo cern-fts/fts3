@@ -79,7 +79,7 @@ add_custom_command(
     COMMAND ${GSOAP_SOAPCPP2} -n -w -i -S -x -q ${gsoap_config_prefix} -p ${gsoap_config_prefix} -d ${generated_files_dir}  -I ${GSOAP_IMPORT_DIR} ${gsoap_config_header_file}
 )
 
-add_library(fts3_ws_ifce_server 
+add_library(fts3_ws_ifce_server SHARED 
     ${gsoap_config_source_files}
     ${gsoap_env_source_files}
     ${gsoap_transfer_source_files}
