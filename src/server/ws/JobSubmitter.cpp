@@ -36,13 +36,13 @@ using namespace boost;
 using namespace db;
 using namespace fts3::ws;
 
-JobSubmitter::JobSubmitter(soap* soap, transfer__TransferJob *job, bool delegation) {
+JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
-		transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "The job was not defined");
+		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "The job was not defined");
 		throw ex;
 	}
 
@@ -52,19 +52,19 @@ JobSubmitter::JobSubmitter(soap* soap, transfer__TransferJob *job, bool delegati
 	// check the delegation and MyProxy password settings
 	if (delegation) {
 		if (job->credential) {
-			transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
+			tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
 					soap, "The MyProxy password should not be provided if delegation is used");
 			throw ex;
 		}
 	} else {
 		if (params.isParamSet(JobParameterHandler::FTS3_PARAM_DELEGATIONID)) {
-			transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
+			tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
 					soap, "The delegation ID should not be provided if MyProxy password mode is used");
 			throw ex;
 		}
 
 		if (!job->credential || job->credential->empty()) {
-			transfer__AuthorizationException* ex = GSoapExceptionHandler::createAuthorizationException(
+			tns3__AuthorizationException* ex = GSoapExceptionHandler::createAuthorizationException(
 					soap, "The MyProxy password is empty while submitting in MyProxy mode");
 			throw ex;
 		}
@@ -72,8 +72,8 @@ JobSubmitter::JobSubmitter(soap* soap, transfer__TransferJob *job, bool delegati
 		cred = *job->credential;
 	}
 
-	// extract the job elements from transfer__TransferJob object and put them into a vector
-    vector<transfer__TransferJobElement * >::iterator it;
+	// extract the job elements from tns3__TransferJob object and put them into a vector
+    vector<tns3__TransferJobElement * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
@@ -89,17 +89,17 @@ JobSubmitter::JobSubmitter(soap* soap, transfer__TransferJob *job, bool delegati
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
 
-JobSubmitter::JobSubmitter(soap* soap, transfer__TransferJob2 *job) {
+JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
-		transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "The job was not defined");
+		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "The job was not defined");
 		throw ex;
 	}
 
 	// checksum uses always delegation?
 	if (job->credential) {
-		transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
+		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
 				soap, "The MyProxy password should not be provided if delegation is used");
 		throw ex;
     }
@@ -107,21 +107,21 @@ JobSubmitter::JobSubmitter(soap* soap, transfer__TransferJob2 *job) {
 	// do the common initialization
 	init(job->jobParams);
 
-	// extract the job elements from transfer__TransferJob2 object and put them into a vector
-    vector<transfer__TransferJobElement2 * >::iterator it;
+	// extract the job elements from tns3__TransferJob2 object and put them into a vector
+    vector<tns3__TransferJobElement2 * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
 
     	// check weather the destination file is supported
     	if (!checkProtocol(dest)) {
-    		transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
+    		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
     				soap, "Destination protocol is not supported for file: " + dest);
     		throw ex;
     	}
     	// check weather the source file is supported
     	if (!checkProtocol(src) && !checkIfLfn(src)) {
-    		transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
+    		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
     				soap, "Source protocol is not supported for file: " + src);
     		throw ex;
     	}
@@ -135,7 +135,7 @@ JobSubmitter::JobSubmitter(soap* soap, transfer__TransferJob2 *job) {
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
 
-void JobSubmitter::init(transfer__TransferParams *jobParams) {
+void JobSubmitter::init(tns3__TransferParams *jobParams) {
 
 	id = UuidGenerator::generateUUID();
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Generated uuid " << id << commit;

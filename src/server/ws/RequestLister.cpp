@@ -17,14 +17,14 @@ using namespace db;
 using namespace fts3::ws;
 using namespace fts3::common;
 
-RequestLister::RequestLister(::soap* soap, fts__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates): soap(soap) {
+RequestLister::RequestLister(::soap* soap, impl__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates): soap(soap) {
 
 	checkGivenStates (inGivenStates);
 	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", "", "");
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
 }
 
-RequestLister::RequestLister(::soap* soap, fts__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo): soap(soap) {
+RequestLister::RequestLister(::soap* soap, impl__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo): soap(soap) {
 
 	checkGivenStates (inGivenStates);
 	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", dn, vo);
@@ -35,16 +35,16 @@ RequestLister::~RequestLister() {
 
 }
 
-fts__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
+impl__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
 
 	// create the object
-	fts__ArrayOf_USCOREtns3_USCOREJobStatus* result;
-	result = soap_new_fts__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
+	impl__ArrayOf_USCOREtns3_USCOREJobStatus* result;
+	result = soap_new_impl__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
 
 	// fill it with job statuses
 	vector<JobStatus*>::iterator it;
 	for (it = jobs.begin(); it < jobs.end(); it++) {
-		transfer__JobStatus* job_ptr = JobStatusCopier::copyJobStatus(soap, *it);
+		tns3__JobStatus* job_ptr = JobStatusCopier::copyJobStatus(soap, *it);
 		result->item.push_back(job_ptr);
 		delete *it;
 	}
@@ -53,10 +53,10 @@ fts__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
 	return result;
 }
 
-void RequestLister::checkGivenStates(fts__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates) {
+void RequestLister::checkGivenStates(impl__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates) {
 
 	if (!inGivenStates || inGivenStates->item.empty()) {
-		transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "No states were defined");
+		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "No states were defined");
 		throw ex;
 	}
 
@@ -64,7 +64,7 @@ void RequestLister::checkGivenStates(fts__ArrayOf_USCOREsoapenc_USCOREstring* in
 	vector<string>::iterator it;
 	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); it++) {
 		if(!handler.isStatusValid(*it)) {
-			transfer__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap,
+			tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap,
 					"Unknown job status: " + *it);
 			throw ex;
 		}

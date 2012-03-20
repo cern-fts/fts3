@@ -17,7 +17,7 @@
  *	limitations under the License.
  */
 
-#include "gsoap_stubs.h"
+#include "ws/gsoap_transfer_stubs.h"
 #include "uuid_generator.h"
 
 #include "db/generic/SingleDbInstance.h"
@@ -40,7 +40,7 @@ using namespace fts3::common;
 using namespace std;
 
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::transferSubmit(transfer__TransferJob *_job, struct fts__transferSubmitResponse &_param_3) {
+int FileTransferSoapBindingService::transferSubmit(tns3__TransferJob *_job, struct impl__transferSubmitResponse &_param_3) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
 
@@ -53,7 +53,7 @@ int FileTransferSoapBindingService::transferSubmit(transfer__TransferJob *_job, 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 	    return SOAP_SVR_FAULT;
 
-	} catch (transfer__TransferException* ex) {
+	} catch (tns3__TransferException* ex) {
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
 		GSoapExceptionHandler exHandler(this, ex);
 		exHandler.handle();
@@ -64,7 +64,7 @@ int FileTransferSoapBindingService::transferSubmit(transfer__TransferJob *_job, 
 }
 
 /// Web service operation 'transferSubmit2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job, struct fts__transferSubmit2Response &_param_4) {
+int FileTransferSoapBindingService::transferSubmit2(tns3__TransferJob *_job, struct impl__transferSubmit2Response &_param_4) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
@@ -77,7 +77,7 @@ int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job,
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 	    return SOAP_FAULT;
 
-	} catch (transfer__TransferException* ex) {
+	} catch (tns3__TransferException* ex) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
 		GSoapExceptionHandler exHandler(this, ex);
@@ -89,7 +89,7 @@ int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job,
 }
 
 /// Web service operation 'transferSubmit3' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job, struct fts__transferSubmit3Response &_param_5) {
+int FileTransferSoapBindingService::transferSubmit3(tns3__TransferJob2 *_job, struct impl__transferSubmit3Response &_param_5) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
@@ -102,7 +102,7 @@ int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job
 	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 	    return SOAP_SVR_FAULT;
 
-	} catch (transfer__TransferException* ex) {
+	} catch (tns3__TransferException* ex) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
 		GSoapExceptionHandler exHandler(this, ex);
@@ -114,7 +114,7 @@ int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job
 }
 
 /// Web service operation 'listRequests' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listRequests(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct fts__listRequestsResponse &_param_7) {
+int FileTransferSoapBindingService::listRequests(impl__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct impl__listRequestsResponse &_param_7) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
 
@@ -127,7 +127,7 @@ int FileTransferSoapBindingService::listRequests(fts__ArrayOf_USCOREsoapenc_USCO
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 		return SOAP_SVR_FAULT;
 
-	} catch (transfer__TransferException* ex) {
+	} catch (tns3__TransferException* ex) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
 		GSoapExceptionHandler exHandler(this, ex);
@@ -139,7 +139,7 @@ int FileTransferSoapBindingService::listRequests(fts__ArrayOf_USCOREsoapenc_USCO
 }
 
 /// Web service operation 'listRequests2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct fts__listRequests2Response &_param_8) {
+int FileTransferSoapBindingService::listRequests2(impl__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct impl__listRequests2Response &_param_8) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
 
@@ -152,7 +152,7 @@ int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USC
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 		return SOAP_SVR_FAULT;
 
-	} catch (transfer__TransferException* ex) {
+	} catch (tns3__TransferException* ex) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
 		GSoapExceptionHandler exHandler(this, ex);
@@ -165,12 +165,12 @@ int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USC
 
 
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getFileStatus(string _requestID, int _offset, int _limit, struct fts__getFileStatusResponse &_param_9) {
+int FileTransferSoapBindingService::getFileStatus(string _requestID, int _offset, int _limit, struct impl__getFileStatusResponse &_param_9) {
 
 	// dummy
-	_param_9._getFileStatusReturn = soap_new_fts__ArrayOf_USCOREtns3_USCOREFileTransferStatus(this, -1);
+	_param_9._getFileStatusReturn = soap_new_impl__ArrayOf_USCOREtns3_USCOREFileTransferStatus(this, -1);
 
-	transfer__FileTransferStatus* status = soap_new_transfer__FileTransferStatus(this, -1);
+	tns3__FileTransferStatus* status = soap_new_tns3__FileTransferStatus(this, -1);
 	status->destSURL = soap_new_std__string(this, -1);
 	status->logicalName = soap_new_std__string(this, -1);
 	status->reason = soap_new_std__string(this, -1);
@@ -186,12 +186,12 @@ int FileTransferSoapBindingService::getFileStatus(string _requestID, int _offset
 }
 
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getFileStatus2(string _requestID, int _offset, int _limit, struct fts__getFileStatus2Response &_param_10) {
+int FileTransferSoapBindingService::getFileStatus2(string _requestID, int _offset, int _limit, struct impl__getFileStatus2Response &_param_10) {
 
 	// dummy
-	_param_10._getFileStatus2Return = soap_new_fts__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(this, -1);
+	_param_10._getFileStatus2Return = soap_new_impl__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(this, -1);
 
-	transfer__FileTransferStatus2* status = soap_new_transfer__FileTransferStatus2(this, -1);
+	tns3__FileTransferStatus2* status = soap_new_tns3__FileTransferStatus2(this, -1);
 	status->destSURL = soap_new_std__string(this, -1);
 	status->logicalName = soap_new_std__string(this, -1);
 	status->reason = soap_new_std__string(this, -1);
@@ -209,7 +209,7 @@ int FileTransferSoapBindingService::getFileStatus2(string _requestID, int _offse
 }
 
 /// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, struct fts__getTransferJobStatusResponse &_param_11) {
+int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, struct impl__getTransferJobStatusResponse &_param_11) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus' request" << commit;
 
@@ -222,7 +222,7 @@ int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, stru
 			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 			delete status;
 		} else {
-			transfer__NotExistsException* ex = GSoapExceptionHandler::createNotExistsException(this,
+			tns3__NotExistsException* ex = GSoapExceptionHandler::createNotExistsException(this,
 					"requestID <" + _requestID + "> was not found");
 			throw ex;
 		}
@@ -231,7 +231,7 @@ int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, stru
 	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 	    return SOAP_SVR_FAULT;
 
-	} catch (transfer__TransferException* ex) {
+	} catch (tns3__TransferException* ex) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
 		GSoapExceptionHandler exHandler(this, ex);
@@ -243,10 +243,10 @@ int FileTransferSoapBindingService::getTransferJobStatus(string _requestID, stru
 }
 
 /// Web service operation 'getTransferJobSummary' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobSummary(string _requestID, struct fts__getTransferJobSummaryResponse &_param_12) {
+int FileTransferSoapBindingService::getTransferJobSummary(string _requestID, struct impl__getTransferJobSummaryResponse &_param_12) {
 
 	// dummy
-	_param_12._getTransferJobSummaryReturn = soap_new_transfer__TransferJobSummary(this, -1);
+	_param_12._getTransferJobSummaryReturn = soap_new_tns3__TransferJobSummary(this, -1);
 	_param_12._getTransferJobSummaryReturn->numActive = 0;
 	_param_12._getTransferJobSummaryReturn->numCanceled = 0;
 	_param_12._getTransferJobSummaryReturn->numCanceling = 0;
@@ -260,7 +260,7 @@ int FileTransferSoapBindingService::getTransferJobSummary(string _requestID, str
 	_param_12._getTransferJobSummaryReturn->numSubmitted = 0;
 	_param_12._getTransferJobSummaryReturn->numWaiting = 0;
 
-	_param_12._getTransferJobSummaryReturn->jobStatus = soap_new_transfer__JobStatus(this, -1);
+	_param_12._getTransferJobSummaryReturn->jobStatus = soap_new_tns3__JobStatus(this, -1);
 	_param_12._getTransferJobSummaryReturn->jobStatus->clientDN = soap_new_std__string(this, -1);
 	_param_12._getTransferJobSummaryReturn->jobStatus->jobID = soap_new_std__string(this, -1);
 	_param_12._getTransferJobSummaryReturn->jobStatus->jobStatus = soap_new_std__string(this, -1);
@@ -274,10 +274,10 @@ int FileTransferSoapBindingService::getTransferJobSummary(string _requestID, str
 }
 
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobSummary2(string _requestID, struct fts__getTransferJobSummary2Response &_param_13) {
+int FileTransferSoapBindingService::getTransferJobSummary2(string _requestID, struct impl__getTransferJobSummary2Response &_param_13) {
 
 	// dummy
-	_param_13._getTransferJobSummary2Return = soap_new_transfer__TransferJobSummary2(this, -1);
+	_param_13._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(this, -1);
 	_param_13._getTransferJobSummary2Return->numActive = 0;
 	_param_13._getTransferJobSummary2Return->numAwaitingPrestage = 0;
 	_param_13._getTransferJobSummary2Return->numCanceled = 0;
@@ -298,7 +298,7 @@ int FileTransferSoapBindingService::getTransferJobSummary2(string _requestID, st
 	_param_13._getTransferJobSummary2Return->numWaitingCatalogResolution = 0;
 	_param_13._getTransferJobSummary2Return->numWaitingPrestage = 0;
 
-	_param_13._getTransferJobSummary2Return->jobStatus = soap_new_transfer__JobStatus(this, -1);
+	_param_13._getTransferJobSummary2Return->jobStatus = soap_new_tns3__JobStatus(this, -1);
 	_param_13._getTransferJobSummary2Return->jobStatus->clientDN = soap_new_std__string(this, -1);
 	_param_13._getTransferJobSummary2Return->jobStatus->jobID = soap_new_std__string(this, -1);
 	_param_13._getTransferJobSummary2Return->jobStatus->jobStatus = soap_new_std__string(this, -1);
@@ -314,28 +314,28 @@ int FileTransferSoapBindingService::getTransferJobSummary2(string _requestID, st
 
 
 /// Web service operation 'getVersion' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getVersion(struct fts__getVersionResponse &_param_21) {
+int FileTransferSoapBindingService::getVersion(struct impl__getVersionResponse &_param_21) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getVersion' request" << commit;
 	_param_21.getVersionReturn = "3.7.6-1";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getSchemaVersion' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getSchemaVersion(struct fts__getSchemaVersionResponse &_param_22) {
+int FileTransferSoapBindingService::getSchemaVersion(struct impl__getSchemaVersionResponse &_param_22) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getSchemaVersion' request" << commit;
 	_param_22.getSchemaVersionReturn = "3.5.0";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getInterfaceVersion' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getInterfaceVersion(struct fts__getInterfaceVersionResponse &_param_23) {
+int FileTransferSoapBindingService::getInterfaceVersion(struct impl__getInterfaceVersionResponse &_param_23) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getInterfaceVersion' request" << commit;
 	_param_23.getInterfaceVersionReturn = "3.7.0";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getServiceMetadata(string _key, struct fts__getServiceMetadataResponse &_param_24) {
+int FileTransferSoapBindingService::getServiceMetadata(string _key, struct impl__getServiceMetadataResponse &_param_24) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getServiceMetadata' request" << commit;
 	_param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
 	return SOAP_OK;
@@ -343,7 +343,7 @@ int FileTransferSoapBindingService::getServiceMetadata(string _key, struct fts__
 
 
 /// Web service operation 'cancel' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::cancel(fts__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct fts__cancelResponse &_param_14) {
+int FileTransferSoapBindingService::cancel(impl__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct impl__cancelResponse &_param_14) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancel' request" << commit;
 
@@ -362,37 +362,37 @@ int FileTransferSoapBindingService::cancel(fts__ArrayOf_USCOREsoapenc_USCOREstri
 }
 
 /// Web service operation 'setJobPriority' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::setJobPriority(string _requestID, int _priority, struct fts__setJobPriorityResponse &_param_15) {
+int FileTransferSoapBindingService::setJobPriority(string _requestID, int _priority, struct impl__setJobPriorityResponse &_param_15) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'addVOManager' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::addVOManager(string _VOName, string _principal, struct fts__addVOManagerResponse &_param_16) {
+int FileTransferSoapBindingService::addVOManager(string _VOName, string _principal, struct impl__addVOManagerResponse &_param_16) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'removeVOManager' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::removeVOManager(string _VOName, string _principal, struct fts__removeVOManagerResponse &_param_17) {
+int FileTransferSoapBindingService::removeVOManager(string _VOName, string _principal, struct impl__removeVOManagerResponse &_param_17) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'listVOManagers' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listVOManagers(string _VOName, struct fts__listVOManagersResponse &_param_18) {
+int FileTransferSoapBindingService::listVOManagers(string _VOName, struct impl__listVOManagersResponse &_param_18) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listVOManagers' request" << commit;
 
-	_param_18._listVOManagersReturn = soap_new_fts__ArrayOf_USCOREsoapenc_USCOREstring(this, -1);
+	_param_18._listVOManagersReturn = soap_new_impl__ArrayOf_USCOREsoapenc_USCOREstring(this, -1);
 	_param_18._listVOManagersReturn->item.push_back("default username");
 
 	return SOAP_OK;
 }
 
 /// Web service operation 'getRoles' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getRoles(struct fts__getRolesResponse &_param_19) {
+int FileTransferSoapBindingService::getRoles(struct impl__getRolesResponse &_param_19) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRoles' request" << commit;
 
-	_param_19.getRolesReturn = soap_new_transfer__Roles(this, -1);
+	_param_19.getRolesReturn = soap_new_tns3__Roles(this, -1);
 
 	_param_19.getRolesReturn->clientDN = soap_new_std__string(this, -1);
 	*_param_19.getRolesReturn->clientDN = "clientDN";
@@ -401,7 +401,7 @@ int FileTransferSoapBindingService::getRoles(struct fts__getRolesResponse &_para
 	_param_19.getRolesReturn->submitter = soap_new_std__string(this, -1);
 	*_param_19.getRolesReturn->submitter = "submitter";
 
-	transfer__StringPair* pair = soap_new_transfer__StringPair(this, -1);
+	tns3__StringPair* pair = soap_new_tns3__StringPair(this, -1);
 	pair->string1 = soap_new_std__string(this, -1);
 	*pair->string1 = "string1";
 	pair->string2 = soap_new_std__string(this, -1);
@@ -412,11 +412,11 @@ int FileTransferSoapBindingService::getRoles(struct fts__getRolesResponse &_para
 }
 
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getRolesOf(string _otherDN, struct fts__getRolesOfResponse &_param_20) {
+int FileTransferSoapBindingService::getRolesOf(string _otherDN, struct impl__getRolesOfResponse &_param_20) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRolesOf' request" << commit;
 
-	_param_20._getRolesOfReturn = soap_new_transfer__Roles(this, -1);
+	_param_20._getRolesOfReturn = soap_new_tns3__Roles(this, -1);
 
 	_param_20._getRolesOfReturn->clientDN = soap_new_std__string(this, -1);
 	*_param_20._getRolesOfReturn->clientDN = "clientDN";
@@ -425,7 +425,7 @@ int FileTransferSoapBindingService::getRolesOf(string _otherDN, struct fts__getR
 	_param_20._getRolesOfReturn->submitter = soap_new_std__string(this, -1);
 	*_param_20._getRolesOfReturn->submitter = "submitter";
 
-	transfer__StringPair* pair = soap_new_transfer__StringPair(this, -1);
+	tns3__StringPair* pair = soap_new_tns3__StringPair(this, -1);
 	pair->string1 = soap_new_std__string(this, -1);
 	*pair->string1 = "string1";
 	pair->string2 = soap_new_std__string(this, -1);

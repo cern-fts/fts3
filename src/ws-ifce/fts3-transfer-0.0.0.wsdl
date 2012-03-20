@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions targetNamespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:apachesoap="http://xml.apache.org/xml-soap" xmlns:impl="http://glite.org/wsdl/services/org.glite.data.transfer.fts" xmlns:intf="http://glite.org/wsdl/services/org.glite.data.transfer.fts" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tns3="http://transfer.data.glite.org" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<definitions targetNamespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:apachesoap="http://xml.apache.org/xml-soap"
+    xmlns:impl="http://glite.org/wsdl/services/org.glite.data.transfer.fts"
+    xmlns:intf="http://glite.org/wsdl/services/org.glite.data.transfer.fts"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:tns3="http://transfer.data.glite.org"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
  <wsdl:types>
   <schema targetNamespace="http://transfer.data.glite.org" xmlns="http://www.w3.org/2001/XMLSchema">
    <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
@@ -191,7 +200,7 @@
   <schema targetNamespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" xmlns="http://www.w3.org/2001/XMLSchema">
    <import namespace="http://transfer.data.glite.org"/>
    <!--<import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>-->
-   
+
   <complexType name="ArrayOf_soapenc_string">
     <sequence>
      <element name="item" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
@@ -212,7 +221,7 @@
      <element name="item" type="tns3:FileTransferStatus2" minOccurs="0" maxOccurs="unbounded"/>
     </sequence>
    </complexType>
-   
+
     <!--<complexType name="ArrayOf_soapenc_string">
     <complexContent>
      <restriction base="soapenc:Array">

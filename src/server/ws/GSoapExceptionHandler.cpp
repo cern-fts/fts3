@@ -47,7 +47,8 @@ void GSoapExceptionHandler::handleReceiverFault() {
 
 void GSoapExceptionHandler::dispatchException() {
 
-	SOAP_ENV__Detail *detail;
+    SOAP_ENV__Detail *detail = NULL;
+    transfer::SOAP_ENV__Fault *fault = NULL;
 	if (soap->version == v12) {
 		// soap version 1.2
 		detail = soap->fault->SOAP_ENV__Detail;
@@ -58,23 +59,23 @@ void GSoapExceptionHandler::dispatchException() {
 
 	// dispatch the exception to the right field in SOAP_ENV_DETAIL
 
-	detail->transfer__AuthorizationExceptionElement = dynamic_cast<transfer__AuthorizationException*>(ex);
-	if (detail->transfer__AuthorizationExceptionElement) return;
+	detail->tns3__AuthorizationExceptionElement = dynamic_cast<tns3__AuthorizationException*>(ex);
+	if (detail->tns3__AuthorizationExceptionElement) return;
 
-	detail->transfer__CannotCancelExceptionElement = dynamic_cast<transfer__CannotCancelException*>(ex);
-	if (detail->transfer__CannotCancelExceptionElement) return;
+	detail->tns3__CannotCancelExceptionElement = dynamic_cast<tns3__CannotCancelException*>(ex);
+	if (detail->tns3__CannotCancelExceptionElement) return;
 
-	detail->transfer__ExistsExceptionElement = dynamic_cast<transfer__ExistsException*>(ex);
-	if (detail->transfer__ExistsExceptionElement) return;
+	detail->tns3__ExistsExceptionElement = dynamic_cast<tns3__ExistsException*>(ex);
+	if (detail->tns3__ExistsExceptionElement) return;
 
-	detail->transfer__InternalExceptionElement = dynamic_cast<transfer__InternalException*>(ex);
-	if (detail->transfer__InternalExceptionElement) return;
+	detail->tns3__InternalExceptionElement = dynamic_cast<tns3__InternalException*>(ex);
+	if (detail->tns3__InternalExceptionElement) return;
 
-	detail->transfer__InvalidArgumentExceptionElement = dynamic_cast<transfer__InvalidArgumentException*>(ex);
-	if (detail->transfer__InvalidArgumentExceptionElement) return;
+	detail->tns3__InvalidArgumentExceptionElement = dynamic_cast<tns3__InvalidArgumentException*>(ex);
+	if (detail->tns3__InvalidArgumentExceptionElement) return;
 
-	detail->transfer__NotExistsExceptionElement = dynamic_cast<transfer__NotExistsException*>(ex);
-	if (detail->transfer__NotExistsExceptionElement) return;
+	detail->tns3__NotExistsExceptionElement = dynamic_cast<tns3__NotExistsException*>(ex);
+	if (detail->tns3__NotExistsExceptionElement) return;
 
-	detail->transfer__ServiceBusyExceptionElement = dynamic_cast<transfer__ServiceBusyException*>(ex);
+	detail->tns3__ServiceBusyExceptionElement = dynamic_cast<tns3__ServiceBusyException*>(ex);
 }

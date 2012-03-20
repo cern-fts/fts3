@@ -25,7 +25,7 @@
 #ifndef JOBSUBMITTER_H_
 #define JOBSUBMITTER_H_
 
-#include "gsoap_stubs.h"
+#include "gsoap_transfer_stubs.h"
 #include "db/generic/GenericDbIfce.h"
 #include "common/JobParameterHandler.h"
 
@@ -56,7 +56,7 @@ public:
 	 * @param job - the job that has to be submitted
 	 * @param delegation - should be true if delegation is being used
 	 */
-	JobSubmitter(soap* soap, transfer__TransferJob *job, bool delegation);
+	JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation);
 
 	/**
 	 * Constructor - creates a submitter object that should be used
@@ -65,7 +65,7 @@ public:
 	 * @param soap - the soap object that is serving the given request
 	 * @param job - the job that has to be submitted
 	 */
-	JobSubmitter(soap* soap, transfer__TransferJob2 *job);
+	JobSubmitter(soap* soap, tns3__TransferJob2 *job);
 
 	/**
 	 * Destructor
@@ -113,7 +113,7 @@ private:
 	 *
 	 * @param jobParams - job parameters
 	 */
-	void init(transfer__TransferParams *jobParams);
+	void init(tns3__TransferParams *jobParams);
 
 	/**
 	 * Checks whether the right protocol has been used

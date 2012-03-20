@@ -1,0 +1,2 @@
+impl = "http://cern.ch/wsdl/services/fts3/config"
+config = "http://http://cern.ch/fts3/config"

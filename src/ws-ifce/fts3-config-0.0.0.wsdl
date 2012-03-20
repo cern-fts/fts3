@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions targetNamespace="http://cern.ch/wsdl/services/fts3/config"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:impl="http://cern.ch/wsdl/services/fts3/config"
+    xmlns:config="http://http://cern.ch/fts3/config"
+    xmlns:apachesoap="http://xml.apache.org/xml-soap"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <wsdl:types>
+        <schema targetNamespace="http://http://cern.ch/fts3/config" xmlns="http://www.w3.org/2001/XMLSchema">
+
+            <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+
+            <complexType name="Configuration">
+                <sequence>
+                    <element maxOccurs="unbounded" name="key" nillable="true" type="xsd:string"/>
+                    <element maxOccurs="unbounded" name="value" nillable="true" type="xsd:string"/>
+                </sequence>
+            </complexType>
+
+            <complexType name="ConfigurationException">
+                <sequence>
+                    <element name="message" nillable="true" type="xsd:string"/>
+                </sequence>
+            </complexType>
+
+            <element name="InvalidConfigurationExceptionElement" type="config:InvalidConfigurationException"/>
+
+            <complexType name="InvalidConfigurationException">
+                <complexContent>
+                    <extension base="config:ConfigurationException">
+                        <sequence/>
+                    </extension>
+                </complexContent>
+            </complexType>
+
+            <element name="AuthorizationExceptionElement" type="config:AuthorizationException"/>
+
+            <complexType name="AuthorizationException">
+                <complexContent>
+                    <extension base="config:Configuration">
+                        <sequence/>
+                    </extension>
+                </complexContent>
+            </complexType>
+
+            <element name="ServiceBusyExceptionElement" type="config:ServiceBusyException"/>
+
+            <complexType name="ServiceBusyException">
+                <complexContent>
+                    <extension base="config:ConfigurationException">
+                        <sequence/>
+                    </extension>
+                </complexContent>
+            </complexType>
+
+            <element name="InternalExceptionElement" type="config:InternalException"/>
+
+            <complexType name="InternalException">
+                <complexContent>
+                    <extension base="config:ConfigurationException">
+                        <sequence/>
+                    </extension>
+                </complexContent>
+            </complexType>
+        </schema>
+    </wsdl:types>
+
+    <message name="SetConfigurationRequest">
+        <part name="configuration" type="config:Configuration"/>
+    </message>
+
+    <message name="SetConfigurationResponse" />
+
+    <message name="GetConfigurationRequest" />
+
+    <message name="GetConfigurationResponse">
+        <part name="configuration" type="config:Configuration"/>
+    </message>
+
+    <message name="AuthorizationException">
+        <part name="fault" element="config:AuthorizationExceptionElement"/>
+    </message>
+
+    <message name="InternalException">
+        <part name="fault" element="config:InternalExceptionElement"/>
+    </message>
+
+    <message name="ServiceBusyException">
+        <part name="fault" element="config:ServiceBusyExceptionElement"/>
+    </message>
+
+    <message name="InvalidConfigurationException">
+        <part name="fault" element="config:InvalidConfigurationExceptionElement"/>
+    </message>
+
+    <portType name="Config">
+        <operation name="setConfiguration" parameterOrder="configuration">
+            <input message="impl:SetConfigurationRequest" name="SetConfigurationRequest"/>
+            <output message="impl:SetConfigurationResponse" name="SetConfigurationResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InvalidConfigurationException" name="InvalidConfigurationException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+
+        <operation name="getConfiguration">
+            <input message="impl:GetConfigurationRequest" name="GetConfigurationRequest"/>
+            <output message="impl:GetConfigurationResponse" name="GetConfigurationResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+    </portType>
+
+    <binding name="SoapBinding" type="impl:Config">
+
+        <wsdlsoap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+
+        <operation name="setConfiguration">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="SetConfigurationRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="SetConfigurationResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InvalidConfigurationException">
+                <wsdlsoap:fault name="InvalidConfigurationException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+
+        <operation name="getConfiguration">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="GetConfigurationRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="GetConfigurationResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+    </binding>
+
+    <service name="Config">
+        <port binding="impl:SoapBinding" name="Config">
+            <wsdlsoap:address location="https://localhost:8444/fts3/config"/>
+        </port>
+    </service>
+</definitions>
+

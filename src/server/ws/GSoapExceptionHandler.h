@@ -25,7 +25,7 @@
 #ifndef GSOAPEXCEPTIONHANDLER_H_
 #define GSOAPEXCEPTIONHANDLER_H_
 
-#include "gsoap_stubs.h"
+#include "gsoap_transfer_stubs.h"
 #include <string>
 
 using namespace std;
@@ -33,10 +33,10 @@ using namespace std;
 namespace fts3 { namespace ws {
 
 /**
- * The GSoapExceptionHandler class takes care of caught exceptions that inherit after transfer__TransferException.
+ * The GSoapExceptionHandler class takes care of caught exceptions that inherit after tns3__TransferException.
  *
  * Since, the soap object supports only pointers to exception objects, only pointers to exception object should be used!
- * All transfer__TransferException* objects have to be created using gSOAP specific functions, so they can automatically
+ * All tns3__TransferException* objects have to be created using gSOAP specific functions, so they can automatically
  * garbage collected later.
  *
  */
@@ -49,7 +49,7 @@ public:
 	 * @param ex - the exception that has to be handled
 	 *
 	 */
-	GSoapExceptionHandler(::soap* soap, transfer__TransferException* ex): ex(ex), soap(soap){};
+	GSoapExceptionHandler(::soap* soap, tns3__TransferException* ex): ex(ex), soap(soap){};
 
 	/**
 	 * Destructor.
@@ -62,7 +62,7 @@ public:
 	void handle();
 
 	/**
-	 * Creates a transfer__InvalidArgumentException exception.
+	 * Creates a tns3__InvalidArgumentException exception.
 	 *
 	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
 	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
@@ -74,12 +74,12 @@ public:
 	 * @param soap - the soap object that is serving the given request
 	 * @param msg - the error message of the exception
 	 *
-	 * @return pointer to the transfer__InvalidArgumentException
+	 * @return pointer to the tns3__InvalidArgumentException
 	 */
-	inline static transfer__InvalidArgumentException* createInvalidArgumentException (::soap* soap, string msg) {
+	inline static tns3__InvalidArgumentException* createInvalidArgumentException (::soap* soap, string msg) {
 
-		transfer__InvalidArgumentException* ex;
-		ex = soap_new_transfer__InvalidArgumentException(soap, -1);
+		tns3__InvalidArgumentException* ex;
+		ex = soap_new_tns3__InvalidArgumentException(soap, -1);
 		ex->message = soap_new_std__string(soap, -1);
 		*ex->message = msg;
 
@@ -87,7 +87,7 @@ public:
 	}
 
 	/**
-	 * Creates a transfer__AuthorizationException exception.
+	 * Creates a tns3__AuthorizationException exception.
 	 *
 	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
 	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
@@ -99,12 +99,12 @@ public:
 	 * @param soap - the soap object that is serving the given request
 	 * @param msg - the error message of the exception
 	 *
-	 * @return pointer to the transfer__AuthorizationException
+	 * @return pointer to the tns3__AuthorizationException
 	 */
-	inline static transfer__AuthorizationException* createAuthorizationException (::soap* soap, string msg) {
+	inline static tns3__AuthorizationException* createAuthorizationException (::soap* soap, string msg) {
 
-		transfer__AuthorizationException* ex;
-		ex = soap_new_transfer__AuthorizationException(soap, -1);
+		tns3__AuthorizationException* ex;
+		ex = soap_new_tns3__AuthorizationException(soap, -1);
 		ex->message = soap_new_std__string(soap, -1);
 		*ex->message = msg;
 
@@ -112,7 +112,7 @@ public:
 	}
 
 	/**
-	 * Creates a transfer__NotExistsException exception.
+	 * Creates a tns3__NotExistsException exception.
 	 *
 	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
 	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
@@ -124,12 +124,12 @@ public:
 	 * @param soap - the soap object that is serving the given request
 	 * @param msg - the error message of the exception
 	 *
-	 * @return pointer to the transfer__AuthorizationException
+	 * @return pointer to the tns3__AuthorizationException
 	 */
-	inline static transfer__NotExistsException* createNotExistsException (::soap* soap, string msg) {
+	inline static tns3__NotExistsException* createNotExistsException (::soap* soap, string msg) {
 
-		transfer__NotExistsException* ex;
-		ex = soap_new_transfer__NotExistsException(soap, -1);
+		tns3__NotExistsException* ex;
+		ex = soap_new_tns3__NotExistsException(soap, -1);
 		ex->message = soap_new_std__string(soap, -1);
 		*ex->message = msg;
 
@@ -164,7 +164,7 @@ private:
 	static const int v12 = 2;
 
 	/// the exception object
-	transfer__TransferException* ex;
+	tns3__TransferException* ex;
 
 	/// the soap object that is serving the given request
 	::soap* soap;

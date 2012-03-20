@@ -95,6 +95,11 @@ else ( "${GSOAP_VERSION}"  VERSION_LESS "2.7.14")
 endif ( "${GSOAP_VERSION}"  VERSION_LESS "2.7.6")
 
 
+# -----------------------------------------------------
+# GSOAP C / C++ flags
+# ----------------------------------------------------
+set (GSOAP_CXX_FLAGS "")
+
 
 # -----------------------------------------------------
 # handle the QUIETLY and REQUIRED arguments and set GSOAP_FOUND to TRUE if 

@@ -25,7 +25,7 @@
 #ifndef REQUESTLISTER_H_
 #define REQUESTLISTER_H_
 
-#include "gsoap_stubs.h"
+#include "gsoap_transfer_stubs.h"
 #include "db/generic/JobStatus.h"
 
 #include <string>
@@ -51,7 +51,7 @@ public:
 	 * @param soap - the soap object that is serving the given request
 	 * @param inGivenStates - the states of interest that should be listed
 	 */
-	RequestLister(::soap* soap, fts__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
+	RequestLister(::soap* soap, impl__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
 
 	/**
 	 * Constructor - creates a lister object that should be used
@@ -62,19 +62,19 @@ public:
 	 * @param dn - user DN
 	 * @param vo - user VO
 	 */
-	RequestLister(::soap* soap, fts__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo);
+	RequestLister(::soap* soap, impl__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo);
 
 	/**
 	 * Retrieves job statuses from DB.
 	 *
-	 * The fts__ArrayOf_USCOREtns3_USCOREJobStatus object is created using gSOAP
+	 * The impl__ArrayOf_USCOREtns3_USCOREJobStatus object is created using gSOAP
 	 * memory-allocation utility, it will be garbage collected! If there is a need
 	 * to delete it manually gSOAP dedicated functions should be used (in particular
 	 * 'soap_unlink'!).
 	 *
-	 * @return fts__ArrayOf_USCOREtns3_USCOREJobStatus object containing statuses of interest
+	 * @return impl__ArrayOf_USCOREtns3_USCOREJobStatus object containing statuses of interest
 	 */
-	fts__ArrayOf_USCOREtns3_USCOREJobStatus* list();
+	impl__ArrayOf_USCOREtns3_USCOREJobStatus* list();
 
 	/**
 	 * Destructor
@@ -90,12 +90,12 @@ private:
 	RequestLister();
 
 	/**
-	 * Check weather the states given in fts__ArrayOf_USCOREsoapenc_USCOREstring
-	 * are correct, if not a transfer__InvalidArgumentException is thrown
+	 * Check weather the states given in impl__ArrayOf_USCOREsoapenc_USCOREstring
+	 * are correct, if not a impl__InvalidArgumentException is thrown
 	 *
 	 * @param inGivenStates - the states of interest that should be listed
 	 */
-	void checkGivenStates(fts__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
+	void checkGivenStates(impl__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
 
 	/// the job statuses retrived from the DB
 	vector<JobStatus*> jobs;

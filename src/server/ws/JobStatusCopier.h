@@ -8,13 +8,13 @@
 #ifndef JOBSTATUSCOPIER_H_
 #define JOBSTATUSCOPIER_H_
 
-#include "gsoap_stubs.h"
+#include "gsoap_transfer_stubs.h"
 
 namespace fts3 { namespace ws {
 
 /**
  * The JobStatusClass carries out the task of copying data from JobStatus structs (generic)
- * into the gSOAP transfer__JobStatus. In future may be extended to copy and create instances
+ * into the gSOAP tns3__JobStatus. In future may be extended to copy and create instances
  * of other gSOAP classes.
  */
 class JobStatusCopier {
@@ -30,7 +30,7 @@ public:
 	virtual ~JobStatusCopier(){};
 
 	/*
-	 * Creates a new instance of transfer__JobStatus, and copies the data from
+	 * Creates a new instance of tns3__JobStatus, and copies the data from
 	 * JS status into this object.
 	 *
 	 * The transfer_JobStatus object is created using gSOAP memory-allocation utility, it
@@ -41,12 +41,12 @@ public:
 	 * @param soap - the soap object that is serving the given request
 	 * @param status - the job status that has to be copied
 	 *
-	 * @return a newly created transfer__JobStatus, with data copied from JS status
+	 * @return a newly created tns3__JobStatus, with data copied from JS status
 	 */
 	template <typename JS>
-	inline static transfer__JobStatus* copyJobStatus(soap* soap, JS* status) {
+	inline static tns3__JobStatus* copyJobStatus(soap* soap, JS* status) {
 
-		transfer__JobStatus* copy = soap_new_transfer__JobStatus(soap, -1);
+		tns3__JobStatus* copy = soap_new_tns3__JobStatus(soap, -1);
 
 		copy->clientDN = soap_new_std__string(soap, -1);
 		*copy->clientDN = status->clientDN;
