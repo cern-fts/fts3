@@ -17,15 +17,24 @@
  *	limitations under the License.
  */
 
-#pragma once
+#include "ws/gsoap_config_stubs.h"
 
-namespace transfer
+int config::SoapBindingService::setConfiguration
+(
+    config__Configuration *_configuration,
+    struct impl__setConfigurationResponse &response
+)
 {
-    struct SOAP_ENV__Fault;
+    return SOAP_OK;
 }
 
-using namespace transfer;
+/* ---------------------------------------------------------------------- */
 
-#include "ws-ifce/gsoap/transferFileTransferSoapBindingService.h"
-#include "ws-ifce/gsoap/transferStub.h"
+int config::SoapBindingService::getConfiguration
+(
+    struct impl__getConfigurationResponse & response
+)
+{
+    return SOAP_OK;
+}
 

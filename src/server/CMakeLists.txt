@@ -19,7 +19,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_CXX_FLAGS "-g -Wall")
 
-set(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
+set(fts3_include_dir 
+    "${PROJECT_SOURCE_DIR}/src/"
+    "${CMAKE_BINARY_DIR}/src/"
+)
+
 include_directories (${fts3_include_dir})
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
 
@@ -27,116 +31,36 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(fts3_libs "-lboost_unit_test_framework ${fts3_libs}")
 endif ()
 
-# GSOAP file generation
-find_package(gSOAP)
-
-set(generated_files_dir "${CMAKE_CURRENT_BINARY_DIR}/ws")
-include_directories (${generated_files_dir})
-file(MAKE_DIRECTORY ${generated_files_dir})
-
-set(gsoap_env_header_file "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_env.h")
-
-set(gsoap_general_source_files
-    "${generated_files_dir}/envC.cpp"
-)
-
-add_custom_command(
-    OUTPUT ${gsoap_general_source_files}
-    DEPENDS ${gsoap_env_header_file}
-    COMMAND ${GSOAP_SOAPCPP2} -d ${generated_files_dir} -penv ${gsoap_env_header_file}
-)
-
-# Generate transfer interface
-set(fts3_transfer_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-transfer-0.0.0.wsdl")
-set(gsoap_transfer_typemap "${PROJECT_SOURCE_DIR}/src/server/ws/transfer_typemap.dat")
-set(gsoap_transfer_header_file "${generated_files_dir}/gsoap_transfer_interface.h")
-set(gsoap_transfer_prefix "transfer")
-
-set(gsoap_transfer_source_files
-    "${generated_files_dir}/${gsoap_transfer_prefix}C.cpp" 
-    "${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingService.cpp" 
-    "${PROJECT_SOURCE_DIR}/src/server/gsoap.cpp"         
+# Web service / gsoap part.
+set(fts3_server_gsoap_transfer_sources
+    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/RequestLister.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapExceptionHandler.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"      
-    "${PROJECT_SOURCE_DIR}/src/server/gsoap_transfer_methods.cpp"         
+    "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_config_methods.cpp"
 )
 
-add_custom_command(
-    OUTPUT ${gsoap_transfer_header_file}
-    DEPENDS ${gsoap_transfer_typemap} ${fts3_transfer_wsdl}
-    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_transfer_typemap} ${fts3_transfer_wsdl} -o ${gsoap_transfer_header_file}
-)
-
-add_custom_command(	
-    OUTPUT ${gsoap_transfer_source_files}
-    DEPENDS ${gsoap_transfer_header_file}
-    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -S -x -p ${gsoap_transfer_prefix} -q ${gsoap_transfer_prefix} -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_transfer_header_file} 
-)
-
-
-# Generate config interface
-set(fts3_config_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-config-0.0.0.wsdl")
-set(gsoap_config_typemap "${PROJECT_SOURCE_DIR}/src/server/ws/config_typemap.dat")
-set(gsoap_config_header_file "${generated_files_dir}/gsoap_config_interface.h")
-set(gsoap_config_prefix "config")
-
-set(gsoap_config_source_files
-    "${generated_files_dir}/${gsoap_config_prefix}C.cpp"
-    "${generated_files_dir}/${gsoap_config_prefix}SoapBindingService.cpp"
-)
-
-add_custom_command(
-    OUTPUT  ${gsoap_config_header_file}
-    DEPENDS  ${gsoap_config_typemap} ${fts3_config_wsdl} 
-    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_config_typemap} ${fts3_config_wsdl} -o ${gsoap_config_header_file}
-)
-
-    MESSAGE("${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_config_typemap} ${fts3_config_wsdl} -o ${gsoap_config_header_file}")
-add_custom_command(
-    OUTPUT ${gsoap_config_source_files}
-    DEPENDS ${gsoap_config_header_file}
-    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -S -x -q ${gsoap_config_prefix} -p ${gsoap_config_prefix} -d ${generated_files_dir}  -I ${GSOAP_IMPORT_DIR} ${gsoap_config_header_file}
-)
-
-    MESSAGE(" ${GSOAP_SOAPCPP2} -n -w -i -S -x -p ${gsoap_config_prefix} -p ${gsoap_config_prefix} -d ${generated_files_dir}  -I ${GSOAP_IMPORT_DIR} ${gsoap_config_header_file}")
+add_library(fts3_server_gsoap_transfer SHARED ${fts3_server_gsoap_transfer_sources})
+set_target_properties(fts3_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
+target_link_libraries(fts3_server_gsoap_transfer "-lfts3_ws_ifce_server")
+add_dependencies(fts3_server_gsoap_transfer fts3_ws_ifce_server)
 
 # Find libuuid
 find_package(LibUuid REQUIRED)
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
-# gSOAP web service lib
-set(fts3_server_gsoap_lib_sources 
-    "${gsoap_general_source_files}" 
-    "${gsoap_transfer_source_files}"
-    "${gsoap_config_source_files}"
-)
-
-add_library(fts3_server_gsoap_lib SHARED ${fts3_server_gsoap_lib_sources})
-set_target_properties(fts3_server_gsoap_lib PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
-target_link_libraries(fts3_server_gsoap_lib -lgsoap++)
-
 # Server lib
 file(GLOB fts3_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*.cpp")
 list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
-list(REMOVE_ITEM fts3_server_lib_sources "gsoap_transfer_methods.cpp")
 add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
-add_dependencies(fts3_server_lib fts3_server_gsoap_lib)
-target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_lib ${LIBUUID_LIBRARIES} -lboost_thread-mt)
+add_dependencies(fts3_server_lib fts3_server_gsoap_transfer)
+target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_transfer ${LIBUUID_LIBRARIES} -lboost_thread-mt)
 
 # Server executable
 add_executable (fts3_server main.cpp)
 add_dependencies(fts3_server fts3_server_lib)
 target_link_libraries(fts3_server -lfts3_server_lib)
-
-# Test_Server executable
-#add_executable (test_server ws/main.cpp ${gsoap_source_files} uuid_generator.cpp)
-#add_dependencies(test_server gsoap++ uuid fts3_db_generic boost_thread-mt)
-#target_link_libraries(test_server gsoap++ uuid fts3_db_generic boost_thread-mt)
-
-install(TARGETS         fts3_server_gsoap_lib 
-	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
 install(TARGETS         fts3_server_lib 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

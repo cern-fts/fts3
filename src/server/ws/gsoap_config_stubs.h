@@ -19,13 +19,13 @@
 
 #pragma once
 
-namespace transfer
+namespace config
 {
     struct SOAP_ENV__Fault;
 }
 
-using namespace transfer;
+using namespace config;
 
-#include "ws-ifce/gsoap/transferFileTransferSoapBindingService.h"
-#include "ws-ifce/gsoap/transferStub.h"
+#include "ws-ifce/gsoap/configSoapBindingService.h"
+#include "ws-ifce/gsoap/configStub.h"
 
