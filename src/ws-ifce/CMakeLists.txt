@@ -42,6 +42,7 @@ set(gsoap_transfer_prefix "transfer")
 set(gsoap_transfer_source_files
     "${generated_files_dir}/${gsoap_transfer_prefix}C.cpp"
     "${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingService.cpp"
+    "${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingProxy.cpp"
 )
 
 add_custom_command(
@@ -65,6 +66,7 @@ set(gsoap_config_prefix "config")
 set(gsoap_config_source_files
     "${generated_files_dir}/${gsoap_config_prefix}C.cpp"
     "${generated_files_dir}/${gsoap_config_prefix}SoapBindingService.cpp"
+    "${generated_files_dir}/${gsoap_config_prefix}SoapBindingProxy.cpp"
 )
 
 add_custom_command(
