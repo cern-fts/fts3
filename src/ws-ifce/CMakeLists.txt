@@ -23,13 +23,16 @@ file(MAKE_DIRECTORY ${generated_files_dir})
 
 set(gsoap_env_header_file "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/gsoap_env.h")
 
+set(gsoap_env_generated_files
+    "${generated_files_dir}/envC.cpp"
+)
 set(gsoap_env_source_files
     "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/gsoap_env.cpp"
-    "${generated_files_dir}/envC.cpp"
+    ${gsoap_env_generated_files}
 )
 
 add_custom_command(
-    OUTPUT ${gsoap_env_source_files}
+    OUTPUT ${gsoap_env_generated_files}
     DEPENDS ${gsoap_env_header_file}
     COMMAND ${GSOAP_SOAPCPP2} -d ${generated_files_dir} -penv ${gsoap_env_header_file}
 )
