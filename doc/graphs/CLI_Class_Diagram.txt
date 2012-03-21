@@ -8,12 +8,14 @@ class CliBase {
 	+bool printVersion()
 	+bool isVerbose()
 	+bool isQuite()
-	+{abstract}string getUsageString()
+	+{abstract}string getUsageString(string)
 	
 	#variables_map vm
 	#options_description basic
 	#options_description visible
 	#options_description all
+	#options_description specific
+	#options_description hidden	
 	#positional_options_description p
 }
 
@@ -21,29 +23,56 @@ class SubmitTransferCli {
 
 	+void initCli(int, char*)
 	+bool createJobElements()
-	+string getUsageString()
+	+string getUsageString(string)
 	+transfer__TransferParams* getParams(soap*)
 	+vector<transfer__TransferJobElement * > getJobElements(soap*)
 	+vector<transfer__TransferJobElement2 * > getJobElements2(soap*)
 
-	-options_description specific
-	-options_description hidden
 	-string bulk_file
 }
 
 CliBase <|-- SubmitTransferCli
 
-class TransferStatusCli {
+class JobIDCli {
 
-	+string getUsageString()
+	+string getUsageString(string)
 	+vector<string> getJobIds()
-	+bool list()
-
-	-options_description specific
-	-options_description hidden
 }
 
-CliBase <|-- TransferStatusCli
+CliBase <|-- JobIDCli
+
+class TransferStatusCli {
+
+	+string getUsageString(string)
+	+bool list()
+}
+
+JobIDCli <|-- TransferStatusCli
+
+class VONameCli {
+	
+	+VONameCli(bool pos = true)
+	+string getUsageString(string)
+	+string getVOName()
+}
+
+CliBase <|-- VONameCli
+
+class DNCli {
+	+string getUsageString(string)
+	+string getUserDn()
+}
+
+CliBase <|-- DNCli
+
+class ListTransferCli {
+	+string getUsageString(string)
+	+bool checkIfFeaturesSupported()
+	+impl__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray(soap*)
+}
+
+VONameCli <|-- ListTransferCli
+DNCli <|-- ListTransferCli
 
 class SrvManager {
 
@@ -90,5 +119,11 @@ class FileTransferSoapBindingProxy {
 }
 
 SrvManager ..> FileTransferSoapBindingProxy
+
+CliBase ..> SrvManager
+ListTransferCli ..> SrvManager
+SubmitTransferCli ..>SrvManager
+
+
 
 @enduml
