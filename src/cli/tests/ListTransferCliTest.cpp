@@ -54,7 +54,7 @@ BOOST_FIXTURE_TEST_CASE (ListTransferCli_Status_Test, ListTransferCli) {
 	initCli(7, const_cast<char**>(av));
 
 	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
-	fts__ArrayOf_USCOREsoapenc_USCOREstring* arr = getStatusArray(&service);
+	impl__ArrayOf_USCOREsoapenc_USCOREstring* arr = getStatusArray(&service);
 	const vector<string>& statuses = arr->item;
 	BOOST_CHECK(statuses.size() == 6);
 	BOOST_CHECK(statuses[0].compare("status1") == 0);

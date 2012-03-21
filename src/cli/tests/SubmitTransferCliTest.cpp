@@ -28,9 +28,123 @@
 #include "ServiceProxyHolder.h"
 #include "common/JobParameterHandler.h"
 
+#include <fstream>
+#include <iostream>
+using namespace std;
+
 using namespace fts3::cli;
 using namespace fts3::common;
 
+BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_File, SubmitTransferCli) {
+
+	// creat a tmeporary file with bulk-job description
+	fstream fs("/tmp/bulk", fstream::out);
+	if (!fs) {
+		cout << "It was not possible to carry out the bulk-job test!" << endl;
+		return;
+	}
+
+	fs << "source1 destination1 Alg:check1" << endl;
+	fs << "source2 destination2" << endl;
+
+	fs.flush();
+	fs.close();
+
+	// has to be const otherwise is deprecated
+	const char* av[] = {"prog_name",
+			"-f", "/tmp/bulk"
+	};
+
+	initCli(3, const_cast<char**>(av));
+
+	BOOST_CHECK(createJobElements());
+	BOOST_CHECK(useCheckSum());
+
+	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	vector<tns3__TransferJobElement2*> elements = getJobElements2(&service);
+
+	BOOST_CHECK(elements.size() == 2);
+
+	BOOST_CHECK(elements[0]->source->compare("source1") == 0);
+	BOOST_CHECK(elements[0]->dest->compare("destination1") == 0);
+	BOOST_CHECK(elements[0]->checksum->compare("Alg:check1") == 0);
+
+	BOOST_CHECK(elements[1]->source->compare("source2") == 0);
+	BOOST_CHECK(elements[1]->dest->compare("destination2") == 0);
+	BOOST_CHECK(elements[1]->checksum->empty());
+}
+
+BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_OtherOptions, SubmitTransferCli) {
+	// has to be const otherwise is deprecated
+	const char* av[] = {"prog_name",
+			"-b",
+			"-p", "P@ssw0rd",
+			"-i", "23",
+			"-e", "1234"
+	};
+
+	initCli(8, const_cast<char**>(av));
+
+	BOOST_CHECK(isBlocking());
+	BOOST_CHECK(vm["interval"].as<int>() == 23);
+	BOOST_CHECK(vm["expire"].as<long>() == 1234);
+
+	mute();
+	performChecks();
+	unmute();
+
+	BOOST_CHECK(getPassword().compare("P@ssw0rd") == 0);
+}
+
+BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_JobElements, SubmitTransferCli) {
+
+	// has to be const otherwise is deprecated
+	const char* av[] = {"prog_name",
+			"source",
+			"destination"
+	};
+
+	initCli(3, const_cast<char**>(av));
+
+	BOOST_CHECK(getSource().compare("source") == 0);
+	BOOST_CHECK(getDestination().compare("destination") == 0);
+
+	BOOST_CHECK(createJobElements());
+	BOOST_CHECK(!useCheckSum());
+
+	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	vector<tns3__TransferJobElement*> elements = getJobElements(&service);
+
+	BOOST_CHECK(elements.size() == 1);
+	BOOST_CHECK(elements[0]->source->compare("source") == 0);
+	BOOST_CHECK(elements[0]->dest->compare("destination") == 0);
+}
+
+BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_JobElements2, SubmitTransferCli) {
+
+	// has to be const otherwise is deprecated
+	const char* av[] = {"prog_name",
+			"source",
+			"destination",
+			"ALGORITHM:1234af"
+	};
+
+	initCli(4, const_cast<char**>(av));
+
+	BOOST_CHECK(getSource().compare("source") == 0);
+	BOOST_CHECK(getDestination().compare("destination") == 0);
+
+	BOOST_CHECK(createJobElements());
+	BOOST_CHECK(useCheckSum());
+
+	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	vector<tns3__TransferJobElement2*> elements = getJobElements2(&service);
+
+	BOOST_CHECK(elements.size() == 1);
+	BOOST_CHECK(elements[0]->source->compare("source") == 0);
+	BOOST_CHECK(elements[0]->dest->compare("destination") == 0);
+	BOOST_CHECK(elements[0]->checksum->compare("ALGORITHM:1234af") == 0);
+}
 
 BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli) {
 
@@ -51,7 +165,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli) {
 	initCli(17, const_cast<char**>(av));
 
 	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
-	transfer__TransferParams* params = getParams(&service);
+	tns3__TransferParams* params = getParams(&service);
 
 	JobParameterHandler handler;
 	handler(params->keys, params->values);
