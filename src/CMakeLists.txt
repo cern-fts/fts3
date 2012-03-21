@@ -24,6 +24,9 @@ add_subdirectory(db)
 add_subdirectory(ws-ifce)
 add_subdirectory(cli)
 add_subdirectory(server)
+add_subdirectory(url-copy)
+
+
 
 if(FTS3_COMPILE_WITH_UNITTEST)
 	add_subdirectory(unittest)

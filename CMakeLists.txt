@@ -22,6 +22,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 link_directories (${PROJECT_BINARY_DIR}/src/common) 
 link_directories (${PROJECT_BINARY_DIR}/src/ws-ifce) 
 link_directories (${PROJECT_BINARY_DIR}/src/config) 
+link_directories (${PROJECT_BINARY_DIR}/src/url-copy) 
 link_directories (${PROJECT_BINARY_DIR}/src/server) 
 link_directories (${PROJECT_BINARY_DIR}/src/db/generic) 
 

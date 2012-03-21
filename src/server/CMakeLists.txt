@@ -25,6 +25,8 @@ set(fts3_include_dir
 )
 
 include_directories (${fts3_include_dir})
+include_directories (${PROJECT_SOURCE_DIR}/src/url-copy/)
+include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -60,7 +62,11 @@ target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_transfer 
 # Server executable
 add_executable (fts3_server main.cpp)
 add_dependencies(fts3_server fts3_server_lib)
-target_link_libraries(fts3_server -lfts3_server_lib)
+target_link_libraries(fts3_server -lfts3_server_lib )
+
+install(TARGETS         fts3_server_gsoap_transfer 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
 install(TARGETS         fts3_server_lib 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

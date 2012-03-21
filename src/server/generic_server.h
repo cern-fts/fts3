@@ -41,6 +41,8 @@ public:
 	    const std::string& ip = theServerConfig().get<std::string>("IP");
         typename TRAITS::TransferWebServiceType handler;
         handler.listen_p(port, ip);
+	typename TRAITS::ProcessServiceType processHandler;
+        processHandler.executeTransfer_p();	
         TRAITS::ThreadPoolType::instance().wait();
     }
 
