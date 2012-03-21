@@ -187,7 +187,7 @@ bool SubmitTransferCli::createJobElements() {
 				cout << "Checksum format is not valid (ALGORITHM:1234af)." << endl;
 				return false;
 			}
-			checksum = true;
+			this->checksum = true;
     	}
 
     	// then if the source and destination have been given create a Task
