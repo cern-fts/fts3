@@ -9,7 +9,7 @@ OracleConnection::OracleConnection(std::string username, std::string password, s
         env = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::THREADED_MUTEXED);
         if (env) {
             conn = env->createConnection(username, password, connectString);
-	    conn->setStmtCacheSize(500);
+	    conn->setStmtCacheSize(1000);	    
         }
     } catch (oracle::occi::SQLException const &e) {
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));   

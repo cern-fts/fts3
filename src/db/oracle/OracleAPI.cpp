@@ -19,6 +19,126 @@ void OracleAPI::init(std::string username, std::string password, std::string con
         conn = new OracleConnection(username, password, connectString);
 }
 
+void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
+    TransferJobs* tr_jobs = NULL;
+    std::vector<TransferJobs*>::iterator iter;
+    const std::string tag = "getSubmittedJobs";
+    const std::string updateTag = "getSubmittedJobsUpdate";
+    std::string update = "update t_job set job_state='ACTIVE' WHERE job_id=:1";
+    std::string query_stmt = "SELECT "
+            " t_job.job_id, "
+            " t_job.job_state, "
+            " t_job.vo_name,  "
+            " t_job.priority,  "
+            " t_job.source, "
+            " t_job.dest,  "
+            " t_job.agent_dn, "
+            " t_job.submit_host, "
+            " t_job.source_se, "
+            " t_job.dest_se, "
+            " t_job.user_dn, "
+            " t_job.user_cred, "
+            " t_job.cred_id,  "
+            " t_job.space_token, "
+            " t_job.storage_class,  "
+            " t_job.job_params, "
+            " t_job.overwrite_flag, "
+            " t_job.source_space_token, "
+            " t_job.source_token_description,"
+            " t_job.copy_pin_lifetime, "
+            " t_job.checksum_method "
+            " FROM t_job, t_file"
+            " WHERE t_job.job_id = t_file.job_id"
+            " AND t_job.job_state = 'SUBMITTED'"
+            " AND t_file.file_state = 'SUBMITTED'"
+            " AND t_job.job_finished is NULL"
+            " AND t_job.CANCEL_JOB is NULL"
+            " AND t_file.job_finished is NULL"
+            " AND rownum <=:1  ORDER BY t_job.priority DESC"
+            " , SYS_EXTRACT_UTC(t_job.submit_time)";
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
+        oracle::occi::Statement* up = conn->createStatement(update, updateTag);
+        s->setInt(1, 10);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while (r->next()) {
+            tr_jobs = new TransferJobs();
+            tr_jobs->JOB_ID = r->getString(1);
+            tr_jobs->JOB_STATE = r->getString(2);
+            tr_jobs->VO_NAME = r->getString(3);
+            tr_jobs->PRIORITY = r->getInt(4);
+            tr_jobs->SOURCE = r->getString(5);
+            tr_jobs->DEST = r->getString(6);
+            tr_jobs->AGENT_DN = r->getString(7);
+            tr_jobs->SUBMIT_HOST = r->getString(8);
+            tr_jobs->SOURCE_SE = r->getString(9);
+            tr_jobs->DEST_SE = r->getString(10);
+            tr_jobs->USER_DN = r->getString(11);
+            tr_jobs->USER_CRED = r->getString(12);
+            tr_jobs->CRED_ID = r->getString(13);
+            tr_jobs->SPACE_TOKEN = r->getString(14);
+            tr_jobs->STORAGE_CLASS = r->getString(15);
+            tr_jobs->INTERNAL_JOB_PARAMS = r->getString(16);
+            tr_jobs->OVERWRITE_FLAG = r->getString(17);
+            tr_jobs->SOURCE_SPACE_TOKEN = r->getString(18);
+            tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
+            tr_jobs->COPY_PIN_LIFETIME = r->getInt(20);
+            tr_jobs->CHECKSUM_METHOD = r->getString(21);
+            jobs.push_back(tr_jobs);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+        for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
+            TransferJobs* temp = (TransferJobs*) * iter;
+            up->setString(1, std::string(temp->JOB_ID));
+            up->executeUpdate();
+        }
+        conn->commit();
+
+        conn->destroyStatement(up, updateTag);
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+}
+
+void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
+    TransferFiles* tr_files = NULL;
+    std::vector<TransferJobs*>::iterator iter;
+    std::string selecttag = "getByJobId";
+    std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_file.file_id,  t_file.file_state, t_file.logical_name, "
+            " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, t_file.catalog_failures, t_file.prestage_failures, t_file.filesize,"
+            " t_file.checksum, t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, t_file.error_scope, t_file.error_phase "
+            " FROM t_file, t_job WHERE"
+            " t_job.job_id = :1 AND t_file.job_id = t_job.job_id AND t_file.job_finished is NULL AND t_job.job_finished is NULL";
+    try {
+
+        oracle::occi::Statement* s = conn->createStatement(select, selecttag);
+
+        for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
+            TransferJobs* temp = (TransferJobs*) * iter;
+            std::string job_id = std::string(temp->JOB_ID);
+            s->setString(1, job_id);
+            oracle::occi::ResultSet* r = conn->createResultset(s);
+            while (r->next()) {
+                tr_files = new TransferFiles();
+                tr_files->SOURCE_SURL = r->getString(1);
+                tr_files->DEST_SURL = r->getString(2);
+		tr_files->JOB_ID = r->getString(3);
+                files.push_back(tr_files);
+            }
+            conn->destroyResultset(s, r);
+        }
+        conn->destroyStatement(s, selecttag);
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
 void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
@@ -27,7 +147,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     /*
             Required fields
             JOB_ID 				   NOT NULL CHAR(36)
-            JOB_STATE			   NOT NULL VARCHAR2(32)
+            JOB_STATE			   	   NOT NULL VARCHAR2(32)
             USER_DN				   NOT NULL VARCHAR2(1024)
      */
 
@@ -240,14 +360,13 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
     }
 
     if (restrictToClientDN.length() > 0) {
-        sel.append(" LEFT OUTER JOIN t_channel_acl C ON J.channel_name = C.channel_name LEFT OUTER JOIN t_vo_acl V ON J.vo_name = V.vo_name ");
+        sel.append(" LEFT OUTER JOIN T_SE_PAIR_ACL C ON J.SE_PAIR_NAME = C.SE_PAIR_NAME LEFT OUTER JOIN t_vo_acl V ON J.vo_name = V.vo_name ");
     }
 
     if (inGivenStates.size() > 0) {
         sel.append(" WHERE J.job_state IN (" + jobStatuses + ") ");
-    }
-    else{
-    	sel.append(" WHERE J.job_state <> '0' ");
+    } else {
+        sel.append(" WHERE J.job_state <> '0' ");
     }
 
     if (restrictToClientDN.length() > 0) {

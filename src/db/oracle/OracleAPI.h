@@ -54,6 +54,10 @@ public:
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
 
+    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs);
+    
+    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files);
+    
 
     /*virtual void setVOLimit(std::string channelUpperName, std::string voName, int limit);
 

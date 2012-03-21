@@ -35,6 +35,8 @@
 #include "SePair.h"
 #include "TransferJobSummary.h"
 #include "Se.h"
+#include "TransferJobs.h"
+#include "TransferFiles.h"
 
 /**
  * GenericDbIfce class declaration
@@ -80,6 +82,11 @@ public:
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
  
+    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs) = 0;
+    
+    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) = 0;
+ 
+    
  /*
     virtual std::vector<FileTransferStatus> getFileStatus(std::string requestID, int offset, int limit) = 0;
 
