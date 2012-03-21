@@ -9,7 +9,6 @@
 #include "ServiceProxyHolder.h"
 #include "ui/ListTransferCli.h"
 #include "SrvManager.h"
-#include "evn.h"
 
 using namespace std;
 using namespace fts3::cli;

@@ -20,7 +20,6 @@
 #include "ServiceProxyHolder.h"
 #include "ui/TransferStatusCli.h"
 #include "SrvManager.h"
-#include "evn.h"
 
 #include <vector>
 #include <string>

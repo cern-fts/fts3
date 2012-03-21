@@ -13,7 +13,7 @@ const std::string BOOLEAN_FALSE_STR = "N";
 
 time_t OracleTypeConversions::toTimeT(const ::oracle::occi::Timestamp& timestamp){
     time_t t = (time_t)-1;
-    
+
         if(!timestamp.isNull()){
             int year;
             unsigned int month,day,hour,minute,second,fs;
@@ -25,7 +25,7 @@ time_t OracleTypeConversions::toTimeT(const ::oracle::occi::Timestamp& timestamp
             timestamp.getTime(hour,minute,second,fs);
             // Get TimeZone Offset
             timestamp.getTimeZoneOffset(tz_hour,tz_minute);
-            
+
             struct tm tmp_tm;
             tmp_tm.tm_sec   = second;
             tmp_tm.tm_min   = minute - tz_minute;
@@ -36,21 +36,21 @@ time_t OracleTypeConversions::toTimeT(const ::oracle::occi::Timestamp& timestamp
             tmp_tm.tm_wday  = 0;
             tmp_tm.tm_yday  = 0;
             tmp_tm.tm_isdst = 0;
-        
+
             // Get Time Value
             t = mktime(&tmp_tm);
             if((time_t)-1 == t){
                // m_log_error("Cannot Convert Timestamp " << timestamp.toText("dd/mm/yyyy hh:mi:ss [tzh:tzm]",0));
             } else {
-                t -= timezone;             
-            }            
+                t -= timezone;
+            }
         }
-	return t;	
+	return t;
 }
 
 oracle::occi::Timestamp OracleTypeConversions::toTimestamp(time_t t, oracle::occi::Environment* m_env){
     oracle::occi::Timestamp timestamp;
-    try{    
+    try{
         struct tm * tmp_tm = gmtime(&t);
         if(0 != tmp_tm){
             timestamp = oracle::occi::Timestamp(m_env,                  // Environment
@@ -67,14 +67,14 @@ oracle::occi::Timestamp OracleTypeConversions::toTimestamp(time_t t, oracle::occ
     } catch(const oracle::occi::SQLException& e){
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
-    
+
     return timestamp;
 }
 
 
 longlong OracleTypeConversions::toLongLong(const ::oracle::occi::Number& number, oracle::occi::Environment* m_env){
     longlong n = -1;
-    try{    
+    try{
         if(!number.isNull()){
             std::string n_str = number.toText(m_env,LONGLONG_FMT);
             n = atoll(n_str.c_str());
@@ -87,22 +87,22 @@ longlong OracleTypeConversions::toLongLong(const ::oracle::occi::Number& number,
 
 
 oracle::occi::Number OracleTypeConversions::toNumber(longlong n, oracle::occi::Environment* m_env){
-    std::string n_str;    
+    std::string n_str;
     std::stringstream str;
     str << n;
     n_str = str.str();
 
     oracle::occi::Number number(0);
-    try{    
-        number.fromText(m_env,n_str,LONGLONG_FMT);        
+    try{
+        number.fromText(m_env,n_str,LONGLONG_FMT);
     } catch(const oracle::occi::SQLException& e){
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what())); 
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
     return number;
 }
 
 
-bool OracleTypeConversions::toBoolean(const std::string& str, bool defaultValue){
+bool OracleTypeConversions::toBoolean(const std::string& str, bool){
     if(str.empty()){
         return false;
     }
@@ -129,13 +129,13 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
 
         // reserve some space on the string
         str.resize(len, 0);
-        char * buffer = &(*(str.begin())); 
+        char * buffer = &(*(str.begin()));
 
         // Get the stream
         StreamPtr<oracle::occi::Clob> instream(clob, clob.getStream(1,0));
         instream->readBuffer(buffer, len);
 
-        // Close the Clob and the related stream        
+        // Close the Clob and the related stream
         clob.close();
     } catch(const ::oracle::occi::SQLException&  exc){
         //Close the Clob
@@ -143,7 +143,7 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
             clob.close();
         }catch(...){}
         std::string reason = (std::string)"Failed to read clob: " + exc.getMessage();
-	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(reason));        
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(reason));
     }
 }
 

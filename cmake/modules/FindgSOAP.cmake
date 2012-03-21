@@ -98,7 +98,9 @@ endif ( "${GSOAP_VERSION}"  VERSION_LESS "2.7.6")
 # -----------------------------------------------------
 # GSOAP C / C++ flags
 # ----------------------------------------------------
-set (GSOAP_CXX_FLAGS "")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set (GSOAP_CXX_FLAGS "-DSOAP_DEBUG -DSOAP_MEM_DEBUG")
+endif ()
 
 
 # -----------------------------------------------------

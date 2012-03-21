@@ -20,7 +20,6 @@
 #include "ServiceProxyHolder.h"
 #include "ui/SubmitTransferCli.h"
 #include "SrvManager.h"
-#include "evn.h"
 #include "common/JobStatusHandler.h"
 
 #include <exception>

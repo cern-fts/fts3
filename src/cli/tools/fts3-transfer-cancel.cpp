@@ -20,7 +20,6 @@
 #include "ServiceProxyHolder.h"
 #include "ui/JobIDCli.h"
 #include "SrvManager.h"
-#include "evn.h"
 
 #include <exception>
 #include <iostream>

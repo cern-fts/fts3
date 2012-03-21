@@ -100,7 +100,7 @@ bool SrvManager::initSoap(soap* soap, string endpoint) {
 	return true;
 }
 
-void SrvManager::delegateProxyCert(string endpoint) {
+void SrvManager::delegateProxyCert(string) {
 
 	// is there a reson for glite_discover_endpoint ???
 

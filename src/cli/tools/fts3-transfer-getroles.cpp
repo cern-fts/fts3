@@ -25,7 +25,6 @@
 #include "ServiceProxyHolder.h"
 #include "ui/DNCli.h"
 #include "SrvManager.h"
-#include "evn.h"
 
 #include <exception>
 

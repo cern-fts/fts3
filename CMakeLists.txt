@@ -26,18 +26,19 @@ link_directories (${PROJECT_BINARY_DIR}/src/url-copy)
 link_directories (${PROJECT_BINARY_DIR}/src/server) 
 link_directories (${PROJECT_BINARY_DIR}/src/db/generic) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
 include(DefineInstallationPaths REQUIRED)
 
-
-ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
-
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     MESSAGE ("Building with Debug settings...")
-    add_definitions (-DFTS3_COMPILE_WITH_UNITTEST)
+    add_definitions (-DFTS3_COMPILE_WITH_UNITTEST -D_DEBUG)
     OPTION(FTS3_COMPILE_WITH_UNITTEST "Build with unit test" ON)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+else ()
+    ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
+    add_definitions (-DNDEBUG)
 endif ()
 
 SET(Boost_DEBUG ON)

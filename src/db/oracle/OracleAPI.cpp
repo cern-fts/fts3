@@ -142,7 +142,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-        const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
+        const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod) {
     /*
             Required fields
@@ -182,11 +182,11 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->setString(15, sourceSpaceToken); //source_token_description
         s_job_statement->setInt(16, copyPinLifeTime); //copy_pin_lifetime
         s_job_statement->setString(17, lanConnection); //lan_connection
-        s_job_statement->setString(18, failNearLine); //fail_nearline	
+        s_job_statement->setString(18, failNearLine); //fail_nearline
         if (checksumMethod.length() == 0)
             s_job_statement->setNull(19, oracle::occi::OCCICHAR);
         else
-            s_job_statement->setString(19, "Y"); //checksum_method		
+            s_job_statement->setString(19, "Y"); //checksum_method
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id
@@ -347,7 +347,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
     if (inGivenStates.size() > 0) {
         foundCancel = std::find_if(inGivenStates.begin(), inGivenStates.end(), bind2nd(std::equal_to<std::string > (), std::string("Canceling")));
-        if (foundCancel == inGivenStates.end()) { //not found 
+        if (foundCancel == inGivenStates.end()) { //not found
             checkForCanceling = true;
         }
     }

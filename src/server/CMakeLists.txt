@@ -17,8 +17,6 @@ cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(CMAKE_CXX_FLAGS "-g -Wall")
-
 set(fts3_include_dir 
     "${PROJECT_SOURCE_DIR}/src/"
     "${CMAKE_BINARY_DIR}/src/"

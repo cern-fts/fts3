@@ -24,6 +24,7 @@ file(MAKE_DIRECTORY ${generated_files_dir})
 set(gsoap_env_header_file "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/gsoap_env.h")
 
 set(gsoap_env_source_files
+    "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/gsoap_env.cpp"
     "${generated_files_dir}/envC.cpp"
 )
 
@@ -91,9 +92,9 @@ target_link_libraries(fts3_ws_ifce_server -lgsoap++)
 
 # Client side library 
 add_library(fts3_ws_ifce_client SHARED
+    ${gsoap_env_source_files}
     ${generated_files_dir}/${gsoap_transfer_prefix}C.cpp
     ${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingProxy.cpp
-    ${generated_files_dir}/envC.cpp
     ${generated_files_dir}/${gsoap_config_prefix}C.cpp
     ${generated_files_dir}/${gsoap_config_prefix}SoapBindingProxy.cpp
 )

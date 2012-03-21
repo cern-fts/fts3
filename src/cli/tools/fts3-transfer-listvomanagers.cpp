@@ -22,7 +22,6 @@
 #include "ServiceProxyHolder.h"
 #include "ui/VONameCli.h"
 #include "SrvManager.h"
-#include "evn.h"
 
 #include <exception>
 #include <string>
