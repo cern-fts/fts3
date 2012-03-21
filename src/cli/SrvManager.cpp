@@ -40,7 +40,7 @@ using namespace std;
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "fts.nsmap"
+#include "ws-ifce/gsoap/transfer.nsmap"
 
 using namespace boost;
 using namespace fts3::cli;
@@ -92,7 +92,7 @@ bool SrvManager::initSoap(soap* soap, string endpoint) {
     }
 
     // set the namespaces
-	if (soap_set_namespaces(soap, fts_namespaces)) {
+	if (soap_set_namespaces(soap, transfer_namespaces)) {
 		cout << "Failed to set SOAP namespaces." << endl;
 		return false;
 	}
