@@ -9,7 +9,10 @@
     }
  
     // ctor for producer (fts3_url_copy)
-    QueueManager::QueueManager(std::string job_id, std::string file_id) : drop_(true), mq_(new message_queue(open_only, FTS3_MQ_NAME)) {}
+    QueueManager::QueueManager(std::string job_id, std::string file_id) : drop_(true), mq_(new message_queue(open_only, FTS3_MQ_NAME)) {
+    	job_id = std::string("");
+	file_id = std::string("");
+    }
  
     QueueManager::~QueueManager() { if(drop_) remove(); }
  

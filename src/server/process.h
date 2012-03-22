@@ -29,8 +29,8 @@ public:
 
 private:
     
-    int execProcess(const int argc, char** argv);
-    int execProcessLog(const int argc, char** argv);
+    int execProcess(int argc, char** argv);
+    int execProcessLog(int argc, char** argv);
     
     int execProcessShell(const char* shell);
     int execProcessShellLog(const char* shell);

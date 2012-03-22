@@ -25,6 +25,8 @@
 #include <errno.h>
 #include "process.h"
 #include "stringhelper.h"
+#include "common/logger.h"
+#include "common/error.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace std;
@@ -41,7 +43,7 @@ int ExecuteProcess::executeProcess()
     list<string> args;
     split( m_arguments, ' ', args, 0, false );
 
-    const int argc = 1 + args.size() + 1; 
+    int argc = 1 + args.size() + 1; 
 
     char** argv = new char*[argc];
     list<string>::iterator it = args.begin();
@@ -102,11 +104,16 @@ std::string ExecuteProcess::generate_request_id(const std::string& prefix){
 }
 
 
-int ExecuteProcess::execProcessLog(const int argc, char** argv)
+int ExecuteProcess::execProcessLog(int argc, char** argv)
 {
     int status = 0;
     int fdpipe[2];
-    pipe( fdpipe );
+    size_t write_size;
+    argc = 0;    
+    int value = 0;
+    value = pipe( fdpipe );
+    if(value != 0)
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << " Pipe system call failed, errno: " << errno << commit;
 
     pid_t pid = fork();
     if ( pid == 0 ) {
@@ -124,16 +131,15 @@ int ExecuteProcess::execProcessLog(const int argc, char** argv)
         // parent process
         close( fdpipe[1] );
 
-	char readbuf[1024];
+	char readbuf[1024]={0};
 	int bytes, wpval;
 
 	while ( (wpval = waitpid ( pid, &status, WNOHANG )) == 0 ) {
 	    while ( (bytes=read(fdpipe[0], readbuf, sizeof(readbuf)-1)) > 0 ) {
 	        readbuf[bytes] = 0;
-		printf("%s", readbuf);
                 fflush(stdout);
                 fflush(stderr);
-                write( m_fdlog, readbuf, bytes );
+                write_size = write( m_fdlog, readbuf, bytes );
 	    }
 	}
 
@@ -146,9 +152,10 @@ int ExecuteProcess::execProcessLog(const int argc, char** argv)
 }
 
 
-int ExecuteProcess::execProcess(const int argc, char** argv)
+int ExecuteProcess::execProcess(int argc, char** argv)
 {
     int status = 0;
+    argc = 0;
     pid_t pid = fork();
     if ( pid == 0 ) {
         // child process
@@ -189,9 +196,13 @@ int ExecuteProcess::executeProcessShell()
 int ExecuteProcess::execProcessShellLog(const char* SHELL)
 {
     int status = 0;
-
+    size_t write_size;
     int fdpipe[2];
-    pipe( fdpipe );
+    int value = 0;
+    value = pipe( fdpipe );
+    if(value != 0)
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << " Pipe system call failed, errno: " << errno << commit;
+    
 
     pid_t pid = fork();
     if ( pid == 0 ) {
@@ -217,7 +228,7 @@ int ExecuteProcess::execProcessShellLog(const char* SHELL)
 	        readbuf[bytes] = 0;
                 fflush(stdout);
                 fflush(stderr);
-                write( m_fdlog, readbuf, bytes );
+                write_size = write( m_fdlog, readbuf, bytes );
 	    }
 	}
 

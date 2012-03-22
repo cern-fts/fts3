@@ -40,7 +40,7 @@ string stripWhiteSpace( const string& s )
 
     int pos = 0;
     string line = s;
-    string::size_type len = line.length();
+    int len = (int) line.length();
     while ( pos < len && isspace( line[pos] ) ) {
         ++pos;
     }

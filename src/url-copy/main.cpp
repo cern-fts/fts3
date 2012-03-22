@@ -125,7 +125,9 @@ int main(int argc, char **argv) {
 
     if (vm.count("daemonize")) {
     	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Daemonize was set" << commit;		                               
-        daemon(0, 0);
+        int value = daemon(0, 0);
+	if(value != 0)
+	    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed to set daemon, will continue atatched to the controlling terminal " << commit;		                               	
     }
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) <<  " Transfer Accepted" << commit;
