@@ -38,7 +38,7 @@ public:
 
 protected:
 
-    FileTransferSoapBindingService _srv;
+    static FileTransferSoapBindingService _srv;
 };
 
 FTS3_SERVER_NAMESPACE_END

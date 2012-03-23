@@ -21,10 +21,21 @@ limitations under the License. */
 #include "common/logger.h"
 #include "common/error.h"
 
+#include "parser.h"
+//#include "config_set_cli_options.h"
+
+
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
+#if 0
+struct Traits
+{
+    typedef ConfigSetCliOptions CliOptions;
+    typedef Parser Parser;
 
+};
+#endif
 using namespace FTS3_COMMON_NAMESPACE;
 
 /* -------------------------------------------------------------------------- */
@@ -32,7 +43,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 int main (int , char** )
 {
     int ret = 0;
-    //ret = FTS3_CLI_NAMESPACE::Fts3ConfigSet::Execute(argc, argv);
+    // = FTS3_CLI_NAMESPACE::Fts3ConfigSet::Execute(argc, argv);
 
     return ret;
 }

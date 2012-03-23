@@ -67,5 +67,7 @@ Pointer<GSoapMethodHandler>::Shared GSoapAcceptor::accept()
     return handler;
 }
 
+FileTransferSoapBindingService GSoapAcceptor::_srv;
+
 FTS3_SERVER_NAMESPACE_END
 

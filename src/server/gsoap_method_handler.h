@@ -19,8 +19,6 @@ limitations under the License. */
 #include "common/pointers.h"
 #include "ws/gsoap_transfer_stubs.h"
 
-class FileTransferSoapBindingService;
-
 FTS3_SERVER_NAMESPACE_START
 
 using namespace FTS3_COMMON_NAMESPACE;
