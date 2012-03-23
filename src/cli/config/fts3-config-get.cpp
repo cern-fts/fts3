@@ -16,7 +16,7 @@ limitations under the License. */
 /** \file fts3-config-get Implementation of fts3-config-get command. */
 
 #include "cli_dev.h"
-#include "fts3_config_get.h"
+#include "fts3_config_get_class.h"
 
 #include "common/logger.h"
 #include "common/error.h"

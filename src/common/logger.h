@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 /** \file logger.h Interface of FTS3 logger component. */
@@ -38,7 +38,7 @@ typedef GenericLogger<LoggerTraits_Syslog> Logger;
 
 /* -------------------------------------------------------------------------- */
 
-/// Singleton access of logger. 
+/// Singleton access of logger.
 inline Logger& theLogger()
 {
     static Logger logger;
@@ -55,7 +55,7 @@ FTS3_COMMON_NAMESPACE_END
  *
  * You can use normal stream constructs. Do not forget commit!
  *
- * The log level labels are system specific, 
+ * The log level labels are system specific,
  */
 #define FTS3_COMMON_LOGGER_NEWLOG(aLevel)	\
 	FTS3_COMMON_NAMESPACE::theLogger().newLog<FTS3_COMMON_NAMESPACE::Logger::type_traits::aLevel>(__FILE__, __FUNCTION__, __LINE__)

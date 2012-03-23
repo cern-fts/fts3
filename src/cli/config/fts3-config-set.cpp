@@ -16,7 +16,7 @@ limitations under the License. */
 /** \file fts3-config-set Implementation of fts3-config-set command. */
 
 #include "cli_dev.h"
-#include "fts3_config_set.h"
+#include "fts3_config_set_class.h"
 
 #include "common/logger.h"
 #include "common/error.h"
@@ -27,61 +27,12 @@ limitations under the License. */
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-FTS3_CLI_NAMESPACE_START
-
 /* -------------------------------------------------------------------------- */
 
-Fts3ConfigSet::Fts3ConfigSet()
-{
-    // EMPTY
-}
-
-/* -------------------------------------------------------------------------- */
-
-Fts3ConfigSet::~Fts3ConfigSet()
-{
-    // EMPTY
-}
-
-/* -------------------------------------------------------------------------- */
-
-void Fts3ConfigSet::Execute
-(
-    int ,
-    char**
-)
-{
-
-}
-
-/* -------------------------------------------------------------------------- */
-#ifdef FTS3_COMPILE_WITH_UNITTEST
-
-/** Test if base constructors have been called */
-BOOST_FIXTURE_TEST_CASE (TEST_NAME, Fts3ConfigSet)
-{
-
-}
-
-#endif // FTS3_COMPILE_WITH_UNITTESTS
-
-FTS3_CLI_NAMESPACE_END
-
-/* -------------------------------------------------------------------------- */
-
-int main (int argc, char** argv)
+int main (int , char** )
 {
     int ret = 0;
-
-    try
-    {
-        FTS3_CLI_NAMESPACE::Fts3ConfigSet::Execute(argc, argv);
-    }
-    catch(...)
-    {
-        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Unknown exception..." << commit;
-        ret = -1;
-    }
+    //ret = FTS3_CLI_NAMESPACE::Fts3ConfigSet::Execute(argc, argv);
 
     return ret;
 }

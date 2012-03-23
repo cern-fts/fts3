@@ -24,7 +24,12 @@ include_directories (${fts3_include_dir})
 
 add_executable (fts3_unittest ${sources})
 
-SET(fts3_libs "-lfts3_config -lfts3_common -lfts3_server_lib")
+SET(fts3_libs 
+    -lfts3_config 
+    -lfts3_common 
+    -lfts3_server_lib
+    -lfts3_cli_config_common
+)
 
 target_link_libraries(fts3_unittest -lboost_unit_test_framework ${fts3_libs})
 

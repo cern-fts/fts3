@@ -25,6 +25,7 @@ link_directories (${PROJECT_BINARY_DIR}/src/config)
 link_directories (${PROJECT_BINARY_DIR}/src/url-copy) 
 link_directories (${PROJECT_BINARY_DIR}/src/server) 
 link_directories (${PROJECT_BINARY_DIR}/src/db/generic) 
+link_directories (${PROJECT_BINARY_DIR}/src/cli) 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")

@@ -119,13 +119,23 @@ target_link_libraries (fts3-transfer-listvomanagers fts3_cli_transfer_common)
 # ------------------------------------------------------------------------
 # FTS3 config tools - common structures
 
+set(fts3_cli_config_common_sources
+    config/fts3_config_set_class.cpp
+    config/parser.cpp
+)
+
+add_library(fts3_cli_config_common SHARED ${fts3_cli_config_common_sources})
+target_link_libraries(fts3_cli_config_common ${fts3_cli_libs})
+add_dependencies(fts3_cli_config_common ${fts3_cli_libs})
+
 # ------------------------------------------------------------------------
 # fts3-config-set command
 
-add_executable(fts3-config-set 
+add_executable(fts3-config-set
     config/fts3-config-set.cpp
 )
-target_link_libraries (fts3-config-set ${fts3_cli_libs})
+add_dependencies(fts3-config-set fts3_cli_config_common)
+target_link_libraries (fts3-config-set fts3_cli_config_common)
 
 # ------------------------------------------------------------------------
 # fts3-config-get command
@@ -133,7 +143,8 @@ target_link_libraries (fts3-config-set ${fts3_cli_libs})
 add_executable(fts3-config-get 
     config/fts3-config-get.cpp
 )
-target_link_libraries (fts3-config-get ${fts3_cli_libs})
+add_dependencies(fts3-config-get fts3_cli_config_common)
+target_link_libraries (fts3-config-get fts3_cli_config_common)
 
 # ------------------------------------------------------------------------
 
@@ -144,6 +155,6 @@ install(TARGETS
     fts3-transfer-listvomanagers
     fts3-transfer-getroles
 
-    RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-    LIBRARY             DESTINATION ${BIN_INSTALL_DIR} 
+    RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX}
+    LIBRARY             DESTINATION ${BIN_INSTALL_DIR}
 )

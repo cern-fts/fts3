@@ -18,6 +18,9 @@ limitations under the License. */
 #pragma once
 
 #include "cli_dev.h"
+#include "fts3_config_common.h"
+
+#include <string>
 
 FTS3_CLI_NAMESPACE_START
 
@@ -29,28 +32,49 @@ FTS3_CLI_NAMESPACE_START
  * @date 2012-03-21
  * ... description ...
  */
-class Fts3ConfigSet
+template <class TRAITS>
+class Fts3ConfigSet : public Fts3ConfigCommon<Fts3ConfigSet<TRAITS> >
 {
 public:
 
     /** Destructor */
-    virtual ~Fts3ConfigSet();
+    virtual ~Fts3ConfigSet()
+    {
+        // EMPTY
+    }
 
     /* ----------------------------------------------------------------------- */
 
     /** Execute the command */
-    static void Execute
+    static void ExecuteCommand
     (
         int argc, /**< Command line options - from main */
         char** argv /**< Command line options - from main */
-    );
+    )
+    {
+        typename TRAITS::CliOptions cliOptions(argc, argv);
+
+        if (cliOptions.isWriteHelp())
+        {
+            cliOptions.writeHelp();
+            return;
+        }
+
+        typename TRAITS::Parser::RawDataType rawConfigData = cliOptions.getData();
+
+        typename TRAITS::Parser::ConfigDataType configData =
+            TRAITS::Parser::Parse(rawConfigData);
+
+        typename TRAITS::ServiceCaller caller(configData);
+        caller.call();
+    }
 
 protected:
 
     /* ----------------------------------------------------------------------- */
 
     /** Default constructor */
-    Fts3ConfigSet();
+    Fts3ConfigSet() {};
 
     /* ----------------------------------------------------------------------- */
 
@@ -66,8 +90,6 @@ protected:
      * @return Reference on initialised object.
      */
     Fts3ConfigSet& operator=(const Fts3ConfigSet& other);
-
-    /* ----------------------------------------------------------------------- */
 };
 
 FTS3_CLI_NAMESPACE_END
