@@ -68,21 +68,21 @@ void* WebServerMock::processRequest(void* ptr) {
 
 
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::transferSubmit(transfer__TransferJob *_job, struct fts__transferSubmitResponse &_param_3) {
+int FileTransferSoapBindingService::transferSubmit(tns3__TransferJob *_job, struct impl__transferSubmitResponse &_param_3) {
 
 	_param_3._transferSubmitReturn = WebServerMock::ID;
 	return SOAP_OK;
 }
 
 /// Web service operation 'transferSubmit2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::transferSubmit2(transfer__TransferJob *_job, struct fts__transferSubmit2Response &_param_4) {
+int FileTransferSoapBindingService::transferSubmit2(tns3__TransferJob *_job, struct impl__transferSubmit2Response &_param_4) {
 
 	_param_4._transferSubmit2Return = WebServerMock::ID;
 	return SOAP_OK;
 }
 
 /// Web service operation 'transferSubmit3' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job, struct fts__transferSubmit3Response &_param_5) {
+int FileTransferSoapBindingService::transferSubmit3(tns3__TransferJob2 *_job, struct impl__transferSubmit3Response &_param_5) {
 
 	_param_5._transferSubmit3Return = WebServerMock::ID;
 	return SOAP_OK;
@@ -90,55 +90,55 @@ int FileTransferSoapBindingService::transferSubmit3(transfer__TransferJob2 *_job
 
 
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getFileStatus(std::string _requestID, int _offset, int _limit, struct fts__getFileStatusResponse &_param_9) {
+int FileTransferSoapBindingService::getFileStatus(std::string _requestID, int _offset, int _limit, struct impl__getFileStatusResponse &_param_9) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getFileStatus2(std::string _requestID, int _offset, int _limit, struct fts__getFileStatus2Response &_param_10) {
+int FileTransferSoapBindingService::getFileStatus2(std::string _requestID, int _offset, int _limit, struct impl__getFileStatus2Response &_param_10) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobStatus(std::string _requestID, struct fts__getTransferJobStatusResponse &_param_11) {
+int FileTransferSoapBindingService::getTransferJobStatus(std::string _requestID, struct impl__getTransferJobStatusResponse &_param_11) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobSummary(std::string _requestID, struct fts__getTransferJobSummaryResponse &_param_12) {
+int FileTransferSoapBindingService::getTransferJobSummary(std::string _requestID, struct impl__getTransferJobSummaryResponse &_param_12) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getTransferJobSummary2(std::string _requestID, struct fts__getTransferJobSummary2Response &_param_13) {
+int FileTransferSoapBindingService::getTransferJobSummary2(std::string _requestID, struct impl__getTransferJobSummary2Response &_param_13) {
 	return SOAP_OK;
 }
 
 
 
 /// Web service operation 'getVersion' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getVersion(struct fts__getVersionResponse &_param_21) {
+int FileTransferSoapBindingService::getVersion(struct impl__getVersionResponse &_param_21) {
 
 	_param_21.getVersionReturn = WebServerMock::VERSION;
 	return SOAP_OK;
 }
 
 /// Web service operation 'getSchemaVersion' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getSchemaVersion(struct fts__getSchemaVersionResponse &_param_22) {
+int FileTransferSoapBindingService::getSchemaVersion(struct impl__getSchemaVersionResponse &_param_22) {
 
 	_param_22.getSchemaVersionReturn = WebServerMock::SCHEMA;
 	return SOAP_OK;
 }
 
 /// Web service operation 'getInterfaceVersion' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getInterfaceVersion(struct fts__getInterfaceVersionResponse &_param_23) {
+int FileTransferSoapBindingService::getInterfaceVersion(struct impl__getInterfaceVersionResponse &_param_23) {
 
 	_param_23.getInterfaceVersionReturn = WebServerMock::INTERFACE;
 	return SOAP_OK;
 }
 
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getServiceMetadata(std::string _key, struct fts__getServiceMetadataResponse &_param_24) {
+int FileTransferSoapBindingService::getServiceMetadata(std::string _key, struct impl__getServiceMetadataResponse &_param_24) {
 
 	_param_24._getServiceMetadataReturn = WebServerMock::METADATA;
 	return SOAP_OK;
@@ -147,49 +147,49 @@ int FileTransferSoapBindingService::getServiceMetadata(std::string _key, struct 
 
 
 /// Web service operation 'listRequests' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listRequests(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct fts__listRequestsResponse &_param_7) {
+int FileTransferSoapBindingService::listRequests(impl__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct impl__listRequestsResponse &_param_7) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'listRequests2' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listRequests2(fts__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, std::string _forDN, std::string _forVO, struct fts__listRequests2Response &_param_8) {
+int FileTransferSoapBindingService::listRequests2(impl__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, std::string _forDN, std::string _forVO, struct impl__listRequests2Response &_param_8) {
 	return SOAP_OK;
 }
 
 
 
 /// Web service operation 'cancel' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::cancel(fts__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct fts__cancelResponse &_param_14) {
+int FileTransferSoapBindingService::cancel(impl__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct impl__cancelResponse &_param_14) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'setJobPriority' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::setJobPriority(std::string _requestID, int _priority, struct fts__setJobPriorityResponse &_param_15) {
+int FileTransferSoapBindingService::setJobPriority(std::string _requestID, int _priority, struct impl__setJobPriorityResponse &_param_15) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'addVOManager' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::addVOManager(std::string _VOName, std::string _principal, struct fts__addVOManagerResponse &_param_16) {
+int FileTransferSoapBindingService::addVOManager(std::string _VOName, std::string _principal, struct impl__addVOManagerResponse &_param_16) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'removeVOManager' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::removeVOManager(std::string _VOName, std::string _principal, struct fts__removeVOManagerResponse &_param_17) {
+int FileTransferSoapBindingService::removeVOManager(std::string _VOName, std::string _principal, struct impl__removeVOManagerResponse &_param_17) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'listVOManagers' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::listVOManagers(std::string _VOName, struct fts__listVOManagersResponse &_param_18) {
+int FileTransferSoapBindingService::listVOManagers(std::string _VOName, struct impl__listVOManagersResponse &_param_18) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getRoles' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getRoles(struct fts__getRolesResponse &_param_19) {
+int FileTransferSoapBindingService::getRoles(struct impl__getRolesResponse &_param_19) {
 	return SOAP_OK;
 }
 
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
-int FileTransferSoapBindingService::getRolesOf(std::string _otherDN, struct fts__getRolesOfResponse &_param_20) {
+int FileTransferSoapBindingService::getRolesOf(std::string _otherDN, struct impl__getRolesOfResponse &_param_20) {
 	return SOAP_OK;
 }
 

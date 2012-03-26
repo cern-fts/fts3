@@ -26,7 +26,7 @@
 #define WEBSERVERMOCK_H_
 
 #include <pthread.h>
-#include "gsoap_stubs.h"
+#include "ws/gsoap_transfer_stubs.h"
 
 using namespace std;
 
