@@ -9,9 +9,11 @@
 #include "ServiceProxyHolder.h"
 #include "ui/ListTransferCli.h"
 #include "SrvManager.h"
+#include "common/JobStatusHandler.h"
 
 using namespace std;
 using namespace fts3::cli;
+using namespace fts3::common;
 
 
 /**
@@ -46,7 +48,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) return 0;
+		if (!manager->init(service)) return 0;
 
 
 		// if verbose print general info
@@ -68,19 +70,22 @@ int main(int ac, char* av[]) {
 			impl__listRequests2Response resp;
 			err = service.listRequests2(array, cli.getUserDn(), cli.getVOName(), resp);
 
-			if (err) {
-				//TODO err handle
+			if (err || !resp._listRequests2Return) {
+				cout << "Failed to list transfers: ListRequest2. ";
+				manager->printSoapErr(service);
 				return 0;
 			}
 
 			statuses = resp._listRequests2Return->item;
+
 		} else {
 
 			impl__listRequestsResponse resp;
 			err = service.listRequests(array, resp);
 
-			if (err) {
-				//TODO err handle
+			if (err || !resp._listRequestsReturn) {
+				cout << "Failed to list transfers: ListRequest. ";
+				manager->printSoapErr(service);
 				return 0;
 			}
 
@@ -91,33 +96,20 @@ int main(int ac, char* av[]) {
 		for (it = statuses.begin(); it < statuses.end(); it++) {
 			if (cli.isVerbose()) {
 
-				// TODO make common print for tns3__JobStatus (also used in fts3-transfer-status)!
-				cout << "Request ID:\t" << *(*it)->jobID << endl;
-				cout << "Status: " << *(*it)->jobStatus << endl;
-				cout << "Client DN: " << *(*it)->clientDN << endl;
-
-				if ((*it)->reason) {
-					cout << "Reason: " << (*it)->reason << endl;
-				} else {
-					cout << "Reason: <None>" << endl;
-				}
-
-				cout << "Submit time: " << ""/*TODO*/ << endl;
-				cout << "Files: " << (*it)->numFiles << endl;
-			    cout << "Priority: " << (*it)->priority << endl;
-			    cout << "VOName: " << *(*it)->voName << endl;
+				JobStatusHandler::printJobStatus(*it);
 
 			} else {
 				cout << *(*it)->jobID << "\t" << *(*it)->jobStatus << endl;
 			}
 		}
 
-	}
-	catch(exception& e) {
+	} catch(std::exception& e) {
+
 		cerr << "error: " << e.what() << "\n";
 		return 1;
-	}
-	catch(...) {
+
+	} catch(...) {
+
 		cerr << "Exception of unknown type!\n";
 	}
 

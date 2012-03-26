@@ -31,10 +31,10 @@
 
 #include <cgsi_plugin.h>
 #include <iostream>
-using namespace std;
+//using namespace std;
 //#include <gridsite.h>
 
-#include <time.h>
+//#include <time.h>
 #include <iostream>
 
 #include <boost/tokenizer.hpp>
@@ -42,6 +42,7 @@ using namespace std;
 
 #include "ws-ifce/gsoap/transfer.nsmap"
 
+using namespace std;
 using namespace boost;
 using namespace fts3::cli;
 
@@ -118,7 +119,7 @@ void SrvManager::delegateProxyCert(string) {
 long SrvManager::isCertValid () {
 
 	// find user proxy certificate
-/*    char * user_proxy = GRSTx509FindProxyFileName();
+    /*char * user_proxy = GRSTx509FindProxyFileName();
 	FILE *fp = fopen(user_proxy , "r");
 	// read the certificate
     X509 *cert = PEM_read_X509(fp, 0, 0, 0);
@@ -128,46 +129,15 @@ long SrvManager::isCertValid () {
     long time = GRSTasn1TimeToTimeT(c_str, 0) - ::time(0);
 
     cout << "Remaining time for local proxy is " << time / 3600 << " hours and " << time % 3600 / 60 << " minutes." << endl;
-*/
+     */
 	long time = 0;
     return time;
 }
 
 void SrvManager::printSoapErr(FileTransferSoapBindingProxy& service) {
 
-	if (service.fault->faultstring) {
+	if (service.fault && service.fault->faultstring) {
 		cout << service.fault->faultstring << endl;
-	}
-
-	if (service.fault) {
-		if (service.version == 2) {
-			// SOAP 1.2 is used
-			if (service.fault->SOAP_ENV__Detail) {
-
-				if (service.fault->SOAP_ENV__Detail->__any) {
-					cout << "(" << service.fault->detail->__any << ")" << endl;
-				}
-
-				if (service.fault->SOAP_ENV__Detail->fault) {
-		    		tns3__TransferException* ex = (tns3__TransferException*)service.fault->detail->fault;
-	    			cout << *ex->message << endl;
-				}
-			}
-		} else {
-			// SOAP 1.1 is used
-
-			if (service.fault->detail) {
-
-				if (service.fault->detail->__any) {
-					cout << "(" << service.fault->detail->__any << ")" << endl;
-				}
-
-				if (service.fault->detail->fault) {
-		    		tns3__TransferException* ex = (tns3__TransferException*)service.fault->detail->fault;
-	    			cout << *ex->message << endl;
-				}
-			}
-		}
 	}
 }
 
@@ -185,7 +155,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 	} else {
 		cout << "Failed to determine the interface version of the service: getInterfaceVersion. ";
 		printSoapErr(service);
-		return err;
+		return false;
 	}
 
 	impl__getVersionResponse vresp;
@@ -195,7 +165,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 	} else {
 		cout << "Failed to determine the version of the service: getVersion. ";
 		printSoapErr(service);
-		return err;
+		return false;
 	}
 
 	impl__getSchemaVersionResponse sresp;
@@ -205,7 +175,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 	} else {
 		cout << "Failed to determine the schema version of the service: getSchemaVersion. ";
 		printSoapErr(service);
-		return err;
+		return false;
 	}
 
 	impl__getServiceMetadataResponse mresp;
@@ -215,10 +185,10 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 	} else {
 		cout << "Failed to determine the service metadata of the service: getServiceMetadataReturn. ";
 		printSoapErr(service);
-		return err;
+		return false;
 	}
 
-	return SOAP_OK;
+	return true;
 }
 
 void SrvManager::setInterfaceVersion(string interface) {

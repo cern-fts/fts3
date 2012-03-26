@@ -63,7 +63,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) return 0;
+		if (!manager->init(service)) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -80,7 +80,7 @@ int main(int ac, char* av[]) {
 		impl__listVOManagersResponse resp;
 		err = service.listVOManagers(vo, resp);
 
-		if (err) {
+		if (err || !resp._listVOManagersReturn) {
 			cout << "Failed to list VO managers transfer: listVOManagers. ";
 			manager->printSoapErr(service);
 			return 0;

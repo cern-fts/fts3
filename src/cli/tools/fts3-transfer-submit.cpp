@@ -60,7 +60,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) return 0;
+		if (!manager->init(service)) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -154,12 +154,11 @@ int main(int ac, char* av[]) {
 			} while (!JobStatusHandler::getInstance().isTransferReady(*resp._getTransferJobStatusReturn->jobStatus));
 		}
 
-    }
-    catch(std::exception& e) {
+    } catch(std::exception& e) {
         cerr << "error: " << e.what() << "\n";
         return 1;
-    }
-    catch(...) {
+
+    } catch(...) {
         cerr << "Exception of unknown type!\n";
     }
 

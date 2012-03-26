@@ -64,7 +64,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) return 0;
+		if (!manager->init(service)) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -77,7 +77,7 @@ int main(int ac, char* av[]) {
 			impl__getRolesResponse resp;
 			err = service.getRoles(resp);
 
-			if (err) {
+			if (err || !resp.getRolesReturn) {
 				cout << "Failed to get roles: getRoles. ";
 				manager->printSoapErr(service);
 				return 0;
@@ -115,7 +115,7 @@ int main(int ac, char* av[]) {
 			impl__getRolesOfResponse resp;
 			err = service.getRolesOf(dn, resp);
 
-			if (err) {
+			if (err || !resp._getRolesOfReturn) {
 				cout << "Failed to get roles: getRolesOf. ";
 				manager->printSoapErr(service);
 				return 0;
@@ -148,15 +148,6 @@ int main(int ac, char* av[]) {
 	        for (it = roles->VOManager.begin(); it < roles->VOManager.end(); it++) {
 	            cout << "The user is VO manager for VO <" << *(*it)->string1 << ">" << endl;
 	        }
-		}
-
-
-
-		if (dn.empty()) {
-
-
-		} else {
-
 		}
 	}
 	catch(std::exception& e) {

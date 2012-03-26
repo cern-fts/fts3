@@ -62,7 +62,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) return 0;
+		if (!manager->init(service)) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {

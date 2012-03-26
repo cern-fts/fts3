@@ -20,12 +20,14 @@
 #include "ServiceProxyHolder.h"
 #include "ui/TransferStatusCli.h"
 #include "SrvManager.h"
+#include "common/JobStatusHandler.h"
 
 #include <vector>
 #include <string>
 
 using namespace std;
 using namespace fts3::cli;
+using namespace fts3::common;
 
 
 /**
@@ -70,7 +72,7 @@ int main(int ac, char* av[]) {
 		if (!manager->initSoap(&service, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (manager->init(service)) return 0;
+		if (!manager->init(service)) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -95,21 +97,9 @@ int main(int ac, char* av[]) {
 					ret = service.getTransferJobSummary2(jobId, resp);
 
 					// print the response
-					if (!ret) {
-						cout << "Request ID: " << jobId << endl;
-						cout << "Status: " << *resp._getTransferJobSummary2Return->jobStatus->jobStatus << endl;
-						cout << "Client DN: " << *resp._getTransferJobSummary2Return->jobStatus->clientDN << endl;
+					if (!ret && resp._getTransferJobSummary2Return) {
 
-						if (resp._getTransferJobSummary2Return->jobStatus->reason) {
-							cout << "Reason: " << *resp._getTransferJobSummary2Return->jobStatus->reason << endl;
-						} else {
-							cout << "Reason: <None>" << endl;
-						}
-
-						cout << "Submit time: " << ""/*TODO*/ << endl;
-						cout << "Files: " << resp._getTransferJobSummary2Return->jobStatus->numFiles << endl;
-					    cout << "Priority: " << resp._getTransferJobSummary2Return->jobStatus->priority << endl;
-					    cout << "VOName: " << *resp._getTransferJobSummary2Return->jobStatus->voName << endl;
+						JobStatusHandler::printJobStatus(resp._getTransferJobSummary2Return->jobStatus);
 
 					    cout << "\tDone: " << resp._getTransferJobSummary2Return->numDone << endl;
 					    cout << "\tActive: " << resp._getTransferJobSummary2Return->numActive << endl;
@@ -132,21 +122,9 @@ int main(int ac, char* av[]) {
 					ret = service.getTransferJobSummary(jobId, resp);
 
 					// print the response
-					if (!ret) {
-						cout << "Request ID: " << jobId << endl;
-						cout << "Status: " << *resp._getTransferJobSummaryReturn->jobStatus->jobStatus << endl;
-						cout << "Client DN: " << *resp._getTransferJobSummaryReturn->jobStatus->clientDN << endl;
+					if (!ret && resp._getTransferJobSummaryReturn) {
 
-						if (resp._getTransferJobSummaryReturn->jobStatus->reason) {
-							cout << "Reason: " << *resp._getTransferJobSummaryReturn->jobStatus->reason << endl;
-						} else {
-							cout << "Reason: <None>" << endl;
-						}
-
-						cout << "Submit time: " << ""/*TODO*/ << endl;
-						cout << "Files: " << resp._getTransferJobSummaryReturn->jobStatus->numFiles << endl;
-					    cout << "Priority: " << resp._getTransferJobSummaryReturn->jobStatus->priority << endl;
-					    cout << "VOName: " << *resp._getTransferJobSummaryReturn->jobStatus->voName << endl;
+						JobStatusHandler::printJobStatus(resp._getTransferJobSummaryReturn->jobStatus);
 
 					    cout << "\tDone: " << resp._getTransferJobSummaryReturn->numDone << endl;
 					    cout << "\tActive: " << resp._getTransferJobSummaryReturn->numActive << endl;
@@ -168,7 +146,7 @@ int main(int ac, char* av[]) {
 		    	ret = service.getTransferJobStatus(jobId, resp);
 
 		    	// print the response
-		    	if (!ret) {
+		    	if (!ret && resp._getTransferJobStatusReturn) {
 		    		cout << *resp._getTransferJobStatusReturn->jobStatus << endl;
 		    	}
 			}
@@ -181,7 +159,7 @@ int main(int ac, char* av[]) {
 				impl__getFileStatusResponse resp;
 				ret = service.getFileStatus(jobId, 0, 100, resp);
 
-				if (!ret) {
+				if (!ret && resp._getFileStatusReturn) {
 
 					std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
 					std::vector<tns3__FileTransferStatus * >::iterator it;
@@ -207,11 +185,11 @@ int main(int ac, char* av[]) {
 	    	}
 		}
     }
-    catch(exception& e) {
+    catch(std::exception& e) {
         cerr << "error: " << e.what() << "\n";
         return 1;
-    }
-    catch(...) {
+        
+    } catch(...) {
         cerr << "Exception of unknown type!\n";
     }
 
