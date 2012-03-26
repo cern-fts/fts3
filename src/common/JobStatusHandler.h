@@ -14,6 +14,7 @@
 #include <string>
 #include <boost/scoped_ptr.hpp>
 #include <stdsoap2.h>
+#include <iostream>
 
 using namespace std;
 using namespace boost;
@@ -117,6 +118,31 @@ public:
 	 */
 	bool isStatusValid(string status);
 
+	/**
+	 *
+	 */
+	template <typename JS>
+	static void printJobStatus(JS* js){
+
+		cout << "Request ID:\t" << *js->jobID << endl;
+		cout << "Status: " << *js->jobStatus << endl;
+		cout << "Client DN: " << *js->clientDN << endl;
+
+		if (js->reason) {
+
+			cout << "Reason: " << *js->reason << endl;
+
+		} else {
+
+			cout << "Reason: <None>" << endl;
+		}
+
+		cout << "Submit time: " << ""/*TODO*/ << endl;
+		cout << "Files: " << js->numFiles << endl;
+	    cout << "Priority: " << js->priority << endl;
+	    cout << "VOName: " << *js->voName << endl;
+	}
+
 private :
 
 	/**
@@ -144,7 +170,7 @@ private :
 	 * JobStatusHandler single instance
 	 */
 	static scoped_ptr<JobStatusHandler> instance;
-public:
+
 	/// maps job status name to job status id
 	const map<string, JobStateEnum> statuses;
 };
