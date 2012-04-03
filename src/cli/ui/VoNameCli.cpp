@@ -22,7 +22,7 @@
  *      Author: Michal Simon
  */
 
-#include "VONameCli.h"
+#include "VoNameCli.h"
 
 using namespace fts3::cli;
 
@@ -38,7 +38,7 @@ using namespace fts3::cli;
 
 }*/
 
-VONameCli::VONameCli(bool pos) {
+VoNameCli::VoNameCli(bool pos) {
 
 	if (pos) {
 		// add hidden options (not printed in help)
@@ -57,14 +57,14 @@ VONameCli::VONameCli(bool pos) {
 	}
 }
 
-VONameCli::~VONameCli() {
+VoNameCli::~VoNameCli() {
 }
 
-string VONameCli::getUsageString(string tool) {
+string VoNameCli::getUsageString(string tool) {
 	return "Usage: " + tool + " [options] VONAME";
 }
 
-string VONameCli::getVOName() {
+string VoNameCli::getVOName() {
 
 	// check whether jobid has been given as a parameter
 	if (vm.count("voname")) {

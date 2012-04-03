@@ -15,46 +15,45 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
+ *
+ * fts3-config-set.cpp
+ *
+ *  Created on: Apr 3, 2012
+ *      Author: Michał Simon
  */
 
 
-
-#include "gsoap_transfer_proxy.h"
-#include "SrvManager.h"
-#include "ui/VoNameCli.h"
+#include "gsoap_config_proxy.h"
+#include "ui/NameValueCli.h"
 
 #include "common/InstanceHolder.h"
 
-#include <exception>
 #include <string>
-#include <iostream>
+#include <vector>
 
 using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
-
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
+typedef InstanceHolder<SoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
- * This is the entry point for the fts3-transfer-cancel command line tool.
+ * This is the entry point for the fts3-config-set command line tool.
  */
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
-	// get SrvManager instance
-	SrvManager* manager = SrvManager::getInstance();
+	SoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 
 	try {
 		// create and initialize the command line utility
-    	VoNameCli cli;
-    	cli.initCli(ac, av);
+		NameValueCli cli;
+		cli.initCli(ac, av);
 
     	// if applicable print help or version and exit
 		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
 
-		// get the source file, the destination file and the FTS3 service endpoint
+		// get the FTS3 service endpoint
     	string endpoint = cli.getService();
 
 		// set the  endpoint
@@ -64,41 +63,35 @@ int main(int ac, char* av[]) {
 		}
 		service.soap_endpoint = endpoint.c_str();
 
-		// initialize SOAP
-		if (!manager->initSoap(&service, endpoint)) return 0;
+		// TODO cgsi soap init!!!
 
-		// initialize SrvManager
-		if (!manager->init(service)) return 0;
-
-		// if verbose print general info
 		if (cli.isVerbose()) {
-			cli.printGeneralInfo();
+			// TODO verbose part !!!
 		}
 
-		string vo  = cli.getVOName();
-		if (vo.empty()) {
-			cout << "The VO name has to be specified" << endl;
+		vector<string> &names = cli.getNames(), &values = cli.getValues();
+
+		if (names.empty() || values.empty()) {
+
+			cout << "No parameters have been specified." << endl;
 			return 0;
 		}
 
-		int err;
-		impl__listVOManagersResponse resp;
-		err = service.listVOManagers(vo, resp);
+		config__Configuration *config = soap_new_config__Configuration(&service, -1);
+		config->key = names;
+		config->value = values;
 
-		if (err || !resp._listVOManagersReturn) {
-			cout << "Failed to list VO managers transfer: listVOManagers. ";
-			manager->printSoapErr(service);
+		impl__setConfigurationResponse resp;
+		int err = service.setConfiguration(config, resp);
+
+		if (err) {
+			cout << "Failed to cancel transfer: cancel. ";
+			// TODO print error message
+			//manager->printSoapErr(service);
 			return 0;
 		}
 
-		vector<string> &vec = resp._listVOManagersReturn->item;
-		vector<string>::iterator it;
-
-		for (it = vec.begin(); it < vec.end(); it++) {
-			cout << *it << endl;
-		}
-	}
-	catch(std::exception& e) {
+	} catch(std::exception& e) {
 		cerr << "error: " << e.what() << "\n";
 		return 1;
 	}

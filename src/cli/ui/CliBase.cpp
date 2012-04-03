@@ -61,6 +61,9 @@ CliBase::~CliBase() {
 
 }
 
+string CliBase::getUsageString(string tool) {
+	return "Usage: " + tool + " [options]";
+}
 
 void CliBase::initCli(int ac, char* av[]) {
 

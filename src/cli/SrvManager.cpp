@@ -23,18 +23,17 @@
  */
 
 #include "SrvManager.h"
-
-//#include <openssl/x509_vfy.h>
-//#include <openssl/err.h>
-//#include <openssl/pem.h>
-//#include <openssl/asn1.h>
-
+/*
+#include <openssl/x509_vfy.h>
+#include <openssl/err.h>
+#include <openssl/pem.h>
+#include <openssl/asn1.h>
+*/
 #include <cgsi_plugin.h>
 #include <iostream>
-//using namespace std;
 //#include <gridsite.h>
 
-//#include <time.h>
+#include <time.h>
 #include <iostream>
 
 #include <boost/tokenizer.hpp>
@@ -117,9 +116,9 @@ void SrvManager::delegateProxyCert(string) {
 }
 
 long SrvManager::isCertValid () {
-
+/*
 	// find user proxy certificate
-    /*char * user_proxy = GRSTx509FindProxyFileName();
+    char* user_proxy = GRSTx509FindProxyFileName();
 	FILE *fp = fopen(user_proxy , "r");
 	// read the certificate
     X509 *cert = PEM_read_X509(fp, 0, 0, 0);
@@ -129,7 +128,7 @@ long SrvManager::isCertValid () {
     long time = GRSTasn1TimeToTimeT(c_str, 0) - ::time(0);
 
     cout << "Remaining time for local proxy is " << time / 3600 << " hours and " << time % 3600 / 60 << " minutes." << endl;
-     */
+*/
 	long time = 0;
     return time;
 }

@@ -126,7 +126,7 @@ public:
 	 *
 	 * @return implementing class should return a string with instruction on how to use the tool
 	 */
-	virtual string getUsageString(string tool) = 0;
+	virtual string getUsageString(string tool);
 
 protected:
 

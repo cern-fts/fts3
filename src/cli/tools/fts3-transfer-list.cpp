@@ -1,20 +1,41 @@
 /*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use this file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ *
  * fts3-transfer-list.cpp
  *
  *  Created on: Mar 1, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 
-#include "ServiceProxyHolder.h"
-#include "ui/ListTransferCli.h"
+#include "gsoap_transfer_proxy.h"
 #include "SrvManager.h"
+#include "ui/ListTransferCli.h"
+
 #include "common/JobStatusHandler.h"
+#include "common/InstanceHolder.h"
 
 using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
+
+typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
  * This is the entry point for the fts3-transfer-list command line tool.
@@ -22,7 +43,7 @@ using namespace fts3::common;
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 

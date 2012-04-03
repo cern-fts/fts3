@@ -23,11 +23,17 @@
  */
 
 //#ifdef FTS3_COMPILE_WITH_UNITTEST
+#include "gsoap_transfer_proxy.h"
+
 #include "ui/ListTransferCli.h"
 #include "unittest/testsuite.h"
-#include "ServiceProxyHolder.h"
+#include "common/InstanceHolder.h"
 
 using namespace fts3::cli;
+using namespace fts3::common;
+
+
+typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 
 BOOST_FIXTURE_TEST_CASE (ListTransferCli_VO_Test1, ListTransferCli) {
 
@@ -53,7 +59,7 @@ BOOST_FIXTURE_TEST_CASE (ListTransferCli_Status_Test, ListTransferCli) {
 	const char* av[] = {"prog_name", "status1", "status2", "status3", "status4", "status5", "status6"};
 	initCli(7, const_cast<char**>(av));
 
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	impl__ArrayOf_USCOREsoapenc_USCOREstring* arr = getStatusArray(&service);
 	const vector<string>& statuses = arr->item;
 	BOOST_CHECK(statuses.size() == 6);

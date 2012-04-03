@@ -29,7 +29,7 @@
 
 namespace fts3 { namespace cli {
 
-class DNCli : virtual public CliBase {
+class DnCli : virtual public CliBase {
 public:
 
 	/**
@@ -37,19 +37,12 @@ public:
 	 *
 	 * Creates the DN command line interface.
 	 */
-	DNCli();
+	DnCli();
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~DNCli();
-
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
+	virtual ~DnCli();
 
 	/**
 	 * Gets the user DN, specified by the user.

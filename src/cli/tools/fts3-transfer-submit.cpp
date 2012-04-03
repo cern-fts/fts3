@@ -17,10 +17,12 @@
  *	limitations under the License.
  */
 
-#include "ServiceProxyHolder.h"
-#include "ui/SubmitTransferCli.h"
+#include "gsoap_transfer_proxy.h"
 #include "SrvManager.h"
+#include "ui/SubmitTransferCli.h"
+
 #include "common/JobStatusHandler.h"
+#include "common/InstanceHolder.h"
 
 #include <exception>
 
@@ -28,13 +30,16 @@ using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
+
+typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
+
 /**
  * This is the entry point for the fts3-transfer-submit command line tool.
  */
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 

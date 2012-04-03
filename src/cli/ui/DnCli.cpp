@@ -16,28 +16,36 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * ListVOManagerCliTest.cpp
+ * DnCli.cpp
  *
- *  Created on: Mar 19, 2012
+ *  Created on: Mar 13, 2012
  *      Author: Michal Simon
  */
 
-
-//#ifdef FTS3_COMPILE_WITH_UNITTEST
-#include "ui/VONameCli.h"
-#include "unittest/testsuite.h"
+#include "DnCli.h"
 
 #include <iostream>
-
-using namespace fts3::cli;
 using namespace std;
 
-BOOST_FIXTURE_TEST_CASE (VONameCli_Test, VONameCli) {
+using namespace fts3::cli;
 
-        // has to be const otherwise is deprecated
-        const char* av[] = {"prog_name", "voname"};
-        initCli(2, const_cast<char**>(av));
+DnCli::DnCli() {
 
-        BOOST_CHECK(getVOName().compare("voname") == 0);
+	// add fts3-transfer-status specific options
+	specific.add_options()
+			("userdn,u", value<string>(), "Restrict to specific user DN.")
+			;
+}
+
+DnCli::~DnCli() {
+}
+
+string DnCli::getUserDn() {
+
+	if (vm.count("userdn")) {
+		return vm["userdn"].as<string>();
+	}
+
+	return string();
 }
 

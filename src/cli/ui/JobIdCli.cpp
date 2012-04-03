@@ -16,40 +16,41 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * DnCli.cpp
+ * JobIDCli.cpp
  *
  *  Created on: Mar 13, 2012
  *      Author: Michal Simon
  */
 
-#include "DNCli.h"
-
-#include <iostream>
-using namespace std;
+#include "JobIdCli.h"
 
 using namespace fts3::cli;
 
-DNCli::DNCli() {
+JobIdCli::JobIdCli() {
 
-	// add fts3-transfer-status specific options
-	specific.add_options()
-			("userdn,u", value<string>(), "Restrict to specific user DN.")
+	// add hidden options (not printed in help)
+	hidden.add_options()
+			("jobid", value< vector<string> >(), "Specify job ID.")
 			;
+
+	// all positional parameters go to jobid
+	p.add("jobid", -1);
 }
 
-DNCli::~DNCli() {
+JobIdCli::~JobIdCli() {
 }
 
-string DNCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options]";
+
+string JobIdCli::getUsageString(string tool) {
+	return "Usage: " + tool + " [options] JOBID [JOBID...]";
 }
 
-string DNCli::getUserDn() {
+vector<string> JobIdCli::getJobIds() {
 
-	if (vm.count("userdn")) {
-		return vm["userdn"].as<string>();
+	// check whether jobid has been given as a parameter
+	if (vm.count("jobid")) {
+		return vm["jobid"].as< vector<string> >();
 	}
 
-	return string();
+	return vector<string>();
 }
-

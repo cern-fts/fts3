@@ -22,15 +22,20 @@
  *      Author: Michal Simon
  */
 
-#include "ServiceProxyHolder.h"
-#include "ui/DNCli.h"
+#include "gsoap_transfer_proxy.h"
 #include "SrvManager.h"
+#include "ui/DnCli.h"
+
+#include "common/InstanceHolder.h"
 
 #include <exception>
 
 using namespace std;
 using namespace fts3::cli;
+using namespace fts3::common;
 
+
+typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.
@@ -38,13 +43,13 @@ using namespace fts3::cli;
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
 	try {
 		// create and initialize the command line utility
-    	DNCli cli;
+    	DnCli cli;
     	cli.initCli(ac, av);
 
     	// if applicable print help or version and exit

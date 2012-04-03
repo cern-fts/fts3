@@ -15,11 +15,18 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
+ *
+ * fts3-config-get.cpp
+ *
+ *  Created on: Apr 3, 2012
+ *      Author: Michał Simon
  */
 
-#include "ServiceProxyHolder.h"
-#include "ui/JobIDCli.h"
+#include "gsoap_transfer_proxy.h"
 #include "SrvManager.h"
+#include "ui/JobIdCli.h"
+
+#include "common/InstanceHolder.h"
 
 #include <exception>
 #include <iostream>
@@ -28,7 +35,10 @@
 
 using namespace std;
 using namespace fts3::cli;
+using namespace fts3::common;
 
+
+typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.
@@ -36,19 +46,19 @@ using namespace fts3::cli;
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
 	try {
 		// create and initialize the command line utility
-    	JobIDCli cli;
+    	JobIdCli cli;
     	cli.initCli(ac, av);
 
     	// if applicable print help or version and exit
 		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
 
-		// get the source file, the destination file and the FTS3 service endpoint
+		// get the FTS3 service endpoint
     	string endpoint = cli.getService();
 
 		// set the  endpoint
@@ -78,9 +88,8 @@ int main(int ac, char* av[]) {
 			return 0;
 		}
 
-		int err;
 		impl__cancelResponse resp;
-		err = service.cancel(rqst, resp);
+		int err = service.cancel(rqst, resp);
 
 		if (err) {
 			cout << "Failed to cancel transfer: cancel. ";
@@ -94,8 +103,7 @@ int main(int ac, char* av[]) {
 	        cout << "Canceled " << *it << endl;;
 	    }
 
-	}
-	catch(std::exception& e) {
+	} catch(std::exception& e) {
 		cerr << "error: " << e.what() << "\n";
 		return 1;
 	}

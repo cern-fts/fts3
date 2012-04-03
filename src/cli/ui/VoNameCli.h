@@ -16,46 +16,37 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * JobIDCli.h
+ * ListVOManager.h
  *
- *  Created on: Mar 13, 2012
+ *  Created on: Mar 14, 2012
  *      Author: Michal Simon
  */
 
-#ifndef JOBIDCLI_H_
-#define JOBIDCLI_H_
+#ifndef LISTVOMANAGER_H_
+#define LISTVOMANAGER_H_
 
 #include "CliBase.h"
-#include <vector>
 #include <string>
 
 using namespace std;
 
 namespace fts3 { namespace cli {
 
-/**
- * JobIDCli is the command line utility used for retreiving job IDs.
- *
- * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
- * 		- job ID (--jobid), positional parameter (passed without any switch option)
- *
- * @see CliBase
- */
-class JobIDCli: public CliBase {
+class VoNameCli: virtual public CliBase {
 public:
 
 	/**
-	 * Default constructor.
+	 * Default Constructor.
 	 *
-	 * Creates the command line interface for retrieving job IDs. Job ID is
-	 * market as both: hidden and positional
+	 * @param pos - if true VONAME is market as both: hidden and positional, otherwise it is a tool specific option
+	 *
 	 */
-	JobIDCli();
+	VoNameCli(bool pos = true);
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~JobIDCli();
+	virtual ~VoNameCli();
 
 	/**
 	 * Gives the instruction how to use the command line tool.
@@ -70,10 +61,10 @@ public:
 	 * @return if job IDs were given as command line parameters a
 	 * 			vector containing job IDs otherwise an empty vector
 	 */
-	vector<string> getJobIds();
+	string getVOName();
 };
 
 }
 }
 
-#endif /* JOBIDCLI_H_ */
+#endif /* LISTVOMANAGER_H_ */

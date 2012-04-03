@@ -23,17 +23,26 @@
  */
 
 //#ifdef FTS3_COMPILE_WITH_UNITTEST
+
+#include "gsoap_transfer_proxy.h"
+
 #include "ui/SubmitTransferCli.h"
 #include "unittest/testsuite.h"
-#include "ServiceProxyHolder.h"
+
 #include "common/JobParameterHandler.h"
+#include "common/InstanceHolder.h"
 
 #include <fstream>
 #include <iostream>
+
 using namespace std;
 
 using namespace fts3::cli;
 using namespace fts3::common;
+
+
+typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
+
 
 BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_File, SubmitTransferCli) {
 
@@ -60,7 +69,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_File, SubmitTransferCli) {
 	BOOST_CHECK(createJobElements());
 	BOOST_CHECK(useCheckSum());
 
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	vector<tns3__TransferJobElement2*> elements = getJobElements2(&service);
 
 	BOOST_CHECK(elements.size() == 2);
@@ -112,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_JobElements, SubmitTransferCli) 
 	BOOST_CHECK(createJobElements());
 	BOOST_CHECK(!useCheckSum());
 
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	vector<tns3__TransferJobElement*> elements = getJobElements(&service);
 
 	BOOST_CHECK(elements.size() == 1);
@@ -137,7 +146,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_JobElements2, SubmitTransferCli)
 	BOOST_CHECK(createJobElements());
 	BOOST_CHECK(useCheckSum());
 
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	vector<tns3__TransferJobElement2*> elements = getJobElements2(&service);
 
 	BOOST_CHECK(elements.size() == 1);
@@ -164,7 +173,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli) {
 
 	initCli(17, const_cast<char**>(av));
 
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	tns3__TransferParams* params = getParams(&service);
 
 	JobParameterHandler handler;

@@ -25,13 +25,13 @@
 #ifndef LISTTRANSFERCLI_H_
 #define LISTTRANSFERCLI_H_
 
-#include "DNCli.h"
+#include "DnCli.h"
 #include "gsoap_transfer_proxy.h"
-#include "VONameCli.h"
+#include "VoNameCli.h"
 
 namespace fts3 { namespace cli {
 
-class ListTransferCli : public DNCli, public VONameCli {
+class ListTransferCli : public DnCli, public VoNameCli {
 public:
 
 	/**

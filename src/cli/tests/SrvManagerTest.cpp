@@ -22,16 +22,23 @@
  *      Author: Michal Simon
  */
 //#ifdef FTS3_COMPILE_WITH_UNITTEST
+
+#include "gsoap_transfer_proxy.h"
 #include "SrvManager.h"
+
 #include "unittest/testsuite.h"
 #include "server/ws/WebServerMock.h"
-#include "ServiceProxyHolder.h"
+#include "common/InstanceHolder.h"
 
 #include <iostream>
 
 using namespace fts3::cli;
 using namespace fts3::ws;
+using namespace fts3::common;
 using namespace std;
+
+typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
+
 
 class SrvManagerTester: public SrvManager {
 
@@ -49,7 +56,7 @@ BOOST_FIXTURE_TEST_CASE (SrvManager_init, SrvManagerTester) {
 	sleep(2);
 
 	// create and initialize the service-proxy
-	FileTransferSoapBindingProxy& service = ServiceProxyHolder::getServiceProxy();
+	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	service.soap_endpoint = "http://localhost:8899";
 
 	// initialize SrvManager

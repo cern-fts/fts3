@@ -29,7 +29,7 @@
 using namespace fts3::cli;
 using namespace fts3::common;
 
-ListTransferCli::ListTransferCli(): VONameCli(false) {
+ListTransferCli::ListTransferCli(): VoNameCli(false) {
 
 	// add hidden options (not printed in help)
 	CliBase::hidden.add_options()

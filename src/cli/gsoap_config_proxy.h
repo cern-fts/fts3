@@ -15,19 +15,15 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- *
- * ListTransferCliTest.cpp
- *
- * ServiceProxyHolder.cpp
- *
- *  Created on: Mar 19, 2012
- *      Author: Michal Simon
  */
 
-#include "ServiceProxyHolder.h"
+#pragma once
 
-using namespace fts3::cli;
+namespace config
+{
+    struct SOAP_ENV__Fault;
+}
 
-FileTransferSoapBindingProxy ServiceProxyHolder::proxy;
+using namespace config;
 
-
+#include "ws-ifce/gsoap/configSoapBindingProxy.h"

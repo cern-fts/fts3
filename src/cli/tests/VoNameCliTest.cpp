@@ -16,34 +16,28 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * ListTransferCliTest.cpp
+ * ListVOManagerCliTest.cpp
  *
- * ServiceProxyHolder.h
- *
- *  Created on: Mar 16, 2012
+ *  Created on: Mar 19, 2012
  *      Author: Michal Simon
  */
 
-#ifndef SERVICEPROXYHOLDER_H_
-#define SERVICEPROXYHOLDER_H_
 
-#include "gsoap_transfer_proxy.h"
+//#ifdef FTS3_COMPILE_WITH_UNITTEST
+#include "ui/VoNameCli.h"
+#include "unittest/testsuite.h"
 
-namespace fts3 { namespace cli {
+#include <iostream>
 
+using namespace fts3::cli;
+using namespace std;
 
-class ServiceProxyHolder {
+BOOST_FIXTURE_TEST_CASE (VONameCli_Test, VoNameCli) {
 
-private:
-	static FileTransferSoapBindingProxy proxy;
+        // has to be const otherwise is deprecated
+        const char* av[] = {"prog_name", "voname"};
+        initCli(2, const_cast<char**>(av));
 
-public:
-	inline static FileTransferSoapBindingProxy& getServiceProxy() {
-	    return proxy;
-	};
-};
-
-}
+        BOOST_CHECK(getVOName().compare("voname") == 0);
 }
 
-#endif /* SERVICEPROXYHOLDER_H_ */

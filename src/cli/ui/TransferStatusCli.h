@@ -27,7 +27,7 @@
 #ifndef TRANSFERSTATUSCLI_H_
 #define TRANSFERSTATUSCLI_H_
 
-#include "JobIDCli.h"
+#include "JobIdCli.h"
 #include <vector>
 #include <string>
 
@@ -44,7 +44,7 @@ namespace fts3 { namespace cli {
  *
  * @see CliBase
  */
-class TransferStatusCli: public JobIDCli {
+class TransferStatusCli: public JobIdCli {
 public:
 	/**
 	 * Default constructor.

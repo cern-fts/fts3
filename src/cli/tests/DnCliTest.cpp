@@ -16,37 +16,36 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * JobIDCliTest.cpp
+ * DnCliTest.cpp
  *
  *  Created on: Mar 19, 2012
- *      Author: Michal Simon
+ *      Author: Michał Simon
  */
 
 
 //#ifdef FTS3_COMPILE_WITH_UNITTEST
-#include "ui/JobIDCli.h"
+#include "ui/DnCli.h"
 #include "unittest/testsuite.h"
 
-#include <string>
-#include <vector>
-
-using namespace std;
 using namespace fts3::cli;
 
-BOOST_FIXTURE_TEST_CASE (JobIDCli_Test1, JobIDCli) {
 
+BOOST_FIXTURE_TEST_CASE (DnCli_Test1, DnCli) {
 	// has to be const otherwise is deprecated
-	const char* av[] = {"prog_name", "ID1", "ID2", "ID3"};
-	initCli(4, const_cast<char**>(av));
-	// there should be a possitional parameter
-	BOOST_CHECK(vm.count("jobid"));
+	const char* av[] = {"prog_name", "-u", "userdn"};
+	initCli(3, const_cast<char**>(av));
+	// all 5 parameters should be available in vm variable
+	BOOST_CHECK(vm.count("userdn"));
+	// the endpoint shouldn't be empty since it's starting with http
+	BOOST_CHECK(getUserDn().compare("userdn") == 0);
+}
 
-	const vector<string>& ids = getJobIds();
-
-	// the vector should have 3 elements
-	BOOST_CHECK(ids.size() == 3);
-	// check if the values are correct
-	BOOST_CHECK(ids[0].compare("ID1") == 0);
-	BOOST_CHECK(ids[1].compare("ID2") == 0);
-	BOOST_CHECK(ids[2].compare("ID3") == 0);
+BOOST_FIXTURE_TEST_CASE (DnCli_Test2, DnCli) {
+	// has to be const otherwise is deprecated
+	const char* av[] = {"prog_name", "--userdn", "userdn"};
+	initCli(3, const_cast<char**>(av));
+	// all 5 parameters should be available in vm variable
+	BOOST_CHECK(vm.count("userdn"));
+	// the endpoint shouldn't be empty since it's starting with http
+	BOOST_CHECK(getUserDn().compare("userdn") == 0);
 }
