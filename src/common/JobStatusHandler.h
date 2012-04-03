@@ -8,12 +8,10 @@
 #ifndef JOBSTATUSHANDLER_H_
 #define JOBSTATUSHANDLER_H_
 
-#include "common/monitorobject.h"
+#include "common/ThreadSafeInstanceHolder.h"
 
 #include <map>
 #include <string>
-#include <boost/scoped_ptr.hpp>
-#include <stdsoap2.h>
 #include <iostream>
 
 using namespace std;
@@ -24,11 +22,14 @@ namespace fts3 { namespace common {
 /**
  * The JobStatusHandler class takes care of job status related operations.
  *
- * The class implements Singleton design pattern, and grands access to a
- * map containing all state names and the corresponding IDs. The class
- * inherits after MonitorObject and is thread safe.
+ * The class implements Singleton design pattern (derives from ThreadSafeInstanceHolder),
+ * and grands access to a map containing all state names and the corresponding
+ * IDs. The class inherits after MonitorObject and is thread safe.
  */
-class JobStatusHandler: public MonitorObject {
+class JobStatusHandler: public ThreadSafeInstanceHolder<JobStatusHandler> {
+
+	friend class ThreadSafeInstanceHolder<JobStatusHandler>;
+
 public:
 
 	/**
@@ -92,16 +93,9 @@ public:
 	///@}
 
 	/**
-	 * Gets a references to JobStatusHandler, is thread safe.
-	 *
-	 * @return reference to JobStatusHandler
+	 * Destructor (empty).
 	 */
-	static JobStatusHandler& getInstance();
-
-	/**
-	 * Destructor.
-	 */
-	virtual ~JobStatusHandler();
+	virtual ~JobStatusHandler() {};
 
 	/**
 	 * Check whether the given status name indicates that a transfer is ready
@@ -165,11 +159,6 @@ private :
 	 * Private, should not be used
 	 */
 	JobStatusHandler & operator=(JobStatusHandler const&);
-
-	/**
-	 * JobStatusHandler single instance
-	 */
-	static scoped_ptr<JobStatusHandler> instance;
 
 	/// maps job status name to job status id
 	const map<string, JobStateEnum> statuses;

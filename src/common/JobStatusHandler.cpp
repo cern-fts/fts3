@@ -13,9 +13,6 @@ using namespace boost::assign;
 using namespace fts3::common;
 using namespace boost;
 
-// initialize single instance pointer with 0
-scoped_ptr<JobStatusHandler> JobStatusHandler::instance;
-
 // initialize string constants
 const string JobStatusHandler::FTS3_STATUS_FAILED = "FAILED";
 const string JobStatusHandler::FTS3_STATUS_CATALOGFAILED = "CATALOGFAILED";
@@ -38,18 +35,6 @@ const string JobStatusHandler::FTS3_STATUS_PRESTAGING = "PRESTAGING";
 const string JobStatusHandler::FTS3_STATUS_WAITING_PRESTAGE = "WAITINGPRESTAGE";
 const string JobStatusHandler::FTS3_STATUS_WAITING_CATALOG_RESOLUTION = "WAITINGCATALOGRESOLUTION";
 const string JobStatusHandler::FTS3_STATUS_WAITING_CATALOG_REGISTRATION = "WAITINGCATALOGREGISTRATION";
-
-JobStatusHandler& JobStatusHandler::getInstance() {
-	// thread safe lazy loading
-    if (instance.get() == 0) {
-        FTS3_COMMON_MONITOR_START_STATIC_CRITICAL
-        if (instance.get() == 0) {
-            instance.reset(new JobStatusHandler);
-        }
-        FTS3_COMMON_MONITOR_END_CRITICAL
-    }
-    return *instance;
-}
 
 JobStatusHandler::JobStatusHandler(): statuses(map_list_of
 		(FTS3_STATUS_SUBMITTED, FTS3_STATUS_SUBMITTED_ID)
@@ -75,10 +60,6 @@ JobStatusHandler::JobStatusHandler(): statuses(map_list_of
 		(FTS3_STATUS_WAITING_CATALOG_REGISTRATION, FTS3_STATUS_WAITING_CATALOG_REGISTRATION_ID).to_container(statuses)) {
 
 	// the constant map is being initialized in initializer list
-}
-
-JobStatusHandler::~JobStatusHandler() {
-
 }
 
 bool JobStatusHandler::isTransferReady(string status) {
