@@ -33,13 +33,22 @@ class SubmitTransferCli {
 
 CliBase <|-- SubmitTransferCli
 
-class JobIDCli {
+class NameValueCli {
+	+void initCli(int, char*)
+	+string getUsageString(string)
+	+vector<string>& getNames()
+	+vector<string>& getValues()
+}
+
+CliBase <|-- NameValueCli
+
+class JobIdCli {
 
 	+string getUsageString(string)
 	+vector<string> getJobIds()
 }
 
-CliBase <|-- JobIDCli
+CliBase <|-- JobIdCli
 
 class TransferStatusCli {
 
@@ -47,23 +56,23 @@ class TransferStatusCli {
 	+bool list()
 }
 
-JobIDCli <|-- TransferStatusCli
+JobIdCli <|-- TransferStatusCli
 
-class VONameCli {
+class VoNameCli {
 	
-	+VONameCli(bool pos = true)
+	+VoNameCli(bool pos = true)
 	+string getUsageString(string)
 	+string getVOName()
 }
 
-CliBase <|-- VONameCli
+CliBase <|-- VoNameCli
 
-class DNCli {
+class DnCli {
 	+string getUsageString(string)
 	+string getUserDn()
 }
 
-CliBase <|-- DNCli
+CliBase <|-- DnCli
 
 class ListTransferCli {
 	+string getUsageString(string)
@@ -71,8 +80,8 @@ class ListTransferCli {
 	+impl__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray(soap*)
 }
 
-VONameCli <|-- ListTransferCli
-DNCli <|-- ListTransferCli
+VoNameCli <|-- ListTransferCli
+DnCli <|-- ListTransferCli
 
 class SrvManager {
 
