@@ -17,22 +17,41 @@ limitations under the License. */
 
 #include "server_dev.h"
 #include "common/pointers.h"
+#include "common/logger.h"
+#include "common/error.h"
 #include "ws/gsoap_transfer_stubs.h"
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+    #include "unittest/testsuite.h"
+#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_SERVER_NAMESPACE_START
 
 using namespace FTS3_COMMON_NAMESPACE;
 
+template <class SRV>
 class GSoapMethodHandler
 {
 public:
-    GSoapMethodHandler (Pointer<transfer::FileTransferSoapBindingService>::Shared service);
+    GSoapMethodHandler (boost::shared_ptr<SRV> service): _service(service)
+    {};
 
-    void handle();
+    void handle()
+    {
+        assert (_service.get());
+        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
+        _service->serve();
+        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
+    }
+
 
 private:
-    Pointer<transfer::FileTransferSoapBindingService>::Shared _service;
+    boost::shared_ptr<SRV> _service;
 };
+
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+
+#endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_SERVER_NAMESPACE_END
 

@@ -18,6 +18,10 @@
  */
 
 #include "ws/gsoap_config_stubs.h"
+#include "common/logger.h"
+
+using namespace fts3::common;
+
 
 int config::SoapBindingService::setConfiguration
 (
@@ -25,6 +29,7 @@ int config::SoapBindingService::setConfiguration
     struct impl__setConfigurationResponse &response
 )
 {
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
     return SOAP_OK;
 }
 
@@ -35,6 +40,17 @@ int config::SoapBindingService::getConfiguration
     struct impl__getConfigurationResponse & response
 )
 {
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
+	response.configuration = soap_new_config__Configuration(this, -1);
+
+	response.configuration->key.push_back("A");
+	response.configuration->key.push_back("B");
+	response.configuration->key.push_back("C");
+
+	response.configuration->value.push_back("1");
+	response.configuration->value.push_back("2");
+	response.configuration->value.push_back("3");
+
     return SOAP_OK;
 }
 

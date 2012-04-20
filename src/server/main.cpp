@@ -82,9 +82,10 @@ int main (int argc, char** argv)
         }
         
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
+
         theServer().start();
     }
-    catch(Err e)
+    catch(Err& e)
     {
         std::string msg = "Fatal error, exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;

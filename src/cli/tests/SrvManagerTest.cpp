@@ -30,8 +30,6 @@
 #include "server/ws/WebServerMock.h"
 #include "common/InstanceHolder.h"
 
-#include <iostream>
-
 using namespace fts3::cli;
 using namespace fts3::ws;
 using namespace fts3::common;

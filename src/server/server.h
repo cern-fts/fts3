@@ -20,6 +20,7 @@ limitations under the License. */
 #include "generic_server.h"
 #include "threadpool.h"
 #include "transfer_web_service.h"
+#include "config_web_service.h"
 #include "process_service.h"
 
 FTS3_SERVER_NAMESPACE_START
@@ -29,6 +30,7 @@ FTS3_SERVER_NAMESPACE_START
 struct ServerTraits
 {
     typedef TransferWebService TransferWebServiceType;
+    typedef ConfigWebService ConfigWebServiceType;
     typedef ProcessService ProcessServiceType;    
     typedef ThreadPool::ThreadPool ThreadPoolType; 
 };

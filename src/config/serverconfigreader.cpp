@@ -50,7 +50,7 @@ po::options_description ServerConfigReader::_defineGenericOptions()
         ("no-daemon,n", "Do not daemonize")
 
         (
-            "configfile,c",  
+            "configfile,f",
             po::value<std::string>( &(_vars["configfile"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT),
             "FTS3 server config file"
         );
@@ -66,9 +66,15 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 
     config.add_options()
 	    (   
-            "Port,p", 
+            "TransferPort,t",
             po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT), 
-            "Listening port"
+            "File transfer listening port"
+        )
+
+	    (
+            "ConfigPort,c",
+            po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT + 1),
+            "File transfer listening port"
         )
 
 	    (
@@ -645,7 +651,8 @@ BOOST_FIXTURE_TEST_CASE
 
 void ServerConfigReader::storeValuesAsStrings ()
 {
-    storeAsString("Port");
+    storeAsString("TransferPort");
+    storeAsString("ConfigPort");
     storeAsString("ThreadNum");
 }
 
