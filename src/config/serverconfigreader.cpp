@@ -74,7 +74,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 	    (
             "ConfigPort,c",
             po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT + 1),
-            "File transfer listening port"
+            "Config listening port"
         )
 
 	    (
