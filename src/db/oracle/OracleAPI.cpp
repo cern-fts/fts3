@@ -127,7 +127,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
                 tr_files = new TransferFiles();
                 tr_files->SOURCE_SURL = r->getString(1);
                 tr_files->DEST_SURL = r->getString(2);
-		tr_files->JOB_ID = r->getString(3);
+                tr_files->JOB_ID = r->getString(3);
                 files.push_back(tr_files);
             }
             conn->destroyResultset(s, r);
@@ -608,27 +608,453 @@ void OracleAPI::removeVOLimit(std::string channelUpperName, std::string voName) 
 void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int limit) {
 }
  */
+
 /* ********************************* NEW API FTS3 *********************************/
-/*void OracleAPI::addSe( std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-    std::string  SE_TRANSFER_TYPE, std::string   SE_TRANSFER_PROTOCOL, std::string   SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
+
+void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
+    Se* seData = NULL;
+    std::vector<Se*>::iterator iter;
+    const std::string tag = "getAllSeInfoNoCritiria";
+    std::string query_stmt = "SELECT "
+            " t_se.ENDPOINT, "
+            " t_se.SE_TYPE, "
+            " t_se.SITE,  "
+            " t_se.NAME,  "
+            " t_se.STATE, "
+            " t_se.VERSION,  "
+            " t_se.HOST, "
+            " t_se.SE_TRANSFER_TYPE, "
+            " t_se.SE_TRANSFER_PROTOCOL, "
+            " t_se.SE_CONTROL_PROTOCOL, "
+            " t_se.GOCDB_ID "
+            " FROM t_se";
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while (r->next()) {
+            seData = new Se();
+            seData->ENDPOINT = r->getString(1);
+            seData->SE_TYPE = r->getString(2);
+            seData->SITE = r->getString(3);
+            seData->NAME = r->getString(4);
+            seData->STATE = r->getString(5);
+            seData->VERSION = r->getString(6);
+            seData->HOST = r->getString(7);
+            seData->SE_TRANSFER_TYPE = r->getString(8);
+            seData->SE_TRANSFER_PROTOCOL = r->getString(9);
+            seData->SE_CONTROL_PROTOCOL = r->getString(10);
+            seData->GOCDB_ID = r->getString(11);
+            se.push_back(seData);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+}
+    
+void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
+    SeConfig* seCon = NULL;
+    std::vector<SeConfig*>::iterator iter;
+    const std::string tag = "getAllSeConfigNoCritiria";
+    std::string query_stmt = "SELECT "
+            " T_SE_VO_SHARE.SE_NAME, "
+            " T_SE_VO_SHARE.SHARE_ID, "
+            " T_SE_VO_SHARE.VO_NAME,  "
+            " T_SE_VO_SHARE.SE_PAIR_SHARE,  "
+            " T_SE_VO_SHARE.SE_LIMIT_IN, "
+            " T_SE_VO_SHARE.SE_LIMIT_OUT,  "
+            " T_SE_VO_SHARE.SE_POLICY "
+            " FROM T_SE_VO_SHARE";
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while (r->next()) {
+            seCon = new SeConfig();
+            seCon->SE_NAME = r->getString(1);
+            seCon->SHARE_ID = r->getString(2);
+            seCon->VO_NAME = r->getString(3);
+            seCon->SE_PAIR_SHARE = r->getInt(4);
+            seCon->SE_LIMIT_IN = r->getInt(5);
+            seCon->SE_LIMIT_OUT = r->getInt(6);
+            seCon->SE_POLICY = r->getString(7);
+            seConfig.push_back(seCon);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+    
+void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string NAME, std::string VO_NAME){
+    SeAndConfig* seData = NULL;
+    std::vector<SeAndConfig*>::iterator iter;
+    const std::string tag = "getAllSeAndConfigWithCritiria";
+    std::string query_stmt = " SELECT "
+            " t_se.ENDPOINT, "
+            " t_se.SE_TYPE, "
+            " t_se.SITE,  "
+            " t_se.NAME,  "
+            " t_se.STATE, "
+            " t_se.VERSION,  "
+            " t_se.HOST, "
+            " t_se.SE_TRANSFER_TYPE, "
+            " t_se.SE_TRANSFER_PROTOCOL, "
+            " t_se.SE_CONTROL_PROTOCOL, "
+            " t_se.GOCDB_ID, "
+            " T_SE_VO_SHARE.SHARE_ID, "
+            " T_SE_VO_SHARE.VO_NAME, "
+            " T_SE_VO_SHARE.SE_PAIR_SHARE, "
+            " T_SE_VO_SHARE.SE_LIMIT_IN, "
+            " T_SE_VO_SHARE.SE_LIMIT_OUT, "
+            " T_SE_VO_SHARE.SE_POLICY "
+            " FROM t_se, T_SE_VO_SHARE where t_se.NAME = T_SE_VO_SHARE.SE_NAME ";	     
+    if (NAME.length() > 0)
+        query_stmt.append(" and t_se.NAME = :1 ");	     
+    if (VO_NAME.length() > 0)
+        query_stmt.append(" and T_SE_VO_SHARE.VO_NAME = :2");
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
+    if (NAME.length() > 0)
+        s->setString(1, NAME);	     
+    if (VO_NAME.length() > 0)
+        s->setString(2, VO_NAME);	         
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while (r->next()) {
+            seData = new SeAndConfig();
+            seData->ENDPOINT = r->getString(1);
+            seData->SE_TYPE = r->getString(2);
+            seData->SITE = r->getString(3);
+            seData->NAME = r->getString(4);
+            seData->STATE = r->getString(5);
+            seData->VERSION = r->getString(6);
+            seData->HOST = r->getString(7);
+            seData->SE_TRANSFER_TYPE = r->getString(8);
+            seData->SE_TRANSFER_PROTOCOL = r->getString(9);
+            seData->SE_CONTROL_PROTOCOL = r->getString(10);
+            seData->GOCDB_ID = r->getString(11);
+            seData->SHARE_ID = r->getString(12);
+            seData->VO_NAME = r->getString(13);
+            seData->SE_PAIR_SHARE = r->getInt(14);
+            seData->SE_LIMIT_IN = r->getInt(15);
+            seData->SE_LIMIT_OUT = r->getInt(16);
+            seData->SE_POLICY = r->getString(17);
+            seAndConfig.push_back(seData);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
 }
 
-Se* OracleAPI::getSeInfo(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-    std::string  SE_TRANSFER_TYPE, std::string   SE_TRANSFER_PROTOCOL, std::string   SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
-        return new Se;
+void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
+            std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
+    std::string query = "INSERT INTO t_se (ENDPOINT, SE_TYPE, SITE, NAME, STATE, VERSION, HOST, SE_TRANSFER_TYPE, SE_TRANSFER_PROTOCOL,SE_CONTROL_PROTOCOL,GOCDB_ID) VALUES (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)";
+    std::string tag = "addSe";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, ENDPOINT);
+        s->setString(2, SE_TYPE);
+        s->setString(3, SITE);
+        s->setString(4, NAME);
+        s->setString(5, STATE);
+        s->setString(6, VERSION);
+        s->setString(7, HOST);
+        s->setString(8, SE_TRANSFER_TYPE);
+        s->setString(9, SE_TRANSFER_PROTOCOL);
+        s->setString(10, SE_CONTROL_PROTOCOL);
+        s->setString(11, GOCDB_ID);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}	    
+
+void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
+            std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
+    int fields = 0;
+    std::string query = "UPDATE T_SE SET ";
+    			if(ENDPOINT.length() > 0){
+	    			query.append(" ENDPOINT='");
+	    			query.append(ENDPOINT);				
+	    			query.append("'");				
+				fields++;
+				}    	    			
+    			if(SE_TYPE.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SE_TYPE='");
+	    			query.append(SE_TYPE);				
+	    			query.append("'");						
+				fields++;
+				}
+    			if(SITE.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SITE='");
+	    			query.append(SE_TYPE);				
+	    			query.append("'");						
+				fields++;
+				}  
+    			if(STATE.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" STATE='");
+	    			query.append(STATE);				
+	    			query.append("'");				
+				fields++;
+				}  
+    			if(VERSION.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" VERSION='");
+	    			query.append(VERSION);				
+	    			query.append("'");				
+				fields++;
+				}  
+    			if(HOST.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" HOST='");
+	    			query.append(HOST);				
+	    			query.append("'");				
+				fields++;
+				}
+    			if(SE_TRANSFER_TYPE.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SE_TRANSFER_TYPE='");
+	    			query.append(SE_TRANSFER_TYPE);				
+	    			query.append("'");					
+				fields++;
+				}	
+    			if(SE_TRANSFER_PROTOCOL.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SE_TRANSFER_PROTOCOL='");
+	    			query.append(SE_TRANSFER_PROTOCOL);				
+	    			query.append("'");				
+				fields++;
+				}							
+    			if(SE_CONTROL_PROTOCOL.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SE_CONTROL_PROTOCOL='");
+	    			query.append(SE_CONTROL_PROTOCOL);			       
+	    			query.append("'");				
+				fields++;
+				}
+    			if(GOCDB_ID.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" GOCDB_ID='");
+	    			query.append(GOCDB_ID);			       
+	    			query.append("'");					
+				fields++;
+				}							
+	    			query.append(" WHERE NAME='");
+	    			query.append(NAME);			       
+	    			query.append("'");
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, "");        
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, "");
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+}	    
+
+
+void OracleAPI::addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int SE_LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY){
+    std::string query = "INSERT INTO T_SE_VO_SHARE (SE_NAME, SHARE_ID, VO_NAME, SE_PAIR_SHARE, SE_LIMIT_IN, SE_LIMIT_OUT, SE_POLICY) VALUES (:1,:2,:3,:4,:5,:6,:7)";
+    std::string tag = "addSeConfig";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, SE_NAME);
+        s->setString(2, SHARE_ID);
+        s->setString(3, VO_NAME);
+        s->setInt(4, SE_PAIR_SHARE);
+        s->setInt(5, SE_LIMIT_IN);
+        s->setInt(6, SE_LIMIT_OUT);
+        s->setString(7, SE_POLICY);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
 }
 
-void OracleAPI::updateSe( std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-    std::string  SE_TRANSFER_TYPE, std::string   SE_TRANSFER_PROTOCOL, std::string   SE_CONTROL_PROTOCOL, std::string GOCDB_ID){
+
+/*
+Update the config of an SE
+REQUIRED: SE_NAME / VO_NAME
+OPTIONAL; the rest
+set int to -1 so as NOT to be changed
+*/
+void OracleAPI::updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int SE_LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY){
+    int fields = 0;
+    std::string query = "UPDATE T_SE_VO_SHARE SET ";
+    			if(SHARE_ID.length() > 0){
+	    			query.append(" SHARE_ID='");
+	    			query.append(SHARE_ID);			       
+	    			query.append("'");					
+				fields++;
+				}    		
+    			if(SE_PAIR_SHARE != -1){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}	
+				std::ostringstream osstream;
+				osstream << SE_PAIR_SHARE;
+				std::string string_x = osstream.str();								
+	    			query.append(" SE_PAIR_SHARE=");
+	    			query.append(string_x);			       						
+				fields++;
+				}
+    			if(SE_LIMIT_IN != -1){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SE_LIMIT_IN=");
+				std::ostringstream osstream;
+				osstream << SE_LIMIT_IN;
+				std::string string_x = osstream.str();	
+	    			query.append(string_x);			       
+						
+				fields++;
+				}
+    			if(SE_LIMIT_OUT != -1){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SE_LIMIT_OUT=");
+				std::ostringstream osstream;
+				osstream << SE_LIMIT_OUT;
+				std::string string_x = osstream.str();	
+	    			query.append(string_x);							
+				fields++;
+				}
+    			if(SE_POLICY.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SE_POLICY=");
+	    			query.append(SE_POLICY);			       
+	    			query.append("'");				
+				}
+
+			query.append(" WHERE SE_NAME ='");
+			query.append(SE_NAME);
+			query.append("'");
+			query.append(" AND ");
+			query.append(" VO_NAME ='");
+			query.append(VO_NAME);
+			query.append("'");
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, "");
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, "");
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
 }
 
-void OracleAPI::deleteSe( std::string ENDPOINT, std::string SITE, std::string NAME){
+/*
+Delete a SE
+REQUIRED: NAME
+*/
+void OracleAPI::deleteSe(std::string NAME){
+    std::string query = "DELETE FROM T_SE WHERE NAME = :1";
+    std::string tag = "deleteSe";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, NAME);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
 }
- */
+
+/*
+Delete the config of an SE for a specific VO
+REQUIRED: SE_NAME
+OPTIONAL: VO_NAME
+*/
+void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string VO_NAME){
+    std::string query = "DELETE FROM T_SE_VO_SHARE WHERE SE_NAME ='"+SE_NAME+"'";    
+    if(VO_NAME.length() > 0)
+    	query.append(" AND VO_NAME ='"+VO_NAME+"'");	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, "");
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, "");
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+
+
 
 
 // the class factories
-
 extern "C" GenericDbIfce* create() {
     return new OracleAPI;
 }

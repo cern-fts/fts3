@@ -35,6 +35,8 @@
 #include "SePair.h"
 #include "TransferJobSummary.h"
 #include "Se.h"
+#include "SeConfig.h"
+#include "SeAndConfig.h"
 #include "TransferJobs.h"
 #include "TransferFiles.h"
 
@@ -229,18 +231,25 @@ public:
 
 
     /*NEW API*/
-    /*
-    virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-            std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
+    virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
+    
+    virtual void getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
+    
+    virtual void getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string NAME, std::string VO_NAME) = 0;    
 
-    virtual Se* getSeInfo(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
+    virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
 
     virtual void updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
 
-    virtual void deleteSe(std::string ENDPOINT, std::string SITE, std::string NAME) = 0;
-    */
+    virtual void deleteSe(std::string NAME) = 0;
+
+    virtual void addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY) = 0;
+
+    virtual void updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY) = 0;
+
+    virtual void deleteSeConfig(std::string SE_NAME, std::string VO_NAME) = 0;
 };
 
 

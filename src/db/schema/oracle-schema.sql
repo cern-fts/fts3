@@ -6,7 +6,7 @@
 CREATE TABLE t_se (
   endpoint varchar2(1024)
   ,se_type varchar(30)
-  ,site varchar2(100) NOT NULL
+  ,site varchar2(100)
   ,name varchar2(255) CONSTRAINT se_name_id_pk PRIMARY KEY
   ,state varchar2(30)
   ,version varchar2(30)
@@ -249,7 +249,7 @@ CREATE TABLE t_se_vo_share (
    ,se_policy     VARCHAR2(50) 
 --
 -- Set primary key
-   ,CONSTRAINT se_pair_vo_share_pk PRIMARY KEY (se_name, share_id)
+   ,CONSTRAINT se_pair_vo_share_pk PRIMARY KEY (se_name)
 --
    ,CONSTRAINT se2_pair_vo_share_pk FOREIGN KEY (se_name) REFERENCES t_se (name)   
 );
