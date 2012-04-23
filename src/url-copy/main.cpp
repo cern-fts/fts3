@@ -15,11 +15,80 @@
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/parsers.hpp>
 #include "mq_manager.h"
-
+#include <fstream>
+#include "boost/date_time/gregorian/gregorian.hpp"
+#include "parse_url.h"
+#include <uuid/uuid.h>
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace std;
 namespace po = boost::program_options;
+
+std::string generateLogFileName(std::string surl, std::string durl){
+   std::string new_name = std::string("");
+   char *base_scheme = NULL;
+   char *base_host = NULL;
+   char *base_path = NULL;
+   int base_port = 0;
+   std::string shost;
+   std::string dhost; 
+   
+	uuid_t id;
+	char cc_str[36];
+
+	uuid_generate(id);;
+	uuid_unparse(id, cc_str);
+	string uuid = cc_str;    
+   
+    //add surl / durl
+    //source
+    parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
+    shost = base_host;
+    
+    //dest
+    parse_url(durl.c_str(), &base_scheme, &base_host, &base_port, &base_path); 
+    dhost = base_host;
+
+    // add date
+    time_t current;
+    time(&current);
+    struct tm * date = gmtime(&current);
+
+    // Create template
+    std::stringstream ss;
+    ss << std::setfill('0');
+    ss << std::setw(4) << (date->tm_year+1900)
+       <<  "-" << std::setw(2) << (date->tm_mon+1)
+       <<  "-" << std::setw(2) << (date->tm_mday)
+       <<  "-" << std::setw(2) << (date->tm_hour)
+               << std::setw(2) << (date->tm_min)
+    << "__" << shost << "__" << dhost << "__" << uuid;
+
+    new_name += ss.str();
+    return new_name;
+}
+
+class logger {
+public:
+
+    logger( std::ostream& os_ );
+
+    template<class T>
+    friend logger& operator<<( logger& log, const T& output );
+
+private:
+
+    std::ostream& os;
+};
+
+logger::logger( std::ostream& os_) : os(os_) {}
+
+template<class T>
+logger& operator<<( logger& log, const T& output ) {
+    log.os << output << std::endl;
+    log.os.flush(); 
+    return log;
+}
 
 int main(int argc, char **argv) {
 
@@ -91,50 +160,77 @@ int main(int argc, char **argv) {
     }
 
     if (vm.count("dest_url")) {
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Source url: " << vm["dest_url"].as<string > ()  << commit;				
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Destination url: " << vm["dest_url"].as<string > ()  << commit;				
     } else {
         FTS3_COMMON_LOGGER_NEWLOG (ERR) << " Destination url is required to be set" << commit;
         return EXIT_FAILURE;
     }
 
+    std::string surl =  vm["source_url"].as<string > ();
+    std::string durl =  vm["dest_url"].as<string > ();
+    std::string logFileName = "/var/log/fts3/";
+    logFileName += generateLogFileName(surl, durl);
+    std::ofstream logStream;
+    logStream.open (logFileName.c_str(), ios::app);    
+    logger log(logStream);    
+    
+    log << "Job id: " << vm["job_id"].as<string > ();
+    log << "File id: " << vm["file_id"].as<string > ();
+    log << "Source url: " << vm["source_url"].as<string > ();
+    log << "Destination url: " << vm["dest_url"].as<string > ();
+
     if (vm.count("nbstreams")) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "nbstreams was set to " << vm["nbstreams"].as<int>() << commit;
+        log << "nbstreams is set to " << vm["nbstreams"].as<int>();
     }
 
     if (vm.count("tcpbuffersize")) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "tcpbuffersize was set to " << vm["tcpbuffersize"].as<int>() << commit;	
     }
 
+	log << "tcpbuffersize was set to " << vm["tcpbuffersize"].as<int>();
+
     if (vm.count("blocksize")) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "blocksize was set to " << vm["blocksize"].as<int>() << commit;		
 	
     }
 
+	log << "blocksize was set to " << vm["blocksize"].as<int>();
+
     if (vm.count("timeout")) {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Timeout was set to " << vm["timeout"].as<int>() << commit;		    
     }
 
-    if (vm.count("overwrite"))
-    	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Overwrite was set" << commit;		           
+	log << "Timeout was set to " << vm["timeout"].as<int>();
 
-    if (vm.count("console"))
-    	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Print console was set" << commit;		               
+    if (vm.count("overwrite")){
+    	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Overwrite was set" << commit;
+	log << "Overwrite was set";		           
+	}
 
-    if (vm.count("blocking"))
+    if (vm.count("console")){
+    	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Print console was set" << commit;	
+	log << "Print console was set";	               
+	}
+
+    if (vm.count("blocking")){
     	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Blocking mode was set" << commit;		                           
+	log << "Blocking mode was set";
+	}
 
     if (vm.count("daemonize")) {
     	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Daemonize was set" << commit;		                               
+	log << "Daemonize was set";
         int value = daemon(0, 0);
 	if(value != 0)
 	    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed to set daemon, will continue atatched to the controlling terminal " << commit;		                               	
     }
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) <<  " Transfer Accepted" << commit;
-    //create log file named file_id.
-    //IF file id doesn't exists (meaning fts3_url_copy direclty, create on with mktemp)
+    
+    log << "Transfer accepted";
 
-
+    log << "Setup the reported queue back to fts3_server for this process";
     //init message_queue
     QueueManager* qm = NULL;
     try {
@@ -150,20 +246,24 @@ int main(int argc, char **argv) {
     gfal_context_t handle;
     int ret = -1;
   
-    // initialize gfal   
+    log << "initialize gfal2";   
     if ((handle = gfal_context_new(&tmp_err)) == NULL) {
 	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Transfer Initialization failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message << commit;
+	log << "Transfer Initialization failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message;
         return -1;
     }
-    // begin copy
+    log << "begin copy";
         FTS3_COMMON_LOGGER_NEWLOG (INFO) <<  " Transfer Started" << commit;
     if ((ret = gfalt_copy_file(handle, NULL, source_url.c_str(), dest_url.c_str(), &tmp_err)) != 0) {        
 	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Transfer failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message << commit;
+	log << "Transfer failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message;
         return -1;
-    } else
+    } else{
         FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Transfer completed successfully"  << commit;
-
-    //release all resources
+	log << "Transfer completed successfully";
+    }
+    
+    log << "release all gfal2 resources";
     gfal_context_free(handle);
     if (qm)
         delete qm;
