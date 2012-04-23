@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
     }
 
     if (vm.count("job_id")) {
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Job id: " << vm["job_id"].as<string > ()  << commit;	
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Job id: " << vm["job_id"].as<string > ()  << commit;
     }
 
     if (vm.count("file_id")) {
@@ -174,8 +174,7 @@ int main(int argc, char **argv) {
     logStream.open (logFileName.c_str(), ios::app);    
     logger log(logStream);    
     
-    log << "Job id: " << vm["job_id"].as<string > ();
-    log << "File id: " << vm["file_id"].as<string > ();
+
     log << "Source url: " << vm["source_url"].as<string > ();
     log << "Destination url: " << vm["dest_url"].as<string > ();
 
