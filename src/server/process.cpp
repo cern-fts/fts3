@@ -173,12 +173,7 @@ int ExecuteProcess::execProcess(int argc, char** argv)
     return status;
 }
 
-/*!
-  execute the process using the shell
-  \return the exit status of the application
 
-  \todo make shell exchangable
-*/
 int ExecuteProcess::executeProcessShell()
 {
     static const char SHELL[] = "/bin/sh";
