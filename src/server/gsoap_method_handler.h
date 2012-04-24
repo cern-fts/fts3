@@ -15,6 +15,9 @@ limitations under the License. */
 
 #pragma once
 
+#include <boost/type_traits/is_base_of.hpp>
+#include <boost/static_assert.hpp>
+
 #include "server_dev.h"
 #include "common/pointers.h"
 #include "common/logger.h"
@@ -32,9 +35,19 @@ using namespace FTS3_COMMON_NAMESPACE;
 template <class SRV>
 class GSoapMethodHandler
 {
+private:
+	static const bool RIGHT_BASE = boost::is_base_of<soap, SRV>::value;
+	BOOST_STATIC_ASSERT(RIGHT_BASE);
+
 public:
     GSoapMethodHandler (boost::shared_ptr<SRV> service): _service(service)
     {};
+
+    ~GSoapMethodHandler ()
+    {
+    	if (_service.get())
+    		_service->destroy();
+    };
 
     void handle()
     {
