@@ -212,7 +212,7 @@ public:
     
     virtual void getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig);
     
-    virtual void getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string NAME, std::string VO_NAME);    
+    virtual void getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE);    
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
@@ -222,11 +222,11 @@ public:
 
     virtual void deleteSe(std::string NAME);
 
-    virtual void addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY);
+    virtual void addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE);
 
-    virtual void updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY);
+    virtual void updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE);
 
-    virtual void deleteSeConfig(std::string SE_NAME, std::string VO_NAME);
+    virtual void deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE);
     
 private:
 	OracleConnection *conn;

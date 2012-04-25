@@ -228,14 +228,12 @@ public:
 
 */
 
-
-
     /*NEW API*/
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
     virtual void getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
     
-    virtual void getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string NAME, std::string VO_NAME) = 0;    
+    virtual void getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) = 0;    
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
@@ -245,11 +243,11 @@ public:
 
     virtual void deleteSe(std::string NAME) = 0;
 
-    virtual void addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY) = 0;
+    virtual void addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) = 0;
 
-    virtual void updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string VO_NAME, int SE_PAIR_SHARE,int LIMIT_IN, int SE_LIMIT_OUT, std::string SE_POLICY) = 0;
+    virtual void updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) = 0;
 
-    virtual void deleteSeConfig(std::string SE_NAME, std::string VO_NAME) = 0;
+    virtual void deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) = 0;
 };
 
 

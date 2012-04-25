@@ -20,6 +20,7 @@ boost::scoped_ptr<DBSingleton> DBSingleton::i;
 DBSingleton::DBSingleton() {
 
   try{
+
   std::string dbType = theServerConfig().get<std::string>("DbType");
     
     if (dbType != "oracle")
@@ -28,7 +29,7 @@ DBSingleton::DBSingleton() {
     }
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << dbType << " database backend loaded" << commit; 
-    
+
     //hardcoded for now
     libraryFileName = "libfts3_db_oracle.so";
 

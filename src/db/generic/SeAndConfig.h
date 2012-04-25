@@ -44,11 +44,8 @@ public:
 	std::string SE_TRANSFER_PROTOCOL;
 	std::string SE_CONTROL_PROTOCOL;
 	std::string GOCDB_ID;	
+  	std::string SE_NAME; 
  	std::string SHARE_ID; 
- 	std::string VO_NAME; 
- 	int SE_PAIR_SHARE;
- 	int SE_LIMIT_IN;
- 	int SE_LIMIT_OUT;
- 	std::string SE_POLICY;	
+ 	std::string SHARE_TYPE; 
 
 };

@@ -4,18 +4,22 @@
 --
 
 CREATE TABLE t_se (
-  endpoint varchar2(1024)
-  ,se_type varchar(30)
-  ,site varchar2(100)
-  ,name varchar2(255) CONSTRAINT se_name_id_pk PRIMARY KEY
-  ,state varchar2(30)
-  ,version varchar2(30)
+-- The internal id
+   se_id_info INTEGER
+  ,endpoint VARCHAR2(1024)
+  ,se_type VARCHAR2(30)
+  ,site VARCHAR2(100)
+  ,name VARCHAR2(512) not null
+  ,state VARCHAR2(30)
+  ,version VARCHAR2(30)
 -- This field will contain the host parse for FTS and extracted from name 
   ,host varchar2(100)
-  ,se_transfer_type varchar(30)
-  ,se_transfer_protocol varchar(30)
-  ,se_control_protocol varchar(30)
-  ,gocdb_id varchar2(100)
+  ,se_transfer_type VARCHAR2(30)
+  ,se_transfer_protocol VARCHAR2(30) not null
+  ,se_control_protocol VARCHAR2(30)
+  ,gocdb_id VARCHAR2(100)
+--  ,CONSTRAINT constraint_name PRIMARY KEY (se_id_info, name, se_transfer_protocol)
+  ,CONSTRAINT se_info_pk PRIMARY KEY (name)
 );
 
 -- 
@@ -25,7 +29,6 @@ CREATE TABLE t_se_acl (
   name varchar2(255)
   ,vo varchar2(32) 
   ,CONSTRAINT se_acl_pk PRIMARY KEY (name, vo)
-  ,CONSTRAINT se_acl_se_fk FOREIGN KEY (name) REFERENCES t_se (name)
 );
 
 --
@@ -153,9 +156,6 @@ CREATE TABLE t_se_pair (
 -- preparing_files_ratio default = 2. urlcopy se_pairs only.
   ,preparing_files_ratio NUMBER default NULL
 --
--- Contraints
-   ,CONSTRAINT se_pair_source_dest_uq UNIQUE (source_site, dest_site)
-   ,CONSTRAINT check_transfer_type CHECK (transfer_type IN ('URLCOPY','SRMCOPY','STUB')) ENABLE
 --
 --   ,CONSTRAINT tx_to_per_mb_value CHECK (tx_to_per_mb >= 0)
 --   ,CONSTRAINT no_tx_activity_to_value CHECK (no_tx_activity_to >= 0)
@@ -200,6 +200,22 @@ BEGIN
 END;
 /
 
+
+--
+-- autoinc sequence on se_id_info
+--
+CREATE SEQUENCE se_id_info_seq;
+
+CREATE OR REPLACE TRIGGER se_id_info_auto_inc
+BEFORE INSERT ON t_se
+FOR EACH ROW
+WHEN (new.se_id_info IS NULL)
+BEGIN
+  SELECT se_id_info_seq.nextval
+  INTO   :new.se_id_info from dual;
+END;
+/
+
 --
 -- Table for saving the site-group association. As convention, group names should be between "[""]"
 -- 
@@ -228,30 +244,14 @@ CREATE TABLE t_site_group (
 CREATE TABLE t_se_vo_share (
 --
 -- the name of the se_pair
-   se_name         VARCHAR2(512)
-                    	CONSTRAINT se_pair_vo_share_ch_not_null NOT NULL			
+   se_name         VARCHAR2(512)  NOT NULL			
 -- share ID
-   ,share_id         VARCHAR2(512)                    			
+   ,share_id         VARCHAR2(512)  NOT NULL			                    			
 --
--- The name of the VO
-  ,vo_name              VARCHAR2(50)
-                    	CONSTRAINT se_pair_vo_share_vo_not_null NOT NULL
---
--- The percentage of the se_pair resources associated to the VO
-   ,se_pair_share       INTEGER DEFAULT 0
---
--- The limit (i.e. cap) in the number of concurrent transfers for this VO
-   ,se_limit_in       INTEGER DEFAULT 50
---
--- The limit (i.e. cap) in the number of concurrent transfers for this VO
-   ,se_limit_out       INTEGER DEFAULT 50
---
-   ,se_policy     VARCHAR2(50) 
---
+   ,share_type VARCHAR2(512)  NOT NULL
 -- Set primary key
-   ,CONSTRAINT se_pair_vo_share_pk PRIMARY KEY (se_name)
---
-   ,CONSTRAINT se2_pair_vo_share_pk FOREIGN KEY (se_name) REFERENCES t_se (name)   
+   ,CONSTRAINT se_pair_vo_share_pk PRIMARY KEY (se_name, share_id, share_type)
+   ,CONSTRAINT se_pair_vo_share_fk FOREIGN KEY (se_name) REFERENCES t_se (name)
 );
 
 --
