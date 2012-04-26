@@ -20,11 +20,11 @@
 #include "ws/gsoap_config_stubs.h"
 #include "db/generic/SingleDbInstance.h"
 #include "common/logger.h"
-#include "ws/GSoapExceptionHandler.h"
 
 #include <vector>
 #include <string>
 #include <set>
+#include <exception>
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -34,7 +34,6 @@ using namespace db;
 using namespace fts3::common;
 using namespace boost;
 using namespace boost::algorithm;
-
 
 
 int config::SoapBindingService::setConfiguration
@@ -154,9 +153,11 @@ int config::SoapBindingService::setConfiguration
 				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The 'SeConfig' record has been updated ("
 													<< type << ", " << name << ", " << id_extended << ")." << commit;
 			}
-		} catch (...) {
-			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught while processing: ("
+		} catch (std::exception& ex) {
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A DB Exception has been caught: " << ex.what() << " ("
 												<< type << ", " << name << ", " << id_extended << ")" << commit;
+
+			return SOAP_FAULT;
 		}
 	}
 
