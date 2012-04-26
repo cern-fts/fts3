@@ -710,18 +710,18 @@ void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndCo
             " FROM t_se, T_SE_VO_SHARE where t_se.NAME = T_SE_VO_SHARE.SE_NAME ";	     
     if (SE_NAME.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SE_NAME ='");
-	query_stmt.append(SE_NAME);		     
-	query_stmt.append("'");	
+		query_stmt.append(SE_NAME);
+		query_stmt.append("'");
 	}
     if (SHARE_ID.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SHARE_ID ='");
-	query_stmt.append(SHARE_ID);		     
-	query_stmt.append("'");		
+		query_stmt.append(SHARE_ID);
+		query_stmt.append("'");
 	}
     if (SHARE_TYPE.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SHARE_TYPE ='");
-	query_stmt.append(SHARE_TYPE);		     
-	query_stmt.append("'");			
+		query_stmt.append(SHARE_TYPE);
+		query_stmt.append("'");
 	}
 
     try {
@@ -740,12 +740,12 @@ void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndCo
             seData->SE_TRANSFER_PROTOCOL = r->getString(9);
             seData->SE_CONTROL_PROTOCOL = r->getString(10);
             seData->GOCDB_ID = r->getString(11);
-	    if (SE_NAME.length() > 0)
+	    //if (SE_NAME.length() > 0)
 	            seData->SE_NAME = r->getString(12);
-	    if (SHARE_ID.length() > 0)		    
+	   // if (SHARE_ID.length() > 0)
             	seData->SHARE_ID = r->getString(13);
-	    if (SHARE_TYPE.length() > 0)		
-            	seData->SHARE_TYPE = r->getInt(14);          
+	    //if (SHARE_TYPE.length() > 0)
+            	seData->SHARE_TYPE = r->getString(14);
 
             seAndConfig.push_back(seData);
         }
