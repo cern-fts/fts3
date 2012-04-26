@@ -55,7 +55,7 @@ file(GLOB fts3_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*
 list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
 add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
 add_dependencies(fts3_server_lib fts3_server_gsoap_transfer)
-target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_transfer ${LIBUUID_LIBRARIES} -lboost_thread-mt)
+target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_transfer ${LIBUUID_LIBRARIES} -lboost_thread-mt -lboost_regex)
 
 # Server executable
 add_executable (fts3_server main.cpp)

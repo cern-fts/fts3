@@ -85,7 +85,7 @@ int main(int ac, char* av[]) {
 		vector<string>::iterator it_name, it_value;
 
 		for (it_name = names.begin(), it_value = values.begin(); it_name < names.end(); it_name++, it_value++) {
-			cout << *it_name << " " << *it_value << endl;
+			cout << *it_name << "=" << *it_value << endl;
 		}
 
 	} catch(std::exception& e) {
