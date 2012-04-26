@@ -66,7 +66,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 
     config.add_options()
 	    (   
-            "TransferPort,t",
+            "TransferPort,p",
             po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT), 
             "File transfer listening port"
         )
