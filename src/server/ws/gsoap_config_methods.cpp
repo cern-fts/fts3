@@ -202,7 +202,7 @@ int config::SoapBindingService::getConfiguration
 			value = "{" + (*it)->SHARE_VALUE + "}";
 			values.push_back(value);
 
-			name = "{\"category\":\"" + (*it)->SHARE_TYPE + "\",\"name\":\"" + (*it)->SE_NAME + "\"," + (*it)->SHARE_ID;
+			name = "{\"category\":\"" + (*it)->SHARE_TYPE + "\",\"name\":\"" + (*it)->SE_NAME + "\"," + (*it)->SHARE_ID + "}";
 			names.push_back(name);
 		}
 
