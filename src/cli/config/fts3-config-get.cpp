@@ -75,7 +75,7 @@ int main(int ac, char* av[]) {
 		int err = service.getConfiguration(resp);
 
 		if (err) {
-			cout << "Failed to cancel transfer: cancel. ";
+			cout << "Failed to get configuration name-value pairs. " << endl;;
 			// TODO print error message
 			//manager->printSoapErr(service);
 			return 0;
