@@ -45,7 +45,8 @@ public:
 	std::string SE_CONTROL_PROTOCOL;
 	std::string GOCDB_ID;	
   	std::string SE_NAME; 
- 	std::string SHARE_ID; 
  	std::string SHARE_TYPE; 
+ 	std::string SHARE_ID; 
+ 	std::string SHARE_VALUE; 	
 
 };

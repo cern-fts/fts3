@@ -666,6 +666,7 @@ void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
             " T_SE_VO_SHARE.SE_NAME, "
             " T_SE_VO_SHARE.SHARE_ID, "
             " T_SE_VO_SHARE.SHARE_TYPE  "
+            " T_SE_VO_SHARE.SHARE_VALUE  "	    
             " FROM T_SE_VO_SHARE";
 
 
@@ -677,6 +678,7 @@ void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
             seCon->SE_NAME = r->getString(1);
             seCon->SHARE_ID = r->getString(2);
             seCon->SHARE_TYPE = r->getString(3);
+            seCon->SHARE_VALUE = r->getString(4);	    
             seConfig.push_back(seCon);
         }
         conn->destroyResultset(s, r);
@@ -688,7 +690,8 @@ void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
     }
 }
     
-void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE){
+void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string
+SHARE_VALUE){
     SeAndConfig* seData = NULL;
     std::vector<SeAndConfig*>::iterator iter;
     const std::string tag = "getAllSeAndConfigWithCritiria";
@@ -707,6 +710,7 @@ void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndCo
             " T_SE_VO_SHARE.SE_NAME, "
             " T_SE_VO_SHARE.SHARE_ID, "
             " T_SE_VO_SHARE.SHARE_TYPE "
+            " T_SE_VO_SHARE.VALUE "	    
             " FROM t_se, T_SE_VO_SHARE where t_se.NAME = T_SE_VO_SHARE.SE_NAME ";	     
     if (SE_NAME.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SE_NAME ='");
@@ -723,6 +727,11 @@ void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndCo
 		query_stmt.append(SHARE_TYPE);
 		query_stmt.append("'");
 	}
+    if (SHARE_VALUE.length() > 0){
+        query_stmt.append(" and T_SE_VO_SHARE.SHARE_VALUE ='");
+		query_stmt.append(SHARE_VALUE);
+		query_stmt.append("'");
+	}	
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, "");	         
@@ -740,13 +749,11 @@ void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndCo
             seData->SE_TRANSFER_PROTOCOL = r->getString(9);
             seData->SE_CONTROL_PROTOCOL = r->getString(10);
             seData->GOCDB_ID = r->getString(11);
-	    //if (SE_NAME.length() > 0)
-	            seData->SE_NAME = r->getString(12);
-	   // if (SHARE_ID.length() > 0)
-            	seData->SHARE_ID = r->getString(13);
-	    //if (SHARE_TYPE.length() > 0)
-            	seData->SHARE_TYPE = r->getString(14);
-
+	    seData->SE_NAME = r->getString(12);
+            seData->SHARE_ID = r->getString(13);
+            seData->SHARE_TYPE = r->getString(14);
+            seData->SHARE_VALUE = r->getString(15);
+	    
             seAndConfig.push_back(seData);
         }
         conn->destroyResultset(s, r);
@@ -909,8 +916,8 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
 }	    
 
 
-void OracleAPI::addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE){
-    std::string query = "INSERT INTO T_SE_VO_SHARE (SE_NAME, SHARE_ID, SHARE_TYPE) VALUES (:1,:2,:3)";
+void OracleAPI::addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE){
+    std::string query = "INSERT INTO T_SE_VO_SHARE (SE_NAME, SHARE_ID, SHARE_TYPE) VALUES (:1,:2,:3,:4)";
     std::string tag = "addSeConfig";
 
     try {
@@ -918,6 +925,7 @@ void OracleAPI::addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::str
         s->setString(1, SE_NAME);
         s->setString(2, SHARE_ID);
         s->setString(3, SHARE_TYPE);     
+        s->setString(4, SHARE_VALUE);     	
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
@@ -936,10 +944,10 @@ REQUIRED: SE_NAME / VO_NAME
 OPTIONAL; the rest
 set int to -1 so as NOT to be changed
 */
-void OracleAPI::updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE){
+void OracleAPI::updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE ){
     int fields = 0;
     std::string query = "UPDATE T_SE_VO_SHARE SET ";
-    			if(SHARE_ID.length() > 0){
+    			/*if(SHARE_ID.length() > 0){
 	    			query.append(" SHARE_ID='");
 	    			query.append(SHARE_ID);			       
 	    			query.append("'");					
@@ -964,6 +972,16 @@ void OracleAPI::updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
 	    			query.append(SHARE_TYPE);			       
 	    			query.append("'");				
 				}
+				*/
+    			if(SHARE_VALUE.length() > 0){
+				if(fields > 0){
+				  fields = 0;	
+				  query.append(", ");
+				}					
+	    			query.append(" SHARE_VALUE='");
+	    			query.append(SHARE_VALUE);			       
+	    			query.append("'");				
+				}				
 			query.append(" WHERE SHARE_ID ='");
 			query.append(SHARE_ID);
 			query.append("'");

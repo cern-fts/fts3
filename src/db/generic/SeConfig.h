@@ -36,6 +36,6 @@ public:
  std::string SHARE_TYPE; 
  std::string SE_NAME; 
  std::string SHARE_ID; 
-
+ std::string SHARE_VALUE; 
 
 };
