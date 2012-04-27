@@ -84,7 +84,7 @@ int config::SoapBindingService::setConfiguration
 		string type = what[SHARE_TYPE_INDEX];
 		string name = what[SE_NAME_INDEX];
 
-		string id = "\"shared_id\":" + what[SHARE_ID_INDEX] + "\",\"value\":";
+		string id = "\"shared_id\":\"" + what[SHARE_ID_INDEX] + "\",\"value\":";
 		string tmp = what[SHARE_NULL_INDEX];
 		if (tmp.empty()){
 			id += "\"" + what[SHARE_VAL_INDEX] + "\"";
@@ -159,7 +159,21 @@ int config::SoapBindingService::getConfiguration
 )
 {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
-
+/*
+	DBSingleton::instance().getDBObjectInstance()->addSe(
+			"some.host.name",
+			"se",
+			"site",
+			"se2",
+			"online",
+			"2.2.8",
+			"some.host.name",
+			"srm",
+			"srm",
+			"srm",
+			"id"
+			);
+*/
 	set<string> types;
 	types.insert("se");
 	types.insert("se_pair");
