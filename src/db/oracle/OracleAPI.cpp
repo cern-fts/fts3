@@ -709,8 +709,8 @@ SHARE_VALUE){
             " t_se.GOCDB_ID, "
             " T_SE_VO_SHARE.SE_NAME, "
             " T_SE_VO_SHARE.SHARE_ID, "
-            " T_SE_VO_SHARE.SHARE_TYPE, "
-            " T_SE_VO_SHARE.VALUE "	    
+            " T_SE_VO_SHARE.SHARE_TYPE,"
+            " T_SE_VO_SHARE.SHARE_VALUE "	    
             " FROM t_se, T_SE_VO_SHARE where t_se.NAME = T_SE_VO_SHARE.SE_NAME ";	     
     if (SE_NAME.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SE_NAME ='");
