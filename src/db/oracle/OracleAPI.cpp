@@ -665,7 +665,7 @@ void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
     std::string query_stmt = "SELECT "
             " T_SE_VO_SHARE.SE_NAME, "
             " T_SE_VO_SHARE.SHARE_ID, "
-            " T_SE_VO_SHARE.SHARE_TYPE  "
+            " T_SE_VO_SHARE.SHARE_TYPE,  "
             " T_SE_VO_SHARE.SHARE_VALUE  "	    
             " FROM T_SE_VO_SHARE";
 
