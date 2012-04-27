@@ -162,9 +162,9 @@ int config::SoapBindingService::getConfiguration
 /*
 	DBSingleton::instance().getDBObjectInstance()->addSe(
 			"some.host.name",
-			"se",
+			"site_pair",
 			"site",
-			"se2",
+			"CERN-FNAL",
 			"online",
 			"2.2.8",
 			"some.host.name",
@@ -174,10 +174,20 @@ int config::SoapBindingService::getConfiguration
 			"id"
 			);
 */
+
+/*
+	vector<Se*> v;
+	DBSingleton::instance().getDBObjectInstance()->getAllSeInfoNoCritiria(v);
+	for (int i = 0; i < v.size(); i++) {
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << v[i]->NAME << commit;
+	}
+*/
+
 	set<string> types;
 	types.insert("se");
 	types.insert("se_pair");
 	types.insert("site");
+	types.insert("site_pair");
 
 	response.configuration = soap_new_config__Configuration(this, -1);
 	vector<string>& names = response.configuration->key;
