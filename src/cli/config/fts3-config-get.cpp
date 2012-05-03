@@ -23,7 +23,7 @@
  */
 
 
-#include "gsoap_config_proxy.h"
+#include "gsoap_proxy.h"
 #include "ui/CliBase.h"
 
 #include "common/InstanceHolder.h"
@@ -71,7 +71,7 @@ int main(int ac, char* av[]) {
 			// TODO verbose part !!!
 		}
 
-		impl__getConfigurationResponse resp;
+		implcfg__getConfigurationResponse resp;
 		int err = service.getConfiguration(resp);
 
 		if (err) {

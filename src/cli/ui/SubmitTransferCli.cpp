@@ -25,7 +25,6 @@
  */
 
 #include "SubmitTransferCli.h"
-#include "gsoap_transfer_proxy.h"
 #include "SrvManager.h"
 #include "common/JobParameterHandler.h"
 
@@ -419,4 +418,3 @@ bool SubmitTransferCli::isBlocking() {
 string SubmitTransferCli::getUsageString(string tool) {
 	return "Usage: " + tool + " [options] SOURCE DEST [CHECKSUM]";
 }
-

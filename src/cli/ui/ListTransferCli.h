@@ -26,7 +26,7 @@
 #define LISTTRANSFERCLI_H_
 
 #include "DnCli.h"
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 #include "VoNameCli.h"
 
 namespace fts3 { namespace cli {
@@ -74,7 +74,7 @@ public:
 	 *
 	 * @return  impl__ArrayOf_USCOREsoapenc_USCOREstring
 	 */
-	impl__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray(soap* soap);
+	impltns__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray(soap* soap);
 
 };
 

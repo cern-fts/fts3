@@ -17,14 +17,14 @@ using namespace db;
 using namespace fts3::ws;
 using namespace fts3::common;
 
-RequestLister::RequestLister(::soap* soap, impl__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates): soap(soap) {
+RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates): soap(soap) {
 
 	checkGivenStates (inGivenStates);
 	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", "", "");
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
 }
 
-RequestLister::RequestLister(::soap* soap, impl__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo): soap(soap) {
+RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo): soap(soap) {
 
 	checkGivenStates (inGivenStates);
 	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", dn, vo);
@@ -35,11 +35,11 @@ RequestLister::~RequestLister() {
 
 }
 
-impl__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
+impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
 
 	// create the object
-	impl__ArrayOf_USCOREtns3_USCOREJobStatus* result;
-	result = soap_new_impl__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
+	impltns__ArrayOf_USCOREtns3_USCOREJobStatus* result;
+	result = soap_new_impltns__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
 
 	// fill it with job statuses
 	vector<JobStatus*>::iterator it;
@@ -53,7 +53,7 @@ impl__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
 	return result;
 }
 
-void RequestLister::checkGivenStates(impl__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates) {
+void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates) {
 
 	if (!inGivenStates || inGivenStates->item.empty()) {
 		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "No states were defined");

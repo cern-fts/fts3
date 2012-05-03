@@ -12,12 +12,12 @@
  *
  *	Unless required by applicable law or agreed to in writing, software
  *	distributed under the License is distributed on an "AS IS" BASIS,
- *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implcfgied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  */
 
-#include "ws/gsoap_config_stubs.h"
+#include "ws/gsoap_stubs.h"
 #include "db/generic/SingleDbInstance.h"
 #include "common/logger.h"
 
@@ -36,10 +36,10 @@ using namespace boost;
 using namespace boost::algorithm;
 
 
-int config::SoapBindingService::setConfiguration
+int SoapBindingService::setConfiguration
 (
     config__Configuration *_configuration,
-    struct impl__setConfigurationResponse &response
+    struct implcfg__setConfigurationResponse &response
 )
 {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
@@ -153,9 +153,9 @@ int config::SoapBindingService::setConfiguration
 
 /* ---------------------------------------------------------------------- */
 
-int config::SoapBindingService::getConfiguration
+int SoapBindingService::getConfiguration
 (
-    struct impl__getConfigurationResponse & response
+    struct implcfg__getConfigurationResponse & response
 )
 {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
@@ -182,6 +182,16 @@ int config::SoapBindingService::getConfiguration
 		FTS3_COMMON_LOGGER_NEWLOG (INFO) << v[i]->NAME << commit;
 	}
 */
+
+/*
+	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("dmp.cern.ch", "", "");
+	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("dcache.desy.de", "", "");
+	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("CERN", "", "");
+	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("dcache.cern.ch-dpm.desy.ch", "", "");
+	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("srm.cern.ch", "", "");
+	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("CERN-FNAL", "", "");
+*/
+//	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("se2", "", "");
 
 	set<string> types;
 	types.insert("se");

@@ -19,12 +19,13 @@
 
 #pragma once
 
-namespace transfer
+namespace fts3
 {
     struct SOAP_ENV__Fault;
 }
 
-using namespace transfer;
+using namespace fts3;
 
-#include "ws-ifce/gsoap/transferFileTransferSoapBindingProxy.h"
-
+#include "ws-ifce/gsoap/fts3FileTransferSoapBindingService.h"
+#include "ws-ifce/gsoap/fts3SoapBindingService.h"
+#include "ws-ifce/gsoap/fts3Stub.h"

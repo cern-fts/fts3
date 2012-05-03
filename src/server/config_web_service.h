@@ -32,7 +32,7 @@
 #include "active_object.h"
 #include "threadpool.h"
 #include "common/traced.h"
-#include "ws/gsoap_config_stubs.h"
+#include "ws/gsoap_stubs.h"
 
 
 FTS3_SERVER_NAMESPACE_START

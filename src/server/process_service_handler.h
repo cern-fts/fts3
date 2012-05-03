@@ -88,7 +88,7 @@ protected:
 
       while(1){
         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-	
+
 	if(jobs2.size() > 0){
 		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
         	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The number of jobs which will be started: " << jobs2.size() << commit;

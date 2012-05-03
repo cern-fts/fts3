@@ -17,7 +17,7 @@
  *	limitations under the License.
  */
 
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 #include "SrvManager.h"
 #include "ui/TransferStatusCli.h"
 
@@ -97,7 +97,7 @@ int main(int ac, char* av[]) {
 					// if version higher than 3.3.0 use getTransferJobSummary2
 
 					// do the request
-					impl__getTransferJobSummary2Response resp;
+					impltns__getTransferJobSummary2Response resp;
 					ret = service.getTransferJobSummary2(jobId, resp);
 
 					// print the response
@@ -122,7 +122,7 @@ int main(int ac, char* av[]) {
 					// if version higher than 3.3.0 use getTransferJobSummary
 
 					// do the request
-					impl__getTransferJobSummaryResponse resp;
+					impltns__getTransferJobSummaryResponse resp;
 					ret = service.getTransferJobSummary(jobId, resp);
 
 					// print the response
@@ -146,7 +146,7 @@ int main(int ac, char* av[]) {
 			} else {
 
 				// do the request
-				impl__getTransferJobStatusResponse resp;
+				impltns__getTransferJobStatusResponse resp;
 		    	ret = service.getTransferJobStatus(jobId, resp);
 
 		    	// print the response
@@ -160,7 +160,7 @@ int main(int ac, char* av[]) {
 			if (cli.list()) {
 
 				// do the request
-				impl__getFileStatusResponse resp;
+				impltns__getFileStatusResponse resp;
 				ret = service.getFileStatus(jobId, 0, 100, resp);
 
 				if (!ret && resp._getFileStatusReturn) {

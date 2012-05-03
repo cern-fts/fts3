@@ -39,7 +39,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "ws-ifce/gsoap/transfer.nsmap"
+#include "ws-ifce/gsoap/fts3.nsmap"
 
 using namespace std;
 using namespace boost;
@@ -92,7 +92,7 @@ bool SrvManager::initSoap(soap* soap, string endpoint) {
     }
 
     // set the namespaces
-	if (soap_set_namespaces(soap, transfer_namespaces)) {
+	if (soap_set_namespaces(soap, fts3_namespaces)) {
 		cout << "Failed to set SOAP namespaces." << endl;
 		return false;
 	}
@@ -146,7 +146,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 
 	int err;
 
-	impl__getInterfaceVersionResponse ivresp;
+	impltns__getInterfaceVersionResponse ivresp;
 	err = service.getInterfaceVersion(ivresp);
 	if (!err) {
 		interface = ivresp.getInterfaceVersionReturn;
@@ -157,7 +157,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 		return false;
 	}
 
-	impl__getVersionResponse vresp;
+	impltns__getVersionResponse vresp;
 	err = service.getVersion(vresp);
 	if (!err) {
 		version = vresp.getVersionReturn;
@@ -167,7 +167,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 		return false;
 	}
 
-	impl__getSchemaVersionResponse sresp;
+	impltns__getSchemaVersionResponse sresp;
 	err = service.getSchemaVersion(sresp);
 	if (!err) {
 		schema = sresp.getSchemaVersionReturn;
@@ -177,7 +177,7 @@ bool SrvManager::init(FileTransferSoapBindingProxy& service) {
 		return false;
 	}
 
-	impl__getServiceMetadataResponse mresp;
+	impltns__getServiceMetadataResponse mresp;
 	err = service.getServiceMetadata("feature.string", mresp);
 	if (!err) {
 		metadata = mresp._getServiceMetadataReturn;

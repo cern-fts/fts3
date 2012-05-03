@@ -37,53 +37,38 @@ add_custom_command(
     COMMAND ${GSOAP_SOAPCPP2} -d ${generated_files_dir} -penv ${gsoap_env_header_file}
 )
 
-# Generate transfer interface
+# Generate transfer & config interface
 set(fts3_transfer_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-transfer-0.0.0.wsdl")
-set(gsoap_transfer_typemap "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/transfer_typemap.dat")
-set(gsoap_transfer_header_file "${generated_files_dir}/gsoap_transfer_interface.h")
-set(gsoap_transfer_prefix "transfer")
+set(fts3_config_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-config-0.0.0.wsdl")
+set(gsoap_typemap "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/typemap.dat")
+set(gsoap_header_file "${generated_files_dir}/gsoap_interface.h")
+set(gsoap_prefix "fts3")
 
 set(gsoap_transfer_source_files
-    "${generated_files_dir}/${gsoap_transfer_prefix}C.cpp"
-    "${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingService.cpp"
-    "${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingProxy.cpp"
+    "${generated_files_dir}/${gsoap_prefix}C.cpp"
+    "${generated_files_dir}/${gsoap_prefix}FileTransferSoapBindingService.cpp"
+    "${generated_files_dir}/${gsoap_prefix}FileTransferSoapBindingProxy.cpp"
 )
-
-add_custom_command(
-    OUTPUT ${gsoap_transfer_header_file}
-    DEPENDS ${gsoap_transfer_typemap} ${fts3_transfer_wsdl}
-    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_transfer_typemap} ${fts3_transfer_wsdl} -o ${gsoap_transfer_header_file}
-)
-
-add_custom_command(
-    OUTPUT ${gsoap_transfer_source_files}
-    DEPENDS ${gsoap_transfer_header_file}
-    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -x -p ${gsoap_transfer_prefix} -q ${gsoap_transfer_prefix} -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_transfer_header_file} 
-)
-
-# Generate config interface
-set(fts3_config_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-config-0.0.0.wsdl")
-set(gsoap_config_typemap "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/config_typemap.dat")
-set(gsoap_config_header_file "${generated_files_dir}/gsoap_config_interface.h")
-set(gsoap_config_prefix "config")
 
 set(gsoap_config_source_files
-    "${generated_files_dir}/${gsoap_config_prefix}C.cpp"
-    "${generated_files_dir}/${gsoap_config_prefix}SoapBindingService.cpp"
-    "${generated_files_dir}/${gsoap_config_prefix}SoapBindingProxy.cpp"
+    "${generated_files_dir}/${gsoap_prefix}C.cpp"
+    "${generated_files_dir}/${gsoap_prefix}SoapBindingService.cpp"
+    "${generated_files_dir}/${gsoap_prefix}SoapBindingProxy.cpp"
+)
+
+
+add_custom_command(
+    OUTPUT ${gsoap_header_file}
+    DEPENDS ${gsoap_typemap} ${fts3_transfer_wsdl} 
+    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_typemap} ${fts3_transfer_wsdl} ${fts3_config_wsdl} -o ${gsoap_header_file}
 )
 
 add_custom_command(
-    OUTPUT  ${gsoap_config_header_file}
-    DEPENDS  ${gsoap_config_typemap} ${fts3_config_wsdl} 
-    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_config_typemap} ${fts3_config_wsdl} -o ${gsoap_config_header_file}
+    OUTPUT ${gsoap_transfer_source_files} ${gsoap_config_source_files}
+    DEPENDS ${gsoap_header_file}
+    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -x -p ${gsoap_prefix} -q ${gsoap_prefix}  -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_header_file} 
 )
 
-add_custom_command(
-    OUTPUT ${gsoap_config_source_files}
-    DEPENDS ${gsoap_config_header_file}
-    COMMAND ${GSOAP_SOAPCPP2} -n -w -i -x -q ${gsoap_config_prefix} -p ${gsoap_config_prefix} -d ${generated_files_dir}  -I ${GSOAP_IMPORT_DIR} ${gsoap_config_header_file}
-)
 
 add_library(fts3_ws_ifce_server SHARED 
     ${gsoap_config_source_files}
@@ -96,12 +81,10 @@ target_link_libraries(fts3_ws_ifce_server -lgsoap++)
 # Client side library 
 add_library(fts3_ws_ifce_client SHARED
     ${gsoap_env_source_files}
-    ${generated_files_dir}/${gsoap_transfer_prefix}C.cpp
-    ${generated_files_dir}/${gsoap_transfer_prefix}FileTransferSoapBindingProxy.cpp
-    ${generated_files_dir}/${gsoap_config_prefix}C.cpp
-    ${generated_files_dir}/${gsoap_config_prefix}SoapBindingProxy.cpp
+    ${generated_files_dir}/${gsoap_prefix}C.cpp
+    ${generated_files_dir}/${gsoap_prefix}FileTransferSoapBindingProxy.cpp
+    ${generated_files_dir}/${gsoap_prefix}SoapBindingProxy.cpp
 )
 
 set_target_properties(fts3_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
 target_link_libraries(fts3_ws_ifce_client -lgsoap++)
-

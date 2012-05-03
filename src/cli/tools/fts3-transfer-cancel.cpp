@@ -22,7 +22,7 @@
  *      Author: Michał Simon
  */
 
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 #include "SrvManager.h"
 #include "ui/JobIdCli.h"
 
@@ -79,7 +79,7 @@ int main(int ac, char* av[]) {
 			cli.printGeneralInfo();
 		}
 
-		impl__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impl__ArrayOf_USCOREsoapenc_USCOREstring(&service, -1);
+		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(&service, -1);
 		vector<string> &jobs = rqst->item;
 		jobs = cli.getJobIds();
 
@@ -88,7 +88,7 @@ int main(int ac, char* av[]) {
 			return 0;
 		}
 
-		impl__cancelResponse resp;
+		impltns__cancelResponse resp;
 		int err = service.cancel(rqst, resp);
 
 		if (err) {

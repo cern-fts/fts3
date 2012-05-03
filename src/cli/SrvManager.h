@@ -26,7 +26,7 @@
 #define SRVMANAGER_H_
 
 #include <string>
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 
 using namespace std;
 

@@ -23,7 +23,7 @@
  */
 
 
-#include "gsoap_config_proxy.h"
+#include "gsoap_proxy.h"
 #include "ui/NameValueCli.h"
 
 #include "common/InstanceHolder.h"
@@ -81,7 +81,7 @@ int main(int ac, char* av[]) {
 		config->key = names;
 		config->value = values;
 
-		impl__setConfigurationResponse resp;
+		implcfg__setConfigurationResponse resp;
 		int err = service.setConfiguration(config, resp);
 
 		if (err) {

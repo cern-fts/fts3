@@ -17,7 +17,7 @@
  *	limitations under the License.
  */
 
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 #include "SrvManager.h"
 #include "ui/SubmitTransferCli.h"
 
@@ -92,7 +92,7 @@ int main(int ac, char* av[]) {
 			// always use delegation with checksum TODO check whether it's right!
 			manager->delegateProxyCert(endpoint);
 			// submit the job
-			impl__transferSubmit3Response resp;
+			impltns__transferSubmit3Response resp;
 			err = service.transferSubmit3(&job, resp);
 			if (err) {
 				cout << "Failed to submit transfer: transferSubmit3. ";
@@ -115,7 +115,7 @@ int main(int ac, char* av[]) {
 
 				manager->delegateProxyCert(endpoint);
 				// submit the job
-				impl__transferSubmit2Response resp;
+				impltns__transferSubmit2Response resp;
 				err = service.transferSubmit2(&job, resp);
 				if (err) {
 					cout << "Failed to submit transfer: transferSubmit2. ";
@@ -134,7 +134,7 @@ int main(int ac, char* av[]) {
 				//cout << *job.credential << endl;
 
 				// submit the job
-				impl__transferSubmitResponse resp;
+				impltns__transferSubmitResponse resp;
 				err = service.transferSubmit(&job, resp);
 				if (err) {
 					cout << "Failed to submit transfer: transferSubmit. ";
@@ -151,7 +151,7 @@ int main(int ac, char* av[]) {
 
 		// check if the -b option has been used
 		if (cli.isBlocking()) {
-			impl__getTransferJobStatusResponse resp;
+			impltns__getTransferJobStatusResponse resp;
 			// wait until the transfer is ready
 			do {
 				sleep(2);

@@ -22,7 +22,7 @@ limitations under the License. */
 #include "common/pointers.h"
 #include "common/logger.h"
 #include "common/error.h"
-#include "ws/gsoap_transfer_stubs.h"
+#include "ws/gsoap_stubs.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"

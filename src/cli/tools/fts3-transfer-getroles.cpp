@@ -22,7 +22,7 @@
  *      Author: Michal Simon
  */
 
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 #include "SrvManager.h"
 #include "ui/DnCli.h"
 
@@ -79,7 +79,7 @@ int main(int ac, char* av[]) {
 		string dn = cli.getUserDn();
 		int err;
 		if (dn.empty()) {
-			impl__getRolesResponse resp;
+			impltns__getRolesResponse resp;
 			err = service.getRoles(resp);
 
 			if (err || !resp.getRolesReturn) {
@@ -117,7 +117,7 @@ int main(int ac, char* av[]) {
 	        }
 
 		} else {
-			impl__getRolesOfResponse resp;
+			impltns__getRolesOfResponse resp;
 			err = service.getRolesOf(dn, resp);
 
 			if (err || !resp._getRolesOfReturn) {
@@ -165,4 +165,3 @@ int main(int ac, char* av[]) {
 
 	return 0;
 }
-

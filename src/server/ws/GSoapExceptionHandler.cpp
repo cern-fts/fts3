@@ -12,7 +12,7 @@
  *
  *	Unless required by applicable law or agreed to in writing, software
  *	distributed under the License is distributed on an "AS IS" BASIS,
- *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or impltnsied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
@@ -48,7 +48,7 @@ void GSoapExceptionHandler::handleReceiverFault() {
 void GSoapExceptionHandler::dispatchException() {
 
     SOAP_ENV__Detail *detail = NULL;
-    transfer::SOAP_ENV__Fault *fault = NULL;
+    SOAP_ENV__Fault *fault = NULL;
 	if (soap->version == v12) {
 		// soap version 1.2
 		detail = soap->fault->SOAP_ENV__Detail;

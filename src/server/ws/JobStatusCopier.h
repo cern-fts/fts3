@@ -8,7 +8,7 @@
 #ifndef JOBSTATUSCOPIER_H_
 #define JOBSTATUSCOPIER_H_
 
-#include "gsoap_transfer_stubs.h"
+#include "gsoap_stubs.h"
 
 namespace fts3 { namespace ws {
 

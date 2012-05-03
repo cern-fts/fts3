@@ -12,7 +12,7 @@
  *
  *	Unless required by applicable law or agreed to in writing, software
  *	distributed under the License is distributed on an "AS IS" BASIS,
- *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or impltnsied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
@@ -25,7 +25,7 @@
 #ifndef GSOAPEXCEPTIONHANDLER_H_
 #define GSOAPEXCEPTIONHANDLER_H_
 
-#include "gsoap_transfer_stubs.h"
+#include "gsoap_stubs.h"
 #include <string>
 
 using namespace std;
@@ -105,6 +105,31 @@ public:
 
 		tns3__AuthorizationException* ex;
 		ex = soap_new_tns3__AuthorizationException(soap, -1);
+		ex->message = soap_new_std__string(soap, -1);
+		*ex->message = msg;
+
+		return ex;
+	}
+
+	/**
+	 * Creates a tns3__InternalException exception.
+	 *
+	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
+	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
+	 * be used (in particular 'soap_unlink'!).
+	 *
+	 * The method is thread safe since it uses no internal fields of GSoapExceptionHandler, and
+	 * each thread has its own copy of the soap object.
+	 *
+	 * @param soap - the soap object that is serving the given request
+	 * @param msg - the error message of the exception
+	 *
+	 * @return pointer to the tns3__InternalException
+	 */
+	inline static tns3__InternalException* createInternalException (::soap* soap, string msg) {
+
+		tns3__InternalException* ex;
+		ex = soap_new_tns3__InternalException(soap, -1);
 		ex->message = soap_new_std__string(soap, -1);
 		*ex->message = msg;
 

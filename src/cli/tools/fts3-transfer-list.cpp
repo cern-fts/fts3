@@ -23,7 +23,7 @@
  */
 
 
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 #include "SrvManager.h"
 #include "ui/ListTransferCli.h"
 
@@ -81,14 +81,14 @@ int main(int ac, char* av[]) {
 			return 0;
 		}
 
-		impl__ArrayOf_USCOREsoapenc_USCOREstring* array = cli.getStatusArray(&service);
+		impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = cli.getStatusArray(&service);
 		int err;
 
 		vector<tns3__JobStatus * > statuses;
 
 		if (manager->isUserVoRestrictListingSupported()) {
 
-			impl__listRequests2Response resp;
+			impltns__listRequests2Response resp;
 			err = service.listRequests2(array, cli.getUserDn(), cli.getVOName(), resp);
 
 			if (err || !resp._listRequests2Return) {
@@ -101,7 +101,7 @@ int main(int ac, char* av[]) {
 
 		} else {
 
-			impl__listRequestsResponse resp;
+			impltns__listRequestsResponse resp;
 			err = service.listRequests(array, resp);
 
 			if (err || !resp._listRequestsReturn) {

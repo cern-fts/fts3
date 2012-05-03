@@ -19,7 +19,7 @@
 
 
 
-#include "gsoap_transfer_proxy.h"
+#include "gsoap_proxy.h"
 #include "SrvManager.h"
 #include "ui/VoNameCli.h"
 
@@ -82,7 +82,7 @@ int main(int ac, char* av[]) {
 		}
 
 		int err;
-		impl__listVOManagersResponse resp;
+		impltns__listVOManagersResponse resp;
 		err = service.listVOManagers(vo, resp);
 
 		if (err || !resp._listVOManagersReturn) {
