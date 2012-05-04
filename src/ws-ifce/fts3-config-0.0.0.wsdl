@@ -41,7 +41,7 @@
 
             <complexType name="AuthorizationException">
                 <complexContent>
-                    <extension base="config:Configuration">
+                    <extension base="config:ConfigurationException">
                         <sequence/>
                     </extension>
                 </complexContent>
