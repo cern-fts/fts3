@@ -78,6 +78,7 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "------------------> executeTransfer_a" << commit;
         const std::string cmd = "fts3_url_copy ";
         std::string params = std::string("");
         ExecuteProcess *pr = NULL;
@@ -88,39 +89,34 @@ protected:
 
       while(1){
         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
 
 	if(jobs2.size() > 0){
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
         	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The number of jobs which will be started: " << jobs2.size() << commit;
 	}
 
-        //for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2) {
-           // TransferJobs* temp = (TransferJobs*) * iter2;
-            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The job id's are: " << temp->JOB_ID << commit;
-        //}
-
-
-        //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetching URLs" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetching URLs" << commit;
         DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
         for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
             TransferFiles* temp = (TransferFiles*) * fileiter;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
-            params.append(" --source_url ");
+            params.append(" -b ");
             params.append(temp->SOURCE_SURL);
-            params.append(" --dest_url ");
-            params.append(temp->DEST_SURL);
+            params.append(" -c ");
+            params.append(temp->DEST_SURL);   
+            params.append(" -a ");
+            params.append(temp->JOB_ID);   	    
 	    
 	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
-            pr = new ExecuteProcess(cmd, params, 1);
-	    params.clear();
+            pr = new ExecuteProcess(cmd, params, 0);	    
 	    if(pr){
             	pr->executeProcessShell();
 		delete pr;
 	    }
+	    params.clear();
         }
-
 
         /** cleanup resources */
         for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)

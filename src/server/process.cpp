@@ -237,21 +237,148 @@ int ExecuteProcess::execProcessShellLog(const char* SHELL)
 
 int ExecuteProcess::execProcessShell(const char* SHELL)
 {
-    int status = 0;
+    const char* pPath = "/home/user/workspace/fts3svn/build/src/url-copy/fts3_url_copy";
+    list<string> args;
+    split( m_arguments, ' ', args, 0, false );
 
-    pid_t pid = fork();
-    if ( pid == 0 ) {
-        execl( SHELL, SHELL, "-c", (m_app + " " + m_arguments).c_str(), NULL );
-        _exit( EXIT_FAILURE );
-    } else if ( pid < 0 ) {
-        // fork failed
-        status = -1;
-    } else {
-        // parent process
-        if ( waitpid ( pid, &status, 0 ) != pid ) {
-            status = -1;
-        }
+    int argc = 1 + args.size() + 1; 
+
+    char** argv = new char*[argc];
+    list<string>::iterator it = args.begin();
+
+    int i = 0;
+    argv[i] = const_cast<char*>( m_app.c_str() );
+    for ( ; it != args.end(); ++it ) {
+        ++i;
+        argv[i] = const_cast<char*>( it->c_str() );
     }
 
-    return status;
+    ++i;
+    assert( i+1 == argc );
+    argv[i] = NULL;
+    
+    // Fork a child process
+    pid_t pid_1 = fork();
+
+    // Ignore SIGCLD: Don't wait for the child to complete
+    signal(SIGCLD, SIG_IGN);
+		
+    if(pid_1 == 0) {
+              // Detach from parent
+                setsid();
+                // Set working directory
+                int ret = chdir(_PATH_TMP);
+
+                if (ret == -1)
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << " chdir " << errno << commit;
+
+                // Close stdin and out
+                int fd;
+                if ((fd = ::open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
+                    ::dup2(fd, STDIN_FILENO);
+                    ::dup2(fd, STDOUT_FILENO);
+                    ::dup2(fd, STDERR_FILENO);
+                    if (fd > 2){
+                       close(fd);
+                    }
+                }		
+				
+    	int r = execvp(pPath, argv);
+        if(-1 == r){
+                    // Process Execution failed: exit the forked process
+                    // The status will detect if the request has not been
+                    // assigned
+		    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Process Execution failed: exit the forked process" << commit;		    
+                    exit(1);
+                }	
+    }
+    delete [] argv;
+    return 0;      
 }
+
+
+/*
+int ExecuteProcess::execProcessShell(const char* SHELL)
+{	
+
+    const char* pPath = "/home/user/workspace/fts3svn/build/src/url-copy/fts3_url_copy";
+    list<string> args;
+    split( m_arguments, ' ', args, 0, false );
+
+    int argc = 1 + args.size() + 1; 
+
+    char** argv = new char*[argc];
+    list<string>::iterator it = args.begin();
+
+    int i = 0;
+    argv[i] = const_cast<char*>( m_app.c_str() );
+    for ( ; it != args.end(); ++it ) {
+        ++i;
+        argv[i] = const_cast<char*>( it->c_str() );
+    }
+
+    ++i;
+    assert( i+1 == argc );
+    argv[i] = NULL;
+   
+	
+       // Fork a child process
+        pid_t pid_1 = fork();
+        if(-1 == pid_1){
+    	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << " fork, errno: " << errno << commit;
+        } else if(0 != pid_1){
+            // Parent process: wait for the first child
+            int status;
+            ::wait(&status);
+            if(0 == WEXITSTATUS(status)){
+                // OK
+            } else if(1 == WEXITSTATUS(status)){
+                 FTS3_COMMON_LOGGER_NEWLOG (ERR) << " second fork failed " << commit;
+            } 
+        } else {
+            // Child process
+            // Ignore SIGCLD: Don't wait for the child to complete
+            signal(SIGCLD, SIG_IGN);
+            pid_t pid_2 = fork();
+            if(-1 == pid_2){
+                // Failed to do the second fork
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Failed to do the second fork " << commit;
+                exit(1);
+            } else if(0 != pid_2){
+                // Parent process exit 0
+				FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Parent process exit 0" << commit;
+                exit(0);
+            } else {
+                // Detach from parent
+                setsid();
+                // Set working directory
+                int ret = chdir(_PATH_TMP);
+
+                if (ret == -1)
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << " chdir " << errno << commit;
+
+                // Close stdin and out
+                int fd;
+                if ((fd = ::open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
+                    ::dup2(fd, STDIN_FILENO);
+                    ::dup2(fd, STDOUT_FILENO);
+                    ::dup2(fd, STDERR_FILENO);
+                    if (fd > 2){
+                       close(fd);
+                    }
+                }		
+						
+		int r = execvp(pPath, argv);
+                if(-1 == r){
+                    // Process Execution failed: exit the forked process
+                    // The status will detect if the request has not been
+                    // assigned
+		    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Process Execution failed: exit the forked process" << commit;		    
+                    exit(1);
+                }
+            }
+        }    
+	delete [] argv;
+	return 0;
+}
+*/

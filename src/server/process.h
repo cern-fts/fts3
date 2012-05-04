@@ -26,15 +26,14 @@ public:
     int executeProcess();
     int executeProcessShell();
     std::string generate_request_id(const std::string& prefix);
-
-private:
-    
     int execProcess(int argc, char** argv);
     int execProcessLog(int argc, char** argv);
     
     int execProcessShell(const char* shell);
     int execProcessShellLog(const char* shell);
     
+private:
+        
     string m_app;
     string m_arguments;
     int m_fdlog;
