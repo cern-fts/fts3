@@ -78,8 +78,7 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "------------------> executeTransfer_a" << commit;
-        const std::string cmd = "fts3_url_copy ";
+        const std::string cmd = "fts3_url_copy";
         std::string params = std::string("");
         ExecuteProcess *pr = NULL;
         std::vector<TransferJobs*> jobs2;
@@ -89,13 +88,13 @@ protected:
 
       while(1){
         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
+	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
 
 	if(jobs2.size() > 0){
         	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The number of jobs which will be started: " << jobs2.size() << commit;
 	}
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetching URLs" << commit;
+        //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetching URLs" << commit;
         DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
         for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
             TransferFiles* temp = (TransferFiles*) * fileiter;
