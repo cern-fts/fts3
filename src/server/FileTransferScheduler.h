@@ -102,7 +102,7 @@ private:
 	static const string seNameRegex;
 	static const string shareValueRegex;
 
-	static const int DEFAULT_VALUE = 1;
+	static const int DEFAULT_VALUE = 50;
 	static const int FREE_CREDITS = 1;
 };
 
