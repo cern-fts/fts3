@@ -59,6 +59,12 @@ public:
     virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files);
     
 
+    virtual void getSeCreditsInUse(int &creditsInUse, std::string srcSeName, std::string destSeName, std::string voName);
+
+    virtual void getSiteCreditsInUse(int &creditsInUse, std::string srcSiteName, std::string destSiteName, std::string voName);
+
+    virtual void updateFileStatus(TransferFiles* file, const std::string status);
+
     /*virtual void setVOLimit(std::string channelUpperName, std::string voName, int limit);
 
     virtual std::vector<FileTransferStatus> getFileStatus(std::string requestID, int offset, int limit);
@@ -209,6 +215,8 @@ public:
 
     /*NEW API*/
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se);
+
+    virtual void getSe(Se* &se, std::string seName);
     
     virtual void getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig);
     

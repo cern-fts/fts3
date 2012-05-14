@@ -49,7 +49,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " t_job.checksum_method "
             " FROM t_job, t_file"
             " WHERE t_job.job_id = t_file.job_id"
-            " AND t_job.job_state = 'SUBMITTED'"
+//            " AND t_job.job_state = 'SUBMITTED'"
             " AND t_file.file_state = 'SUBMITTED'"
             " AND t_job.job_finished is NULL"
             " AND t_job.CANCEL_JOB is NULL"
@@ -105,12 +105,191 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
 
 }
 
+void OracleAPI::getSeCreditsInUse (
+		int &creditsInUse,
+		std::string srcSeName,
+		std::string destSeName,
+		std::string voName
+	) {
+
+	std::string query_stmt =
+			"SELECT COUNT(*) "
+			"FROM t_job, t_file "
+			"WHERE "
+			"	t_job.job_id = t_file.job_id "
+			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'ACTIVE') ";
+
+	if (!srcSeName.empty()) {
+		query_stmt +=
+//			"	AND t_file.source_surl like :1 "; // srcSeName + "/%
+			"	AND t_file.source_surl like '" + srcSeName + "/%' ";
+	}
+
+	if (!destSeName.empty()) {
+		query_stmt +=
+//			"	AND t_file.dest_surl like :2 "; // destSeName + "/%
+			"	AND t_file.dest_surl like '" + destSeName + "/%' ";
+	}
+
+	if (srcSeName.empty() || destSeName.empty()) {
+		if (!voName.empty()) {
+//			query_stmt += "	AND t_job.vo_name = :3 "; // vo
+			query_stmt += "	AND t_job.vo_name = '" + voName + "' "; // vo
+		} else {
+			// voName not in those who have voshare for this SE
+			query_stmt +=
+			" 	AND NOT EXISTS ( "
+			"		SELECT * "
+			"		FROM t_se_vo_share "
+			"		WHERE "
+//			"			t_se_vo_share.se_name = :4 "
+			"			t_se_vo_share.se_name = '" + srcSeName + "' "
+			"			AND t_se_vo_share.share_type = 'se' "
+			"			AND t_se_vo_share.share_id = '%\"share_name\":\"' || t_job.vo_name || '\"%' "
+			"	) ";
+		}
+	}
+
+    try {
+
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
+/*
+        if (!srcSeName.empty()) {
+        	s->setString(1, srcSeName + "/%");
+        	seName = srcSeName;
+        }
+
+        if (!destSeName.empty()) {
+        	s->setString(2, destSeName + "/%");
+        	seName = destSeName;
+        }
+
+        if (srcSeName.empty() || destSeName.empty()) {
+			if (!voName.empty()) {
+				s->setString(3, voName);
+			} else {
+				s->setString(4, seName);
+			}
+        }
+*/
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        if(r->next()) {
+        	creditsInUse = r->getInt(1);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, selecttag);
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+void OracleAPI::getSiteCreditsInUse (
+		int &creditsInUse,
+		std::string srcSiteName,
+		std::string destSiteName,
+		std::string voName
+	) {
+
+	std::string query_stmt =
+			"SELECT COUNT(*) "
+			"FROM t_job, t_file, t_se "
+			"WHERE "
+			"	t_job.job_id = t_file.job_id "
+			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'ACTIVE') ";
+
+	if (!srcSiteName.empty()) {
+		query_stmt +=
+//			"	AND t_se.site = :1 " // the se has the information about site name
+			"	AND t_se.site = '" + srcSiteName + "' " // the se has the information about site name
+			"	AND t_file.source_surl like t_se.name + '/%' "; // srcSeName + "/%
+	}
+
+	if (!destSiteName.empty()) {
+		query_stmt +=
+//			"	AND t_se.site = :2 " // the se has the information about site name
+			"	AND t_se.site = '" + destSiteName + "' " // the se has the information about site name
+			"	AND t_file.dest_surl like t_se.name + '/%' "; // destSeName + "/%
+	}
+
+	if (srcSiteName.empty() || destSiteName.empty()) {
+		if (!voName.empty()) {
+			query_stmt +=
+//			"	AND t_job.vo_name = :3 "; // vo
+			"	AND t_job.vo_name = '" + voName + "' "; // vo
+		} else {
+			// voName not in those who have voshare for this SE
+			query_stmt +=
+			" AND NOT EXISTS ( "
+			"		SELECT * "
+			"		FROM t_se_vo_share "
+			"		WHERE "
+			"			t_se_vo_share.se_name = t_se.name "
+			"			AND t_se_vo_share.share_type = 'se' "
+			"			AND t_se_vo_share.share_id = '%\"share_name\":\"' || t_job.vo_name || '\"%' "
+			"	) ";
+
+		}
+	}
+
+    try {
+
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
+/*
+        if (!srcSiteName.empty()) {
+        	s->setString(1, srcSiteName + "/%");
+         }
+
+        if (!destSiteName.empty()) {
+        	s->setString(2, destSiteName + "/%");
+        }
+
+        if (srcSiteName.empty() || destSiteName.empty()) {
+			if (!voName.empty()) {
+				s->setString(3, voName);
+			}
+        }
+*/
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        if(r->next()) {
+        	creditsInUse = r->getInt(1);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, selecttag);
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+void OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
+    int fields = 0;
+    std::string query =
+    		"UPDATE t_file "
+    		"SET file_state =:1 "
+    		"WHERE file_id = :2";
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, "");
+        s->setString(1, status);
+        s->setInt(2, file->FILE_ID);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, "");
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
 void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::iterator iter;
     std::string selecttag = "getByJobId";
-    std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_file.file_id,  t_file.file_state, t_file.logical_name, "
-            " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, t_file.catalog_failures, t_file.prestage_failures, t_file.filesize,"
+    std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
+    		" t_file.file_id,  t_file.file_state, t_file.logical_name, "
+            " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
             " t_file.checksum, t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, t_file.error_scope, t_file.error_phase "
             " FROM t_file, t_job WHERE"
             " t_job.job_id = :1 AND t_file.job_id = t_job.job_id AND t_file.job_finished is NULL AND t_job.job_finished is NULL";
@@ -128,6 +307,9 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
                 tr_files->SOURCE_SURL = r->getString(1);
                 tr_files->DEST_SURL = r->getString(2);
                 tr_files->JOB_ID = r->getString(3);
+                tr_files->VO_NAME = r->getString(4);
+                tr_files->FILE_ID = r->getInt(5);
+
                 files.push_back(tr_files);
             }
             conn->destroyResultset(s, r);
@@ -610,6 +792,55 @@ void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int
  */
 
 /* ********************************* NEW API FTS3 *********************************/
+
+void OracleAPI::getSe(Se* &se, std::string seName){
+    Se* seData = NULL;
+    std::vector<Se*>::iterator iter;
+    const std::string tag = "getAllSeInfoNoCritiria";
+    std::string query_stmt =
+    		"SELECT "
+            "	t_se.ENDPOINT, "
+            " 	t_se.SE_TYPE, "
+            " 	t_se.SITE,  "
+            " 	t_se.NAME,  "
+            " 	t_se.STATE, "
+            " 	t_se.VERSION,  "
+            " 	t_se.HOST, "
+            " 	t_se.SE_TRANSFER_TYPE, "
+            " 	t_se.SE_TRANSFER_PROTOCOL, "
+            " 	t_se.SE_CONTROL_PROTOCOL, "
+            " 	t_se.GOCDB_ID "
+            "FROM t_se "
+    		"WHERE t_se.NAME=:1";
+
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
+        s->setString(1, seName);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        if (r->next()) {
+            se = new Se();
+            se->ENDPOINT = r->getString(1);
+            se->SE_TYPE = r->getString(2);
+            se->SITE = r->getString(3);
+            se->NAME = r->getString(4);
+            se->STATE = r->getString(5);
+            se->VERSION = r->getString(6);
+            se->HOST = r->getString(7);
+            se->SE_TRANSFER_TYPE = r->getString(8);
+            se->SE_TRANSFER_PROTOCOL = r->getString(9);
+            se->SE_CONTROL_PROTOCOL = r->getString(10);
+            se->GOCDB_ID = r->getString(11);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, "");
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
 
 void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
     Se* seData = NULL;
