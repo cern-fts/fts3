@@ -868,7 +868,9 @@ void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
             seData = new Se();
             seData->ENDPOINT = r->getString(1);
             seData->SE_TYPE = r->getString(2);
-            seData->SITE = r->getString(3);
+            if (!r->isNull(3)) {
+            	seData->SITE = r->getString(3);
+            }
             seData->NAME = r->getString(4);
             seData->STATE = r->getString(5);
             seData->VERSION = r->getString(6);
