@@ -28,6 +28,8 @@ limitations under the License. */
 #include <string>
 #include <vector>
 
+#include "FileTransferScheduler.h"
+
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -86,46 +88,55 @@ protected:
         std::vector<TransferFiles*> files;
         std::vector<TransferFiles*>::iterator fileiter;	
 
-      while(1){
-        DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
+        while(1){
+        	DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+        	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
 
-	if(jobs2.size() > 0){
-        	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The number of jobs which will be started: " << jobs2.size() << commit;
-	}
+        	if(jobs2.size() > 0){
+        		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The number of jobs which will be started: " << jobs2.size() << commit;
+        	}
 
-        //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetching URLs" << commit;
-        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
-        for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-            TransferFiles* temp = (TransferFiles*) * fileiter;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
-            params.append(" -b ");
-            params.append(temp->SOURCE_SURL);
-            params.append(" -c ");
-            params.append(temp->DEST_SURL);   
-            params.append(" -a ");
-            params.append(temp->JOB_ID);   	    
-	    
-	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
-            pr = new ExecuteProcess(cmd, params, 0);	    
-	    if(pr){
-            	pr->executeProcessShell();
-		delete pr;
-	    }
-	    params.clear();
-        }
+			//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetching URLs" << commit;
+			DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
+			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
+				TransferFiles* temp = (TransferFiles*) * fileiter;
+				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
+				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
+				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
 
-        /** cleanup resources */
-        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-            delete *iter2;
-        jobs2.clear();
-        for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
-            delete *fileiter;
-        files.clear();
-	sleep(3);
-     }
+				FileTransferScheduler scheduler(temp);
+				if (scheduler.schedule()) {
+//					params.append(" --source_url ");
+//					params.append(temp->SOURCE_SURL);
+//					params.append(" --dest_url ");
+//					params.append(temp->DEST_SURL);
+
+					params.append(" -b ");
+					params.append(temp->SOURCE_SURL);
+					params.append(" -c ");
+					params.append(temp->DEST_SURL);
+					params.append(" -a ");
+					params.append(temp->JOB_ID);
+
+					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
+					pr = new ExecuteProcess(cmd, params, 0);
+					if(pr){
+							pr->executeProcessShell();
+							delete pr;
+					}
+					params.clear();
+				}
+			}
+
+			/** cleanup resources */
+			for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+				delete *iter2;
+			jobs2.clear();
+			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
+				delete *fileiter;
+			files.clear();
+			sleep(3);
+		}
     }
 
     /* ---------------------------------------------------------------------- */
