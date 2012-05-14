@@ -229,6 +229,14 @@ public:
 */
 
     /*NEW API*/
+    virtual void getSe(Se* &se, std::string seName) = 0;
+
+    virtual void getSeCreditsInUse(int &creditsInUse, std::string srcSeName, std::string destSeName, std::string voName) = 0;
+
+    virtual void getSiteCreditsInUse(int &creditsInUse, std::string srcSiteName, std::string destSiteName, std::string voName) = 0;
+
+    virtual void updateFileStatus(TransferFiles* file, const std::string status) = 0;
+
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
     virtual void getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
