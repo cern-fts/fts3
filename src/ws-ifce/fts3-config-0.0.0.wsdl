@@ -16,8 +16,7 @@
 
             <complexType name="Configuration">
                 <sequence>
-                    <element maxOccurs="unbounded" name="key" nillable="true" type="xsd:string"/>
-                    <element maxOccurs="unbounded" name="value" nillable="true" type="xsd:string"/>
+                    <element maxOccurs="unbounded" name="cfg" nillable="true" type="xsd:string"/>
                 </sequence>
             </complexType>
 
