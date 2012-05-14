@@ -38,14 +38,17 @@ FileTransferScheduler::FileTransferScheduler(TransferFiles* file) {
 	voName = file->VO_NAME;
 
 	// prepare input for site part
-	Se* srcSe;
+	Se* srcSe = 0;
 	DBSingleton::instance().getDBObjectInstance()->getSe(srcSe, srcSeName);
+	if (srcSe) {
+		srcSiteName = srcSe->SITE;
+	}
 
-	Se* destSe;
+	Se* destSe = 0;
 	DBSingleton::instance().getDBObjectInstance()->getSe(destSe, destSeName);
-
-	srcSiteName = srcSe->SITE;
-	destSiteName = destSe->SITE;
+	if(destSe) {
+		destSiteName = destSe->SITE;
+	}
 
 	delete srcSe;
 	delete destSe;
