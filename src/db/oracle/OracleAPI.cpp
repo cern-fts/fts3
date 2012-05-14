@@ -177,7 +177,7 @@ void OracleAPI::getSeCreditsInUse (
         	creditsInUse = r->getInt(1);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, selecttag);
+        conn->destroyStatement(s, "");
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -255,7 +255,7 @@ void OracleAPI::getSiteCreditsInUse (
         	creditsInUse = r->getInt(1);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, selecttag);
+        conn->destroyStatement(s, "");
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
