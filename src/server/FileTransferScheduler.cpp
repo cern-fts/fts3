@@ -222,7 +222,8 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 		return FREE_CREDITS;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The default value (" << DEFAULT_VALUE << ") is used." << commit;
+	int defval = DEFAULT_VALUE;
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The default value (" << defval << ") is used." << commit;
 	// otherwise return the difference for the default value
 	return DEFAULT_VALUE - creditsInUse;
 }
