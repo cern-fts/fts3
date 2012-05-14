@@ -42,16 +42,15 @@ FileTransferScheduler::FileTransferScheduler(TransferFiles* file) {
 	DBSingleton::instance().getDBObjectInstance()->getSe(srcSe, srcSeName);
 	if (srcSe) {
 		srcSiteName = srcSe->SITE;
+		delete srcSe;
 	}
 
 	Se* destSe = 0;
 	DBSingleton::instance().getDBObjectInstance()->getSe(destSe, destSeName);
 	if(destSe) {
 		destSiteName = destSe->SITE;
+		delete destSe;
 	}
-
-	delete srcSe;
-	delete destSe;
 }
 
 FileTransferScheduler::~FileTransferScheduler() {
