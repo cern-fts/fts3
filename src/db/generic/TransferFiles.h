@@ -60,5 +60,5 @@ public:
  std::string FINISH_TIME;
  std::string INTERNAL_FILE_PARAMS;
  std::string JOB_FINISHED;
- 
+ std::string VO_NAME;
 };
