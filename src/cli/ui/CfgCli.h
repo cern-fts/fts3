@@ -31,7 +31,7 @@
 
 namespace fts3 { namespace cli {
 
-class NameValueCli: public CliBase {
+class CfgCli: public CliBase {
 
 public:
 
@@ -41,24 +41,12 @@ public:
 	 * Creates the command line interface for retrieving name-value pairs.
 	 * The name-value pair is market as both: hidden and positional.
 	 */
-	NameValueCli();
+	CfgCli();
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~NameValueCli();
-
-	/**
-	 * Initializes the object with command line options.
-	 *
-	 * In addition parses the name-value pairs into two separate vectors.
-	 *
-	 * @param ac - argument count
-	 * @param av - argument array
-	 *
-	 * @see CliBase::initCli(int, char*)
-	 */
-	virtual void initCli(int ac, char* av[]);
+	virtual ~CfgCli();
 
 	/**
 	 * Gives the instruction how to use the command line tool.
@@ -68,28 +56,12 @@ public:
 	string getUsageString(string tool);
 
 	/**
-	 * Gets a vector with value names.
+	 * Gets a vector with SE configurations.
 	 *
-	 * @return if name-value pairs were given as command line parameters a
+	 * @return if SE configurations were given as command line parameters a
 	 * 			vector containing the value names, otherwise an empty vector
 	 */
-	vector<string>& getNames();
-
-	/**
-	 * Gets a vector with values.
-	 *
-	 * @return if name-value pairs were given as command line parameters a
-	 * 			vector containing the values, otherwise an empty vector
-	 */
-	vector<string>& getValues();
-
-private:
-
-	/// the names from the name-value pairs
-	vector<string> names;
-
-	/// the values from the name-value pairs
-	vector<string> values;
+	vector<string> getConfigurations();
 };
 
 }

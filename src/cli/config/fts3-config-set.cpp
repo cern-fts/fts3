@@ -24,7 +24,7 @@
 
 
 #include "gsoap_proxy.h"
-#include "ui/NameValueCli.h"
+#include "ui/CfgCli.h"
 
 #include "common/InstanceHolder.h"
 
@@ -47,7 +47,7 @@ int main(int ac, char* av[]) {
 
 	try {
 		// create and initialize the command line utility
-		NameValueCli cli;
+		CfgCli cli;
 		cli.initCli(ac, av);
 
     	// if applicable print help or version and exit
@@ -69,17 +69,16 @@ int main(int ac, char* av[]) {
 			// TODO verbose part !!!
 		}
 
-		vector<string> &names = cli.getNames(), &values = cli.getValues();
+		vector<string> cfgs = cli.getConfigurations();
 
-		if (names.empty() || values.empty()) {
+		if (cfgs.empty()) {
 
 			cout << "No parameters have been specified." << endl;
 			return 0;
 		}
 
 		config__Configuration *config = soap_new_config__Configuration(&service, -1);
-		config->key = names;
-		config->value = values;
+		config->cfg = cfgs;
 
 		implcfg__setConfigurationResponse resp;
 		int err = service.setConfiguration(config, resp);
