@@ -44,68 +44,61 @@ int SoapBindingService::setConfiguration
 {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
 
-	const int SHARE_TYPE_INDEX = 1;
-	const int SE_NAME_INDEX = 2;
-	const int SHARE_ID_INDEX = 3;
+	const int TYPE_INDEX = 1;
+	const int NAME_INDEX = 2;
+	const int SHARE_TYPE_INDEX = 3;
 	const int SHARE_NULL_INDEX = 5;
-	const int SHARE_VAL_INDEX = 6;
+	const int SHARE_ID_INDEX = 6;
+	const int INBOUND_INDEX = 7;
+	const int OUTBOUND_INDEX = 8;
+	const int POLICY_INDEX = 9;
 
-	string 	exp_n = 	"\\s*\"\\s*category\\s*\"\\s*:\\s*\"\\s*(.+)\\s*\"\\s*,";
-			exp_n +=	"\\s*\"\\s*name\\s*\"\\s*:\\s*\"\\s*(.+)\\s*\"\\s*,";
-			exp_n += 	"\\s*\"\\s*shared_id\\s*\"\\s*:\\s*\"\\s*(publicshare|voshare|spacetokenshare)\\s*\"\\s*,";
-			exp_n +=	"\\s*\"\\s*value\\s*\"\\s*:\\s*((null)|\"\\s*(.+)\\s*\")\\s*\\s*";
 
-	string 	exp_v = 	"\\s*\"\\s*in\\s*\"\\s*:\\s*(\\d+)\\s*,";
-			exp_v += 	"\\s*\"\\s*out\\s*\"\\s*:\\s*(\\d+)\\s*,";
-			exp_v +=	"\\s*\"\\s*policy\\s*\"\\s*:\\s*\"\\s*(.+)\\s*\"\\s*";
+	string 	exp = 	"\\s*\"\\s*type\\s*\"\\s*:\\s*\"\\s*(se|site)\\s*\"\\s*,"
+					"\\s*\"\\s*name\\s*\"\\s*:\\s*\"\\s*(.+)\\s*\"\\s*,"
+					"\\s*\"\\s*share_type\\s*\"\\s*:\\s*\"\\s*(public|vo|pair)\\s*\"\\s*,"
+					"\\s*\"\\s*share_id\\s*\"\\s*:\\s*((null)|\"\\s*(.+)\\s*\")\\s*,"
+					"\\s*\"\\s*in\\s*\"\\s*:\\s*(\\d+)\\s*,"
+					"\\s*\"\\s*out\\s*\"\\s*:\\s*(\\d+)\\s*,"
+					"\\s*\"\\s*policy\\s*\"\\s*:\\s*\"\\s*(.+)\\s*\"\\s*";
 
-	regex re_n(exp_n);
-	regex re_v(exp_v);
+	regex re(exp);
 	smatch what;
 
-	vector<string>& name = _configuration->key;
-	vector<string>& value = _configuration->value;
-	int size = name.size(), pos;
+	vector<string>& cfgs = _configuration->cfg;
+	vector<string>::iterator it;
+	int pos;
 
-	for(int i = 0; i < size; i++) {
+//	for(int i = 0; i < size; i++) {
+	for(it = cfgs.begin(); it < cfgs.end(); it++) {
 
-		// parsing name
-		pos = name[i].find('{');
+		string cfg = *it;
+		// parsing cfg
+		pos = cfg.find('{');
 		if (pos != string::npos)
-			name[i].erase(pos, 1);
+			cfg.erase(pos, 1);
 
-		pos = name[i].find('}');
+		pos = cfg.find('}');
 		if (pos != string::npos)
-			name[i].erase(pos, 1);
+			cfg.erase(pos, 1);
 
-		to_lower(name[i]);
-		regex_match(name[i], what, re_n, match_extra);
+		to_lower(cfg);
+		regex_match(cfg, what, re, match_extra);
 
-		string type = what[SHARE_TYPE_INDEX];
-		string name = what[SE_NAME_INDEX];
+		string type = what[TYPE_INDEX];
+		string name = what[NAME_INDEX];
 
-		string id = "\"shared_id\":\"" + what[SHARE_ID_INDEX] + "\",\"value\":";
+		string id = "\"share_type\":\"" + what[SHARE_TYPE_INDEX] + "\",\"share_id\":";
 		string tmp = what[SHARE_NULL_INDEX];
 		if (tmp.empty()){
-			id += "\"" + what[SHARE_VAL_INDEX] + "\"";
+			id += "\"" + what[SHARE_ID_INDEX] + "\"";
 		} else {
 			id += "null}";
 		}
 
-		// parsing value
-		pos = value[i].find('{');
-		if (pos != string::npos)
-			value[i].erase(pos, 1);
-
-		pos = value[i].find('}');
-		if (pos != string::npos)
-			value[i].erase(pos, 1);
-
-		to_lower(value[i]);
-		regex_match(value[i], what, re_v, match_extra);
-
-		string val = "\"in\":" + what[1] + ",\"out\":" + what[2] + ",\"policy\":\"" + what[3] + "\"";
-		//string id_extended = id + "=" + val;
+		string val = "\"in\":" + what[INBOUND_INDEX] +
+					",\"out\":" + what[OUTBOUND_INDEX] +
+					",\"policy\":\"" + what[POLICY_INDEX] + "\"";
 
 		vector<SeAndConfig*> seAndConfig;
 		vector<SeAndConfig*>::iterator it;
@@ -159,74 +152,45 @@ int SoapBindingService::getConfiguration
 )
 {
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
-/*
-	DBSingleton::instance().getDBObjectInstance()->addSe(
-			"some.host.name",
-			"site_pair",
-			"site",
-			"CERN-FNAL",
-			"online",
-			"2.2.8",
-			"some.host.name",
-			"srm",
-			"srm",
-			"srm",
-			"id"
-			);
-*/
-
-/*
-	vector<Se*> v;
-	DBSingleton::instance().getDBObjectInstance()->getAllSeInfoNoCritiria(v);
-	for (int i = 0; i < v.size(); i++) {
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << v[i]->NAME << commit;
-	}
-*/
-
-/*
-	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("dmp.cern.ch", "", "");
-	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("dcache.desy.de", "", "");
-	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("CERN", "", "");
-	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("dcache.cern.ch-dpm.desy.ch", "", "");
-	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("srm.cern.ch", "", "");
-	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("CERN-FNAL", "", "");
-*/
-//	DBSingleton::instance().getDBObjectInstance()->deleteSeConfig("se2", "", "");
 
 	set<string> types;
 	types.insert("se");
-	types.insert("se_pair");
 	types.insert("site");
-	types.insert("site_pair");
 
 	response.configuration = soap_new_config__Configuration(this, -1);
-	vector<string>& names = response.configuration->key;
-	vector<string>& values =  response.configuration->value;
-
+	vector<string>& cfgs = response.configuration->cfg;
 	vector<SeConfig*> seConfig;
 	vector<SeConfig*>::iterator it;
 
 	DBSingleton::instance().getDBObjectInstance()->getAllSeConfigNoCritiria(seConfig);
 
 	int pos;
-	string name, value;
+	string cfg;
+	SeConfig* seCfg;
 
 	for (it = seConfig.begin(); it < seConfig.end(); it++) {
+
+		seCfg = *it;
+
 		if (types.count((*it)->SHARE_TYPE)) {
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << (*it)->SHARE_TYPE << commit;
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << (*it)->SE_NAME << commit;
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << (*it)->SHARE_ID << commit;
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << (*it)->SHARE_VALUE << commit;
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "" << commit;
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << seCfg->SHARE_TYPE << commit;
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << seCfg->SE_NAME << commit;
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << seCfg->SHARE_ID << commit;
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << seCfg->SHARE_VALUE << commit;
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
 
-			value = "{" + (*it)->SHARE_VALUE + "}";
-			values.push_back(value);
 
-			name = "{\"category\":\"" + (*it)->SHARE_TYPE + "\",\"name\":\"" + (*it)->SE_NAME + "\"," + (*it)->SHARE_ID + "}";
-			names.push_back(name);
+			cfg = "{"
+					"\"type\":\"" + seCfg->SHARE_TYPE + "\","
+					"\"name\":\"" + seCfg->SE_NAME + "\","
+					+ seCfg->SHARE_ID + ","
+					+ seCfg->SHARE_VALUE +
+				"}";
+
+			cfgs.push_back(cfg);
 		}
 
-		delete (*it);
+		delete (seCfg);
 	}
 
     return SOAP_OK;
