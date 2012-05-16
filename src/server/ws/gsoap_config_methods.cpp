@@ -93,7 +93,7 @@ int SoapBindingService::setConfiguration
 		if (tmp.empty()){
 			id += "\"" + what[SHARE_ID_INDEX] + "\"";
 		} else {
-			id += "null}";
+			id += "null";
 		}
 
 		string val = "\"in\":" + what[INBOUND_INDEX] +
