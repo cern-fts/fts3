@@ -27,6 +27,7 @@ limitations under the License. */
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "FileTransferScheduler.h"
 
@@ -34,6 +35,14 @@ FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
+
+template <class T>
+inline std::string to_string (const T& t)
+{
+	std::stringstream ss;
+	ss << t;
+	return ss.str();
+}
 
 template
 <
@@ -90,33 +99,32 @@ protected:
 
         while(1){
         	DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-        	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
+        	
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
 
         	if(jobs2.size() > 0){
         		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The number of jobs which will be started: " << jobs2.size() << commit;
         	}
+		
 
-			//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Fetching URLs" << commit;
 			DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
 			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
 				TransferFiles* temp = (TransferFiles*) * fileiter;
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
+				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << temp->FILE_ID << commit;
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
 
 				FileTransferScheduler scheduler(temp);
 				if (scheduler.schedule()) {
-//					params.append(" --source_url ");
-//					params.append(temp->SOURCE_SURL);
-//					params.append(" --dest_url ");
-//					params.append(temp->DEST_SURL);
-
 					params.append(" -b ");
 					params.append(temp->SOURCE_SURL);
 					params.append(" -c ");
 					params.append(temp->DEST_SURL);
 					params.append(" -a ");
 					params.append(temp->JOB_ID);
+					params.append(" -B ");
+					params.append(to_string(temp->FILE_ID));					
 
 					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
 					pr = new ExecuteProcess(cmd, params, 0);

@@ -49,6 +49,10 @@ public:
 
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();	
+	
+        typename TRAITS::ProcessQueueType queueHandler;
+        queueHandler.executeTransfer_p();		
+	
         TRAITS::ThreadPoolType::instance().wait();
     }
 

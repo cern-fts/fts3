@@ -1,20 +1,20 @@
 #include "mq_manager.h"
 
 
-    // ctor for consumer (fts3_server)
-    QueueManager::QueueManager() : drop_(false)
+    QueueManager::QueueManager(bool consumer) : drop_(false)
     {
-      remove();
-      mq_.reset(new message_queue(create_only, FTS3_MQ_NAME, MAX_NUM_MSGS, sizeof(message)));
+    	//fts3_server
+      if(consumer == true){
+	      remove();
+	      mq_.reset(new message_queue(create_only, FTS3_MQ_NAME, MAX_NUM_MSGS, sizeof(message)));
+      }
+      else{ //ft3_url_copy
+	       mq_.reset(new message_queue(open_only, FTS3_MQ_NAME));      
+      }
     }
  
-    // ctor for producer (fts3_url_copy)
-    QueueManager::QueueManager(std::string job_id, std::string file_id) : drop_(true), mq_(new message_queue(open_only, FTS3_MQ_NAME)) {
-    	job_id = std::string("");
-	file_id = std::string("");
-    }
- 
-    QueueManager::~QueueManager() { if(drop_) remove(); }
+   
+    QueueManager::~QueueManager() {}
  
     void QueueManager::send(struct message* msg)
     {

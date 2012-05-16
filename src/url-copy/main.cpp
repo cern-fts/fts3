@@ -31,23 +31,24 @@ void archive(std::string &filename){
 }
 
 
+void constructMessage(QueueManager* qm, struct message* msg, string job_id, string file_id, string transfer_status, string transfer_message){
+	strcpy (msg->job_id, job_id.c_str());
+	strcpy (msg->file_id, file_id.c_str());	
+	strcpy (msg->transfer_status, transfer_status.c_str());		
+	strcpy (msg->transfer_message, transfer_message.c_str());
+	qm->send(msg);			
+}
+
+
 std::string generateLogFileName(std::string surl, std::string durl, std::string & file_id){
    std::string new_name = std::string("");
    char *base_scheme = NULL;
    char *base_host = NULL;
    char *base_path = NULL;
    int base_port = 0;
-   std::string shost;
-   std::string dhost; 
-   
-	uuid_t id;
-	char cc_str[36];
+   std::string shost("");
+   std::string dhost(""); 
 
-	uuid_generate(id);;
-	uuid_unparse(id, cc_str);
-	std::string uuid = cc_str;
-	file_id =  uuid;   
-   
     //add surl / durl
     //source
     parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
@@ -70,7 +71,7 @@ std::string generateLogFileName(std::string surl, std::string durl, std::string 
        <<  "-" << std::setw(2) << (date->tm_mday)
        <<  "-" << std::setw(2) << (date->tm_hour)
                << std::setw(2) << (date->tm_min)
-    << "__" << shost << "__" << dhost << "__" << uuid;
+    << "__" << shost << "__" << dhost << "__" << file_id;
 
     new_name += ss.str();
     return new_name;
@@ -101,36 +102,6 @@ logger& operator<<( logger& log, const T& output ) {
 
 int main(int argc, char **argv) {
 
-/*
--a ("job_id", po::value<string > (&job_id), "job id")
--b ("source_url", po::value<string > (&source_url), "source url")
--c ("dest_url", po::value<string > (&dest_url), "dest url")
--d ("overwrite", "overwrite")
--e ("nbstreams", po::value<int>(&nbstreams)->default_value(5), "nbstreams")
--f ("tcpbuffersize", po::value<int>(&tcpbuffersize)->default_value(0), "tcpbuffersize")
--g ("blocksize", po::value<int>(&blocksize)->default_value(0), "blocksize")
--h ("timeout", po::value<int>(&timeout)->default_value(3600), "timeout")
--i ("daemonize", "daemonize")
--j  -T, --dest-token-desc DESC:  target space token description.
--k  -S, --source-token-desc DESC:  source space token description.
--l  -m, --markers-timeout N:     set the transfer markers timeout to N seconds.
--m  -f, --first-marker-timeout N: set the first transfer marker timeout to N seconds.
--n  -g, --srm-get-timeout N:     set the srm-get timeout to N seconds.
--o  -u, --srm-put-timeout N:     set the srm-put timeout to N seconds.
--p  -H, --http-timeout N:        set the http timeout to N seconds.
--q  -e, --dont-ping-source:      don't ping source endpoint.
--r  -E, --dont-ping-dest:        don't ping destination endpoint.
--s  -k, --disable-dir-check:     skip target directory existence check and mkdir operations.
--t  --copy-pin-lifetime N:       set the desired copy pin lifetime to N seconds.
--u  --lan-connection:            use LAN connection type in get and put operations.
--v  --fail-nearline:             fail the transfer immediately if the source file is on tape.
--w  --timeout-per-mb N:          size based transfer timeout, in seconds per MB (float).
--x  --no-progress-timeout N:     abort the transfer if no progress is received for more than N seconds.
--y  -a, --algorithm ALG:         use ALG as checksum algorithm (default = ADLER32).   (implies --compare-checksum).
--z  -c, --checksum-value CKSM:   verify that the checksum of the file is equal to CKSM after transfer (implies --compare-checksum).
--A  -K, --compare-checksum:      verify that the checksum of the file is equal to the source one after transfer.
-*/
-
     std::string file_id("");
     std::string job_id("");   //a
     std::string source_url(""); //b
@@ -159,6 +130,8 @@ int main(int argc, char **argv) {
     std::string algorithm("");//y
     std::string checksum_value("");//z
     bool compare_checksum = true; //A
+    
+    struct message* msg = new struct message;
     
   
     for(int i(1); i < argc; ++i){             	
@@ -217,6 +190,8 @@ int main(int argc, char **argv) {
 	 srm_put_timeout = std::atoi(argv[i+1]);		 	  
         if(temp.compare("-p") == 0)
 	 http_timeout = std::atoi(argv[i+1]);		 	  	 	 	 	 
+        if(temp.compare("-B") == 0)
+	 file_id = std::string(argv[i+1]);		 	  	 	 	 	 	 
     }
       
     std::string logFileName = "/var/log/fts3/";
@@ -227,6 +202,7 @@ int main(int argc, char **argv) {
 
     log << "Transfer accepted"<< '\n';
     log << "job_id:" << job_id<< '\n'; //a
+    log << "file_id:" << file_id<< '\n'; //a
     log << "source_url:" << source_url<< '\n'; //b
     log << "dest_url:" << dest_url<< '\n'; //c
     log << "overwrite:" << overwrite<< '\n'; //d
@@ -255,16 +231,20 @@ int main(int argc, char **argv) {
     log << "compare_checksum:" << compare_checksum<< '\n'; //A
     
 
-    log << "Setup the reported queue back to fts3_server for this process"<< '\n';
+    log << "Setup the fts3_server reporter queue"<< '\n';
     //init message_queue
     QueueManager* qm = NULL;
     try {
-        qm = new QueueManager(job_id, file_id);
+        qm = new QueueManager(false);
     } catch (interprocess_exception &ex) {
         if (qm)
             delete qm;
         log << ex.what()<< '\n';
     }
+    
+    
+    constructMessage(qm, msg, job_id, file_id, "STARTED", "Transfer started");
+    
 
     //start transfer gfal2	
     GError * tmp_err = NULL; // classical GError/glib error management
@@ -275,19 +255,24 @@ int main(int argc, char **argv) {
     if ((handle = gfal_context_new(&tmp_err)) == NULL) {
 	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Transfer Initialization failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message << commit;
 	log << "Transfer Initialization failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message<< '\n';
+	constructMessage(qm, msg, job_id, file_id, "FINISHED", std::string(tmp_err->message));
     }
     log << "begin copy"<< '\n';
         FTS3_COMMON_LOGGER_NEWLOG (INFO) <<  " Transfer Started" << commit;
     if ((ret = gfalt_copy_file(handle, NULL, source_url.c_str(), dest_url.c_str(), &tmp_err)) != 0) {        
 	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Transfer failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message << commit;
 	log << "Transfer failed - errno: " <<  tmp_err->message << " Error message:" << tmp_err->message<< '\n';
+	constructMessage(qm, msg, job_id, file_id, "FINISHED", std::string(tmp_err->message));	
     } else{
         FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Transfer completed successfully"  << commit;
 	log << "Transfer completed successfully"<< '\n';
+		constructMessage(qm, msg, job_id, file_id, "FINISHED", "");
     }
     
     log << "release all gfal2 resources"<< '\n';
     gfal_context_free(handle);
+    if(msg)
+	delete msg;    
     if (qm)
         delete qm;
 

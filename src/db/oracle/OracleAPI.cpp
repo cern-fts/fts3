@@ -24,7 +24,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
     std::vector<TransferJobs*>::iterator iter;
     const std::string tag = "getSubmittedJobs";
     const std::string updateTag = "getSubmittedJobsUpdate";
-    std::string update = "update t_job set job_state='ACTIVE' WHERE job_id=:1";
+    //std::string update = "update t_job set job_state='ACTIVE' WHERE job_id=:1";
     std::string query_stmt = "SELECT "
             " t_job.job_id, "
             " t_job.job_state, "
@@ -59,8 +59,8 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
-        oracle::occi::Statement* up = conn->createStatement(update, updateTag);
-        s->setInt(1, 10);
+        //oracle::occi::Statement* up = conn->createStatement(update, updateTag);
+        s->setInt(1, 100);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -90,14 +90,15 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
 
-        for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
+       /* for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
             TransferJobs* temp = (TransferJobs*) * iter;
             up->setString(1, std::string(temp->JOB_ID));
             up->executeUpdate();
         }
         conn->commit();
-
-        conn->destroyStatement(up, updateTag);
+	*/	
+        //conn->destroyStatement(up, updateTag);
+	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -117,7 +118,7 @@ void OracleAPI::getSeCreditsInUse (
 			"FROM t_job, t_file "
 			"WHERE "
 			"	t_job.job_id = t_file.job_id "
-			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'ACTIVE') ";
+			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'STARTED') ";
 
 	if (!srcSeName.empty()) {
 		query_stmt +=
@@ -1284,7 +1285,28 @@ void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
 }
 
 
+void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message){
+    const std::string tag = "updateFileTransferStatus";
+    std::string query =
+    		"UPDATE t_file "
+    		"SET file_state =:1, REASON=:2 "
+    		"WHERE file_id = :3 ";		
 
+      std::cerr << query << std::endl;
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, transfer_status);
+        s->setString(2, transfer_message);
+	s->setInt(3, atoi(file_id.c_str()));
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}    
 
 
 // the class factories

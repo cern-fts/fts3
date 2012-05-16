@@ -48,7 +48,7 @@ void ThreadPool::wait()
 void ThreadPool::stop()
 {
 	_thgrp.interrupt_all();
-	_thgrp.join_all();
+	//_thgrp.join_all();
 }
 
 ThreadPool::element_type ThreadPool::pop(const Timeout& td) 

@@ -33,12 +33,10 @@ class QueueManager
     bool drop_; // drop the message queue
     boost::scoped_ptr<message_queue> mq_; 
  
+  public:  
     void remove();
-  public:
 
-    QueueManager();
- 
-    QueueManager(std::string job_id, std::string file_id);
+    QueueManager(bool consumer);  
  
     ~QueueManager();
  
