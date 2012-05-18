@@ -25,6 +25,7 @@ set(fts3_include_dir
 include_directories (${fts3_include_dir})
 include_directories (${PROJECT_SOURCE_DIR}/src/url-copy/)
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
+include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
