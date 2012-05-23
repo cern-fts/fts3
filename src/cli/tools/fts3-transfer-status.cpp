@@ -22,7 +22,6 @@
 #include "ui/TransferStatusCli.h"
 
 #include "common/JobStatusHandler.h"
-#include "common/InstanceHolder.h"
 
 #include <vector>
 #include <string>
@@ -31,16 +30,12 @@ using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
-
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
-
 /**
  * This is the entry point for the fts3-transfer-status command line tool.
  */
 int main(int ac, char* av[]) {
 
-	// create the service client
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
@@ -70,13 +65,12 @@ int main(int ac, char* av[]) {
 
 		//service.soap_endpoint = "https://vtb-generic-32.cern.ch:8443/glite-data-transfer-fts/services/FileTransfer";
 		// set the endpoint
-		service.soap_endpoint = endpoint.c_str();
 
 		// initialize SOAP
-		if (!manager->initSoap(&service, endpoint)) return 0;
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (!manager->init(service)) return 0;
+		if (!manager->init(soap, endpoint.c_str())) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -98,7 +92,7 @@ int main(int ac, char* av[]) {
 
 					// do the request
 					impltns__getTransferJobSummary2Response resp;
-					ret = service.getTransferJobSummary2(jobId, resp);
+					ret = soap_call_impltns__getTransferJobSummary2(soap, endpoint.c_str(), 0, jobId, resp);
 
 					// print the response
 					if (!ret && resp._getTransferJobSummary2Return) {
@@ -123,7 +117,7 @@ int main(int ac, char* av[]) {
 
 					// do the request
 					impltns__getTransferJobSummaryResponse resp;
-					ret = service.getTransferJobSummary(jobId, resp);
+					ret = soap_call_impltns__getTransferJobSummary(soap, endpoint.c_str(), 0, jobId, resp);
 
 					// print the response
 					if (!ret && resp._getTransferJobSummaryReturn) {
@@ -147,7 +141,7 @@ int main(int ac, char* av[]) {
 
 				// do the request
 				impltns__getTransferJobStatusResponse resp;
-		    	ret = service.getTransferJobStatus(jobId, resp);
+				ret = soap_call_impltns__getTransferJobStatus(soap, endpoint.c_str(), 0, jobId, resp);
 
 		    	// print the response
 		    	if (!ret && resp._getTransferJobStatusReturn) {
@@ -161,7 +155,7 @@ int main(int ac, char* av[]) {
 
 				// do the request
 				impltns__getFileStatusResponse resp;
-				ret = service.getFileStatus(jobId, 0, 100, resp);
+				ret = soap_call_impltns__getFileStatus(soap, endpoint.c_str(), 0, jobId, 0, 100, resp);
 
 				if (!ret && resp._getFileStatusReturn) {
 
@@ -185,7 +179,7 @@ int main(int ac, char* av[]) {
 			// print the error message if applicable
 	    	if (ret) {
 	    		cout << "getTransferJobStatus: ";
-	    		manager->printSoapErr(service);
+	    		manager->printSoapErr(soap);
 	    	}
 		}
     }
@@ -196,6 +190,10 @@ int main(int ac, char* av[]) {
     } catch(...) {
         cerr << "Exception of unknown type!\n";
     }
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
 	return 0;
 }

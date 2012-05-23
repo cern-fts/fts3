@@ -61,7 +61,7 @@ public:
 	 * @return if job IDs were given as command line parameters a
 	 * 			vector containing job IDs otherwise an empty vector
 	 */
-	string getVOName();
+	string getVoName();
 };
 
 }

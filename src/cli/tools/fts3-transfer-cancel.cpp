@@ -26,8 +26,6 @@
 #include "SrvManager.h"
 #include "ui/JobIdCli.h"
 
-#include "common/InstanceHolder.h"
-
 #include <exception>
 #include <iostream>
 #include <vector>
@@ -35,10 +33,6 @@
 
 using namespace std;
 using namespace fts3::cli;
-using namespace fts3::common;
-
-
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.
@@ -46,7 +40,7 @@ typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 int main(int ac, char* av[]) {
 
 	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
@@ -66,20 +60,19 @@ int main(int ac, char* av[]) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
-		service.soap_endpoint = endpoint.c_str();
 
 		// initialize SOAP
-		if (!manager->initSoap(&service, endpoint)) return 0;
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (!manager->init(service)) return 0;
+		if (!manager->init(soap, endpoint.c_str())) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
 			cli.printGeneralInfo();
 		}
 
-		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(&service, -1);
+		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
 		vector<string> &jobs = rqst->item;
 		jobs = cli.getJobIds();
 
@@ -89,11 +82,11 @@ int main(int ac, char* av[]) {
 		}
 
 		impltns__cancelResponse resp;
-		int err = service.cancel(rqst, resp);
+		int err =  soap_call_impltns__cancel(soap, endpoint.c_str(), 0, rqst, resp);
 
 		if (err) {
 			cout << "Failed to cancel transfer: cancel. ";
-			manager->printSoapErr(service);
+			manager->printSoapErr(soap);
 			return 0;
 		}
 
@@ -110,6 +103,10 @@ int main(int ac, char* av[]) {
 	catch(...) {
 		cerr << "Exception of unknown type!\n";
 	}
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
 	return 0;
 }

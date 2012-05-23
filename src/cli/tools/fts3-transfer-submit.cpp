@@ -22,7 +22,6 @@
 #include "ui/SubmitTransferCli.h"
 
 #include "common/JobStatusHandler.h"
-#include "common/InstanceHolder.h"
 
 #include <exception>
 
@@ -30,16 +29,12 @@ using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
-
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
-
 /**
  * This is the entry point for the fts3-transfer-submit command line tool.
  */
 int main(int ac, char* av[]) {
 
-	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
@@ -59,13 +54,12 @@ int main(int ac, char* av[]) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
-		service.soap_endpoint = endpoint.c_str();
 
 		// initialize SOAP
-		if (!manager->initSoap(&service, endpoint)) return 0;
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (!manager->init(service)) return 0;
+		if (!manager->init(soap, endpoint.c_str())) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -85,18 +79,19 @@ int main(int ac, char* av[]) {
 		if (cli.useCheckSum()) {
 			tns3__TransferJob2 job;
 			// set job elements
-			job.transferJobElements = cli.getJobElements2(&service);
+			job.transferJobElements = cli.getJobElements2(soap);
 			// set transfer parameters
-			job.jobParams = cli.getParams(&service);
+			job.jobParams = cli.getParams(soap);
 
 			// always use delegation with checksum TODO check whether it's right!
 			manager->delegateProxyCert(endpoint);
 			// submit the job
 			impltns__transferSubmit3Response resp;
-			err = service.transferSubmit3(&job, resp);
+			err = soap_call_impltns__transferSubmit3(soap, endpoint.c_str(), 0, &job, resp);
+
 			if (err) {
 				cout << "Failed to submit transfer: transferSubmit3. ";
-				manager->printSoapErr(service);
+				manager->printSoapErr(soap);
 				return 0;
 			}
 
@@ -106,9 +101,9 @@ int main(int ac, char* av[]) {
 		} else {
 			tns3__TransferJob job;
 			// set job elements
-			job.transferJobElements = cli.getJobElements(&service);
+			job.transferJobElements = cli.getJobElements(soap);
 			// set transfer parameters
-			job.jobParams = cli.getParams(&service);
+			job.jobParams = cli.getParams(soap);
 
 			// check whether a proxy certificate should be used
 			if (cli.useDelegation()) {
@@ -116,10 +111,10 @@ int main(int ac, char* av[]) {
 				manager->delegateProxyCert(endpoint);
 				// submit the job
 				impltns__transferSubmit2Response resp;
-				err = service.transferSubmit2(&job, resp);
+				err = soap_call_impltns__transferSubmit2(soap, endpoint.c_str(), 0, &job, resp);
 				if (err) {
 					cout << "Failed to submit transfer: transferSubmit2. ";
-					manager->printSoapErr(service);
+					manager->printSoapErr(soap);
 					return 0;
 				}
 
@@ -129,16 +124,16 @@ int main(int ac, char* av[]) {
 			} else {
 
 				// set the credential (Password)
-				job.credential = soap_new_std__string(&service, -1);
+				job.credential = soap_new_std__string(soap, -1);
 				*job.credential = cli.getPassword(); // TODO test
 				//cout << *job.credential << endl;
 
 				// submit the job
 				impltns__transferSubmitResponse resp;
-				err = service.transferSubmit(&job, resp);
+				err = soap_call_impltns__transferSubmit(soap, endpoint.c_str(), 0, &job, resp);
 				if (err) {
 					cout << "Failed to submit transfer: transferSubmit. ";
-					manager->printSoapErr(service);
+					manager->printSoapErr(soap);
 					return 0;
 				}
 
@@ -155,7 +150,7 @@ int main(int ac, char* av[]) {
 			// wait until the transfer is ready
 			do {
 				sleep(2);
-				service.getTransferJobStatus(jobId, resp);
+				soap_call_impltns__getTransferJobStatus(soap, endpoint.c_str(), 0, jobId, resp);
 			} while (!JobStatusHandler::getInstance().isTransferReady(*resp._getTransferJobStatusReturn->jobStatus));
 		}
 
@@ -166,6 +161,10 @@ int main(int ac, char* av[]) {
     } catch(...) {
         cerr << "Exception of unknown type!\n";
     }
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
     return 0;
 }

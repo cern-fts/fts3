@@ -36,7 +36,7 @@
 using namespace fts3::cli;
 using namespace std;
 
-BOOST_FIXTURE_TEST_CASE (NameValueCli_WrongFormat_Test, NameValueCli) {
+BOOST_FIXTURE_TEST_CASE (NameValueCli_WrongFormat_Test, CfgCli) {
 
         // has to be const otherwise is deprecated
         const char* av[] = {"prog_name", "wrong_format"};
@@ -52,7 +52,7 @@ BOOST_FIXTURE_TEST_CASE (NameValueCli_WrongFormat_Test, NameValueCli) {
         BOOST_CHECK(wrong_format);
 }
 
-BOOST_FIXTURE_TEST_CASE (NameValueCli_Test, NameValueCli) {
+BOOST_FIXTURE_TEST_CASE (NameValueCli_Test, CfgCli) {
 
         // has to be const otherwise is deprecated
         const char* av[] = {"prog_name", "p1=1", "p2=2", "p3=3"};

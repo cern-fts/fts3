@@ -77,7 +77,7 @@ public:
 	 * @return true if all information were received
 	 * @see SrvManager::initSoap(soap*, string)
 	 */
-	bool init(FileTransferSoapBindingProxy& service);
+	bool init(soap* soap, const char* endpoint);
 
 	/**
 	 * Splits the given string, and sets:
@@ -112,7 +112,7 @@ public:
 	 * #param service - proxy to the FTS3 service
 	 *
 	 */
-	void printSoapErr (FileTransferSoapBindingProxy& service);
+	void printSoapErr (soap* soap);
 
 	///@{
 	/**

@@ -26,24 +26,18 @@
 #include "SrvManager.h"
 #include "ui/DnCli.h"
 
-#include "common/InstanceHolder.h"
-
 #include <exception>
 
 using namespace std;
 using namespace fts3::cli;
-using namespace fts3::common;
 
-
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.
  */
 int main(int ac, char* av[]) {
 
-	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
@@ -63,13 +57,12 @@ int main(int ac, char* av[]) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
-		service.soap_endpoint = endpoint.c_str();
 
 		// initialize SOAP
-		if (!manager->initSoap(&service, endpoint)) return 0;
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (!manager->init(service)) return 0;
+		if (!manager->init(soap, endpoint.c_str())) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
@@ -80,11 +73,11 @@ int main(int ac, char* av[]) {
 		int err;
 		if (dn.empty()) {
 			impltns__getRolesResponse resp;
-			err = service.getRoles(resp);
+			err = soap_call_impltns__getRoles(soap, endpoint.c_str(), 0, resp);
 
 			if (err || !resp.getRolesReturn) {
 				cout << "Failed to get roles: getRoles. ";
-				manager->printSoapErr(service);
+				manager->printSoapErr(soap);
 				return 0;
 			}
 
@@ -118,11 +111,11 @@ int main(int ac, char* av[]) {
 
 		} else {
 			impltns__getRolesOfResponse resp;
-			err = service.getRolesOf(dn, resp);
+			err = soap_call_impltns__getRolesOf(soap, endpoint.c_str(), 0, dn, resp);
 
 			if (err || !resp._getRolesOfReturn) {
 				cout << "Failed to get roles: getRolesOf. ";
-				manager->printSoapErr(service);
+				manager->printSoapErr(soap);
 				return 0;
 			}
 
@@ -162,6 +155,10 @@ int main(int ac, char* av[]) {
 	catch(...) {
 		cerr << "Exception of unknown type!\n";
 	}
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
 	return 0;
 }

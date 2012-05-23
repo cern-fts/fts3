@@ -64,7 +64,7 @@ string VoNameCli::getUsageString(string tool) {
 	return "Usage: " + tool + " [options] VONAME";
 }
 
-string VoNameCli::getVOName() {
+string VoNameCli::getVoName() {
 
 	// check whether jobid has been given as a parameter
 	if (vm.count("voname")) {

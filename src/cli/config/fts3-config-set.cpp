@@ -24,26 +24,23 @@
 
 
 #include "gsoap_proxy.h"
+#include "SrvManager.h"
 #include "ui/CfgCli.h"
-
-#include "common/InstanceHolder.h"
 
 #include <string>
 #include <vector>
 
 using namespace std;
 using namespace fts3::cli;
-using namespace fts3::common;
-
-typedef InstanceHolder<SoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
  * This is the entry point for the fts3-config-set command line tool.
  */
 int main(int ac, char* av[]) {
 
-	// create FTS3 service client
-	SoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
+	// get SrvManager instance
+	SrvManager* manager = SrvManager::getInstance();
 
 	try {
 		// create and initialize the command line utility
@@ -61,7 +58,9 @@ int main(int ac, char* av[]) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
-		service.soap_endpoint = endpoint.c_str();
+
+		// initialize SOAP
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// TODO cgsi soap init!!!
 
@@ -77,14 +76,14 @@ int main(int ac, char* av[]) {
 			return 0;
 		}
 
-		config__Configuration *config = soap_new_config__Configuration(&service, -1);
+		config__Configuration *config = soap_new_config__Configuration(soap, -1);
 		config->cfg = cfgs;
 
 		implcfg__setConfigurationResponse resp;
-		int err = service.setConfiguration(config, resp);
+		int err = soap_call_implcfg__setConfiguration(soap, endpoint.c_str(), 0, config, resp);
 
 		if (err) {
-			cout << "Failed to set configuration name-value pairs. ";
+			cout << "Failed to set configuration. ";
 			// TODO print error message
 			//manager->printSoapErr(service);
 			return 0;
@@ -97,6 +96,10 @@ int main(int ac, char* av[]) {
 	catch(...) {
 		cerr << "Exception of unknown type!\n";
 	}
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
 	return 0;
 }

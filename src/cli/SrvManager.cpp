@@ -133,57 +133,57 @@ long SrvManager::isCertValid () {
     return time;
 }
 
-void SrvManager::printSoapErr(FileTransferSoapBindingProxy& service) {
+void SrvManager::printSoapErr(soap* soap) {
 
-	if (service.fault && service.fault->faultstring) {
-		cout << service.fault->faultstring << endl;
+	if (soap->fault && soap->fault->faultstring) {
+		cout << soap->fault->faultstring << endl;
 	}
 }
 
-bool SrvManager::init(FileTransferSoapBindingProxy& service) {
+bool SrvManager::init(soap* soap, const char* endpoint) {
 
 	// request the information about the FTS3 service
 
 	int err;
 
 	impltns__getInterfaceVersionResponse ivresp;
-	err = service.getInterfaceVersion(ivresp);
+	err = soap_call_impltns__getInterfaceVersion(soap, endpoint, 0, ivresp);
 	if (!err) {
 		interface = ivresp.getInterfaceVersionReturn;
 		setInterfaceVersion(interface);
 	} else {
 		cout << "Failed to determine the interface version of the service: getInterfaceVersion. ";
-		printSoapErr(service);
+		printSoapErr(soap);
 		return false;
 	}
 
 	impltns__getVersionResponse vresp;
-	err = service.getVersion(vresp);
+	err = soap_call_impltns__getVersion(soap, endpoint, 0, vresp);
 	if (!err) {
 		version = vresp.getVersionReturn;
 	} else {
 		cout << "Failed to determine the version of the service: getVersion. ";
-		printSoapErr(service);
+		printSoapErr(soap);
 		return false;
 	}
 
 	impltns__getSchemaVersionResponse sresp;
-	err = service.getSchemaVersion(sresp);
+	err = soap_call_impltns__getSchemaVersion(soap, endpoint, 0, sresp);
 	if (!err) {
 		schema = sresp.getSchemaVersionReturn;
 	} else {
 		cout << "Failed to determine the schema version of the service: getSchemaVersion. ";
-		printSoapErr(service);
+		printSoapErr(soap);
 		return false;
 	}
 
 	impltns__getServiceMetadataResponse mresp;
-	err = service.getServiceMetadata("feature.string", mresp);
+	err = soap_call_impltns__getServiceMetadata(soap, endpoint, 0, "feature.string", mresp);
 	if (!err) {
 		metadata = mresp._getServiceMetadataReturn;
 	} else {
 		cout << "Failed to determine the service metadata of the service: getServiceMetadataReturn. ";
-		printSoapErr(service);
+		printSoapErr(soap);
 		return false;
 	}
 

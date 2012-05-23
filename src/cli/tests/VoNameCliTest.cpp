@@ -38,6 +38,6 @@ BOOST_FIXTURE_TEST_CASE (VONameCli_Test, VoNameCli) {
         const char* av[] = {"prog_name", "voname"};
         initCli(2, const_cast<char**>(av));
 
-        BOOST_CHECK(getVOName().compare("voname") == 0);
+        BOOST_CHECK(getVoName().compare("voname") == 0);
 }
 

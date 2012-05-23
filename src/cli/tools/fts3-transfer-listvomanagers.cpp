@@ -23,26 +23,19 @@
 #include "SrvManager.h"
 #include "ui/VoNameCli.h"
 
-#include "common/InstanceHolder.h"
-
 #include <exception>
 #include <string>
 #include <iostream>
 
 using namespace std;
 using namespace fts3::cli;
-using namespace fts3::common;
-
-
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
 
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.
  */
 int main(int ac, char* av[]) {
 
-	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
@@ -62,20 +55,19 @@ int main(int ac, char* av[]) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
-		service.soap_endpoint = endpoint.c_str();
 
 		// initialize SOAP
-		if (!manager->initSoap(&service, endpoint)) return 0;
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (!manager->init(service)) return 0;
+		if (!manager->init(soap, endpoint.c_str())) return 0;
 
 		// if verbose print general info
 		if (cli.isVerbose()) {
 			cli.printGeneralInfo();
 		}
 
-		string vo  = cli.getVOName();
+		string vo  = cli.getVoName();
 		if (vo.empty()) {
 			cout << "The VO name has to be specified" << endl;
 			return 0;
@@ -83,11 +75,11 @@ int main(int ac, char* av[]) {
 
 		int err;
 		impltns__listVOManagersResponse resp;
-		err = service.listVOManagers(vo, resp);
+		err = soap_call_impltns__listVOManagers(soap, endpoint.c_str(), 0, vo, resp);
 
 		if (err || !resp._listVOManagersReturn) {
 			cout << "Failed to list VO managers transfer: listVOManagers. ";
-			manager->printSoapErr(service);
+			manager->printSoapErr(soap);
 			return 0;
 		}
 
@@ -105,6 +97,10 @@ int main(int ac, char* av[]) {
 	catch(...) {
 		cerr << "Exception of unknown type!\n";
 	}
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
 	return 0;
 }

@@ -24,9 +24,8 @@
 
 
 #include "gsoap_proxy.h"
+#include "SrvManager.h"
 #include "ui/CliBase.h"
-
-#include "common/InstanceHolder.h"
 
 #include <string>
 #include <vector>
@@ -34,18 +33,15 @@
 
 using namespace std;
 using namespace fts3::cli;
-using namespace fts3::common;
-
-typedef InstanceHolder<SoapBindingProxy> ServiceProxyInstanceHolder;
-
 
 /**
  * This is the entry point for the fts3-config-set command line tool.
  */
 int main(int ac, char* av[]) {
 
-	// create FTS3 service client
-	SoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
+	// get SrvManager instance
+	SrvManager* manager = SrvManager::getInstance();
 
 	try {
 		// create and initialize the command line utility
@@ -63,19 +59,21 @@ int main(int ac, char* av[]) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
-		service.soap_endpoint = endpoint.c_str();
+
+		// initialize SOAP
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// TODO cgsi soap init!!!
-
 		if (cli.isVerbose()) {
 			// TODO verbose part !!!
 		}
 
 		implcfg__getConfigurationResponse resp;
-		int err = service.getConfiguration(resp);
+		int err = soap_call_implcfg__getConfiguration(soap, endpoint.c_str(), 0, resp);
+				//service.getConfiguration(resp);
 
 		if (err) {
-			cout << "Failed to get configuration name-value pairs. " << endl;;
+			cout << "Failed to get configuration. " << endl;;
 			// TODO print error message
 			//manager->printSoapErr(service);
 			return 0;
@@ -95,6 +93,10 @@ int main(int ac, char* av[]) {
 	catch(...) {
 		cerr << "Exception of unknown type!\n";
 	}
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
 	return 0;
 }

@@ -28,22 +28,19 @@
 #include "ui/ListTransferCli.h"
 
 #include "common/JobStatusHandler.h"
-#include "common/InstanceHolder.h"
 
 using namespace std;
 using namespace fts3::cli;
 using namespace fts3::common;
 
 
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
-
 /**
  * This is the entry point for the fts3-transfer-list command line tool.
  */
 int main(int ac, char* av[]) {
 
-	// create FTS3 service client
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
+	soap* soap = soap_new();
+
 	// get SrvManager instance
 	SrvManager* manager = SrvManager::getInstance();
 
@@ -63,13 +60,12 @@ int main(int ac, char* av[]) {
 			cout << "Failed to determine the endpoint" << endl;
 			return 0;
 		}
-		service.soap_endpoint = endpoint.c_str();
 
 		// initialize SOAP
-		if (!manager->initSoap(&service, endpoint)) return 0;
+		if (!manager->initSoap(soap, endpoint)) return 0;
 
 		// initialize SrvManager
-		if (!manager->init(service)) return 0;
+		if (!manager->init(soap, endpoint.c_str())) return 0;
 
 
 		// if verbose print general info
@@ -81,7 +77,7 @@ int main(int ac, char* av[]) {
 			return 0;
 		}
 
-		impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = cli.getStatusArray(&service);
+		impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = cli.getStatusArray(soap);
 		int err;
 
 		vector<tns3__JobStatus * > statuses;
@@ -89,11 +85,11 @@ int main(int ac, char* av[]) {
 		if (manager->isUserVoRestrictListingSupported()) {
 
 			impltns__listRequests2Response resp;
-			err = service.listRequests2(array, cli.getUserDn(), cli.getVOName(), resp);
+			err = soap_call_impltns__listRequests2(soap, endpoint.c_str(), 0, array, cli.getUserDn(), cli.getVoName(), resp);
 
 			if (err || !resp._listRequests2Return) {
 				cout << "Failed to list transfers: ListRequest2. ";
-				manager->printSoapErr(service);
+				manager->printSoapErr(soap);
 				return 0;
 			}
 
@@ -102,11 +98,11 @@ int main(int ac, char* av[]) {
 		} else {
 
 			impltns__listRequestsResponse resp;
-			err = service.listRequests(array, resp);
+			err = soap_call_impltns__listRequests(soap, endpoint.c_str(), 0, array, resp);
 
 			if (err || !resp._listRequestsReturn) {
 				cout << "Failed to list transfers: ListRequest. ";
-				manager->printSoapErr(service);
+				manager->printSoapErr(soap);
 				return 0;
 			}
 
@@ -133,6 +129,10 @@ int main(int ac, char* av[]) {
 
 		cerr << "Exception of unknown type!\n";
 	}
+
+	soap_destroy(soap);
+	soap_end(soap);
+	soap_free(soap);
 
 	return 0;
 }
