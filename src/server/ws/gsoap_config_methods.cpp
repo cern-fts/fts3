@@ -5,7 +5,7 @@
  *	See www.eu-emi.eu for details on the copyright holders
  *
  *	Licensed under the Apache License, Version 2.0 (the "License");
- *	you may not use this file except in compliance with the License.
+ *	you may not use soap file except in compliance with the License.
  *	You may obtain a copy of the License at
  *
  *		http://www.apache.org/licenses/LICENSE-2.0
@@ -36,12 +36,8 @@ using namespace boost;
 using namespace boost::algorithm;
 
 
-int SoapBindingService::setConfiguration
-(
-    config__Configuration *_configuration,
-    struct implcfg__setConfigurationResponse &response
-)
-{
+int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__setConfigurationResponse &response) {
+
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
 
 	const int TYPE_INDEX = 1;
@@ -82,7 +78,7 @@ int SoapBindingService::setConfiguration
 		if (pos != string::npos)
 			cfg.erase(pos, 1);
 
-		to_lower(cfg);
+		boost::to_lower(cfg);
 		regex_match(cfg, what, re, match_extra);
 
 		string type = what[TYPE_INDEX];
@@ -146,18 +142,15 @@ int SoapBindingService::setConfiguration
 
 /* ---------------------------------------------------------------------- */
 
-int SoapBindingService::getConfiguration
-(
-    struct implcfg__getConfigurationResponse & response
-)
-{
+int fts3::implcfg__getConfiguration(soap* soap, struct implcfg__getConfigurationResponse & response) {
+
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
 
 	set<string> types;
 	types.insert("se");
 	types.insert("site");
 
-	response.configuration = soap_new_config__Configuration(this, -1);
+	response.configuration = soap_new_config__Configuration(soap, -1);
 	vector<string>& cfgs = response.configuration->cfg;
 	vector<SeConfig*> seConfig;
 	vector<SeConfig*>::iterator it;

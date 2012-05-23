@@ -56,7 +56,8 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
 void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates) {
 
 	if (!inGivenStates || inGivenStates->item.empty()) {
-		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "No states were defined");
+		tns3__InvalidArgumentException* ex =
+				GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(soap, "No states were defined");
 		throw ex;
 	}
 
@@ -64,8 +65,8 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
 	vector<string>::iterator it;
 	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); it++) {
 		if(!handler.isStatusValid(*it)) {
-			tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap,
-					"Unknown job status: " + *it);
+			tns3__InvalidArgumentException* ex =
+					GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(soap, "Unknown job status: " + *it);
 			throw ex;
 		}
 	}

@@ -27,6 +27,7 @@
 
 #include "gsoap_stubs.h"
 #include <string>
+#include <typeinfo>
 
 using namespace std;
 
@@ -40,6 +41,7 @@ namespace fts3 { namespace ws {
  * garbage collected later.
  *
  */
+template<typename EX>
 class GSoapExceptionHandler {
 public:
 	/**
@@ -49,7 +51,7 @@ public:
 	 * @param ex - the exception that has to be handled
 	 *
 	 */
-	GSoapExceptionHandler(::soap* soap, tns3__TransferException* ex): ex(ex), soap(soap){};
+	GSoapExceptionHandler(::soap* soap, EX* ex): ex(ex), soap(soap){};
 
 	/**
 	 * Destructor.
@@ -59,60 +61,64 @@ public:
 	/**
 	 * Handles the exception!
 	 */
-	void handle();
-
-	/**
-	 * Creates a tns3__InvalidArgumentException exception.
-	 *
-	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
-	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
-	 * be used (in particular 'soap_unlink'!).
-	 *
-	 * The method is thread safe since it uses no internal fields of GSoapExceptionHandler, and
-	 * each thread has its own copy of the soap object.
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param msg - the error message of the exception
-	 *
-	 * @return pointer to the tns3__InvalidArgumentException
-	 */
-	inline static tns3__InvalidArgumentException* createInvalidArgumentException (::soap* soap, string msg) {
-
-		tns3__InvalidArgumentException* ex;
-		ex = soap_new_tns3__InvalidArgumentException(soap, -1);
-		ex->message = soap_new_std__string(soap, -1);
-		*ex->message = msg;
-
-		return ex;
+	void handle() {
+		handleReceiverFault(); // TODO check which exceptions are sender and which receiver faults
 	}
 
 	/**
-	 * Creates a tns3__AuthorizationException exception.
-	 *
-	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
-	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
-	 * be used (in particular 'soap_unlink'!).
-	 *
-	 * The method is thread safe since it uses no internal fields of GSoapExceptionHandler, and
-	 * each thread has its own copy of the soap object.
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param msg - the error message of the exception
-	 *
-	 * @return pointer to the tns3__AuthorizationException
+	 * General pointer to exception instantiator functions
 	 */
-	inline static tns3__AuthorizationException* createAuthorizationException (::soap* soap, string msg) {
+	typedef EX* (*soap_instantiate__ExceptionFunction)(::soap*, int, const char*, const char*, size_t *);
 
-		tns3__AuthorizationException* ex;
-		ex = soap_new_tns3__AuthorizationException(soap, -1);
-		ex->message = soap_new_std__string(soap, -1);
-		*ex->message = msg;
+	/**
+	 * Returns a pointer to a function that creates an exception
+	 * 	of a type specified as the template parameter
+	 *
+	 * 	@return pointer to an exception instantiator
+	 */
+	inline static soap_instantiate__ExceptionFunction getExceptionInstantiator() {
 
-		return ex;
+		if (typeid(EX) == typeid(tns3__InvalidArgumentException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_tns3__InvalidArgumentException;
+		}
+
+		if (typeid(EX) == typeid(tns3__AuthorizationException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_tns3__AuthorizationException;
+		}
+
+		if (typeid(EX) == typeid(config__AuthorizationException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_config__AuthorizationException;
+		}
+
+		if (typeid(EX) == typeid(tns3__InternalException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_tns3__InternalException;
+		}
+
+		if (typeid(EX) == typeid(config__InternalException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_config__InternalException;
+		}
+
+		if (typeid(EX) == typeid(tns3__NotExistsException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_tns3__NotExistsException;
+		}
+
+		if (typeid(EX) == typeid(config__InvalidConfigurationException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_config__InvalidConfigurationException;
+		}
+
+		if (typeid(EX) == typeid(config__ConfigurationException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_config__ConfigurationException;
+		}
+
+		if (typeid(EX) == typeid(tns3__TransferException)) {
+			return (soap_instantiate__ExceptionFunction) &soap_instantiate_tns3__TransferException;
+		}
+
+		return 0;
 	}
 
 	/**
-	 * Creates a tns3__InternalException exception.
+	 * Creates an exception of type EX.
 	 *
 	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
 	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
@@ -124,37 +130,19 @@ public:
 	 * @param soap - the soap object that is serving the given request
 	 * @param msg - the error message of the exception
 	 *
-	 * @return pointer to the tns3__InternalException
+	 * @return pointer to the EX exception
 	 */
-	inline static tns3__InternalException* createInternalException (::soap* soap, string msg) {
+	inline static EX* createException(::soap* soap, string msg) {
 
-		tns3__InternalException* ex;
-		ex = soap_new_tns3__InternalException(soap, -1);
-		ex->message = soap_new_std__string(soap, -1);
-		*ex->message = msg;
+		static soap_instantiate__ExceptionFunction soap_instantiate__Exception = 0;
+		if (!soap_instantiate__Exception) {
+			soap_instantiate__Exception = getExceptionInstantiator();
+		}
 
-		return ex;
-	}
+		if (!soap_instantiate__Exception) return 0;
 
-	/**
-	 * Creates a tns3__NotExistsException exception.
-	 *
-	 * The exception object is created using gSOAP memory-allocation utility, it will be garbage
-	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
-	 * be used (in particular 'soap_unlink'!).
-	 *
-	 * The method is thread safe since it uses no internal fields of GSoapExceptionHandler, and
-	 * each thread has its own copy of the soap object.
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param msg - the error message of the exception
-	 *
-	 * @return pointer to the tns3__AuthorizationException
-	 */
-	inline static tns3__NotExistsException* createNotExistsException (::soap* soap, string msg) {
-
-		tns3__NotExistsException* ex;
-		ex = soap_new_tns3__NotExistsException(soap, -1);
+		EX* ex;
+		ex = soap_instantiate__Exception(soap, -1, 0, 0, 0);
 		ex->message = soap_new_std__string(soap, -1);
 		*ex->message = msg;
 
@@ -172,28 +160,85 @@ private:
 	/**
 	 * Handles exceptions that were caused by the client side (e.g. wrong arguments were given)
 	 */
-	void handleSenderFault();
+	void handleSenderFault() {
+		// sets the faultstring field in SOAP_ENV__Fault struct
+		// also allocates SOAP_ENV__Detail struct and sets _any field
+		soap_sender_fault(soap, ex->message->c_str(), "TransferException");
+		//dispatchException();
+	}
 
 	/**
 	 * Handles exceptions that were caused by the server side (e.g. service busy)
 	 */
-	void handleReceiverFault();
+	void handleReceiverFault() {
+		// sets the faultstring field in SOAP_ENV__Fault struct
+		// also allocates SOAP_ENV__Detail struct and sets _any field
+		soap_receiver_fault(soap, ex->message->c_str(), "TransferException");
+		//dispatchException();
+	}
+
 
 	/**
 	 * Checks the class of the exception object and dispatches the
 	 * object to the right field in SOAP_ENV__Detail struct
 	 */
-	void dispatchException ();
+	void dispatchException () {
+
+	    SOAP_ENV__Detail *detail = NULL;
+	    SOAP_ENV__Fault *fault = soap->fault;//NULL;
+		if (soap->version == v12) {
+			// soap version 1.2
+			detail = fault->SOAP_ENV__Detail;
+		} else {
+			// soap version 1.1
+			detail = fault->detail;
+		}
+
+		// dispatch the exception to the right field in SOAP_ENV_DETAIL
+
+		// tns3 exceptions:
+		detail->tns3__AuthorizationExceptionElement = dynamic_cast<tns3__AuthorizationException*>(ex);
+		if (detail->tns3__AuthorizationExceptionElement) return;
+
+		detail->tns3__CannotCancelExceptionElement = dynamic_cast<tns3__CannotCancelException*>(ex);
+		if (detail->tns3__CannotCancelExceptionElement) return;
+
+		detail->tns3__ExistsExceptionElement = dynamic_cast<tns3__ExistsException*>(ex);
+		if (detail->tns3__ExistsExceptionElement) return;
+
+		detail->tns3__InternalExceptionElement = dynamic_cast<tns3__InternalException*>(ex);
+		if (detail->tns3__InternalExceptionElement) return;
+
+		detail->tns3__InvalidArgumentExceptionElement = dynamic_cast<tns3__InvalidArgumentException*>(ex);
+		if (detail->tns3__InvalidArgumentExceptionElement) return;
+
+		detail->tns3__NotExistsExceptionElement = dynamic_cast<tns3__NotExistsException*>(ex);
+		if (detail->tns3__NotExistsExceptionElement) return;
+
+		detail->tns3__ServiceBusyExceptionElement = dynamic_cast<tns3__ServiceBusyException*>(ex);
+		if(detail->tns3__ServiceBusyExceptionElement) return;
+
+		// config exceptions:
+		detail->config__AuthorizationExceptionElement = dynamic_cast<config__AuthorizationException*>(ex);
+		if(detail->config__AuthorizationExceptionElement) return;
+
+		detail->config__InternalExceptionElement = dynamic_cast<config__InternalException*>(ex);
+		if(detail->config__InternalExceptionElement) return;
+
+		detail->config__InvalidConfigurationExceptionElement = dynamic_cast<config__InvalidConfigurationException*>(ex);
+		if(detail->config__InvalidConfigurationExceptionElement) return;
+
+		detail->config__ServiceBusyExceptionElement = dynamic_cast<config__ServiceBusyException*>(ex);
+	}
 
 	/// soap version 1.2
 	static const int v12 = 2;
 
 	/// the exception object
-	tns3__TransferException* ex;
+	EX* ex;
 
 	/// the soap object that is serving the given request
 	::soap* soap;
-
 };
 
 }

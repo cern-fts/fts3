@@ -36,7 +36,6 @@ endif ()
 set(fts3_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/RequestLister.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapExceptionHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_config_methods.cpp"

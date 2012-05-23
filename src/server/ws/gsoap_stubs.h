@@ -26,6 +26,4 @@ namespace fts3
 
 using namespace fts3;
 
-#include "ws-ifce/gsoap/fts3FileTransferSoapBindingService.h"
-#include "ws-ifce/gsoap/fts3SoapBindingService.h"
-#include "ws-ifce/gsoap/fts3Stub.h"
+#include "ws-ifce/gsoap/fts3H.h"

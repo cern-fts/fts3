@@ -17,7 +17,7 @@ limitations under the License. */
 
 #include "web_service_handler.h"
 #include "gsoap_acceptor.h"
-#include "gsoap_method_handler.h"
+#include "gsoap_request_handler.h"
 #include "active_object.h"
 #include "threadpool.h"
 #include "common/traced.h"
@@ -35,8 +35,8 @@ class TransferWebService;
 
 struct TransferWebServiceTraits
 {
-    typedef GSoapAcceptor<FileTransferSoapBindingService> Acceptor;
-    typedef GSoapMethodHandler<FileTransferSoapBindingService> Handler;
+    typedef GSoapAcceptor Acceptor;
+    typedef GSoapRequestHandler Handler;
     typedef ActiveObject <ThreadPool::ThreadPool, Traced<TransferWebService> > ActiveObjectType;
 };
 

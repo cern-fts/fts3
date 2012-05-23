@@ -42,7 +42,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
-		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "The job was not defined");
+		tns3__InvalidArgumentException* ex =
+				GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(soap, "The job was not defined");
 		throw ex;
 	}
 
@@ -52,20 +53,26 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 	// check the delegation and MyProxy password settings
 	if (delegation) {
 		if (job->credential) {
-			tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
-					soap, "The MyProxy password should not be provided if delegation is used");
+			tns3__InvalidArgumentException* ex =
+					GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(
+							soap, "The MyProxy password should not be provided if delegation is used"
+						);
 			throw ex;
 		}
 	} else {
 		if (params.isParamSet(JobParameterHandler::FTS3_PARAM_DELEGATIONID)) {
-			tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
-					soap, "The delegation ID should not be provided if MyProxy password mode is used");
+			tns3__InvalidArgumentException* ex =
+					GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(
+							soap, "The delegation ID should not be provided if MyProxy password mode is used"
+						);
 			throw ex;
 		}
 
 		if (!job->credential || job->credential->empty()) {
-			tns3__AuthorizationException* ex = GSoapExceptionHandler::createAuthorizationException(
-					soap, "The MyProxy password is empty while submitting in MyProxy mode");
+			tns3__AuthorizationException* ex =
+					GSoapExceptionHandler<tns3__AuthorizationException>::createException(
+							soap, "The MyProxy password is empty while submitting in MyProxy mode"
+						);
 			throw ex;
 		}
 
@@ -93,14 +100,17 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
-		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(soap, "The job was not defined");
+		tns3__InvalidArgumentException* ex =
+				GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(soap, "The job was not defined");
 		throw ex;
 	}
 
 	// checksum uses always delegation?
 	if (job->credential) {
-		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
-				soap, "The MyProxy password should not be provided if delegation is used");
+		tns3__InvalidArgumentException* ex =
+				GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(
+						soap, "The MyProxy password should not be provided if delegation is used"
+					);
 		throw ex;
     }
 
@@ -115,14 +125,18 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
 
     	// check weather the destination file is supported
     	if (!checkProtocol(dest)) {
-    		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
-    				soap, "Destination protocol is not supported for file: " + dest);
+    		tns3__InvalidArgumentException* ex =
+    				GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(
+    						soap, "Destination protocol is not supported for file: " + dest
+    					);
     		throw ex;
     	}
     	// check weather the source file is supported
     	if (!checkProtocol(src) && !checkIfLfn(src)) {
-    		tns3__InvalidArgumentException* ex = GSoapExceptionHandler::createInvalidArgumentException(
-    				soap, "Source protocol is not supported for file: " + src);
+    		tns3__InvalidArgumentException* ex =
+    				GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(
+    						soap, "Source protocol is not supported for file: " + src
+    					);
     		throw ex;
     	}
 

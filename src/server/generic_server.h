@@ -44,9 +44,6 @@ public:
 	    typename TRAITS::TransferWebServiceType handler_t;
         handler_t.listen_p(t_port, ip);
 
- 	 	typename TRAITS::ConfigWebServiceType handler_c;
-        handler_c.listen_p(c_port, ip);
-
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();	
 	

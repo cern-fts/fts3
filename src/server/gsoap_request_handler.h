@@ -32,34 +32,18 @@ FTS3_SERVER_NAMESPACE_START
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-template <class SRV>
-class GSoapMethodHandler
+
+class GSoapRequestHandler
 {
-private:
-	static const bool RIGHT_BASE = boost::is_base_of<soap, SRV>::value;
-	BOOST_STATIC_ASSERT(RIGHT_BASE);
-
 public:
-    GSoapMethodHandler (boost::shared_ptr<SRV> service): _service(service)
-    {};
+    GSoapRequestHandler (::soap* soap): soap(soap) {};
+    ~GSoapRequestHandler ();
 
-    ~GSoapMethodHandler ()
-    {
-    	if (_service.get())
-    		_service->destroy();
-    };
-
-    void handle()
-    {
-        assert (_service.get());
-        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
-        _service->serve();
-        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
-    }
+    void handle();
 
 
 private:
-    boost::shared_ptr<SRV> _service;
+    ::soap* soap;
 };
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
