@@ -146,7 +146,7 @@ if [ ! -f "/etc/yum.repos.d/EMI-2-RC4-base.repo" ]; then
 cat > /etc/yum.repos.d/EMI-2-RC4-base.repo <<EOF
 [EMI-2-RC4-base]
 name=EMI 2 RC4 Base Repository
-baseurl=http://emisoft.web.cern.ch/emisoft/dist/EMI/2/sl6/$basearch/base
+baseurl=http://emisoft.web.cern.ch/emisoft/dist/EMI/2/sl6/x86_64/base
 gpgkey=http://emisoft.web.cern.ch/emisoft/dist/EMI/2/RPM-GPG-KEY-emi
 protect=1
 enabled=1
@@ -305,7 +305,7 @@ if [ ! -f "/etc/yum.repos.d/EMI-2-RC4-third-party.repo" ]; then
 sudo cat > /etc/yum.repos.d/EMI-2-RC4-third-party.repo  <<EOF
 [EMI-2-RC4-third-party]
 name=EMI 2 RC4 Third-Party Repository
-baseurl=http://emisoft.web.cern.ch/emisoft/dist/EMI/2/sl6/$basearch/third-party
+baseurl=http://emisoft.web.cern.ch/emisoft/dist/EMI/2/sl6/x86_64/third-party
 gpgkey=http://emisoft.web.cern.ch/emisoft/dist/EMI/2/RPM-GPG-KEY-emi
 protect=1
 enabled=0
