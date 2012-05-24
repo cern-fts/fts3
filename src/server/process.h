@@ -29,7 +29,7 @@ public:
     int execProcess(int argc, char** argv);
     int execProcessLog(int argc, char** argv);
     
-    int execProcessShell(const char* shell);
+    int execProcessShell();
     int execProcessShellLog(const char* shell);
     
 private:

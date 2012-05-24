@@ -26,6 +26,8 @@ include_directories (${fts3_include_dir})
 include_directories (${PROJECT_SOURCE_DIR}/src/url-copy/)
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
+include_directories (/usr/lib64/glib-2.0/include)
+include_directories (/usr/include/glib-2.0)
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -55,7 +57,7 @@ file(GLOB fts3_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*
 list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
 add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
 add_dependencies(fts3_server_lib fts3_server_gsoap_transfer)
-target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_transfer ${LIBUUID_LIBRARIES} -lboost_thread-mt -lboost_regex)
+target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_transfer ${LIBUUID_LIBRARIES} -lboost_thread-mt -lboost_regex -lis_ifce -lldap_r -lglib-2.0)
 
 # Server executable
 add_executable (fts3_server main.cpp)

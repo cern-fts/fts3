@@ -28,8 +28,10 @@ limitations under the License. */
 #include <vector>
 #include <sstream>
 #include "mq_manager.h"
-
-
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/scoped_ptr.hpp>
+ 
+using namespace boost::interprocess;
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;

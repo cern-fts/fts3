@@ -22,21 +22,17 @@ SET(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/server/)
+include_directories (${PROJECT_SOURCE_DIR}/src/monitoring/)
 include_directories (${fts3_include_dir})
 include_directories (/usr/include/gfal2)
 include_directories (/usr/include/glib-2.0)
 include_directories (/usr/lib64/glib-2.0/include)
 
-#set(fts3_url_copy_lib_SOURCES parse_url.cpp mq_producer.cpp process.cpp mq_manager.cpp stringhelper.cpp process_service_handler.h process_service.h )
-#add_library(fts3_url_copy_lib SHARED ${fts3_url_copy_lib_SOURCES})
-#target_link_libraries(fts3_url_copy_lib -lfts3_config -lfts3_common -lfts3_server_lib -lboost_program_options -lgfal_transfer -lgfal2 -lglib-2.0    )
 
-
-set(fts3_url_copy_SOURCES main.cpp parse_url.cpp )
+set(fts3_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
 add_executable (fts3_url_copy ${fts3_url_copy_SOURCES})
-#SET(fts3_libs "-lfts3_config -lfts3_common -lfts3_server_lib")
-SET(fts3_libs "-lfts3_config -lfts3_common ")
-target_link_libraries(fts3_url_copy  -luuid -lboost_program_options -lboost_thread-mt -lgfal_transfer -lgfal2 -lglib-2.0 ${fts3_libs})
+SET(fts3_libs "-lfts3_config -lfts3_common")
+target_link_libraries(fts3_url_copy  -luuid  -lboost_thread-mt -lgfal_transfer -lgfal2 -lglib-2.0 -lfts3_msg_ifce ${fts3_libs})
 
 
 install(TARGETS         fts3_url_copy 

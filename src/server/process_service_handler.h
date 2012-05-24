@@ -28,7 +28,7 @@ limitations under the License. */
 #include <string>
 #include <vector>
 #include <sstream>
-
+#include "site_name.h"
 #include "FileTransferScheduler.h"
 
 FTS3_SERVER_NAMESPACE_START
@@ -96,17 +96,13 @@ protected:
         std::vector<TransferJobs*>::iterator iter2;
         std::vector<TransferFiles*> files;
         std::vector<TransferFiles*>::iterator fileiter;	
+	std::string sourceSiteName("");
+	std::string destSiteName("");
+	SiteName siteResolver;
 
         while(1){
         	DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-        	
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get submitted jobs" << commit;
-
-        	if(jobs2.size() > 0){
-        		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The number of jobs which will be started: " << jobs2.size() << commit;
-        	}
-		
-
+       		
 			DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
 			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
 				TransferFiles* temp = (TransferFiles*) * fileiter;
@@ -114,9 +110,12 @@ protected:
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << temp->FILE_ID << commit;
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
-
+				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO name: " << temp->VO_NAME << commit;
+				
 				FileTransferScheduler scheduler(temp);
 				if (scheduler.schedule()) {
+					sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
+					destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
 					params.append(" -b ");
 					params.append(temp->SOURCE_SURL);
 					params.append(" -c ");
@@ -125,6 +124,16 @@ protected:
 					params.append(temp->JOB_ID);
 					params.append(" -B ");
 					params.append(to_string(temp->FILE_ID));					
+					params.append(" -C ");
+					params.append(temp->VO_NAME);
+					if(sourceSiteName.length() > 0){
+						params.append(" -D ");
+						params.append(sourceSiteName);
+					}
+					if(destSiteName.length() > 0){					
+						params.append(" -E ");
+						params.append(destSiteName);	
+					}				
 
 					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
 					pr = new ExecuteProcess(cmd, params, 0);
@@ -143,7 +152,7 @@ protected:
 			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
 				delete *fileiter;
 			files.clear();
-			sleep(3);
+			sleep(1);
 		}
     }
 

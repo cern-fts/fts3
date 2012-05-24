@@ -180,7 +180,7 @@ int ExecuteProcess::executeProcessShell() {
     if (m_fdlog > 0) {
         status = execProcessShellLog(SHELL);
     } else {
-        status = execProcessShell(SHELL);
+        status = execProcessShell();
     }
 
     return status;
@@ -232,7 +232,7 @@ int ExecuteProcess::execProcessShellLog(const char* SHELL) {
     return status;
 }
 
-int ExecuteProcess::execProcessShell(const char* SHELL) {   
+int ExecuteProcess::execProcessShell() {   
     std::vector<std::string> pathV;
     std::vector<std::string>::iterator iter;
     std::string p;
@@ -288,7 +288,7 @@ int ExecuteProcess::execProcessShell(const char* SHELL) {
         strcpy(copy, path);
         token = strtok(copy, ":");
 
-        while (token = strtok(0, ":")) {
+        while ( (token = strtok(0, ":")) != NULL) {
             pathV.push_back(std::string(token));
         }
 

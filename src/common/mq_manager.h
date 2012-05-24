@@ -21,17 +21,13 @@ limitations under the License. */
 #include <string>
 #include "definitions.h"
  
-#include <boost/interprocess/ipc/message_queue.hpp>
-#include <boost/scoped_ptr.hpp>
- 
-using namespace boost::interprocess;
+
  
 
 class QueueManager
   {
   private:
     bool drop_; // drop the message queue
-    boost::scoped_ptr<message_queue> mq_; 
  
   public:  
     void remove();

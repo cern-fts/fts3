@@ -1,5 +1,9 @@
 #include "mq_manager.h"
-
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/scoped_ptr.hpp>
+ 
+using namespace boost::interprocess;
+boost::scoped_ptr<message_queue> mq_; 
 
     QueueManager::QueueManager(bool consumer) : drop_(false)
     {

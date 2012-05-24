@@ -264,7 +264,6 @@ void OracleAPI::getSiteCreditsInUse (
 }
 
 void OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
-    int fields = 0;
     std::string query =
     		"UPDATE t_file "
     		"SET file_state =:1 "
@@ -795,8 +794,6 @@ void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int
 /* ********************************* NEW API FTS3 *********************************/
 
 void OracleAPI::getSe(Se* &se, std::string seName){
-    Se* seData = NULL;
-    std::vector<Se*>::iterator iter;
     const std::string tag = "getAllSeInfoNoCritiria";
     std::string query_stmt =
     		"SELECT "
@@ -1286,13 +1283,13 @@ void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
 
 
 void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message){
+    job_id = "";
     const std::string tag = "updateFileTransferStatus";
     std::string query =
     		"UPDATE t_file "
     		"SET file_state =:1, REASON=:2 "
     		"WHERE file_id = :3 ";		
 
-      std::cerr << query << std::endl;
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, transfer_status);
