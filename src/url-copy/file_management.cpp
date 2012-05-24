@@ -91,7 +91,8 @@ void FileManagement::archive() {
     std::string arcFileName = "/var/log/fts3/" + archiveFileName;
     directoryExists(arcFileName.c_str());
     arcFileName += "/" + fname;
-    rename(logFileName.c_str(), arcFileName.c_str());
+    std::string origFile = "/var/log/fts3/" + fname;
+    rename(origFile.c_str(), arcFileName.c_str());
 }
 
 std::string FileManagement::generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id) {
