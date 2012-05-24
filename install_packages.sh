@@ -397,103 +397,103 @@ EOF
 fi
 
 echo "Install required packages"
-yum -y install gfal2-debuginfo
-yum -y install libuuid-devel
-yum -y install activemq-cpp-devel
-yum -y install globus-gssapi-error
-yum -y install libxslt
-yum -y install oracle-instantclient-devel
-yum -y install libXau-devel
-yum -y install sudo
-yum -y install voms-clients
-yum -y install gfal2-plugin-srm
-yum -y install gsoap
-yum -y install globus-gass-transfer
-yum -y install apr-util-devel
-yum -y install CGSI-gSOAP
-yum -y install glibc-devel
-yum -y install boost-date-time
-yum -y install lfc-libs
-yum -y install fuse
-yum -y install mysql-libs
-yum -y install gfal2-plugin-gridftp
-yum -y install globus-gsi-sysconfig
-yum -y install globus-gass-copy
-yum -y install libuuid
-yum -y install is-interface-debuginfo
-yum -y install glibc
-yum -y install voms
-yum -y install boost-filesystem
-yum -y install boost-devel
-yum -y install mlocate
-yum -y install gfal2-plugin-lfc
-yum -y install globus-gsi-cert-utils
-yum -y install gcc
-yum -y install valgrind
-yum -y install oracle-instantclient-basic
-yum -y install glibc-headers
-yum -y install gfal2-core
-yum -y install gfal2-plugin-dcap
-yum -y install gfal2-all
-yum -y install globus-gsi-proxy-core
-yum -y install globus-ftp-control
-yum -y install boost-signals
-yum -y install is-interface
-yum -y install cmake
-yum -y install boost-doc
-yum -y install libgcc
-yum -y install gfal2-doc
-yum -y install globus-gsi-openssl-error
-yum -y install globus-xio
-yum -y install globus-callout
-yum -y install openldap
-yum -y install globus-gass-copy-progs
-yum -y install activemq-cpp
-yum -y install apr-util
-yum -y install boost-regex
-yum -y install gcc-c++
-yum -y install CGSI-gSOAP-devel
-yum -y install gfal2-plugin-rfio
-yum -y install srm-ifce
-yum -y install globus-gsi-callback
-yum -y install globus-io
-yum -y install gsoap-devel
-yum -y install boost-iostreams
-yum -y install gfal
-yum -y install boost-serialization
-yum -y install apr-devel
-yum -y install glib2
-yum -y install oracle-instantclient-sqlplus
-yum -y install boost-thread
-yum -y install glib2-devel
-yum -y install boost-openmpi
-yum -y install strace
-yum -y install gfal2-transfer
-yum -y install globus-common
-yum -y install globus-gssapi-gsi
-yum -y install globus-ftp-client
-yum -y install is-interface-devel
-yum -y install boost-program-options
-yum -y install apr
-yum -y install boost-system
-yum -y install cpp
-yum -y install gdb
-yum -y install boost
-yum -y install glibc-common
-yum -y install gfal2
-yum -y install globus-openssl-module
-yum -y install globus-gsi-credential
-yum -y install pkgconfig
-yum -y install openldap-devel
-yum -y install lcg-CA
-yum -y install boost-openmpi-devel
-yum -y install gfal2-devel
-yum -y install globus-gsi-proxy-ssl
-yum -y install globus-xio-popen-driver
-yum -y install srm-ifce-debuginfo
-yum -y install globus-xio-gsi-driver
-yum -y install boost-test
-yum -y install openssl
+sudo yum -y install gfal2-debuginfo
+sudo yum -y install libuuid-devel
+sudo yum -y install activemq-cpp-devel
+sudo yum -y install globus-gssapi-error
+sudo yum -y install libxslt
+sudo yum -y install oracle-instantclient-devel
+sudo yum -y install libXau-devel
+sudo yum -y install sudo
+sudo yum -y install voms-clients
+sudo yum -y install gfal2-plugin-srm
+sudo yum -y install gsoap
+sudo yum -y install globus-gass-transfer
+sudo yum -y install apr-util-devel
+sudo yum -y install CGSI-gSOAP
+sudo yum -y install glibc-devel
+sudo yum -y install boost-date-time
+sudo yum -y install lfc-libs
+sudo yum -y install fuse
+sudo yum -y install mysql-libs
+sudo yum -y install gfal2-plugin-gridftp
+sudo yum -y install globus-gsi-sysconfig
+sudo yum -y install globus-gass-copy
+sudo yum -y install libuuid
+sudo yum -y install is-interface-debuginfo
+sudo yum -y install glibc
+sudo yum -y install voms
+sudo yum -y install boost-filesystem
+sudo yum -y install boost-devel
+sudo yum -y install mlocate
+sudo yum -y install gfal2-plugin-lfc
+sudo yum -y install globus-gsi-cert-utils
+sudo yum -y install gcc
+sudo yum -y install valgrind
+sudo yum -y install oracle-instantclient-basic
+sudo yum -y install glibc-headers
+sudo yum -y install gfal2-core
+sudo yum -y install gfal2-plugin-dcap
+sudo yum -y install gfal2-all
+sudo yum -y install globus-gsi-proxy-core
+sudo yum -y install globus-ftp-control
+sudo yum -y install boost-signals
+sudo yum -y install is-interface
+sudo yum -y install cmake
+sudo yum -y install boost-doc
+sudo yum -y install libgcc
+sudo yum -y install gfal2-doc
+sudo yum -y install globus-gsi-openssl-error
+sudo yum -y install globus-xio
+sudo yum -y install globus-callout
+sudo yum -y install openldap
+sudo yum -y install globus-gass-copy-progs
+sudo yum -y install activemq-cpp
+sudo yum -y install apr-util
+sudo yum -y install boost-regex
+sudo yum -y install gcc-c++
+sudo yum -y install CGSI-gSOAP-devel
+sudo yum -y install gfal2-plugin-rfio
+sudo yum -y install srm-ifce
+sudo yum -y install globus-gsi-callback
+sudo yum -y install globus-io
+sudo yum -y install gsoap-devel
+sudo yum -y install boost-iostreams
+sudo yum -y install gfal
+sudo yum -y install boost-serialization
+sudo yum -y install apr-devel
+sudo yum -y install glib2
+sudo yum -y install oracle-instantclient-sqlplus
+sudo yum -y install boost-thread
+sudo yum -y install glib2-devel
+sudo yum -y install boost-openmpi
+sudo yum -y install strace
+sudo yum -y install gfal2-transfer
+sudo yum -y install globus-common
+sudo yum -y install globus-gssapi-gsi
+sudo yum -y install globus-ftp-client
+sudo yum -y install is-interface-devel
+sudo yum -y install boost-program-options
+sudo yum -y install apr
+sudo yum -y install boost-system
+sudo yum -y install cpp
+sudo yum -y install gdb
+sudo yum -y install boost
+sudo yum -y install glibc-common
+sudo yum -y install gfal2
+sudo yum -y install globus-openssl-module
+sudo yum -y install globus-gsi-credential
+sudo yum -y install pkgconfig
+sudo yum -y install openldap-devel
+sudo yum -y install lcg-CA
+sudo yum -y install boost-openmpi-devel
+sudo yum -y install gfal2-devel
+sudo yum -y install globus-gsi-proxy-ssl
+sudo yum -y install globus-xio-popen-driver
+sudo yum -y install srm-ifce-debuginfo
+sudo yum -y install globus-xio-gsi-driver
+sudo yum -y install boost-test
+sudo yum -y install openssl
 
 
 echo "Fetch-crls now"
