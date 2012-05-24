@@ -719,9 +719,6 @@ bool caseInsCompare(const string& s1, const string& s2) {
 
 bool send_message(std::string & text)
 {   
-
-	std::cerr << text << std::endl;
-
        bool msgSent = true;       
        int fd = 0;
        int fd2 = 0;
