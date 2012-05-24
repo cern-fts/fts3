@@ -138,15 +138,15 @@ int main(int argc, char **argv) {
             file_id = std::string(argv[i + 1]);
     }
 
-    std::auto_ptr<FileManagement> fileManagement(new FileManagement);
-    std::auto_ptr<Reporter> reporter(new Reporter);
-    fileManagement->setSourceUrl(source_url);
-    fileManagement->setDestUrl(dest_url);
-    fileManagement->setFileId(file_id);
-    fileManagement->setJobId(job_id);
+    FileManagement fileManagement;
+    Reporter reporter;
+    fileManagement.setSourceUrl(source_url);
+    fileManagement.setDestUrl(dest_url);
+    fileManagement.setFileId(file_id);
+    fileManagement.setJobId(job_id);
 
     std::ofstream logStream;
-    fileManagement->getLogStream(logStream);
+    fileManagement.getLogStream(logStream);
     logger log(logStream);
 
     char hostname[1024]={0};
@@ -155,14 +155,14 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());    
     msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
     
-    msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement->getSePair());
-    msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement->getLogFileName());
+    msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());
+    msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement.getLogFileName());
     msg_ifce::getInstance()->set_source_srm_version(&tr_completed, "2.2");
     msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, "2.2");
     msg_ifce::getInstance()->set_source_url(&tr_completed, source_url);
     msg_ifce::getInstance()->set_dest_url(&tr_completed, dest_url);
-    msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostname());
-    msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostname());
+    msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement.getSourceHostname());
+    msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement.getDestHostname());
     msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
     msg_ifce::getInstance()->set_vo(&tr_completed, vo);
     msg_ifce::getInstance()->set_source_site_name(&tr_completed, sourceSiteName);
@@ -186,42 +186,42 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
 
-    log << fileManagement->timestamp() << "Transfer accepted" << '\n';
-    log << fileManagement->timestamp() << "job_id:" << job_id << '\n'; //a
-    log << fileManagement->timestamp() << "file_id:" << file_id << '\n'; //a
-    log << fileManagement->timestamp() << "source_url:" << source_url << '\n'; //b
-    log << fileManagement->timestamp() << "dest_url:" << dest_url << '\n'; //c
-    log << fileManagement->timestamp() << "overwrite:" << overwrite << '\n'; //d
-    log << fileManagement->timestamp() << "nbstreams:" << nbstreams << '\n'; //e
-    log << fileManagement->timestamp() << "tcpbuffersize:" << tcpbuffersize << '\n'; //f
-    log << fileManagement->timestamp() << "blocksize:" << blocksize << '\n'; //g
-    log << fileManagement->timestamp() << "timeout:" << timeout << '\n'; //h
-    log << fileManagement->timestamp() << "daemonize:" << daemonize << '\n'; //i
-    log << fileManagement->timestamp() << "dest_token_desc:" << dest_token_desc << '\n'; //j
-    log << fileManagement->timestamp() << "source_token_desc:" << source_token_desc << '\n'; //k
-    log << fileManagement->timestamp() << "markers_timeout:" << markers_timeout << '\n'; //l
-    log << fileManagement->timestamp() << "first_marker_timeout:" << first_marker_timeout; //m
-    log << fileManagement->timestamp() << "srm_get_timeout:" << srm_get_timeout << '\n'; //n
-    log << fileManagement->timestamp() << "srm_put_timeout:" << srm_put_timeout << '\n'; //o	
-    log << fileManagement->timestamp() << "http_timeout:" << http_timeout << '\n'; //p
-    log << fileManagement->timestamp() << "dont_ping_source:" << dont_ping_source << '\n'; //q
-    log << fileManagement->timestamp() << "dont_ping_dest:" << dont_ping_dest << '\n'; //r
-    log << fileManagement->timestamp() << "disable_dir_check:" << disable_dir_check << '\n'; //s
-    log << fileManagement->timestamp() << "copy_pin_lifetime:" << copy_pin_lifetime << '\n'; //t
-    log << fileManagement->timestamp() << "lan_connection:" << lan_connection << '\n'; //u
-    log << fileManagement->timestamp() << "fail_nearline:" << fail_nearline << '\n'; //v
-    log << fileManagement->timestamp() << "timeout_per_mb:" << timeout_per_mb << '\n'; //w
-    log << fileManagement->timestamp() << "no_progress_timeout:" << no_progress_timeout << '\n'; //x
-    log << fileManagement->timestamp() << "algorithm:" << algorithm << '\n'; //y
-    log << fileManagement->timestamp() << "checksum_value:" << checksum_value << '\n'; //z
-    log << fileManagement->timestamp() << "compare_checksum:" << compare_checksum << '\n'; //A
+    log << fileManagement.timestamp() << "Transfer accepted" << '\n';
+    log << fileManagement.timestamp() << "job_id:" << job_id << '\n'; //a
+    log << fileManagement.timestamp() << "file_id:" << file_id << '\n'; //a
+    log << fileManagement.timestamp() << "source_url:" << source_url << '\n'; //b
+    log << fileManagement.timestamp() << "dest_url:" << dest_url << '\n'; //c
+    log << fileManagement.timestamp() << "overwrite:" << overwrite << '\n'; //d
+    log << fileManagement.timestamp() << "nbstreams:" << nbstreams << '\n'; //e
+    log << fileManagement.timestamp() << "tcpbuffersize:" << tcpbuffersize << '\n'; //f
+    log << fileManagement.timestamp() << "blocksize:" << blocksize << '\n'; //g
+    log << fileManagement.timestamp() << "timeout:" << timeout << '\n'; //h
+    log << fileManagement.timestamp() << "daemonize:" << daemonize << '\n'; //i
+    log << fileManagement.timestamp() << "dest_token_desc:" << dest_token_desc << '\n'; //j
+    log << fileManagement.timestamp() << "source_token_desc:" << source_token_desc << '\n'; //k
+    log << fileManagement.timestamp() << "markers_timeout:" << markers_timeout << '\n'; //l
+    log << fileManagement.timestamp() << "first_marker_timeout:" << first_marker_timeout; //m
+    log << fileManagement.timestamp() << "srm_get_timeout:" << srm_get_timeout << '\n'; //n
+    log << fileManagement.timestamp() << "srm_put_timeout:" << srm_put_timeout << '\n'; //o	
+    log << fileManagement.timestamp() << "http_timeout:" << http_timeout << '\n'; //p
+    log << fileManagement.timestamp() << "dont_ping_source:" << dont_ping_source << '\n'; //q
+    log << fileManagement.timestamp() << "dont_ping_dest:" << dont_ping_dest << '\n'; //r
+    log << fileManagement.timestamp() << "disable_dir_check:" << disable_dir_check << '\n'; //s
+    log << fileManagement.timestamp() << "copy_pin_lifetime:" << copy_pin_lifetime << '\n'; //t
+    log << fileManagement.timestamp() << "lan_connection:" << lan_connection << '\n'; //u
+    log << fileManagement.timestamp() << "fail_nearline:" << fail_nearline << '\n'; //v
+    log << fileManagement.timestamp() << "timeout_per_mb:" << timeout_per_mb << '\n'; //w
+    log << fileManagement.timestamp() << "no_progress_timeout:" << no_progress_timeout << '\n'; //x
+    log << fileManagement.timestamp() << "algorithm:" << algorithm << '\n'; //y
+    log << fileManagement.timestamp() << "checksum_value:" << checksum_value << '\n'; //z
+    log << fileManagement.timestamp() << "compare_checksum:" << compare_checksum << '\n'; //A
 
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     if (gfal_stat(source_url.c_str(), &statbufsrc) < 0) {
-        log << fileManagement->timestamp() << "Failed to get source file size, errno: " << gfal_posix_code_error() << '\n';
+        log << fileManagement.timestamp() << "Failed to get source file size, errno: " << gfal_posix_code_error() << '\n';
     } else {
-        log << fileManagement->timestamp() << "Source file size: " << statbufsrc.st_size << '\n';
+        log << fileManagement.timestamp() << "Source file size: " << statbufsrc.st_size << '\n';
         source_size = statbufsrc.st_size;
         //conver longlong to string
         std::string size_to_string = to_string<long double > (source_size, std::dec);
@@ -239,27 +239,27 @@ int main(int argc, char **argv) {
 
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-    reporter->constructMessage(job_id, file_id, "STARTED", "Transfer started");
+    reporter.constructMessage(job_id, file_id, "STARTED", "Transfer started");
 
-    log << fileManagement->timestamp() << "initialize gfal2" << '\n';
+    log << fileManagement.timestamp() << "initialize gfal2" << '\n';
     if ((handle = gfal_context_new(&tmp_err)) == NULL) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer Initialization failed - errno: " << tmp_err->message << " Error message:" << tmp_err->message << commit;
-        log << fileManagement->timestamp() << "Transfer Initialization failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
-        reporter->constructMessage(job_id, file_id, "FINISHED", std::string(tmp_err->message));
+        log << fileManagement.timestamp() << "Transfer Initialization failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
+        reporter.constructMessage(job_id, file_id, "FINISHED", std::string(tmp_err->message));
     }
-    log << fileManagement->timestamp() << "begin copy" << '\n';
+    log << fileManagement.timestamp() << "begin copy" << '\n';
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
     
     msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     if ((ret = gfalt_copy_file(handle, params, source_url.c_str(), dest_url.c_str(), &tmp_err)) != 0) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
-        log << fileManagement->timestamp() << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
-        reporter->constructMessage(job_id, file_id, "FINISHED", std::string(tmp_err->message));
+        log << fileManagement.timestamp() << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
+        reporter.constructMessage(job_id, file_id, "FINISHED", std::string(tmp_err->message));
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
-        log << fileManagement->timestamp() << "Transfer completed successfully" << '\n';
-        reporter->constructMessage(job_id, file_id, "FINISHED", "");
+        log << fileManagement.timestamp() << "Transfer completed successfully" << '\n';
+        reporter.constructMessage(job_id, file_id, "FINISHED", "");
     }
 
     std::string bytes_to_string = to_string<long long>(transferred_bytes, std::dec);
@@ -273,9 +273,9 @@ int main(int argc, char **argv) {
 
     msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     if (gfal_stat(dest_url.c_str(), &statbufdest) < 0) {
-        log << fileManagement->timestamp() << "Failed to get source file size, errno: " << gfal_posix_code_error() << '\n';
+        log << fileManagement.timestamp() << "Failed to get source file size, errno: " << gfal_posix_code_error() << '\n';
     } else {
-        log << fileManagement->timestamp() << "Dest file size: " << statbufdest.st_size << '\n';
+        log << fileManagement.timestamp() << "Dest file size: " << statbufdest.st_size << '\n';
         dest_size = statbufdest.st_size;
     }
     msg_ifce::getInstance()->set_timestamp_checksum_dest_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
@@ -283,12 +283,13 @@ int main(int argc, char **argv) {
 
     //check source and dest file sizes
     if (source_size == dest_size)
-        log << fileManagement->timestamp() << "Source and destination files size is the same" << '\n';
+        log << fileManagement.timestamp() << "Source and destination files size is the same" << '\n';
     else
-        log << fileManagement->timestamp() << "Source and destination files size IS NOT the same" << '\n';
+        log << fileManagement.timestamp() << "Source and destination files size IS NOT the same" << '\n';
 
-    log << fileManagement->timestamp() << "release all gfal2 resources" << '\n';
+    log << fileManagement.timestamp() << "release all gfal2 resources" << '\n';
     gfal_context_free(handle);
+
     msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, "SOURCE");
@@ -299,7 +300,8 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());    
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
+    logStream.close();
+    fileManagement.archive();
 
-    fileManagement->archive();
     return EXIT_SUCCESS;
 }

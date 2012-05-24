@@ -20,7 +20,7 @@ using namespace std;
 
 
 FileManagement::FileManagement() {
-    //logFileName = theServerConfig().get<std::string > ("TransferLogDirectory");
+    //logFileName = theServerConfig().get<std::string >("TransferLogDirectory");
     logFileName = "/var/log/fts3";    
     if (logFileName.length() > 0)
         directoryExists(logFileName.c_str());
@@ -32,7 +32,7 @@ FileManagement::~FileManagement() {
 
 void FileManagement::getLogStream(std::ofstream& logStream) {
     fname = generateLogFileName(source_url, dest_url, file_id, job_id);
-    logFileName = "/" + fname;
+    logFileName += "/" + fname;
     logStream.open(logFileName.c_str(), ios::app);
 }
 
@@ -90,9 +90,8 @@ void FileManagement::archive() {
     //: full path to file
     std::string arcFileName = "/var/log/fts3/" + archiveFileName;
     directoryExists(arcFileName.c_str());
-    arcFileName += "/" + fname;
-    std::string origFile = "/var/log/fts3/" + fname;
-    rename(origFile.c_str(), arcFileName.c_str());
+    arcFileName += "/" + fname; 
+    rename(logFileName.c_str(), arcFileName.c_str());
 }
 
 std::string FileManagement::generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id) {
