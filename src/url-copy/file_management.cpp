@@ -24,6 +24,11 @@ FileManagement::FileManagement() {
     logFileName = "/var/log/fts3";    
     if (logFileName.length() > 0)
         directoryExists(logFileName.c_str());
+
+    //generate arc based on date
+    std::string dateArch = logFileName + "/" + dateDir();	
+    directoryExists(dateArch.c_str());	
+    logFileName = dateArch;
 }
 
 FileManagement::~FileManagement() {
@@ -32,8 +37,8 @@ FileManagement::~FileManagement() {
 
 void FileManagement::getLogStream(std::ofstream& logStream) {
     fname = generateLogFileName(source_url, dest_url, file_id, job_id);
-    logFileName += "/" + fname;
-    logStream.open(logFileName.c_str(), ios::app);
+    log = logFileName + "/" + fname;
+    logStream.open(log.c_str(), ios::app);
 }
 
 void FileManagement::setSourceUrl(std::string& source_url) {
@@ -88,10 +93,26 @@ void FileManagement::archive() {
 
     //archiveFileName: src__dest
     //: full path to file
-    std::string arcFileName = "/var/log/fts3/" + archiveFileName;
+    std::string arcFileName = logFileName + "/" + archiveFileName;
     directoryExists(arcFileName.c_str());
     arcFileName += "/" + fname; 
-    rename(logFileName.c_str(), arcFileName.c_str());
+    rename(log.c_str(), arcFileName.c_str());
+}
+
+std::string FileManagement::dateDir(){
+    // add date
+    time_t current;
+    time(&current);
+    struct tm * date = gmtime(&current);
+
+    // Create template
+    std::stringstream ss;
+    ss << std::setfill('0');
+    ss << std::setw(4) << (date->tm_year + 1900)
+            << "-" << std::setw(2) << (date->tm_mon + 1)
+            << "-" << std::setw(2) << (date->tm_mday);
+
+    return ss.str();
 }
 
 std::string FileManagement::generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id) {
