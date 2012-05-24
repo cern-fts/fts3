@@ -5,14 +5,14 @@ echo "Export required env valiables"
 export LCG_GFAL_INFOSYS=certtb-bdii-top.cern.ch:2170
 export GFAL_PLUGIN_LIST=libgfal_plugin_srm.so:libgfal_plugin_rfio.so:libgfal_plugin_lfc.so:libgfal_plugin_dcap.so:libgfal_plugin_dcap.so:libgfal_plugin_gridftp.so
 
-updatedb
+sudo updatedb
 export URLCOPY=`locate fts3_url_copy | head -1 | sed 's/\/fts3_url_copy//'`
 export PATH=$PATH:$URLCOPY
 export LD_LIBRARY_PATH=`locate libfts3_db_oracle.so | head -1 | sed 's/\/libfts3_db_oracle.so//'`
 
 echo "Prepare fts3 server config file"
 if [ ! -f "/etc/sysconfig/fts3config" ]; then
-cat > /etc/sysconfig/fts3config <<EOF
+sudo cat > /etc/sysconfig/fts3config <<EOF
 TransferPort=8080
 IP=0.0.0.0
 DbConnectString=
@@ -26,7 +26,7 @@ fi
 
 echo "Prepare fts3 monitoring using messaging config file"
 if [ ! -f "/etc/fts-msg-monitoring.conf" ]; then
-cat > /etc/fts-msg-monitoring.conf <<EOF
+sudo cat > /etc/fts-msg-monitoring.conf <<EOF
 #broker uri / port number
 BROKER=gridmsg007.cern.ch:6163
 #start msg topic/queue name
@@ -70,8 +70,8 @@ fi
 echo "Setup vomses"
 #check if /etc/vomses exists and copy hardoced voms
 if [ ! -d "/etc/vomses" ]; then
-mkdir /etc/vomses
-cat > /etc/vomses/dteam-lxbra2309.cern.ch <<EOF
+sudo mkdir /etc/vomses
+sudo cat > /etc/vomses/dteam-lxbra2309.cern.ch <<EOF
 "dteam" "lxbra2309.cern.ch" "15002" "/DC=ch/DC=cern/OU=computers/CN=lxbra2309.cern.ch" "dteam" "24"
 EOF
 
@@ -91,7 +91,7 @@ fi
 
 echo "Setup repositories"
 if [ ! -f "/etc/yum.repos.d/atrpms.repo" ]; then
-cat > /etc/yum.repos.d/atrpms.repo <<EOF
+sudo cat > /etc/yum.repos.d/atrpms.repo <<EOF
 [atrpms-stable]
 name=UNSUPPORTED: ATrpms (http://atrpms.net) stable add-ons, no formal support from CERN
 baseurl=http://linuxsoft.cern.ch/atrpms/sl6-$basearch/atrpms/stable
@@ -210,7 +210,7 @@ EOF
 fi
 
 if [ ! -f "/etc/yum.repos.d/rpmforge.repo" ]; then
-cat > /etc/yum.repos.d/rpmforge.repo <<EOF
+sudo cat > /etc/yum.repos.d/rpmforge.repo <<EOF
 # note : rpmforge packages with .rf disttag: these DO NOT replace system packages
 [rpmforge]
 name=UNSUPPORTED: RPMforge (http://rpmgforge.net), no formal support from CERN
@@ -242,7 +242,7 @@ EOF
 fi
 
 if [ ! -f "/etc/yum.repos.d/slc6-extras.repo" ]; then
-cat > /etc/yum.repos.d/slc6-extras.repo <<EOF
+sudo cat > /etc/yum.repos.d/slc6-extras.repo <<EOF
 [slc6-extras]
 name=Scientific Linux CERN 6 (SLC6) add-on packages, no formal support
 baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/extras/
@@ -262,7 +262,7 @@ EOF
 fi
 
 if [ ! -f "/etc/yum.repos.d/slc6-testing.repo" ]; then
-cat > /etc/yum.repos.d/slc6-testing.repo <<EOF
+sudo cat > /etc/yum.repos.d/slc6-testing.repo <<EOF
 [slc6-testing]
 name=Scientific Linux CERN 6 (SLC6) packages in testing phase
 baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/testing/
@@ -282,7 +282,7 @@ EOF
 fi
 
 if [ ! -f "/etc/yum.repos.d/elrepo.repo" ]; then
-cat > /etc/yum.repos.d/elrepo.repo <<EOF
+sudo cat > /etc/yum.repos.d/elrepo.repo <<EOF
 [elrepo]
 name=UNSUPPORTED: El Repo, the Community Enterprise Linux Repository, no formal support from CERN
 baseurl=http://linuxsoft.cern.ch/elrepo/elrepo/el6/$basearch
@@ -302,7 +302,7 @@ EOF
 fi
 
 if [ ! -f "/etc/yum.repos.d/EMI-2-RC4-third-party.repo" ]; then
-cat > /etc/yum.repos.d/EMI-2-RC4-third-party.repo  <<EOF
+sudo cat > /etc/yum.repos.d/EMI-2-RC4-third-party.repo  <<EOF
 [EMI-2-RC4-third-party]
 name=EMI 2 RC4 Third-Party Repository
 baseurl=http://emisoft.web.cern.ch/emisoft/dist/EMI/2/sl6/$basearch/third-party
@@ -316,7 +316,7 @@ fi
 
 
 if [ ! -f "/etc/yum.repos.d/lcg-CA.repo" ]; then
-cat > /etc/yum.repos.d/lcg-CA.repo  <<EOF
+sudo cat > /etc/yum.repos.d/lcg-CA.repo  <<EOF
 # This is the official YUM repository string for the lcg-CA repository
 # Fetched from: http://grid-deployment.web.cern.ch/grid-deployment/glite/repos/3.1/lcg-CA.repo
 # Place it to /etc/yum.repos/3.1.d/ and run 'yum update'
@@ -334,7 +334,7 @@ fi
 
 
 if [ ! -f "/etc/yum.repos.d/slc6-cernonly.repo" ]; then
-cat > /etc/yum.repos.d/slc6-cernonly.repo  <<EOF
+sudo cat > /etc/yum.repos.d/slc6-cernonly.repo  <<EOF
 [slc6-cernonly]
 name=Scientific Linux CERN 6 (SLC6) CERN-only packages
 baseurl=http://linuxsoft.cern.ch/onlycern/slc6X/$basearch/yum/cernonly/
@@ -357,7 +357,7 @@ EOF
 fi
 
 if [ ! -f "/etc/yum.repos.d/slc6-os.repo" ]; then
-cat > /etc/yum.repos.d/slc6-os.repo  <<EOF
+sudo cat > /etc/yum.repos.d/slc6-os.repo  <<EOF
 [slc6-os]
 name=Scientific Linux CERN 6 (SLC6) base system packages
 baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/os/
@@ -377,7 +377,7 @@ EOF
 fi
 
 if [ ! -f "/etc/yum.repos.d/slc6-updates.repo" ]; then
-cat > /etc/yum.repos.d/slc6-updates.repo  <<EOF
+sudo cat > /etc/yum.repos.d/slc6-updates.repo  <<EOF
 [slc6-updates]
 name=Scientific Linux CERN 6 (SLC6) bugfix and security updates
 baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/updates/
@@ -497,7 +497,7 @@ sudo yum -y install openssl
 
 
 echo "Fetch-crls now"
-fetch-crl
+sudo fetch-crl
 
 
 echo " Now manually set X509_USER_CERT & X509_USER_KEY to point to your certificate and key"
