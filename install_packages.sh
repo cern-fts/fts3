@@ -94,7 +94,7 @@ if [ ! -f "/etc/yum.repos.d/atrpms.repo" ]; then
 sudo cat > /etc/yum.repos.d/atrpms.repo <<EOF
 [atrpms-stable]
 name=UNSUPPORTED: ATrpms (http://atrpms.net) stable add-ons, no formal support from CERN
-baseurl=http://linuxsoft.cern.ch/atrpms/sl6-$basearch/atrpms/stable
+baseurl=http://linuxsoft.cern.ch/atrpms/sl6-x86_64/atrpms/stable
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-atrpms
 gpgcheck=1
 enabled=0
@@ -102,7 +102,7 @@ protect=0
  
 [atrpms-testing]
 name=UNSUPPORTED: ATrpms (http://atrpms.net) testing add-ons, no formal support from CERN
-baseurl=http://linuxsoft.cern.ch/atrpms/sl6-$basearch/atrpms/testing
+baseurl=http://linuxsoft.cern.ch/atrpms/sl6-x86_64/atrpms/testing
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-atrpms
 gpgcheck=1
 enabled=0
@@ -110,7 +110,7 @@ protect=0
  
 [atrpms-bleeding]
 name=UNSUPPORTED: ATrpms (http://atrpms.net) bleeding edge, no formal support from CERN
-baseurl=http://linuxsoft.cern.ch/atrpms/sl6-$basearch/atrpms/bleeding
+baseurl=http://linuxsoft.cern.ch/atrpms/sl6-x86_64/atrpms/bleeding
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-atrpms
 gpgcheck=1
 enabled=0
@@ -118,7 +118,7 @@ protect=0
  
 [atrpms-stable-source]
 name=UNSUPPORTED: ATrpms (http://atrpms.net) stable add-ons, no formal support from CERN - source RPMs
-baseurl=http://linuxsoft.cern.ch/atrpms/src/sl6-$basearch/atrpms/stable
+baseurl=http://linuxsoft.cern.ch/atrpms/src/sl6-x86_64/atrpms/stable
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-atrpms
 gpgcheck=1
 enabled=0
@@ -126,7 +126,7 @@ protect=0
  
 [atrpms-testing-source]
 name=UNSUPPORTED: ATrpms (http://atrpms.net) testing add-ons, no formal support from CERN - source RPMs
-baseurl=http://linuxsoft.cern.ch/atrpms/src/sl6-$basearch/atrpms/testing
+baseurl=http://linuxsoft.cern.ch/atrpms/src/sl6-x86_64/atrpms/testing
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-atrpms
 gpgcheck=1
 enabled=0
@@ -134,7 +134,7 @@ protect=0
  
 [atrpms-bleeding-source]
 name=UNSUPPORTED: ATrpms (http://atrpms.net) bleeding edge, no formal support from CERN - source RPMs
-baseurl=http://linuxsoft.cern.ch/atrpms/src/sl6-$basearch/atrpms/bleeding
+baseurl=http://linuxsoft.cern.ch/atrpms/src/sl6-x86_64/atrpms/bleeding
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-atrpms
 gpgcheck=1
 enabled=0
@@ -159,7 +159,7 @@ if [ ! -f "/etc/yum.repos.d/epel.repo" ]; then
 cat > /etc/yum.repos.d/epel.repo <<EOF
 [epel]
 name=UNSUPPORTED: Extra Packages for Enterprise Linux add-ons, no formal support from CERN
-baseurl=http://linuxsoft.cern.ch/epel/6/$basearch
+baseurl=http://linuxsoft.cern.ch/epel/6/x86_64
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
 gpgcheck=1
 enabled=1
@@ -175,7 +175,7 @@ protect=0
  
 [epel-testing]
 name=UNSUPPORTED: Extra Packages for Enterprise Linux add-ons, no formal support from CERN - testing
-baseurl=http://linuxsoft.cern.ch/epel/testing/6/$basearch
+baseurl=http://linuxsoft.cern.ch/epel/testing/6/x86_64
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
 gpgcheck=1
 enabled=1
@@ -183,7 +183,7 @@ protect=0
  
 [epel-testing-debuginfo]
 name=UNSUPPORTED: Extra Packages for Enterprise Linux add-ons, no formal support from CERN - testing debuginfo
-baseurl=http://linuxsoft.cern.ch/epel/testing/6/$basearch/debug
+baseurl=http://linuxsoft.cern.ch/epel/testing/6/x86_64/debug
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
 gpgcheck=1
 enabled=1
@@ -198,9 +198,8 @@ enabled=1
 protect=0
  
 [epel-testing-debuginfo]
-name=Extra Packages for Enterprise Linux 6 - Testing - $basearch - Debug
-#baseurl=http://download.fedoraproject.org/pub/epel/testing/6/$basearch/debug
-mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel6&arch=$basearch
+name=Extra Packages for Enterprise Linux 6 - Testing - x86_64 - Debug
+mirrorlist=https://mirrors.fedoraproject.org/metalink?repo=testing-debug-epel6&arch=x86_64
 failovermethod=priority
 enabled=1
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6
@@ -214,7 +213,7 @@ sudo cat > /etc/yum.repos.d/rpmforge.repo <<EOF
 # note : rpmforge packages with .rf disttag: these DO NOT replace system packages
 [rpmforge]
 name=UNSUPPORTED: RPMforge (http://rpmgforge.net), no formal support from CERN
-baseurl=http://linuxsoft/rpmforge/redhat/el6/en/$basearch/rpmforge
+baseurl=http://linuxsoft/rpmforge/redhat/el6/en/x86_64/rpmforge
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-dag
 gpgcheck=1
 enabled=0
@@ -224,7 +223,7 @@ protect=0
 # warning: packages from this repository MAY replace your system ones.
 [rpmforge-testing]
 name=UNSUPPORTED: RPMforge Testting (http://rpmgforge.net), no formal support from CERN
-baseurl=http://linuxsoft/rpmforge/redhat/el6/en/$basearch/testing
+baseurl=http://linuxsoft/rpmforge/redhat/el6/en/x86_64/testing
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-dag
 gpgcheck=1
 enabled=0
@@ -233,7 +232,7 @@ protect=0
 # warning: packages from this repository WILL replace your system ones.
 [rpmforge-extras]
 name=UNSUPPORTED: RPMforge Extras (http://rpmgforge.net), no formal support from CERN
-baseurl=http://linuxsoft/rpmforge/redhat/el6/en/$basearch/extras
+baseurl=http://linuxsoft/rpmforge/redhat/el6/en/x86_64/extras
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-rpmforge-dag
 gpgcheck=1
 enabled=0
@@ -245,7 +244,7 @@ if [ ! -f "/etc/yum.repos.d/slc6-extras.repo" ]; then
 sudo cat > /etc/yum.repos.d/slc6-extras.repo <<EOF
 [slc6-extras]
 name=Scientific Linux CERN 6 (SLC6) add-on packages, no formal support
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/extras/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/extras/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=1
@@ -253,7 +252,7 @@ protect=1
  
 [slc6-extras-source]
 name=Scientific Linux CERN 6 (SLC6) add-on packages, no formal support - source RPMS
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/extras-source/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/extras-source/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=0
@@ -265,7 +264,7 @@ if [ ! -f "/etc/yum.repos.d/slc6-testing.repo" ]; then
 sudo cat > /etc/yum.repos.d/slc6-testing.repo <<EOF
 [slc6-testing]
 name=Scientific Linux CERN 6 (SLC6) packages in testing phase
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/testing/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/testing/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=0
@@ -273,7 +272,7 @@ protect=1
  
 [slc6-testing-source]
 name=Scientific Linux CERN 6 (SLC6) packages in testing phase - source RPMs
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/testing-source/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/testing-source/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=0
@@ -285,7 +284,7 @@ if [ ! -f "/etc/yum.repos.d/elrepo.repo" ]; then
 sudo cat > /etc/yum.repos.d/elrepo.repo <<EOF
 [elrepo]
 name=UNSUPPORTED: El Repo, the Community Enterprise Linux Repository, no formal support from CERN
-baseurl=http://linuxsoft.cern.ch/elrepo/elrepo/el6/$basearch
+baseurl=http://linuxsoft.cern.ch/elrepo/elrepo/el6/x86_64
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-elrepo.org
 gpgcheck=1
 enabled=0
@@ -293,7 +292,7 @@ protect=0
  
 [elrepo-testing]
 name=UNSUPPORTED: El Repo the Community Enterprise Linux Repository, no formal support from CERN
-baseurl=http://linuxsoft.cern.ch/elrepo/testing/el6/$basearch
+baseurl=http://linuxsoft.cern.ch/elrepo/testing/el6/x86_64
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-elrepo.org
 gpgcheck=1
 enabled=0
@@ -337,7 +336,7 @@ if [ ! -f "/etc/yum.repos.d/slc6-cernonly.repo" ]; then
 sudo cat > /etc/yum.repos.d/slc6-cernonly.repo  <<EOF
 [slc6-cernonly]
 name=Scientific Linux CERN 6 (SLC6) CERN-only packages
-baseurl=http://linuxsoft.cern.ch/onlycern/slc6X/$basearch/yum/cernonly/
+baseurl=http://linuxsoft.cern.ch/onlycern/slc6X/x86_64/yum/cernonly/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
        file:///etc/pki/rpm-gpg/RPM-GPG-KEY-jpolok
 gpgcheck=1
@@ -347,7 +346,7 @@ protect=1
 
 [slc6-cernonly-srpms]
 name=Scientific Linux CERN 6 (SLC6) CERN-only packages (sources)
-baseurl=http://linuxsoft.cern.ch/onlycern/slc6X/$basearch/yum/cernonly-srpms/
+baseurl=http://linuxsoft.cern.ch/onlycern/slc6X/x86_64/yum/cernonly-srpms/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
        file:///etc/pki/rpm-gpg/RPM-GPG-KEY-jpolok
 gpgcheck=1
@@ -360,7 +359,7 @@ if [ ! -f "/etc/yum.repos.d/slc6-os.repo" ]; then
 sudo cat > /etc/yum.repos.d/slc6-os.repo  <<EOF
 [slc6-os]
 name=Scientific Linux CERN 6 (SLC6) base system packages
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/os/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/os/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=1
@@ -368,7 +367,7 @@ protect=1
  
 [slc6-os-source]
 name=Scientific Linux CERN 6 (SLC6) base system packages - source RPMs
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/os-source/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/os-source/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=0
@@ -380,7 +379,7 @@ if [ ! -f "/etc/yum.repos.d/slc6-updates.repo" ]; then
 sudo cat > /etc/yum.repos.d/slc6-updates.repo  <<EOF
 [slc6-updates]
 name=Scientific Linux CERN 6 (SLC6) bugfix and security updates
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/updates/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/updates/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=1
@@ -388,7 +387,7 @@ protect=1
  
 [slc6-updates-source]
 name=Scientific Linux CERN 6 (SLC6) bugfix and security updates - source RPMs
-baseurl=http://linuxsoft.cern.ch/cern/slc6X/$basearch/yum/updates-source/
+baseurl=http://linuxsoft.cern.ch/cern/slc6X/x86_64/yum/updates-source/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
 enabled=0
