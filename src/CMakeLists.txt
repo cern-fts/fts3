@@ -21,6 +21,7 @@ add_subdirectory(db)
 add_subdirectory(ws-ifce)
 add_subdirectory(cli)
 add_subdirectory(server)
+add_subdirectory(monitoring)
 add_subdirectory(url-copy)
 
 
