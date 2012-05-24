@@ -6,9 +6,9 @@ export LCG_GFAL_INFOSYS=certtb-bdii-top.cern.ch:2170
 export GFAL_PLUGIN_LIST=libgfal_plugin_srm.so:libgfal_plugin_rfio.so:libgfal_plugin_lfc.so:libgfal_plugin_dcap.so:libgfal_plugin_dcap.so:libgfal_plugin_gridftp.so
 
 sudo updatedb
-export URLCOPY=`locate fts3_url_copy | head -1 | sed 's/\/fts3_url_copy//'`
+export URLCOPY=`sudo locate fts3_url_copy | head -1 | sed 's/\/fts3_url_copy//'`
 export PATH=$PATH:$URLCOPY
-export LD_LIBRARY_PATH=`locate libfts3_db_oracle.so | head -1 | sed 's/\/libfts3_db_oracle.so//'`
+export LD_LIBRARY_PATH=`sudo locate libfts3_db_oracle.so | head -1 | sed 's/\/libfts3_db_oracle.so//'`
 
 echo "Prepare fts3 server config file"
 if [ ! -f "/etc/sysconfig/fts3config" ]; then

@@ -27,7 +27,7 @@ FileManagement::FileManagement() {
 }
 
 FileManagement::~FileManagement() {
-    archive();
+    //archive();
 }
 
 void FileManagement::getLogStream(std::ofstream& logStream) {

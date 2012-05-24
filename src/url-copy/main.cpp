@@ -299,5 +299,7 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());    
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
+
+    fileManagement->archive();
     return EXIT_SUCCESS;
 }
