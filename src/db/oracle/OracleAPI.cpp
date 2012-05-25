@@ -381,7 +381,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
             " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
             " t_file.checksum, t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, t_file.error_scope, t_file.error_phase "
             " FROM t_file, t_job WHERE"
-            " t_job.job_id = :1 AND t_file.job_id = t_job.job_id AND t_file.file_state='SUBMITTED' AND t_file.job_finished is NULL AND t_job.job_finished is NULL";
+            " t_job.job_id = :1 AND t_file.job_id = t_job.job_id AND t_file.job_finished is NULL AND t_job.job_finished is NULL";
     try {
 
         oracle::occi::Statement* s = conn->createStatement(select, selecttag);
