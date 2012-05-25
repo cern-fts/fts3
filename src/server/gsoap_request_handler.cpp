@@ -18,20 +18,21 @@
  */
 
 #include "gsoap_request_handler.h"
+#include "gsoap_acceptor.h"
 
 FTS3_SERVER_NAMESPACE_START
 
-GSoapRequestHandler::~GSoapRequestHandler () {
+GSoapRequestHandler::GSoapRequestHandler(GSoapAcceptor& acceptor): acceptor(acceptor) {
+	ctx = acceptor.getSoapContext();
+}
 
-	soap_destroy(soap);
-	soap_end(soap);
-	soap_done(soap); // ??
-	soap_free(soap);
+GSoapRequestHandler::~GSoapRequestHandler() {
+	acceptor.recycleSoapContext(ctx);
 }
 
 void GSoapRequestHandler::handle() {
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
-    fts3_serve(soap);
+    fts3_serve(ctx);
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
 }
 

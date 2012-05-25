@@ -17,31 +17,37 @@ limitations under the License. */
 
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/static_assert.hpp>
+#include <queue>
 
 #include "server_dev.h"
 #include "common/pointers.h"
 #include "common/error.h"
 #include "common/logger.h"
-#include "gsoap_request_handler.h"
+#include "ws/gsoap_stubs.h"
 
-//#include "ws-ifce/gsoap/fts3.nsmap"
 
 FTS3_SERVER_NAMESPACE_START
 
 using namespace FTS3_COMMON_NAMESPACE;
 
+class GSoapRequestHandler;
 
-class GSoapAcceptor
-{
+
+class GSoapAcceptor: public MonitorObject {
+
 public:
     GSoapAcceptor(const unsigned int port, const std::string& ip);
     virtual ~GSoapAcceptor();
+
+    soap* getSoapContext();
+    void recycleSoapContext(soap* ctx);
 
     boost::shared_ptr<GSoapRequestHandler> accept();
 
 protected:
 
-    ::soap* soap;
+    soap* ctx;
+    std::queue<soap*> recycle;
 };
 
 FTS3_SERVER_NAMESPACE_END

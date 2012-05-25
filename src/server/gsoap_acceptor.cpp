@@ -18,48 +18,80 @@
  */
  
 #include "gsoap_acceptor.h"
+#include "gsoap_request_handler.h"
 #include "ws-ifce/gsoap/fts3.nsmap"
 
 FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
-	soap = soap_new();
-	soap_set_namespaces(soap, fts3_namespaces);
+	ctx = soap_new();
+	soap_set_namespaces(ctx, fts3_namespaces);
 
-	SOAP_SOCKET sock = soap_bind(soap, ip.c_str(), port, 100);
+	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), port, 100);
 
-    if (sock >= 0)
-    {
+    if (sock >= 0) {
         FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service bound to socket " << sock << commit;
-    }
-    else
-    {
+    } else {
         FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
     }
 }
 
 GSoapAcceptor::~GSoapAcceptor() {
-	soap_destroy(soap);
-	soap_end(soap);
-	soap_free(soap);
+
+	soap* tmp;
+	while (!recycle.empty()) {
+
+		tmp = recycle.front();
+		recycle.pop();
+
+		soap_done(tmp);
+		soap_free(tmp);
+	}
+
+	soap_destroy(ctx);
+	soap_end(ctx);
+	soap_free(ctx);
 }
 
 boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
-    SOAP_SOCKET sock = soap_accept(soap);
+    SOAP_SOCKET sock = soap_accept(ctx);
     boost::shared_ptr<GSoapRequestHandler> handler;
 
-    if (sock >= 0)
-    {
+    if (sock >= 0) {
+
         FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New connection, bound to socket " << sock << commit;
-        handler.reset (new GSoapRequestHandler (soap_copy(soap)));
-    }
-    else
-    {
+        handler.reset (
+        		new GSoapRequestHandler(*this)
+        	);
+    } else {
         FTS3_COMMON_EXCEPTION_LOGERROR (Err_System ("Unable to accept connection request."));
     }
 
     return handler;
+}
+
+soap* GSoapAcceptor::getSoapContext() {
+
+	FTS3_COMMON_MONITOR_START_CRITICAL
+	if (!recycle.empty()) {
+		soap* ctx = recycle.front();
+		recycle.pop();
+		ctx->socket = this->ctx->socket;
+		return ctx;
+	}
+	FTS3_COMMON_MONITOR_END_CRITICAL
+
+	return soap_copy(ctx);
+}
+
+void GSoapAcceptor::recycleSoapContext(soap* ctx) {
+
+	FTS3_COMMON_MONITOR_START_CRITICAL
+	soap_destroy(ctx);
+	soap_end(ctx);
+	recycle.push(ctx);
+	FTS3_COMMON_MONITOR_END_CRITICAL
 }
 
 FTS3_SERVER_NAMESPACE_END

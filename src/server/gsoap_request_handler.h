@@ -17,12 +17,14 @@ limitations under the License. */
 
 #include <boost/type_traits/is_base_of.hpp>
 #include <boost/static_assert.hpp>
+#include <queue>
 
 #include "server_dev.h"
 #include "common/pointers.h"
 #include "common/logger.h"
 #include "common/error.h"
 #include "ws/gsoap_stubs.h"
+
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
@@ -32,18 +34,20 @@ FTS3_SERVER_NAMESPACE_START
 
 using namespace FTS3_COMMON_NAMESPACE;
 
+class GSoapAcceptor;
 
-class GSoapRequestHandler
-{
+class GSoapRequestHandler {
+
 public:
-    GSoapRequestHandler (::soap* soap): soap(soap) {};
-    ~GSoapRequestHandler ();
+    GSoapRequestHandler(GSoapAcceptor& acceptor);
+    ~GSoapRequestHandler();
 
     void handle();
 
 
 private:
-    ::soap* soap;
+    soap* ctx;
+    GSoapAcceptor& acceptor;
 };
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
