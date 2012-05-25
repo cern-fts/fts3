@@ -95,7 +95,10 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
     
-    while(1){
+    while(1){ /*need to receive more than one messages at a time*/
+    
+     for(int i = 0; i < 50; i++){
+
     	struct message* msg =  qm->receive();
           
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "MSG queue: " << msg->job_id  << commit;
@@ -104,12 +107,12 @@ protected:
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg->transfer_message  << commit;   
       
       DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(std::string(msg->job_id), std::string(msg->file_id),std::string(msg->transfer_status),std::string(msg->transfer_message) );
-      
+      DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg->job_id), std::string(msg->transfer_status));      
       
       if(msg)
       	delete msg;                
-      
-      usleep(10);
+      }
+      sleep(1);
       }
     }
 

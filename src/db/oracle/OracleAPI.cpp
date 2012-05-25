@@ -118,7 +118,7 @@ void OracleAPI::getSeCreditsInUse (
 			"FROM t_job, t_file "
 			"WHERE "
 			"	t_job.job_id = t_file.job_id "
-			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'STARTED') ";
+			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'ACTIVE') ";
 
 	if (!srcSeName.empty()) {
 		query_stmt +=
@@ -264,24 +264,113 @@ void OracleAPI::getSiteCreditsInUse (
 }
 
 void OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
+    const std::string tag = "updateFileStatus";
     std::string query =
     		"UPDATE t_file "
     		"SET file_state =:1 "
-    		"WHERE file_id = :2";
+    		"WHERE file_id = :2 and file_state = 'SUBMITTED'";
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query, "");
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, status);
         s->setInt(2, file->FILE_ID);
         s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, "");
+        conn->destroyStatement(s, tag);
+	
+	updateJObStatus(file->JOB_ID, status);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
 }
+
+void OracleAPI::updateJObStatus(std::string jobId, const std::string status) {
+    const std::string tag = "updateJobStatus";
+    std::string query =
+                "UPDATE t_job "
+                "SET job_state =:1 "
+                "WHERE job_id = :2 and job_state = 'SUBMITTED'";
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, status);
+        s->setString(2, jobId);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+
+
+
+void OracleAPI::updateJobTransferStatus(std::string job_id, const std::string status){
+
+    const std::string reason = "One or more files failed. Please have a look at the details for more information";
+    const std::string terminal = "FINISHED";
+    bool finished  = true;
+    std::string state("");
+    const std::string tag1 = "updateJobTransferStatus";
+    const std::string tag2 = "selectJobTransferStatus";    
+    const std::string tag3 = "selectJobNotFinished";        
+    std::string update =
+    		"UPDATE t_job "
+    		"SET JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 "
+    		"WHERE job_id = :5 AND JOB_STATE='ACTIVE'";	
+    std::string updateJobNotFinished =
+    		"UPDATE t_job "
+    		"SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE='READY' ";				
+    std::string query = "SELECT FILE_STATE FROM T_FILE WHERE JOB_ID=:1";
+	    
+    try {
+        oracle::occi::Statement* st = conn->createStatement(query, tag2);
+	job_id = job_id.substr (0,36);
+	st->setString(1,job_id);
+        oracle::occi::ResultSet* r = conn->createResultset(st);
+        while (r->next()) {
+            	state = r->getString(1);
+		if( (state.length() > 0) && (state.compare(terminal)!=0)){
+			finished = false;
+	     }
+        }
+        conn->destroyResultset(st, r);
+        conn->destroyStatement(st, tag2);
+   
+    if(finished == true){
+        time_t timed = time(NULL);
+        oracle::occi::Statement* s = conn->createStatement(update, tag1);
+        s->setString(1,terminal);
+        s->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
+        s->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
+        s->setString(4, reason);
+	s->setString(5, job_id);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag1);
+      }
+      else{
+        oracle::occi::Statement* st2 = conn->createStatement(updateJobNotFinished, tag3);
+        st2->setString(1,status);       
+	st2->setString(2, job_id);
+        st2->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(st2, tag3);      
+      }
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}    
+
+
+
+
 
 void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
     TransferFiles* tr_files = NULL;

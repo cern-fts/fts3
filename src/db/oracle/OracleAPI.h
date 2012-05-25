@@ -236,7 +236,11 @@ public:
 
     virtual void deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE);
     
-    virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message);        
+    virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message);    
+    
+    virtual void updateJobTransferStatus(std::string job_id, const std::string status); 
+    
+    virtual void updateJObStatus(std::string jobId, const std::string status);    
     
 private:
 	OracleConnection *conn;

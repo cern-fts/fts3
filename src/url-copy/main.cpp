@@ -29,6 +29,9 @@ using namespace std;
 
 int main(int argc, char **argv) {
 
+    bool terminalTransferState = true;
+    std::string errorMessage("");
+    
     transfer_completed tr_completed;
     struct stat statbufsrc;
     struct stat statbufdest;
@@ -220,6 +223,8 @@ int main(int argc, char **argv) {
 
     if (gfal_stat(source_url.c_str(), &statbufsrc) < 0) {
         log << fileManagement.timestamp() << "Failed to get source file size, errno: " << gfal_posix_code_error() << '\n';
+	terminalTransferState = false;
+	errorMessage = "Failed to get source file size";
     } else {
         log << fileManagement.timestamp() << "Source file size: " << statbufsrc.st_size << '\n';
         source_size = statbufsrc.st_size;
@@ -239,13 +244,14 @@ int main(int argc, char **argv) {
 
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-    reporter.constructMessage(job_id, file_id, "STARTED", "Transfer started");
+    reporter.constructMessage(job_id, file_id, "ACTIVE", "");
 
     log << fileManagement.timestamp() << "initialize gfal2" << '\n';
     if ((handle = gfal_context_new(&tmp_err)) == NULL) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer Initialization failed - errno: " << tmp_err->message << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "Transfer Initialization failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
-        reporter.constructMessage(job_id, file_id, "FINISHED", std::string(tmp_err->message));
+	terminalTransferState = false;
+	errorMessage = std::string(tmp_err->message);
     }
     log << fileManagement.timestamp() << "begin copy" << '\n';
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
@@ -255,11 +261,11 @@ int main(int argc, char **argv) {
     if ((ret = gfalt_copy_file(handle, params, source_url.c_str(), dest_url.c_str(), &tmp_err)) != 0) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
-        reporter.constructMessage(job_id, file_id, "FINISHED", std::string(tmp_err->message));
+	terminalTransferState = false;
+	errorMessage = std::string(tmp_err->message);
     } else {
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
         log << fileManagement.timestamp() << "Transfer completed successfully" << '\n';
-        reporter.constructMessage(job_id, file_id, "FINISHED", "");
     }
 
     std::string bytes_to_string = to_string<long long>(transferred_bytes, std::dec);
@@ -273,7 +279,9 @@ int main(int argc, char **argv) {
 
     msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     if (gfal_stat(dest_url.c_str(), &statbufdest) < 0) {
-        log << fileManagement.timestamp() << "Failed to get source file size, errno: " << gfal_posix_code_error() << '\n';
+        log << fileManagement.timestamp() << "Failed to get destination file size, errno: " << gfal_posix_code_error() << '\n';
+	terminalTransferState = false;
+	errorMessage = "Failed to get destination file size";
     } else {
         log << fileManagement.timestamp() << "Dest file size: " << statbufdest.st_size << '\n';
         dest_size = statbufdest.st_size;
@@ -282,10 +290,14 @@ int main(int argc, char **argv) {
 
 
     //check source and dest file sizes
-    if (source_size == dest_size)
+    if (source_size == dest_size){
         log << fileManagement.timestamp() << "Source and destination files size is the same" << '\n';
-    else
-        log << fileManagement.timestamp() << "Source and destination files size IS NOT the same" << '\n';
+    }
+    else{
+        log << fileManagement.timestamp() << "Source and destination file size differ" << '\n';
+	terminalTransferState = false;
+	errorMessage = "Source and destination file size differ";
+    }
 
     log << fileManagement.timestamp() << "release all gfal2 resources" << '\n';
     gfal_context_free(handle);
@@ -299,6 +311,8 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");  
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());    
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+   
+    reporter.constructMessage(job_id, file_id, "FINISHED", errorMessage);
 
     logStream.close();
     fileManagement.archive();

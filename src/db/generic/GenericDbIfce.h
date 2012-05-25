@@ -258,6 +258,10 @@ public:
     virtual void deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) = 0;
     
     virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message) = 0;    
+    
+    virtual void updateJobTransferStatus(std::string job_id, const std::string status) = 0;
+    
+    virtual void updateJObStatus(std::string jobId, const std::string status) = 0;      
 };
 
 
