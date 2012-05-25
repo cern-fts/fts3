@@ -77,7 +77,6 @@ impltns__ArrayOf_USCOREsoapenc_USCOREstring* ListTransferCli::getStatusArray(soa
 
 	if (array->item.empty()) {
 		array->item.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
-		array->item.push_back(JobStatusHandler::FTS3_STATUS_PENDING);
 		array->item.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
 
 		if (SrvManager::getInstance()->isUserVoRestrictListingSupported()) {
