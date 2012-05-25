@@ -96,10 +96,11 @@ protected:
     void executeTransfer_a() {
     
     while(1){ /*need to receive more than one messages at a time*/
-    
+     std::cerr << "---------------------------------111111111-----------------" << std::endl;
      for(int i = 0; i < 50; i++){
-
+     std::cerr << "---------------------------------22222222222-----------------" << std::endl;
     	struct message* msg =  qm->receive();
+	     std::cerr << "---------------------------------33333333333333333-----------------" << std::endl;
           
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "MSG queue: " << msg->job_id  << commit;
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg->file_id  << commit;      
