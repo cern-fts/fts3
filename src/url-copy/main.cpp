@@ -248,23 +248,23 @@ int main(int argc, char **argv) {
 
     log << fileManagement.timestamp() << "initialize gfal2" << '\n';
     if ((handle = gfal_context_new(&tmp_err)) == NULL) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer Initialization failed - errno: " << tmp_err->message << " Error message:" << tmp_err->message << commit;
+        //FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer Initialization failed - errno: " << tmp_err->message << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "Transfer Initialization failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
 	terminalTransferState = false;
 	errorMessage = std::string(tmp_err->message);
     }
     log << fileManagement.timestamp() << "begin copy" << '\n';
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
+    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
     
     msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     if ((ret = gfalt_copy_file(handle, params, source_url.c_str(), dest_url.c_str(), &tmp_err)) != 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
+        //FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
 	terminalTransferState = false;
 	errorMessage = std::string(tmp_err->message);
     } else {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
+        //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
         log << fileManagement.timestamp() << "Transfer completed successfully" << '\n';
     }
 
@@ -306,7 +306,7 @@ int main(int argc, char **argv) {
 
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, "SOURCE");
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, "category");
-    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "error message");
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, "PHASE_PREPARATION");
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");  
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());    
