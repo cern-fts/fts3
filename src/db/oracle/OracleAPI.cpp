@@ -1303,61 +1303,15 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     		"UPDATE t_file "
     		"SET file_state =:1, REASON=:2 "
     		"WHERE file_id = :3 and (file_state='READY' or file_state='ACTIVE') ";	
-    const std::string reason = "One or more files failed. Please have a look at the details for more information";
-    const std::string terminal = "FINISHED";
-    bool finished  = true;
-    std::string state("");
-    const std::string tag1 = "updateJobTransferStatus";
-    const std::string tag2 = "selectJobTransferStatus";    
-    const std::string tag3 = "selectJobNotFinished";        
-    std::string update =
-    		"UPDATE t_job "
-    		"SET JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 "
-    		"WHERE job_id = :5 AND JOB_STATE='ACTIVE'";	
-    std::string updateJobNotFinished =
-    		"UPDATE t_job "
-    		"SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE='READY' ";				
-    std::string query2 = "SELECT FILE_STATE FROM T_FILE WHERE JOB_ID=:1";
-	    			
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query, "");
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, transfer_status);
         s->setString(2, transfer_message);
 	s->setInt(3, atoi(file_id.c_str()));
         s->executeUpdate();
-	s->setSQL(query2);
-	job_id = job_id.substr (0,36);
-	s->setString(1,job_id);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        while (r->next()) {
-            	state = r->getString(1);
-		if( (state.length() > 0) && (state.compare(terminal)!=0)){
-			finished = false;
-			break;
-	     }
-        }
-        conn->destroyResultset(s, r);
-   
-    if(finished == true){
-        time_t timed = time(NULL);
-	s->setSQL(update);
-        s->setString(1,terminal);
-        s->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
-        s->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
-        s->setString(4, reason);
-	s->setString(5, job_id);
-        s->executeUpdate();
-      }
-      else{     
-	s->setSQL(updateJobNotFinished);
-        s->setString(1,transfer_status);       
-	s->setString(2, job_id);
-        s->executeUpdate();
-      }
-
         conn->commit();	
-	conn->destroyStatement(s, "");
+	conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -1407,27 +1361,9 @@ void OracleAPI::updateJobTransferStatus(std::string job_id, const std::string st
         st->setString(4, reason);
 	st->setString(5, job_id);
         st->executeUpdate();
-        conn->commit();	
-        /*oracle::occi::Statement* s = conn->createStatement(update, tag1);
-        s->setString(1,terminal);
-        s->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
-        s->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
-        s->setString(4, reason);
-	s->setString(5, job_id);
-        s->executeUpdate();
-        conn->commit();
-        conn->destroyStatement(s, tag1);
-	*/
+        conn->commit();	  
       }
-      else{
-      /*
-        oracle::occi::Statement* st2 = conn->createStatement(updateJobNotFinished, tag3);
-        st2->setString(1,status);       
-	st2->setString(2, job_id);
-        st2->executeUpdate();
-        conn->commit();
-        conn->destroyStatement(st2, tag3);      
-	*/
+      else{     
 	st->setSQL(updateJobNotFinished);
         st->setString(1,status);       
 	st->setString(2, job_id);
