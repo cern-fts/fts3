@@ -310,7 +310,6 @@ void OracleAPI::updateJobTransferStatus(std::string job_id, const std::string st
 	     }
         }
         conn->destroyResultset(st, r);
-        //conn->destroyStatement(st, tag2);
    
     if(finished == true){
         time_t timed = time(NULL);
@@ -1381,7 +1380,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     std::string query =
     		"UPDATE t_file "
     		"SET file_state =:1, REASON=:2 "
-    		"WHERE file_id = :3 ";		
+    		"WHERE file_id = :3 and file_state='READY' or file_state='ACTIVE' ";		
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
