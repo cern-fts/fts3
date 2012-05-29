@@ -53,7 +53,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND t_file.job_finished is NULL"
             " AND rownum <= 30  ORDER BY t_job.priority DESC"
-            " , SYS_EXTRACT_UTC(t_job.submit_time)";
+            " , SYS_EXTRACT_UTC(t_job.submit_time) FOR UPDATE";
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
