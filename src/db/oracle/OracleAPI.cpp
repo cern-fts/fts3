@@ -53,7 +53,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND t_file.job_finished is NULL"
             " AND rownum <= 30  ORDER BY t_job.priority DESC"
-            " , SYS_EXTRACT_UTC(t_job.submit_time) FOR UPDATE";
+            " , SYS_EXTRACT_UTC(t_job.submit_time)";
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
@@ -387,7 +387,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
         }	    
 	    jobAppender = jobAppender.substr(0, jobAppender.length()-1);
 	    select.append(jobAppender);
-	    select.append(")");
+	    select.append(") FOR UPDATE");
 		     
             oracle::occi::Statement* s = conn->createStatement(select,"");
             oracle::occi::ResultSet* r = conn->createResultset(s);
