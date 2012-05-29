@@ -24,7 +24,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
     std::vector<TransferJobs*>::iterator iter;
     const std::string tag = "getSubmittedJobs";
     const std::string updateTag = "getSubmittedJobsUpdate";
-    //std::string update = "update t_job set job_state='ACTIVE' WHERE job_id=:1";
     std::string query_stmt = "SELECT "
             " t_job.job_id, "
             " t_job.job_state, "
@@ -49,18 +48,15 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " t_job.checksum_method "
             " FROM t_job, t_file"
             " WHERE t_job.job_id = t_file.job_id"
-//            " AND t_job.job_state = 'SUBMITTED'"
             " AND t_file.file_state = 'SUBMITTED'"
             " AND t_job.job_finished is NULL"
             " AND t_job.CANCEL_JOB is NULL"
             " AND t_file.job_finished is NULL"
-            " AND rownum <=:1  ORDER BY t_job.priority DESC"
+            " AND rownum <= 30  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time)";
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
-        //oracle::occi::Statement* up = conn->createStatement(update, updateTag);
-        s->setInt(1, 100);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -89,15 +85,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
-
-       /* for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
-            TransferJobs* temp = (TransferJobs*) * iter;
-            up->setString(1, std::string(temp->JOB_ID));
-            up->executeUpdate();
-        }
-        conn->commit();
-	*/	
-        //conn->destroyStatement(up, updateTag);
 	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -112,30 +99,33 @@ void OracleAPI::getSeCreditsInUse (
 		std::string destSeName,
 		std::string voName
 	) {
-
+	std::string tag = "getSeCreditsInUse";
 	std::string query_stmt =
 			"SELECT COUNT(*) "
 			"FROM t_job, t_file "
 			"WHERE "
 			"	t_job.job_id = t_file.job_id "
 			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'ACTIVE') ";
-
+		tag.append("1");
 	if (!srcSeName.empty()) {
 		query_stmt +=
 //			"	AND t_file.source_surl like :1 "; // srcSeName + "/%
 			"	AND t_file.source_surl like '" + srcSeName + "/%' ";
+			tag.append("2");
 	}
 
 	if (!destSeName.empty()) {
 		query_stmt +=
 //			"	AND t_file.dest_surl like :2 "; // destSeName + "/%
 			"	AND t_file.dest_surl like '" + destSeName + "/%' ";
+		tag.append("3");
 	}
 
 	if (srcSeName.empty() || destSeName.empty()) {
 		if (!voName.empty()) {
 //			query_stmt += "	AND t_job.vo_name = :3 "; // vo
 			query_stmt += "	AND t_job.vo_name = '" + voName + "' "; // vo
+			tag.append("4");
 		} else {
 			// voName not in those who have voshare for this SE
 			query_stmt +=
@@ -148,31 +138,13 @@ void OracleAPI::getSeCreditsInUse (
 			"			AND t_se_vo_share.share_type = 'se' "
 			"			AND t_se_vo_share.share_id = '%\"share_name\":\"' || t_job.vo_name || '\"%' "
 			"	) ";
+			tag.append("5");
 		}
 	}
 
     try {
 
         oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
-/*
-        if (!srcSeName.empty()) {
-        	s->setString(1, srcSeName + "/%");
-        	seName = srcSeName;
-        }
-
-        if (!destSeName.empty()) {
-        	s->setString(2, destSeName + "/%");
-        	seName = destSeName;
-        }
-
-        if (srcSeName.empty() || destSeName.empty()) {
-			if (!voName.empty()) {
-				s->setString(3, voName);
-			} else {
-				s->setString(4, seName);
-			}
-        }
-*/
         oracle::occi::ResultSet* r = conn->createResultset(s);
         if(r->next()) {
         	creditsInUse = r->getInt(1);
@@ -191,19 +163,20 @@ void OracleAPI::getSiteCreditsInUse (
 		std::string destSiteName,
 		std::string voName
 	) {
-
+	std::string tag = "getSiteCreditsInUse";
 	std::string query_stmt =
 			"SELECT COUNT(*) "
 			"FROM t_job, t_file, t_se "
 			"WHERE "
 			"	t_job.job_id = t_file.job_id "
 			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'ACTIVE') ";
-
+			tag.append("1");
 	if (!srcSiteName.empty()) {
 		query_stmt +=
 //			"	AND t_se.site = :1 " // the se has the information about site name
 			"	AND t_se.site = '" + srcSiteName + "' " // the se has the information about site name
 			"	AND t_file.source_surl like t_se.name + '/%' "; // srcSeName + "/%
+			tag.append("2");
 	}
 
 	if (!destSiteName.empty()) {
@@ -211,6 +184,7 @@ void OracleAPI::getSiteCreditsInUse (
 //			"	AND t_se.site = :2 " // the se has the information about site name
 			"	AND t_se.site = '" + destSiteName + "' " // the se has the information about site name
 			"	AND t_file.dest_surl like t_se.name + '/%' "; // destSeName + "/%
+			tag.append("3");
 	}
 
 	if (srcSiteName.empty() || destSiteName.empty()) {
@@ -218,6 +192,7 @@ void OracleAPI::getSiteCreditsInUse (
 			query_stmt +=
 //			"	AND t_job.vo_name = :3 "; // vo
 			"	AND t_job.vo_name = '" + voName + "' "; // vo
+			tag.append("4");
 		} else {
 			// voName not in those who have voshare for this SE
 			query_stmt +=
@@ -229,28 +204,13 @@ void OracleAPI::getSiteCreditsInUse (
 			"			AND t_se_vo_share.share_type = 'se' "
 			"			AND t_se_vo_share.share_id = '%\"share_name\":\"' || t_job.vo_name || '\"%' "
 			"	) ";
-
+			tag.append("5");
 		}
 	}
 
     try {
 
         oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
-/*
-        if (!srcSiteName.empty()) {
-        	s->setString(1, srcSiteName + "/%");
-         }
-
-        if (!destSiteName.empty()) {
-        	s->setString(2, destSiteName + "/%");
-        }
-
-        if (srcSiteName.empty() || destSiteName.empty()) {
-			if (!voName.empty()) {
-				s->setString(3, voName);
-			}
-        }
-*/
         oracle::occi::ResultSet* r = conn->createResultset(s);
         if(r->next()) {
         	creditsInUse = r->getInt(1);
@@ -269,16 +229,25 @@ void OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) 
     		"UPDATE t_file "
     		"SET file_state =:1 "
     		"WHERE file_id = :2 and file_state = 'SUBMITTED'";
+    std::string query2 =
+                "UPDATE t_job "
+                "SET job_state =:1 "
+                "WHERE job_id = :2 and job_state = 'SUBMITTED'";
+
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        oracle::occi::Statement* s = conn->createStatement(query, "");
         s->setString(1, status);
         s->setInt(2, file->FILE_ID);
         s->executeUpdate();
-        conn->commit();
-        conn->destroyStatement(s, tag);
+	s->setSQL(query2);
+        s->setString(1, status);
+        s->setString(2, file->JOB_ID);
+        s->executeUpdate();
+        conn->commit();	
+        conn->destroyStatement(s, "");
 	
-	updateJObStatus(file->JOB_ID, status);
+	//updateJObStatus(file->JOB_ID, status);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -329,7 +298,7 @@ void OracleAPI::updateJobTransferStatus(std::string job_id, const std::string st
     std::string query = "SELECT FILE_STATE FROM T_FILE WHERE JOB_ID=:1";
 	    
     try {
-        oracle::occi::Statement* st = conn->createStatement(query, tag2);
+        oracle::occi::Statement* st = conn->createStatement(query, "");
 	job_id = job_id.substr (0,36);
 	st->setString(1,job_id);
         oracle::occi::ResultSet* r = conn->createResultset(st);
@@ -337,14 +306,23 @@ void OracleAPI::updateJobTransferStatus(std::string job_id, const std::string st
             	state = r->getString(1);
 		if( (state.length() > 0) && (state.compare(terminal)!=0)){
 			finished = false;
+			break;
 	     }
         }
         conn->destroyResultset(st, r);
-        conn->destroyStatement(st, tag2);
+        //conn->destroyStatement(st, tag2);
    
     if(finished == true){
         time_t timed = time(NULL);
-        oracle::occi::Statement* s = conn->createStatement(update, tag1);
+	st->setSQL(update);
+        st->setString(1,terminal);
+        st->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
+        st->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
+        st->setString(4, reason);
+	st->setString(5, job_id);
+        st->executeUpdate();
+        conn->commit();	
+        /*oracle::occi::Statement* s = conn->createStatement(update, tag1);
         s->setString(1,terminal);
         s->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
         s->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
@@ -353,15 +331,25 @@ void OracleAPI::updateJobTransferStatus(std::string job_id, const std::string st
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag1);
+	*/
       }
       else{
+      /*
         oracle::occi::Statement* st2 = conn->createStatement(updateJobNotFinished, tag3);
         st2->setString(1,status);       
 	st2->setString(2, job_id);
         st2->executeUpdate();
         conn->commit();
         conn->destroyStatement(st2, tag3);      
+	*/
+	st->setSQL(updateJobNotFinished);
+        st->setString(1,status);       
+	st->setString(2, job_id);
+        st->executeUpdate();
+        conn->commit();	
       }
+      
+      conn->destroyStatement(st, "");      
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -373,37 +361,49 @@ void OracleAPI::updateJobTransferStatus(std::string job_id, const std::string st
 
 
 void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
+    std::string jobAppender("");
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::iterator iter;
     std::string selecttag = "getByJobId";
     std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
-    		" t_file.file_id,  t_file.file_state, t_file.logical_name, "
-            " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
-            " t_file.checksum, t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, t_file.error_scope, t_file.error_phase "
+                " t_file.file_id,  t_file.file_state, t_file.logical_name, "
+            " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, "
+   " t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
+            " t_file.checksum, t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
+   " t_file.error_scope, t_file.error_phase "
             " FROM t_file, t_job WHERE"
-            " t_job.job_id = :1 AND t_file.job_id = t_job.job_id AND t_file.job_finished is NULL AND t_job.job_finished is NULL";
+   " t_file.job_id = t_job.job_id AND "
+   " t_file.job_finished is NULL AND "
+   " t_job.job_finished is NULL AND "
+   " t_job.job_id IN(";
     try {
-
-        oracle::occi::Statement* s = conn->createStatement(select, selecttag);
-
+      	
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
             TransferJobs* temp = (TransferJobs*) * iter;
-            std::string job_id = std::string(temp->JOB_ID);
-            s->setString(1, job_id);
+            	std::string job_id = std::string(temp->JOB_ID);
+            	jobAppender.append("'");
+   		jobAppender.append(job_id);
+   		jobAppender.append("',");
+        }	    
+	    jobAppender = jobAppender.substr(0, jobAppender.length()-1);
+	    select.append(jobAppender);
+	    select.append(")");
+		     
+            oracle::occi::Statement* s = conn->createStatement(select,"");
             oracle::occi::ResultSet* r = conn->createResultset(s);
-            while (r->next()) {
+	    
+            while (r->next()) {	        
                 tr_files = new TransferFiles();
                 tr_files->SOURCE_SURL = r->getString(1);
                 tr_files->DEST_SURL = r->getString(2);
                 tr_files->JOB_ID = r->getString(3);
                 tr_files->VO_NAME = r->getString(4);
                 tr_files->FILE_ID = r->getInt(5);
-
                 files.push_back(tr_files);
             }
+	    
             conn->destroyResultset(s, r);
-        }
-        conn->destroyStatement(s, selecttag);
+            conn->destroyStatement(s, "");
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -883,7 +883,7 @@ void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int
 /* ********************************* NEW API FTS3 *********************************/
 
 void OracleAPI::getSe(Se* &se, std::string seName){
-    const std::string tag = "getAllSeInfoNoCritiria";
+    const std::string tag = "getSeTest";
     std::string query_stmt =
     		"SELECT "
             "	t_se.ENDPOINT, "
@@ -902,7 +902,7 @@ void OracleAPI::getSe(Se* &se, std::string seName){
 
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
         s->setString(1, seName);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         if (r->next()) {
@@ -920,7 +920,7 @@ void OracleAPI::getSe(Se* &se, std::string seName){
             se->GOCDB_ID = r->getString(11);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, "");
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -949,7 +949,7 @@ void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
 	    
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             seData = new Se();
@@ -969,7 +969,7 @@ void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
             se.push_back(seData);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, "");
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -991,7 +991,7 @@ void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
 
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             seCon = new SeConfig();
@@ -1002,7 +1002,7 @@ void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
             seConfig.push_back(seCon);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, "");
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -1014,7 +1014,7 @@ void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndCo
 SHARE_VALUE){
     SeAndConfig* seData = NULL;
     std::vector<SeAndConfig*>::iterator iter;
-    const std::string tag = "getAllSeAndConfigWithCritiria";
+    std::string tag = "getAllSeAndConfigWithCritiria";
     std::string query_stmt = " SELECT "
             " t_se.ENDPOINT, "
             " t_se.SE_TYPE, "
@@ -1036,21 +1036,25 @@ SHARE_VALUE){
         query_stmt.append(" and T_SE_VO_SHARE.SE_NAME ='");
 		query_stmt.append(SE_NAME);
 		query_stmt.append("'");
+		tag.append("1");
 	}
     if (SHARE_ID.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SHARE_ID ='");
 		query_stmt.append(SHARE_ID);
 		query_stmt.append("'");
+		tag.append("2");
 	}
     if (SHARE_TYPE.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SHARE_TYPE ='");
 		query_stmt.append(SHARE_TYPE);
 		query_stmt.append("'");
+		tag.append("3");
 	}
     if (SHARE_VALUE.length() > 0){
         query_stmt.append(" and T_SE_VO_SHARE.SHARE_VALUE ='");
 		query_stmt.append(SHARE_VALUE);
 		query_stmt.append("'");
+		tag.append("4");
 	}	
 
     try {
@@ -1077,7 +1081,7 @@ SHARE_VALUE){
             seAndConfig.push_back(seData);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
+        conn->destroyStatement(s, "");
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();

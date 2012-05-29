@@ -37,11 +37,10 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 
 template <class T>
-inline std::string to_string (const T& t)
-{
-	std::stringstream ss;
-	ss << t;
-	return ss.str();
+inline std::string to_string(const T& t) {
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
 }
 
 template
@@ -95,65 +94,66 @@ protected:
         std::vector<TransferJobs*> jobs2;
         std::vector<TransferJobs*>::iterator iter2;
         std::vector<TransferFiles*> files;
-        std::vector<TransferFiles*>::iterator fileiter;	
-	std::string sourceSiteName("");
-	std::string destSiteName("");
-	SiteName siteResolver;
+        std::vector<TransferFiles*>::iterator fileiter;
+        std::string sourceSiteName("");
+        std::string destSiteName("");
+        SiteName siteResolver;
 
-        while(1){
-        	DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-       		
-			DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
-			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-				TransferFiles* temp = (TransferFiles*) * fileiter;
-				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
-				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << temp->FILE_ID << commit;
-				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
-				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
-				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO name: " << temp->VO_NAME << commit;
-				
-				FileTransferScheduler scheduler(temp);
-				if (scheduler.schedule()) {
-					sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
-					destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
-					params.append(" -b ");
-					params.append(temp->SOURCE_SURL);
-					params.append(" -c ");
-					params.append(temp->DEST_SURL);
-					params.append(" -a ");
-					params.append(temp->JOB_ID);
-					params.append(" -B ");
-					params.append(to_string(temp->FILE_ID));					
-					params.append(" -C ");
-					params.append(temp->VO_NAME);
-					if(sourceSiteName.length() > 0){
-						params.append(" -D ");
-						params.append(sourceSiteName);
-					}
-					if(destSiteName.length() > 0){					
-						params.append(" -E ");
-						params.append(destSiteName);	
-					}				
+        while (1) {
+            DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+            if (jobs2.size() > 0) {
+                DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
+                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
+                    TransferFiles* temp = (TransferFiles*) * fileiter;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << temp->FILE_ID << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO name: " << temp->VO_NAME << commit;
 
-					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
-					pr = new ExecuteProcess(cmd, params, 0);
-					if(pr){
-							pr->executeProcessShell();
-							delete pr;
-					}
-					params.clear();
-				}
-			}
+                    FileTransferScheduler scheduler(temp);
+                    if (scheduler.schedule()) {
+                        sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
+                        destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
+                        params.append(" -b ");
+                        params.append(temp->SOURCE_SURL);
+                        params.append(" -c ");
+                        params.append(temp->DEST_SURL);
+                        params.append(" -a ");
+                        params.append(temp->JOB_ID);
+                        params.append(" -B ");
+                        params.append(to_string(temp->FILE_ID));
+                        params.append(" -C ");
+                        params.append(temp->VO_NAME);
+                        if (sourceSiteName.length() > 0) {
+                            params.append(" -D ");
+                            params.append(sourceSiteName);
+                        }
+                        if (destSiteName.length() > 0) {
+                            params.append(" -E ");
+                            params.append(destSiteName);
+                        }
 
-			/** cleanup resources */
-			for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-				delete *iter2;
-			jobs2.clear();
-			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
-				delete *fileiter;
-			files.clear();
-			sleep(1);
-		}
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
+                        pr = new ExecuteProcess(cmd, params, 0);
+                        if (pr) {
+                            pr->executeProcessShell();
+                            delete pr;
+                        }
+                        params.clear();
+                    }
+                }
+
+                /** cleanup resources */
+                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                    delete *iter2;
+                jobs2.clear();
+                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
+                    delete *fileiter;
+                files.clear();
+            }
+           sleep(1);	    
+        }
     }
 
     /* ---------------------------------------------------------------------- */
