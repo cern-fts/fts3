@@ -387,7 +387,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
         }	    
 	    jobAppender = jobAppender.substr(0, jobAppender.length()-1);
 	    select.append(jobAppender);
-	    select.append(") FOR UPDATE");
+	    select.append(")");
 		     
             oracle::occi::Statement* s = conn->createStatement(select,"");
             oracle::occi::ResultSet* r = conn->createResultset(s);
