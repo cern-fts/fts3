@@ -76,11 +76,17 @@ void daemonize()
         exit(EXIT_SUCCESS);
     }
 
-    chdir("/");
+    int ch = chdir("/");
+    if(ch < 0)
+	FTS3_COMMON_EXCEPTION_THROW(Err_System());
     umask(0);
     int fileDesc = open("/dev/null", O_RDWR);/* stdin */
-    (void) dup(fileDesc);  /* stdout */
-    (void) dup(fileDesc);  /* stderr */
+    int d1 = dup(fileDesc);  /* stdout */
+    if(d1 < 0)
+	FTS3_COMMON_EXCEPTION_THROW(Err_System());
+    int d2 = dup(fileDesc);  /* stderr */
+    if(d2 < 0)
+	FTS3_COMMON_EXCEPTION_THROW(Err_System());
     
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Daemon is initialized" << commit;
 }

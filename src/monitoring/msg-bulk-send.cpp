@@ -109,7 +109,9 @@ void DoServer() {
 
 int main() {
 
-    daemon(0,0);
+    int d =  daemon(0,0);
+    if(d < 0)
+	std::cerr << "Can't set to daemon mode, will cont attached to tty" << std::endl;
 
     //create a recover msgs thread using the last named pipe (barely used)
     MsgRecoverPipe pipeRecover(HALF_DUPLEX3);

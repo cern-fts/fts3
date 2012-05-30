@@ -259,12 +259,12 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     if ((ret = gfalt_copy_file(handle, params, source_url.c_str(), dest_url.c_str(), &tmp_err)) != 0) {
-        //FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
 	terminalTransferState = false;
 	errorMessage = std::string(tmp_err->message);
     } else {
-        //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
         log << fileManagement.timestamp() << "Transfer completed successfully" << '\n';
     }
 

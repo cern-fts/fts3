@@ -38,7 +38,7 @@ public:
     void start()
     {
         unsigned int t_port = theServerConfig().get<unsigned int>("TransferPort");
-        unsigned int c_port = theServerConfig().get<unsigned int>("ConfigPort");
+        //unsigned int c_port = theServerConfig().get<unsigned int>("ConfigPort");
 	    const std::string& ip = theServerConfig().get<std::string>("IP");
 
 	    typename TRAITS::TransferWebServiceType handler_t;

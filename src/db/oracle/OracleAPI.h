@@ -238,7 +238,7 @@ public:
     
     virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message);    
     
-    virtual void updateJobTransferStatus(std::string job_id, const std::string status); 
+    virtual void updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status); 
     
     virtual void updateJObStatus(std::string jobId, const std::string status);    
     
