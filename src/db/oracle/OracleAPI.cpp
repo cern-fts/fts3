@@ -293,7 +293,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
    " t_job.job_finished is NULL AND "
    " t_job.job_id IN(";
     try {
-      	
+              	
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
             TransferJobs* temp = (TransferJobs*) * iter;
             	std::string job_id = std::string(temp->JOB_ID);
@@ -304,8 +304,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 	    jobAppender = jobAppender.substr(0, jobAppender.length()-1);
 	    select.append(jobAppender);
 	    select.append(")");
-		     
-            oracle::occi::Statement* s = conn->createStatement(select,"");
+	    		     
+            oracle::occi::Statement* s = conn->createStatement(select,"");	    
             oracle::occi::ResultSet* r = conn->createResultset(s);
 	    
             while (r->next()) {	        
@@ -1293,30 +1293,33 @@ void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
 
 void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message){
     job_id = "";
-    
-    const std::string tag = "updateFileTransferStatus";
-    std::string query = "UPDATE t_file SET file_state ='";
-		query.append(transfer_status);
-		query.append("', REASON='");
-		query.append(transfer_message);
-		query.append("'");
+    unsigned int index = 1;
+    std::string tag = "updateFileTransferStatus";
+    std::stringstream query;
+    query << "UPDATE t_file SET file_state=:" << 1 <<  ", REASON=:" << ++index;
 		if(transfer_status.compare("FINISHED") == 0){
-			query.append(", FINISH_TIME=:1");
+			query << ", FINISH_TIME=:" << ++index;
+			tag.append("xx");
 		}
-    		query.append(" WHERE file_id =");
-		query.append(file_id);
-		query.append(" and (file_state='READY' or file_state='ACTIVE')");	
+    		query << " WHERE file_id =:" << ++index;
+		query << " and (file_state='READY' or file_state='ACTIVE')";	
 
     try {
-        oracle::occi::Statement* s = conn->createStatement(query, "");
+        oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
+	index = 1; //reset index
+	s->setString(1, transfer_status); 
+	++index;
+	s->setString(index, transfer_message); 
 	if(transfer_status.compare("FINISHED") == 0){
 		time_t timed = time(NULL);
-		s->setTimestamp(1, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
+		++index;
+		s->setTimestamp(index, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
 		}
-	
+	++index;	
+	s->setInt(index, atoi(file_id.c_str()));	
         s->executeUpdate();
         conn->commit();	
-	conn->destroyStatement(s, "");
+	conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
