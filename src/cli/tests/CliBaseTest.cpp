@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_CASE (CliBase_Test1, CliBaseTester) {
 
 	// has to be const otherwise is deprecated
 	const char* av[] = {"prog_name", "-h", "-q", "-v", "-s", "http://hostname:1234/service", "-V"};
-	initCli(7, const_cast<char**>(av));
+	parse(7, const_cast<char**>(av));
 	// all 5 parameters should be available in vm variable
 	BOOST_CHECK(vm.count("help") && vm.count("quite") && vm.count("verbose") && vm.count("service") && vm.count("version"));
 	// the endpoint shouldn't be empty since it's starting with http
@@ -58,7 +58,7 @@ BOOST_FIXTURE_TEST_CASE (CliBase_Test2, CliBaseTester) {
 	const char* av[] = {"prog_name", "--help", "--quite", "--verbose", "--service", "hostname:1234/service", "--version"};
 
 	mute();
-	initCli(7, const_cast<char**>(av));
+	parse(7, const_cast<char**>(av));
 	unmute();
 
 	// all 5 parameters should be available in vm variable

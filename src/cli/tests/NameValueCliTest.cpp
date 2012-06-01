@@ -44,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE (NameValueCli_WrongFormat_Test, CfgCli) {
         bool wrong_format = false;
 
         try {
-        	initCli(2, const_cast<char**>(av));
+        	parse(2, const_cast<char**>(av));
         } catch (invalid_argument& e) {
         	wrong_format = true;
 		}
@@ -57,7 +57,7 @@ BOOST_FIXTURE_TEST_CASE (NameValueCli_Test, CfgCli) {
         // has to be const otherwise is deprecated
         const char* av[] = {"prog_name", "p1=1", "p2=2", "p3=3"};
 
-       	initCli(4, const_cast<char**>(av));
+       	parse(4, const_cast<char**>(av));
 
        	vector<string> &names = getNames(), &values = getValues();
 

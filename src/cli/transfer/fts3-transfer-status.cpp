@@ -17,14 +17,14 @@
  *	limitations under the License.
  */
 
-#include "gsoap_proxy.h"
-#include "SrvManager.h"
+#include "GSoapContextAdapter.h"
 #include "ui/TransferStatusCli.h"
 
 #include "common/JobStatusHandler.h"
 
 #include <vector>
 #include <string>
+#include <memory>
 
 using namespace std;
 using namespace fts3::cli;
@@ -35,67 +35,36 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[]) {
 
-	soap* soap = soap_new();
-	// get SrvManager instance
-	SrvManager* manager = SrvManager::getInstance();
-
 	try {
-		// create and the command line utility
-		TransferStatusCli cli;
-		cli.initCli(ac, av);
+		// create and initialize the command line utility
+		auto_ptr<TransferStatusCli> cli (
+				getCli<TransferStatusCli>(ac, av)
+			);
 
-		// if applicable print help or version and exit
-		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
-
-		// get the FTS3 service endpoint
-		string endpoint = cli.getService();
-
-		// check if its not empty
-		if (endpoint.empty()) {
-			cout << "The service has not been defined." << endl;
-			return 0;
-		}
+		// validate command line options, and return respective gsoap context
+		GSoapContextAdapter* ctx = cli->validate();
+		if (!ctx) return 0;
 
 		// get job IDs that have to be check
-		vector<string> jobIds = cli.getJobIds();
-		if (jobIds.empty()) {
-			cout << "No request ID specified." << endl;
-			return 0;
-		}
-
-		//service.soap_endpoint = "https://vtb-generic-32.cern.ch:8443/glite-data-transfer-fts/services/FileTransfer";
-		// set the endpoint
-
-		// initialize SOAP
-		if (!manager->initSoap(soap, endpoint)) return 0;
-
-		// initialize SrvManager
-		if (!manager->init(soap, endpoint.c_str())) return 0;
-
-		// if verbose print general info
-		if (cli.isVerbose()) {
-			cli.printGeneralInfo();
-		}
-
+		vector<string> jobIds = cli->getJobIds();
 		// iterate over job IDs
 		vector<string>::iterator it;
 		for (it = jobIds.begin(); it < jobIds.end(); it++) {
 
 			//string job = "1215375b-5407-11e1-9322-bc3d2ed9263b"
 			string jobId = *it;
-			int ret;
 
-			if (cli.isVerbose()) {
+			if (cli->isVerbose()) {
 
-				if (manager->isItVersion330()) {
+				if (ctx->isItVersion330()) {
 					// if version higher than 3.3.0 use getTransferJobSummary2
 
 					// do the request
 					impltns__getTransferJobSummary2Response resp;
-					ret = soap_call_impltns__getTransferJobSummary2(soap, endpoint.c_str(), 0, jobId, resp);
+					ctx->getTransferJobSummary2(jobId, resp);
 
 					// print the response
-					if (!ret && resp._getTransferJobSummary2Return) {
+					if (resp._getTransferJobSummary2Return) {
 
 						JobStatusHandler::printJobStatus(resp._getTransferJobSummary2Return->jobStatus);
 
@@ -117,10 +86,10 @@ int main(int ac, char* av[]) {
 
 					// do the request
 					impltns__getTransferJobSummaryResponse resp;
-					ret = soap_call_impltns__getTransferJobSummary(soap, endpoint.c_str(), 0, jobId, resp);
+					ctx->getTransferJobSummary(jobId, resp);
 
 					// print the response
-					if (!ret && resp._getTransferJobSummaryReturn) {
+					if (resp._getTransferJobSummaryReturn) {
 
 						JobStatusHandler::printJobStatus(resp._getTransferJobSummaryReturn->jobStatus);
 
@@ -141,23 +110,23 @@ int main(int ac, char* av[]) {
 
 				// do the request
 				impltns__getTransferJobStatusResponse resp;
-				ret = soap_call_impltns__getTransferJobStatus(soap, endpoint.c_str(), 0, jobId, resp);
+				ctx->getTransferJobStatus(jobId, resp);
 
 		    	// print the response
-		    	if (!ret && resp._getTransferJobStatusReturn) {
+		    	if (resp._getTransferJobStatusReturn) {
 		    		cout << *resp._getTransferJobStatusReturn->jobStatus << endl;
 		    	}
 			}
 
 			// TODO test!
 			// check if the -l option has been used
-			if (cli.list()) {
+			if (cli->list()) {
 
 				// do the request
 				impltns__getFileStatusResponse resp;
-				ret = soap_call_impltns__getFileStatus(soap, endpoint.c_str(), 0, jobId, 0, 100, resp);
+				ctx->getFileStatus(jobId, resp);
 
-				if (!ret && resp._getFileStatusReturn) {
+				if (resp._getFileStatusReturn) {
 
 					std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
 					std::vector<tns3__FileTransferStatus * >::iterator it;
@@ -175,25 +144,18 @@ int main(int ac, char* av[]) {
 					}
 				}
 			}
-
-			// print the error message if applicable
-	    	if (ret) {
-	    		cout << "getTransferJobStatus: ";
-	    		manager->printSoapErr(soap);
-	    	}
 		}
-    }
-    catch(std::exception& e) {
+
+    } catch(std::exception& e) {
         cerr << "error: " << e.what() << "\n";
         return 1;
-        
+    } catch(string& ex) {
+    	cout << ex << endl;
+    	return 1;
     } catch(...) {
         cerr << "Exception of unknown type!\n";
+        return 1;
     }
-
-	soap_destroy(soap);
-	soap_end(soap);
-	soap_free(soap);
 
 	return 0;
 }

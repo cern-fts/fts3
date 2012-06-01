@@ -23,7 +23,6 @@
  */
 
 #include "ListTransferCli.h"
-#include "SrvManager.h"
 #include "common/JobStatusHandler.h"
 
 using namespace fts3::cli;
@@ -43,6 +42,17 @@ ListTransferCli::ListTransferCli(): VoNameCli(false) {
 ListTransferCli::~ListTransferCli() {
 }
 
+GSoapContextAdapter* ListTransferCli::validate() {
+
+	// do the standard validation
+	if (!CliBase::validate()) return 0;
+
+	// checks if requested features are supported
+	if(!checkIfFeaturesSupported()) return 0;
+
+	return ctx;
+}
+
 string ListTransferCli::getUsageString(string tool) {
 
 	return "Usage: " + tool + " [options] [STATE...]";
@@ -50,26 +60,24 @@ string ListTransferCli::getUsageString(string tool) {
 
 bool ListTransferCli::checkIfFeaturesSupported() {
 
-	SrvManager* manager = SrvManager::getInstance();
-
-	if (CliBase::vm.count("userdn") && !manager->isUserVoRestrictListingSupported()) {
+	if (CliBase::vm.count("userdn") && !ctx->isUserVoRestrictListingSupported()) {
 		cout << "The server you are contacting does not support the -u option (it is running interface version ";
-		cout << manager->getInterface() << ")." << endl;
+		cout << ctx->getInterface() << ")." << endl;
 		return false;
 	}
 
-    if (CliBase::vm.count("voname") && !manager->isUserVoRestrictListingSupported()) {
+    if (CliBase::vm.count("voname") && !ctx->isUserVoRestrictListingSupported()) {
         cout << "The server you are contacting does not support the -o option (it is running interface version ";
-        cout << manager->getInterface() << ")." << endl;
+        cout << ctx->getInterface() << ")." << endl;
         return false;
     }
 
    return true;
 }
 
-impltns__ArrayOf_USCOREsoapenc_USCOREstring* ListTransferCli::getStatusArray(soap* soap) {
+impltns__ArrayOf_USCOREsoapenc_USCOREstring* ListTransferCli::getStatusArray() {
 
-	impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
+	impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(*ctx, -1);
 
 	if (CliBase::vm.count("state")) {
 		array->item = CliBase::vm["state"].as<vector<string> >();
@@ -79,7 +87,7 @@ impltns__ArrayOf_USCOREsoapenc_USCOREstring* ListTransferCli::getStatusArray(soa
 		array->item.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
 		array->item.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
 
-		if (SrvManager::getInstance()->isUserVoRestrictListingSupported()) {
+		if (ctx->isUserVoRestrictListingSupported()) {
 			array->item.push_back(JobStatusHandler::FTS3_STATUS_READY);
 		}
 	}

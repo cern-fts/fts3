@@ -23,7 +23,6 @@
  */
 
 #include "CliBase.h"
-#include  "SrvManager.h"
 
 #include <iostream>
 
@@ -36,16 +35,14 @@ using namespace boost;
 using namespace fts3::cli;
 
 
-CliBase::CliBase() : visible("Allowed options") {
-
-	cout_sbuf = 0;
+CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0) {
 
 	// initialize variables needed for FTS3 service discovery
-	FTS3_CA_SD_TYPE = "org.glite.ChannelAgent";
-	FTS3_SD_ENV = "GLITE_SD_FTS_TYPE";
-	FTS3_SD_TYPE = "org.glite.FileTransfer";
-	FTS3_IFC_VERSION = "GLITE_FTS_IFC_VERSION";
-	FTS3_INTERFACE_VERSION = "3.7.0"; // TODO where it comes from?
+//	FTS3_CA_SD_TYPE = "org.glite.ChannelAgent";
+//	FTS3_SD_ENV = "GLITE_SD_FTS_TYPE";
+//	FTS3_SD_TYPE = "org.glite.FileTransfer";
+//	FTS3_IFC_VERSION = "GLITE_FTS_IFC_VERSION";
+//	FTS3_INTERFACE_VERSION = "3.7.0"; // TODO where it comes from?
 
 	// add basic command line options
     basic.add_options()
@@ -58,14 +55,14 @@ CliBase::CliBase() : visible("Allowed options") {
 }
 
 CliBase::~CliBase() {
-
+	if (ctx) {
+		delete ctx;
+	}
 }
 
-string CliBase::getUsageString(string tool) {
-	return "Usage: " + tool + " [options]";
-}
+void CliBase::parse(int ac, char* av[]) {
 
-void CliBase::initCli(int ac, char* av[]) {
+	toolname = av[0];
 
 	// add specific and hidden parameters to all parameters
 	all.add(basic).add(specific).add(hidden);
@@ -97,6 +94,33 @@ void CliBase::initCli(int ac, char* av[]) {
 	}
 }
 
+GSoapContextAdapter* CliBase::validate() {
+
+	// if applicable print help or version and exit, nothing else needs to be done
+	if (printHelp(toolname) || printVersion()) return 0;
+
+	// if endpoint could not be determined, we cannot do anything
+	if (endpoint.empty()) {
+		cout << "Failed to determine the endpoint" << endl;
+		throw string("Failed to determine the endpoint");
+	}
+
+	// create and initialize gsoap context
+	ctx = new GSoapContextAdapter(endpoint);
+	ctx->init();
+
+	// if verbose print general info
+	if (isVerbose()) {
+		ctx->printInfo();
+	}
+
+	return ctx;
+}
+
+string CliBase::getUsageString(string tool) {
+	return "Usage: " + tool + " [options]";
+}
+
 bool CliBase::printHelp(string tool) {
 
 	// check whether the -h option was used
@@ -126,21 +150,6 @@ bool CliBase::printVersion() {
     }
 
     return false;
-}
-
-void CliBase::printGeneralInfo() {
-
-	// get the instance of SrvManger
-	SrvManager* manager = SrvManager::getInstance();
-
-	// print the info
-	cout << "# Using endpoint: " << getService() << endl;
-	cout << "# Service version: " << manager->getVersion() << endl;
-	cout << "# Interface version: " << manager->getInterface() << endl;
-	cout << "# Schema version: " << manager->getSchema() << endl;
-	cout << "# Service features: " << manager->getMetadata() << endl;
-	cout << "# Client version: TODO" << endl;
-	cout << "# Client interface version: TODO" << endl;
 }
 
 bool CliBase::isVerbose() {

@@ -16,47 +16,73 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * fts3-config-get.cpp
+ * fts3-transfer-list.cpp
  *
- *  Created on: Apr 3, 2012
- *      Author: Michał Simon
+ *  Created on: Mar 1, 2012
+ *      Author: Michal Simon
  */
 
 
 #include "GSoapContextAdapter.h"
-#include "ui/CliBase.h"
+#include "ui/ListTransferCli.h"
 
-#include <string>
-#include <vector>
-#include <iostream>
+#include "common/JobStatusHandler.h"
+
 #include <memory>
 
 using namespace std;
 using namespace fts3::cli;
+using namespace fts3::common;
+
 
 /**
- * This is the entry point for the fts3-config-set command line tool.
+ * This is the entry point for the fts3-transfer-list command line tool.
  */
 int main(int ac, char* av[]) {
 
 	try {
 		// create and initialize the command line utility
-		auto_ptr<CliBase> cli (
-				getCli<CliBase>(ac, av)
+		auto_ptr<ListTransferCli> cli (
+				getCli<ListTransferCli>(ac, av)
 			);
 
 		// validate command line options, and return respective gsoap context
 		GSoapContextAdapter* ctx = cli->validate();
 		if (!ctx) return 0;
 
-		implcfg__getConfigurationResponse resp;
-		ctx->getConfiguration(resp);
+		if (!cli->checkIfFeaturesSupported()) {
+			return 0;
+		}
 
-		vector<string> &cfgs = resp.configuration->cfg;
-		vector<string>::iterator it;
+		impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = cli->getStatusArray();
+		int err;
 
-		for (it = cfgs.begin(); it < cfgs.end(); it++) {
-			cout << *it << endl;
+		vector<tns3__JobStatus * > statuses;
+
+		if (ctx->isUserVoRestrictListingSupported()) {
+
+			impltns__listRequests2Response resp;
+			ctx->listRequests2(array, cli->getUserDn(), cli->getVoName(), resp);
+
+			statuses = resp._listRequests2Return->item;
+
+		} else {
+
+			impltns__listRequestsResponse resp;
+			ctx->listRequests(array, resp);
+
+			statuses = resp._listRequestsReturn->item;
+		}
+
+		vector<tns3__JobStatus * >::iterator it;
+		for (it = statuses.begin(); it < statuses.end(); it++) {
+			if (cli->isVerbose()) {
+
+				JobStatusHandler::printJobStatus(*it);
+
+			} else {
+				cout << *(*it)->jobID << "\t" << *(*it)->jobStatus << endl;
+			}
 		}
 
     } catch(std::exception& e) {

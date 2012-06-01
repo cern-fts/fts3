@@ -37,7 +37,7 @@ BOOST_FIXTURE_TEST_CASE (JobIDCli_Test1, JobIdCli) {
 
 	// has to be const otherwise is deprecated
 	const char* av[] = {"prog_name", "ID1", "ID2", "ID3"};
-	initCli(4, const_cast<char**>(av));
+	parse(4, const_cast<char**>(av));
 	// there should be a possitional parameter
 	BOOST_CHECK(vm.count("jobid"));
 

@@ -26,18 +26,6 @@
 
 using namespace fts3::cli;
 
-/*VONameCli::VONameCli() {
-
-	// add hidden options (not printed in help)
-	hidden.add_options()
-			("voname,o", value<string>(), "Specify VO name.")
-			;
-
-	// the positional parameter goes to voname
-	p.add("voname", 1);
-
-}*/
-
 VoNameCli::VoNameCli(bool pos) {
 
 	if (pos) {
@@ -58,6 +46,18 @@ VoNameCli::VoNameCli(bool pos) {
 }
 
 VoNameCli::~VoNameCli() {
+}
+
+GSoapContextAdapter* VoNameCli::validate() {
+
+	if (!CliBase::validate()) return 0;
+
+	if (getVoName().empty()) {
+		cout << "The VO name has to be specified" << endl;
+		return 0;
+	}
+
+	return ctx;
 }
 
 string VoNameCli::getUsageString(string tool) {

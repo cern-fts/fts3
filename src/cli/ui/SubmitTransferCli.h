@@ -116,7 +116,20 @@ public:
 	 *
 	 * @see CliBase::initCli(int, char*)
 	 */
-	virtual void initCli(int ac, char* av[]);
+	virtual void parse(int ac, char* av[]);
+
+	/**
+	 * Validates command line options
+	 * 1. Checks the endpoint
+	 * 2. If -h or -V option were used respective informations are printed
+	 * 3. GSoapContexAdapter is created, and info about server requested
+	 * 4. Additional check regarding server are performed
+	 * 5. If verbal additional info is printed
+	 *
+	 * @return GSoapContexAdapter instance, or null if all activities
+	 * 				requested using program options have been done.
+	 */
+	virtual GSoapContextAdapter* validate();
 
 	/**
 	 * Creates job elements.
@@ -177,11 +190,9 @@ public:
 	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
 	 * be used (in particular 'soap_unlink'!)
 	 *
-	 * @param soap - soap object corresponding to FTS3 service
-	 *
 	 * @return tns3__TransferParams object containing name-value pairs
 	 */
-	tns3__TransferParams* getParams(soap* soap);
+	tns3__TransferParams* getParams();
 
 	/**
 	 * Gets a vector containing 'tns3__TransferJobElement' objects.
@@ -191,13 +202,11 @@ public:
 	 * be garbage collected. If there is a need to delete it manually gsoap dedicated functions should
 	 * be used (in particular 'soap_unlink'!)
 	 *
-	 * @param soap - soap object corresponding to FTS3 service
-	 *
 	 * @return vector of 'tns3__TransferJobElement' objects
 	 *
 	 * @see SubmitTransferCli::createJobElements()
 	 */
-	vector<tns3__TransferJobElement * > getJobElements(soap* soap);
+	vector<tns3__TransferJobElement * > getJobElements();
 
 	/**
 	 * Gets a vector containing 'tns3__TransferJobElement2' objects.
@@ -207,13 +216,11 @@ public:
 	 * be garbage collected. If there is a need to delete it manually gsoap dedicated functions should
 	 * be used (in particular 'soap_unlink'!)
 	 *
-	 * @param soap - soap object corresponding to FTS3 service
-	 *
 	 * @return vector of 'tns3__TransferJobElement2' objects
 	 *
 	 * @see SubmitTransferCli::createJobElements()
 	 */
-	vector<tns3__TransferJobElement2 * > getJobElements2(soap* soap);
+	vector<tns3__TransferJobElement2 * > getJobElements2();
 
 	/**
 	 * Gets the value of delegation flag.

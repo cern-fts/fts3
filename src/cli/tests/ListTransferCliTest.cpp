@@ -39,7 +39,7 @@ BOOST_FIXTURE_TEST_CASE (ListTransferCli_VO_Test1, ListTransferCli) {
 
         // has to be const otherwise is deprecated
         const char* av[] = {"prog_name", "-o", "vo"};
-        initCli(4, const_cast<char**>(av));
+        parse(4, const_cast<char**>(av));
 
         BOOST_CHECK(getVOName().compare("vo") == 0);
 }
@@ -48,7 +48,7 @@ BOOST_FIXTURE_TEST_CASE (ListTransferCli_VO_Test2, ListTransferCli) {
 
         // has to be const otherwise is deprecated
         const char* av[] = {"prog_name", "--voname", "vo"};
-        initCli(4, const_cast<char**>(av));
+        parse(4, const_cast<char**>(av));
 
         BOOST_CHECK(getVOName().compare("vo") == 0);
 }
@@ -57,7 +57,7 @@ BOOST_FIXTURE_TEST_CASE (ListTransferCli_Status_Test, ListTransferCli) {
 
 	// has to be const otherwise is deprecated
 	const char* av[] = {"prog_name", "status1", "status2", "status3", "status4", "status5", "status6"};
-	initCli(7, const_cast<char**>(av));
+	parse(7, const_cast<char**>(av));
 
 	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	impl__ArrayOf_USCOREsoapenc_USCOREstring* arr = getStatusArray(&service);

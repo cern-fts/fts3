@@ -33,7 +33,7 @@ using namespace fts3::cli;
 BOOST_FIXTURE_TEST_CASE (DnCli_Test1, DnCli) {
 	// has to be const otherwise is deprecated
 	const char* av[] = {"prog_name", "-u", "userdn"};
-	initCli(3, const_cast<char**>(av));
+	parse(3, const_cast<char**>(av));
 	// all 5 parameters should be available in vm variable
 	BOOST_CHECK(vm.count("userdn"));
 	// the endpoint shouldn't be empty since it's starting with http
@@ -43,7 +43,7 @@ BOOST_FIXTURE_TEST_CASE (DnCli_Test1, DnCli) {
 BOOST_FIXTURE_TEST_CASE (DnCli_Test2, DnCli) {
 	// has to be const otherwise is deprecated
 	const char* av[] = {"prog_name", "--userdn", "userdn"};
-	initCli(3, const_cast<char**>(av));
+	parse(3, const_cast<char**>(av));
 	// all 5 parameters should be available in vm variable
 	BOOST_CHECK(vm.count("userdn"));
 	// the endpoint shouldn't be empty since it's starting with http

@@ -60,6 +60,20 @@ public:
 	virtual ~TransferStatusCli();
 
 	/**
+	 * Validates command line options
+	 * 1. Checks the endpoint
+	 * 2. If -h or -V option were used respective informations are printed
+	 * 3. GSoapContexAdapter is created, and info about server requested
+	 * 4. Additional check regarding server are performed
+	 * 5. If verbal additional info is printed
+	 *
+	 * @return GSoapContexAdapter instance, or null if all activities
+	 * 				requested using program options have been done.
+	 */
+	virtual GSoapContextAdapter* validate();
+
+
+	/**
 	 * Check if the list mode is on.
 	 *
 	 * @return true if the -l option has been used

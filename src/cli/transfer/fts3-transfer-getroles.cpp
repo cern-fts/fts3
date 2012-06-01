@@ -22,11 +22,11 @@
  *      Author: Michal Simon
  */
 
-#include "gsoap_proxy.h"
-#include "SrvManager.h"
+#include "GSoapContextAdapter.h"
 #include "ui/DnCli.h"
 
 #include <exception>
+#include <memory>
 
 using namespace std;
 using namespace fts3::cli;
@@ -37,49 +37,20 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[]) {
 
-	soap* soap = soap_new();
-	// get SrvManager instance
-	SrvManager* manager = SrvManager::getInstance();
-
 	try {
 		// create and initialize the command line utility
-    	DnCli cli;
-    	cli.initCli(ac, av);
+		auto_ptr<DnCli> cli (
+				getCli<DnCli>(ac, av)
+			);
 
-    	// if applicable print help or version and exit
-		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
+		// validate command line options, and return respective gsoap context
+		GSoapContextAdapter* ctx = cli->validate();
+		if (!ctx) return 0;
 
-		// get the source file, the destination file and the FTS3 service endpoint
-    	string endpoint = cli.getService();
-
-		// set the  endpoint
-		if (endpoint.size() == 0) {
-			cout << "Failed to determine the endpoint" << endl;
-			return 0;
-		}
-
-		// initialize SOAP
-		if (!manager->initSoap(soap, endpoint)) return 0;
-
-		// initialize SrvManager
-		if (!manager->init(soap, endpoint.c_str())) return 0;
-
-		// if verbose print general info
-		if (cli.isVerbose()) {
-			cli.printGeneralInfo();
-		}
-
-		string dn = cli.getUserDn();
-		int err;
+		string dn = cli->getUserDn();
 		if (dn.empty()) {
 			impltns__getRolesResponse resp;
-			err = soap_call_impltns__getRoles(soap, endpoint.c_str(), 0, resp);
-
-			if (err || !resp.getRolesReturn) {
-				cout << "Failed to get roles: getRoles. ";
-				manager->printSoapErr(soap);
-				return 0;
-			}
+			ctx->getRoles(resp);
 
 			tns3__Roles* roles = resp.getRolesReturn;
 
@@ -111,13 +82,7 @@ int main(int ac, char* av[]) {
 
 		} else {
 			impltns__getRolesOfResponse resp;
-			err = soap_call_impltns__getRolesOf(soap, endpoint.c_str(), 0, dn, resp);
-
-			if (err || !resp._getRolesOfReturn) {
-				cout << "Failed to get roles: getRolesOf. ";
-				manager->printSoapErr(soap);
-				return 0;
-			}
+			ctx->getRolesOf(dn, resp);
 
 			tns3__Roles* roles = resp._getRolesOfReturn;
 
@@ -147,18 +112,16 @@ int main(int ac, char* av[]) {
 	            cout << "The user is VO manager for VO <" << *(*it)->string1 << ">" << endl;
 	        }
 		}
-	}
-	catch(std::exception& e) {
-		cerr << "error: " << e.what() << "\n";
-		return 1;
-	}
-	catch(...) {
-		cerr << "Exception of unknown type!\n";
-	}
-
-	soap_destroy(soap);
-	soap_end(soap);
-	soap_free(soap);
+    } catch(std::exception& e) {
+        cerr << "error: " << e.what() << "\n";
+        return 1;
+    } catch(string& ex) {
+    	cout << ex << endl;
+    	return 1;
+    } catch(...) {
+        cerr << "Exception of unknown type!\n";
+        return 1;
+    }
 
 	return 0;
 }

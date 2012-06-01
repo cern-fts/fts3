@@ -22,14 +22,14 @@
  *      Author: Michał Simon
  */
 
-#include "gsoap_proxy.h"
-#include "SrvManager.h"
+#include "GSoapContextAdapter.h"
 #include "ui/JobIdCli.h"
 
 #include <exception>
 #include <iostream>
 #include <vector>
 #include <string>
+#include <memory>
 
 using namespace std;
 using namespace fts3::cli;
@@ -39,42 +39,18 @@ using namespace fts3::cli;
  */
 int main(int ac, char* av[]) {
 
-	// create FTS3 service client
-	soap* soap = soap_new();
-	// get SrvManager instance
-	SrvManager* manager = SrvManager::getInstance();
-
 	try {
 		// create and initialize the command line utility
-    	JobIdCli cli;
-    	cli.initCli(ac, av);
+		auto_ptr<JobIdCli> cli (
+				getCli<JobIdCli>(ac, av)
+			);
 
-    	// if applicable print help or version and exit
-		if (cli.printHelp(av[0]) || cli.printVersion()) return 0;
+		// validate command line options, and return respective gsoap context
+		GSoapContextAdapter* ctx = cli->validate();
 
-		// get the FTS3 service endpoint
-    	string endpoint = cli.getService();
-
-		// set the  endpoint
-		if (endpoint.size() == 0) {
-			cout << "Failed to determine the endpoint" << endl;
-			return 0;
-		}
-
-		// initialize SOAP
-		if (!manager->initSoap(soap, endpoint)) return 0;
-
-		// initialize SrvManager
-		if (!manager->init(soap, endpoint.c_str())) return 0;
-
-		// if verbose print general info
-		if (cli.isVerbose()) {
-			cli.printGeneralInfo();
-		}
-
-		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
+		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(*ctx, -1);
 		vector<string> &jobs = rqst->item;
-		jobs = cli.getJobIds();
+		jobs = cli->getJobIds();
 
 		if (jobs.empty()) {
 			cout << "No request ID has been specified" << endl;
@@ -82,13 +58,7 @@ int main(int ac, char* av[]) {
 		}
 
 		impltns__cancelResponse resp;
-		int err =  soap_call_impltns__cancel(soap, endpoint.c_str(), 0, rqst, resp);
-
-		if (err) {
-			cout << "Failed to cancel transfer: cancel. ";
-			manager->printSoapErr(soap);
-			return 0;
-		}
+		ctx->cancel(rqst, resp);
 
 		vector<string>::iterator it;
 
@@ -96,17 +66,16 @@ int main(int ac, char* av[]) {
 	        cout << "Canceled " << *it << endl;;
 	    }
 
-	} catch(std::exception& e) {
-		cerr << "error: " << e.what() << "\n";
-		return 1;
-	}
-	catch(...) {
-		cerr << "Exception of unknown type!\n";
-	}
-
-	soap_destroy(soap);
-	soap_end(soap);
-	soap_free(soap);
+    } catch(std::exception& e) {
+        cerr << "error: " << e.what() << "\n";
+        return 1;
+    } catch(string& ex) {
+    	cout << ex << endl;
+    	return 1;
+    } catch(...) {
+        cerr << "Exception of unknown type!\n";
+        return 1;
+    }
 
 	return 0;
 }

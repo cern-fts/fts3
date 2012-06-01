@@ -36,7 +36,7 @@ BOOST_FIXTURE_TEST_CASE (VONameCli_Test, VoNameCli) {
 
         // has to be const otherwise is deprecated
         const char* av[] = {"prog_name", "voname"};
-        initCli(2, const_cast<char**>(av));
+        parse(2, const_cast<char**>(av));
 
         BOOST_CHECK(getVoName().compare("voname") == 0);
 }

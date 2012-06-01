@@ -25,6 +25,8 @@
 #ifndef CLIBASE_H_
 #define CLIBASE_H_
 
+#include "GSoapContextAdapter.h"
+
 #include <boost/program_options.hpp>
 #include <fstream>
 
@@ -73,7 +75,20 @@ public:
 	 * @param ac - argument count
 	 * @param av - argument array
 	 */
-	virtual void initCli(int ac, char* av[]);
+	virtual void parse(int ac, char* av[]);
+
+	/**
+	 * Validates command line options
+	 * 1. Checks the endpoint
+	 * 2. If -h or -V option were used respective informations are printed
+	 * 3. GSoapContexAdapter is created, and info about server requested
+	 * 4. Additional check regarding server are performed
+	 * 5. If verbal additional info is printed
+	 *
+	 * @return GSoapContexAdapter instance, or null if all activities
+	 * 				requested using program options have been done.
+	 */
+	virtual GSoapContextAdapter* validate();
 
 	/**
 	 * Prints help message if the -h option has been used.
@@ -90,13 +105,6 @@ public:
 	 * @return true if the version has been printed
 	 */
 	bool printVersion();
-
-	/**
-	 * TODO should be moved to SrvManager !!!
-	 * Prints general information about the FTS3 service.
-	 * Should be used if the -v option has been used.
-	 */
-	void printGeneralInfo();
 
 	/**
 	 * Checks whether the -v option was used.
@@ -191,6 +199,16 @@ protected:
 	 */
 	string endpoint;
 
+	/**
+	 * the name of the utility
+	 */
+	string toolname;
+
+	/**
+	 * gsoap context
+	 */
+	GSoapContextAdapter* ctx;
+
 private:
 
 	///@{
@@ -215,6 +233,20 @@ private:
 	 */
 	ofstream fout;
 };
+
+/**
+ * Factory method for fts3 CLIs
+ * 	The object has to be created in two steps:
+ * 	1. creating program options (base + tool specific)
+ * 	2. parsing parameters accordingly to the options created in step 1.
+ */
+template<typename CLI>
+CLI* getCli(int ac, char* av[]) {
+
+	CliBase* ret = new CLI; // done to ensure it's used only with classes derived from CliBase
+	ret->parse(ac, av);
+	return dynamic_cast<CLI*>(ret);
+}
 
 }
 }

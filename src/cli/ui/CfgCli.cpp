@@ -45,6 +45,18 @@ CfgCli::CfgCli() {
 CfgCli::~CfgCli() {
 }
 
+GSoapContextAdapter* CfgCli::validate() {
+
+	if (!CliBase::validate()) return 0;
+
+	if (getConfigurations().empty()) {
+		cout << "No parameters have been specified." << endl;
+		return 0;
+	}
+
+	return ctx;
+}
+
 string CfgCli::getUsageString(string tool) {
 	return "Usage: " + tool + " [options] NAME=VALUE [NAME=VALUE...]";
 }

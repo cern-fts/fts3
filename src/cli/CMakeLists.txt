@@ -66,7 +66,7 @@ set(fts3_cli_common_sources
     ui/JobIdCli.cpp
     ui/VoNameCli.cpp
     ui/CfgCli.cpp
-    SrvManager.cpp
+    GSoapContextAdapter.cpp
 )
 
 add_library(fts3_cli_common SHARED ${fts3_cli_common_sources})
@@ -76,7 +76,7 @@ add_dependencies(fts3_cli_common ${fts3_cli_libs})
 # ------------------------------------------------------------------------
 # fts3-transfer-submit
 add_executable(fts3-transfer-submit
-    tools/fts3-transfer-submit.cpp
+    transfer/fts3-transfer-submit.cpp
     ui/SubmitTransferCli.cpp
 )
 add_dependencies(fts3-transfer-submit fts3_cli_common)
@@ -86,7 +86,7 @@ target_link_libraries (fts3-transfer-submit fts3_cli_common)
 # fts3-transfer-status
 
 add_executable(fts3-transfer-status
-    tools/fts3-transfer-status.cpp
+    transfer/fts3-transfer-status.cpp
     ui/TransferStatusCli.cpp 
 )
 add_dependencies(fts3-transfer-status fts3_cli_common)
@@ -96,7 +96,7 @@ target_link_libraries (fts3-transfer-status fts3_cli_common)
 # fts3-transfer-list
 
 add_executable(fts3-transfer-list
-    tools/fts3-transfer-list.cpp
+    transfer/fts3-transfer-list.cpp
     ui/ListTransferCli.cpp 
 )
 add_dependencies(fts3-transfer-list fts3_cli_common)
@@ -106,7 +106,7 @@ target_link_libraries (fts3-transfer-list fts3_cli_common)
 # fts3-transfer-cancel
 
 add_executable(fts3-transfer-cancel
-    tools/fts3-transfer-cancel.cpp
+    transfer/fts3-transfer-cancel.cpp
 )
 add_dependencies(fts3-transfer-cancel fts3_cli_common)
 target_link_libraries (fts3-transfer-cancel fts3_cli_common)
@@ -115,7 +115,7 @@ target_link_libraries (fts3-transfer-cancel fts3_cli_common)
 # fts3-transfer-getroles
 
 add_executable(fts3-transfer-getroles 
-    tools/fts3-transfer-getroles.cpp
+    transfer/fts3-transfer-getroles.cpp
 )
 add_dependencies(fts3-transfer-getroles fts3_cli_common)
 target_link_libraries (fts3-transfer-getroles fts3_cli_common)
@@ -123,13 +123,13 @@ target_link_libraries (fts3-transfer-getroles fts3_cli_common)
 # ------------------------------------------------------------------------
 # fts3-transfer-listvomanagers
 add_executable(fts3-transfer-listvomanagers
-    tools/fts3-transfer-listvomanagers.cpp
+    transfer/fts3-transfer-listvomanagers.cpp
 )
 add_dependencies(fts3-transfer-listvomanagers fts3_cli_common)
 target_link_libraries (fts3-transfer-listvomanagers fts3_cli_common)
 
 # ------------------------------------------------------------------------
-# FTS3 config tools - common structures
+# FTS3 config transfer - common structures
 
 # ------------------------------------------------------------------------
 # fts3-config-set command

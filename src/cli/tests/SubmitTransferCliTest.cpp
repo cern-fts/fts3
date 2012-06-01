@@ -64,7 +64,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_File, SubmitTransferCli) {
 			"-f", "/tmp/bulk"
 	};
 
-	initCli(3, const_cast<char**>(av));
+	parse(3, const_cast<char**>(av));
 
 	BOOST_CHECK(createJobElements());
 	BOOST_CHECK(useCheckSum());
@@ -92,7 +92,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_OtherOptions, SubmitTransferCli)
 			"-e", "1234"
 	};
 
-	initCli(8, const_cast<char**>(av));
+	parse(8, const_cast<char**>(av));
 
 	BOOST_CHECK(isBlocking());
 	BOOST_CHECK(vm["interval"].as<int>() == 23);
@@ -113,7 +113,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_JobElements, SubmitTransferCli) 
 			"destination"
 	};
 
-	initCli(3, const_cast<char**>(av));
+	parse(3, const_cast<char**>(av));
 
 	BOOST_CHECK(getSource().compare("source") == 0);
 	BOOST_CHECK(getDestination().compare("destination") == 0);
@@ -138,7 +138,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Test_JobElements2, SubmitTransferCli)
 			"ALGORITHM:1234af"
 	};
 
-	initCli(4, const_cast<char**>(av));
+	parse(4, const_cast<char**>(av));
 
 	BOOST_CHECK(getSource().compare("source") == 0);
 	BOOST_CHECK(getDestination().compare("destination") == 0);
@@ -171,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli) {
 			"--copy-pin-lifetime", "123"
 	};
 
-	initCli(17, const_cast<char**>(av));
+	parse(17, const_cast<char**>(av));
 
 	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
 	tns3__TransferParams* params = getParams(&service);

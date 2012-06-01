@@ -36,7 +36,7 @@ BOOST_FIXTURE_TEST_CASE (TransferStatusCli_Test, TransferStatusCli) {
 			"-l"
 	};
 
-	initCli(2, const_cast<char**>(av));
+	parse(2, const_cast<char**>(av));
 
 	BOOST_CHECK(list());
 }

@@ -25,7 +25,6 @@
  */
 
 #include "SubmitTransferCli.h"
-#include "SrvManager.h"
 #include "common/JobParameterHandler.h"
 
 #include <iostream>
@@ -83,15 +82,29 @@ SubmitTransferCli::~SubmitTransferCli() {
 
 }
 
-void SubmitTransferCli::initCli(int ac, char* av[]) {
+void SubmitTransferCli::parse(int ac, char* av[]) {
 
 	// do the basic initialization
-	CliBase::initCli(ac, av);
+	CliBase::parse(ac, av);
 
 	// check whether to use delegation
 	if (vm.count("id")) {
 		delegate = true;
 	}
+}
+
+GSoapContextAdapter* SubmitTransferCli::validate() {
+
+	// do the standard validation
+	if (!CliBase::validate()) return 0;
+
+	// perform standard checks in order to determine if the job was well specified
+	if(!performChecks()) return 0;
+
+	// prepare job elements
+	if (!createJobElements()) return 0;
+
+	return ctx;
 }
 
 string SubmitTransferCli::getSource() {
@@ -140,7 +153,7 @@ bool SubmitTransferCli::createJobElements() {
     		// iterate over the tokens (we are interested in up to 3 tokens)
     		for(it = tokens.begin(); it != tokens.end() && count < 3; it++) {
     			string s = *it;
-    			trim(s);
+    			boost::trim(s);
     			if (!s.empty()) {
     				// if the token is not empty after trimming,
     				// it is the element we are interested in
@@ -205,7 +218,7 @@ bool SubmitTransferCli::createJobElements() {
     return true;
 }
 
-vector<tns3__TransferJobElement * > SubmitTransferCli::getJobElements(soap* soap) {
+vector<tns3__TransferJobElement * > SubmitTransferCli::getJobElements() {
 
 	vector<tns3__TransferJobElement * > jobElements;
 
@@ -216,9 +229,9 @@ vector<tns3__TransferJobElement * > SubmitTransferCli::getJobElements(soap* soap
 	for (it = tasks.begin(); it < tasks.end(); it++) {
 
 		// create the job element, and set the source and destination values
-		element = soap_new_tns3__TransferJobElement(soap, -1);
-		element->source = soap_new_std__string(soap, -1);
-		element->dest = soap_new_std__string(soap, -1);
+		element = soap_new_tns3__TransferJobElement(*ctx, -1);
+		element->source = soap_new_std__string(*ctx, -1);
+		element->dest = soap_new_std__string(*ctx, -1);
 		*element->source = it->src;
 		*element->dest = it->dest;
 		// push the element into the result vector
@@ -228,9 +241,9 @@ vector<tns3__TransferJobElement * > SubmitTransferCli::getJobElements(soap* soap
 	return jobElements;
 }
 
-vector<tns3__TransferJobElement2 * > SubmitTransferCli::getJobElements2(soap* soap) {
+vector<tns3__TransferJobElement2 * > SubmitTransferCli::getJobElements2() {
 
-	vector<tns3__TransferJobElement2 * > jobElements;
+	vector<tns3__TransferJobElement2*> jobElements;
 
 	tns3__TransferJobElement2* element;
 	vector<JobElement>::iterator it;
@@ -239,10 +252,10 @@ vector<tns3__TransferJobElement2 * > SubmitTransferCli::getJobElements2(soap* so
 	for (it = tasks.begin(); it < tasks.end(); it++) {
 
 		// create the job element, and set the source, destination and checksum values
-		element = soap_new_tns3__TransferJobElement2(soap, -1);
-		element->source = soap_new_std__string(soap, -1);
-		element->dest = soap_new_std__string(soap, -1);
-		element->checksum = soap_new_std__string(soap, -1);
+		element = soap_new_tns3__TransferJobElement2(*ctx, -1);
+		element->source = soap_new_std__string(*ctx, -1);
+		element->dest = soap_new_std__string(*ctx, -1);
+		element->checksum = soap_new_std__string(*ctx, -1);
 
 		*element->source = it->src;
 		*element->dest = it->dest;
@@ -257,10 +270,8 @@ vector<tns3__TransferJobElement2 * > SubmitTransferCli::getJobElements2(soap* so
 
 bool SubmitTransferCli::performChecks() {
 
-	SrvManager* manager = SrvManager::getInstance();
-
     // check if the server supports delegation
-	if (manager->isDelegationSupported()) {
+	if (ctx->isDelegationSupported()) {
 		// if the user did not specify a password use delegation
 		if (!vm.count("password")) {
 	        cout << "Server supports delegation. Delegation will be used by default." << endl;
@@ -289,28 +300,26 @@ bool SubmitTransferCli::performChecks() {
 	}
 
 	// if the checksum algorithm is given the server has to be support checksum
-	if (checksum && !manager->isChecksumSupported()) {
+	if (checksum && !ctx->isChecksumSupported()) {
 		cout << "You have specified an optional checksum, but it is not supported by the server." << endl;
 		return false;
 	}
 
     // if the checksum is used it has to be supported by the server
-    if (vm.count("compare-checksum") && !manager->isChecksumSupported()) {
-        cout <<"The server you are contacting does not support checksum checking (it is running interface version ";
-        cout << /*srv_iface_ve <<*/ "). Please omit checksums for this server." << endl;
-        return false;
+    if (vm.count("compare-checksum") && !ctx->isChecksumSupported()) {
+    	cout << "The server you are contacting does not support checksum checking (it is running interface version ...). Please omit checksums for this server." << endl;
+		return false;
     }
 
     // if delegation is used it has to be supported by the server
-    if (delegate && !manager->isDelegationSupported()) {
-        cout <<"The server you are contacting does not support credential delegation (it is running interface version ";
-        cout << /*srv_iface_ver <<*/ "). Please use the MyProxy password legacy method for this server." << endl;
-        return false;
+    if (delegate && !ctx->isDelegationSupported()) {
+    	cout <<
+    			"The server you are contacting does not support credential delegation (it is running interface version ...). Please use the MyProxy password legacy method for this server."
+    		<< endl;
+    	return false;
     }
 
-
-
-	return true;
+    return true;
 }
 
 string SubmitTransferCli::askForPassword() {
@@ -347,9 +356,9 @@ string SubmitTransferCli::askForPassword() {
     return pass1;
 }
 
-tns3__TransferParams* SubmitTransferCli::getParams(soap* soap) {
+tns3__TransferParams* SubmitTransferCli::getParams() {
 
-	tns3__TransferParams *jobParams = soap_new_tns3__TransferParams(soap, -1);
+	tns3__TransferParams *jobParams = soap_new_tns3__TransferParams(*ctx, -1);
 
 	// check if the parameters were set using CLI, and if yes set them
 

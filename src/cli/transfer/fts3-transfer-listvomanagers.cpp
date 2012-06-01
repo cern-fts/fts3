@@ -15,19 +15,15 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- *
- * fts3-config-get.cpp
- *
- *  Created on: Apr 3, 2012
- *      Author: Michał Simon
  */
 
 
-#include "GSoapContextAdapter.h"
-#include "ui/CliBase.h"
 
+#include "GSoapContextAdapter.h"
+#include "ui/VoNameCli.h"
+
+#include <exception>
 #include <string>
-#include <vector>
 #include <iostream>
 #include <memory>
 
@@ -35,27 +31,27 @@ using namespace std;
 using namespace fts3::cli;
 
 /**
- * This is the entry point for the fts3-config-set command line tool.
+ * This is the entry point for the fts3-transfer-cancel command line tool.
  */
 int main(int ac, char* av[]) {
 
 	try {
 		// create and initialize the command line utility
-		auto_ptr<CliBase> cli (
-				getCli<CliBase>(ac, av)
+		auto_ptr<VoNameCli> cli (
+				getCli<VoNameCli>(ac, av)
 			);
 
 		// validate command line options, and return respective gsoap context
 		GSoapContextAdapter* ctx = cli->validate();
 		if (!ctx) return 0;
 
-		implcfg__getConfigurationResponse resp;
-		ctx->getConfiguration(resp);
+		impltns__listVOManagersResponse resp;
+		ctx->listVoManagers(cli->getVoName(), resp);
 
-		vector<string> &cfgs = resp.configuration->cfg;
+		vector<string> &vec = resp._listVOManagersReturn->item;
 		vector<string>::iterator it;
 
-		for (it = cfgs.begin(); it < cfgs.end(); it++) {
+		for (it = vec.begin(); it < vec.end(); it++) {
 			cout << *it << endl;
 		}
 
@@ -69,6 +65,5 @@ int main(int ac, char* av[]) {
         cerr << "Exception of unknown type!\n";
         return 1;
     }
-
 	return 0;
 }
