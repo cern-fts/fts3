@@ -101,7 +101,6 @@ GSoapContextAdapter* CliBase::validate() {
 
 	// if endpoint could not be determined, we cannot do anything
 	if (endpoint.empty()) {
-		cout << "Failed to determine the endpoint" << endl;
 		throw string("Failed to determine the endpoint");
 	}
 
