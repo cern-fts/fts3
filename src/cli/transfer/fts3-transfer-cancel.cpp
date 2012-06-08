@@ -47,6 +47,7 @@ int main(int ac, char* av[]) {
 
 		// validate command line options, and return respective gsoap context
 		GSoapContextAdapter* ctx = cli->validate();
+		if (!ctx) return 0;
 
 		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(*ctx, -1);
 		vector<string> &jobs = rqst->item;
