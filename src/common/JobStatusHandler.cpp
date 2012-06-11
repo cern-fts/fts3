@@ -14,6 +14,7 @@ using namespace fts3::common;
 using namespace boost;
 
 // initialize string constants
+const string JobStatusHandler::FTS3_STATUS_CANCELED = "CANCELED";
 const string JobStatusHandler::FTS3_STATUS_UNKNOWN = "UNKNOWN";
 const string JobStatusHandler::FTS3_STATUS_FAILED = "FAILED";
 const string JobStatusHandler::FTS3_STATUS_FINISHED = "FINISHED";
@@ -22,6 +23,7 @@ const string JobStatusHandler::FTS3_STATUS_READY = "READY";
 const string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
 
 JobStatusHandler::JobStatusHandler(): statuses(map_list_of
+		(FTS3_STATUS_CANCELED, FTS3_STATUS_CANCELED_ID)
 		(FTS3_STATUS_UNKNOWN, FTS3_STATUS_UNKNOWN_ID)
 		(FTS3_STATUS_SUBMITTED, FTS3_STATUS_SUBMITTED_ID)
 		(FTS3_STATUS_ACTIVE, FTS3_STATUS_ACTIVE_ID)
