@@ -1,6 +1,8 @@
 #include "reporter.h"
 #include <string>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 using namespace std;
 
@@ -24,5 +26,6 @@ void  Reporter::constructMessage(string job_id, string file_id, string transfer_
 	strcpy (msg->transfer_status, transfer_status.c_str());	
 	transfer_message = transfer_message.substr (0,1023);	
 	strcpy (msg->transfer_message, transfer_message.c_str());
+	msg->process_id = (int) getpid();
 	qm->send(msg);	
 }

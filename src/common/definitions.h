@@ -13,5 +13,6 @@ struct message{
       char file_id[FILE_ID_LEN];
       char transfer_status[TRANFER_STATUS_LEN];
       char transfer_message[TRANSFER_MESSAGE];
+      int process_id;
 };
  

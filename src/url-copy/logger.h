@@ -1,3 +1,9 @@
+#pragma once
+#ifndef _LOGGER
+#define _LOGGER
+
+#include <iostream>
+
 class logger {
 public:
 
@@ -8,7 +14,6 @@ public:
     friend logger& operator<<( logger& log, const T& output );
 
 private:
-
     std::ostream& os;
 };
 
@@ -20,3 +25,5 @@ logger& operator<<( logger& log, const T& output ) {
     log.os.flush(); 
     return log;
 }
+
+#endif

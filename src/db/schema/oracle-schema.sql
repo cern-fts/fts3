@@ -34,7 +34,7 @@ CREATE TABLE t_se_acl (
 --
 -- se_pairs in the system
 --
-CREATE TABLE t_se_pair (
+CREATE TABLE t_se_protocol (
 --
 -- Name of the se_pair
    se_pair_name     	VARCHAR2(32)
@@ -500,6 +500,9 @@ CREATE TABLE t_file (
 -- states (Finished, FinishedDirty, Failed, Canceled). Use for table
 -- partitioning
   ,job_finished          TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+-- the pid of the process which is executing the file transfer
+  ,pid INTEGER
 );
 --
 -- autoinc sequence on file_id

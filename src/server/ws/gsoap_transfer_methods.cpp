@@ -349,15 +349,17 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancel' request" << commit;
 
+	try{
 	if (_requestIDs) {
 		vector<string> &jobs = _requestIDs->item;
 		if (!jobs.empty()) {
 			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that have been canceled:" << commit;
-			vector<string>::iterator it;
-			for (it = jobs.begin(); it < jobs.end(); it++) {
-				FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << *it << commit;
-			}
+			DBSingleton::instance().getDBObjectInstance()->cancelJob(jobs);			
 		}
+	}
+	}catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+	    return SOAP_FAULT;
 	}
 
 	return SOAP_OK;

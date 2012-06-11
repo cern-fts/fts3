@@ -102,9 +102,10 @@ protected:
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "MSG queue: " << msg->job_id  << commit;
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg->file_id  << commit;      
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg->transfer_status  << commit;            
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg->transfer_message  << commit;   
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg->transfer_message  << commit; 
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg->process_id  << commit;   
       
-      DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(std::string(msg->job_id), std::string(msg->file_id),std::string(msg->transfer_status),std::string(msg->transfer_message) );
+      DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(std::string(msg->job_id), std::string(msg->file_id),std::string(msg->transfer_status),std::string(msg->transfer_message), msg->process_id );
       DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg->file_id), std::string(msg->job_id), std::string(msg->transfer_status));      
       
       if(msg)

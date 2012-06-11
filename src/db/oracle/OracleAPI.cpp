@@ -303,7 +303,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
         }	    
 	    jobAppender = jobAppender.substr(0, jobAppender.length()-1);
 	    select.append(jobAppender);
-	    select.append(")");
+	    select.append(") ORDER BY t_file.file_id DESC");
 	    		     
             oracle::occi::Statement* s = conn->createStatement(select,"");	    
             oracle::occi::ResultSet* r = conn->createResultset(s);
@@ -1291,7 +1291,7 @@ void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
 }
 
 
-void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message){
+void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id){
     job_id = "";
     unsigned int index = 1;
     std::string tag = "updateFileTransferStatus";
@@ -1301,6 +1301,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 			query << ", FINISH_TIME=:" << ++index;
 			tag.append("xx");
 		}
+		query << ", PID=:" << ++index;
     		query << " WHERE file_id =:" << ++index;
 		query << " and (file_state='READY' or file_state='ACTIVE')";	
 
@@ -1316,6 +1317,8 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 		s->setTimestamp(index, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
 		}
 	++index;	
+	s->setInt(index, process_id);
+	++index;
 	s->setInt(index, atoi(file_id.c_str()));	
         s->executeUpdate();
         conn->commit();	
@@ -1397,9 +1400,75 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
 }    
 
 
+void OracleAPI::cancelJob(std::vector<std::string>& requestIDs){
+	const std::string cancelReason = "Job canceled by the user";
+	std::string cancelJ = "update t_job SET  JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE job_id = :5";
+	std::string cancelF = "update t_file set file_state=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE JOB_ID=:5";
+	const std::string cancelJTag = "cancelJTag";
+	const std::string cancelFTag = "cancelFTag";
+	std::vector<std::string>::iterator iter;
+	time_t timed = time(NULL);	
+	
+	try{
+	oracle::occi::Statement* st1 = conn->createStatement(cancelJ, cancelJTag);
+	oracle::occi::Statement* st2 = conn->createStatement(cancelF, cancelFTag);
+	
+        for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter) {
+	    	std::string jobId = std::string(*iter);
+		
+        	st1->setString(1,"CANCELED");
+        	st1->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
+        	st1->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
+        	st1->setString(4, cancelReason);
+		st1->setString(5, jobId);	    
+            	st1->executeUpdate();
+		
+        	st2->setString(1,"CANCELED");
+        	st2->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
+        	st2->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
+        	st2->setString(4, cancelReason);
+		st2->setString(5, jobId);	    		
+            	st2->executeUpdate();
+		conn->commit();	    
+        }	   	
+	
+	conn->destroyStatement(st1, cancelJTag);
+	conn->destroyStatement(st2, cancelFTag);
+	}
+	catch (oracle::occi::SQLException const &e) {
+        	conn->rollback();
+        	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    	}
+}
 
-
-
+void OracleAPI::getCancelJob(std::vector<int>& requestIDs){
+	const std::string tag = "getCancelJob";
+	const std::string tag1 = "getCancelJobUpdateCancel";
+	std::string query = "select t_file.pid, t_job.job_id from t_file, t_job where t_file.job_id=t_job.job_id and t_file.FILE_STATE='CANCELED' and t_file.PID IS NOT NULL AND t_job.CANCEL_JOB IS NULL ";
+	std::string update = "update t_job SET CANCEL_JOB='Y' where job_id=:1 ";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        oracle::occi::Statement* s1 = conn->createStatement(update, tag1);
+		
+        while (r->next()) {           
+            int pid = r->getInt(1);
+	    std::string job_id = r->getString(2);
+            requestIDs.push_back(pid);
+	    s1->setString(1, job_id);	    		
+            s1->executeUpdate();
+	    conn->commit();	       	    
+        }
+        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+        conn->destroyStatement(s1, tag1);	
+	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
 
 
 // the class factories

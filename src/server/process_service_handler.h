@@ -30,6 +30,7 @@ limitations under the License. */
 #include <sstream>
 #include "site_name.h"
 #include "FileTransferScheduler.h"
+#include <signal.h>
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
@@ -85,6 +86,14 @@ public:
     }
 
 protected:
+    void killRunninfJob(std::vector<int>& requestIDs){
+	std::vector<int>::iterator iter; 	
+    	for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter) {
+		int pid = *iter;
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing process: " << pid << commit;		
+		kill(pid, SIGTERM);
+	}
+    }
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
@@ -98,9 +107,15 @@ protected:
         std::string sourceSiteName("");
         std::string destSiteName("");
         SiteName siteResolver;
+	std::vector<int> requestIDs;
 
         while (1) {
             DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+	    DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+	    if(requestIDs.size() > 0)
+	    	killRunninfJob(requestIDs);
+	    requestIDs.clear();	
+	    	
             if (jobs2.size() > 0) {
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
