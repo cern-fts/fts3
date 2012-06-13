@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# fts3-msg-cron  -  This shell script enables the msg-cron for FTS 3 monitoring
+#
+# Author:       msalicho@cern.ch
+#
+# chkconfig:    345 11 89
+#
+# description:  Enable a run of fts3-msg-cron cron.
+# processname:  fts3-msg-cron
+
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+lockfile=/var/lock/subsys/fts3-msg-cron
+
+RETVAL=0
+
+start() {
+        echo -n $"Enabling fts3-msg-cron job: "
+        rm -f "$lockfile" && success || failure
+        RETVAL=$?
+        echo "OK"	
+}
+
+stop() {
+        echo -n $"Disabling fts3-msg-cron job: "
+        touch "$lockfile" && success || failure
+        RETVAL=$?	
+        echo "OK"
+}
+
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart|force-reload)
+        restart
+        ;;
+  reload)
+        ;;
+  condrestart)
+        [ -f "$lockfile" ] && restart
+        ;;
+  status)
+        if [ ! -f $lockfile ]; then
+                echo $"Cron fts3-msg-cron is enabled."
+                RETVAL=0
+        else
+                echo $"Cron fts3-msg-cron is disabled."
+                RETVAL=3
+        fi
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|reload|force-reload|
+condrestart}"
+        exit 1
+esac
+
+exit $RETVAL
+
+

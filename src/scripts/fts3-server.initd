@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# fts3-msg-bulk  -  This shell script enables the msg-bulk for FTS 3 monitoring
+#
+# Author:       msalicho@cern.ch
+#
+# chkconfig:    345 11 89
+#
+# description:  Enable a run of fts3-server
+# processname:  fts3_server
+
+
+# source function library
+. /etc/rc.d/init.d/functions
+
+lockfile=/var/lock/subsys/fts3-server
+
+RETVAL=0
+
+start() {
+if [ ! -f $lockfile ] ; then
+        echo -n $"Enabling fts3-server : "
+        touch "$lockfile" && success || failure
+	fts3-server
+        RETVAL=$?
+        echo "OK"
+else	
+        echo "Already running"
+fi
+}
+
+stop() {
+        echo -n $"Disabling fts3-server : "
+        rm -f "$lockfile" && success || failure
+        RETVAL=$?
+	pkill fts3_server
+        echo "OK"
+}
+
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        restart
+        ;;
+  condreload)
+	if [ -f $lockfile ]; then
+	    stop
+	    start
+	    RETVAL=$?
+	else
+	    start   
+	fi
+	;;
+  status)
+        if [ -f $lockfile ]; then
+                echo $"fts3-server is enabled."
+                RETVAL=0
+        else
+                echo $"fts3-server is disabled."
+                RETVAL=3
+        fi
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|condreload}"
+        exit 1
+esac
+
+exit $RETVAL

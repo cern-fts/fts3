@@ -1,0 +1,6 @@
+#!/bin/bash
+
+fts3_server > /dev/null 2>&1
+
+
+ 
