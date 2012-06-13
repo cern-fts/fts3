@@ -1,3 +1,68 @@
+--
+-- Holds certificate request information
+--
+CREATE TABLE t_credential_cache (
+--
+-- delegation identifier
+   dlg_id	VARCHAR2(100),
+--
+-- DN of delegated proxy owner
+   dn		VARCHAR2(255),
+--
+-- certificate request
+   cert_request CLOB
+        CONSTRAINT cred_cache_cert_req_not_null NOT NULL,
+--
+-- private key of request
+   priv_key	CLOB
+        CONSTRAINT cred_cache_priv_key_not_null NOT NULL,
+--
+-- list of voms attributes contained in delegated proxy
+   voms_attrs CLOB,
+--
+-- set primary key
+   CONSTRAINT cred_cache_pk PRIMARY KEY (dlg_id, dn)
+);
+
+--
+-- Holds delegated proxies
+--
+CREATE TABLE t_credential (
+--
+-- delegation identifier
+   dlg_id	VARCHAR2(100),
+--
+-- DN of delegated proxy owner
+   dn		VARCHAR2(255),
+--
+-- delegated proxy certificate chain
+   proxy CLOB
+        CONSTRAINT cred_proxy_not_null NOT NULL,
+--
+-- list of voms attributes contained in delegated proxy
+   voms_attrs CLOB,
+--
+-- termination time of the credential
+   termination_time TIMESTAMP WITH TIME ZONE
+        CONSTRAINT cred_term_time_not_null NOT NULL,
+--
+-- set primary key
+   CONSTRAINT cred_pk PRIMARY KEY (dlg_id, dn)
+);
+
+--
+-- Schema version
+--
+CREATE TABLE t_credential_vers (
+  major NUMBER NOT NULL,
+  minor NUMBER NOT NULL,
+  patch NUMBER NOT NULL
+);
+INSERT INTO t_credential_vers (major,minor,patch) VALUES (1,2,0);
+
+-- t_credential index:
+-- t_credential(dlg,dn) is primary key
+CREATE INDEX credential_term_time ON t_credential(termination_time);
 
 --
 -- SE from the information service, currently BDII
@@ -31,41 +96,41 @@ CREATE TABLE t_se_acl (
   ,CONSTRAINT se_acl_pk PRIMARY KEY (name, vo)
 );
 
+
 --
--- se_pairs in the system
+-- se, se pair and se groups in the system
 --
 CREATE TABLE t_se_protocol (
+   se_row_id		INTEGER
+			CONSTRAINT se_row_id_not_null NOT NULL
+		        CONSTRAINT se_row_id_pk PRIMARY KEY
 --
 -- Name of the se_pair
-   se_pair_name     	VARCHAR2(32)
-                    	CONSTRAINT se_pair_se_pair_name_not_null NOT NULL
-                    	CONSTRAINT se_pair_se_pair_name_id_pk PRIMARY KEY
---
+   ,se_group_name     	VARCHAR2(512)
+--          
 -- Source site name
-   ,source_site        	VARCHAR2(100)
-			CONSTRAINT se_pair_source_site_not_null NOT NULL
+   ,source_se        	VARCHAR2(512)	
 --
 -- Destination site name
-   ,dest_site        	VARCHAR2(100)
-	                CONSTRAINT se_pair_dest_site_not_null NOT NULL
+   ,dest_se        	VARCHAR2(512)
 --
 -- Email contact of the se_pair responsbile
    ,contact         	VARCHAR2(255)
 --
 -- Maximum bandwidth, capacity, in Mbits/s
-   ,bandwidth       	NUMBER
+   ,bandwidth       	NUMBER default NULL
 --
 -- The target number of concurrent streams on the network
-   ,nostreams       	INTEGER
+   ,nostreams       	INTEGER default NULL
 --
 -- The target number of concurrent files on the network
-   ,nofiles             INTEGER
+   ,nofiles             INTEGER default NULL
 --
 -- Default TCP Buffer Size for the transfer
-   ,tcp_buffer_size     VARCHAR(24)
+   ,tcp_buffer_size     INTEGER default NULL
 --
 -- The target throughput for the system (Mbits/s)
-   ,nominal_throughput	NUMBER
+   ,nominal_throughput	NUMBER default NULL
 --
 -- The state of the se_pair ("Active", "Inactive", "Drain", "Stopped")
    ,se_pair_state	VARCHAR2(30)
@@ -85,66 +150,48 @@ CREATE TABLE t_se_protocol (
 -- per-SE limit on se_pair
    ,se_limit         INTEGER DEFAULT NULL
 --
--- se_pair_type (DEDICATED, NONDEDICATED)
-   ,se_pair_type     VARCHAR2(20)
--------------------------------------------
--- se_pair configuration parameters.
--- Note: probably these values should be 
--- factorized in a separate table in order
--- to support different kind of transfer
--- mechanism. se_pair_type could be used
--- to select the correct table
--------------------------------------------
--- the block size to be used during the transfer
---
-   ,blocksize          VARCHAR2(24)
+   ,blocksize         INTEGER  default NULL
 -- HTTP timeout
 --
-   ,http_to            INTEGER
+   ,http_to            INTEGER default NULL
 -- Transfer log level. Allowed values are (DEBUG, INFO, WARN, ERROR)
 --
-   ,tx_loglevel        VARCHAR2(12)
+   ,tx_loglevel        VARCHAR2(12) default NULL
 -- urlcopy put timeout
 --
-   ,urlcopy_put_to     INTEGER
+   ,urlcopy_put_to     INTEGER default NULL
 -- urlcopy putdone timeout
 --
-   ,urlcopy_putdone_to INTEGER
+   ,urlcopy_putdone_to INTEGER default NULL
 -- urlcopy get timeout
 --
-   ,urlcopy_get_to     INTEGER
+   ,urlcopy_get_to     INTEGER default NULL
 -- urlcopy getdone timeout
 --
-   ,urlcopy_getdone_to INTEGER
+   ,urlcopy_getdone_to INTEGER default NULL
 -- urlcopy transfer5 timeout
 --
-   ,urlcopy_tx_to      INTEGER
+   ,urlcopy_tx_to      INTEGER default NULL
 -- urlcopy transfer markers timeout
 --
-   ,urlcopy_txmarks_to INTEGER
+   ,urlcopy_txmarks_to INTEGER default NULL
 -- srmcopy direction
 --
-   ,srmcopy_direction  VARCHAR2(4)
+   ,srmcopy_direction  VARCHAR2(4) default NULL
 -- srmcopy transfer timeout
 --
-   ,srmcopy_to        INTEGER
+   ,srmcopy_to        INTEGER default NULL
 -- srmcopy refresh timeout (timeout since last status update)
 --
-   ,srmcopy_refresh_to INTEGER
+   ,srmcopy_refresh_to INTEGER default NULL
 --
 -- check that target directory is accessible
 --
-   ,target_dir_check CHAR(1)
+   ,target_dir_check CHAR(1) default NULL
 --
 -- The parameter to set after how many seconds to mark the first transfer activity
 --
-   ,url_copy_first_txmark_to INTEGER
---
---  The transfer mode of the se_pair [URLCOPY|SRMCOPY]
---
-    ,transfer_type VARCHAR(15) 
---
--- *** New in 3.3.0 ***
+   ,url_copy_first_txmark_to INTEGER default NULL
 --
 -- size-based transfer timeout, in seconds per MB
   ,tx_to_per_mb NUMBER default NULL 
@@ -252,6 +299,12 @@ CREATE TABLE t_se_vo_share (
    ,CONSTRAINT se_pair_vo_share_fk FOREIGN KEY (se_name) REFERENCES t_se (name)
 );
 
+
+CREATE TABLE t_se_group(
+	se_group_name varchar2(512) NOT NULL
+	,se_name varchar2(512) NOT NULL
+	,CONSTRAINT t_se_group_pk PRIMARY KEY (se_group_name,se_name)	
+); 
 --
 -- Store se_pair ACL
 --
@@ -267,9 +320,6 @@ CREATE TABLE t_se_pair_acl (
 --
 -- Set Primary Key
   ,CONSTRAINT se_pair_acl_pk PRIMARY KEY (se_pair_name, principal)
---
--- Set Foreign key
-  ,CONSTRAINT se_pair_acl_fk FOREIGN KEY (se_pair_name) REFERENCES t_se_pair (se_pair_name)
 );
 
 --
@@ -342,10 +392,6 @@ CREATE TABLE t_job (
 -- The VO that owns this job
   ,vo_name              VARCHAR2(50)
 --
--- the name of the transfer se_pair for this job
-  ,se_pair_name     	VARCHAR2(32)
-                    	REFERENCES t_se_pair(se_pair_name)
---
 -- The reason the job is in the current state
   ,reason           	VARCHAR2(1024)
 --
@@ -395,7 +441,7 @@ CREATE TABLE t_job (
   ,internal_job_params   VARCHAR2(255)
 --
 -- Overwrite flag for job
-  ,overwrite_flag        CHAR(1)
+  ,overwrite_flag        CHAR(1) DEFAULT NULL
 --
 -- this timestamp will be set when the job enter in one of the terminal 
 -- states (Finished, FinishedDirty, Failed, Canceled). Use for table
@@ -518,6 +564,25 @@ BEGIN
   INTO   :new.file_id from dual;
 END;
 /
+
+
+--
+-- autoinc sequence on se_row_id
+--
+CREATE SEQUENCE se_row_id_seq;
+
+CREATE OR REPLACE TRIGGER se_row_id_auto_inc
+BEFORE INSERT ON t_se_protocol
+FOR EACH ROW
+WHEN (new.se_row_id IS NULL)
+BEGIN
+  SELECT se_row_id_seq.nextval
+  INTO   :new.se_row_id from dual;
+END;
+/
+
+
+
 --
 -- t_transfer table stores the data related to a file transfer
 --
@@ -713,10 +778,6 @@ END;
 --
 --
 
--- t_se_pair indexes:
--- t_se_pair(se_pair_name) is primary key
-CREATE INDEX se_pair_se_pair_state ON t_se_pair(se_pair_state);
-
 -- t_bad_ses indexes:
 -- t_bad_ses(se_id) is primary key
 CREATE INDEX bad_se_hostname ON t_bad_ses(se_hostname);
@@ -728,7 +789,6 @@ CREATE INDEX site_group_sname_id ON t_site_group(site_name);
 -- t_job indexes:
 -- t_job(job_id) is primary key
 CREATE INDEX job_job_state    ON t_job(job_state);
-CREATE INDEX job_se_pair_name ON t_job(se_pair_name);
 CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
@@ -748,7 +808,7 @@ CREATE INDEX transfer_jobfinished_id    ON t_transfer(job_finished);
 -- Indices suggested by M. Anjo in order to improve performances and reduce the DB load
 --------------------------------------------------------------------------------------
 CREATE index idx_report_transfer ON t_transfer (transfer_state,reason_class,file_id,duration,bytes_written);
-CREATE index idx_report_job      ON t_job (se_pair_name,vo_name,job_id);
+CREATE index idx_report_job      ON t_job (vo_name,job_id);
 
 -- t_stage_request indexes:
 -- t_stage_request(t_stagereq__unique_id) is primary key
