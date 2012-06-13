@@ -20,8 +20,8 @@ using namespace std;
 
 
 FileManagement::FileManagement() {
-    //logFileName = theServerConfig().get<std::string >("TransferLogDirectory");
-    logFileName = "/var/log/fts3";    
+    FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
+    logFileName = theServerConfig().get<std::string>("TransferLogDirectory");  
     if (logFileName.length() > 0)
         directoryExists(logFileName.c_str());
 
