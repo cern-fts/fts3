@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 /** \file serverconfigreader.h Implementation of FTS3 server config reader. */
@@ -65,9 +65,9 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 	po::options_description config("Configuration");
 
     config.add_options()
-	    (   
+	    (
             "TransferPort,p",
-            po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT), 
+            po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT),
             "File transfer listening port"
         )
 
@@ -78,37 +78,37 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         )
 
 	    (
-            "IP,i", 
-            po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT), 
+            "IP,i",
+            po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
             "IP address that the server is bound to"
         )
 
 	    (
-            "DbConnectString,s", 
+            "DbConnectString,s",
             po::value<std::string>( &(_vars["DbConnectString"]) )->default_value(""),
             "Connect string for the used database account"
         )
 
 	    (
-            "DbType,d", 
+            "DbType,d",
             po::value<std::string>( &(_vars["DbType"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT),
             "Database backend type. Allowed values: oracle"
         )
-	    
+
         (
-            "DbUserName,u", 
-            po::value<std::string>( &(_vars["DbUserName"]) )->default_value(""), 
+            "DbUserName,u",
+            po::value<std::string>( &(_vars["DbUserName"]) )->default_value(""),
             "Database account user name"
         )
-	    
+
         (
-            "DbPassword,w", 
+            "DbPassword,w",
             po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
             "Database account password"
         )
-	    
+
         (
-            "TransferLogDirectory,l", 
+            "TransferLogDirectory,l",
             po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
             "Directory where the individual transfer logs are written"
         );
@@ -124,7 +124,7 @@ po::options_description ServerConfigReader::_defineHiddenOptions()
 
     hidden.add_options()
         (
-            "ThreadNum,t", 
+            "ThreadNum,t",
             po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT),
             "Number of worker threads."
         );
@@ -135,7 +135,7 @@ po::options_description ServerConfigReader::_defineHiddenOptions()
 /* ========================================================================== */
 
 /** Read command line option - the real thing. */
-struct ReadCommandLineOptions_SystemTraits 
+struct ReadCommandLineOptions_SystemTraits
 {
     static void exit(const int aVal)
     {
@@ -143,14 +143,14 @@ struct ReadCommandLineOptions_SystemTraits
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static std::ostream& stream()
     {
         return std::cout;
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static void processVariables
     (
         ServerConfigReader& aReader
@@ -165,9 +165,14 @@ struct ReadCommandLineOptions_SystemTraits
 /** Read config file - the real thing. */
 struct ReadConfigFile_SystemTraits
 {
+    static void exit(const int aVal)
+    {
+        ::exit(aVal);
+    }
+
     static boost::shared_ptr<std::istream> getStream (const std::string& aName)
     {
-        boost::shared_ptr<std::istream> in 
+        boost::shared_ptr<std::istream> in
         (
             dynamic_cast<std::istream*> (new std::ifstream(aName.c_str()))
         );
@@ -175,7 +180,7 @@ struct ReadConfigFile_SystemTraits
         if (!(*in))
         {
             std::stringstream msg;
-            msg << "Error opening file " << aName; 
+            msg << "Error opening file " << aName;
             FTS3_COMMON_EXCEPTION_THROW ( FTS3_COMMON_NAMESPACE::Err_System (msg.str()) );
         }
 
@@ -183,7 +188,7 @@ struct ReadConfigFile_SystemTraits
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static void processVariables
     (
         ServerConfigReader& reader
@@ -197,14 +202,14 @@ struct ReadConfigFile_SystemTraits
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readConfigFile_SystemTraits, 
+    Config_ServerConfigReader_readConfigFile_SystemTraits,
     ReadConfigFile_SystemTraits
 )
 {
     // Test non-existing file opening
-    BOOST_CHECK_EXCEPTION 
+    BOOST_CHECK_EXCEPTION
     (
         getStream("/atyala/patyala/thisfile-doesnot_exis"),
         FTS3_COMMON_NAMESPACE::Err_System,
@@ -231,8 +236,8 @@ ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char**
     // Option group in the command line
     po::options_description cmdline_options;
     cmdline_options.add(generic).add(config).add(hidden);
-    _readCommandLineOptions<ReadCommandLineOptions_SystemTraits> (argc, argv, cmdline_options);     
-   
+    _readCommandLineOptions<ReadCommandLineOptions_SystemTraits> (argc, argv, cmdline_options);
+
     // Option group in config file
     po::options_description config_file_options;
     config_file_options.add(config).add(hidden);
@@ -248,8 +253,8 @@ ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char**
 /** This test checks if command line options really change default values */
 BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_default, ServerConfigReader)
 {
-    static const int argc = 3; 
-    char *argv[argc];  
+    static const int argc = 3;
+    char *argv[argc];
     argv[0] = const_cast<char*> ("executable");
     argv[1] = const_cast<char*> ("--configfile=/dev/null");
     argv[2] = const_cast<char*> ("--Port=7823682");
@@ -271,7 +276,7 @@ struct Test_DbType_ServerConfigReader : public ServerConfigReader
     }
 
     /* -------------------------------------------------------------------- */
-    
+
     void doTest()
     {
         (*this)(argc, argv);
@@ -279,23 +284,23 @@ struct Test_DbType_ServerConfigReader : public ServerConfigReader
     }
 
     /* -------------------------------------------------------------------- */
-    
+
     static const int argc_max = 4;
-    
+
     /* -------------------------------------------------------------------- */
-    
+
     static const std::string& label ()
     {
         static const std::string str("atyala");
         return str;
     }
-    
+
     /* -------------------------------------------------------------------- */
-    
+
     char* argv[argc_max];
-    
+
     /* -------------------------------------------------------------------- */
-    
+
     int argc;
 };
 
@@ -350,10 +355,10 @@ BOOST_FIXTURE_TEST_CASE (Common__ServerConfigReader_functionOperator_fromfile, S
     file << "DbPassword=" << f_str << std::endl;
     file << "TransferLogDirectory=" << f_str << std::endl;
     file << "ThreadNum=" << f_intval << std::endl;
-    file.close(); 
+    file.close();
     // Read from the file
-    static const int argc = 2; 
-    char *argv[argc];  
+    static const int argc = 2;
+    char *argv[argc];
     argv[0] = const_cast<char*> ("executable");
     std::string confpar = std::string("--configfile=") + filename;
     argv[1] = const_cast<char*> (confpar.c_str());
@@ -385,7 +390,7 @@ struct readCommandLineOptions_TestTraits
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static void processVariables
     (
         ServerConfigReader&
@@ -393,9 +398,9 @@ struct readCommandLineOptions_TestTraits
     {
         processVariablesCalled = true;
     }
-    
+
     /* ---------------------------------------------------------------------- */
-    
+
     static void reset()
     {
         processVariablesCalled = false;
@@ -404,7 +409,7 @@ struct readCommandLineOptions_TestTraits
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static std::ostream& stream()
     {
         return strstream;
@@ -436,7 +441,7 @@ struct TestServerConfigReader : public ServerConfigReader
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     void setupParameters
     (
         const std::string& aOption
@@ -447,7 +452,7 @@ struct TestServerConfigReader : public ServerConfigReader
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** This test checks if:
      *    - --help option recognized
      *    - help message displayed
@@ -464,7 +469,7 @@ struct TestServerConfigReader : public ServerConfigReader
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** This test checks if:
      *    - version option displays FTS3 version string
      *    - program exits
@@ -478,9 +483,9 @@ struct TestServerConfigReader : public ServerConfigReader
         bool contained = boost::find_first (displayedText, f_versionMessage);
         BOOST_CHECK (contained);
     }
-   
+
     /* ---------------------------------------------------------------------- */
-    
+
     /** This test checks if:
      *    - Any other options than helo or version calls provessVariables
      *    - program does not exit
@@ -493,7 +498,7 @@ struct TestServerConfigReader : public ServerConfigReader
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** This test checks the effect of nodaemon flags. */
     void do_noDaemonSpecifiedTest()
     {
@@ -502,7 +507,7 @@ struct TestServerConfigReader : public ServerConfigReader
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** This test checks the effect of nodaemon flags. */
     void do_noDaemonNotSpecifiedTest()
     {
@@ -513,7 +518,7 @@ struct TestServerConfigReader : public ServerConfigReader
 protected:
 
     /* ---------------------------------------------------------------------- */
-    
+
     static const int argc = 2;
     char *argv[argc];
     po::options_description testDesc;
@@ -521,9 +526,9 @@ protected:
 
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_help_long, 
+    Config_ServerConfigReader_readCommandLineOptions_help_long,
     TestServerConfigReader
 )
 {
@@ -534,12 +539,12 @@ BOOST_FIXTURE_TEST_CASE
 
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_help_short, 
+    Config_ServerConfigReader_readCommandLineOptions_help_short,
     TestServerConfigReader
 )
-{    
+{
     // Test executing short help option
     setupParameters ("-h" );
     do_helpTest();
@@ -547,9 +552,9 @@ BOOST_FIXTURE_TEST_CASE
 
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_version, 
+    Config_ServerConfigReader_readCommandLineOptions_version,
     TestServerConfigReader
 )
 {
@@ -557,26 +562,26 @@ BOOST_FIXTURE_TEST_CASE
     setupParameters("--version");
     do_versionTest();
 }
-    
+
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_other, 
+    Config_ServerConfigReader_readCommandLineOptions_other,
     TestServerConfigReader
 )
 {
-    // Test executing "other" parameter. Test fixture requires paremeter to 
+    // Test executing "other" parameter. Test fixture requires paremeter to
     // other!
     setupParameters("--other=value");
     do_othersTest();
-} 
+}
 
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_nodaemon_long, 
+    Config_ServerConfigReader_readCommandLineOptions_nodaemon_long,
     TestServerConfigReader
 )
 {
@@ -586,9 +591,9 @@ BOOST_FIXTURE_TEST_CASE
 
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_nodaemon_short, 
+    Config_ServerConfigReader_readCommandLineOptions_nodaemon_short,
     TestServerConfigReader
 )
 {
@@ -598,9 +603,9 @@ BOOST_FIXTURE_TEST_CASE
 
 /* ---------------------------------------------------------------------- */
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_readCommandLineOptions_nodaemon_not_specified, 
+    Config_ServerConfigReader_readCommandLineOptions_nodaemon_not_specified,
     TestServerConfigReader
 )
 {
@@ -612,7 +617,7 @@ BOOST_FIXTURE_TEST_CASE
 
 /* ========================================================================== */
 
-void ServerConfigReader::storeAsString 
+void ServerConfigReader::storeAsString
 (
     const std::string& aName
 )
@@ -630,9 +635,9 @@ void ServerConfigReader::storeAsString
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 
-BOOST_FIXTURE_TEST_CASE 
+BOOST_FIXTURE_TEST_CASE
 (
-    Config_ServerConfigReader_storeAsString, 
+    Config_ServerConfigReader_storeAsString,
     TestServerConfigReader
 )
 {
@@ -661,8 +666,13 @@ void ServerConfigReader::storeValuesAsStrings ()
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 
 /** Traits to test _readConfigFile */
-struct readConfigFile_TestTraits
+struct ReadConfigFile_TestTraits
 {
+    static void exit(const int)
+    {
+        // EMPTY
+    }
+
     static boost::shared_ptr<std::istream> getStream (const std::string&)
     {
         std::stringstream* ss = new std::stringstream;
@@ -674,7 +684,7 @@ struct readConfigFile_TestTraits
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static void processVariables
     (
         ServerConfigReader& reader
@@ -689,7 +699,7 @@ struct readConfigFile_TestTraits
 BOOST_FIXTURE_TEST_CASE (Config_ServerConfigReader_readConfigFile, TestServerConfigReader)
 {
     _vars["configfile"] = "anyname";
-    _readConfigFile<readConfigFile_TestTraits>(testDesc);
+    _readConfigFile<ReadConfigFile_TestTraits>(testDesc);
     BOOST_CHECK_EQUAL (_vars["intpar"], std::string("10"));
 }
 
