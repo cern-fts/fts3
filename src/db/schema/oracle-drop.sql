@@ -10,7 +10,7 @@ drop table T_FILE cascade constraints;
 drop table T_JOB cascade constraints;
 drop table T_SCHEMA_VERS cascade constraints;
 drop table T_SE cascade constraints;
-drop table T_SE_GROUP constraints;
+drop table T_SE_GROUP cascade constraints;
 drop table T_SE_ACL cascade constraints;
 drop table T_SE_PROTOCOL cascade constraints;
 drop table T_SE_PAIR_ACL cascade constraints;
