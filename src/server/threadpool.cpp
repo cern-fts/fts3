@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "threadpool.h"
@@ -25,18 +25,18 @@ FTS3_SERVER_NAMESPACE_START
 
 namespace ThreadPool {
 
-ThreadPool::ThreadPool(const size_t queueSize, const size_t workerNum) 
-	: Traced<ThreadPool>("ThreadPool"), _queue(queueSize) 
+ThreadPool::ThreadPool(const size_t queueSize, const size_t workerNum)
+	: Traced<ThreadPool>("ThreadPool"), _queue(queueSize)
 {
 	int c = 1;
 	for (size_t i = 0; i < workerNum; ++i) _workers.push_back(new Worker(_thgrp, c++));
-	
+
 	FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ThreadPool queue size: " << queueSize <<
 		", number of worker threads: " << workerNum << commit;
 }
 
-ThreadPool::~ThreadPool() 
-{	
+ThreadPool::~ThreadPool()
+{
 	// EMPTY
 }
 
@@ -47,11 +47,13 @@ void ThreadPool::wait()
 
 void ThreadPool::stop()
 {
+FTS3_COMMON_MONITOR_START_CRITICAL
 	_thgrp.interrupt_all();
 	//_thgrp.join_all();
+FTS3_COMMON_MONITOR_END_CRITICAL
 }
 
-ThreadPool::element_type ThreadPool::pop(const Timeout& td) 
+ThreadPool::element_type ThreadPool::pop(const Timeout& td)
 {
 	element_type t(_queue.pop(td));
 	return t;
@@ -60,7 +62,7 @@ ThreadPool::element_type ThreadPool::pop(const Timeout& td)
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 
 /** The operation stores a value in an external (referenced) value */
-class TestOp 
+class TestOp
 {
 public:
     typedef int value_type;
@@ -70,17 +72,17 @@ public:
     (
         value_type& ret, /**< The external variable */
         int expected /**< The value to be stored */
-    ) 
-        : _ret(ret), 
-          _exp(expected) 
+    )
+        : _ret(ret),
+          _exp(expected)
     {};
 
-    void operator () () 
+    void operator () ()
     {
         _ret = _exp;
     };
 
-    static value_type val(enabled_value_type e) 
+    static value_type val(enabled_value_type e)
     {
         return static_cast<value_type>(e);
     }
@@ -90,7 +92,7 @@ private:
     const value_type _exp;
 };
 #if 0
-BOOST_AUTO_TEST_CASE(ThreadPoolTest)
+bOOST_AUTO_TEST_CASE(ThreadPoolTest)
 {
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
 	// TODO
