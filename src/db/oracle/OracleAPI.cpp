@@ -282,10 +282,10 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
     std::vector<TransferJobs*>::iterator iter;
     std::string selecttag = "getByJobId";
     std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
-                " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.file_state, t_file.logical_name, "
+                " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.checksum, t_job.CHECKSUM_METHOD, t_file.file_state, t_file.logical_name, "
             " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, "
    " t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
-            " t_file.checksum, t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
+            " t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
    " t_file.error_scope, t_file.error_phase "
             " FROM t_file, t_job WHERE"
    " t_file.job_id = t_job.job_id AND "
@@ -318,6 +318,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 		tr_files->OVERWRITE = r->getString(6);
 		tr_files->DN = r->getString(7);
 		tr_files->CRED_ID = r->getString(8);
+		tr_files->CHECKSUM = r->getString(9);
+		tr_files->CHECKSUM_METHOD = r->getString(10);		
                 files.push_back(tr_files);
             }
 	    
@@ -372,7 +374,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->setString(15, sourceSpaceToken); //source_token_description
         s_job_statement->setInt(16, copyPinLifeTime); //copy_pin_lifetime
         s_job_statement->setString(17, lanConnection); //lan_connection
-        s_job_statement->setString(18, failNearLine); //fail_nearline
+        s_job_statement->setString(18, failNearLine); //fail_nearline	
         if (checksumMethod.length() == 0)
             s_job_statement->setNull(19, oracle::occi::OCCICHAR);
         else

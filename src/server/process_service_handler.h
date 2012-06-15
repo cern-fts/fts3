@@ -173,6 +173,14 @@ protected:
                         	params.append(" -proxy ");
 	                        params.append(proxy_file);	
 			}		
+			if(std::string(temp->CHECKSUM).length() > 0){ //checksum
+                        	params.append(" -z ");
+	                        params.append(temp->CHECKSUM);	
+			}
+			if(std::string(temp->CHECKSUM_METHOD).length() > 0){ //checksum
+                        	params.append(" -A ");
+	                        params.append(temp->CHECKSUM_METHOD);	
+			}				
                         params.append(" -b ");
                         params.append(temp->SOURCE_SURL);
                         params.append(" -c ");

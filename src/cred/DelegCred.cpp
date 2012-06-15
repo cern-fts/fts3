@@ -111,7 +111,7 @@ std::string DelegCred::getFileName(const std::string& userDn, const std::string&
 
     // Compute Max length
     unsigned long filename_max = pathconf(repository.c_str(), _PC_NAME_MAX);
-    long max_length = (filename_max - 7 - strlen(PROXY_NAME_PREFIX));
+    unsigned long max_length = (filename_max - 7 - strlen(PROXY_NAME_PREFIX));
     if(max_length <= 0){
         //m_log_error("Failed to generate the proxy file name: prefix name (" << PROXY_NAME_PREFIX << ") too long for " << m_factory.repository());
         //throw LogicError("Cannot generate proxy file name: prefix too long");

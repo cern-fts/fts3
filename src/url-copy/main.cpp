@@ -288,6 +288,14 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
     }
 
+    /*Checksuming*/
+    if(compare_checksum){
+            if(checksum_value.length() > 0){ //use provide/user checksum
+	    }
+	    else{//use auto checksum
+	    }
+    }
+
     //overwrite dest file if exists
     if(overwrite)	      
     	gfalt_set_replace_existing_file(params, TRUE, &tmp_err);

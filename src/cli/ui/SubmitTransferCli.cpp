@@ -59,7 +59,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
 			("overwrite,o", "Overwrite files.")
 			("dest-token,t", value<string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
-			("source-token,S", value<string>(), "he source space token or its description (for SRM 2.2 transfers).")
+			("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
 			("compare-checksum,K", "Compare checksums between source and destination.")
 			("copy-pin-lifetime", value<int>(), "pin lifetime of the copy of the file (seconds)")
 			("lan-connection", "use LAN as ConnectionType (default = WAN)")

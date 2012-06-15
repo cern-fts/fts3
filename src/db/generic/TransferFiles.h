@@ -64,4 +64,5 @@ public:
  std::string OVERWRITE;
  std::string DN;
  std::string CRED_ID;
+ std::string CHECKSUM_METHOD;
 };
