@@ -55,7 +55,6 @@ int main(int ac, char* av[]) {
 		}
 
 		impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = cli->getStatusArray();
-		int err;
 
 		vector<tns3__JobStatus * > statuses;
 

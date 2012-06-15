@@ -39,6 +39,9 @@
 #include "SeAndConfig.h"
 #include "TransferJobs.h"
 #include "TransferFiles.h"
+#include "SeProtocolConfig.h"
+#include "CredCache.h"
+#include "Cred.h"
 
 /**
  * GenericDbIfce class declaration
@@ -265,7 +268,56 @@ public:
     
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;        
     
+    /*protocol config*/
+    virtual bool is_se_group_member(std::string se) = 0;
+
+    virtual bool is_se_protocol_exist(std::string se) = 0;
     
+    virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2) = 0;
+    
+    virtual SeProtocolConfig* get_se_protocol_config(std::string se) = 0;
+    
+    virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2) = 0;
+    
+    virtual SeProtocolConfig* get_se_group_protocol_config(std::string se) = 0;
+
+    virtual void add_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
+
+    virtual void add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
+
+    virtual void add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;
+    
+    virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
+
+    virtual void delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
+
+    virtual void delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
+
+    virtual void update_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
+
+    virtual void update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
+
+    virtual void update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
+
+    virtual SeProtocolConfig* getProtocol(std::string se1, std::string se2) = 0;
+
+    /*se group operations*/
+    virtual void add_se_to_group(std::string sd, std::string group) = 0;
+    virtual void remove_se_from_group(std::string sd, std::string group) = 0;	
+    virtual void delete_group(std::string group) = 0;	
+ 
+ 
+ 
+    /*t_credential API*/
+    virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    virtual void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    virtual CredCache* findGrDPStorageCacheElement(std::string delegationID, std::string dn) = 0;
+    virtual void deleteGrDPStorageCacheElement(std::string delegationID, std::string dn) = 0;
+    
+    virtual void insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    virtual void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    virtual  Cred* findGrDPStorageElement(std::string delegationID, std::string dn) = 0;
+    virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn) = 0;
 };
 
 

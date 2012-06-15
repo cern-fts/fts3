@@ -154,7 +154,7 @@ void JobSubmitter::init(tns3__TransferParams *jobParams) {
 	id = UuidGenerator::generateUUID();
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Generated uuid " << id << commit;
 
-    dn = "/C=DE/O=GermanGrid/OU=DESY/CN=galway.desy.de";
+    dn = "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=msalicho/CN=709008/CN=Michail Salichos";
     vo = "dteam";
     sourceSpaceTokenDescription = "";
     copyPinLifeTime = 1;
@@ -179,7 +179,7 @@ string JobSubmitter::submit() {
             cred,
             vo,
             params.get(JobParameterHandler::FTS3_PARAM_MYPROXY),
-            params.get(JobParameterHandler::FTS3_PARAM_DELEGATIONID),
+            "7e9b169fac86fb8a9f21cde02984a665eebdea2f",
             params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN),
             params.get(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG),
             params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE),

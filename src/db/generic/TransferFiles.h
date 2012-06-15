@@ -61,4 +61,7 @@ public:
  std::string INTERNAL_FILE_PARAMS;
  std::string JOB_FINISHED;
  std::string VO_NAME;
+ std::string OVERWRITE;
+ std::string DN;
+ std::string CRED_ID;
 };

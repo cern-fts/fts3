@@ -26,6 +26,7 @@ include_directories (${fts3_include_dir})
 include_directories (${PROJECT_SOURCE_DIR}/src/url-copy/)
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
+include_directories (${PROJECT_SOURCE_DIR}/src/cred/)
 include_directories (/usr/lib64/glib-2.0/include)
 include_directories (/usr/include/glib-2.0)
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
@@ -62,7 +63,7 @@ target_link_libraries(fts3_server_lib ${fts3_libs} -lfts3_server_gsoap_transfer 
 # Server executable
 add_executable (fts3_server main.cpp)
 add_dependencies(fts3_server fts3_server_lib)
-target_link_libraries(fts3_server -lfts3_server_lib )
+target_link_libraries(fts3_server -lfts3_server_lib -lfts3_proxy )
 
 install(TARGETS         fts3_server_gsoap_transfer 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

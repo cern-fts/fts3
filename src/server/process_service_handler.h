@@ -31,6 +31,8 @@ limitations under the License. */
 #include "site_name.h"
 #include "FileTransferScheduler.h"
 #include <signal.h>
+#include "parse_url.h"
+#include "cred-utility.h"
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
@@ -95,6 +97,23 @@ protected:
 	}
     }
 
+    std::string extractHostname(std::string surl){
+	std::string hostname("");
+	char *base_scheme = NULL;
+	char *base_host = NULL;
+	char *base_path = NULL;
+	int base_port = 0;
+    	parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
+	hostname = base_host;
+	if(base_scheme)
+		free(base_scheme);
+	if(base_host)
+		free(base_host);
+	if(base_path)
+		free(base_path);
+    	return hostname;
+    }
+
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
         const std::string cmd = "fts3_url_copy";
@@ -108,35 +127,59 @@ protected:
         std::string destSiteName("");
         SiteName siteResolver;
 	std::vector<int> requestIDs;
+	std::string source_hostname("");
+	std::string destin_hostname("");
+	SeProtocolConfig* protocol = NULL;
+	std::string proxy_file("");
 
         while (1) {
+	    /*get jobs in submitted state*/
             DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+	    /*also get jobs which have been canceled by the client*/
 	    DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-	    if(requestIDs.size() > 0)
+	    if(requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
 	    	killRunninfJob(requestIDs);
-	    requestIDs.clear();	
+	    requestIDs.clear();	/*clean the list*/
 	    	
             if (jobs2.size() > 0) {
+	        /*get the file for each jobs*/
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
                     TransferFiles* temp = (TransferFiles*) * fileiter;
+		    source_hostname = extractHostname(temp->SOURCE_SURL);
+		    destin_hostname = extractHostname(temp->DEST_SURL);
+		    protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
+		    proxy_file = get_proxy_cert(
+                		temp->DN,                                   // user_dn
+		                temp->CRED_ID,                                   // user_cred
+                		temp->VO_NAME,                                   // vo_name
+		                "",
+                		"",                                             // assoc_service
+		                "",                                             // assoc_service_type
+                		false, 
+                		"");
+
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << temp->FILE_ID << commit;
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO name: " << temp->VO_NAME << commit;
-
+		     
                     FileTransferScheduler scheduler(temp);
                     if (scheduler.schedule()) {
                         sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
                         destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
+			if(proxy_file.length() > 0){
+                        	params.append(" -proxy ");
+	                        params.append(proxy_file);	
+			}		
                         params.append(" -b ");
                         params.append(temp->SOURCE_SURL);
                         params.append(" -c ");
                         params.append(temp->DEST_SURL);
                         params.append(" -a ");
                         params.append(temp->JOB_ID);
-                        params.append(" -B ");
+                        params.append(" -B ");			
                         params.append(to_string(temp->FILE_ID));
                         params.append(" -C ");
                         params.append(temp->VO_NAME);
@@ -148,6 +191,17 @@ protected:
                             params.append(" -E ");
                             params.append(destSiteName);
                         }
+			if(std::string(temp->OVERWRITE).length() > 0){
+				params.append(" -d ");
+			}
+			if(protocol!=NULL && protocol->NOSTREAMS > 0){
+	                        params.append(" -e ");			
+	                        params.append(to_string(protocol->NOSTREAMS));
+			}
+			if(protocol!=NULL && protocol->URLCOPY_TX_TO > 0){
+	                        params.append(" -h ");			
+	                        params.append(to_string(protocol->URLCOPY_TX_TO));
+			}
 
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);
@@ -157,6 +211,8 @@ protected:
                         }
                         params.clear();
                     }
+		    if(protocol)
+		    	delete protocol;
                 }
 
                 /** cleanup resources */

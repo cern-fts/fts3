@@ -282,7 +282,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
     std::vector<TransferJobs*>::iterator iter;
     std::string selecttag = "getByJobId";
     std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
-                " t_file.file_id,  t_file.file_state, t_file.logical_name, "
+                " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.file_state, t_file.logical_name, "
             " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, "
    " t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
             " t_file.checksum, t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
@@ -315,6 +315,9 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
                 tr_files->JOB_ID = r->getString(3);
                 tr_files->VO_NAME = r->getString(4);
                 tr_files->FILE_ID = r->getInt(5);
+		tr_files->OVERWRITE = r->getString(6);
+		tr_files->DN = r->getString(7);
+		tr_files->CRED_ID = r->getString(8);
                 files.push_back(tr_files);
             }
 	    
@@ -1469,6 +1472,554 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs){
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }	
 }
+
+
+    /*protocol config*/
+bool OracleAPI::is_se_group_member(std::string se){
+	const std::string tag = "is_se_group_member";
+	std::string query = "select * from t_se_group where SE_NAME=:1 ";
+	bool exists = false;	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,se);	
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+	
+        if (r->next()) {           
+            exists = true;
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return exists;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return exists;
+    }	
+return exists;
+}
+
+bool OracleAPI::is_se_protocol_exist(std::string se){
+	const std::string tag = "is_se_protocol_exist";
+	std::string query = "select * from t_se_protocol where SOURCE_SE=:1 and DEST_SE IS NULL ";
+	bool exists = false;	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,se);	
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+	
+        if (r->next()) {           
+            exists = true;
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return exists;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return exists;
+    }	
+return exists;
+}
+    
+bool OracleAPI::is_se_pair_protocol_exist(std::string se1, std::string se2){
+	const std::string tag = "is_se_pair_protocol_exist";
+	std::string query = "select * from t_se_protocol where SOURCE_SE=:1 AND DEST_SE=:2 ";
+	bool exists = false;	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,se1);
+	s->setString(2,se2);	
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+
+        if (r->next()) {           
+            exists = true;
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return exists;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return exists;
+    }	
+return exists;
+}
+
+    
+SeProtocolConfig* OracleAPI::get_se_protocol_config(std::string se){
+	SeProtocolConfig* seProtocolConfig = NULL;
+	const std::string tag = "get_se_protocol_config";
+	std::string query = "select SE_ROW_ID,SE_GROUP_NAME,SOURCE_SE,DEST_SE,CONTACT,BANDWIDTH,NOSTREAMS,NOFILES, "
+				"TCP_BUFFER_SIZE,NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
+				"ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
+				"URLCOPY_GETDONE_TO,URLCOPY_TX_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
+				"TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where SOURCE_SE=:1 and DEST_SE IS NULL and SE_GROUP_NAME IS NULL";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,se);	
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+	seProtocolConfig = new SeProtocolConfig();
+        while (r->next()) {    
+		seProtocolConfig->NOSTREAMS = r->getInt(7);
+		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(24);
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return seProtocolConfig;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return seProtocolConfig;
+    }	
+return seProtocolConfig;
+}
+    
+SeProtocolConfig* OracleAPI::get_se_pair_protocol_config(std::string se1, std::string se2){
+	SeProtocolConfig* seProtocolConfig = NULL;
+	const std::string tag = "get_se_protocol_config";
+	std::string query = "select SE_ROW_ID,SE_GROUP_NAME,SOURCE_SE,DEST_SE,CONTACT,BANDWIDTH,NOSTREAMS,NOFILES, "
+				"TCP_BUFFER_SIZE,NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
+				"ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
+				"URLCOPY_GETDONE_TO,URLCOPY_TX_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
+				"TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where"
+				" SOURCE_SE=:1 and DEST_SE=:2 and SE_GROUP_NAME IS NULL";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,se1);
+	s->setString(2,se2);		
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+	
+	seProtocolConfig = new SeProtocolConfig();
+        while (r->next()) {    
+		seProtocolConfig->NOSTREAMS = r->getInt(7);
+		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(24);
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return seProtocolConfig;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return seProtocolConfig;
+    }	
+return seProtocolConfig;
+}
+    
+SeProtocolConfig* OracleAPI::get_se_group_protocol_config(std::string se){
+	SeProtocolConfig* seProtocolConfig = NULL;
+	const std::string tag = "get_se_group_protocol_config";
+	std::string query = "select SE_ROW_ID,SE_GROUP_NAME,SOURCE_SE,DEST_SE,CONTACT,BANDWIDTH,NOSTREAMS,NOFILES, "
+				"TCP_BUFFER_SIZE,NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
+				"ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
+				"URLCOPY_GETDONE_TO,URLCOPY_TX_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
+				"TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where"
+				" (SOURCE_SE=:1 OR DEST_SE=:2) and SE_GROUP_NAME IS NOT NULL";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,se);
+	s->setString(2,se);		
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+	
+	seProtocolConfig = new SeProtocolConfig();
+        while (r->next()) {    
+		seProtocolConfig->NOSTREAMS = r->getInt(7);
+		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(24);
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return seProtocolConfig;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return seProtocolConfig;
+    }	
+return seProtocolConfig;
+}
+
+void OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
+	const std::string tag = "add_se_protocol_config";
+	std::string query = "insert into t_se_protocol(SOURCE_SE,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, seProtocolConfig->SOURCE_SE);
+	s->setInt(2, seProtocolConfig->NOSTREAMS);	
+	s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
+	const std::string tag = "add_se_pair_protocol_config";
+	std::string query = "insert into t_se_protocol(SOURCE_SE,DEST_SE,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3,:4)";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, sePairProtocolConfig->SOURCE_SE);
+	s->setString(2, sePairProtocolConfig->DEST_SE);	
+	s->setInt(3, sePairProtocolConfig->NOSTREAMS);	
+	s->setInt(4, sePairProtocolConfig->URLCOPY_TX_TO);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
+	const std::string tag = "add_se_group_protocol_config";
+	std::string query = "insert into t_se_protocol(SE_GROUP_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);
+	s->setInt(2, seGroupProtocolConfig->NOSTREAMS);	
+	s->setInt(3, seGroupProtocolConfig->URLCOPY_TX_TO);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+    
+void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig){
+	const std::string tag = "delete_se_protocol_config";
+	std::string query = "delete from t_se_protocol where SOURCE_SE=:1 and DEST_SE IS NULL and SE_GROUP_NAME IS NULL ";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, seProtocolConfig->SOURCE_SE);				    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
+	const std::string tag = "delete_se_pair_protocol_config";
+	std::string query = "delete from t_se_protocol where SOURCE_SE=:1 and DEST_SE=:2 ";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, sePairProtocolConfig->SOURCE_SE);
+	s->setString(2, sePairProtocolConfig->DEST_SE);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
+	const std::string tag = "delete_se_group_protocol_config";
+	std::string query = "delete from t_se_protocol where SE_GROUP_NAME=:1";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+
+
+
+
+void OracleAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig){
+}
+
+void OracleAPI::update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
+}
+
+void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
+	int index = 1;
+	const std::string tag = "update_se_group_protocol_config";
+        std::stringstream query;
+    	query << "UPDATE t_se_protocol SET ";
+		if( (seGroupProtocolConfig->CONTACT).length() > 0){
+			query << " CONTACT =:" << index;
+			++index;
+		}
+		if( seGroupProtocolConfig->NOSTREAMS > -1){
+			query << ", NOSTREAMS =:" << index;
+			++index;
+		}
+		if( seGroupProtocolConfig->TCP_BUFFER_SIZE > -1){
+			query << ", TCP_BUFFER_SIZE =:" << index;
+			++index;
+		}
+		if( seGroupProtocolConfig->BLOCKSIZE > -1){
+			query << ", BLOCKSIZE =:" << index;
+			++index;
+		}
+		if( seGroupProtocolConfig->BLOCKSIZE > -1){
+			query << ", BLOCKSIZE =:" << index;
+			++index;
+		}
+    		query << " WHERE se_group_name =:" << index;
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query.str(), tag);		   			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+ 
+
+SeProtocolConfig* OracleAPI::getProtocol(std::string se1, std::string se2){
+	bool is_group = is_se_group_member(se2);
+	if(is_group){
+		return get_se_group_protocol_config(se2);
+	}else{
+		bool is_pair = is_se_pair_protocol_exist(se1, se2);
+		if(is_pair){
+			return get_se_pair_protocol_config(se1, se2);
+		}else{
+			bool is_se = is_se_protocol_exist(se2);
+			if(is_se)
+				return get_se_protocol_config(se2);
+		}
+	}
+	return NULL;
+}
+
+    /*se group operations*/
+void OracleAPI::add_se_to_group(std::string se, std::string group){
+	const std::string tag = "add_se_to_group";
+	std::string query = "insert into t_se_group(se_group_name, se_name) values(:1,:2)";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, group);
+	s->setString(2, se);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::remove_se_from_group(std::string se, std::string group){
+	const std::string tag = "remove_se_from_group";
+	std::string query = "delete from t_se_group where se_name=:1 and se_group_name=:2";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, se);
+	s->setString(2, group);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	           
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::delete_group(std::string group){
+	const std::string tag = "delete_group";
+	std::string query = "delete from t_se_group where se_group_name=:1";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, group);	    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+
+    /*t_credential API*/
+void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs){
+	const std::string tag = "insertGrDPStorageCacheElement";
+	std::string query = "INSERT INTO t_credential_cache (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES (:1, :2, :3, :4, :5)";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, dlg_id);
+	s->setString(2, dn);	    			    		
+	s->setString(3, cert_request);
+	s->setString(4, priv_key);		
+	s->setString(5, voms_attrs); 
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs){
+	const std::string tag = "updateGrDPStorageCacheElement";
+	std::string query = "UPDATE t_credential_cache SET cert_request = :1, priv_key = :2, voms_attrs = :3 WHERE dlg_id = :4 AND dn = :5";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, cert_request);
+	s->setString(2, priv_key);			
+	s->setString(3, voms_attrs); 
+	s->setString(4, dlg_id);
+	s->setString(5, dn);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+
+CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std::string dn){
+	CredCache* cred = NULL;
+	const std::string tag = "findGrDPStorageCacheElement";
+	std::string query = "SELECT dlg_id, dn, voms_attrs, cert_request, priv_key FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,delegationID);
+	s->setString(2,dn);		
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+		
+        if(r->next()) {    
+		cred = new CredCache();
+  		cred->delegationID = r->getString(1);
+		cred->DN = r->getString(2);
+		cred->vomsAttributes = r->getString(3);
+		cred->certificateRequest = r->getString(4);
+		cred->privateKey = r->getString(5);
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return cred;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return cred;
+    }	
+return cred;
+}
+
+
+
+
+void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::string dn){
+	const std::string tag = "deleteGrDPStorageCacheElement";
+	std::string query = "DELETE FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, delegationID);	    		
+	s->setString(2, dn);	    			
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+    
+void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time){
+	const std::string tag = "insertGrDPStorageElement";
+	std::string query = "INSERT INTO t_credential (dlg_id, dn, proxy, voms_attrs, termination_time) VALUES (:1, :2, :3, :4, :5)";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, dlg_id);
+	s->setString(2, dn);	    			    		
+	s->setString(3, proxy);
+	s->setString(4, voms_attrs);		
+	s->setTimestamp(5, OracleTypeConversions::toTimestamp(termination_time, conn->getEnv())); 
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time){
+	const std::string tag = "updateGrDPStorageElement";
+	std::string query = "UPDATE t_credential SET proxy = :1, voms_attrs = :2, termination_time = :3 WHERE dlg_id = :4 AND dn = :5";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, proxy);
+	s->setString(2, voms_attrs);			
+	s->setTimestamp(3, OracleTypeConversions::toTimestamp(termination_time, conn->getEnv())); 
+	s->setString(4, dlg_id);
+	s->setString(5, dn);	    			    		
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn){
+	Cred* cred = NULL;
+	const std::string tag = "findGrDPStorageElement";
+	std::string query = "SELECT dlg_id, dn, voms_attrs, proxy, termination_time FROM t_credential WHERE dlg_id = :1 AND dn = :2";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,delegationID);
+	s->setString(2,dn);		
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+		
+        if(r->next()) {    
+		cred = new Cred();
+		cred->delegationID = r->getString(1) ;
+		cred->DN = r->getString(2) ;
+		OracleTypeConversions::toString(r->getClob(3), cred->vomsAttributes);
+		OracleTypeConversions::toString(r->getClob(4), cred->proxy);
+		cred->termination_time = OracleTypeConversions::toTimeT(r->getTimestamp(5));						
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return cred;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return cred;
+    }	
+return cred;
+}
+
+void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string dn){
+	const std::string tag = "deleteGrDPStorageElement";
+	std::string query = "DELETE FROM t_credential WHERE dlg_id = :1 AND dn = :2";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1, delegationID);	    		
+	s->setString(2, dn);	    			
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+
 
 
 // the class factories

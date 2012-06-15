@@ -245,6 +245,58 @@ public:
     virtual void cancelJob(std::vector<std::string>& requestIDs);
     
     virtual void getCancelJob(std::vector<int>& requestIDs);
+
+    /*protocol config*/
+    virtual bool is_se_group_member(std::string se);
+
+    virtual bool is_se_protocol_exist(std::string se);
+    
+    virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2);
+
+    
+    virtual SeProtocolConfig* get_se_protocol_config(std::string se);
+    
+    virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2);
+    
+    virtual SeProtocolConfig* get_se_group_protocol_config(std::string se);
+
+    virtual void add_se_protocol_config(SeProtocolConfig* seProtocolConfig);
+
+    virtual void add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
+
+    virtual void add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);
+    
+    virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig);
+
+    virtual void delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
+
+    virtual void delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);   
+
+    virtual void update_se_protocol_config(SeProtocolConfig* seProtocolConfig);
+
+    virtual void update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
+
+    virtual void update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);   
+
+    virtual SeProtocolConfig* getProtocol(std::string se1, std::string se2);
+
+    /*se group operations*/
+    virtual void add_se_to_group(std::string sd, std::string group);
+    virtual void remove_se_from_group(std::string sd, std::string group);	
+    virtual void delete_group(std::string group);	
+    
+    
+    /*t_credential API*/
+    virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    virtual void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
+    virtual CredCache* findGrDPStorageCacheElement(std::string delegationID, std::string dn);
+    virtual void deleteGrDPStorageCacheElement(std::string delegationID, std::string dn);
+    
+    virtual void insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    virtual void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
+    virtual Cred* findGrDPStorageElement(std::string delegationID, std::string dn);
+    virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn);    
+ 
     
 private:
 	OracleConnection *conn;
