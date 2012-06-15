@@ -15,8 +15,8 @@
  * limitations under the License.
  ***********************************************/
  
-#ifndef GLITE_DATA_AGENTS_EXTRA_UTILITY_H_
-#define GLITE_DATA_AGENTS_EXTRA_UTILITY_H_
+#ifndef UTILITY_H_
+#define UTILITY_H_
 
 #include <string>
 #include <algorithm>
@@ -72,4 +72,4 @@ unsigned long hash_string(const std::string& str) throw ();
 std::string get_dirname(const std::string& dir_path) throw ();
 
 
-#endif //GLITE_DATA_AGENTS_EXTRA_UTILITY_H_
+#endif //UTILITY_H_

@@ -15,8 +15,8 @@
  * limitations under the License.
  ***********************************************/
 
-#ifndef GLITE_DATA_AGENTS_CRED_CRED_UTILITY_H_
-#define GLITE_DATA_AGENTS_CRED_CRED_UTILITY_H_
+#ifndef CRED_CRED_UTILITY_H_
+#define CRED_CRED_UTILITY_H_
 
 #include <string>
 
@@ -45,4 +45,4 @@ time_t get_proxy_lifetime(const std::string& filename) /*throw ()*/;
     
 
 
-#endif //GLITE_DATA_AGENTS_CRED_CRED_UTILITY_H_
+#endif //CRED_CRED_UTILITY_H_

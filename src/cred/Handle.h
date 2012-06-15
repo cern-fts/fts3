@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and 
  * limitations under the License.
  ***********************************************/
-#ifndef GLITE_DATA_AGENTS_EXTRA_HANDLE_H_
-#define GLITE_DATA_AGENTS_EXTRA_HANDLE_H_
+#ifndef HANDLE_H_
+#define HANDLE_H_
 
 #include <unistd.h>
 #include <boost/utility.hpp>
@@ -112,4 +112,4 @@ private:
  
 
 
-#endif //GLITE_DATA_AGENTS_EXTRA_TEMPFILE_H_
+#endif //TEMPFILE_H_

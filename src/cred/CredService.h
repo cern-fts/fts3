@@ -15,8 +15,8 @@
  * limitations under the License.
  ***********************************************/
 
-#ifndef GLITE_DATA_AGENTS_CRED_CREDSERVICE_H_
-#define GLITE_DATA_AGENTS_CRED_CREDSERVICE_H_
+#ifndef CRED_CREDSERVICE_H_
+#define CRED_CREDSERVICE_H_
 
 #include <iostream>
 /**
@@ -99,4 +99,4 @@ protected:
 };
 
 
-#endif //GLITE_DATA_AGENTS_CRED_CREDSERVICE_H_
+#endif //CRED_CREDSERVICE_H_

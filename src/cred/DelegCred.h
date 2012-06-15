@@ -15,8 +15,8 @@
  * limitations under the License.
  ***********************************************/
 
-#ifndef GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCRED_H_
-#define GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCRED_H_
+#ifndef CRED_DELEG_DELEGCRED_H_
+#define CRED_DELEG_DELEGCRED_H_
 
 #include "CredService.h"
 #include <boost/utility.hpp>
@@ -66,4 +66,4 @@ private:
 
 
 
-#endif //GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCRED_H_
+#endif //CRED_DELEG_DELEGCRED_H_

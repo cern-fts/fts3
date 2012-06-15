@@ -15,8 +15,8 @@
  * limitations under the License.
  ***********************************************/
 
-#ifndef GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCREDEXCEPTION_H_
-#define GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCREDEXCEPTION_H_
+#ifndef CRED_DELEG_DELEGCREDEXCEPTION_H_
+#define CRED_DELEG_DELEGCREDEXCEPTION_H_
 
 #include "CredServiceException.h"
 

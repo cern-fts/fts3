@@ -15,12 +15,11 @@
  * limitations under the License.
  ***********************************************/
 
-#ifndef GLITE_DATA_AGENTS_CRED_CREDSERVICEFACTORY_H_
-#define GLITE_DATA_AGENTS_CRED_CREDSERVICEFACTORY_H_
+#ifndef CRED_CREDSERVICEFACTORY_H_
+#define CRED_CREDSERVICEFACTORY_H_
 
-#include "glite/data/agents/cred/CredServiceException.h"
-#include "glite/data/agents/cred/CredService.h"
-#include "glite/data/agents/sd/sd-utility.h"
+#include "CredServiceException.h"
+#include "CredService.h"
 
 #include <string>
 #include <map>

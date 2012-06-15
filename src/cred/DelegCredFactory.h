@@ -15,8 +15,8 @@
  * limitations under the License.
  ***********************************************/
 
-#ifndef GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCREDFACTORY_H_
-#define GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCREDFACTORY_H_
+#ifndef CRED_DELEG_DELEGCREDFACTORY_H_
+#define CRED_DELEG_DELEGCREDFACTORY_H_
 
 #include "CredServiceFactory.h"
 #include "common/logger.h"
@@ -151,4 +151,4 @@ private:
 } // end namespace data
 } // end namespace glite
 
-#endif //GLITE_DATA_TRANSFER_AGENT_CRED_DELEG_DELEGCREDFACTORY_H_
+#endif //CRED_DELEG_DELEGCREDFACTORY_H_
