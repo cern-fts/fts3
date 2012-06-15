@@ -21,11 +21,14 @@
 #include "gsoap_request_handler.h"
 #include "ws-ifce/gsoap/fts3.nsmap"
 
+#include <cgsi_plugin.h>
+
 FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
 	ctx = soap_new();
+	soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_DISABLE_MAPPING | CGSI_OPT_SSL_COMPATIBLE);
 	soap_set_namespaces(ctx, fts3_namespaces);
 
 	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), port, 100);
