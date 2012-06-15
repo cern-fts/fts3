@@ -223,7 +223,7 @@ CREATE TABLE t_bad_ses (
    ,se_hostname         VARCHAR2(256)
 --
 -- The reason this host was added 
-   ,message             VARCHAR2(1024) DEFAULT NULL
+   ,message             VARCHAR2(2048) DEFAULT NULL
 --
 -- The time the host was added
    ,addition_time       TIMESTAMP WITH TIME ZONE
@@ -393,7 +393,7 @@ CREATE TABLE t_job (
   ,vo_name              VARCHAR2(50)
 --
 -- The reason the job is in the current state
-  ,reason           	VARCHAR2(1024)
+  ,reason           	VARCHAR2(2048)
 --
 -- The time that the job was submitted
   ,submit_time      	TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP AT TIME ZONE '+00:00'
@@ -516,7 +516,7 @@ CREATE TABLE t_file (
   ,reason_class		VARCHAR2(32)
 --
 -- The reason the file is in this state
-  ,reason           	VARCHAR2(1024)
+  ,reason           	VARCHAR2(2048)
 --
 -- Total number of failures (including transfer,catalog and prestaging errors)
   ,num_failures         INTEGER
@@ -667,7 +667,7 @@ CREATE TABLE t_transfer (
   ,reason_class         VARCHAR2(32)
 --
 -- The reason the transfer is in this state
-  ,reason               VARCHAR2(1024)
+  ,reason               VARCHAR2(2048)
 --
 -- the nominal size of the file (bytes)
   ,filesize         	INTEGER
@@ -738,7 +738,7 @@ CREATE TABLE t_stage_req (
   ,reason_class         VARCHAR2(32)
 --
 -- The reason the transfer is in this state
-  ,reason               VARCHAR2(1024)
+  ,reason               VARCHAR2(2048)
 --
 -- the nominal size of the file (bytes)
   ,filesize         	INTEGER

@@ -110,6 +110,7 @@ int main(int argc, char **argv) {
     std::string destSiteName("");
     char hostname[1024] = {0};
     std::string proxy("");
+    char errorBuffer[2048] = {0};
 
     for (int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
@@ -273,8 +274,9 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     if (gfal_stat(source_url.c_str(), &statbufsrc) < 0) {
-        log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno: " << gfal_posix_code_error() << '\n';
-        errorMessage = "Failed to get source file size";
+	std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
+        log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
+        errorMessage = "Failed to get source file size: " + tempError;		
 	errorScope = SOURCE;
 	reasonClass = GENERAL_FAILURE;
 	errorPhase = TRANSFER_PREPARATION;	
@@ -349,8 +351,10 @@ int main(int argc, char **argv) {
 
     msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     if (gfal_stat(dest_url.c_str(), &statbufdest) < 0) {
-        log << fileManagement.timestamp() << "ERROR Failed to get destination file size, errno: " << gfal_posix_code_error() << '\n';
-        errorMessage = "Failed to get destination file size";
+        memset(errorBuffer, 0, 2048);
+	std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
+        log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
+        errorMessage = "Failed to get dest file size: " + tempError;		
 	errorScope = DESTINATION;
 	reasonClass = GENERAL_FAILURE;
 	errorPhase = TRANSFER_FINALIZATION;	
