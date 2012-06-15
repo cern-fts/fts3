@@ -25,6 +25,7 @@
 #include "msg-ifce.h"
 #include "errors.h"
 #include "signal_logger.h"
+#include "UserProxyEnv.h"
 
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -108,6 +109,7 @@ int main(int argc, char **argv) {
     std::string sourceSiteName("");
     std::string destSiteName("");
     char hostname[1024] = {0};
+    std::string proxy("");
 
     for (int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
@@ -173,8 +175,16 @@ int main(int argc, char **argv) {
             http_timeout = std::atoi(argv[i + 1]);
         if (temp.compare("-B") == 0)
             file_id = std::string(argv[i + 1]);
+        if (temp.compare("-proxy") == 0)
+            proxy = std::string(argv[i + 1]);	    
     }
 
+    UserProxyEnv* cert = NULL;
+    if(proxy.length() > 0){
+	    // Set Proxy Env                                     
+	    cert = new UserProxyEnv(proxy);
+    }
+        
     //FileManagement fileManagement;
     //Reporter reporter;
     fileManagement.setSourceUrl(source_url);
@@ -256,6 +266,7 @@ int main(int argc, char **argv) {
     log << fileManagement.timestamp() << "INFO algorithm:" << algorithm << '\n'; //y
     log << fileManagement.timestamp() << "INFO checksum_value:" << checksum_value << '\n'; //z
     log << fileManagement.timestamp() << "INFO compare_checksum:" << compare_checksum << '\n'; //A
+    log << fileManagement.timestamp() << "INFO proxy:" << proxy << '\n'; //proxy
 
     reporter.constructMessage(job_id, file_id, "ACTIVE", "");
 
@@ -277,8 +288,12 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
     }
 
-    //overwrite dest file if exists	      
-    gfalt_set_replace_existing_file(params, TRUE, &tmp_err);
+    //overwrite dest file if exists
+    if(overwrite)	      
+    	gfalt_set_replace_existing_file(params, TRUE, &tmp_err);
+
+    gfalt_set_timeout(params, timeout, NULL);
+    gfalt_set_nbstreams(params, nbstreams, NULL);
 
     msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
@@ -298,7 +313,7 @@ int main(int argc, char **argv) {
         goto stop;
     }
     log << fileManagement.timestamp() << "INFO begin copy" << '\n';
-    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
 
     msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
@@ -371,5 +386,8 @@ stop:
     logStream.close();
     fileManagement.archive();
 
+    if(cert)
+    	delete cert;
+	
     return EXIT_SUCCESS;
 }
