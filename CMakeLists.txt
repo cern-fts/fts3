@@ -19,6 +19,8 @@ project(FTS3)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
+
+link_directories (${PROJECT_BINARY_DIR}/src/cred)
 link_directories (${PROJECT_BINARY_DIR}/src/common) 
 link_directories (${PROJECT_BINARY_DIR}/src/ws-ifce) 
 link_directories (${PROJECT_BINARY_DIR}/src/config) 
