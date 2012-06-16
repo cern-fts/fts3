@@ -11,8 +11,8 @@ export PATH=$PATH:$URLCOPY
 export LD_LIBRARY_PATH=`sudo locate libfts3_db_oracle.so | head -1 | sed 's/\/libfts3_db_oracle.so//'`
 
 echo "Prepare fts3 server config file"
-if [ ! -f "/etc/sysconfig/fts3config" ]; then
-sudo cat > /etc/sysconfig/fts3config <<EOF
+if [ ! -f "/etc/fts3config" ]; then
+sudo cat > /etc/fts3config <<EOF
 TransferPort=8080
 IP=0.0.0.0
 DbConnectString=
@@ -400,6 +400,7 @@ sudo yum -y install gfal2-debuginfo
 sudo yum -y install libuuid-devel
 sudo yum -y install activemq-cpp-devel
 sudo yum -y install globus-gssapi-error
+sudo yum -y install globus-gssapi-error-devel
 sudo yum -y install libxslt
 sudo yum -y install oracle-instantclient-devel
 sudo yum -y install libXau-devel
@@ -408,6 +409,7 @@ sudo yum -y install voms-clients
 sudo yum -y install gfal2-plugin-srm
 sudo yum -y install gsoap
 sudo yum -y install globus-gass-transfer
+sudo yum -y install globus-gass-transfer-devel
 sudo yum -y install apr-util-devel
 sudo yum -y install CGSI-gSOAP
 sudo yum -y install glibc-devel
@@ -417,7 +419,9 @@ sudo yum -y install fuse
 sudo yum -y install mysql-libs
 sudo yum -y install gfal2-plugin-gridftp
 sudo yum -y install globus-gsi-sysconfig
+sudo yum -y install globus-gsi-sysconfig-devel
 sudo yum -y install globus-gass-copy
+sudo yum -y install globus-gass-copy-devel
 sudo yum -y install libuuid
 sudo yum -y install is-interface-debuginfo
 sudo yum -y install glibc
@@ -427,6 +431,7 @@ sudo yum -y install boost-devel
 sudo yum -y install mlocate
 sudo yum -y install gfal2-plugin-lfc
 sudo yum -y install globus-gsi-cert-utils
+sudo yum -y install globus-gsi-cert-utils-devel
 sudo yum -y install gcc
 sudo yum -y install valgrind
 sudo yum -y install oracle-instantclient-basic
@@ -435,7 +440,9 @@ sudo yum -y install gfal2-core
 sudo yum -y install gfal2-plugin-dcap
 sudo yum -y install gfal2-all
 sudo yum -y install globus-gsi-proxy-core
+sudo yum -y install globus-gsi-proxy-core-devel
 sudo yum -y install globus-ftp-control
+sudo yum -y install globus-ftp-control-devel
 sudo yum -y install boost-signals
 sudo yum -y install is-interface
 sudo yum -y install cmake
@@ -443,7 +450,9 @@ sudo yum -y install boost-doc
 sudo yum -y install libgcc
 sudo yum -y install gfal2-doc
 sudo yum -y install globus-gsi-openssl-error
+sudo yum -y install globus-gsi-openssl-error-devel
 sudo yum -y install globus-xio
+sudo yum -y install globus-xio-devel
 sudo yum -y install globus-callout
 sudo yum -y install openldap
 sudo yum -y install globus-gass-copy-progs
@@ -455,7 +464,9 @@ sudo yum -y install CGSI-gSOAP-devel
 sudo yum -y install gfal2-plugin-rfio
 sudo yum -y install srm-ifce
 sudo yum -y install globus-gsi-callback
+sudo yum -y install globus-gsi-callback-devel
 sudo yum -y install globus-io
+sudo yum -y install globus-io-devel
 sudo yum -y install gsoap-devel
 sudo yum -y install boost-iostreams
 sudo yum -y install gfal
@@ -469,8 +480,11 @@ sudo yum -y install boost-openmpi
 sudo yum -y install strace
 sudo yum -y install gfal2-transfer
 sudo yum -y install globus-common
+sudo yum -y install globus-common-devel
 sudo yum -y install globus-gssapi-gsi
+sudo yum -y install globus-gssapi-gsi-devel
 sudo yum -y install globus-ftp-client
+sudo yum -y install globus-ftp-client-devel
 sudo yum -y install is-interface-devel
 sudo yum -y install boost-program-options
 sudo yum -y install apr
@@ -481,16 +495,21 @@ sudo yum -y install boost
 sudo yum -y install glibc-common
 sudo yum -y install gfal2
 sudo yum -y install globus-openssl-module
+sudo yum -y install globus-openssl-module-devel
 sudo yum -y install globus-gsi-credential
+sudo yum -y install globus-gsi-credential-devel
 sudo yum -y install pkgconfig
 sudo yum -y install openldap-devel
 sudo yum -y install lcg-CA
 sudo yum -y install boost-openmpi-devel
 sudo yum -y install gfal2-devel
 sudo yum -y install globus-gsi-proxy-ssl
+sudo yum -y install globus-gsi-proxy-ssl-devel
 sudo yum -y install globus-xio-popen-driver
+sudo yum -y install globus-xio-popen-driver-devel
 sudo yum -y install srm-ifce-debuginfo
 sudo yum -y install globus-xio-gsi-driver
+sudo yum -y install globus-xio-gsi-driver-devel
 sudo yum -y install boost-test
 sudo yum -y install openssl
 
@@ -502,6 +521,6 @@ sudo fetch-crl
 echo " Now manually set X509_USER_CERT & X509_USER_KEY to point to your certificate and key"
 echo " Run voms-proxy-init -voms dteam"
 
-echo "Set username, password and connection string in /etc/sysconfig/fts3config"
+echo "Set username, password and oracle connection string in /etc/fts3config"
 
 echo "Set the password to connect to the broker in /etc/fts-msg-monitoring.conf"
