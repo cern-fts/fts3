@@ -36,4 +36,4 @@ target_link_libraries(fts3_url_copy  -luuid  -lboost_thread-mt -lgfal_transfer -
 
 
 install(TARGETS         fts3_url_copy 
-	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )

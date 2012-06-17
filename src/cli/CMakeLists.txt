@@ -156,6 +156,6 @@ install(TARGETS
     fts3-transfer-listvomanagers
     fts3-transfer-getroles
 
-    RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-    LIBRARY             DESTINATION ${BIN_INSTALL_DIR} 
+    RUNTIME             DESTINATION ${BIN_INSTALL_DIR}
+    LIBRARY             DESTINATION ${LIB_INSTALL_DIR} 
 )

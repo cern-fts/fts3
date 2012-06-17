@@ -50,10 +50,10 @@ target_link_libraries(fts3_msg_cron -lpthread )
 
 
 install(TARGETS         fts3_msg_bulk 
-	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
 
 install(TARGETS         fts3_msg_cron
-	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
 
 install(TARGETS         fts3_msg_ifce 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

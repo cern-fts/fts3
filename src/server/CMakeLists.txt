@@ -85,4 +85,4 @@ install(TARGETS         fts3_server_lib
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
 install(TARGETS         fts3_server 
-	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
