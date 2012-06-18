@@ -88,3 +88,8 @@ add_library(fts3_ws_ifce_client SHARED
 
 set_target_properties(fts3_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
 target_link_libraries(fts3_ws_ifce_client -lgsoap++)
+
+install(TARGETS         fts3_ws_ifce_client fts3_ws_ifce_server
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+

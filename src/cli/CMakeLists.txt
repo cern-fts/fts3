@@ -149,13 +149,15 @@ target_link_libraries (fts3-config-get fts3_cli_common)
 
 # ------------------------------------------------------------------------
 
-install(TARGETS
-    fts3-transfer-submit
-    fts3-transfer-status
-    fts3-transfer-list
-    fts3-transfer-listvomanagers
-    fts3-transfer-getroles
 
-    RUNTIME             DESTINATION ${BIN_INSTALL_DIR}
-    LIBRARY             DESTINATION ${LIB_INSTALL_DIR} 
-)
+install(TARGETS
+	fts3-transfer-submit
+    	fts3-transfer-status
+    	fts3-transfer-list
+    	fts3-transfer-listvomanagers
+    	fts3-transfer-getroles
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
+
+install(TARGETS         fts3_cli_common 
+	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
