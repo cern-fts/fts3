@@ -51,7 +51,7 @@ SOAPSOURCES = \
 	env.cpp
 
 VERSIONFILES = \
-	libdelegation_api_cpp.ver \
+	libfts3_delegation_api_cpp.ver \
 	libdelegation_server_api_cpp.ver
 
 BUILT_SOURCES = \
@@ -69,29 +69,29 @@ MAINTAINERCLEANFILES = Makefile.in
 
 if EXPORT_SERVER_API
 lib_LTLIBRARIES = \
-	libdelegation_api_cpp.la \
+	libfts3_delegation_api_cpp.la \
 	libdelegation_server_api_cpp.la
 else
 lib_LTLIBRARIES = \
-	libdelegation_api_cpp.la
+	libfts3_delegation_api_cpp.la
 endif
 
 %.ver: shlib_version.template
 	sed -e s/@libname\@/$(basename $@)_`expr $(INTERFACE_LIBTOOL_CURRENT) - $(INTERFACE_LIBTOOL_AGE)`/ $< > $@
 
 
-libdelegation_api_cpp_la_SOURCES = \
+libfts3_delegation_api_cpp_la_SOURCES = \
 	delegationClientLib.cpp \
 	envC.cpp \
 	env.cpp
 
 
-libdelegation_api_cpp_la_LIBADD = \
+libfts3_delegation_api_cpp_la_LIBADD = \
 	$(CGSI_GSOAP_CPP_LIBS) \
 	$(GSOAP_LIBS_EMI_CPP) \
 	$(GLOBUS_GSS_NOTHR_LIBS)
 
-libdelegation_api_cpp_la_LDFLAGS = \
+libfts3_delegation_api_cpp_la_LDFLAGS = \
 	$(SYMVER_LDFLAGS) \
 	-version-info $(INTERFACE_LIBTOOL_CURRENT):$(INTERFACE_LIBTOOL_REVISION):$(INTERFACE_LIBTOOL_AGE)
 
