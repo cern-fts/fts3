@@ -1,0 +1,8 @@
+TransferPort=8080
+IP=0.0.0.0
+DbConnectString=
+DbType=oracle
+DbUserName=
+DbPassword=
+TransferLogDirectory=/var/log/fts3
+ConfigPort=8081
