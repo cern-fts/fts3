@@ -16,11 +16,11 @@ if (UNIX)
 	ENDIF (CMAKE_SIZEOF_VOID_P EQUAL 4)
 
   SET(EXEC_INSTALL_PREFIX
-    "${CMAKE_INSTALL_PREFIX}"
+    "${CMAKE_INSTALL_PREFIX}/usr"
     CACHE PATH  "Base directory for executables and libraries"
   )
   SET(SHARE_INSTALL_PREFIX
-    "${CMAKE_INSTALL_PREFIX}/share"
+    "${CMAKE_INSTALL_PREFIX}/usr/share"
     CACHE PATH "Base directory for files which go to share/"
   )
   SET(DATA_INSTALL_PREFIX
@@ -55,7 +55,7 @@ if (UNIX)
     CACHE PATH "The subdirectory relative to the install prefix where plugins will be installed (default is prefix/lib/${APPLICATION_NAME})"
   )
   SET(INCLUDE_INSTALL_DIR
-    "${CMAKE_INSTALL_PREFIX}/include"
+    "${CMAKE_INSTALL_PREFIX}/usr/include"
     CACHE PATH "The subdirectory to the header prefix (default prefix/include)"
   )
 
@@ -97,7 +97,7 @@ if (UNIX)
   )
 
   SET(SYSCONF_INSTALL_DIR
-    "${EXEC_INSTALL_PREFIX}/etc"
+    "${CMAKE_INSTALL_PREFIX}/etc"
     CACHE PATH "The ${APPLICATION_NAME} sysconfig install dir (default prefix/etc)"
   )
   SET(MAN_INSTALL_DIR

@@ -15,24 +15,19 @@
 
 cmake_minimum_required(VERSION 2.6)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
-include_directories (${fts3_include_dir})
+set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
+install(FILES         fts3-msg-bulk.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/init.d )
 
-file(GLOB fts3_config "*.cpp")
-#add_definitions(-E)
-add_library(fts3_config SHARED ${fts3_config})
-#target_link_libraries(fts3_config ${Boost_LIBRARIES} )
-target_link_libraries(fts3_config -lboost_program_options )
+install(FILES         fts3-msg-cron.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/init.d )
 
-install(TARGETS         fts3_config 
-	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+install(FILES         fts3-msg-cron.logrotate
+        DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d )
 
-install(FILES         fts3config
-        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )
+install(FILES         fts3-server.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/init.d )
 
-install(FILES         fts-msg-monitoring.conf
-        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )
-
+install(FILES         fts3-server.logrotate
+        DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d )
