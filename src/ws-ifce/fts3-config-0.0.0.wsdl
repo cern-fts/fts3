@@ -2,7 +2,7 @@
 <definitions targetNamespace="http://cern.ch/wsdl/services/fts3/config"
     xmlns="http://schemas.xmlsoap.org/wsdl/"
     xmlns:impl="http://cern.ch/wsdl/services/fts3/config"
-    xmlns:config="http://http://cern.ch/fts3/config"
+    xmlns:config="http://cern.ch/fts3/config"
     xmlns:apachesoap="http://xml.apache.org/xml-soap"
     xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
     xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
@@ -10,7 +10,7 @@
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
     <wsdl:types>
-        <schema targetNamespace="http://http://cern.ch/fts3/config" xmlns="http://www.w3.org/2001/XMLSchema">
+        <schema targetNamespace="http://cern.ch/fts3/config" xmlns="http://www.w3.org/2001/XMLSchema">
 
             <import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
 

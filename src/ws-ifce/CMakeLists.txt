@@ -40,6 +40,14 @@ add_custom_command(
 # Generate transfer & config interface
 set(fts3_transfer_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-transfer-0.0.0.wsdl")
 set(fts3_config_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-config-0.0.0.wsdl")
+set(fts3_delegation_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-delegation-0.0.0.wsdl")
+
+set(wsdl_files 
+	${fts3_transfer_wsdl} 
+	${fts3_config_wsdl} 
+	${fts3_delegation_wsdl}
+)
+
 set(gsoap_typemap "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/typemap.dat")
 set(gsoap_header_file "${generated_files_dir}/gsoap_interface.h")
 set(gsoap_prefix "fts3")
@@ -53,7 +61,7 @@ set(gsoap_source_files
 add_custom_command(
     OUTPUT ${gsoap_header_file}
     DEPENDS ${gsoap_typemap} ${fts3_transfer_wsdl} 
-    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_typemap} ${fts3_transfer_wsdl} ${fts3_config_wsdl} -o ${gsoap_header_file}
+    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_typemap} ${wsdl_files} -o ${gsoap_header_file}
 )
 
 add_custom_command(
