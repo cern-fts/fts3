@@ -60,7 +60,7 @@ FTS3 client
 %build
 mkdir build
 cd build
-cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=/usr ..
+cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
 make VERBOSE=1
 
 
@@ -76,10 +76,18 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n fts3-server
 %defattr(-,root,root,-)
+%dir %{_sysconfdir}/fts3
 %{_sbindir}/fts3_msg_cron
 %{_sbindir}/fts3_msg_bulk
 %{_sbindir}/fts3_server
 %{_sbindir}/fts3_url_copy
+%{_initddir}/fts3-msg-bulk.initd
+%{_initddir}/fts3-server.initd
+%{_initddir}/fts3-msg-cron.initd
+%{_sysconfdir}/logrotate.d/fts3-msg-cron.logrotate
+%{_sysconfdir}/logrotate.d/fts3-server.logrotate
+%config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
+%config(noreplace) %{_sysconfdir}/fts3/fts3config
 
 %files -n fts3-client
 %defattr(-,root,root,-)
