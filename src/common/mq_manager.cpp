@@ -25,17 +25,13 @@ boost::scoped_ptr<message_queue> mq_;
       mq_->send(msg, sizeof(message), 0);
     }
  
-    struct message* QueueManager::receive()
+    void QueueManager::receive(struct message* msg)
     {
-      struct message* msg = new struct message;
- 
       unsigned int priority;
       std::size_t recvd_size;
       mq_->receive(msg, sizeof(message), recvd_size, priority);
- 
-      return msg;
     }
  
  
 
-void QueueManager::remove() { message_queue::remove(FTS3_MQ_NAME); }
+void QueueManager::remove() {}

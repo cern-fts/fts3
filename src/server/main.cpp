@@ -37,7 +37,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 void _handle_sigint(int)
 {
     theServer().stop();
-    kill(getpid(), 9);
     exit(EXIT_SUCCESS);
 }
 

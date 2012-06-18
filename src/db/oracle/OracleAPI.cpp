@@ -303,7 +303,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
         }	    
 	    jobAppender = jobAppender.substr(0, jobAppender.length()-1);
 	    select.append(jobAppender);
-	    select.append(") ORDER BY t_file.file_id DESC");
+	    select.append(") ORDER BY t_file.file_id DESC ");
 	    		     
             oracle::occi::Statement* s = conn->createStatement(select,"");	    
             oracle::occi::ResultSet* r = conn->createResultset(s);

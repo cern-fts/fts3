@@ -38,7 +38,7 @@ class QueueManager
  
     void send(struct message* msg);
  
-    struct message* receive();
+    void receive(struct message* msg);
 
   };
 

@@ -42,11 +42,16 @@ std::string SiteName::getSiteName(std::string& hostname){
 
 
 std::string  SiteName::getFromBDII(std::string& hostname){
+	std::string site("");
 	char* sitename = SD_getServiceSite(hostname.c_str(), &exception);
 	if (exception.status != SDStatus_SUCCESS)
             SD_freeException(&exception);
-	if(sitename)
-		return std::string(sitename);	    
+	if(sitename){
+		site =  std::string(sitename);	    
+		if(sitename)
+			free(sitename);
+		return site;	
+	}
 
 	return std::string("");		
 }
