@@ -40,8 +40,10 @@ set(fts3_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/RequestLister.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapDelegationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_config_methods.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_deleg_methods.cpp"
 )
 
 add_library(fts3_server_gsoap_transfer SHARED ${fts3_server_gsoap_transfer_sources})
