@@ -156,7 +156,7 @@ install(TARGETS
     	fts3-transfer-list
     	fts3-transfer-listvomanagers
     	fts3-transfer-getroles
-	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
+	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
 install(TARGETS         fts3_cli_common 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

@@ -107,6 +107,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts3_proxy.so
 %{_libdir}/libfts3_server_gsoap_transfer.so
 %{_libdir}/libfts3_server_lib.so
+%{_libdir}/libfts3_cli_common.so
+%{_libdir}/libfts3_ws_ifce_client.so
+%{_libdir}/libfts3_ws_ifce_server.so
 %doc
 
 
