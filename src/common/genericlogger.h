@@ -51,7 +51,7 @@ protected:
 
 /** \file Generic Logger class. Supports dependency injection, etc.
  * You can redefine the behaviour of Logger by using different Traits class.
- * Good for testing as well, to injetct dependencies. */
+ * Good for testing as well, to inject dependencies. */
 template <typename Traits>
 class GenericLogger : public LoggerBase
 {
@@ -69,6 +69,40 @@ public:
     {
         Traits::openLog();
     }
+    
+    std::string timestamp() {
+    		std::string timestapStr("");
+    		time_t ltime; /* calendar time */
+    		ltime = time(NULL); /* get current cal time */
+    		timestapStr = asctime(localtime(&ltime));
+    		timestapStr.erase(timestapStr.end() - 1);
+    		return timestapStr + " ";
+	}
+
+    std::string logLevelStringRepresentation(int loglevel) {
+		switch (loglevel) {
+  			case 0:
+				return std::string("EMERG   ");
+  			case 1:
+				return std::string("DEBUG   ");			
+  			case 2:
+				return std::string("WARNING ");						
+  			case 3:
+				return std::string("INFO    ");						
+  			case 4:
+				return std::string("ALERT   ");						
+  			case 5:
+				return std::string("CRIT    ");						
+  			case 6:							
+				return std::string("ERR     ");								   				 
+  			case 7:	 			
+				return std::string("NOTICE  ");						
+  			default:
+				return std::string("INFO    ");						
+    				
+  		}
+	}
+
 
     /* ---------------------------------------------------------------------- */
 
@@ -135,8 +169,8 @@ public:
 	    commit(*this);
     FTS3_COMMON_MONITOR_START_CRITICAL
 	    _actLogLevel = LOGLEVEL;
-        _logLine << "thread:" << ThreadTraits::get_id() << _separator();
-        bool isDebug = (Traits::DEBUG == _actLogLevel);
+        _logLine << logLevelStringRepresentation(_actLogLevel) << timestamp() << _separator();
+        bool isDebug = (Traits::ERR == _actLogLevel);
 
 	    if (isDebug)
         {

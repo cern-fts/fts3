@@ -35,7 +35,7 @@ void Error<true>::_logSystemError()
 /* -------------------------------------------------------------------------- */
 
 template<>
-const char* Error<false, Err::e_detailedReport>::what() const throw()
+const char* Error<false, Err::e_detailedReport>::what()
 {
     return _description().c_str();
 }
@@ -44,14 +44,14 @@ const char* Error<false, Err::e_detailedReport>::what() const throw()
 
 void Err::log(const char* aFile, const char* aFunc, const int aLineNo)
 {
-    theLogger().newLog<Logger::type_traits::DEBUG>(aFile, aFunc, aLineNo) << _description();
+    theLogger().newLog<Logger::type_traits::ERR>(aFile, aFunc, aLineNo) << _description();
     _logSystemError();
     theLogger() << commit;
 } 
 
 /* -------------------------------------------------------------------------- */
 
-const char* Err::what() const throw()
+const char* Err::what()
 {
     return "Unknown error";
 }

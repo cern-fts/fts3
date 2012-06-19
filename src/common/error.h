@@ -40,7 +40,6 @@ limitations under the License. */
 #define FTS3_COMMON_EXCEPTION_THROW(aError) \
 { \
     FTS3_COMMON_EXCEPTION_LOGERROR(aError) \
-	throw aError; \
 }
 
 /* ========================================================================== */
@@ -48,7 +47,7 @@ limitations under the License. */
 FTS3_COMMON_NAMESPACE_START
 
 /** General FTS3 error class. */
-class Err : public std::exception
+class Err 
 {
 public:
     enum ErrorType 
@@ -63,7 +62,7 @@ public:
     
     /* ---------------------------------------------------------------------- */
     
-    virtual const char* what() const throw();
+    virtual const char* what();
 
 protected:
     
@@ -89,7 +88,7 @@ template<bool IS_SYSTEM_ERROR, Err::ErrorType = Err::e_defaultReport>
 class Error : virtual public Err
 {
 private:
-    virtual const char* what() const throw() 
+    virtual const char* what() 
     { 
         return Err::what(); 
     };
@@ -118,7 +117,7 @@ public:
 
     /* ---------------------------------------------------------------------- */
 	
-    virtual ~Err_System() throw() 
+    virtual ~Err_System()
     {
         // EMPTY
     };

@@ -64,9 +64,9 @@ public:
 	virtual void execute () {
 		try {
 			_op();
-		} catch (Err& e) {
+		} catch (const Err& e) {
 			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FTS3 Server Exception in " << id() << commit;
-		} catch (std::exception& e) {
+		} catch (const std::exception& e) {
 			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "C++ Exception in " << id() << e.what() << commit;
 		} catch (...) {
 			std::cerr << "Unknown exception " << std::endl;

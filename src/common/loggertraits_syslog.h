@@ -31,7 +31,7 @@ FTS3_COMMON_NAMESPACE_START
 /** \brief Traits for logger, using syslog. */
 struct LoggerTraits_Syslog
 {
-    #define FTS3_TMP_ACTION(r,data,t) t = BOOST_PP_CAT(LOG_, t),
+    /*#define FTS3_TMP_ACTION(r,data,t) t = BOOST_PP_CAT(LOG_, t),
 
     enum {
         BOOST_PP_SEQ_FOR_EACH(FTS3_TMP_ACTION, ~, FTS3_COMMON_LOGGER_SUPPORTED_LOG_LEVELS)
@@ -39,6 +39,8 @@ struct LoggerTraits_Syslog
     };
 
     #undef FTS3_TMP_ACTION
+    */
+    enum {EMERG,DEBUG,WARNING,INFO,ALERT,CRIT,ERR,NOTICE};
 
     /// Open syslog file
     static void openLog();

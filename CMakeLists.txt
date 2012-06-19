@@ -30,7 +30,11 @@ link_directories (${PROJECT_BINARY_DIR}/src/db/generic)
 link_directories (${PROJECT_BINARY_DIR}/src/cli)
 link_directories (${PROJECT_BINARY_DIR}/src/monitoring) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
+#set(CMAKE_EXE_FLAGS  "${CMAKE_EXE_FLAGS} -pg")
+#set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -pg")
+
+
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
 include(DefineInstallationPaths REQUIRED)

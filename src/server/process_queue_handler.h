@@ -66,10 +66,14 @@ public:
      try {
         qm = new QueueManager(true);
     } catch (interprocess_exception &ex) {
-        if (qm)
-            delete qm;
-	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Check permissions of /dev/shm/fts3mq" << commit;    
-	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+        /*shared mem segment already exists, reuse it*/
+	try{
+		qm = new QueueManager(false);    
+	}
+	catch (interprocess_exception &ex) {
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+	}
+	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Check permissions of /dev/shm/fts3mq, message:" << ex.what() << commit; 	
     }    
     }
 
