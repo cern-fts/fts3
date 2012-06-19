@@ -68,6 +68,7 @@ public:
     } catch (interprocess_exception &ex) {
         if (qm)
             delete qm;
+	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Check permissions of /dev/shm/fts3mq" << commit;    
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
     }    
     }

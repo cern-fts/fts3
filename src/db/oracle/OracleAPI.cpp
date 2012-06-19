@@ -1853,16 +1853,14 @@ void OracleAPI::delete_group(std::string group){
     /*t_credential API*/
 void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs){
 	const std::string tag = "insertGrDPStorageCacheElement";
-	std::string query = "INSERT INTO t_credential_cache (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES (:1, :2, :3, :4, :5)";
+	std::string query = "INSERT INTO t_credential_cache (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES (:1, :2, empty_clob(), empty_clob(), empty_clob())";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, dlg_id);
 	s->setString(2, dn);	    			    		
-	s->setString(3, cert_request);
-	s->setString(4, priv_key);		
-	s->setString(5, voms_attrs); 
         s->executeUpdate();
 	conn->commit();	       	    
+	updateGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs);
         conn->destroyStatement(s, tag);	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -1904,9 +1902,9 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
 		cred = new CredCache();
   		cred->delegationID = r->getString(1);
 		cred->DN = r->getString(2);
-		cred->vomsAttributes = r->getString(3);
-		cred->certificateRequest = r->getString(4);
-		cred->privateKey = r->getString(5);
+		OracleTypeConversions::toString(r->getClob(3), cred->vomsAttributes);
+		OracleTypeConversions::toString(r->getClob(4), cred->certificateRequest);
+		OracleTypeConversions::toString(r->getClob(5), cred->privateKey);
         }        
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
@@ -1940,16 +1938,15 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
     
 void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time){
 	const std::string tag = "insertGrDPStorageElement";
-	std::string query = "INSERT INTO t_credential (dlg_id, dn, proxy, voms_attrs, termination_time) VALUES (:1, :2, :3, :4, :5)";
+	std::string query = "INSERT INTO t_credential (dlg_id, dn, termination_time, proxy, voms_attrs, ) VALUES (:1, :2, :3, empty_clob(), empty_clob())";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, dlg_id);
-	s->setString(2, dn);	    			    		
-	s->setString(3, proxy);
-	s->setString(4, voms_attrs);		
-	s->setTimestamp(5, OracleTypeConversions::toTimestamp(termination_time, conn->getEnv())); 
+	s->setString(2, dn);	    		
+	s->setTimestamp(3, OracleTypeConversions::toTimestamp(termination_time, conn->getEnv())); 		    		
         s->executeUpdate();
-	conn->commit();	       	    
+	conn->commit();	
+	updateGrDPStorageElement(dlg_id, dn, proxy, voms_attrs, termination_time);       	    
         conn->destroyStatement(s, tag);	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();

@@ -10,15 +10,13 @@ CREATE TABLE t_credential_cache (
    dn		VARCHAR2(255),
 --
 -- certificate request
-   cert_request CLOB
-        CONSTRAINT cred_cache_cert_req_not_null NOT NULL,
+   cert_request CLOB default empty_clob(),
 --
 -- private key of request
-   priv_key	CLOB
-        CONSTRAINT cred_cache_priv_key_not_null NOT NULL,
+   priv_key	CLOB default empty_clob(),
 --
 -- list of voms attributes contained in delegated proxy
-   voms_attrs CLOB,
+   voms_attrs CLOB default empty_clob(),
 --
 -- set primary key
    CONSTRAINT cred_cache_pk PRIMARY KEY (dlg_id, dn)
@@ -36,11 +34,10 @@ CREATE TABLE t_credential (
    dn		VARCHAR2(255),
 --
 -- delegated proxy certificate chain
-   proxy CLOB
-        CONSTRAINT cred_proxy_not_null NOT NULL,
+   proxy CLOB default empty_clob(),
 --
 -- list of voms attributes contained in delegated proxy
-   voms_attrs CLOB,
+   voms_attrs CLOB default empty_clob(),
 --
 -- termination time of the credential
    termination_time TIMESTAMP WITH TIME ZONE

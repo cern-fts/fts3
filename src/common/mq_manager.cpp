@@ -34,4 +34,4 @@ boost::scoped_ptr<message_queue> mq_;
  
  
 
-void QueueManager::remove() {}
+void QueueManager::remove() { message_queue::remove(FTS3_MQ_NAME); }
