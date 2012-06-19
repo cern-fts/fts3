@@ -1,6 +1,8 @@
 version=${shell grep '^Version:' ./specs/fts3.spec | awk '{print $$2}' }
 name=fts3
 rpmbuild=${shell pwd}/rpmbuild
+MOCKENV=epel-6-cernonly-x86_64
+MOCKARGS=--trace --verbose
 
 dist: clean
 	tar --create --gzip --directory ../.. --file ./${name}-${version}.tar.gz --exclude=./packaging --exclude .svn .
@@ -21,6 +23,9 @@ srpm: prepare ./specs/$(name).spec
 	rpmbuild --nodeps -bs --define='_topdir ${rpmbuild}' ./specs/$(name).spec
 
 rpm: srpm
-	/usr/bin/mock --trace --verbose -r epel-6-cernonly-x86_64 --rebuild $(rpmbuild)/SRPMS/$(name)-$(version)-*.src.rpm
+	rpmbuild --nodeps -bb --define='_topdir ${rpmbuild}' ./specs/$(name).spec
+
+mock: srpm
+	/usr/bin/mock $(MOCKARGS) -r $(MOCKENV) --rebuild $(rpmbuild)/SRPMS/$(name)-$(version)-*.src.rpm
 
 

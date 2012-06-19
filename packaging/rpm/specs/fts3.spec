@@ -40,7 +40,7 @@ Group:          System Environment/Libraries
 
 %package -n fts3-client
 Summary:        FTS3 server
-Group:          System Environment/Daemons
+Group:          Applications/Internet
 Requires:       fts3-common
 
 %description -n fts3-server
@@ -81,11 +81,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/fts3_msg_bulk
 %{_sbindir}/fts3_server
 %{_sbindir}/fts3_url_copy
-%{_initddir}/fts3-msg-bulk.initd
-%{_initddir}/fts3-server.initd
-%{_initddir}/fts3-msg-cron.initd
-%{_sysconfdir}/logrotate.d/fts3-msg-cron.logrotate
-%{_sysconfdir}/logrotate.d/fts3-server.logrotate
+%{_initddir}/fts3-msg-bulk
+%{_initddir}/fts3-server
+%{_initddir}/fts3-msg-cron
+%{_sysconfdir}/logrotate.d/fts3-msg-cron
+%{_sysconfdir}/logrotate.d/fts3-server
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 
