@@ -1,6 +1,0 @@
-#!/bin/bash
-
-fts3_msg_bulk > /dev/null 2>&1
-
-
- 

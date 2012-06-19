@@ -1,9 +1,0 @@
-#!/bin/bash
-
-lockfile=/var/lock/subsys/fts3-msg-cron
-
-if [ ! -f $lockfile ]; then
-	fts3_msg_cron > /dev/null 2>&1
-fi
-
- 

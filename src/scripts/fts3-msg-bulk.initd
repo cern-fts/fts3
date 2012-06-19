@@ -7,7 +7,7 @@
 # chkconfig:    345 11 89
 #
 # description:  Enable a run of fts3-msg-bulk.
-# processname:  fts3-msg-bulk
+# processname:  fts3_msg_bulk
 
 
 # source function library
@@ -21,7 +21,7 @@ start() {
 if [ ! -f $lockfile ] ; then
         echo -n $"Enabling fts3-msg-bulk : "
         touch "$lockfile" && success || failure
-	fts3-msg-bulk
+	fts3_msg_bulk
         RETVAL=$?
         echo "OK"
 else	

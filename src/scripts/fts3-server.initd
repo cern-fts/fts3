@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# fts3-msg-bulk  -  This shell script enables the msg-bulk for FTS 3 monitoring
+# fts3-server  -  This shell script enables the FTS 3 server
 #
 # Author:       msalicho@cern.ch
 #
@@ -21,7 +21,7 @@ start() {
 if [ ! -f $lockfile ] ; then
         echo -n $"Enabling fts3-server : "
         touch "$lockfile" && success || failure
-	fts3-server
+	fts3_server
         RETVAL=$?
         echo "OK"
 else	
