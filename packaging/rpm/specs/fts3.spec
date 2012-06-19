@@ -33,6 +33,8 @@ The File Transfer Service V3
 Summary:        FTS3 server
 Group:          System Environment/Daemons
 Requires:       fts3-common
+Requires:       gfal2-plugin-gridftp
+Requires:       gfal2-plugin-srm
 
 %package -n fts3-common
 Summary:        FTS3 common
