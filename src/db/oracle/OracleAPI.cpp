@@ -1938,7 +1938,7 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
     
 void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time){
 	const std::string tag = "insertGrDPStorageElement";
-	std::string query = "INSERT INTO t_credential (dlg_id, dn, termination_time, proxy, voms_attrs, ) VALUES (:1, :2, :3, empty_clob(), empty_clob())";
+	std::string query = "INSERT INTO t_credential (dlg_id, dn, termination_time, proxy, voms_attrs ) VALUES (:1, :2, :3, empty_clob(), empty_clob())";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, dlg_id);
