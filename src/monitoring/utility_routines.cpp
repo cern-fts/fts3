@@ -55,7 +55,7 @@
 #define MILLI 36000000
 
 const std::string CFG_FILE_NAME = "fts-msg-monitoring.conf";
-const std::string CFG_FILE_PATH = "/etc/";
+const std::string CFG_FILE_PATH = "/etc/fts3/";
 const std::string DATABASE_FILE_NAME = ".properties.xml";
 const std::string DATABASE_FILE_PATH = "/etc/glite-data-transfer-agents.d/";
 const std::string TEMPLOG = "/var/log/fts3/msg.log";
@@ -243,7 +243,7 @@ std::string filesStore(const char* filename, const char *path, char *env) {
 		  	return fullPath; 	
 			}
 		  else{
-		  	logger::writeMsgNoConfig("/etc/fts-msg-monitoring.conf configuration file cannot be found");
+		  	logger::writeMsgNoConfig("/etc/fts3/fts-msg-monitoring.conf configuration file cannot be found");
 			exit(0);
 	          }	
 		}
@@ -434,7 +434,7 @@ std::string getMsgConfigFile() {
             }
 
     } catch (...) {
-        logger::writeMsgNoConfig("/etc/fts-msg-monitoring.conf file cannot be found");
+        logger::writeMsgNoConfig("/etc/fts3/fts-msg-monitoring.conf file cannot be found");
         return std::string("");
     }
 }
