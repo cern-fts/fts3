@@ -73,7 +73,7 @@ public:
 	catch (interprocess_exception &ex) {
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
 	}
-	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Check permissions of /dev/shm/fts3mq, message:" << ex.what() << commit; 	
+	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "/dev/shm/fts3mq " << ex.what() << commit; 	
     }    
     }
 

@@ -24,7 +24,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
     std::vector<TransferJobs*>::iterator iter;
     const std::string tag = "getSubmittedJobs";
     const std::string updateTag = "getSubmittedJobsUpdate";
-    std::string query_stmt = "SELECT "
+/*    std::string query_stmt = "SELECT "
             " t_job.job_id, "
             " t_job.job_state, "
             " t_job.vo_name,  "
@@ -54,6 +54,38 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND t_file.job_finished is NULL"
             " AND rownum <= 30  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time)";
+*/
+   std::string query_stmt = "SELECT "
+            " t_job.job_id, "
+            " t_job.job_state, "
+            " t_job.vo_name,  "
+            " t_job.priority,  "
+            " t_job.source, "
+            " t_job.dest,  "
+            " t_job.agent_dn, "
+            " t_job.submit_host, "
+            " t_job.source_se, "
+            " t_job.dest_se, "
+            " t_job.user_dn, "
+            " t_job.user_cred, "
+            " t_job.cred_id,  "
+            " t_job.space_token, "
+            " t_job.storage_class,  "
+            " t_job.job_params, "
+            " t_job.overwrite_flag, "
+            " t_job.source_space_token, "
+            " t_job.source_token_description,"
+            " t_job.copy_pin_lifetime, "
+            " t_job.checksum_method "
+            " FROM t_job, t_file"
+            " WHERE t_job.job_id = t_file.job_id"            
+            " AND t_job.job_finished is NULL"
+            " AND t_job.CANCEL_JOB is NULL"
+            " AND t_file.job_finished is NULL"
+	    " AND t_file.file_state = 'SUBMITTED'"
+            " AND rownum <= 30  ORDER BY t_job.priority DESC"
+            " , SYS_EXTRACT_UTC(t_job.submit_time), t_file.job_id, t_file.file_id";
+
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
@@ -290,6 +322,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
             " FROM t_file, t_job WHERE"
    " t_file.job_id = t_job.job_id AND "
    " t_file.job_finished is NULL AND "
+   " t_file.file_state ='SUBMITTED' AND "   
    " t_job.job_finished is NULL AND "
    " t_job.job_id IN(";
     try {
@@ -1302,7 +1335,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     std::string tag = "updateFileTransferStatus";
     std::stringstream query;
     query << "UPDATE t_file SET file_state=:" << 1 <<  ", REASON=:" << ++index;
-		if(transfer_status.compare("FINISHED") == 0){
+		if( (transfer_status.compare("FINISHED") == 0) || (transfer_status.compare("FAILED") == 0) ){
 			query << ", FINISH_TIME=:" << ++index;
 			tag.append("xx");
 		}
@@ -1316,7 +1349,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 	s->setString(1, transfer_status); 
 	++index;
 	s->setString(index, transfer_message); 
-	if(transfer_status.compare("FINISHED") == 0){
+	if( (transfer_status.compare("FINISHED") == 0) || (transfer_status.compare("FAILED") == 0) ){
 		time_t timed = time(NULL);
 		++index;
 		s->setTimestamp(index, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
@@ -1339,7 +1372,8 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status){
     file_id = "";
     const std::string reason = "One or more files failed. Please have a look at the details for more information";
-    const std::string terminal = "FINISHED";
+    const std::string terminal1 = "FINISHED";
+    const std::string terminal2 = "FAILED";    
     bool finished  = true;
     std::string state("");
     const std::string tag1 = "updateJobTransferStatus";
@@ -1365,7 +1399,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
         oracle::occi::ResultSet* r = conn->createResultset(st);
         while (r->next()) {
             	state = r->getString(1);
-		if( (state.length() > 0) && (state.compare(terminal)!=0)){
+		if( (state.length() > 0) && ((state.compare(terminal1)!=0) || (state.compare(terminal2)!=0) ) ){
 			finished = false;
 			break;
 	     }
@@ -1375,7 +1409,10 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     if(finished == true){
         time_t timed = time(NULL);
 	st->setSQL(update);
-        st->setString(1,terminal);
+	if( state.compare(terminal1)!=0 )
+        	st->setString(1,terminal1);
+	else
+		st->setString(1,terminal2);	
         st->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
         st->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
         st->setString(4, reason);
@@ -1870,17 +1907,33 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
 
 void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs){
 	const std::string tag = "updateGrDPStorageCacheElement";
-	std::string query = "UPDATE t_credential_cache SET cert_request = :1, priv_key = :2, voms_attrs = :3 WHERE dlg_id = :4 AND dn = :5";
+	int index = 1;
+	std::string query = "UPDATE t_credential_cache SET ";
+	if(cert_request.length() > 0){
+		query.append(" cert_request='"+cert_request+"' ");
+		index++;
+	}
+	if(priv_key.length() > 0){
+		if(index > 1)
+			query.append(", priv_key='"+priv_key+"' ");
+		else	
+			query.append(" priv_key='"+priv_key+"' ");		
+		index++;
+	}	
+	if(voms_attrs.length() > 0){
+		if(index > 1)
+			query.append(", voms_attrs='"+voms_attrs+"' ");
+		else	
+			query.append(" voms_attrs='"+voms_attrs+"' ");		
+		index++;
+	}	
+	query.append(" WHERE dlg_id = '"+dlg_id+"' AND dn = '"+dn+"' ");
+	
     try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);	
-	s->setString(1, cert_request);
-	s->setString(2, priv_key);			
-	s->setString(3, voms_attrs); 
-	s->setString(4, dlg_id);
-	s->setString(5, dn);	    			    		
+        oracle::occi::Statement* s = conn->createStatement(query, "");			    		
         s->executeUpdate();
 	conn->commit();	       	    
-        conn->destroyStatement(s, tag);	
+        conn->destroyStatement(s, "");	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));

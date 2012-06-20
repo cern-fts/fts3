@@ -53,7 +53,7 @@ void signalHandler( int signum )
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");    
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-    reporter.constructMessage(g_job_id, g_file_id, "FINISHED", "Transfer canceled by the user");
+    reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user");
     logStream.close();
     fileManagement.archive();    
     exit(signum);  
@@ -182,12 +182,10 @@ int main(int argc, char **argv) {
 
     UserProxyEnv* cert = NULL;
     if(proxy.length() > 0){
-	    // Set Proxy Env                                     
+	    // Set Proxy Env    
 	    cert = new UserProxyEnv(proxy);
     }
-        
-    //FileManagement fileManagement;
-    //Reporter reporter;
+
     fileManagement.setSourceUrl(source_url);
     fileManagement.setDestUrl(dest_url);
     fileManagement.setFileId(file_id);
@@ -195,7 +193,6 @@ int main(int argc, char **argv) {
     g_file_id = file_id;
     g_job_id = job_id;
 
-    //std::ofstream logStream;
     fileManagement.getLogStream(logStream);
     logger log(logStream);
     
@@ -314,7 +311,7 @@ int main(int argc, char **argv) {
 
     log << fileManagement.timestamp() << "INFO initialize gfal2" << '\n';
     if ((handle = gfal_context_new(&tmp_err)) == NULL) {
-        //FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer Initialization failed - errno: " << tmp_err->message << " Error message:" << tmp_err->message << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer Initialization failed - errno: " << tmp_err->message << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "ERROR Transfer Initialization failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
         errorMessage = std::string(tmp_err->message);
 	errorScope = AGENT;
@@ -388,13 +385,18 @@ stop:
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-    if(errorMessage.length() > 0)    
+    if(errorMessage.length() > 0){
     	msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-    else	
+	reporter.constructMessage(job_id, file_id, "FAILED", errorMessage);
+	}
+    else{	
 	msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "");    
+	reporter.constructMessage(job_id, file_id, "FINISHED", errorMessage);
+	}
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << errorMessage << commit;	
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-    reporter.constructMessage(job_id, file_id, "FINISHED", errorMessage);
+    
     logStream.close();
     fileManagement.archive();
 

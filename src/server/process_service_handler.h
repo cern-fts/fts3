@@ -135,6 +135,7 @@ protected:
         while (1) {
 	    /*get jobs in submitted state*/
             DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+	    
 	    /*also get jobs which have been canceled by the client*/
 	    DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
 	    if(requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
