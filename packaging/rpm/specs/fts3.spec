@@ -25,6 +25,7 @@ BuildRequires:  glib2-devel
 BuildRequires:  gridsite-devel
 BuildRequires:  gfal2-devel
 BuildRequires:  oracle-instantclient-devel
+BuildRequires:  voms-devel
 
 %description
 The File Transfer Service V3
