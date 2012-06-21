@@ -29,16 +29,16 @@ using namespace fts3::common;
 using namespace fts3::ws;
 
 
-int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, struct deleg__getProxyReqResponse &_param_4) {
+int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, struct delegation__getProxyReqResponse &_param_4) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__getProxyReq' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getProxyReq' request" << commit;
 
 	GSoapDelegationHandler handler(soap);
 	try {
 		_param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
 	} catch (string& ex) {
-		// TODO update GSoapExceptionHandler to handle _deleg__DelegationException
+		// TODO update GSoapExceptionHandler to handle _delegation__DelegationException
 		soap_receiver_fault(soap, ex.c_str(), "DelegationException");
 		return SOAP_FAULT;
 	}
@@ -46,9 +46,9 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 	return SOAP_OK;
 }
 
-int fts3::delegation__getNewProxyReq(struct soap* soap, struct deleg__getNewProxyReqResponse &_param_5) {
+int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNewProxyReqResponse &_param_5) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__getNewProxyReq' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getNewProxyReq' request" << commit;
 
 	GSoapDelegationHandler handler(soap);
 	try {
@@ -62,9 +62,9 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct deleg__getNewProx
 	return SOAP_OK;
 }
 
-int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID, struct deleg__renewProxyReqResponse &_param_6) {
+int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID, struct delegation__renewProxyReqResponse &_param_6) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__renewProxyReq' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__renewProxyReq' request" << commit;
 
 	GSoapDelegationHandler handler(soap);
 	try {
@@ -78,9 +78,9 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 	return SOAP_OK;
 }
 
-int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std::string _proxy, struct deleg__putProxyResponse &_param_7) {
+int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std::string _proxy, struct delegation__putProxyResponse &_param_7) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__putProxy' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__putProxy' request" << commit;
 
 	GSoapDelegationHandler handler(soap);
 	try {
@@ -94,9 +94,9 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 	return SOAP_OK;
 }
 
-int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegationID, struct deleg__getTerminationTimeResponse &_param_8) {
+int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegationID, struct delegation__getTerminationTimeResponse &_param_8) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__getTerminationTime' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getTerminationTime' request" << commit;
 
 	GSoapDelegationHandler handler(soap);
 	try {
@@ -110,9 +110,9 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 	return SOAP_OK;
 }
 
-int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, struct deleg__destroyResponse &_param_9) {
+int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, struct delegation__destroyResponse &_param_9) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__destroy' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__destroy' request" << commit;
 
 	GSoapDelegationHandler handler(soap);
 	try {
@@ -126,25 +126,25 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 	return SOAP_OK;
 }
 
-int fts3::delegation__getVersion(struct soap* soap, struct deleg__getVersionResponse &_param_1) {
+int fts3::delegation__getVersion(struct soap* soap, struct delegation__getVersionResponse &_param_1) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__getVersion' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getVersion' request" << commit;
 	_param_1.getVersionReturn = "3.7.6-1";
 
 	return SOAP_OK;
 }
 
-int fts3::delegation__getInterfaceVersion(struct soap* soap, struct deleg__getInterfaceVersionResponse &_param_2) {
+int fts3::delegation__getInterfaceVersion(struct soap* soap, struct delegation__getInterfaceVersionResponse &_param_2) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__getInterfaceVersion' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getInterfaceVersion' request" << commit;
 	_param_2.getInterfaceVersionReturn = "3.7.0";
 
 	return SOAP_OK;
 }
 
-int fts3::delegation__getServiceMetadata(struct soap* soap, std::string _key, struct deleg__getServiceMetadataResponse &_param_3) {
+int fts3::delegation__getServiceMetadata(struct soap* soap, std::string _key, struct delegation__getServiceMetadataResponse &_param_3) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'deleg__getServiceMetadata' request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getServiceMetadata' request" << commit;
 	_param_3._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
 
 	return SOAP_OK;
