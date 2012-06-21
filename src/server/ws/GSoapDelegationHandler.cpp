@@ -156,7 +156,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 	return req;
 }
 
-deleg__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
+delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 
 	string dn = getDn();
 	if (dn.empty()) throw string("'getDn' failed!");
@@ -196,7 +196,7 @@ deleg__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 			);
 	}
 
-	deleg__NewProxyReq* ret = soap_new_deleg__NewProxyReq(ctx, -1);
+	delegation__NewProxyReq* ret = soap_new_delegation__NewProxyReq(ctx, -1);
 	ret->proxyRequest = soap_new_std__string(ctx, -1);
 	*ret->proxyRequest = req;
 	ret->delegationID = soap_new_std__string(ctx, -1);

@@ -47,7 +47,7 @@ public:
 	string getProxyReq(string delegationId);
 	string renewProxyReq(string delegationId);
 	time_t getTerminationTime(string delegationId);
-	deleg__NewProxyReq* getNewProxyReq();
+	delegation__NewProxyReq* getNewProxyReq();
 	void putProxy(string delegationId, string proxy);
 	void destroy(string delegationId);
 
