@@ -438,9 +438,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
 
 void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) {
 
-    const std::string query = "SELECT job_id, job_state, file_state, user_dn, reason, submit_time, priority, vo_name, "
-            "(SELECT count(*) from t_file where t_file.job_id = t_job.job_id and t_file.job_id=:1) "
-            "FROM t_job WHERE job_id = :2";
+    std::string query = "SELECT t_job.job_id, t_job.job_state, t_file.file_state, t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, t_job.vo_name, "
+            "(SELECT count(*) from t_file where t_file.job_id=:1) "
+            "FROM t_job, t_file WHERE t_file.job_id = t_job.job_id and t_file.job_id = :2";
     const std::string tag = "getTransferJobStatus";
 
     JobStatus* js = NULL;
