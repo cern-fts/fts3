@@ -73,6 +73,7 @@ int main(int ac, char* av[]) {
 					    cout << "\tCanceled: " << resp._getTransferJobSummary2Return->numCanceled << endl;
 					    cout << "\tFinished: " << resp._getTransferJobSummary2Return->numFinished << endl;
 					    cout << "\tSubmitted: " << resp._getTransferJobSummary2Return->numSubmitted << endl;
+					    cout << "\tFailed: " << resp._getTransferJobSummary2Return->numFailed << endl;
 					}
 
 				} else {
@@ -90,6 +91,7 @@ int main(int ac, char* av[]) {
 					    cout << "\tActive: " << resp._getTransferJobSummaryReturn->numActive << endl;
 					    cout << "\tCanceled: " << resp._getTransferJobSummaryReturn->numCanceled << endl;
 					    cout << "\tSubmitted: " << resp._getTransferJobSummaryReturn->numSubmitted << endl;
+					    cout << "\tFailed: " << resp._getTransferJobSummaryReturn->numFailed << endl;
 					}
 				}
 			} else {
