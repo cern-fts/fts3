@@ -71,6 +71,7 @@ target_link_libraries(fts3_server_lib
 	-lglib-2.0 
 	-lgridsite
 	-lcgsi_plugin_cpp
+	-lvomsapi
 )
 
 # Server executable

@@ -21,6 +21,7 @@
 #define GSOAPDELEGATIONHANDLER_H_
 
 #include <string>
+#include <gridsite.h>
 
 #include "ws/gsoap_stubs.h"
 
@@ -34,10 +35,14 @@ public:
 	virtual ~GSoapDelegationHandler();
 
 	string getDn();
-	string getDelegationId();
-	bool checkDelegationId(string delegationId);
+	string makeDelegationId();
 	string handleDelegationId(string delegationId);
-	string getProxyDirectory();
+	bool checkDelegationId(string delegationId);
+
+	string x509ToString(X509* cert);
+	string addKeyToProxyCertificate(string proxy, string key);
+	time_t readTerminationTime(string proxy);
+	string getVomsAttributes(string proxy);
 
 	string getProxyReq(string delegationId);
 	string renewProxyReq(string delegationId);
@@ -49,6 +54,7 @@ public:
 private:
 	soap* ctx;
 	static const string GRST_PROXYCACHE;
+	string attr;
 };
 
 }
