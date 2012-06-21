@@ -68,17 +68,11 @@ int main(int ac, char* av[]) {
 
 						JobStatusHandler::printJobStatus(resp._getTransferJobSummary2Return->jobStatus);
 
-					    cout << "\tDone: " << resp._getTransferJobSummary2Return->numDone << endl;
 					    cout << "\tActive: " << resp._getTransferJobSummary2Return->numActive << endl;
-					    cout << "\tPending: " << resp._getTransferJobSummary2Return->numPending << endl;
 					    cout << "\tReady: " << resp._getTransferJobSummary2Return->numReady << endl;
 					    cout << "\tCanceled: " << resp._getTransferJobSummary2Return->numCanceled << endl;
-					    cout << "\tFailed: " << resp._getTransferJobSummary2Return->numFailed << endl;
-					    cout << "\tFinishing: " << resp._getTransferJobSummary2Return->numFinishing << endl;
 					    cout << "\tFinished: " << resp._getTransferJobSummary2Return->numFinished << endl;
 					    cout << "\tSubmitted: " << resp._getTransferJobSummary2Return->numSubmitted << endl;
-					    cout << "\tHold: " << resp._getTransferJobSummary2Return->numHold << endl;
-					    cout << "\tWaiting: " << resp._getTransferJobSummary2Return->numWaiting << endl;
 					}
 
 				} else {
@@ -93,17 +87,9 @@ int main(int ac, char* av[]) {
 
 						JobStatusHandler::printJobStatus(resp._getTransferJobSummaryReturn->jobStatus);
 
-					    cout << "\tDone: " << resp._getTransferJobSummaryReturn->numDone << endl;
 					    cout << "\tActive: " << resp._getTransferJobSummaryReturn->numActive << endl;
-					    cout << "\tPending: " << resp._getTransferJobSummaryReturn->numPending << endl;
 					    cout << "\tCanceled: " << resp._getTransferJobSummaryReturn->numCanceled << endl;
-					    cout << "\tCanceling: " << resp._getTransferJobSummaryReturn->numCanceling << endl;
-					    cout << "\tFailed: " << resp._getTransferJobSummaryReturn->numFailed << endl;
-					    cout << "\tFinished: " << resp._getTransferJobSummaryReturn->numFinished << endl;
 					    cout << "\tSubmitted: " << resp._getTransferJobSummaryReturn->numSubmitted << endl;
-					    cout << "\tHold: " << resp._getTransferJobSummaryReturn->numHold << endl;
-					    cout << "\tWaiting: " << resp._getTransferJobSummaryReturn->numWaiting << endl;
-					    cout << "\tCatalogFailed: " << resp._getTransferJobSummaryReturn->numCatalogFailed << endl;
 					}
 				}
 			} else {
