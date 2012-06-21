@@ -22,24 +22,25 @@ const string JobStatusHandler::FTS3_STATUS_SUBMITTED = "SUBMITTED";
 const string JobStatusHandler::FTS3_STATUS_READY = "READY";
 const string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
 
-JobStatusHandler::JobStatusHandler(): statuses(map_list_of
-		(FTS3_STATUS_CANCELED, FTS3_STATUS_CANCELED_ID)
-		(FTS3_STATUS_UNKNOWN, FTS3_STATUS_UNKNOWN_ID)
-		(FTS3_STATUS_SUBMITTED, FTS3_STATUS_SUBMITTED_ID)
-		(FTS3_STATUS_ACTIVE, FTS3_STATUS_ACTIVE_ID)
-		(FTS3_STATUS_FINISHED, FTS3_STATUS_FINISHED_ID)
-		(FTS3_STATUS_READY, FTS3_STATUS_READY_ID)
-		(FTS3_STATUS_FAILED, FTS3_STATUS_FAILED_ID).to_container(statuses)) {
+JobStatusHandler::JobStatusHandler():
+		statusNameToId(map_list_of
+			(FTS3_STATUS_CANCELED, FTS3_STATUS_CANCELED_ID)
+			(FTS3_STATUS_UNKNOWN, FTS3_STATUS_UNKNOWN_ID)
+			(FTS3_STATUS_SUBMITTED, FTS3_STATUS_SUBMITTED_ID)
+			(FTS3_STATUS_ACTIVE, FTS3_STATUS_ACTIVE_ID)
+			(FTS3_STATUS_FINISHED, FTS3_STATUS_FINISHED_ID)
+			(FTS3_STATUS_READY, FTS3_STATUS_READY_ID)
+			(FTS3_STATUS_FAILED, FTS3_STATUS_FAILED_ID).to_container(statusNameToId)) {
 
-	// the constant map is being initialized in initializer list
+	// the constant maps are initialized in initializer list
 }
 
 bool JobStatusHandler::isTransferReady(string status) {
 
 	to_upper(status);
-	map<string, JobStateEnum>::const_iterator it = statuses.find(status);
+	map<string, JobStatusEnum>::const_iterator it = statusNameToId.find(status);
 
-	if (it == statuses.end()) {
+	if (it == statusNameToId.end()) {
 		return FTS3_STATUS_UNKNOWN_ID <= 0;
 	}
 	return it->second <= 0;
@@ -48,5 +49,19 @@ bool JobStatusHandler::isTransferReady(string status) {
 bool JobStatusHandler::isStatusValid(string status) {
 
 	to_upper(status);
-	return statuses.find(status) != statuses.end();
+	return statusNameToId.find(status) != statusNameToId.end();
+}
+
+int JobStatusHandler::countInState(const string status, vector<JobStatus*>& statuses) {
+
+	int count = 0;
+
+	vector<JobStatus*>::iterator it;
+	for (it = statuses.begin(); it < statuses.end(); it++) {
+		if (status == (*it)->fileStatus) {
+			++count;
+		}
+	}
+
+	return count;
 }

@@ -39,7 +39,7 @@ public:
 	 * that the job has been finished, value greater than 0 indicates that the job
 	 * is still being processed
 	 */
-	enum JobStateEnum {
+	enum JobStatusEnum {
 		FTS3_STATUS_CANCELED_ID = -3,
 		FTS3_STATUS_UNKNOWN_ID = -2,
 	    FTS3_STATUS_FAILED_ID = -1,
@@ -81,6 +81,16 @@ public:
 	 * @return true if the the state is valid
 	 */
 	bool isStatusValid(string status);
+
+	/**
+	 * Counts how many states in the given vector are equal to given state
+	 *
+	 * @param STATE
+	 * @param states
+	 *
+	 * @return
+	 */
+	int countInState(string status, vector<JobStatus*>& statuses);
 
 	/**
 	 *
@@ -133,7 +143,7 @@ private:
 	JobStatusHandler & operator=(JobStatusHandler const&);
 
 	/// maps job status name to job status id
-	const map<string, JobStateEnum> statuses;
+	const map<string, JobStatusEnum> statusNameToId;
 };
 
 

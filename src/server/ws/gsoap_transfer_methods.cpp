@@ -214,7 +214,8 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus' request" << commit;
 
 	try{
-		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID);
+		vector<JobStatus*> fileStatuses;
+		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
 		if(status){
@@ -247,30 +248,57 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 /// Web service operation 'getTransferJobSummary' (returns error code or SOAP_OK)
 int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct impltns__getTransferJobSummaryResponse &_param_12) {
 
-	// dummy
-	_param_12._getTransferJobSummaryReturn = soap_new_tns3__TransferJobSummary(soap, -1);
-	_param_12._getTransferJobSummaryReturn->numActive = 0;
-	_param_12._getTransferJobSummaryReturn->numCanceled = 0;
-	_param_12._getTransferJobSummaryReturn->numCanceling = 0;
-	_param_12._getTransferJobSummaryReturn->numCatalogFailed = 0;
-	_param_12._getTransferJobSummaryReturn->numDone = 0;
-	_param_12._getTransferJobSummaryReturn->numFailed = 0;
-	_param_12._getTransferJobSummaryReturn->numFinished = 0;
-	_param_12._getTransferJobSummaryReturn->numHold = 0;
-	_param_12._getTransferJobSummaryReturn->numPending = 0;
-	_param_12._getTransferJobSummaryReturn->numRestarted = 0;
-	_param_12._getTransferJobSummaryReturn->numSubmitted = 0;
-	_param_12._getTransferJobSummaryReturn->numWaiting = 0;
+	try{
+		vector<JobStatus*> fileStatuses;
+		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
+		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
-	_param_12._getTransferJobSummaryReturn->jobStatus = soap_new_tns3__JobStatus(soap, -1);
-	_param_12._getTransferJobSummaryReturn->jobStatus->clientDN = soap_new_std__string(soap, -1);
-	_param_12._getTransferJobSummaryReturn->jobStatus->jobID = soap_new_std__string(soap, -1);
-	_param_12._getTransferJobSummaryReturn->jobStatus->jobStatus = soap_new_std__string(soap, -1);
-	_param_12._getTransferJobSummaryReturn->jobStatus->reason = soap_new_std__string(soap, -1);
-	_param_12._getTransferJobSummaryReturn->jobStatus->voName = soap_new_std__string(soap, -1);
-	_param_12._getTransferJobSummaryReturn->jobStatus->submitTime = 0;
-	_param_12._getTransferJobSummaryReturn->jobStatus->numFiles = 0;
-	_param_12._getTransferJobSummaryReturn->jobStatus->priority = 0;
+		if(status) {
+
+			_param_12._getTransferJobSummaryReturn = soap_new_tns3__TransferJobSummary(soap, -1);
+			_param_12._getTransferJobSummaryReturn->jobStatus = JobStatusCopier::copyJobStatus(soap, status);
+
+			JobStatusHandler& handler = JobStatusHandler::getInstance();
+			// TODO change the state machine in wsdl !!!
+			_param_12._getTransferJobSummaryReturn->numActive = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_ACTIVE,
+					fileStatuses
+				);
+			_param_12._getTransferJobSummaryReturn->numCanceled = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_CANCELED,
+					fileStatuses
+				);
+			_param_12._getTransferJobSummaryReturn->numSubmitted = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_SUBMITTED,
+					fileStatuses
+				);
+			_param_12._getTransferJobSummaryReturn->numFinished = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_FINISHED,
+					fileStatuses
+				);
+
+			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
+			delete status;
+
+		} else {
+			tns3__NotExistsException* ex =
+					GSoapExceptionHandler<tns3__NotExistsException>::createException(
+							soap, "requestID <" + _requestID + "> was not found"
+						);
+			throw ex;
+		}
+
+	} catch (string const &e) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
+	    return SOAP_FAULT;
+
+	} catch (tns3__TransferException* ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
@@ -278,37 +306,61 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
 int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct impltns__getTransferJobSummary2Response &_param_13) {
 
-	// dummy
-	_param_13._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(soap, -1);
-	_param_13._getTransferJobSummary2Return->numActive = 0;
-	_param_13._getTransferJobSummary2Return->numAwaitingPrestage = 0;
-	_param_13._getTransferJobSummary2Return->numCanceled = 0;
-	_param_13._getTransferJobSummary2Return->numCanceling = 0;
-	_param_13._getTransferJobSummary2Return->numFinishing = 0;
-	_param_13._getTransferJobSummary2Return->numCatalogFailed = 0;
-	_param_13._getTransferJobSummary2Return->numDone = 0;
-	_param_13._getTransferJobSummary2Return->numFailed = 0;
-	_param_13._getTransferJobSummary2Return->numFinished = 0;
-	_param_13._getTransferJobSummary2Return->numHold = 0;
-	_param_13._getTransferJobSummary2Return->numPrestaging = 0;
-	_param_13._getTransferJobSummary2Return->numPending = 0;
-	_param_13._getTransferJobSummary2Return->numRestarted = 0;
-	_param_13._getTransferJobSummary2Return->numSubmitted = 0;
-	_param_13._getTransferJobSummary2Return->numReady = 0;
-	_param_13._getTransferJobSummary2Return->numWaiting = 0;
-	_param_13._getTransferJobSummary2Return->numWaitingCatalogRegistration = 0;
-	_param_13._getTransferJobSummary2Return->numWaitingCatalogResolution = 0;
-	_param_13._getTransferJobSummary2Return->numWaitingPrestage = 0;
+	try{
+		vector<JobStatus*> fileStatuses;
+		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
+		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
-	_param_13._getTransferJobSummary2Return->jobStatus = soap_new_tns3__JobStatus(soap, -1);
-	_param_13._getTransferJobSummary2Return->jobStatus->clientDN = soap_new_std__string(soap, -1);
-	_param_13._getTransferJobSummary2Return->jobStatus->jobID = soap_new_std__string(soap, -1);
-	_param_13._getTransferJobSummary2Return->jobStatus->jobStatus = soap_new_std__string(soap, -1);
-	_param_13._getTransferJobSummary2Return->jobStatus->reason = soap_new_std__string(soap, -1);
-	_param_13._getTransferJobSummary2Return->jobStatus->voName = soap_new_std__string(soap, -1);
-	_param_13._getTransferJobSummary2Return->jobStatus->submitTime = 0;
-	_param_13._getTransferJobSummary2Return->jobStatus->numFiles = 0;
-	_param_13._getTransferJobSummary2Return->jobStatus->priority = 0;
+		if(status) {
+
+			_param_13._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(soap, -1);
+			_param_13._getTransferJobSummary2Return->jobStatus = JobStatusCopier::copyJobStatus(soap, status);
+
+			JobStatusHandler& handler = JobStatusHandler::getInstance();
+			// TODO change the state machine in wsdl !!!
+			_param_13._getTransferJobSummary2Return->numActive = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_ACTIVE,
+					fileStatuses
+				);
+			_param_13._getTransferJobSummary2Return->numCanceled = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_CANCELED,
+					fileStatuses
+				);
+			_param_13._getTransferJobSummary2Return->numSubmitted = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_SUBMITTED,
+					fileStatuses
+				);
+			_param_13._getTransferJobSummary2Return->numFinished = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_FINISHED,
+					fileStatuses
+				);
+			_param_13._getTransferJobSummary2Return->numFinished = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_READY,
+					fileStatuses
+				);
+
+			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
+			delete status;
+
+		} else {
+			tns3__NotExistsException* ex =
+					GSoapExceptionHandler<tns3__NotExistsException>::createException(
+							soap, "requestID <" + _requestID + "> was not found"
+						);
+			throw ex;
+		}
+
+	} catch (string const &e) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
+	    return SOAP_FAULT;
+
+	} catch (tns3__TransferException* ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
+		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
+		exHandler.handle();
+		return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
