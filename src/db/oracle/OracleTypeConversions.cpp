@@ -4,6 +4,7 @@
 #include <boost/algorithm/string/compare.hpp>
 #include <algorithm>
 #include "StreamPtr.h"
+#include <iostream>
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -126,6 +127,8 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
         // Open the Clob
         clob.open(oracle::occi::OCCI_LOB_READONLY);
         int len = clob.length();
+	if(len == 0)
+		return;
 
         // reserve some space on the string
         str.resize(len, 0);
@@ -133,8 +136,10 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
 
         // Get the stream
         StreamPtr<oracle::occi::Clob> instream(clob, clob.getStream(1,0));
+
         instream->readBuffer(buffer, len);
 
+ 
         // Close the Clob and the related stream
         clob.close();
     } catch(const ::oracle::occi::SQLException&  exc){
