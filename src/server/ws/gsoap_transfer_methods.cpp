@@ -280,6 +280,10 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 					JobStatusHandler::FTS3_STATUS_FINISHED,
 					fileStatuses
 				);
+			_param_12._getTransferJobSummaryReturn->numFailed = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_FAILED,
+					fileStatuses
+				);
 
 			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
@@ -344,6 +348,10 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 				);
 			_param_13._getTransferJobSummary2Return->numFinished = handler.countInState(
 					JobStatusHandler::FTS3_STATUS_READY,
+					fileStatuses
+				);
+			_param_13._getTransferJobSummary2Return->numFailed = handler.countInState(
+					JobStatusHandler::FTS3_STATUS_FAILED,
 					fileStatuses
 				);
 
