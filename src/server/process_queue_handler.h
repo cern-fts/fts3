@@ -113,9 +113,7 @@ protected:
       
       DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(std::string(msg.job_id), std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id );
       DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), std::string(msg.job_id), std::string(msg.transfer_status));      
-      
-      //if(msg)
-      	//delete msg;                
+                    
       }
       sleep(1);
       }

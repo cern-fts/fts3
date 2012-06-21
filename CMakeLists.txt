@@ -30,7 +30,7 @@ link_directories (${PROJECT_BINARY_DIR}/src/db/generic)
 link_directories (${PROJECT_BINARY_DIR}/src/cli)
 link_directories (${PROJECT_BINARY_DIR}/src/monitoring) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
 #set(CMAKE_EXE_FLAGS  "${CMAKE_EXE_FLAGS} -pg")
 #set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 
@@ -44,6 +44,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_definitions (-DFTS3_COMPILE_WITH_UNITTEST)
     OPTION(FTS3_COMPILE_WITH_UNITTEST "Build with unit test" ON)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+    #set(CMAKE_EXE_FLAGS "${CMAKE_EXE_FLAGS} ")
+    #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ")
     ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)   
 endif ()
 

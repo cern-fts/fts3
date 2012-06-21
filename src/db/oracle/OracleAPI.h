@@ -42,7 +42,7 @@ public:
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
                                  const std::string & failNearLine, const std::string & checksumMethod);
 
-    virtual JobStatus* getTransferJobStatus(std::string requestID);
+    virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
 
     virtual std::vector<std::string> getSiteGroupNames();
 

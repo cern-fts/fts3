@@ -436,41 +436,37 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
 
 }
 
-JobStatus* OracleAPI::getTransferJobStatus(std::string requestID) {
+void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) {
 
-    const std::string query = "SELECT job_id, job_state, se_pair_name, user_dn, reason, submit_time, priority, vo_name, "
-            "(SELECT count(*) from t_file where t_file.job_id = t_job.job_id) "
-            "FROM t_job WHERE job_id = :1";
+    const std::string query = "SELECT job_id, job_state, file_state, user_dn, reason, submit_time, priority, vo_name, "
+            "(SELECT count(*) from t_file where t_file.job_id = t_job.job_id and t_file.job_id=:1) "
+            "FROM t_job WHERE job_id = :2";
     const std::string tag = "getTransferJobStatus";
 
     JobStatus* js = NULL;
     try {
-        js = new JobStatus();
-        js->priority = 0;
-        js->numFiles = 0;
-        js->submitTime = (std::time_t) - 1;
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, requestID);
+        s->setString(2, requestID);	
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
+            js = new JobStatus();            
             js->jobID = r->getString(1);
             js->jobStatus = r->getString(2);
-            js->sePairName = r->getString(3);
+            js->fileStatus = r->getString(3);
             js->clientDN = r->getString(4);
             js->reason = r->getString(5);
             js->submitTime = OracleTypeConversions::toTimeT(r->getTimestamp(6));
             js->priority = r->getInt(7);
             js->voName = r->getString(8);
             js->numFiles = r->getInt(9);
+	    jobs.push_back(js);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-        if (js)
-            delete js;
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
-    return js;
 }
 
 std::vector<std::string> OracleAPI::getSiteGroupNames() {
