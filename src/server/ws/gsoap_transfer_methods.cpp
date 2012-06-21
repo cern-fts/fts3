@@ -215,13 +215,17 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 
 	try{
 		vector<JobStatus*> fileStatuses;
-		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
+		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
-		if(status){
-			_param_11._getTransferJobStatusReturn = JobStatusCopier::copyJobStatus(soap, status);
+		if(!fileStatuses.empty()){
+			_param_11._getTransferJobStatusReturn = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
 			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
-			delete status;
+
+			vector<JobStatus*>::iterator it;
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+				delete *it;
+			}
 		} else {
 			tns3__NotExistsException* ex =
 					GSoapExceptionHandler<tns3__NotExistsException>::createException(
@@ -250,13 +254,13 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 
 	try{
 		vector<JobStatus*> fileStatuses;
-		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
+		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
-		if(status) {
+		if (!fileStatuses.empty()) {
 
 			_param_12._getTransferJobSummaryReturn = soap_new_tns3__TransferJobSummary(soap, -1);
-			_param_12._getTransferJobSummaryReturn->jobStatus = JobStatusCopier::copyJobStatus(soap, status);
+			_param_12._getTransferJobSummaryReturn->jobStatus = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
 			// TODO change the state machine in wsdl !!!
@@ -278,7 +282,11 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 				);
 
 			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
-			delete status;
+
+			vector<JobStatus*>::iterator it;
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+				delete *it;
+			}
 
 		} else {
 			tns3__NotExistsException* ex =
@@ -308,13 +316,13 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 
 	try{
 		vector<JobStatus*> fileStatuses;
-		JobStatus* status =  DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
+		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
-		if(status) {
+		if(!fileStatuses.empty()) {
 
 			_param_13._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(soap, -1);
-			_param_13._getTransferJobSummary2Return->jobStatus = JobStatusCopier::copyJobStatus(soap, status);
+			_param_13._getTransferJobSummary2Return->jobStatus = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
 			// TODO change the state machine in wsdl !!!
@@ -340,7 +348,11 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 				);
 
 			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
-			delete status;
+
+			vector<JobStatus*>::iterator it;
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+				delete *it;
+			}
 
 		} else {
 			tns3__NotExistsException* ex =

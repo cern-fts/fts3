@@ -13,6 +13,8 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include "db/generic/JobStatus.h"
+
 
 using namespace std;
 using namespace boost;
