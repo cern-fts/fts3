@@ -34,7 +34,6 @@ public:
 	GSoapDelegationHandler(soap* ctx);
 	virtual ~GSoapDelegationHandler();
 
-	string getDn();
 	string makeDelegationId();
 	string handleDelegationId(string delegationId);
 	bool checkDelegationId(string delegationId);
@@ -42,7 +41,7 @@ public:
 	string x509ToString(X509* cert);
 	string addKeyToProxyCertificate(string proxy, string key);
 	time_t readTerminationTime(string proxy);
-	string getVomsAttributes(string proxy);
+	string fqansToString(vector<string> attrs);
 
 	string getProxyReq(string delegationId);
 	string renewProxyReq(string delegationId);
@@ -53,8 +52,8 @@ public:
 
 private:
 	soap* ctx;
-	static const string GRST_PROXYCACHE;
-	string attr;
+	string dn;
+	vector<string> attrs;
 };
 
 }
