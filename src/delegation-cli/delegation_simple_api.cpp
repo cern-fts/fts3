@@ -76,9 +76,10 @@ static void decode_exception(glite_delegation_ctx *ctx,
     if (!detail)
         return;
 
+    // TODO remove this macro!!!
 
 #define SET_EXCEPTION(exc) \
-    message = ((struct _delegation__ ## exc *)detail->fault)->msg; \
+    message = const_cast<char*>(((struct _delegation__ ## exc *)detail->fault)->msg->c_str()); \
     if (!message) \
         message = #exc " received from the service"; \
     glite_delegation_set_error(ctx, "%s: %s", method, message); \
@@ -106,11 +107,15 @@ static void _fault_to_error(glite_delegation_ctx *ctx, const char *method)
     if (soap->fault)
     {
         /* Look for a SOAP 1.1 fault */
-        if (soap->fault->detail)
-            decode_exception(ctx, soap->fault->detail, method);
+        if (soap->fault->detail) {
+        	SOAP_ENV__Detail *detail = soap->fault->detail;
+            decode_exception(ctx, detail, method);
+        }
         /* Look for a SOAP 1.2 fault */
-        if (soap->fault->SOAP_ENV__Detail)
-            decode_exception(ctx, soap->fault->SOAP_ENV__Detail, method);
+        if (soap->fault->SOAP_ENV__Detail) {
+        	SOAP_ENV__Detail *detail = soap->fault->SOAP_ENV__Detail;
+            decode_exception(ctx, detail, method);
+        }
     }
 
     /* If we did not manage to decode the exception, try generic error
@@ -283,8 +288,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
     if (force) 
     {
         /* force the renewal of the proxy */
-        ret = soap_call_delegation__renewProxyReq(ctx->soap, ctx->endpoint, NULL,
-                                                  sdelegationID, &renew_resp);
+        ret = soap_call_delegation__renewProxyReq(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), renew_resp);
         if (SOAP_OK != ret)
         {
             _fault_to_error(ctx, __func__);
@@ -297,8 +301,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
     if (NULL == certreq) 
     {
         /* there was no proxy, or not forcing -- the normal path */
-        ret = soap_call_delegation__getProxyReq(ctx->soap, ctx->endpoint, NULL,
-                                                     sdelegationID, &get_resp);
+        ret = soap_call_delegation__getProxyReq(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), get_resp);
         if (SOAP_OK != ret)
         {
             _fault_to_error(ctx, __func__);
@@ -325,8 +328,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         return -1;
     }
 
-    if (SOAP_OK != soap_call_delegation__putProxy(ctx->soap, ctx->endpoint, NULL,
-                                                  sdelegationID, scerttxt, &put_resp))
+    if (SOAP_OK != soap_call_delegation__putProxy(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), scerttxt, put_resp))
     {
             _fault_to_error(ctx, __func__);
             return -1;
@@ -360,8 +362,7 @@ int glite_delegation_info(glite_delegation_ctx *ctx,
         }
     }
     
-    if (SOAP_OK != soap_call_delegation__getTerminationTime(ctx->soap, 
-                        ctx->endpoint, NULL, sdelegationID, &resp))
+    if (SOAP_OK != soap_call_delegation__getTerminationTime(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), resp))
     {
             _fault_to_error(ctx, __func__);
             return -1;
@@ -395,8 +396,7 @@ int glite_delegation_destroy(glite_delegation_ctx *ctx, const char *delegationID
         }
     }
     
-    if (SOAP_OK != soap_call_delegation__destroy(ctx->soap, ctx->endpoint, NULL,
-                                                  sdelegationID, &dest_resp))
+    if (SOAP_OK != soap_call_delegation__destroy(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), dest_resp))
     {
             _fault_to_error(ctx, __func__);
             return -1;
@@ -417,14 +417,13 @@ char *glite_delegation_getVersion(glite_delegation_ctx *ctx)
     if (!ctx->soap) 
         return NULL;
 
-    if (SOAP_OK != soap_call_delegation__getVersion(ctx->soap, ctx->endpoint, 
-                                                    NULL, &resp))
+    if (SOAP_OK != soap_call_delegation__getVersion(ctx->soap, ctx->endpoint, NULL, resp))
     {
             _fault_to_error(ctx, __func__);
             return NULL;
     }
 
-    if (!resp.getVersionReturn) 
+    if (!resp.getVersionReturn.empty())
     {
         glite_delegation_set_error(ctx, "%s: service sent empty version", __func__);
         soap_end(ctx->soap);
@@ -448,14 +447,13 @@ char *glite_delegation_getInterfaceVersion(glite_delegation_ctx *ctx)
     if (!ctx->soap) 
         return NULL;
 
-    if (SOAP_OK != soap_call_delegation__getInterfaceVersion(ctx->soap, ctx->endpoint, 
-                                                    NULL, &resp))
+    if (SOAP_OK != soap_call_delegation__getInterfaceVersion(ctx->soap, ctx->endpoint, NULL, resp))
     {
             _fault_to_error(ctx, __func__);
             return NULL;
     }
 
-    if (!resp.getInterfaceVersionReturn) 
+    if (!resp.getInterfaceVersionReturn.empty())
     {
         glite_delegation_set_error(ctx, "%s: service sent empty version", __func__);
         soap_end(ctx->soap);
@@ -494,14 +492,13 @@ char *glite_delegation_getServiceMetadata(glite_delegation_ctx *ctx,
         return NULL;
     }
 
-    if (SOAP_OK != soap_call_delegation__getServiceMetadata(ctx->soap, ctx->endpoint, 
-                                                   NULL, req_key, &resp))
+    if (SOAP_OK != soap_call_delegation__getServiceMetadata(ctx->soap, ctx->endpoint, NULL, req_key, resp))
     {
             _fault_to_error(ctx, __func__);
             return NULL;
     }
 
-    if (!resp._getServiceMetadataReturn) 
+    if (!resp._getServiceMetadataReturn.empty())
     {
         glite_delegation_set_error(ctx, "%s: service had no value for key '%s'", 
                 __func__, key);
