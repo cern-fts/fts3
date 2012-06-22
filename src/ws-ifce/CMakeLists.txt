@@ -50,12 +50,19 @@ set(wsdl_files
 
 set(gsoap_typemap "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/typemap.dat")
 set(gsoap_header_file "${generated_files_dir}/gsoap_interface.h")
+set(delegation_header_file "${generated_files_dir}/delegation_interface.h")
 set(gsoap_prefix "fts3")
+set(delegation_prefix "delegation")
 
 set(gsoap_source_files
 	"${generated_files_dir}/${gsoap_prefix}C.cpp"
     "${generated_files_dir}/${gsoap_prefix}Client.cpp"
     "${generated_files_dir}/${gsoap_prefix}Server.cpp"
+)
+
+set(delegation_source_files
+	"${generated_files_dir}/${delegation_prefix}C.cpp"
+    "${generated_files_dir}/${delegation_prefix}Client.cpp"
 )
 
 add_custom_command(
@@ -70,6 +77,19 @@ add_custom_command(
     COMMAND ${GSOAP_SOAPCPP2} -n -w -x -p ${gsoap_prefix} -q ${gsoap_prefix}  -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${gsoap_header_file} 
 )
 
+# generate delegation stubs for client!
+add_custom_command(
+    OUTPUT ${delegation_header_file}
+    DEPENDS ${gsoap_typemap} ${fts3_delegation_wsdl} 
+    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_typemap} ${fts3_delegation_wsdl} -o ${delegation_header_file}
+)
+
+# generate delegation stubs for client!
+add_custom_command(
+    OUTPUT ${delegation_source_files}
+    DEPENDS ${delegation_header_file}
+    COMMAND ${GSOAP_SOAPCPP2} -C -n -w -x -p ${delegation_prefix} -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${delegation_header_file} 
+)
 
 add_library(fts3_ws_ifce_server SHARED 
     ${gsoap_env_source_files}
@@ -84,6 +104,13 @@ add_library(fts3_ws_ifce_client SHARED
     ${gsoap_env_source_files}
     ${generated_files_dir}/${gsoap_prefix}C.cpp
     ${generated_files_dir}/${gsoap_prefix}Client.cpp
+)
+
+# Client side delegation library 
+add_library(fts3_delegation_api_cpp SHARED
+#    ${gsoap_env_source_files}
+    ${generated_files_dir}/${delegation_prefix}C.cpp
+    ${generated_files_dir}/${delegation_prefix}Client.cpp
 )
 
 set_target_properties(fts3_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
