@@ -127,8 +127,10 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
         // Open the Clob
         clob.open(oracle::occi::OCCI_LOB_READONLY);
         int len = clob.length();
-	if(len == 0)
+	if(len == 0){
+		clob.close();
 		return;
+	}
 
         // reserve some space on the string
         str.resize(len, 0);

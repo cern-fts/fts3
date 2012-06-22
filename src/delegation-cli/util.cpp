@@ -616,7 +616,7 @@ SDVOList *check_voms_proxy(void)
 		return NULL;
 	}
 
-	volist = calloc(1, sizeof(*volist));
+	volist = (SDVOList*) calloc(1, sizeof(*volist));
 	if (!volist)
 	{
 		free(creds);
@@ -639,7 +639,7 @@ SDVOList *check_voms_proxy(void)
 		if (*p2)
 			*p2 = '\0';
 		
-		tmp = realloc(volist->names, (volist->numNames + 1) *
+		tmp = (char**) realloc(volist->names, (volist->numNames + 1) *
 			sizeof(*volist->names));
 		if (!tmp)
 		{
@@ -674,11 +674,11 @@ SDVOList *check_vo_env(void)
 	if (!vo)
 		return NULL;
 
-	volist = calloc(1, sizeof(*volist));
+	volist = (SDVOList*) calloc(1, sizeof(*volist));
 	if (!volist)
 		return NULL;
 
-	volist->names = malloc(sizeof(char *));
+	volist->names = (char**) malloc(sizeof(char *));
 	if (!volist->names)
 	{
 		free(volist);

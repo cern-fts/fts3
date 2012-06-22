@@ -58,7 +58,7 @@ static void fixup_lfn_uri(glite_uri *uri)
 	{
 		if (uri->endpoint)
 		{
-			uri->endpoint = g_realloc(uri->endpoint,
+			uri->endpoint = (char *) g_realloc(uri->endpoint,
 				strlen(uri->endpoint) + strlen(uri->path) + 1);
 			strcat(uri->endpoint, uri->path);
 			g_free(uri->path);
@@ -97,7 +97,7 @@ glite_uri *glite_uri_new(const char *uri_str)
 	uri = g_new0(glite_uri, 1);
 
 	/* Look for the scheme */
-	p = strchr(uri_str, ':');
+	p = (char *) strchr(uri_str, ':');
 	if (p)
 	{
 		uri->scheme = g_ascii_strdown(uri_str, p - uri_str);
@@ -114,7 +114,7 @@ glite_uri *glite_uri_new(const char *uri_str)
 	/* Look for a host specification. It is only valid after a scheme */
 	if (uri->scheme)
 	{
-		p = strchr(uri_str, '/');
+		p = (char *) strchr(uri_str, '/');
 		if (p && p != uri_str)
 		{
 			/* <scheme>://<host><path> */
@@ -126,7 +126,7 @@ glite_uri *glite_uri_new(const char *uri_str)
 
 	/* Look for a query component, but only if we have <scheme> and
 	 * <host> */
-	if (uri->scheme && uri->endpoint && (p = strchr(uri_str, '?')))
+	if (uri->scheme && uri->endpoint && (p = (char *) strchr(uri_str, '?')))
 	{
 		uri->path = g_strndup(uri_str, p - uri_str);
 		uri->query = g_strdup(p + 1);

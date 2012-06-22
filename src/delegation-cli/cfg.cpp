@@ -137,7 +137,7 @@ const char *glite_conf_value(const char *key)
 	/* Let the environment values override glite.conf */
 	result = getenv(key);
 	if (!result)
-		result = g_hash_table_lookup(glite_conf, key);
+		result = (const char *) g_hash_table_lookup(glite_conf, key);
 	return result;
 }
 

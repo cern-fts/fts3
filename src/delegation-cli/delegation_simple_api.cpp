@@ -12,7 +12,7 @@
 #include "gridsite.h"
 #include "delegation.nsmap"
 #include "delegation-simple.h"
-
+#include <sstream>
 #include "ServiceDiscoveryIfce.h"
 #include "util.h"
 
@@ -76,22 +76,14 @@ static void decode_exception(glite_delegation_ctx *ctx,
     if (!detail)
         return;
 
-#if _GSOAP_VERSION >= 0x020700
+
 #define SET_EXCEPTION(exc) \
     message = ((struct _delegation__ ## exc *)detail->fault)->msg; \
     if (!message) \
         message = #exc " received from the service"; \
     glite_delegation_set_error(ctx, "%s: %s", method, message); \
     ctx->error = 1;
-#else
-#define SET_EXCEPTION(exc) \
-    message = ((struct _delegation__ ## exc *)detail->value)->msg; \
-    if (!message) \
-        message = #exc " received from the service"; \
-    glite_delegation_set_error(ctx, "%s: %s", method, message); \
-    ctx->error = 1;
-#endif
-    
+
     switch (detail->__type)
     {
         case SOAP_TYPE__delegation__DelegationException:
@@ -136,12 +128,12 @@ static void _fault_to_error(glite_delegation_ctx *ctx, const char *method)
         /* Provide default messages */
         if (!code || !*code)
         {
-            code = alloca(sizeof(*code));
+            code = (const char**) alloca(sizeof(*code));
             *code = "(SOAP fault code missing)";
         }
         if (!string || !*string)
         {
-            string = alloca(sizeof(*string));
+            string = (const char**) alloca(sizeof(*string));
             *string = "(SOAP fault string missing)";
         }
 
@@ -161,7 +153,7 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint)
     int ret;
     glite_delegation_ctx *ctx;
 
-    ctx = calloc(sizeof(*ctx), 1);
+    ctx = (glite_delegation_ctx *) calloc(sizeof(*ctx), 1);
     if(!ctx)
         return NULL;
 
@@ -298,7 +290,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
             _fault_to_error(ctx, __func__);
             return -1;
         }
-        certreq = renew_resp._renewProxyReqReturn;
+        certreq = (char *) std::string(renew_resp._renewProxyReqReturn).c_str();
     }
 
     /* if it was forced and failed, or if it was not forced at all */
@@ -312,7 +304,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
             _fault_to_error(ctx, __func__);
             return -1;
         }
-        certreq = get_resp._getProxyReqReturn;
+        certreq = (char*) std::string(get_resp._getProxyReqReturn).c_str();
     }
 
     /* generating a certificate from the request */
@@ -439,7 +431,7 @@ char *glite_delegation_getVersion(glite_delegation_ctx *ctx)
         return NULL;
     }
 
-    version = strdup(resp.getVersionReturn);
+    version = strdup( (const char*) std::string(resp.getVersionReturn).c_str());
     soap_end(ctx->soap);
     return version;
 }
@@ -470,7 +462,7 @@ char *glite_delegation_getInterfaceVersion(glite_delegation_ctx *ctx)
         return NULL;
     }
 
-    version = strdup(resp.getInterfaceVersionReturn);
+    version = strdup( (const char*) std::string(resp.getInterfaceVersionReturn).c_str());
     soap_end(ctx->soap);
     return version;
 }
@@ -517,7 +509,7 @@ char *glite_delegation_getServiceMetadata(glite_delegation_ctx *ctx,
         return NULL;
     }
 
-    value= strdup(resp._getServiceMetadataReturn);
+    value= strdup((const char*) std::string(resp._getServiceMetadataReturn).c_str());
     soap_end(ctx->soap);
     return value;
 }

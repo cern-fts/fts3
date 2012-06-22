@@ -19,10 +19,9 @@ cmake_minimum_required(VERSION 2.6)
 add_subdirectory(common)
 add_subdirectory(config)
 add_subdirectory(db)
-
 add_subdirectory(cred)
-
 add_subdirectory(ws-ifce)
+add_subdirectory(delegation-cli)
 add_subdirectory(cli)
 add_subdirectory(server)
 add_subdirectory(monitoring)

@@ -275,8 +275,11 @@ string GSoapDelegationHandler::getVomsAttributes(string proxy) {
 	vomsdata vdata;
 	if(!vdata.Retrieve(cert, certstack)) {
 		sk_X509_free(certstack);
-		throw string("Failed to retrieve voms attributes from proxy certificate!");
+		std::cerr << vdata.error << std::endl;
+		std::cerr << vdata.ErrorMessage() << std::endl;
+		//throw string("Failed to retrieve voms attributes from proxy certificate!");
 	}
+
 
 	static const string delimiter(" ");
 	stringstream ss;
@@ -285,6 +288,11 @@ string GSoapDelegationHandler::getVomsAttributes(string proxy) {
 	vector <voms>::iterator voms_it;
 	vector<string> fqan;
 	vector<string>::iterator fqan_it;
+
+	if(userVoms.size() == 0){		
+		return ss.str();
+	}
+
 
 	for (voms_it = userVoms.begin(); voms_it != userVoms.end(); voms_it++) {
 
