@@ -43,6 +43,41 @@ static std::string reasonClass("");
 static std::string errorMessage("");
 
 
+static std::vector<std::string> split(const char *str, char c = ':')
+{
+    std::vector<std::string> result;
+
+    while(1)
+    {
+        const char *begin = str;
+
+        while(*str != c && *str)
+                str++;
+
+        result.push_back(string(begin, str));
+
+        if(0 == *str++)
+                break;
+    }
+
+    return result;
+}
+
+
+
+void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpointer user_data){
+
+	size_t avg  =  gfalt_copy_get_average_baudrate(h,NULL) / 1024;  
+	size_t inst =  gfalt_copy_get_instant_baudrate(h,NULL) / 1024; 
+	size_t trans=  gfalt_copy_get_bytes_transfered(h,NULL);
+	time_t elapsed  = gfalt_copy_get_elapsed_time(h,NULL);
+	   
+	logStream << fileManagement.timestamp() <<  "INFO bytes:" << trans << ", KB/sec avg:" << avg << ",KB/sec inst:" << inst << ", elapsed:" << elapsed << '\n';
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) <<  "INFO bytes:" << trans << ", KB/sec avg:" << avg << ",KB/sec inst:" << inst << ", elapsed:" << elapsed <<  commit;
+}
+
+
+
 void signalHandler( int signum )
 {   
     logStream << fileManagement.timestamp() <<  "WARN Interrupt signal received" << '\n';
@@ -261,7 +296,6 @@ int main(int argc, char **argv) {
     log << fileManagement.timestamp() << "INFO fail_nearline:" << fail_nearline << '\n'; //v
     log << fileManagement.timestamp() << "INFO timeout_per_mb:" << timeout_per_mb << '\n'; //w
     log << fileManagement.timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
-    log << fileManagement.timestamp() << "INFO algorithm:" << algorithm << '\n'; //y
     log << fileManagement.timestamp() << "INFO checksum_value:" << checksum_value << '\n'; //z
     log << fileManagement.timestamp() << "INFO compare_checksum:" << compare_checksum << '\n'; //A
     log << fileManagement.timestamp() << "INFO proxy:" << proxy << '\n'; //proxy
@@ -289,9 +323,15 @@ int main(int argc, char **argv) {
 
     /*Checksuming*/
     if(compare_checksum){
-            if(checksum_value.length() > 0){ //use provide/user checksum
+            if(checksum_value.length() > 0){ //user provided checksum
+ 	        std::vector<std::string> token =  split(checksum_value.c_str());
+		std::string checkAlg = token[0];
+		std::string csk = token[1];
+	    	gfalt_set_user_defined_checksum(params,checkAlg.c_str(), csk.c_str(), &tmp_err);
+		gfalt_set_checksum_check(params, TRUE, &tmp_err);
 	    }
 	    else{//use auto checksum
+	    	gfalt_set_checksum_check(params, TRUE, &tmp_err);
 	    }
     }
 
@@ -301,6 +341,7 @@ int main(int argc, char **argv) {
 
     gfalt_set_timeout(params, timeout, NULL);
     gfalt_set_nbstreams(params, nbstreams, NULL);
+    gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
 
     msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
@@ -376,6 +417,7 @@ int main(int argc, char **argv) {
     }
 
     log << fileManagement.timestamp() << "INFO release all gfal2 resources" << '\n';
+    gfalt_params_handle_delete(params,NULL);
     gfal_context_free(handle);
 
     msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
