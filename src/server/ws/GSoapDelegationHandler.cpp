@@ -132,7 +132,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 				dn,
 				req,
 				string(keytxt),
-				string()
+				fqansToString(attrs)
 			);
 		delete cache;
 
@@ -142,7 +142,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 				dn,
 				req,
 				string(keytxt),
-				string()
+				fqansToString(attrs)
 			);
 	}
 
@@ -175,7 +175,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 				dn,
 				req,
 				string(keytxt),
-				string()
+				fqansToString(attrs)
 			);
 		delete cache;
 
@@ -185,7 +185,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 				dn,
 				req,
 				string(keytxt),
-				string()
+				fqansToString(attrs)
 			);
 	}
 
@@ -335,7 +335,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 				dn,
 				req,
 				string(keytxt),
-				string()
+				fqansToString(attrs)
 			);
 		delete cache;
 
@@ -345,7 +345,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 				dn,
 				req,
 				string(keytxt),
-				string()
+				fqansToString(attrs)
 			);
 	}
 
