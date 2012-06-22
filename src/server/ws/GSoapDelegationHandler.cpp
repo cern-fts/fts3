@@ -22,7 +22,6 @@
 #include "db/generic/SingleDbInstance.h"
 #include "common/logger.h"
 
-#include <voms/voms_api.h>
 #include <cgsi_plugin.h>
 #include <stdlib.h>
 
@@ -33,23 +32,25 @@ using namespace fts3::ws;
 using namespace db;
 using namespace boost;
 
-const string GSoapDelegationHandler::GRST_PROXYCACHE = "/../proxycache/";
-
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) {
 
+	// get client DN
+	char buff[200];
+	int len = 200;
+	if (get_client_dn(ctx, buff, len)) throw string("'get_client_dn' failed!"); // if there's an error throw an exception
+	dn = buff;
+
+	// retrieve VOMS attributes (fqnas)
+	int nbfqans = 0;
+	char **arr = get_client_roles(ctx, &nbfqans);
+
+	for (int i = 0; i < nbfqans; i++) {
+		attrs.push_back(arr[i]);
+	}
 }
 
 GSoapDelegationHandler::~GSoapDelegationHandler() {
 
-}
-
-string GSoapDelegationHandler::getDn() {
-
-	static char buff[200];
-	static int len = 200;
-	if (get_client_dn(ctx, buff, len)) throw string("'get_client_dn' failed!"); // if there's an error throw an exception
-
-	return string(buff);
 }
 
 string GSoapDelegationHandler::makeDelegationId() {
@@ -67,14 +68,12 @@ string GSoapDelegationHandler::makeDelegationId() {
 	EVP_DigestInit(&ctx, m);
 
 	// use DN
-	string dn = getDn();
-	if (!dn.empty()) {
-		EVP_DigestUpdate(&ctx, dn.c_str(), dn.size());
-	}
+	EVP_DigestUpdate(&ctx, dn.c_str(), dn.size());
 
 	// use last voms attribute if available!
-	if (!attr.empty()) {
-		EVP_DigestUpdate(&ctx, attr.c_str(), attr.size());
+	if (!attrs.empty()) {
+		vector<string>::iterator fqan = attrs.end() - 1;
+		EVP_DigestUpdate(&ctx, fqan->c_str(), fqan->size());
 	}
 
 	EVP_DigestFinal(&ctx, hash_delegation_id, &delegation_id_len);
@@ -111,9 +110,6 @@ string GSoapDelegationHandler::handleDelegationId(string delegationId) {
 }
 
 string GSoapDelegationHandler::getProxyReq(string delegationId) {
-
-	string dn = getDn();
-	if (dn.empty()) throw string("'getDn' failed!");
 
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
@@ -157,9 +153,6 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 }
 
 delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
-
-	string dn = getDn();
-	if (dn.empty()) throw string("'getDn' failed!");
 
 	string delegationId = makeDelegationId();
 	if (delegationId.empty()) throw string("'getDelegationId' failed!");
@@ -262,65 +255,25 @@ time_t GSoapDelegationHandler::readTerminationTime(string proxy) {
     return GRSTasn1TimeToTimeT( (char*) ASN1_STRING_data(X509_get_notAfter(cert)), 0);
 }
 
-string GSoapDelegationHandler::getVomsAttributes(string proxy) {
+string GSoapDelegationHandler::fqansToString(vector<string> attrs) {
 
-	STACK_OF(X509) *certstack;
-
-	if (GRSTx509StringToChain(&certstack, const_cast<char*>(proxy.c_str())) != GRST_RET_OK) {
-		throw string("Failed to retrieve voms attributes from proxy certificate!");
-	}
-
-	X509 *cert = sk_X509_value(certstack, 0);
-
-	vomsdata vdata;
-	if(!vdata.Retrieve(cert, certstack)) {
-		sk_X509_free(certstack);
-		std::cerr << vdata.error << std::endl;
-		std::cerr << vdata.ErrorMessage() << std::endl;
-		//throw string("Failed to retrieve voms attributes from proxy certificate!");
-	}
-
-
-	static const string delimiter(" ");
 	stringstream ss;
+	const string delimiter = " ";
 
-	vector<voms> userVoms = vdata.data;
-	vector <voms>::iterator voms_it;
-	vector<string> fqan;
-	vector<string>::iterator fqan_it;
-
-	if(userVoms.size() == 0){		
-		return ss.str();
+	vector<string>::iterator it;
+	for (it = attrs.begin(); it < attrs.end(); it++) {
+		ss << *it << delimiter;
 	}
 
-
-	for (voms_it = userVoms.begin(); voms_it != userVoms.end(); voms_it++) {
-
-		fqan = voms_it->fqan;
-		for (fqan_it = fqan.begin(); fqan_it < fqan.end(); fqan_it++) {
-			ss << *fqan_it << delimiter;
-		}
-	}
-
-	// get the last voms attribute;
-	voms_it = userVoms.end() - 1;
-	fqan_it = voms_it->fqan.end() - 1;
-	attr = *fqan_it;
-
-	sk_X509_free(certstack);
 	return ss.str();
 }
 
 void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 
-	string dn = getDn();
-	if (dn.empty()) throw string("'getDn' failed!");
-
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
 
 	time_t time = readTerminationTime(proxy);
-	string attrs = getVomsAttributes(proxy);
 
 	string key;
 	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn);
@@ -332,17 +285,13 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 
 	proxy = addKeyToProxyCertificate(proxy, key);
 
-	// create a new delegation ID using voms attributes!
-	// has to be called after getVomsAttributes!!!
-	delegationId = makeDelegationId();
-
 	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn);
 	if (cred) {
 		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageElement(
 				delegationId,
 				dn,
 				proxy,
-				attrs,
+				fqansToString(attrs),
 				time
 			);
 		delete cred;
@@ -352,16 +301,13 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 				delegationId,
 				dn,
 				proxy,
-				attrs,
+				fqansToString(attrs),
 				time
 			);
 	}
 }
 
 string GSoapDelegationHandler::renewProxyReq(string delegationId) {
-
-	string dn = getDn();
-	if (dn.empty()) throw string("'getDn' failed!");
 
 	if (delegationId.empty()) {
 		throw string("Delegation ID is empty!");
@@ -411,13 +357,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 
 time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 
-	string dn = getDn();
-	if (dn.empty()) throw string("'getDn' failed!");
-
-	delegationId = handleDelegationId(delegationId);
-	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
-
-	//delegationId = makeDelegationId(); // should return always the same delegation ID for the same user
+	delegationId = makeDelegationId(); // should return always the same delegation ID for the same user
 
 	time_t time;
 	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn);
@@ -433,9 +373,6 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 }
 
 void GSoapDelegationHandler::destroy(string delegationId) {
-
-	string dn = getDn();
-	if (dn.empty()) throw string("'getDn' failed!");
 
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
