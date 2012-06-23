@@ -7,7 +7,7 @@
 #include <sys/stat.h>
 #include <vector>
 #include <stdio.h>
-#include <stdlib.h>
+#include <pwd.h>
 #include <transfer/gfal_transfer.h>
 #include "common/logger.h"
 #include "common/error.h"
@@ -26,6 +26,10 @@
 #include "errors.h"
 #include "signal_logger.h"
 #include "UserProxyEnv.h"
+#include <sys/param.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <grp.h>
 
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -42,6 +46,10 @@ static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
 
+static int   orig_ngroups = -1;
+static gid_t orig_gid = -1;
+static uid_t orig_uid = -1;
+static gid_t orig_groups[NGROUPS_MAX];
 
 static std::vector<std::string> split(const char *str, char c = ':')
 {
@@ -72,8 +80,8 @@ void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpoi
 	size_t trans=  gfalt_copy_get_bytes_transfered(h,NULL);
 	time_t elapsed  = gfalt_copy_get_elapsed_time(h,NULL);
 	   
-	logStream << fileManagement.timestamp() <<  "INFO bytes:" << trans << ", KB/sec avg:" << avg << ",KB/sec inst:" << inst << ", elapsed:" << elapsed << '\n';
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) <<  "INFO bytes:" << trans << ", KB/sec avg:" << avg << ",KB/sec inst:" << inst << ", elapsed:" << elapsed <<  commit;
+	logStream << fileManagement.timestamp() <<  "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) <<  "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed <<  commit;
 }
 
 
@@ -94,12 +102,102 @@ void signalHandler( int signum )
     exit(signum);  
 }
 
+
+/*courtesy of:
+"Setuid Demystified" by Hao Chen, David Wagner, and Drew Dean: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
+*/
+uid_t name_to_uid(char const *name)
+{
+  if (!name)
+    return -1;
+  long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
+  if (buflen == -1)
+    return -1;
+  // requires c99
+  char buf[buflen];
+  struct passwd pwbuf, *pwbufp;
+  if (0 != getpwnam_r(name, &pwbuf, buf, buflen, &pwbufp)
+      || !pwbufp)
+    return -1;
+  return pwbufp->pw_uid;
+}
+
+void spc_drop_privileges(int permanent) {
+  gid_t newgid = getgid(  ), oldgid = getegid(  );
+  uid_t newuid = getuid(  ), olduid = geteuid(  );
+   
+  if (!permanent) {
+    /* Save information about the privileges that are being dropped so that they
+     * can be restored later.
+     */
+    orig_gid = oldgid;
+    orig_uid = olduid;
+    orig_ngroups = getgroups(NGROUPS_MAX, orig_groups);
+  }
+   
+  /* If root privileges are to be dropped, be sure to pare down the ancillary
+   * groups for the process before doing anything else because the setgroups(  )
+   * system call requires root privileges.  Drop ancillary groups regardless of
+   * whether privileges are being dropped temporarily or permanently.
+   */
+  if (!olduid) setgroups(1, &newgid);
+   
+  if (newgid != oldgid) {
+#if !defined(linux)
+    setegid(newgid);
+    if (permanent && setgid(newgid) == -1) abort(  );
+#else
+    if (setregid((permanent ? newgid : -1), newgid) == -1) abort(  );
+#endif
+  }
+   
+  if (newuid != olduid) {
+#if !defined(linux)
+    seteuid(newuid);
+    if (permanent && setuid(newuid) == -1) abort(  );
+#else
+    if (setregid((permanent ? newuid : -1), newuid) == -1) abort(  );
+#endif
+  }
+   
+  /* verify that the changes were successful */
+  if (permanent) {
+    if (newgid != oldgid && (setegid(oldgid) != -1 || getegid(  ) != newgid))
+      abort(  );
+    if (newuid != olduid && (seteuid(olduid) != -1 || geteuid(  ) != newuid))
+      abort(  );
+  } else {
+    if (newgid != oldgid && getegid(  ) != newgid) abort(  );
+    if (newuid != olduid && geteuid(  ) != newuid) abort(  );
+  }
+}
+   
+void spc_restore_privileges(void) {
+  if (geteuid(  ) != orig_uid)
+    if (seteuid(orig_uid) == -1 || geteuid(  ) != orig_uid) abort(  );
+  if (getegid(  ) != orig_gid)
+    if (setegid(orig_gid) == -1 || getegid(  ) != orig_gid) abort(  );
+  if (!orig_uid)
+    setgroups(orig_ngroups, orig_groups);
+}
+
 int main(int argc, char **argv) {
 
+    //switch to non-priviledged user to avoid reading the hostcert
+    char user[ ]  ="fts3";      
+    uid_t pw_uid;
+    pw_uid = name_to_uid(user);
+    if(pw_uid != -1){
+    	setuid(pw_uid);
+	setgid(pw_uid);
+	seteuid(pw_uid);
+	setegid(pw_uid);
+    }    
+    
     REGISTER_SIGNAL(SIGABRT);
     REGISTER_SIGNAL(SIGSEGV);
     REGISTER_SIGNAL(SIGTERM);
-    
+        
     std::string bytes_to_string("");
     //transfer_completed tr_completed;
     struct stat statbufsrc;
@@ -213,8 +311,8 @@ int main(int argc, char **argv) {
             file_id = std::string(argv[i + 1]);
         if (temp.compare("-proxy") == 0)
             proxy = std::string(argv[i + 1]);	    
-    }
-
+    }       
+	
     UserProxyEnv* cert = NULL;
     if(proxy.length() > 0){
 	    // Set Proxy Env    
@@ -268,6 +366,7 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, dest_token_desc);
     msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);
     msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+    
 
 
     log << fileManagement.timestamp() << "INFO Transfer accepted" << '\n';
@@ -300,7 +399,7 @@ int main(int argc, char **argv) {
     log << fileManagement.timestamp() << "INFO compare_checksum:" << compare_checksum << '\n'; //A
     log << fileManagement.timestamp() << "INFO proxy:" << proxy << '\n'; //proxy
 
-    reporter.constructMessage(job_id, file_id, "ACTIVE", "");
+    //reporter.constructMessage(job_id, file_id, "ACTIVE", "");
 
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
@@ -435,7 +534,10 @@ stop:
 	msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "");    
 	reporter.constructMessage(job_id, file_id, "FINISHED", errorMessage);
 	}
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << errorMessage << commit;	
+
+    if(errorMessage.length() > 0)
+    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << errorMessage << commit;	
+	
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
     

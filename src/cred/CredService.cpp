@@ -93,7 +93,7 @@ void CredService::get(
     if(true == isValidProxy(fname)){
         filename = fname;
         //m_log_debug("Proxy Certificate is already on file " << filename);
-	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate is already on file " << filename << commit;
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is already on file " << filename << commit;
         return;
     }
     

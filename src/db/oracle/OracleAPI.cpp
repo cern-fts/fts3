@@ -83,6 +83,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND t_file.job_finished is NULL"
 	    " AND t_file.file_state = 'SUBMITTED'"
+	    " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
             " AND rownum <= 30  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time), t_file.job_id, t_file.file_id";
 
@@ -260,11 +261,11 @@ void OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) 
     std::string query =
     		"UPDATE t_file "
     		"SET file_state =:1 "
-    		"WHERE file_id = :2 and file_state = 'SUBMITTED'";
+    		"WHERE file_id = :2 ";
     std::string query2 =
                 "UPDATE t_job "
                 "SET job_state =:1 "
-                "WHERE job_id = :2 and job_state = 'SUBMITTED'";
+                "WHERE job_id = :2 and job_state = 'SUBMITTED' OR job_state = 'READY'";
 
 
     try {

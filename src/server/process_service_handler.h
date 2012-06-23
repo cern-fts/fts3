@@ -33,6 +33,11 @@ limitations under the License. */
 #include <signal.h>
 #include "parse_url.h"
 #include "cred-utility.h"
+#include <sys/types.h>
+#include <unistd.h>
+#include <grp.h>
+#include <sys/stat.h>
+
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
@@ -173,6 +178,8 @@ protected:
 			if(proxy_file.length() > 0){
                         	params.append(" -proxy ");
 	                        params.append(proxy_file);	
+				/*make sure proxy is readable    */
+    				chmod(proxy_file.c_str(), (mode_t) 0777); //S_IRUSR|S_IRGRP|S_IROTH				
 			}		
 			if(std::string(temp->CHECKSUM).length() > 0){ //checksum
                         	params.append(" -z ");
@@ -218,6 +225,7 @@ protected:
                             pr->executeProcessShell();
                             delete pr;
                         }
+			DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "ACTIVE");
                         params.clear();
                     }
 		    if(protocol)

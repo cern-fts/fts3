@@ -179,7 +179,7 @@ string JobSubmitter::submit() {
             cred,
             vo,
             params.get(JobParameterHandler::FTS3_PARAM_MYPROXY),
-            "af2364fa8bb835e1",
+            "9e52376e3ab44cf0",
             params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN),
             params.get(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG),
             params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE),
