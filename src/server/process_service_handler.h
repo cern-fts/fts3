@@ -37,12 +37,29 @@ limitations under the License. */
 #include <unistd.h>
 #include <grp.h>
 #include <sys/stat.h>
-
+#include <pwd.h>
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
+
+uid_t name_to_uid(char const *name)
+{
+  if (!name)
+    return -1;
+  long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
+  if (buflen == -1)
+    return -1;
+
+  char buf[buflen];
+  struct passwd pwbuf, *pwbufp;
+  if (0 != getpwnam_r(name, &pwbuf, buf, buflen, &pwbufp)
+      || !pwbufp)
+    return -1;
+  return pwbufp->pw_uid;
+}
+
 
 template <class T>
 inline std::string to_string(const T& t) {
@@ -180,6 +197,10 @@ protected:
 	                        params.append(proxy_file);	
 				/*make sure proxy is readable    */
     				chmod(proxy_file.c_str(), (mode_t) 0600); //S_IRUSR|S_IRGRP|S_IROTH				
+				char user[ ]  ="fts3";
+    				uid_t pw_uid;
+    				pw_uid = name_to_uid(user);
+				chown(proxy_file.c_str(), pw_uid, getgid() );
 			}		
 			if(std::string(temp->CHECKSUM).length() > 0){ //checksum
                         	params.append(" -z ");

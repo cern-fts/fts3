@@ -122,79 +122,15 @@ uid_t name_to_uid(char const *name)
   return pwbufp->pw_uid;
 }
 
-void spc_drop_privileges(int permanent) {
-  gid_t newgid = getgid(  ), oldgid = getegid(  );
-  uid_t newuid = getuid(  ), olduid = geteuid(  );
-   
-  if (!permanent) {
-    /* Save information about the privileges that are being dropped so that they
-     * can be restored later.
-     */
-    orig_gid = oldgid;
-    orig_uid = olduid;
-    orig_ngroups = getgroups(NGROUPS_MAX, orig_groups);
-  }
-   
-  /* If root privileges are to be dropped, be sure to pare down the ancillary
-   * groups for the process before doing anything else because the setgroups(  )
-   * system call requires root privileges.  Drop ancillary groups regardless of
-   * whether privileges are being dropped temporarily or permanently.
-   */
-  if (!olduid) setgroups(1, &newgid);
-   
-  if (newgid != oldgid) {
-#if !defined(linux)
-    setegid(newgid);
-    if (permanent && setgid(newgid) == -1) abort(  );
-#else
-    if (setregid((permanent ? newgid : -1), newgid) == -1) abort(  );
-#endif
-  }
-   
-  if (newuid != olduid) {
-#if !defined(linux)
-    seteuid(newuid);
-    if (permanent && setuid(newuid) == -1) abort(  );
-#else
-    if (setregid((permanent ? newuid : -1), newuid) == -1) abort(  );
-#endif
-  }
-   
-  /* verify that the changes were successful */
-  if (permanent) {
-    if (newgid != oldgid && (setegid(oldgid) != -1 || getegid(  ) != newgid))
-      abort(  );
-    if (newuid != olduid && (seteuid(olduid) != -1 || geteuid(  ) != newuid))
-      abort(  );
-  } else {
-    if (newgid != oldgid && getegid(  ) != newgid) abort(  );
-    if (newuid != olduid && geteuid(  ) != newuid) abort(  );
-  }
-}
-   
-void spc_restore_privileges(void) {
-  if (geteuid(  ) != orig_uid)
-    if (seteuid(orig_uid) == -1 || geteuid(  ) != orig_uid) abort(  );
-  if (getegid(  ) != orig_gid)
-    if (setegid(orig_gid) == -1 || getegid(  ) != orig_gid) abort(  );
-  if (!orig_uid)
-    setgroups(orig_ngroups, orig_groups);
-}
-
 int main(int argc, char **argv) {
 
     //switch to non-priviledged user to avoid reading the hostcert
+    uid_t privid = geteuid();     
     char user[ ]  ="fts3";      
     uid_t pw_uid;
     pw_uid = name_to_uid(user);
-    if(pw_uid != -1){
-    	//setuid(pw_uid);
-	//setgid(pw_uid);
-	seteuid(pw_uid);
-	setegid(pw_uid);
-    } 
-       
-    
+
+ 
     REGISTER_SIGNAL(SIGABRT);
     REGISTER_SIGNAL(SIGSEGV);
     REGISTER_SIGNAL(SIGTERM);
@@ -313,12 +249,15 @@ int main(int argc, char **argv) {
         if (temp.compare("-proxy") == 0)
             proxy = std::string(argv[i + 1]);	    
     }       
-	
+
+    seteuid(pw_uid); 	
     UserProxyEnv* cert = NULL;
     if(proxy.length() > 0){
 	    // Set Proxy Env    
 	    cert = new UserProxyEnv(proxy);
     }
+    seteuid(privid);
+
 
     fileManagement.setSourceUrl(source_url);
     fileManagement.setDestUrl(dest_url);
@@ -404,8 +343,11 @@ int main(int argc, char **argv) {
 
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
+    seteuid(pw_uid);
+     
     if (gfal_stat(source_url.c_str(), &statbufsrc) < 0) {
 	std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
+        seteuid(privid);
         log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
         errorMessage = "Failed to get source file size: " + tempError;		
 	errorScope = SOURCE;
@@ -413,6 +355,7 @@ int main(int argc, char **argv) {
 	errorPhase = TRANSFER_PREPARATION;	
         goto stop;
     } else {
+        seteuid(privid);
         log << fileManagement.timestamp() << "INFO Source file size: " << statbufsrc.st_size << '\n';
         source_size = statbufsrc.st_size;
         //conver longlong to string
@@ -427,22 +370,27 @@ int main(int argc, char **argv) {
  	        std::vector<std::string> token =  split(checksum_value.c_str());
 		std::string checkAlg = token[0];
 		std::string csk = token[1];
+		seteuid(pw_uid);
 	    	gfalt_set_user_defined_checksum(params,checkAlg.c_str(), csk.c_str(), &tmp_err);
 		gfalt_set_checksum_check(params, TRUE, &tmp_err);
 	    }
 	    else{//use auto checksum
+		seteuid(pw_uid);
 	    	gfalt_set_checksum_check(params, TRUE, &tmp_err);
 	    }
     }
 
+    seteuid(pw_uid);
     //overwrite dest file if exists
-    if(overwrite)	      
+    if(overwrite){	      
     	gfalt_set_replace_existing_file(params, TRUE, &tmp_err);
+    }
 
     gfalt_set_timeout(params, timeout, NULL);
     gfalt_set_nbstreams(params, nbstreams, NULL);
     gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
 
+    seteuid(privid);
     msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
     msg_ifce::getInstance()->set_timestamp_checksum_source_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
@@ -451,7 +399,9 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     log << fileManagement.timestamp() << "INFO initialize gfal2" << '\n';
+    seteuid(pw_uid);
     if ((handle = gfal_context_new(&tmp_err)) == NULL) {
+        seteuid(privid);
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer Initialization failed - errno: " << tmp_err->message << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "ERROR Transfer Initialization failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
         errorMessage = std::string(tmp_err->message);
@@ -460,12 +410,14 @@ int main(int argc, char **argv) {
 	errorPhase = ALLOCATION;	
         goto stop;
     }
+    seteuid(privid);
     log << fileManagement.timestamp() << "INFO begin copy" << '\n';
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
 
     msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
+    seteuid(pw_uid);
     if ((ret = gfalt_copy_file(handle, params, source_url.c_str(), dest_url.c_str(), &tmp_err)) != 0) {
+        seteuid(privid);
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
         log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
         errorMessage = std::string(tmp_err->message);
@@ -474,6 +426,7 @@ int main(int argc, char **argv) {
 	errorPhase = TRANSFER;	
         goto stop;
     } else {
+        seteuid(privid);
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
         log << fileManagement.timestamp() << "INFO Transfer completed successfully" << '\n';
     }
@@ -488,7 +441,9 @@ int main(int argc, char **argv) {
 
 
     msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+    seteuid(pw_uid);
     if (gfal_stat(dest_url.c_str(), &statbufdest) < 0) {
+        seteuid(privid);
         memset(errorBuffer, 0, 2048);
 	std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
         log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
@@ -498,6 +453,7 @@ int main(int argc, char **argv) {
 	errorPhase = TRANSFER_FINALIZATION;	
         goto stop;
     } else {
+        seteuid(privid);
         log << fileManagement.timestamp() << "INFO Dest file size: " << statbufdest.st_size << '\n';
         dest_size = statbufdest.st_size;
     }
@@ -517,12 +473,14 @@ int main(int argc, char **argv) {
     }
 
     log << fileManagement.timestamp() << "INFO release all gfal2 resources" << '\n';
+    seteuid(pw_uid);
     gfalt_params_handle_delete(params,NULL);
     gfal_context_free(handle);
-
+    seteuid(privid);
     msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
 stop:
+    seteuid(privid);
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
