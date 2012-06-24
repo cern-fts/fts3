@@ -47,11 +47,13 @@ DBSingleton::DBSingleton() {
         // create an instance of the DB class
         dbBackend = create_db();
     } else{
-    	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library"));
+    	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library, check if libfts3_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64"));
+	exit(1);
     }
     
     }catch(...) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library"));       
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library, check if libfts3_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64"));       
+	exit(1);
     }
 
 }

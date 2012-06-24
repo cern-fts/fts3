@@ -117,7 +117,7 @@ public:
 
     /* ---------------------------------------------------------------------- */
 	
-    virtual ~Err_System()
+    virtual ~Err_System() throw() 
     {
         // EMPTY
     };

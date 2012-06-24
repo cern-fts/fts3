@@ -104,8 +104,8 @@ protected:
      for(int i = 0; i < 50; i++){
     	struct message msg;
 	qm->receive(&msg);
-          
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "MSG queue: " << msg.job_id  << commit;
+      std::string job = std::string(msg.job_id).substr (0,36);    
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Transfer status: " << job  << commit;
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg.file_id  << commit;      
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg.transfer_status  << commit;            
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << msg.transfer_message  << commit; 

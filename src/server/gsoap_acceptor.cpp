@@ -37,6 +37,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
         FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service bound to socket " << sock << commit;
     } else {
         FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
+        exit(1);
     }
 }
 

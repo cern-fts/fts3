@@ -48,18 +48,63 @@ void fts3_initialize_db_backend()
     std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
     std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
 
-    std::cout << dbConnectString << std::endl;
+    
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Connect to " << dbConnectString  << commit;
 
     db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
 }
 
 /* -------------------------------------------------------------------------- */
+static int fexists(const char *filename) {
+    struct stat buffer;
+    if (stat(filename, &buffer) == 0) return 0;
+    return -1;
+}
+
+
+
+
+static bool checkUrlCopy(){
+        std::string p("");
+        std::vector<std::string> pathV;
+        std::vector<std::string>::iterator iter;
+        char *token;
+        const char *path = getenv("PATH");
+        char *copy = (char *) malloc(strlen(path) + 1);
+        strcpy(copy, path);
+        token = strtok(copy, ":");
+
+        while ( (token = strtok(0, ":")) != NULL) {
+            pathV.push_back(std::string(token));
+        }
+
+        for (iter = pathV.begin(); iter < pathV.end(); iter++) {
+            p = *iter + "/fts3_url_copy";
+            if (fexists(p.c_str()) == 0){
+        	free(copy);
+        	copy = NULL;
+        	pathV.clear();
+		return true;
+	        }
+        }
+
+	free(copy);
+	return false;
+}
+
+
 
 int main (int argc, char** argv)
 {
     try 
     {
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+	if(false == checkUrlCopy()){
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts3_url_copy process is set in the PATH env variable" << commit;
+		exit(1);
+	}
+		
+
         fts3_initialize_db_backend();
         struct sigaction action;
         action.sa_handler = _handle_sigint;

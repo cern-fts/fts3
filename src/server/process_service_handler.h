@@ -179,7 +179,7 @@ protected:
                         	params.append(" -proxy ");
 	                        params.append(proxy_file);	
 				/*make sure proxy is readable    */
-    				chmod(proxy_file.c_str(), (mode_t) 0777); //S_IRUSR|S_IRGRP|S_IROTH				
+    				chmod(proxy_file.c_str(), (mode_t) 0600); //S_IRUSR|S_IRGRP|S_IROTH				
 			}		
 			if(std::string(temp->CHECKSUM).length() > 0){ //checksum
                         	params.append(" -z ");

@@ -188,11 +188,12 @@ int main(int argc, char **argv) {
     uid_t pw_uid;
     pw_uid = name_to_uid(user);
     if(pw_uid != -1){
-    	setuid(pw_uid);
-	setgid(pw_uid);
+    	//setuid(pw_uid);
+	//setgid(pw_uid);
 	seteuid(pw_uid);
 	setegid(pw_uid);
-    }    
+    } 
+       
     
     REGISTER_SIGNAL(SIGABRT);
     REGISTER_SIGNAL(SIGSEGV);
