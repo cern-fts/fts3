@@ -46,10 +46,8 @@ static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
 
-static int   orig_ngroups = -1;
-static gid_t orig_gid = -1;
-static uid_t orig_uid = -1;
-static gid_t orig_groups[NGROUPS_MAX];
+static uid_t privid;
+static uid_t pw_uid;
 
 static std::vector<std::string> split(const char *str, char c = ':')
 {
@@ -88,7 +86,8 @@ void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpoi
 
 void signalHandler( int signum )
 {   
-    logStream << fileManagement.timestamp() <<  "WARN Interrupt signal received" << '\n';
+    seteuid(privid);
+    logStream << fileManagement.timestamp() <<  "WARN Interrupt signal received, transfer canceled" << '\n';
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
@@ -99,6 +98,7 @@ void signalHandler( int signum )
     reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user");
     logStream.close();
     fileManagement.archive();    
+    sleep(1);
     exit(signum);  
 }
 
@@ -125,9 +125,8 @@ uid_t name_to_uid(char const *name)
 int main(int argc, char **argv) {
 
     //switch to non-priviledged user to avoid reading the hostcert
-    uid_t privid = geteuid();     
-    char user[ ]  ="fts3";      
-    uid_t pw_uid;
+    privid = geteuid();     
+    char user[ ]  ="fts3";          
     pw_uid = name_to_uid(user);
 
  
