@@ -1196,6 +1196,7 @@ void OracleAPI::addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::str
     std::string tag = "addSeConfig";
 
     try {
+    	addSe("", "", "", SE_NAME, "", "", "", "", "", "", "");
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, SE_NAME);
         s->setString(2, SHARE_ID);
@@ -1313,7 +1314,7 @@ void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
     			query.append(" AND SHARE_ID ='"+SHARE_ID+"'");	
     			query.append(" AND SHARE_TYPE ='"+SHARE_TYPE+"'");
 
-    try {
+    try {        
         oracle::occi::Statement* s = conn->createStatement(query, "");
         s->executeUpdate();
         conn->commit();

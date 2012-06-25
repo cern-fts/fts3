@@ -77,7 +77,7 @@ CREATE TABLE t_se (
 -- This field will contain the host parse for FTS and extracted from name 
   ,host varchar2(100)
   ,se_transfer_type VARCHAR2(30)
-  ,se_transfer_protocol VARCHAR2(30) not null
+  ,se_transfer_protocol VARCHAR2(30)
   ,se_control_protocol VARCHAR2(30)
   ,gocdb_id VARCHAR2(100)
 --  ,CONSTRAINT constraint_name PRIMARY KEY (se_id_info, name, se_transfer_protocol)
