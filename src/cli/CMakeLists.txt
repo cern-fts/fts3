@@ -70,7 +70,7 @@ set(fts3_cli_common_sources
     ui/VoNameCli.cpp
     ui/CfgCli.cpp
     GSoapContextAdapter.cpp
-    ProxyCertificateHandler.cpp
+    ProxyCertificateDelegator.cpp
 )
 
 add_library(fts3_cli_common SHARED ${fts3_cli_common_sources})

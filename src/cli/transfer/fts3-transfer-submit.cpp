@@ -18,7 +18,7 @@
  */
 
 #include "GSoapContextAdapter.h"
-#include "ProxyCertificateHandler.h"
+#include "ProxyCertificateDelegator.h"
 #include "ui/SubmitTransferCli.h"
 
 #include "common/JobStatusHandler.h"
@@ -45,11 +45,6 @@ int main(int ac, char* av[]) {
 		GSoapContextAdapter* ctx = cli->validate();
 		if (!ctx) return 0;
 
-		if (cli->useDelegation()) {
-			ProxyCertificateHandler handler(cli->getService(), cli->getDelegationId(), cli->getExpirationTime());
-			if (!handler.delegate()) return 0;
-		}
-
 		// get the source file, the destination file and the FTS3 service endpoint
     	string source = cli->getSource(), destination = cli->getDestination();
 
@@ -64,7 +59,9 @@ int main(int ac, char* av[]) {
 			job.jobParams = cli->getParams();
 
 			// always use delegation with checksum TODO check whether it's right!
-			// TODO delegateProxyCert(endpoint);
+			// delegate Proxy Certificate
+			ProxyCertificateDelegator handler(cli->getService(), cli->getDelegationId(), cli->getExpirationTime());
+			if (!handler.delegate()) return 0;
 
 			// submit the job
 			impltns__transferSubmit3Response resp;
@@ -83,7 +80,9 @@ int main(int ac, char* av[]) {
 			// check whether a proxy certificate should be used
 			if (cli->useDelegation()) {
 
-				// TODO delegateProxyCert(endpoint);
+				// delegate Proxy Certificate
+				ProxyCertificateDelegator handler(cli->getService(), cli->getDelegationId(), cli->getExpirationTime());
+				if (!handler.delegate()) return 0;
 
 				// submit the job
 				impltns__transferSubmit2Response resp;
@@ -96,8 +95,7 @@ int main(int ac, char* av[]) {
 
 				// set the credential (Password)
 				job.credential = soap_new_std__string(*ctx, -1);
-				*job.credential = cli->getPassword(); // TODO test
-				//cout << *job.credential << endl;
+				*job.credential = cli->getPassword();
 
 				// submit the job
 				impltns__transferSubmitResponse resp;
