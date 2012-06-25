@@ -18,6 +18,7 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "ProxyCertificateHandler.h"
 #include "ui/SubmitTransferCli.h"
 
 #include "common/JobStatusHandler.h"
@@ -43,6 +44,11 @@ int main(int ac, char* av[]) {
 		// validate command line options, and return respective gsoap context
 		GSoapContextAdapter* ctx = cli->validate();
 		if (!ctx) return 0;
+
+		if (cli->useDelegation()) {
+			ProxyCertificateHandler handler(cli->getService(), cli->getDelegationId(), cli->getExpirationTime());
+			if (!handler.delegate()) return 0;
+		}
 
 		// get the source file, the destination file and the FTS3 service endpoint
     	string source = cli->getSource(), destination = cli->getDestination();

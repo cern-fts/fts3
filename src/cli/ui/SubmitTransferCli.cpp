@@ -125,6 +125,24 @@ string SubmitTransferCli::getDestination() {
 	return "";
 }
 
+string SubmitTransferCli::getDelegationId() {
+
+	// check if destination was passed via command line options
+	if (vm.count("id")) {
+		return vm["id"].as<string>();
+	}
+	return "";
+}
+
+long SubmitTransferCli::getExpirationTime() {
+
+	if (vm.count("expire")) {
+		return vm["expire"].as<long>();
+	}
+	return 0;
+}
+
+
 bool SubmitTransferCli::createJobElements() {
 
 	// first check if the -f option was used, try to open the file with bulk-job description

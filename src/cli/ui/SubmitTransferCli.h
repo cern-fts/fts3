@@ -183,6 +183,20 @@ public:
 	string getDestination();
 
 	/**
+	 * Gets the delegation ID (string).
+	 *
+	 * @return delegation ID string if it was given as a CLI option, or an empty string if not
+	 */
+	string getDelegationId();
+
+	/**
+	 * Gets user's set expiration time in seconds (long).
+	 *
+	 * @return expiration time in seconds if it was given as a CLI option, or 0 string if not
+	 */
+	long getExpirationTime();
+
+	/**
 	 * Gets the 'tns3__TransferParams' object.
 	 *
 	 * The parameters are set accordingly to the options used with the command line tool.

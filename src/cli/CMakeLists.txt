@@ -48,9 +48,12 @@ set (fts3_cli_internal_libs
 
 set(fts3_cli_libs
     ${fts3_cli_internal_libs}
+    gridsite
     cgsi_plugin_cpp
     boost_program_options
     boost_thread-mt
+    is_ifce 
+    fts3_delegation_api_simple
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -67,6 +70,7 @@ set(fts3_cli_common_sources
     ui/VoNameCli.cpp
     ui/CfgCli.cpp
     GSoapContextAdapter.cpp
+    ProxyCertificateHandler.cpp
 )
 
 add_library(fts3_cli_common SHARED ${fts3_cli_common_sources})
