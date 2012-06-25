@@ -51,7 +51,6 @@ int main(int ac, char* av[]) {
 		vector<string>::iterator it;
 		for (it = jobIds.begin(); it < jobIds.end(); it++) {
 
-			//string job = "1215375b-5407-11e1-9322-bc3d2ed9263b"
 			string jobId = *it;
 
 			if (cli->isVerbose()) {
@@ -90,6 +89,7 @@ int main(int ac, char* av[]) {
 
 					    cout << "\tActive: " << resp._getTransferJobSummaryReturn->numActive << endl;
 					    cout << "\tCanceled: " << resp._getTransferJobSummaryReturn->numCanceled << endl;
+					    cout << "\tFinished: " << resp._getTransferJobSummaryReturn->numFinished << endl;
 					    cout << "\tSubmitted: " << resp._getTransferJobSummaryReturn->numSubmitted << endl;
 					    cout << "\tFailed: " << resp._getTransferJobSummaryReturn->numFailed << endl;
 					}
