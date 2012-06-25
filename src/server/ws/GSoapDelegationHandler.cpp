@@ -240,6 +240,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
 	// first cert
 	X509 *cert = sk_X509_value(certstack, 0);
 	ss << x509ToString(cert);
+	X509_free(cert);
 
 	// private key
 	ss << key;
@@ -248,6 +249,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
 	for (int i = 1; i < sk_X509_num(certstack); i++) {
 		cert = sk_X509_value(certstack, i);
 		ss << x509ToString(cert);
+		X509_free(cert);
 	}
 
 	sk_X509_free(certstack);
@@ -260,10 +262,14 @@ time_t GSoapDelegationHandler::readTerminationTime(string proxy) {
 	BIO *bio = BIO_new(BIO_s_mem());
 	BIO_puts(bio, const_cast<char*>(proxy.c_str()));
 	X509 *cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
-
 	BIO_free(bio);
+
 	if(!cert) throw string("Failed to determine proxy's termination time!");
-    return GRSTasn1TimeToTimeT( (char*) ASN1_STRING_data(X509_get_notAfter(cert)), 0);
+
+	time_t time = GRSTasn1TimeToTimeT( (char*) ASN1_STRING_data(X509_get_notAfter(cert)), 0);
+	X509_free(cert);
+
+    return time;
 }
 
 string GSoapDelegationHandler::fqansToString(vector<string> attrs) {
