@@ -27,6 +27,7 @@
 #include "db/generic/SingleDbInstance.h"
 #include "common/logger.h"
 #include "GSoapExceptionHandler.h"
+#include "GSoapDelegationHandler.h"
 
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
@@ -39,6 +40,10 @@ using namespace fts3::ws;
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
+
+	GSoapDelegationHandler handler;
+	delegationId = handler.makeDelegationId();
+	vo = handler.getClientVo();
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
@@ -97,6 +102,12 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
+
+	GSoapDelegationHandler handler;
+	delegationId = handler.makeDelegationId();
+	vo = handler.getClientVo();
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
@@ -179,7 +190,7 @@ string JobSubmitter::submit() {
             cred,
             vo,
             params.get(JobParameterHandler::FTS3_PARAM_MYPROXY),
-            "9e52376e3ab44cf0",
+            delegationId,
             params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN),
             params.get(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG),
             params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE),

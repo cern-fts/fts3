@@ -92,6 +92,8 @@ private:
 	string dn;
 	/// user VO
 	string vo;
+	/// delegation ID
+	string delegationId;
 	/// used only for compatibility reason
 	string sourceSpaceTokenDescription;
 	/// user password
