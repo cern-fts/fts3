@@ -424,8 +424,13 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 	try{
 	if (_requestIDs) {
 		vector<string> &jobs = _requestIDs->item;
+		std::vector<std::string>::iterator jobsIter;
 		if (!jobs.empty()) {
-			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that have been canceled:" << commit;
+			 std::string jobId("");
+			 for (jobsIter = jobs.begin(); jobsIter != jobs.end(); ++jobsIter)
+			 	jobId += *jobsIter; 
+			 
+			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that will be canceled:" << jobId << commit;
 			DBSingleton::instance().getDBObjectInstance()->cancelJob(jobs);			
 		}
 	}
