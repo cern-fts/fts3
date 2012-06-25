@@ -113,7 +113,9 @@ public:
 			cout << "Reason: <None>" << endl;
 		}
 
-		cout << "Submit time: " << ""/*TODO*/ << endl;
+		char buff[20];
+		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js->submitTime));
+		cout << "Submit time: " << buff << endl;
 		cout << "Files: " << js->numFiles << endl;
 	    cout << "Priority: " << js->priority << endl;
 	    cout << "VOName: " << *js->voName << endl;
