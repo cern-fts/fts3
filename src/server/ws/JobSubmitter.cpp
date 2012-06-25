@@ -41,7 +41,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
 
-	GSoapDelegationHandler handler;
+	GSoapDelegationHandler handler (soap);
 	delegationId = handler.makeDelegationId();
 	vo = handler.getClientVo();
 
@@ -105,7 +105,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
 
-	GSoapDelegationHandler handler;
+	GSoapDelegationHandler handler (soap);
 	delegationId = handler.makeDelegationId();
 	vo = handler.getClientVo();
 
