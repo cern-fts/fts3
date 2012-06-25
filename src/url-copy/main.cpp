@@ -270,7 +270,9 @@ int main(int argc, char **argv) {
     logger log(logStream);
     
     // register signal SIGINT and signal handler  
-    signal(SIGINT, signalHandler);          
+    signal(SIGINT, signalHandler);
+    
+    reporter.constructMessage(job_id, file_id, "ACTIVE", "");          
 
     hostname[1023] = '\0';
     gethostname(hostname, 1023);

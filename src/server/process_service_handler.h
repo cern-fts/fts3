@@ -188,8 +188,8 @@ protected:
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO name: " << temp->VO_NAME << commit;
 		     
-                    FileTransferScheduler scheduler(temp);
-                    if (scheduler.schedule()) {
+                    FileTransferScheduler scheduler(temp); 
+                    if (scheduler.schedule()) { /*SET TO READY STATE WHEN TRUE*/
                         sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
                         destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
 			if(proxy_file.length() > 0){
@@ -242,11 +242,11 @@ protected:
 
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);
-                        if (pr) {
+                        if (pr) {			    
                             pr->executeProcessShell();
                             delete pr;
                         }
-			DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "ACTIVE");
+			
                         params.clear();
                     }
 		    if(protocol)
