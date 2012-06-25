@@ -38,11 +38,14 @@ public:
 	string handleDelegationId(string delegationId);
 	bool checkDelegationId(string delegationId);
 
+	string getClientVo();
+
 	string x509ToString(X509* cert);
 	string addKeyToProxyCertificate(string proxy, string key);
 	time_t readTerminationTime(string proxy);
 	string fqansToString(vector<string> attrs);
 
+	// delegation web server methods
 	string getProxyReq(string delegationId);
 	string renewProxyReq(string delegationId);
 	time_t getTerminationTime(string delegationId);

@@ -53,6 +53,17 @@ GSoapDelegationHandler::~GSoapDelegationHandler() {
 
 }
 
+string GSoapDelegationHandler::getClientVo() {
+
+	char* vo  = get_client_voname(ctx);
+
+	if (vo) {
+		return string(vo);
+	}
+
+	return string();
+}
+
 string GSoapDelegationHandler::makeDelegationId() {
 
 	unsigned char hash_delegation_id[EVP_MAX_MD_SIZE];
