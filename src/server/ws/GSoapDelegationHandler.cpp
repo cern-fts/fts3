@@ -309,9 +309,10 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 
 string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 
-	if (delegationId.empty()) {
-		throw string("Delegation ID is empty!");
-	}
+	// it is different to gridsite implementation but it is done like that in delegation-java
+	// in GliteDelegation.java
+	delegationId = handleDelegationId(delegationId);
+	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
 
 	if (!checkDelegationId(delegationId)) {
 		throw string("Wrong format of delegation ID!");
