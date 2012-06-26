@@ -1692,10 +1692,13 @@ bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
         s->executeUpdate();
 	conn->commit();	       	    
         conn->destroyStatement(s, tag);	
+	return true;
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return false;;	
     }	
+   return true;
 }
 
 bool OracleAPI::add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
@@ -1715,10 +1718,14 @@ bool OracleAPI::add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConf
         s->executeUpdate();
 	conn->commit();	       	    
         conn->destroyStatement(s, tag);	
+	return true;
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return false;	
     }	
+    
+    return true;    
 }
 
 bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
@@ -1737,10 +1744,14 @@ bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolCo
         s->executeUpdate();
 	conn->commit();	       	    
         conn->destroyStatement(s, tag);	
+	return true;	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return false;	
     }	
+    
+    return true;
 }
     
 void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig){
