@@ -275,17 +275,19 @@ public:
     
     virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2) = 0;
     
+    virtual bool is_se_group_exist(std::string group) = 0;    
+    
     virtual SeProtocolConfig* get_se_protocol_config(std::string se) = 0;
     
     virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2) = 0;
     
     virtual SeProtocolConfig* get_se_group_protocol_config(std::string se) = 0;
 
-    virtual void add_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
+    virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 
-    virtual void add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
+    virtual bool add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
 
-    virtual void add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;
+    virtual bool add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;
     
     virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 

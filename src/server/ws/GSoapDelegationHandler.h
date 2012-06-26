@@ -39,6 +39,7 @@ public:
 	bool checkDelegationId(string delegationId);
 
 	string getClientVo();
+	string getClientDN();
 
 	string x509ToString(X509* cert);
 	string addKeyToProxyCertificate(string proxy, string key);

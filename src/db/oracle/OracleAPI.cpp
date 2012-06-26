@@ -1487,10 +1487,12 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs){
 }
 
 
-    /*protocol config*/
+    /*Protocol config*/
+    
+/*check if a SE belongs to a group*/
 bool OracleAPI::is_se_group_member(std::string se){
 	const std::string tag = "is_se_group_member";
-	std::string query = "select * from t_se_group where SE_NAME=:1 ";
+	std::string query = "select SE_NAME from t_se_group where SE_NAME=:1 ";
 	bool exists = false;	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
@@ -1511,9 +1513,34 @@ bool OracleAPI::is_se_group_member(std::string se){
 return exists;
 }
 
+bool OracleAPI::is_se_group_exist(std::string group){
+	const std::string tag = "is_se_group_exist";
+	std::string query = "select SE_GROUP_NAME from t_se_group where SE_GROUP_NAME=:1 ";
+	bool exists = false;	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,group);	
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+	
+        if (r->next()) {           
+            exists = true;
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return exists;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return exists;
+    }	
+return exists;
+}
+
+
+/*check if a SE belongs to a group*/
 bool OracleAPI::is_se_protocol_exist(std::string se){
 	const std::string tag = "is_se_protocol_exist";
-	std::string query = "select * from t_se_protocol where SOURCE_SE=:1 and DEST_SE IS NULL ";
+	std::string query = "select SOURCE_SE from t_se_protocol where SOURCE_SE=:1 and DEST_SE IS NULL ";
 	bool exists = false;	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
@@ -1536,7 +1563,7 @@ return exists;
     
 bool OracleAPI::is_se_pair_protocol_exist(std::string se1, std::string se2){
 	const std::string tag = "is_se_pair_protocol_exist";
-	std::string query = "select * from t_se_protocol where SOURCE_SE=:1 AND DEST_SE=:2 ";
+	std::string query = "select count(*) from t_se_protocol where SOURCE_SE=:1 AND DEST_SE=:2 ";
 	bool exists = false;	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
@@ -1572,7 +1599,7 @@ SeProtocolConfig* OracleAPI::get_se_protocol_config(std::string se){
 	s->setString(1,se);	
         oracle::occi::ResultSet* r = conn->createResultset(s);
 	seProtocolConfig = new SeProtocolConfig();
-        while (r->next()) {    
+        if (r->next()) {    
 		seProtocolConfig->NOSTREAMS = r->getInt(7);
 		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(24);
         }        
@@ -1603,7 +1630,7 @@ SeProtocolConfig* OracleAPI::get_se_pair_protocol_config(std::string se1, std::s
         oracle::occi::ResultSet* r = conn->createResultset(s);
 	
 	seProtocolConfig = new SeProtocolConfig();
-        while (r->next()) {    
+        if (r->next()) {    
 		seProtocolConfig->NOSTREAMS = r->getInt(7);
 		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(24);
         }        
@@ -1634,7 +1661,7 @@ SeProtocolConfig* OracleAPI::get_se_group_protocol_config(std::string se){
         oracle::occi::ResultSet* r = conn->createResultset(s);
 	
 	seProtocolConfig = new SeProtocolConfig();
-        while (r->next()) {    
+        if(r->next()) {    
 		seProtocolConfig->NOSTREAMS = r->getInt(7);
 		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(24);
         }        
@@ -1649,9 +1676,14 @@ SeProtocolConfig* OracleAPI::get_se_group_protocol_config(std::string se){
 return seProtocolConfig;
 }
 
-void OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
+bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 	const std::string tag = "add_se_protocol_config";
 	std::string query = "insert into t_se_protocol(SOURCE_SE,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
+	
+	bool exists = is_se_protocol_exist(seProtocolConfig->SOURCE_SE);
+	if(exists)
+		return false;
+	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seProtocolConfig->SOURCE_SE);
@@ -1666,9 +1698,14 @@ void OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
     }	
 }
 
-void OracleAPI::add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
+bool OracleAPI::add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
 	const std::string tag = "add_se_pair_protocol_config";
 	std::string query = "insert into t_se_protocol(SOURCE_SE,DEST_SE,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3,:4)";
+		
+	bool exists = is_se_pair_protocol_exist(sePairProtocolConfig->SOURCE_SE, sePairProtocolConfig->DEST_SE);
+	if(exists)
+		return false;
+			
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, sePairProtocolConfig->SOURCE_SE);
@@ -1684,9 +1721,14 @@ void OracleAPI::add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConf
     }	
 }
 
-void OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
+bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
 	const std::string tag = "add_se_group_protocol_config";
 	std::string query = "insert into t_se_protocol(SE_GROUP_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
+	
+	bool exists = is_se_group_exist(seGroupProtocolConfig->SE_GROUP_NAME);
+	if(exists)
+		return false;	
+	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);

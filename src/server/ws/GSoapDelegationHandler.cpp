@@ -53,6 +53,11 @@ GSoapDelegationHandler::~GSoapDelegationHandler() {
 
 }
 
+string GSoapDelegationHandler::getClientDN(){
+	std::cerr << dn << std::endl;
+	return dn;
+}
+
 string GSoapDelegationHandler::getClientVo() {
 
 	char* vo  = get_client_voname(ctx);

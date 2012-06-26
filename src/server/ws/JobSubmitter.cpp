@@ -44,6 +44,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 	GSoapDelegationHandler handler (soap);
 	delegationId = handler.makeDelegationId();
 	vo = handler.getClientVo();
+	dn = handler.getClientDN();
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
@@ -165,8 +166,6 @@ void JobSubmitter::init(tns3__TransferParams *jobParams) {
 	id = UuidGenerator::generateUUID();
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Generated uuid " << id << commit;
 
-    dn = "/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=msalicho/CN=709008/CN=Michail Salichos";
-    vo = "dteam";
     sourceSpaceTokenDescription = "";
     copyPinLifeTime = 1;
 

@@ -249,6 +249,8 @@ public:
     /*protocol config*/
     virtual bool is_se_group_member(std::string se);
 
+    virtual bool is_se_group_exist(std::string group);
+
     virtual bool is_se_protocol_exist(std::string se);
     
     virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2);
@@ -260,11 +262,11 @@ public:
     
     virtual SeProtocolConfig* get_se_group_protocol_config(std::string se);
 
-    virtual void add_se_protocol_config(SeProtocolConfig* seProtocolConfig);
+    virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig);
 
-    virtual void add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
+    virtual bool add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
 
-    virtual void add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);
+    virtual bool add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);
     
     virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig);
 
