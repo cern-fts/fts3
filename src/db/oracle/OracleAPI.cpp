@@ -1572,6 +1572,31 @@ bool OracleAPI::is_se_protocol_exist(std::string se){
     }	
 return exists;
 }
+
+
+bool OracleAPI::is_group_protocol_exist(std::string group){
+	const std::string tag = "is_group_protocol_exist";
+	std::string query = "select SE_GROUP_NAME from t_se_protocol where SE_GROUP_NAME=:1 ";
+	bool exists = false;	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setString(1,group);	
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+	
+        if (r->next()) {           
+            exists = true;
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return exists;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return exists;
+    }	
+return exists;
+
+}
     
 /*bool OracleAPI::is_se_pair_protocol_exist(std::string se1, std::string se2){
 	const std::string tag = "is_se_pair_protocol_exist";

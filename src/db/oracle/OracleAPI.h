@@ -287,6 +287,8 @@ public:
     virtual void remove_se_from_group(std::string sd, std::string group);	
     virtual void delete_group(std::string group);	
     
+    virtual bool is_group_protocol_exist(std::string group);        
+    
     
     /*t_credential API*/
     virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);

@@ -268,44 +268,55 @@ public:
     
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;        
     
-    /*protocol config*/
+    /*PROTOCOL CONFIG API*/
+    
+    /*check if a SE is already member of a group*/
     virtual bool is_se_group_member(std::string se) = 0;
 
+    /*check if a SE already has protocol config*/
     virtual bool is_se_protocol_exist(std::string se) = 0;
     
-    /*virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2) = 0;*/
+    /*check if a group already has protocol config*/
+    virtual bool is_group_protocol_exist(std::string group) = 0;    
     
+    /*check if a group already exists*/
     virtual bool is_se_group_exist(std::string group) = 0;    
     
-    virtual SeProtocolConfig* get_se_protocol_config(std::string se) = 0;
+    /*get protocol configuration for a given SE*/
+    virtual SeProtocolConfig* get_se_protocol_config(std::string se) = 0;    
     
-    /*virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2) = 0;*/
-    
+    /*get protocol configuration for a given SE which belongs to a group*/
     virtual SeProtocolConfig* get_se_group_protocol_config(std::string se) = 0;
 
+    /*add config for a SE*/
     virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 
-    /*virtual bool add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;*/
-
+    /*add config for a group*/
     virtual bool add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;
     
+    /*delete config for a group*/
     virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 
-    /*virtual void delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;*/
-
+    /*delete config for a SE*/
     virtual void delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
 
+    /*update config for a SE*/
     virtual void update_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 
-    /*virtual void update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;*/
-
+    /*update config for a group*/
     virtual void update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
 
+    /*check if a group or a SE protocol must be fetched */
     virtual SeProtocolConfig* getProtocol(std::string se1, std::string se2) = 0;
 
     /*se group operations*/
+    /*add a SE to a group*/
     virtual void add_se_to_group(std::string sd, std::string group) = 0;
+    
+    /*remove se from a group*/
     virtual void remove_se_from_group(std::string sd, std::string group) = 0;	
+    
+    /*delete a group*/
     virtual void delete_group(std::string group) = 0;	
  
  
