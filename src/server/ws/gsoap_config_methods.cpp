@@ -18,8 +18,12 @@
  */
 
 #include "ws/gsoap_stubs.h"
+#include "ws/ConfigurationHandler.h"
+
 #include "db/generic/SingleDbInstance.h"
+
 #include "common/logger.h"
+#include <common/error.h>
 
 #include <vector>
 #include <string>
@@ -34,108 +38,87 @@ using namespace db;
 using namespace fts3::common;
 using namespace boost;
 using namespace boost::algorithm;
+using namespace fts3::ws;
 
 
 int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__setConfigurationResponse &response) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
 
-	const int TYPE_INDEX = 1;
-	const int NAME_INDEX = 2;
-	const int SHARE_TYPE_INDEX = 3;
-	const int SHARE_NULL_INDEX = 5;
-	const int SHARE_ID_INDEX = 6;
-	const int INBOUND_INDEX = 7;
-	const int OUTBOUND_INDEX = 8;
-	const int POLICY_INDEX = 9;
-
-
-	string 	exp = 	"\\s*\"\\s*type\\s*\"\\s*:\\s*\"\\s*(se|site)\\s*\"\\s*,"
-					"\\s*\"\\s*name\\s*\"\\s*:\\s*\"\\s*(.+)\\s*\"\\s*,"
-					"\\s*\"\\s*share_type\\s*\"\\s*:\\s*\"\\s*(public|vo|pair)\\s*\"\\s*,"
-					"\\s*\"\\s*share_id\\s*\"\\s*:\\s*((null)|\"\\s*(.+)\\s*\")\\s*,"
-					"\\s*\"\\s*in\\s*\"\\s*:\\s*(\\d+)\\s*,"
-					"\\s*\"\\s*out\\s*\"\\s*:\\s*(\\d+)\\s*,"
-					"\\s*\"\\s*policy\\s*\"\\s*:\\s*\"\\s*(.+)\\s*\"\\s*";
-
-	regex re(exp);
-	smatch what;
-
 	vector<string>& cfgs = _configuration->cfg;
 	vector<string>::iterator it;
-	int pos;
 
-//	for(int i = 0; i < size; i++) {
-	for(it = cfgs.begin(); it < cfgs.end(); it++) {
-
-		string cfg = *it;
-		// parsing cfg
-		pos = cfg.find('{');
-		if (pos != string::npos)
-			cfg.erase(pos, 1);
-
-		pos = cfg.find('}');
-		if (pos != string::npos)
-			cfg.erase(pos, 1);
-
-		boost::to_lower(cfg);
-		regex_match(cfg, what, re, match_extra);
-
-		string type = what[TYPE_INDEX];
-		string name = what[NAME_INDEX];
-
-		string id = "\"share_type\":\"" + what[SHARE_TYPE_INDEX] + "\",\"share_id\":";
-		string tmp = what[SHARE_NULL_INDEX];
-		if (tmp.empty()){
-			id += "\"" + what[SHARE_ID_INDEX] + "\"";
-		} else {
-			id += "null";
+	try {
+		for(it = cfgs.begin(); it < cfgs.end(); it++) {
+			ConfigurationHandler handler(*it);
+			handler.add();
 		}
+	} catch(std::exception& ex) {
 
-		string val = "\"in\":" + what[INBOUND_INDEX] +
-					",\"out\":" + what[OUTBOUND_INDEX] +
-					",\"policy\":\"" + what[POLICY_INDEX] + "\"";
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
+		return SOAP_FAULT;
 
-		vector<SeAndConfig*> seAndConfig;
-		vector<SeAndConfig*>::iterator it;
+	} catch(Err& ex) {
 
-		try {
-			// checking if the 'SeConfig' record exist already, if yes there's nothing to do
-			DBSingleton::instance().getDBObjectInstance()->getAllSeAndConfigWithCritiria(seAndConfig, name, id, type, val);
-
-			if (!seAndConfig.empty()) {
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Nothing to do (" << type << ", " << name << ", " << id << ", " << val << ")" << commit;
-				for (it = seAndConfig.begin(); it < seAndConfig.end(); it++) {
-					delete (*it);
-				}
-				continue;
-			}
-
-			// checking if there's same name but with different value
-			DBSingleton::instance().getDBObjectInstance()->getAllSeAndConfigWithCritiria(seAndConfig, name, id, type, "");
-
-			if (seAndConfig.empty()) {
-				// it's not in the database
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
-				DBSingleton::instance().getDBObjectInstance()->addSeConfig(name, id, type, val);
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB ("
-													<< type << ", " << name << ", " << id << ", " << val << ")." << commit;
-			} else {
-				// it is already in the database
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Updating 'SeConfig' record ..." << commit;
-				DBSingleton::instance().getDBObjectInstance()->updateSeConfig(name, id, type, val);
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The 'SeConfig' record has been updated ("
-													<< type << ", " << name << ", " << id <<  ", " << val << ")." << commit;
-
-				delete *seAndConfig.begin();
-			}
-		} catch (std::exception& ex) {
-			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A DB Exception has been caught: " << ex.what() << " ("
-												<< type << ", " << name << ", " << id << ", " << val << ")" << commit;
-
-			return SOAP_FAULT;
-		}
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
+		return SOAP_FAULT;
 	}
+
+//	for(it = cfgs.begin(); it < cfgs.end(); it++) {
+
+//		string tmp = what[SHARE_NULL_INDEX];
+//		if (tmp.empty()){
+//			id += "\"" + what[SHARE_ID_INDEX] + "\"";
+//		} else {
+//			id += "null";
+//		}
+//
+//		string val = "\"in\":" + what[INBOUND_INDEX] +
+//					",\"out\":" + what[OUTBOUND_INDEX] +
+//					",\"policy\":\"" + what[POLICY_INDEX] + "\"";
+//
+//		vector<SeAndConfig*> seAndConfig;
+//		vector<SeAndConfig*>::iterator it;
+//
+//		try {
+//			// checking if the 'SeConfig' record exist already, if yes there's nothing to do
+//			DBSingleton::instance().getDBObjectInstance()->getAllSeAndConfigWithCritiria(seAndConfig, name, id, type, val);
+//
+//			if (!seAndConfig.empty()) {
+//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Nothing to do (" << type << ", " << name << ", " << id << ", " << val << ")" << commit;
+//				for (it = seAndConfig.begin(); it < seAndConfig.end(); it++) {
+//					delete (*it);
+//				}
+//				continue;
+//			}
+//
+//			// checking if there's same name but with different value
+//			DBSingleton::instance().getDBObjectInstance()->getAllSeAndConfigWithCritiria(seAndConfig, name, id, type, "");
+//
+//			if (seAndConfig.empty()) {
+//				// it's not in the database
+//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
+//				DBSingleton::instance().getDBObjectInstance()->addSeConfig(name, id, type, val);
+//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB ("
+//													<< type << ", " << name << ", " << id << ", " << val << ")." << commit;
+//			} else {
+//				// it is already in the database
+//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Updating 'SeConfig' record ..." << commit;
+//				DBSingleton::instance().getDBObjectInstance()->updateSeConfig(name, id, type, val);
+//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The 'SeConfig' record has been updated ("
+//													<< type << ", " << name << ", " << id <<  ", " << val << ")." << commit;
+//
+//				delete *seAndConfig.begin();
+//			}
+//		} catch (std::exception& ex) {
+//			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A DB Exception has been caught: " << ex.what() << " ("
+//												<< type << ", " << name << ", " << id << ", " << val << ")" << commit;
+//
+//			return SOAP_FAULT;
+//		}
+//	}
 
     return SOAP_OK;
 }
@@ -171,7 +154,6 @@ int fts3::implcfg__getConfiguration(soap* soap, struct implcfg__getConfiguration
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << seCfg->SHARE_ID << commit;
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << seCfg->SHARE_VALUE << commit;
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
-
 
 			cfg = "{"
 					"\"type\":\"" + seCfg->SHARE_TYPE + "\","
