@@ -61,8 +61,7 @@ public:
 
     int SE_ROW_ID; //				   NOT NULL NUMBER(38)
     std::string SE_GROUP_NAME; //					    VARCHAR2(50)
-    std::string SOURCE_SE; //					    VARCHAR2(512)
-    std::string DEST_SE; //					    VARCHAR2(512)
+    std::string SE_NAME; //					    VARCHAR2(512)
     std::string CONTACT; //					    VARCHAR2(255)
     int BANDWIDTH; //					    NUMBER
     int NOSTREAMS; //					    NUMBER(38)

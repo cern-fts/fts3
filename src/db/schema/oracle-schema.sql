@@ -106,10 +106,7 @@ CREATE TABLE t_se_protocol (
    ,se_group_name     	VARCHAR2(512)
 --          
 -- Source site name
-   ,source_se        	VARCHAR2(512)	
---
--- Destination site name
-   ,dest_se        	VARCHAR2(512)
+   ,se_name        	VARCHAR2(512)	
 --
 -- Email contact of the se_pair responsbile
    ,contact         	VARCHAR2(255)
@@ -137,7 +134,7 @@ CREATE TABLE t_se_protocol (
 -- 
 -- The Message concerning Last Modification 
    ,message             VARCHAR2(1024)
---
+--   
 -- Last Modification time
    ,last_modification   TIMESTAMP WITH TIME ZONE
 --

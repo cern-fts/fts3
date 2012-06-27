@@ -236,7 +236,7 @@ public:
 
     virtual void getSiteCreditsInUse(int &creditsInUse, std::string srcSiteName, std::string destSiteName, std::string voName) = 0;
 
-    virtual void updateFileStatus(TransferFiles* file, const std::string status) = 0;
+    virtual int updateFileStatus(TransferFiles* file, const std::string status) = 0;
 
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
@@ -273,31 +273,31 @@ public:
 
     virtual bool is_se_protocol_exist(std::string se) = 0;
     
-    virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2) = 0;
+    /*virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2) = 0;*/
     
     virtual bool is_se_group_exist(std::string group) = 0;    
     
     virtual SeProtocolConfig* get_se_protocol_config(std::string se) = 0;
     
-    virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2) = 0;
+    /*virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2) = 0;*/
     
     virtual SeProtocolConfig* get_se_group_protocol_config(std::string se) = 0;
 
     virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 
-    virtual bool add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
+    /*virtual bool add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;*/
 
     virtual bool add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;
     
     virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 
-    virtual void delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
+    /*virtual void delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;*/
 
     virtual void delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
 
     virtual void update_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
 
-    virtual void update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;
+    /*virtual void update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig) = 0;*/
 
     virtual void update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
 

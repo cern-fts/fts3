@@ -19,6 +19,7 @@ set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
 SET(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
+link_directories (/usr/lib64/gfal2-plugins)
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/server/)

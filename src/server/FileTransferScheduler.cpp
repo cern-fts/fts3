@@ -273,7 +273,9 @@ bool FileTransferScheduler::schedule() {
 	}
 
 	// update file state to READY
-	DBSingleton::instance().getDBObjectInstance()->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+	int updated = DBSingleton::instance().getDBObjectInstance()->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+	if(updated == 0)
+		return false;
 
 	return true;
 }

@@ -63,7 +63,7 @@ public:
 
     virtual void getSiteCreditsInUse(int &creditsInUse, std::string srcSiteName, std::string destSiteName, std::string voName);
 
-    virtual void updateFileStatus(TransferFiles* file, const std::string status);
+    virtual int updateFileStatus(TransferFiles* file, const std::string status);
 
     /*virtual void setVOLimit(std::string channelUpperName, std::string voName, int limit);
 
@@ -253,30 +253,30 @@ public:
 
     virtual bool is_se_protocol_exist(std::string se);
     
-    virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2);
+    /*virtual bool is_se_pair_protocol_exist(std::string se1, std::string se2);*/
 
     
     virtual SeProtocolConfig* get_se_protocol_config(std::string se);
     
-    virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2);
+    /*virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2);*/
     
     virtual SeProtocolConfig* get_se_group_protocol_config(std::string se);
 
     virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig);
 
-    virtual bool add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
+    /*virtual bool add_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);*/
 
     virtual bool add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);
     
     virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig);
 
-    virtual void delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
+    /*virtual void delete_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);*/
 
     virtual void delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);   
 
     virtual void update_se_protocol_config(SeProtocolConfig* seProtocolConfig);
 
-    virtual void update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);
+    /*virtual void update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig);*/
 
     virtual void update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig);   
 
