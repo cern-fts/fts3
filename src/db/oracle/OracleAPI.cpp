@@ -1666,7 +1666,7 @@ SeProtocolConfig* OracleAPI::get_se_group_protocol_config(std::string se){
 				"ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
 				"URLCOPY_GETDONE_TO,URLCOPY_TX_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
 				"TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where"
-				" SE_NAME=:1 and SE_GROUP_NAME IS NOT NULL";
+				" SE_GROUP_NAME=:1";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1,se);
