@@ -1176,7 +1176,6 @@ void OracleAPI::addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::str
     std::string tag = "addSeConfig";
 
     try {
-    	addSe("", "", "", SE_NAME, "", "", "", "", "", "", "");
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, SE_NAME);
         s->setString(2, SHARE_ID);
