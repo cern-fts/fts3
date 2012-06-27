@@ -289,8 +289,7 @@ CREATE TABLE t_se_vo_share (
    ,share_id         VARCHAR2(512)  NOT NULL			                    			
    ,share_value         VARCHAR2(512)  NOT NULL
    ,share_type VARCHAR2(512)  NOT NULL
-   ,CONSTRAINT se_pair_vo_share_pk PRIMARY KEY (se_name, share_id, share_type)
-   ,CONSTRAINT se_pair_vo_share_fk FOREIGN KEY (se_name) REFERENCES t_se (name)
+   ,CONSTRAINT se_pair_vo_share_pk PRIMARY KEY (se_name, share_id, share_type) 
 );
 
 

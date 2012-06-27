@@ -5,7 +5,7 @@
 #define FILE_ID_LEN 36
 #define TRANFER_STATUS_LEN 50
 #define TRANSFER_MESSAGE 1024
-#define MAX_NUM_MSGS 10000
+#define MAX_NUM_MSGS 50000
 #define FTS3_MQ_NAME "fts3mq"
 
 struct message{  

@@ -5,27 +5,29 @@
 #include <stdlib.h>
 #include <iostream>
 
+
+std::string stackTrace("");
+
 /**
  * log_stack
  * log program stack as warnings
  */
-void SignalLogger::log_stack(int sig){
-    std::cerr << sig << std::endl;
-    //*logStream_  << "Received signal " <<  sig << '\n';   
-    //(*logStream_).flush();
-    if(sig ==15){ //SIGTERM      
-    	//*logStream_  << "INFO TRANSFER ABORTED " << '\n';   
+void SignalLogger::log_stack(int sig){ 
+    if(sig ==15){ //SIGTERM  
 	raise(SIGINT);
     }
-    else{
+    else{   
+        signal(sig, SIG_DFL);
     	const int stack_size = 25;
     	void * array[stack_size];
     	int nSize = backtrace(array, stack_size);
     	char ** symbols = backtrace_symbols(array, nSize);
     	for (int i = 0; i < nSize; ++i){
-        	//*logStream_  << "ERROR " << symbols[i] << '\n';
+		stackTrace+=std::string(symbols[i]) + '\n';
     	}
-    	free(symbols);
+    	free(symbols);	
+	kill(getpid(), SIGINT);
+
     }
 }
 

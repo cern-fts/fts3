@@ -49,6 +49,8 @@ static std::string errorMessage("");
 static uid_t privid;
 static uid_t pw_uid;
 
+extern std::string stackTrace;
+
 static std::vector<std::string> split(const char *str, char c = ':')
 {
     std::vector<std::string> result;
@@ -86,6 +88,21 @@ void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpoi
 
 void signalHandler( int signum )
 {   
+   if(stackTrace.length() > 0){
+    logStream << fileManagement.timestamp() <<  "ERROR Transfer process died" << '\n';
+    logStream << fileManagement.timestamp() <<  "ERROR " << stackTrace << '\n';
+    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+    msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer process died");
+    msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");    
+    msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+    reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer process died");
+    logStream.close();
+    fileManagement.archive();    
+    exit(1);     
+   }else{
     seteuid(privid);
     logStream << fileManagement.timestamp() <<  "WARN Interrupt signal received, transfer canceled" << '\n';
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
@@ -100,6 +117,7 @@ void signalHandler( int signum )
     fileManagement.archive();    
     sleep(1);
     exit(signum);  
+    }
 }
 
 

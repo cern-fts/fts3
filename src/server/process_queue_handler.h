@@ -115,7 +115,7 @@ protected:
       DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), std::string(msg.job_id), std::string(msg.transfer_status));      
                     
       }
-      sleep(1);
+      usleep(10000);
       }
     }
 
