@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
     int no_progress_timeout = 180; //x
     std::string algorithm(""); //y
     std::string checksum_value(""); //z
-    bool compare_checksum = true; //A
+    bool compare_checksum = false; //A
     std::string vo("");
     std::string sourceSiteName("");
     std::string destSiteName("");
