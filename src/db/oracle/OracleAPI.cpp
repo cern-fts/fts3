@@ -1202,32 +1202,6 @@ set int to -1 so as NOT to be changed
 void OracleAPI::updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE ){
     int fields = 0;
     std::string query = "UPDATE T_SE_VO_SHARE SET ";
-    			/*if(SHARE_ID.length() > 0){
-	    			query.append(" SHARE_ID='");
-	    			query.append(SHARE_ID);			       
-	    			query.append("'");					
-				fields++;
-				}    		    			
-    			if(SE_NAME.length() > 0){
-				if(fields > 0){
-				  fields = 0;	
-				  query.append(", ");
-				}					
-	    			query.append(" SE_NAME='");
-	    			query.append(SE_NAME);			       
-	    			query.append("'");
-				fields++;				
-				}
-    			if(SHARE_TYPE.length() > 0){
-				if(fields > 0){
-				  fields = 0;	
-				  query.append(", ");
-				}					
-	    			query.append(" SHARE_TYPE='");
-	    			query.append(SHARE_TYPE);			       
-	    			query.append("'");				
-				}
-				*/
     			if(SHARE_VALUE.length() > 0){
 				if(fields > 0){
 				  fields = 0;	
@@ -1842,46 +1816,78 @@ void OracleAPI::delete_se_group_protocol_config(SeProtocolConfig* seGroupProtoco
 }
 
 
-
-
-
-void OracleAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig){
-}
-
 /*
 void OracleAPI::update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
 }
 */
 
 
-void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
+void OracleAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 	int index = 1;
-	const std::string tag = "update_se_group_protocol_config";
+	std::string tag = "update_se_group_protocol_config";
         std::stringstream query;
     	query << "UPDATE t_se_protocol SET ";
-		if( (seGroupProtocolConfig->CONTACT).length() > 0){
-			query << " CONTACT =:" << index;
+		if( seProtocolConfig->NOSTREAMS > 0){
+			query << " NOSTREAMS =:" << index;
+			++index;
+			tag+="1";
+		}
+		if( seProtocolConfig->URLCOPY_TX_TO > 0){
+			query << ", URLCOPY_TX_TO =:" << index;
+			++index;
+			tag+="2";
+		}		
+    		query << " WHERE SE_NAME =:" << index;
+    try {
+        index = 1; //reset index
+        oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
+		if( seProtocolConfig->NOSTREAMS > 0){
+			s->setInt(index, seProtocolConfig->NOSTREAMS);
 			++index;
 		}
-		if( seGroupProtocolConfig->NOSTREAMS > -1){
-			query << ", NOSTREAMS =:" << index;
+		if( seProtocolConfig->URLCOPY_TX_TO > 0){
+			s->setInt(index, seProtocolConfig->URLCOPY_TX_TO);
 			++index;
-		}
-		if( seGroupProtocolConfig->TCP_BUFFER_SIZE > -1){
-			query << ", TCP_BUFFER_SIZE =:" << index;
+		}		
+		s->setString(index, seProtocolConfig->SE_NAME);
+        s->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+
+void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
+	int index = 1;
+	std::string tag = "update_se_group_protocol_config";
+        std::stringstream query;
+    	query << "UPDATE t_se_protocol SET ";
+		if( seGroupProtocolConfig->NOSTREAMS > 0){
+			query << " NOSTREAMS =:" << index;
 			++index;
+			tag+="1";
 		}
-		if( seGroupProtocolConfig->BLOCKSIZE > -1){
-			query << ", BLOCKSIZE =:" << index;
+		if( seGroupProtocolConfig->URLCOPY_TX_TO > 0){
+			query << ", URLCOPY_TX_TO =:" << index;
 			++index;
-		}
-		if( seGroupProtocolConfig->BLOCKSIZE > -1){
-			query << ", BLOCKSIZE =:" << index;
-			++index;
-		}
+			tag+="2";
+		}		
     		query << " WHERE se_group_name =:" << index;
     try {
-        oracle::occi::Statement* s = conn->createStatement(query.str(), tag);		   			    		
+        index = 1; //reset index
+        oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
+		if( seGroupProtocolConfig->NOSTREAMS > 0){
+			s->setInt(index, seGroupProtocolConfig->NOSTREAMS);
+			++index;
+		}
+		if( seGroupProtocolConfig->URLCOPY_TX_TO > 0){
+			s->setInt(index, seGroupProtocolConfig->URLCOPY_TX_TO);
+			++index;
+		}		
+		s->setString(index, seGroupProtocolConfig->SE_GROUP_NAME);
         s->executeUpdate();
 	conn->commit();	       	    
         conn->destroyStatement(s, tag);	

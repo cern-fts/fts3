@@ -358,8 +358,6 @@ int main(int argc, char **argv) {
     log << fileManagement.timestamp() << "INFO compare_checksum:" << compare_checksum << '\n'; //A
     log << fileManagement.timestamp() << "INFO proxy:" << proxy << '\n'; //proxy
 
-    //reporter.constructMessage(job_id, file_id, "ACTIVE", "");
-
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     seteuid(pw_uid);
