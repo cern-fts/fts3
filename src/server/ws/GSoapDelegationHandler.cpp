@@ -20,7 +20,9 @@
 #include "GSoapDelegationHandler.h"
 
 #include "db/generic/SingleDbInstance.h"
+
 #include "common/logger.h"
+#include <common/error.h>
 
 #include <cgsi_plugin.h>
 #include <stdlib.h>
@@ -37,7 +39,7 @@ GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) {
 	// get client DN
 	char buff[200];
 	int len = 200;
-	if (get_client_dn(ctx, buff, len)) throw string("'get_client_dn' failed!"); // if there's an error throw an exception
+	if (get_client_dn(ctx, buff, len)) throw Err_Custom("'get_client_dn' failed!"); // if there's an error throw an exception
 	dn = buff;
 
 	// retrieve VOMS attributes (fqnas)
@@ -128,7 +130,7 @@ string GSoapDelegationHandler::handleDelegationId(string delegationId) {
 string GSoapDelegationHandler::getProxyReq(string delegationId) {
 
 	delegationId = handleDelegationId(delegationId);
-	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
+	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
 	char *reqtxt = 0, *keytxt = 0;
 	int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
@@ -136,7 +138,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 	if (err) {
 		if (reqtxt) free (reqtxt);
 		if (keytxt) free (keytxt);
-		throw string("'GRSTx509CreateProxyRequest' failed!");
+		throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
 	}
 
 	string req (reqtxt);
@@ -171,7 +173,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 
 	string delegationId = makeDelegationId();
-	if (delegationId.empty()) throw string("'getDelegationId' failed!");
+	if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
 
 	char *reqtxt = 0, *keytxt = 0;
 	int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
@@ -179,7 +181,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 	if (err) {
 		if (reqtxt) free (reqtxt);
 		if (keytxt) free (keytxt);
-		throw string("'GRSTx509CreateProxyRequest' failed!");
+		throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
 	}
 
 	string req (reqtxt);
@@ -239,7 +241,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
 	STACK_OF(X509) *certstack;
 
 	if (GRSTx509StringToChain(&certstack, const_cast<char*>(proxy.c_str())) != GRST_RET_OK) {
-		throw string("Failed to add private key to the proxy certificate!");
+		throw Err_Custom("Failed to add private key to the proxy certificate!");
 	}
 
 	// first cert
@@ -269,7 +271,7 @@ time_t GSoapDelegationHandler::readTerminationTime(string proxy) {
 	X509 *cert = PEM_read_bio_X509(bio, NULL, NULL, NULL);
 	BIO_free(bio);
 
-	if(!cert) throw string("Failed to determine proxy's termination time!");
+	if(!cert) throw Err_Custom("Failed to determine proxy's termination time!");
 
 	time_t time = GRSTasn1TimeToTimeT( (char*) ASN1_STRING_data(X509_get_notAfter(cert)), 0);
 	X509_free(cert);
@@ -293,7 +295,7 @@ string GSoapDelegationHandler::fqansToString(vector<string> attrs) {
 void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 
 	delegationId = handleDelegationId(delegationId);
-	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
+	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
 	time_t time = readTerminationTime(proxy);
 
@@ -303,7 +305,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 		key = cache->privateKey;
 		delete cache;
 	} else
-		throw string("Failed to retrieve the cache element from DB!");
+		throw Err_Custom("Failed to retrieve the cache element from DB!");
 
 	proxy = addKeyToProxyCertificate(proxy, key);
 
@@ -334,10 +336,10 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 	// it is different to gridsite implementation but it is done like that in delegation-java
 	// in GliteDelegation.java
 	delegationId = handleDelegationId(delegationId);
-	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
+	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
 	if (!checkDelegationId(delegationId)) {
-		throw string("Wrong format of delegation ID!");
+		throw Err_Custom("Wrong format of delegation ID!");
 	}
 
 	char *reqtxt = 0, *keytxt = 0;
@@ -346,7 +348,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 	if (err) {
 		if (reqtxt) free (reqtxt);
 		if (keytxt) free (keytxt);
-		throw string("'GRSTx509CreateProxyRequest' failed!");
+		throw Err_Custom("'GRSTx509CreateProxyRequest' failed!");
 	}
 
 	string req (reqtxt);
@@ -390,7 +392,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 		delete cred;
 
 	} else
-		throw string("Failed to retrieve storage element from DB!");
+		throw Err_Custom("Failed to retrieve storage element from DB!");
 
 	return time;
 }
@@ -398,7 +400,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 void GSoapDelegationHandler::destroy(string delegationId) {
 
 	delegationId = handleDelegationId(delegationId);
-	if (delegationId.empty()) throw string("'handleDelegationId' failed!");
+	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
 	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, dn);
 	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageElement(delegationId, dn);

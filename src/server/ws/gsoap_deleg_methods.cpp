@@ -22,6 +22,7 @@
 #include "ws/GSoapDelegationHandler.h"
 
 #include "common/logger.h"
+#include <common/error.h>
 
 
 using namespace std;
@@ -37,9 +38,8 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 	try {
 		_param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
-	} catch (string& ex) {
-		// TODO update GSoapExceptionHandler to handle _delegation__DelegationException
-		soap_receiver_fault(soap, ex.c_str(), "DelegationException");
+	} catch (Err& ex) {
+		soap_receiver_fault(soap, ex.what(), "DelegationException");
 		return SOAP_FAULT;
 	}
 
@@ -54,8 +54,8 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
 	try {
 		_param_5.getNewProxyReqReturn = handler.getNewProxyReq();
 
-	} catch (string& ex) {
-		soap_receiver_fault(soap, ex.c_str(), "DelegationException");
+	} catch (Err& ex) {
+		soap_receiver_fault(soap, ex.what(), "DelegationException");
 		return SOAP_FAULT;
 	}
 
@@ -70,8 +70,8 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 	try {
 		_param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
 
-	} catch(string& ex) {
-		soap_receiver_fault(soap, ex.c_str(), "DelegationException");
+	} catch(Err& ex) {
+		soap_receiver_fault(soap, ex.what(), "DelegationException");
 		return SOAP_FAULT;
 	}
 
@@ -86,8 +86,8 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 	try {
 		handler.putProxy(_delegationID, _proxy);
 
-	} catch (string& ex) {
-		soap_receiver_fault(soap, ex.c_str(), "DelegationException");
+	} catch (Err& ex) {
+		soap_receiver_fault(soap, ex.what(), "DelegationException");
 		return SOAP_FAULT;
 	}
 
@@ -102,8 +102,8 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 	try {
 		_param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
 
-	} catch (string& ex) {
-		soap_receiver_fault(soap, ex.c_str(), "DelegationException");
+	} catch (Err& ex) {
+		soap_receiver_fault(soap, ex.what(), "DelegationException");
 		return SOAP_FAULT;
 	}
 
@@ -118,8 +118,8 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 	try {
 		handler.destroy(_delegationID);
 
-	} catch(string& ex) {
-		soap_receiver_fault(soap, ex.c_str(), "DelegationException");
+	} catch(Err& ex) {
+		soap_receiver_fault(soap, ex.what(), "DelegationException");
 		return SOAP_FAULT;
 	}
 
