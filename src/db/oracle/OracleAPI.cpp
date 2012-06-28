@@ -1599,10 +1599,10 @@ return exists;
 SeProtocolConfig* OracleAPI::get_se_protocol_config(std::string se){
 	SeProtocolConfig* seProtocolConfig = NULL;
 	const std::string tag = "get_se_protocol_config";
-	std::string query = "select SE_ROW_ID,SE_GROUP_NAME,SE_NAME,CONTACT,BANDWIDTH,NOSTREAMS,NOFILES, "
+	std::string query = "select NOSTREAMS, URLCOPY_TX_TO, SE_GROUP_NAME,SE_NAME,CONTACT,BANDWIDTH,NOFILES, "
 				"TCP_BUFFER_SIZE,NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
 				"ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
-				"URLCOPY_GETDONE_TO,URLCOPY_TX_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
+				"URLCOPY_GETDONE_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
 				"TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where SE_NAME=:1 and SE_GROUP_NAME IS NULL";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
@@ -1610,8 +1610,8 @@ SeProtocolConfig* OracleAPI::get_se_protocol_config(std::string se){
         oracle::occi::ResultSet* r = conn->createResultset(s);
 	seProtocolConfig = new SeProtocolConfig();
         if (r->next()) {    
-		seProtocolConfig->NOSTREAMS = r->getInt(7);
-		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(24);
+		seProtocolConfig->NOSTREAMS = r->getInt(1);
+		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(2);
         }        
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
