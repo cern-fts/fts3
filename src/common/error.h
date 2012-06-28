@@ -136,7 +136,7 @@ private:
 /* ========================================================================== */
 
 /** Custom (user) error. You must give a textual explanation in the constructor. */
-class Err_Custom : public Error<false>
+class Err_Custom : public Error<false, Err::e_detailedReport>
 {
 public:
     Err_Custom(const std::string& aDesc) 
