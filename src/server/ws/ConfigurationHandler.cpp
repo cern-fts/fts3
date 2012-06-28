@@ -379,8 +379,17 @@ void ConfigurationHandler::addGroupConfiguration() {
 			// check if the SE exists
 			addSeIfNotExist(*it);
 
-			// add the SE to the group
-			db->add_se_to_group(*it, name);
+			// check if the SE is a member of a group
+			string gr = db->get_group_name(*it);
+			if (gr.empty()) {
+				// if not, add it to the group
+				db->add_se_to_group(*it, name);
+			} else if (gr != name) {
+				// if its a member of other group throw an exception
+				throw Err_Custom (
+						"The SE: " + *it + " is already a member of another SE group (" + gr + ")!"
+					);
+			}
 		}
 	}
 
