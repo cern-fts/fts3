@@ -909,7 +909,7 @@ void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
 
 }
     
-void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig){
+void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig) {
     SeConfig* seCon = NULL;
     std::vector<SeConfig*>::iterator iter;
     const std::string tag = "getAllSeConfigNoCritiria";
@@ -1688,6 +1688,35 @@ SeProtocolConfig* OracleAPI::get_se_group_protocol_config(std::string se){
 return seProtocolConfig;
 }
 
+SeProtocolConfig* OracleAPI::get_group_protocol_config(std::string group){
+	SeProtocolConfig* seProtocolConfig = NULL;
+	const std::string tag = "get_se_group_protocol_config";
+	std::string query = "select NOSTREAMS, URLCOPY_TX_TO, SE_GROUP_NAME,SE_NAME,CONTACT,BANDWIDTH,NOFILES, "
+				"TCP_BUFFER_SIZE,NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
+				"ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
+				"URLCOPY_GETDONE_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
+				"TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where"
+				" SE_GROUP_NAME=:1";
+
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1,group);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+
+        seProtocolConfig = new SeProtocolConfig();
+        if(r->next()) {
+		seProtocolConfig->NOSTREAMS = r->getInt(1);
+		seProtocolConfig->URLCOPY_TX_TO =  r->getInt(2);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+    return seProtocolConfig;
+}
+
 bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 	const std::string tag = "add_se_protocol_config";
 	std::string query = "insert into t_se_protocol(SE_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
@@ -1980,6 +2009,45 @@ std::string OracleAPI::get_group_name(std::string se){
 return group;
 
 };    
+
+std::vector<std::string> OracleAPI::get_group_names() {
+	const std::string tag = "get_group_names";
+	std::vector<std::string> group;
+	std::string query = "select distinct SE_GROUP_NAME from t_se_group";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while(r->next()) {
+        	group.push_back(r->getString(1));
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+    return group;
+}
+
+std::vector<std::string> OracleAPI::get_group_members(std::string name) {
+	const std::string tag = "get_group_members";
+	std::vector<std::string> members;
+	std::string query = "select SE_NAME from t_se_group where SE_GROUP_NAME=:1";
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, name);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while(r->next()) {
+        	members.push_back(r->getString(1));
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+    return members;
+}
 
 
     /*t_credential API*/

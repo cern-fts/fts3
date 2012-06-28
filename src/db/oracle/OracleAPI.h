@@ -247,7 +247,10 @@ public:
     virtual void getCancelJob(std::vector<int>& requestIDs);
 
     /*protocol config*/
+    virtual std::vector<std::string> get_group_names();
     
+    virtual std::vector<std::string> get_group_members(std::string name);
+
     virtual std::string get_group_name(std::string se);        
     
     virtual bool is_se_group_member(std::string se);
@@ -264,6 +267,8 @@ public:
     /*virtual SeProtocolConfig* get_se_pair_protocol_config(std::string se1, std::string se2);*/
     
     virtual SeProtocolConfig* get_se_group_protocol_config(std::string se);
+
+    virtual SeProtocolConfig* get_group_protocol_config(std::string group);
 
     virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig);
 
