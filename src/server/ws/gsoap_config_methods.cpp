@@ -45,8 +45,6 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
 
-	Error<false, Err::e_detailedReport> e;
-
 	vector<string>& cfgs = _configuration->cfg;
 	vector<string>::iterator it;
 
