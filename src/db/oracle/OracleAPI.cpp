@@ -1690,10 +1690,6 @@ bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 	const std::string tag = "add_se_protocol_config";
 	std::string query = "insert into t_se_protocol(SE_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
 	
-	bool exists = is_se_protocol_exist(seProtocolConfig->SE_NAME);
-	if(exists)
-		return false;
-	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seProtocolConfig->SE_NAME);
@@ -1744,10 +1740,7 @@ bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
 	const std::string tag = "add_se_group_protocol_config";
 	std::string query = "insert into t_se_protocol(SE_GROUP_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
-	
-	bool exists = is_se_group_exist(seGroupProtocolConfig->SE_GROUP_NAME);
-	if(exists)
-		return false;	
+
 	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	

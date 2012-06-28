@@ -102,7 +102,11 @@ ConfigurationHandler::ConfigurationHandler(string configuration):
 	to_lower(configuration);
 
 	smatch what;
-	regex_match(configuration, what, cfg_re, match_extra);
+	bool matches = regex_match(configuration, what, cfg_re, match_extra);
+	if(!matches){
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Wrong configuration format!" << commit;
+		throw Err_Custom("Wrong configuration format!");
+	}
 
 	string all = what[ALL];
 	if (all.empty()) {
