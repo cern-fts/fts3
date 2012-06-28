@@ -270,6 +270,8 @@ public:
     
     /*PROTOCOL CONFIG API*/
     
+    virtual std::string get_group_name(std::string se) = 0;    
+    
     /*check if a SE is already member of a group*/
     virtual bool is_se_group_member(std::string se) = 0;
 

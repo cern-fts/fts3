@@ -247,6 +247,9 @@ public:
     virtual void getCancelJob(std::vector<int>& requestIDs);
 
     /*protocol config*/
+    
+    virtual std::string get_group_name(std::string se);        
+    
     virtual bool is_se_group_member(std::string se);
 
     virtual bool is_se_group_exist(std::string group);
