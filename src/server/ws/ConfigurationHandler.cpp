@@ -86,7 +86,7 @@ const string ConfigurationHandler::VO_SHARE = "vo";
 const string ConfigurationHandler::PAIR_SHARE = "pair";
 
 
-ConfigurationHandler::ConfigurationHandler(string configuration):
+ConfigurationHandler::ConfigurationHandler():
 		db (DBSingleton::instance().getDBObjectInstance()),
 		cfg_re(cfg_exp),
 		get_name_re(get_name_exp),
@@ -112,6 +112,9 @@ ConfigurationHandler::ConfigurationHandler(string configuration):
 			("no_tx_activity_to", NO_TX_ACTIVITY_TO)
 			("preparing_files_ratio", PREPARING_FILES_RATIO).to_container(parameterNameToId)
 		) {
+}
+
+void ConfigurationHandler::parse(string configuration) {
 
 	to_lower(configuration);
 
@@ -433,5 +436,127 @@ void ConfigurationHandler::addSeConfiguration() {
 		addShareConfiguration();
 	}
 
+}
+
+vector<string> ConfigurationHandler::get() {
+
+	vector<SeConfig*> seConfig;
+	db->getAllSeConfigNoCritiria(seConfig);
+
+	vector<string> ret;
+	vector<SeConfig*>::iterator it_cfg;
+	for (it_cfg = seConfig.begin(); it_cfg < seConfig.end(); it_cfg++) {
+
+		SeConfig* cfg = *it_cfg;
+		
+		string resp =
+			"{"
+				"\"name\":\"" + cfg->SE_NAME + "\","
+				"\"type\":\"" + cfg->SHARE_TYPE + "\","
+				"\"share\":"
+				"{"
+					+ cfg->SHARE_ID + ","
+					+ cfg->SHARE_VALUE +
+				"}"
+			"}";
+
+		ret.push_back(resp);
+		delete (cfg);
+	}
+
+	vector<Se*> se;
+	db->getAllSeInfoNoCritiria(se);
+
+	vector<Se*>::iterator it_se;
+	for (it_se = se.begin(); it_se < se.end(); it_se++) {
+
+		string se_name = (*it_se)->NAME;
+
+		if (!db->is_se_protocol_exist(se_name)) {
+			delete *it_se;
+			continue;
+		}
+
+		SeProtocolConfig* cfg = db->get_se_protocol_config(se_name);
+		if (cfg->URLCOPY_TX_TO || cfg->NOSTREAMS) {
+
+			string resp =
+				"{"
+					"\"name\":\"" + se_name + "\","
+					"\"type\":\"" + SE_TYPE + "\","
+					"\"parameters\":"
+					"{";
+			if (cfg->URLCOPY_TX_TO) {
+				resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);
+				if (cfg->NOSTREAMS)
+					resp += ",";
+			}
+
+			if (cfg->NOSTREAMS) {
+				resp += "\"nostreams\":" + lexical_cast<string>(cfg->NOSTREAMS);
+			}
+
+			resp +=
+					"}"
+				"}";
+
+			ret.push_back(resp);
+		}
+
+		delete cfg;
+		delete *it_se;
+	}
+
+	vector<string> groups = db->get_group_names();
+	vector<string>::iterator it_gr;
+	for (it_gr = groups.begin(); it_gr < groups.end(); it_gr++) {
+
+		string resp =
+				"{"
+					"\"name\":\"" + *it_gr + "\","
+					"\"type\":\"" + GROUP_TYPE + "\","
+					"\"members\":["
+				;
+
+		vector<string> members = db->get_group_members(*it_gr);
+		vector<string>::iterator it_mbr;
+		for (it_mbr = members.begin(); it_mbr < members.end(); it_mbr++) {
+			resp += "{\"se\":\"" + *it_mbr + "\"}";
+			if (it_mbr + 1 != members.end()) resp += ",";
+		}
+
+		resp +=	"]}";
+		ret.push_back(resp);
+
+		if (db->is_group_protocol_exist(*it_gr)) {
+			SeProtocolConfig* cfg = db->get_group_protocol_config(*it_gr);
+
+			resp.erase();
+			resp +=
+					"{"
+						"\"name\":\"" + *it_gr + "\","
+						"\"type\":\"" + GROUP_TYPE + "\","
+						"\"parameters\":"
+						"{";
+			if (cfg->URLCOPY_TX_TO) {
+				resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);
+				if (cfg->NOSTREAMS)
+						resp += ",";
+			}
+
+			if (cfg->NOSTREAMS) {
+				resp += "\"nostreams\":" + lexical_cast<string>(cfg->NOSTREAMS);
+			}
+
+			resp +=
+						"}"
+					"}";
+
+			ret.push_back(resp);
+			delete cfg;
+		}
+	}
+
+	return ret;
 }
 

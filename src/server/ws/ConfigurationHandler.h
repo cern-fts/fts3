@@ -87,9 +87,11 @@ public:
 	static const string VO_SHARE;
 	static const string PAIR_SHARE;
 
-	ConfigurationHandler(string configuration);
+	ConfigurationHandler();
 	virtual ~ConfigurationHandler();
 
+	// parse the given cfg
+	void parse(string configuration);
 
 	// retrieve data from sub-configuration strings
 	string getName(string cfg);
@@ -108,6 +110,10 @@ public:
 	void addGroupConfiguration();
 	void addShareConfiguration();
 
+	// get configuration from DB
+	vector<string> get();
+
+	// gets protocol configuration for the SE or SE group
 	shared_ptr<SeProtocolConfig> getProtocolConfig();
 
 private:
