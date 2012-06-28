@@ -270,6 +270,10 @@ public:
     
     /*PROTOCOL CONFIG API*/
     
+    virtual std::vector<std::string> get_group_names() = 0;
+
+    virtual std::vector<std::string> get_group_members(std::string name) = 0;
+
     virtual std::string get_group_name(std::string se) = 0;    
     
     /*check if a SE is already member of a group*/
@@ -289,6 +293,8 @@ public:
     
     /*get protocol configuration for a given SE which belongs to a group*/
     virtual SeProtocolConfig* get_se_group_protocol_config(std::string se) = 0;
+
+    virtual SeProtocolConfig* get_group_protocol_config(std::string group) = 0;
 
     /*add config for a SE*/
     virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
