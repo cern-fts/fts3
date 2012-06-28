@@ -27,6 +27,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
@@ -52,7 +53,16 @@ public:
 		TYPE,
 		MEMBERS = 4,
 		PROTOCOL_PARAMETERS = 6,
-		BANDWIDTH,
+		SHARE = 8,
+		SHARE_TYPE,
+		SHARE_ID = 11,
+		IN = 13,
+		OUT,
+		POLICY
+	};
+
+	enum ProtocolParameters {
+		BANDWIDTH = 0,
 		NOSTREAMS,
 		TCP_BUFFER_SIZE,
 		NOMINAL_THROUGHPUT,
@@ -67,13 +77,7 @@ public:
 		URLCOPY_FIRST_TXMARK_TO,
 		TX_TO_PER_MB,
 		NO_TX_ACTIVITY_TO,
-		PREPARING_FILES_RATIO,
-		SHARE = 23,
-		SHARE_TYPE,
-		SHARE_ID = 26,
-		IN = 28,
-		OUT,
-		POLICY
+		PREPARING_FILES_RATIO
 	};
 
 	static const string SE_TYPE;
@@ -88,9 +92,12 @@ public:
 
 
 	// retrieve data from sub-configuration strings
+	string getName(string cfg);
 	int getNumber(string cfg);
 	string getString(string cfg );
 	vector<string> getVector(string cfg);
+	vector<int> getParamVector(string cfg);
+
 
 	// checks if the SE exists, if not adds it to the DB
 	void addSeIfNotExist(string name);
@@ -107,18 +114,22 @@ private:
 
 	// regular expressions
 	static const string cfg_exp;
+	static const string get_name_exp;
 	static const string get_num_exp;
 	static const string get_str_exp;
 	static const string get_vec_exp;
+	static const string get_par_exp;
 
 	// JSON null string = 'null'
 	static const string null_str;
 
 	// regex objects corresponding to each expression
 	regex cfg_re;
+	regex get_name_re;
 	regex get_num_re;
 	regex get_str_re;
 	regex get_vec_re;
+	regex get_par_re;
 
 	// DB singleton
 	GenericDbIfce* db;
@@ -127,22 +138,7 @@ private:
 	string name;
 	string type;
 	vector<string> members;
-	int bandwidth;
-	int nostreams;
-	int tcp_buffer_size;
-	int nominal_throughput;
-	int blocksize;
-	int http_to;
-	int urlcopy_put_to;
-	int urlcopy_putdone_to;
-	int urlcopy_get_to;
-	int urlcopy_get_doneto;
-	int urlcopy_tx_to;
-	int urlcopy_txmarks_to;
-	int urlcopy_first_txmark_to;
-	int tx_to_per_mb;
-	int no_tx_activity_to;
-	int preparing_files_ratio;
+
 	string share_type;
 	string share_id;
 	int in;
@@ -152,6 +148,10 @@ private:
 	bool cfgMembers;
 	bool cfgProtocolParams;
 	bool cfgShare;
+
+	const map<string, ProtocolParameters> parameterNameToId;
+	vector<int> parameters;
+	static const int PARAMETERS_NMB = 16;
 };
 
 }

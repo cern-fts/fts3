@@ -27,9 +27,10 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/assign.hpp>
 
 using namespace fts3::ws;
-
+using namespace boost::assign;
 
 const string ConfigurationHandler::cfg_exp =
 		"\\s*\\{\\s*"
@@ -39,22 +40,7 @@ const string ConfigurationHandler::cfg_exp =
 			"("
 				"\"parameters\"\\s*:\\s*"
 				"\\s*\\{\\s*"
-					"(\"bandwidth\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"nostreams\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"tcp_buffer_size\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"nominal_throughput\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"blocksize\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"http_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"urlcopy_put_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"urlcopy_putdone_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"urlcopy_get_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"urlcopy_get_doneto\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"urlcopy_tx_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"urlcopy_txmarks_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"urlcopy_first_txmark_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"tx_to_per_mb\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"no_tx_activity_to\"\\s*:\\s*\\d+)?\\s*,?\\s*"
-					"(\"preparing_files_ratio\"\\s*:\\s*\\d+)?\\s*"
+					"(\"[a-zA-Z0-9\\.-_]+\"\\s*:\\s*\\d+\\s*,?\\s*)+"
 				"\\s*\\}\\s*"
 			")?\\s*,?\\s*"
 			"("
@@ -70,6 +56,10 @@ const string ConfigurationHandler::cfg_exp =
 		"\\s*\\}\\s*"
 		;
 
+const string ConfigurationHandler::get_name_exp =
+		"\\s*\"(.+)\"\\s*:\\s*.+\\s*"
+		;
+
 const string ConfigurationHandler::get_num_exp =
 		"\\s*\".+\"\\s*:\\s*(\\d+)\\s*"
 		;
@@ -80,6 +70,10 @@ const string ConfigurationHandler::get_str_exp =
 
 const string ConfigurationHandler::get_vec_exp =
 		"\\s*\".+\"\\s*:\\s*\\[(\\s*\\{\\s*\".+\"\\s*:\\s*\"[a-zA-Z0-9\\.-]+\"\\s*\\}\\s*,?\\s*)+\\]\\s*"
+		;
+
+const string ConfigurationHandler::get_par_exp =
+		"\\s*\".+\"\\s*:\\s*\\{((\\s*\".+\"\\s*:\\s*\\d+\\s*,?)+)\\}\\s*"
 		;
 
 const string ConfigurationHandler::null_str = "null";
@@ -95,21 +89,35 @@ const string ConfigurationHandler::PAIR_SHARE = "pair";
 ConfigurationHandler::ConfigurationHandler(string configuration):
 		db (DBSingleton::instance().getDBObjectInstance()),
 		cfg_re(cfg_exp),
+		get_name_re(get_name_exp),
 		get_str_re(get_str_exp),
 		get_num_re(get_num_exp),
-		get_vec_re(get_vec_exp) {
+		get_vec_re(get_vec_exp),
+		get_par_re(get_par_exp),
+		parameterNameToId (map_list_of
+			("bandwidth", BANDWIDTH)
+			("nostreams", NOSTREAMS)
+			("TCP_BUFFER_SIZE", TCP_BUFFER_SIZE)
+			("NOMINAL_THROUGHPUT", NOMINAL_THROUGHPUT)
+			("blocksize", BLOCKSIZE)
+			("http_to", HTTP_TO)
+			("urlcopy_put_to", URLCOPY_PUT_TO)
+			("urlcopy_putdone_to", URLCOPY_PUTDONE_TO)
+			("urlcopy_get_to", URLCOPY_GET_TO)
+			("urlcopy_get_doneto", URLCOPY_GET_DONETO)
+			("urlcopy_tx_to", URLCOPY_TX_TO)
+			("urlcopy_txmarks_to", URLCOPY_TXMARKS_TO)
+			("urlcopy_first_txmark_to", URLCOPY_FIRST_TXMARK_TO)
+			("tx_to_per_mb", TX_TO_PER_MB)
+			("no_tx_activity_to", NO_TX_ACTIVITY_TO)
+			("preparing_files_ratio", PREPARING_FILES_RATIO).to_container(parameterNameToId)
+		) {
 
 	to_lower(configuration);
 
 	smatch what;
 	bool matches = regex_match(configuration, what, cfg_re, match_extra);
 	if(!matches){
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Wrong configuration format!" << commit;
-		throw Err_Custom("Wrong configuration format!");
-	}
-
-	string all = what[ALL];
-	if (all.empty()) {
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Wrong configuration format!" << commit;
 		throw Err_Custom("Wrong configuration format!");
 	}
@@ -126,24 +134,10 @@ ConfigurationHandler::ConfigurationHandler(string configuration):
 	}
 
 	// handle protocol parameters
-	cfgProtocolParams = !string(what[PROTOCOL_PARAMETERS]).empty();
+	string params_str = what[PROTOCOL_PARAMETERS];
+	cfgProtocolParams = !params_str.empty();
 	if (cfgProtocolParams) {
-		bandwidth = getNumber(what[BANDWIDTH]);
-		nostreams = getNumber(what[NOSTREAMS]);
-		tcp_buffer_size = getNumber(what[TCP_BUFFER_SIZE]);
-		nominal_throughput = getNumber(what[NOMINAL_THROUGHPUT]);
-		blocksize = getNumber(what[BLOCKSIZE]);
-		http_to = getNumber(what[HTTP_TO]);
-		urlcopy_put_to = getNumber(what[URLCOPY_PUT_TO]);
-		urlcopy_putdone_to = getNumber(what[URLCOPY_GET_DONETO]);
-		urlcopy_get_to = getNumber(what[URLCOPY_GET_TO]);
-		urlcopy_get_doneto = getNumber(what[URLCOPY_GET_DONETO]);
-		urlcopy_tx_to = getNumber(what[URLCOPY_TX_TO]);
-		urlcopy_txmarks_to = getNumber(what[URLCOPY_TXMARKS_TO]);
-		urlcopy_first_txmark_to = getNumber(what[URLCOPY_FIRST_TXMARK_TO]);
-		tx_to_per_mb = getNumber(what[TX_TO_PER_MB]);
-		no_tx_activity_to = getNumber(what[NO_TX_ACTIVITY_TO]);
-		preparing_files_ratio = getNumber(what[PREPARING_FILES_RATIO]);
+		parameters = getParamVector(params_str);
 	}
 
 	// handle share configuration
@@ -159,6 +153,17 @@ ConfigurationHandler::ConfigurationHandler(string configuration):
 
 ConfigurationHandler::~ConfigurationHandler() {
 
+}
+
+string ConfigurationHandler::getName(string cfg) {
+
+	if (cfg.empty()) return string();
+
+	static const int VALUE = 1;
+	smatch what;
+	regex_match(cfg, what, get_name_re, match_extra);
+
+	return what[VALUE];
 }
 
 int ConfigurationHandler::getNumber(string cfg) {
@@ -217,6 +222,36 @@ vector<string> ConfigurationHandler::getVector(string cfg) {
 	return ret;
 }
 
+vector<int> ConfigurationHandler::getParamVector(string cfg) {
+
+	if (cfg.empty()) return vector<int>();
+
+	static const int VALUE = 1;
+
+	smatch what;
+	regex_match(cfg, what, get_par_re, match_extra);
+	string tmp = what[VALUE];
+
+	char_separator<char> sep(",");
+	tokenizer< char_separator<char> > tokens(tmp, sep);
+	tokenizer< char_separator<char> >::iterator it;
+
+	vector<int> ret(PARAMETERS_NMB, 0);
+
+	for(it = tokens.begin(); it != tokens.end(); it++) {
+		string s = *it;
+		map<string, ProtocolParameters>::const_iterator id = parameterNameToId.find (
+				getName(s)
+			);
+		if (id != parameterNameToId.end()) {
+			ret[id->second] = (getNumber(s));
+		}
+
+	}
+
+	return ret;
+}
+
 void ConfigurationHandler::add() {
 
 	if (type == SE_TYPE) {
@@ -252,21 +287,21 @@ shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig() {
 		ret->SE_GROUP_NAME = name;
 	}
 
-	ret->BANDWIDTH = bandwidth;
-	ret->NOSTREAMS = nostreams;
-	ret->TCP_BUFFER_SIZE = tcp_buffer_size;
-	ret->NOMINAL_THROUGHPUT = nominal_throughput;
-	ret->BLOCKSIZE = blocksize;
-	ret->HTTP_TO = http_to;
-	ret->URLCOPY_PUT_TO = urlcopy_put_to;
-	ret->URLCOPY_PUTDONE_TO = urlcopy_putdone_to;
-	ret->URLCOPY_GET_TO = urlcopy_get_to;
-	ret->URLCOPY_GETDONE_TO = urlcopy_get_doneto;
-	ret->URLCOPY_TX_TO = urlcopy_tx_to;
-	ret->URLCOPY_TXMARKS_TO = urlcopy_txmarks_to;
-	ret->TX_TO_PER_MB = tx_to_per_mb;
-	ret->NO_TX_ACTIVITY_TO = no_tx_activity_to;
-	ret->PREPARING_FILES_RATIO = preparing_files_ratio;
+	ret->BANDWIDTH = parameters[BANDWIDTH];
+	ret->NOSTREAMS = parameters[NOSTREAMS];
+	ret->TCP_BUFFER_SIZE = parameters[TCP_BUFFER_SIZE];
+	ret->NOMINAL_THROUGHPUT = parameters[NOMINAL_THROUGHPUT];
+	ret->BLOCKSIZE = parameters[BLOCKSIZE];
+	ret->HTTP_TO = parameters[HTTP_TO];
+	ret->URLCOPY_PUT_TO = parameters[URLCOPY_PUT_TO];
+	ret->URLCOPY_PUTDONE_TO = parameters[URLCOPY_PUTDONE_TO];
+	ret->URLCOPY_GET_TO = parameters[URLCOPY_GET_TO];
+	ret->URLCOPY_GETDONE_TO = parameters[URLCOPY_GET_DONETO];
+	ret->URLCOPY_TX_TO = parameters[URLCOPY_TX_TO];
+	ret->URLCOPY_TXMARKS_TO = parameters[URLCOPY_TXMARKS_TO];
+	ret->TX_TO_PER_MB = parameters[TX_TO_PER_MB];
+	ret->NO_TX_ACTIVITY_TO = parameters[NO_TX_ACTIVITY_TO];
+	ret->PREPARING_FILES_RATIO = parameters[PREPARING_FILES_RATIO];
 
 	return ret;
 }
