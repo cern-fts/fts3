@@ -89,15 +89,15 @@ private:
 	string srcSeName;
 	string destSeName;
 	string voName;
-	string srcSiteName;
-	string destSiteName;
+	string srcGroupName;
+	string destGroupName;
 
 	static const int SE_NAME_REGEX_INDEX = 1;
 	static const int INBOUND_REGEX_INDEX = 1;
 	static const int OUTBOUND_REGEX_INDEX = 2;
 
 	static const string SE_TYPE;
-	static const string SITE_TYPE;
+	static const string GROUP_TYPE;
 
 	static const string seNameRegex;
 	static const string shareValueRegex;

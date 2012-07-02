@@ -344,7 +344,7 @@ void ConfigurationHandler::addShareConfiguration() {
 	vector<SeAndConfig*>::iterator it;
 
 	// check if the 'SeConfig' exists already in DB
-	db->getAllSeAndConfigWithCritiria(seAndConfig, name, id, type, value);
+	db->getAllShareAndConfigWithCritiria(seAndConfig, name, id, type, value);
 	if (!seAndConfig.empty()) {
 		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Share configuration found in DB, nothing to do!" << commit;
 
@@ -354,7 +354,7 @@ void ConfigurationHandler::addShareConfiguration() {
 	}
 
 	// check if the 'SeConfig' exists but with different value
-	db->getAllSeAndConfigWithCritiria(seAndConfig, name, id, type, string());
+	db->getAllShareAndConfigWithCritiria(seAndConfig, name, id, type, string());
 
 	if (seAndConfig.empty()) {
 		// it's not in the database
@@ -441,7 +441,7 @@ void ConfigurationHandler::addSeConfiguration() {
 vector<string> ConfigurationHandler::get() {
 
 	vector<SeConfig*> seConfig;
-	db->getAllSeConfigNoCritiria(seConfig);
+	db->getAllShareConfigNoCritiria(seConfig);
 
 	vector<string> ret;
 	vector<SeConfig*>::iterator it_cfg;
