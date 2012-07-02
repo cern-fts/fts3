@@ -112,23 +112,27 @@ void OracleAPI::getSeCreditsInUse (
 	if (!srcSeName.empty()) {
 		query_stmt +=
 //			"	AND t_file.source_surl like :1 "; // srcSeName + "/%
-			"	AND t_file.source_surl like '" + srcSeName + "/%' ";
+			"	AND t_file.source_surl like '%://" + srcSeName + ":%/%' ";
 			tag.append("2");
 	}
 
 	if (!destSeName.empty()) {
 		query_stmt +=
 //			"	AND t_file.dest_surl like :2 "; // destSeName + "/%
-			"	AND t_file.dest_surl like '" + destSeName + "/%' ";
+			"	AND t_file.dest_surl like '%://" + destSeName + ":%/%' ";
 		tag.append("3");
 	}
 
 	if (srcSeName.empty() || destSeName.empty()) {
 		if (!voName.empty()) {
+			// vo share
 //			query_stmt += "	AND t_job.vo_name = :3 "; // vo
 			query_stmt += "	AND t_job.vo_name = '" + voName + "' "; // vo
 			tag.append("4");
 		} else {
+
+			std::string seName = srcSeName.empty() ? destSeName : srcSeName;
+			// public share
 			// voName not in those who have voshare for this SE
 			query_stmt +=
 			" 	AND NOT EXISTS ( "
@@ -136,9 +140,9 @@ void OracleAPI::getSeCreditsInUse (
 			"		FROM t_se_vo_share "
 			"		WHERE "
 //			"			t_se_vo_share.se_name = :4 "
-			"			t_se_vo_share.se_name = '" + srcSeName + "' "
+			"			t_se_vo_share.se_name = '" + seName + "' "
 			"			AND t_se_vo_share.share_type = 'se' "
-			"			AND t_se_vo_share.share_id = '%\"share_name\":\"' || t_job.vo_name || '\"%' "
+			"			AND t_se_vo_share.share_id = '%\"share_id\":\"' || t_job.vo_name || '\"%' "
 			"	) ";
 			tag.append("5");
 		}
@@ -159,12 +163,13 @@ void OracleAPI::getSeCreditsInUse (
     }
 }
 
-void OracleAPI::getSiteCreditsInUse (
+void OracleAPI::getGroupCreditsInUse (
 		int &creditsInUse,
-		std::string srcSiteName,
-		std::string destSiteName,
+		std::string srcGroupName,
+		std::string destGroupName,
 		std::string voName
 	) {
+
 	std::string tag = "getSiteCreditsInUse";
 	std::string query_stmt =
 			"SELECT COUNT(*) "
@@ -173,38 +178,48 @@ void OracleAPI::getSiteCreditsInUse (
 			"	t_job.job_id = t_file.job_id "
 			"	AND (t_file.file_state = 'READY' OR t_file.file_state = 'ACTIVE') ";
 			tag.append("1");
-	if (!srcSiteName.empty()) {
+	if (!srcGroupName.empty()) {
 		query_stmt +=
 //			"	AND t_se.site = :1 " // the se has the information about site name
-			"	AND t_se.site = '" + srcSiteName + "' " // the se has the information about site name
-			"	AND t_file.source_surl like t_se.name + '/%' "; // srcSeName + "/%
+			"	AND t_file.source_surl like '%://' || t_se.name || ':%/%' " // srcSeName + "/%
+			"	AND t_se.name IN ( "
+			"		SELECT se_name "
+			"		FROM t_se_group "
+			"		WHERE se_group_name = '" + srcGroupName + "' "
+			"	) ";
 			tag.append("2");
 	}
 
-	if (!destSiteName.empty()) {
+	if (!destGroupName.empty()) {
 		query_stmt +=
 //			"	AND t_se.site = :2 " // the se has the information about site name
-			"	AND t_se.site = '" + destSiteName + "' " // the se has the information about site name
-			"	AND t_file.dest_surl like t_se.name + '/%' "; // destSeName + "/%
+			"	AND t_file.dest_surl like '%://' || t_se.name || ':%/%' " // destSeName + "/%
+			"	AND t_se.name IN ( "
+			"		SELECT se_name "
+			"		FROM t_se_group "
+			"		WHERE se_group_name = '" + destGroupName + "' "
+			"	) ";
 			tag.append("3");
 	}
 
-	if (srcSiteName.empty() || destSiteName.empty()) {
+	if (srcGroupName.empty() || destGroupName.empty()) {
 		if (!voName.empty()) {
 			query_stmt +=
 //			"	AND t_job.vo_name = :3 "; // vo
 			"	AND t_job.vo_name = '" + voName + "' "; // vo
 			tag.append("4");
 		} else {
+
+			std::string groupName = srcGroupName.empty() ? destGroupName : srcGroupName;
 			// voName not in those who have voshare for this SE
 			query_stmt +=
 			" AND NOT EXISTS ( "
 			"		SELECT * "
 			"		FROM t_se_vo_share "
 			"		WHERE "
-			"			t_se_vo_share.se_name = t_se.name "
-			"			AND t_se_vo_share.share_type = 'se' "
-			"			AND t_se_vo_share.share_id = '%\"share_name\":\"' || t_job.vo_name || '\"%' "
+			"			t_se_vo_share.se_name = '" + groupName + "' "
+			"			AND t_se_vo_share.share_type = 'group' "
+			"			AND t_se_vo_share.share_id = '%\"share_id\":\"' || t_job.vo_name || '\"%' "
 			"	) ";
 			tag.append("5");
 		}
@@ -909,7 +924,7 @@ void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
 
 }
     
-void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig) {
+void OracleAPI::getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) {
     SeConfig* seCon = NULL;
     std::vector<SeConfig*>::iterator iter;
     const std::string tag = "getAllSeConfigNoCritiria";
@@ -941,48 +956,71 @@ void OracleAPI::getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig) {
     }
 }
     
-void OracleAPI::getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string
+void OracleAPI::getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string
 SHARE_VALUE){
     SeAndConfig* seData = NULL;
     std::vector<SeAndConfig*>::iterator iter;
     std::string tag = "getAllSeAndConfigWithCritiria";
     std::string query_stmt = " SELECT "
-            " t_se.ENDPOINT, "
-            " t_se.SE_TYPE, "
-            " t_se.SITE,  "
-            " t_se.NAME,  "
-            " t_se.STATE, "
-            " t_se.VERSION,  "
-            " t_se.HOST, "
-            " t_se.SE_TRANSFER_TYPE, "
-            " t_se.SE_TRANSFER_PROTOCOL, "
-            " t_se.SE_CONTROL_PROTOCOL, "
-            " t_se.GOCDB_ID, "
             " T_SE_VO_SHARE.SE_NAME, "
             " T_SE_VO_SHARE.SHARE_ID, "
             " T_SE_VO_SHARE.SHARE_TYPE,"
             " T_SE_VO_SHARE.SHARE_VALUE "	    
-            " FROM t_se, T_SE_VO_SHARE where t_se.NAME = T_SE_VO_SHARE.SE_NAME ";	     
+            " FROM T_SE_VO_SHARE ";
+
+    bool first = true;
     if (SE_NAME.length() > 0){
-        query_stmt.append(" and T_SE_VO_SHARE.SE_NAME ='");
+
+    	if(first) {
+    		first = false;
+    		query_stmt += " where ";
+    	} else {
+    		query_stmt += " and ";
+    	}
+
+        query_stmt.append(" T_SE_VO_SHARE.SE_NAME ='");
 		query_stmt.append(SE_NAME);
 		query_stmt.append("'");
 		tag.append("1");
 	}
     if (SHARE_ID.length() > 0){
-        query_stmt.append(" and T_SE_VO_SHARE.SHARE_ID ='");
+
+    	if(first) {
+    		first = false;
+    		query_stmt += " where ";
+    	} else {
+    		query_stmt += " and ";
+    	}
+
+        query_stmt.append(" T_SE_VO_SHARE.SHARE_ID ='");
 		query_stmt.append(SHARE_ID);
 		query_stmt.append("'");
 		tag.append("2");
 	}
     if (SHARE_TYPE.length() > 0){
-        query_stmt.append(" and T_SE_VO_SHARE.SHARE_TYPE ='");
+
+    	if(first) {
+    		first = false;
+    		query_stmt += " where ";
+    	} else {
+    		query_stmt += " and ";
+    	}
+
+        query_stmt.append(" T_SE_VO_SHARE.SHARE_TYPE ='");
 		query_stmt.append(SHARE_TYPE);
 		query_stmt.append("'");
 		tag.append("3");
 	}
     if (SHARE_VALUE.length() > 0){
-        query_stmt.append(" and T_SE_VO_SHARE.SHARE_VALUE ='");
+
+    	if(first) {
+    		first = false;
+    		query_stmt += " where ";
+    	} else {
+    		query_stmt += " and ";
+    	}
+
+        query_stmt.append(" T_SE_VO_SHARE.SHARE_VALUE ='");
 		query_stmt.append(SHARE_VALUE);
 		query_stmt.append("'");
 		tag.append("4");
@@ -993,21 +1031,10 @@ SHARE_VALUE){
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             seData = new SeAndConfig();
-            seData->ENDPOINT = r->getString(1);
-            seData->SE_TYPE = r->getString(2);
-            seData->SITE = r->getString(3);
-            seData->NAME = r->getString(4);
-            seData->STATE = r->getString(5);
-            seData->VERSION = r->getString(6);
-            seData->HOST = r->getString(7);
-            seData->SE_TRANSFER_TYPE = r->getString(8);
-            seData->SE_TRANSFER_PROTOCOL = r->getString(9);
-            seData->SE_CONTROL_PROTOCOL = r->getString(10);
-            seData->GOCDB_ID = r->getString(11);
-	    seData->SE_NAME = r->getString(12);
-            seData->SHARE_ID = r->getString(13);
-            seData->SHARE_TYPE = r->getString(14);
-            seData->SHARE_VALUE = r->getString(15);
+            seData->SE_NAME = r->getString(1);
+            seData->SHARE_ID = r->getString(2);
+            seData->SHARE_TYPE = r->getString(3);
+            seData->SHARE_VALUE = r->getString(4);
 	    
             seAndConfig.push_back(seData);
         }
