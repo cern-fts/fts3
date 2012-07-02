@@ -234,15 +234,15 @@ public:
 
     virtual void getSeCreditsInUse(int &creditsInUse, std::string srcSeName, std::string destSeName, std::string voName) = 0;
 
-    virtual void getSiteCreditsInUse(int &creditsInUse, std::string srcSiteName, std::string destSiteName, std::string voName) = 0;
+    virtual void getGroupCreditsInUse(int &creditsInUse, std::string srcSeName, std::string destSeName, std::string voName) = 0;
 
     virtual int updateFileStatus(TransferFiles* file, const std::string status) = 0;
 
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
-    virtual void getAllSeConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
+    virtual void getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
     
-    virtual void getAllSeAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE) = 0;    
+    virtual void getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE) = 0;    
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
