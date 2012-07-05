@@ -113,6 +113,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts3_cli_common.so
 %{_libdir}/libfts3_ws_ifce_client.so
 %{_libdir}/libfts3_ws_ifce_server.so
+%{_libdir}/libfts3_delegation_api_simple.so
 %doc
 
 
