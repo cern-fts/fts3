@@ -7,23 +7,17 @@ actor CommandlineTool
 
 User -> CommandlineTool: job query
 
-	CommandlineTool -> TransferStatusCli: initCli(job query)
-	CommandlineTool <-- TransferStatusCli: vector<JobId>, endpoint
+	CommandlineTool -> TransferStatusCli: TransferStatusCli(argv, argc)
+
+	CommandlineTool -> TransferStatusCli: validate()
+	CommandlineTool <-- TransferStatusCli: GSoapContextAdapterInstance
 	
-	CommandlineTool -> SrvManager: initSoap(endpoint)
-		SrvManager -> FileTransferSoapBindingProxy: soap_cgsi_init()
-		SrvManager <-- FileTransferSoapBindingProxy: TRUE
-	CommandlineTool <-- SrvManager: TRUE
-	
-	CommandlineTool -> SrvManager: init()
-		SrvManager -> FileTransferSoapBindingProxy: getServerInfo()
-		SrvManager <-- FileTransferSoapBindingProxy: {version, interface, schema, metadata}
-		SrvManager -> SrvManager: setServerInfo()
-	CommandlineTool <-- SrvManager: TRUE
+	CommandlineTool -> TransferStatusCli: getJobIds
+	CommandlineTool <-- TransferStatusCli: vector<JobId>
 	
 	loop for each jobId in vector<JobId>
-		CommandlineTool -> FileTransferSoapBindingProxy: getTransferJobStatus(jobId)
-		CommandlineTool <-- FileTransferSoapBindingProxy: jobStatus
+		CommandlineTool -> GSoapContextAdapter: getTransferJobStatus(jobId)
+		CommandlineTool <-- GSoapContextAdapter: jobStatus
 		
 User <-- CommandlineTool: jobStatus 
 	end

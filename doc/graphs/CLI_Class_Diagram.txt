@@ -33,14 +33,13 @@ class SubmitTransferCli {
 
 CliBase <|-- SubmitTransferCli
 
-class NameValueCli {
+class CfgCli {
 	+void initCli(int, char*)
 	+string getUsageString(string)
-	+vector<string>& getNames()
-	+vector<string>& getValues()
+	+vector<string>& getConfigurations()
 }
 
-CliBase <|-- NameValueCli
+CliBase <|-- CfgCli
 
 class JobIdCli {
 
@@ -83,56 +82,28 @@ class ListTransferCli {
 VoNameCli <|-- ListTransferCli
 DnCli <|-- ListTransferCli
 
-class SrvManager {
+class GSoapContextAdapter {
 
-	+{static}SrvManager* getInstance()
-	..
-	+bool initSoap(soap*, string)
-	+bool init(FileTransferSoapBindingProxy&)
-	+long isCertValid ()
-	+bool isTransferReady(string)
-	+void delegateProxyCert(string)
-	..
-	+int isChecksumSupported()
-	+int isDelegationSupported()
-	..
-	+string getInterface()
-	+string getVersion()
-	+string getSchema()
-	+string getMetadata()
-	--
-	#SrvManager()
-	#long major
-	#long minor
-	#long patch
-	--
-	-SrvManager (SrvManager const&);
-	-SrvManager& operator=(SrvManager const&)
-	..
-	-{static} SrvManager* manager
-	..
-	-string interface
-	-string version
-	-string schema
-	-string metadata
+	+void init()
+	+void printInfo()
+	+void handleSoapFault(string)
+	+void transferSubmit3 (tns3__TransferJob2*, impltns__transferSubmit3Response&)
+	+void transferSubmit2 (tns3__TransferJob*, impltns__transferSubmit2Response&)
+	+void transferSubmit (tns3__TransferJob*, impltns__transferSubmitResponse&)
+	+void getTransferJobStatus (string, impltns__getTransferJobStatusResponse&)
+	+void getRoles (impltns__getRolesResponse&)
+	+void getRolesOf (string, impltns__getRolesOfResponse&)
+	+void cancel(impltns__ArrayOf_USCOREsoapenc_USCOREstring*, impltns__cancelResponse&)
+	+void listRequests2 (impltns__ArrayOf_USCOREsoapenc_USCOREstring*, string, string, impltns__listRequests2Response&)
+	+void listRequests (impltns__ArrayOf_USCOREsoapenc_USCOREstring*, impltns__listRequestsResponse&)
+	+void listVoManagers (string, impltns__listVOManagersResponse&)
+	+void getTransferJobSummary2 (string, impltns__getTransferJobSummary2Response&)
+	+void getTransferJobSummary (string, impltns__getTransferJobSummaryResponse&)
+	+void getFileStatus (string, impltns__getFileStatusResponse&)
+	+void setConfiguration (config__Configuration*, implcfg__setConfigurationResponse&)
+	+void getConfiguration (implcfg__getConfigurationResponse&)
 }
 
-SrvManager o-- SrvManager
-
-
-class FileTransferSoapBindingProxy {
-
-	+transferSubmit()
-	+getTransferJobStatus()
-	+getServerInfo()
-}
-
-SrvManager ..> FileTransferSoapBindingProxy
-
-CliBase ..> SrvManager
-ListTransferCli ..> SrvManager
-SubmitTransferCli ..>SrvManager
-
-
+CliBase ..> GSoapContextAdapter
 
 @enduml

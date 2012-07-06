@@ -7,22 +7,16 @@ actor CommandlineTool
 
 User -> CommandlineTool: transfer-job description
 
-	CommandlineTool -> SubmitTransferCli: initCli(transfer-job description)
-	CommandlineTool <-- SubmitTransferCli: source, destination, endpoint
+	CommandlineTool -> SubmitTransferCli: SubmitTransferCli(argv, argc)
 	
-	CommandlineTool -> SrvManager: initSoap(endpoint)
-		SrvManager -> FileTransferSoapBindingProxy: soap_cgsi_init()
-		SrvManager <-- FileTransferSoapBindingProxy: TRUE
-	CommandlineTool <-- SrvManager: TRUE
+	CommandlineTool -> SubmitTransferCli: validate()
+	CommandlineTool <-- SubmitTransferCli: GSoapContextAdapterInstance
 	
-	CommandlineTool -> SrvManager: init()
-		SrvManager -> FileTransferSoapBindingProxy: getServerInfo()
-		SrvManager <-- FileTransferSoapBindingProxy: {version, interface, schema, metadata}
-		SrvManager -> SrvManager: setServerInfo()
-	CommandlineTool <-- SrvManager: TRUE
-
-	CommandlineTool -> SubmitTransferCli: performChecks()
-	CommandlineTool <-- SubmitTransferCli: TRUE
+	CommandlineTool -> SubmitTransferCli: getSource()
+	CommandlineTool <-- SubmitTransferCli: source
+	
+	CommandlineTool -> SubmitTransferCli: getDestination()
+	CommandlineTool <-- SubmitTransferCli: destination
 	
 	CommandlineTool -> SubmitTransferCli: getJobElements()
 	CommandlineTool <-- SubmitTransferCli: jobElements
@@ -30,8 +24,8 @@ User -> CommandlineTool: transfer-job description
 	CommandlineTool -> SubmitTransferCli: getParameters()
 	CommandlineTool <-- SubmitTransferCli: parameters
 	
-	CommandlineTool -> FileTransferSoapBindingProxy: transferSubmit()
-	CommandlineTool <-- FileTransferSoapBindingProxy: jobID
+	CommandlineTool -> GSoapContextAdapter: transferSubmit()
+	CommandlineTool <-- GSoapContextAdapter: jobID
 	
 User <-- CommandlineTool: jobId 
 
