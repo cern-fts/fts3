@@ -182,73 +182,71 @@ protected:
                 		false, 
                 		"");
 
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id: " << temp->JOB_ID << commit;
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "File id: " << temp->FILE_ID << commit;
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Source Url: " << temp->SOURCE_SURL << commit;
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Destin Url: " << temp->DEST_SURL << commit;
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "VO name: " << temp->VO_NAME << commit;
-		     
-                    FileTransferScheduler scheduler(temp); 
-                    if (scheduler.schedule()) { /*SET TO READY STATE WHEN TRUE*/
-                        sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
-                        destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
-			if(proxy_file.length() > 0){
-                        	params.append(" -proxy ");
-	                        params.append(proxy_file);	
-				/*make sure proxy is readable    */
-    				chmod(proxy_file.c_str(), (mode_t) 0600); //S_IRUSR|S_IRGRP|S_IROTH				
-				char user[ ]  ="fts3";
-    				uid_t pw_uid;
-    				pw_uid = name_to_uid(user);
-				chown(proxy_file.c_str(), pw_uid, getgid() );
-			}		
-			if(std::string(temp->CHECKSUM).length() > 0){ //checksum
-                        	params.append(" -z ");
-	                        params.append(temp->CHECKSUM);	
-			}
-			if(std::string(temp->CHECKSUM_METHOD).length() > 0){ //checksum
-                        	params.append(" -A ");
-	                        params.append(temp->CHECKSUM_METHOD);	
-			}				
-                        params.append(" -b ");
-                        params.append(temp->SOURCE_SURL);
-                        params.append(" -c ");
-                        params.append(temp->DEST_SURL);
-                        params.append(" -a ");
-                        params.append(temp->JOB_ID);
-                        params.append(" -B ");			
-                        params.append(to_string(temp->FILE_ID));
-                        params.append(" -C ");
-                        params.append(temp->VO_NAME);
-                        if (sourceSiteName.length() > 0) {
-                            params.append(" -D ");
-                            params.append(sourceSiteName);
-                        }
-                        if (destSiteName.length() > 0) {
-                            params.append(" -E ");
-                            params.append(destSiteName);
-                        }
-			if(std::string(temp->OVERWRITE).length() > 0){
-				params.append(" -d ");
-			}
-			if(protocol!=NULL && protocol->NOSTREAMS > 0){
-	                        params.append(" -e ");			
-	                        params.append(to_string(protocol->NOSTREAMS));
-			}
-			if(protocol!=NULL && protocol->URLCOPY_TX_TO > 0){
-	                        params.append(" -h ");			
-	                        params.append(to_string(protocol->URLCOPY_TX_TO));
-			}
+			FileTransferScheduler scheduler(temp);
+			if (scheduler.schedule()) { /*SET TO READY STATE WHEN TRUE*/
 
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
-                        pr = new ExecuteProcess(cmd, params, 0);
-                        if (pr) {			    
-                            pr->executeProcessShell();
-                            delete pr;
-                        }
+				sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
+				destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
+
+				if(proxy_file.length() > 0) {
+					params.append(" -proxy ");
+					params.append(proxy_file);
+					/*make sure proxy is readable    */
+						chmod(proxy_file.c_str(), (mode_t) 0600); //S_IRUSR|S_IRGRP|S_IROTH
+					char user[ ]  ="fts3";
+						uid_t pw_uid;
+						pw_uid = name_to_uid(user);
+					chown(proxy_file.c_str(), pw_uid, getgid() );
+				}
+
+				if(std::string(temp->CHECKSUM).length() > 0){ //checksum
+								params.append(" -z ");
+								params.append(temp->CHECKSUM);
+				}
+				if(std::string(temp->CHECKSUM_METHOD).length() > 0){ //checksum
+								params.append(" -A ");
+								params.append(temp->CHECKSUM_METHOD);
+				}
+				params.append(" -b ");
+				params.append(temp->SOURCE_SURL);
+				params.append(" -c ");
+				params.append(temp->DEST_SURL);
+				params.append(" -a ");
+				params.append(temp->JOB_ID);
+				params.append(" -B ");
+				params.append(to_string(temp->FILE_ID));
+				params.append(" -C ");
+				params.append(temp->VO_NAME);
+				if (sourceSiteName.length() > 0) {
+					params.append(" -D ");
+					params.append(sourceSiteName);
+				}
+				if (destSiteName.length() > 0) {
+					params.append(" -E ");
+					params.append(destSiteName);
+				}
+				if(std::string(temp->OVERWRITE).length() > 0){
+					params.append(" -d ");
+				}
+				if(protocol!=NULL && protocol->NOSTREAMS > 0){
+								params.append(" -e ");
+								params.append(to_string(protocol->NOSTREAMS));
+				}
+				if(protocol!=NULL && protocol->URLCOPY_TX_TO > 0){
+								params.append(" -h ");
+								params.append(to_string(protocol->URLCOPY_TX_TO));
+				}
+
+				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
+				pr = new ExecuteProcess(cmd, params, 0);
+				if (pr) {
+					pr->executeProcessShell();
+					delete pr;
+				}
+
+				params.clear();
+            }
 			
-                        params.clear();
-                    }
 		    if(protocol)
 		    	delete protocol;
                 }

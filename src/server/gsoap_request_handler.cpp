@@ -22,8 +22,8 @@
 
 FTS3_SERVER_NAMESPACE_START
 
-GSoapRequestHandler::GSoapRequestHandler(GSoapAcceptor& acceptor): acceptor(acceptor) {
-	ctx = acceptor.getSoapContext();
+GSoapRequestHandler::GSoapRequestHandler(GSoapAcceptor& acceptor): acceptor(acceptor), ctx(acceptor.getSoapContext()) {
+
 }
 
 GSoapRequestHandler::~GSoapRequestHandler() {

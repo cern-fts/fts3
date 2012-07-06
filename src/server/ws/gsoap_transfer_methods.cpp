@@ -263,7 +263,6 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 			_param_12._getTransferJobSummaryReturn->jobStatus = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
-			// TODO change the state machine in wsdl !!!
 			_param_12._getTransferJobSummaryReturn->numActive = handler.countInState(
 					JobStatusHandler::FTS3_STATUS_ACTIVE,
 					fileStatuses
@@ -329,7 +328,6 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 			_param_13._getTransferJobSummary2Return->jobStatus = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
-			// TODO change the state machine in wsdl !!!
 			_param_13._getTransferJobSummary2Return->numActive = handler.countInState(
 					JobStatusHandler::FTS3_STATUS_ACTIVE,
 					fileStatuses
