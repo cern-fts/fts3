@@ -38,7 +38,7 @@ const string ConfigurationHandler::cfg_exp =
 			"(\"type\"\\s*:\\s*\"(se|group)\")\\s*,?\\s*"
 			"(\"members\"\\s*:\\s*\\[(\\s*\"[a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+\\])?\\s*,?\\s*"
 			"("
-				"\"parameters\"\\s*:\\s*"
+				"\"protocol\"\\s*:\\s*"
 				"\\s*\\{\\s*"
 					"(\"[a-zA-Z0-9\\.-_]+\"\\s*:\\s*\\d+\\s*,?\\s*)+"
 				"\\s*\\}\\s*"
@@ -97,8 +97,8 @@ ConfigurationHandler::ConfigurationHandler():
 		parameterNameToId (map_list_of
 			("bandwidth", BANDWIDTH)
 			("nostreams", NOSTREAMS)
-			("TCP_BUFFER_SIZE", TCP_BUFFER_SIZE)
-			("NOMINAL_THROUGHPUT", NOMINAL_THROUGHPUT)
+			("tcp_buffer_size", TCP_BUFFER_SIZE)
+			("nominal_throughput", NOMINAL_THROUGHPUT)
 			("blocksize", BLOCKSIZE)
 			("http_to", HTTP_TO)
 			("urlcopy_put_to", URLCOPY_PUT_TO)
