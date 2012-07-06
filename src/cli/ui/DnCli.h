@@ -29,6 +29,12 @@
 
 namespace fts3 { namespace cli {
 
+/**
+ * The command line utility for getting user DN
+ *
+ * The class provides:
+ * 		- userdn (u), allows specifying user DN
+ */
 class DnCli : virtual public CliBase {
 public:
 

@@ -58,7 +58,7 @@ GSoapContextAdapter* CfgCli::validate() {
 }
 
 string CfgCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] NAME=VALUE [NAME=VALUE...]";
+	return "Usage: " + tool + " [options] CONFIG [CONFIG...]";
 }
 
 vector<string> CfgCli::getConfigurations() {

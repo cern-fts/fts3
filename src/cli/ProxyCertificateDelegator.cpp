@@ -168,10 +168,12 @@ bool ProxyCertificateDelegator::delegate() {
              << " hours and "
              << (long int)((requestProxyDelegationTime) % 3600 / 60)
              << " minutes." << endl;
-        err = glite_delegation_delegate(dctx, delegationId.c_str(),
-                                        (requestProxyDelegationTime/60),
-                                        renewDelegation);
-        if (-1 == err) {
+        err = glite_delegation_delegate(
+        		dctx, delegationId.c_str(),
+        		(requestProxyDelegationTime/60),
+                renewDelegation
+        	);
+        if (err == -1) {
             cout << "delegation: " << glite_delegation_get_error(dctx) << endl;
             return false;
         }

@@ -32,6 +32,15 @@ using namespace std;
 
 namespace fts3 { namespace cli {
 
+/**
+ * The command line utility for specyfying VO name
+ *
+ * The class provides:
+ * 		- voname, which is a positional parameter if the constructor
+ * 			parameter was true, otherwise its an ordinary parameter
+ * 			(o option is also available in that case), allows for
+ * 			specifying the VO name
+  */
 class VoNameCli: virtual public CliBase {
 public:
 

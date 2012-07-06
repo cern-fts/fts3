@@ -18,7 +18,7 @@
  * GSoapContextAdapter.h
  *
  *  Created on: May 30, 2012
- *      Author: simonm
+ *      Author: Michał Simon
  */
 
 #ifndef GSOAPCONTEXADAPTER_H_
@@ -32,17 +32,30 @@ using namespace std;
 
 namespace fts3 { namespace cli {
 
+
+/**
+ * The adapter class for the GSoap context
+ *
+ * This one is used instead of GSoap generated proxy classes because of GSoap bug ID: 3511337
+ * (see example http://sourceforge.net/tracker/?func=detail&atid=468021&aid=3511337&group_id=52781)
+ *
+ * Provides all the functionalities of transfer and configuration web service
+ */
 class GSoapContextAdapter {
 
 public:
 
 	/**
+	 * Constructor
 	 *
+	 * Creates and initializes GSoap context
 	 */
 	GSoapContextAdapter(string endpoint);
 
 	/**
+	 * Destructor
 	 *
+	 * Deallocates GSoap context
 	 */
 	virtual ~GSoapContextAdapter();
 

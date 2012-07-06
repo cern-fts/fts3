@@ -31,6 +31,14 @@
 
 namespace fts3 { namespace cli {
 
+/**
+ * CfgCli provides the user interface for configuring SEs
+ *
+ * 		- cfg, positional parameter, the configuration in JSON format
+ * 			corresponding to a SE (maybe given multiple times to configure
+ * 			multiple SEs)
+ *
+ */
 class CfgCli: public CliBase {
 
 public:
@@ -38,7 +46,7 @@ public:
 	/**
 	 * Default constructor.
 	 *
-	 * Creates the command line interface for retrieving name-value pairs.
+	 * Creates the command line interface for retrieving JSON configurations.
 	 * The name-value pair is market as both: hidden and positional.
 	 */
 	CfgCli();

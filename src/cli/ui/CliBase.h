@@ -195,7 +195,7 @@ protected:
 	options_description hidden;
 
 	/**
-	 * the endpoint FTS3 service
+	 * the FTS3 service endpoint
 	 */
 	string endpoint;
 

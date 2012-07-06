@@ -31,6 +31,12 @@
 
 namespace fts3 { namespace cli {
 
+/**
+ * Command line utility for specifying the list of states of interest
+ *
+ * 		- state, positional parameter, allows for specifying several
+ * 			states of interest
+ */
 class ListTransferCli : public DnCli, public VoNameCli {
 public:
 
