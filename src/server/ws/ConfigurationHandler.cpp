@@ -36,7 +36,7 @@ const string ConfigurationHandler::cfg_exp =
 		"\\s*\\{\\s*"
 			"(\"name\"\\s*:\\s*\"[a-zA-Z0-9\\.-]+\")\\s*,\\s*"
 			"(\"type\"\\s*:\\s*\"(se|group)\")\\s*,?\\s*"
-			"(\"members\"\\s*:\\s*\\[(\\s*\\{\\s*\"se\"\\s*:\\s*\"[a-zA-Z0-9\\.-]+\"\\s*\\}\\s*,?\\s*)+\\])?\\s*,?\\s*"
+			"(\"members\"\\s*:\\s*\\[(\\s*\"[a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+\\])?\\s*,?\\s*"
 			"("
 				"\"parameters\"\\s*:\\s*"
 				"\\s*\\{\\s*"
@@ -69,7 +69,7 @@ const string ConfigurationHandler::get_str_exp =
 		;
 
 const string ConfigurationHandler::get_vec_exp =
-		"\\s*\".+\"\\s*:\\s*\\[(\\s*\\{\\s*\".+\"\\s*:\\s*\"[a-zA-Z0-9\\.-]+\"\\s*\\}\\s*,?\\s*)+\\]\\s*"
+		"\\s*\".+\"\\s*:\\s*\\[((\\s*\"[a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+)\\]\\s*"
 		;
 
 const string ConfigurationHandler::get_par_exp =
@@ -211,7 +211,7 @@ vector<string> ConfigurationHandler::getVector(string cfg) {
 	regex_match(cfg, what, get_vec_re, match_extra);
 	string tmp = what[VALUE];
 
-	char_separator<char> sep(",");
+	char_separator<char> sep(",\"");
 	tokenizer< char_separator<char> > tokens(tmp, sep);
 	tokenizer< char_separator<char> >::iterator it;
 
@@ -219,7 +219,7 @@ vector<string> ConfigurationHandler::getVector(string cfg) {
 
 	for(it = tokens.begin(); it != tokens.end(); it++) {
 		string s = *it;
-		ret.push_back(getString(s));
+		ret.push_back(s);
 	}
 
 	return ret;
