@@ -153,6 +153,37 @@ target_link_libraries (fts3-config-get fts3_cli_common)
 
 # ------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------
+# man pages
+
+set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man")
+set(MAN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/man1")
+set(MAN_INSTALL_DIR "/usr/share/man/man1")
+
+file(MAKE_DIRECTORY ${MAN_OUTPUT_DIR})
+
+find_package(GZip)
+
+# find all manpages filenames
+file(GLOB man_pages RELATIVE ${MAN_INPUT_DIR} ${MAN_INPUT_DIR}/fts3-*)
+
+# loop over all manpages
+foreach(man_page ${man_pages})
+	# gzip the manpage
+	add_custom_command(
+		TARGET ${man_page}
+		POST_BUILD
+		COMMAND ${GZIP} -c ${MAN_INPUT_DIR}/${man_page} > ${MAN_OUTPUT_DIR}/${man_page}.1.gz
+	)
+	#install it
+	install(
+		FILES ${MAN_OUTPUT_DIR}/${man_page}.1.gz
+		DESTINATION ${MAN_INSTALL_DIR}
+	)
+	
+endforeach()
+# ------------------------------------------------------------------------
+
 
 install(TARGETS
 	fts3-transfer-submit

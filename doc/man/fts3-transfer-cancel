@@ -1,0 +1,17 @@
+.\" Manpage for fts3-transfer-cancel.
+.\" Contact michal.simon@cern.ch to correct errors or typos.
+.TH man 1 "09 July 2012" "1.0" "fts3-transfer-cancel man page"
+.SH NAME
+fts3-transfer-cancel
+.SH SYNOPSIS
+fts3-transfer-cancel [options] JOBID [JOBID...]
+.SH DESCRIPTION
+fts3-transfer-cancel is a tool that allows canceling transfer-jobs. The user has to provide respective transfer-job(s) ID.  
+.SH OPTIONS
+  -h [ --help ]         Print this help text and exit.
+  -q [ --quite ]        Quiet operation.
+  -v [ --verbose ]      Be more verbose.
+  -s [ --service ] arg  Use the transfer service at the specified URL.
+  -V [ --version ]      Print the version number and exit.
+.SH SEE ALSO
+https://svnweb.cern.ch/trac/fts3/wiki/AdminGuide
