@@ -35,4 +35,4 @@ fts3-transfer-submit is a tool for submitting transfer-jobs using the GRID File 
   --lan-connection           use LAN as ConnectionType (default = WAN)
   --fail-nearline            fail the transfer if the file is nearline
 .SH SEE ALSO
-https://svnweb.cern.ch/trac/fts3/wiki/AdminGuide
+https://svnweb.cern.ch/trac/fts3/wiki/UserGuide

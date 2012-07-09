@@ -14,4 +14,4 @@ fts3-config-set is a tool for configuring SEs (storage elements) and SE groups. 
   -s [ --service ] arg  Use the transfer service at the specified URL.
   -V [ --version ]      Print the version number and exit.
 .SH SEE ALSO
-https://svnweb.cern.ch/trac/fts3/wiki/AdminGuide
+https://svnweb.cern.ch/trac/fts3/wiki/UserGuide

@@ -79,6 +79,31 @@ add_executable (fts3_server main.cpp)
 add_dependencies(fts3_server fts3_server_lib)
 target_link_libraries(fts3_server -lfts3_server_lib -lfts3_proxy )
 
+# ------------------------------------------------------------------------
+# man pages
+
+set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/server")
+set(MAN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/man1")
+set(MAN_INSTALL_DIR "/usr/share/man/man1")
+
+file(MAKE_DIRECTORY ${MAN_OUTPUT_DIR})
+
+find_package(GZip)
+
+# gzip the manpage
+add_custom_command(
+	TARGET fts3_server
+	POST_BUILD
+	COMMAND ${GZIP} -c ${MAN_INPUT_DIR}/fts3_server > ${MAN_OUTPUT_DIR}/fts3_server.1.gz
+)
+#install it
+install(
+	FILES ${MAN_OUTPUT_DIR}/fts3_server.1.gz
+	DESTINATION ${MAN_INSTALL_DIR}
+)
+# ------------------------------------------------------------------------
+
+
 install(TARGETS         fts3_server_gsoap_transfer 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )

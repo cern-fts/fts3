@@ -1,0 +1,90 @@
+{
+	"name" :
+	{
+		"type" : "string",
+		"description" : "The SE or SE group name",
+		"required" : true
+	},
+	
+	"type" :
+	{
+		"type" : "string",
+		"enum" : ["se", "group"],
+		"description" : "The type of the configuration",
+		"required" : true
+	},
+	
+	"members" :
+	{
+		"type" : "array",
+		"items" :
+		{
+			"type" : "string"
+		},
+		"description" : "SE group members, should be only used if the type of the configuration is 'group'!",
+		"required" : false
+		
+	},
+
+	"protocol" :
+	{
+		"type" : "object",
+		"properties" :
+		{
+			"urlcopy_tx_to" : 
+			{
+				"type" : "number",
+				"required" : false
+			},
+			"nostreams" :
+			{
+				"type" : "number",
+				"required" : false
+			}
+		},
+		"description" : "So far only URLCOPY_TX_TO and NOSTREAMS are supported",
+		"required" : false
+	},
+
+	"share" :
+	{
+		"type" : "object",
+		"properties" :
+		{
+			"share_type" : 
+			{
+				"type" : "string",
+				"enum" : ["public", "vo", "pair"]
+				"description" : "The 'pair' should be only used if the type of the configuration is 'se'!"
+				"required" : true
+			},
+			"share_id" :
+			{
+				"type" : "string"
+				"description" : "If the share_type is 'public' it should be null, if the share_type is 'vo' it should be a VO name, if the share_type is 'pair' it should be a SE name"
+				"required" : true				
+			},
+			"in" :
+			{
+				"type" : "number",
+				"minimum" : 0
+				"required" : true	
+			},
+			"out" :
+			{
+				"type" : "number",
+				"minimum" : 0
+				"required" : true
+			},
+			"policy" :
+			{
+				"type" : "string",
+				"enum" : ["shared", "exclusive"],
+				"description" : "So far only 'exclusive' policy is supported!"
+				"required" : true
+			}
+		},
+		"description" : "The share configuration.",
+		"required" : false
+	}
+}
