@@ -156,7 +156,7 @@ target_link_libraries (fts3-config-get fts3_cli_common)
 # ------------------------------------------------------------------------
 # man pages
 
-set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man")
+set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/cli")
 set(MAN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/man1")
 set(MAN_INSTALL_DIR "/usr/share/man/man1")
 
