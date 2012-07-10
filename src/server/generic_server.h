@@ -37,12 +37,11 @@ public:
     /** Start the service. */
     void start()
     {
-        unsigned int t_port = theServerConfig().get<unsigned int>("TransferPort");
-        //unsigned int c_port = theServerConfig().get<unsigned int>("ConfigPort");
+        unsigned int port = theServerConfig().get<unsigned int>("Port");
 	    const std::string& ip = theServerConfig().get<std::string>("IP");
 
 	    typename TRAITS::TransferWebServiceType handler_t;
-        handler_t.listen_p(t_port, ip);
+        handler_t.listen_p(port, ip);
 
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();	

@@ -66,15 +66,9 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 
     config.add_options()
 	    (
-            "TransferPort,p",
+            "Port,p",
             po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT),
             "File transfer listening port"
-        )
-
-	    (
-            "ConfigPort,c",
-            po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT + 1),
-            "Config listening port"
         )
 
 	    (
@@ -656,8 +650,7 @@ BOOST_FIXTURE_TEST_CASE
 
 void ServerConfigReader::storeValuesAsStrings ()
 {
-    storeAsString("TransferPort");
-    storeAsString("ConfigPort");
+    storeAsString("Port");
     storeAsString("ThreadNum");
 }
 
