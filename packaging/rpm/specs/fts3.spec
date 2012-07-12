@@ -91,6 +91,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/logrotate.d/fts3-server
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
+%{_mandir}/man1/fts3_server.1.gz
 
 %files -n fts3-client
 %defattr(-,root,root,-)
@@ -115,6 +116,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts3_ws_ifce_server.so
 %{_libdir}/libfts3_delegation_api_simple.so
 %{_libdir}/libfts3_delegation_api_cpp.so
+%{_mandir}/man1/fts3-config-get.1.gz
+%{_mandir}/man1/fts3-config-set.1.gz
+%{_mandir}/man1/fts3-transfer-cancel.1.gz
+%{_mandir}/man1/fts3-transfer-getroles.1.gz
+%{_mandir}/man1/fts3-transfer-list.1.gz
+%{_mandir}/man1/fts3-transfer-listvomanagers.1.gz
+%{_mandir}/man1/fts3-transfer-status.1.gz
+%{_mandir}/man1/fts3-transfer-submit.1.gz
 %doc
 
 
