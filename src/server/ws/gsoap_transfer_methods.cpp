@@ -344,7 +344,7 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 					JobStatusHandler::FTS3_STATUS_FINISHED,
 					fileStatuses
 				);
-			_param_13._getTransferJobSummary2Return->numFinished = handler.countInState(
+			_param_13._getTransferJobSummary2Return->numReady = handler.countInState(
 					JobStatusHandler::FTS3_STATUS_READY,
 					fileStatuses
 				);
