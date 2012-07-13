@@ -91,7 +91,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/logrotate.d/fts3-server
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
-%{_mandir}/man1/fts3_server.1.gz
+%{_mandir}/man8/fts3_server.8.gz
 
 %files -n fts3-client
 %defattr(-,root,root,-)
