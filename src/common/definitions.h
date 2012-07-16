@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define JOB_ID_LEN 36
+#define JOB_ID_LEN 36+1
 #define FILE_ID_LEN 36
 #define TRANFER_STATUS_LEN 50
 #define TRANSFER_MESSAGE 1024
