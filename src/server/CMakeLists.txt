@@ -84,7 +84,7 @@ target_link_libraries(fts3_server -lfts3_server_lib -lfts3_proxy )
 
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/server")
 set(MAN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/man8")
-set(MAN_INSTALL_DIR "/usr/share/man/man1")
+set(MAN_INSTALL_DIR "/usr/share/man/man8")
 
 file(MAKE_DIRECTORY ${MAN_OUTPUT_DIR})
 
