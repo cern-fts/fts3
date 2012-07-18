@@ -39,7 +39,7 @@ AuthorizationManager::AuthorizationManager() : voNames(list_of
 		("dteam")
 		("cms")
 		("atlas")
-		("lhcb")
+		("lhcb").to_container(voNames)
 	) {
 	// initialization list does everything :)
 }
