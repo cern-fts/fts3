@@ -13,8 +13,6 @@
 #include "common/logger.h"
 #include "common/JobStatusHandler.h"
 
-#include "JobStatusCopier.h"
-
 using namespace db;
 using namespace fts3::ws;
 using namespace fts3::common;
@@ -46,7 +44,7 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
 	// fill it with job statuses
 	vector<JobStatus*>::iterator it;
 	for (it = jobs.begin(); it < jobs.end(); it++) {
-		tns3__JobStatus* job_ptr = JobStatusCopier::copyJobStatus(soap, *it);
+		tns3__JobStatus* job_ptr = JobStatusHandler::getInstance().copyJobStatus(soap, *it);
 		result->item.push_back(job_ptr);
 		delete *it;
 	}

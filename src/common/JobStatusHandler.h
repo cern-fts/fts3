@@ -13,7 +13,10 @@
 #include <map>
 #include <string>
 #include <iostream>
+
 #include "db/generic/JobStatus.h"
+
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 
 
 using namespace std;
@@ -119,6 +122,47 @@ public:
 		cout << "Files: " << js->numFiles << endl;
 	    cout << "Priority: " << js->priority << endl;
 	    cout << "VOName: " << *js->voName << endl;
+	}
+
+	/*
+	 * Creates a new instance of tns3__JobStatus, and copies the data from
+	 * JS status into this object.
+	 *
+	 * The transfer_JobStatus object is created using gSOAP memory-allocation utility, it
+	 * will be garbage collected! If there is a need to delete it manually gSOAP dedicated
+	 * functions should be used (in particular 'soap_unlink'!).
+	 *
+	 * @param JS - type of the class/structure that contains data about job status
+	 * @param soap - the soap object that is serving the given request
+	 * @param status - the job status that has to be copied
+	 *
+	 * @return a newly created tns3__JobStatus, with data copied from JS status
+	 */
+	template <typename JS>
+	inline tns3__JobStatus* copyJobStatus(soap* soap, JS* status) {
+
+		tns3__JobStatus* copy = soap_new_tns3__JobStatus(soap, -1);
+
+		copy->clientDN = soap_new_std__string(soap, -1);
+		*copy->clientDN = status->clientDN;
+
+		copy->jobID = soap_new_std__string(soap, -1);
+		*copy->jobID = status->jobID;
+
+		copy->jobStatus = soap_new_std__string(soap, -1);
+		*copy->jobStatus = status->jobStatus;
+
+		copy->reason = soap_new_std__string(soap, -1);
+		*copy->reason = status->reason;
+
+		copy->voName = soap_new_std__string(soap, -1);
+		*copy->voName = status->voName;
+
+		copy->submitTime = status->submitTime;
+		copy->numFiles = status->numFiles;
+		copy->priority = status->priority;
+
+		return copy;
 	}
 
 protected:

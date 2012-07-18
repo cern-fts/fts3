@@ -25,7 +25,6 @@
 
 #include "ws/JobSubmitter.h"
 #include "ws/RequestLister.h"
-#include "ws/JobStatusCopier.h"
 #include "ws/AuthorizationManager.h"
 
 #include "common/JobStatusHandler.h"
@@ -197,7 +196,9 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
 		if(!fileStatuses.empty()){
-			_param_11._getTransferJobStatusReturn = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
+			_param_11._getTransferJobStatusReturn = JobStatusHandler::getInstance().copyJobStatus(
+					soap, *fileStatuses.begin()
+				);
 			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
@@ -230,7 +231,9 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 		if (!fileStatuses.empty()) {
 
 			_param_12._getTransferJobSummaryReturn = soap_new_tns3__TransferJobSummary(soap, -1);
-			_param_12._getTransferJobSummaryReturn->jobStatus = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
+			_param_12._getTransferJobSummaryReturn->jobStatus = JobStatusHandler::getInstance().copyJobStatus(
+					soap, *fileStatuses.begin()
+				);
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
 			_param_12._getTransferJobSummaryReturn->numActive = handler.countInState(
@@ -287,7 +290,9 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 		if(!fileStatuses.empty()) {
 
 			_param_13._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(soap, -1);
-			_param_13._getTransferJobSummary2Return->jobStatus = JobStatusCopier::copyJobStatus(soap, *fileStatuses.begin());
+			_param_13._getTransferJobSummary2Return->jobStatus = JobStatusHandler::getInstance().copyJobStatus(
+					soap, *fileStatuses.begin()
+				);
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
 			_param_13._getTransferJobSummary2Return->numActive = handler.countInState(
