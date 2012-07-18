@@ -42,6 +42,7 @@ set(fts3_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapDelegationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/ConfigurationHandler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/AuthorizationManager.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_config_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_deleg_methods.cpp"
