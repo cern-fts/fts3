@@ -20,6 +20,7 @@
 
 #include "ws/gsoap_stubs.h"
 #include "ws/GSoapDelegationHandler.h"
+#include "ws/AuthorizationManager.h"
 
 #include "common/logger.h"
 #include <common/error.h>
@@ -36,6 +37,7 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 
 	GSoapDelegationHandler handler(soap);
 	try {
+		AuthorizationManager::getInstance().authorize(soap);
 		_param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
 	} catch (Err& ex) {
@@ -52,6 +54,7 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
 
 	GSoapDelegationHandler handler(soap);
 	try {
+		AuthorizationManager::getInstance().authorize(soap);
 		_param_5.getNewProxyReqReturn = handler.getNewProxyReq();
 
 	} catch (Err& ex) {
@@ -68,6 +71,7 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 
 	GSoapDelegationHandler handler(soap);
 	try {
+		AuthorizationManager::getInstance().authorize(soap);
 		_param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
 
 	} catch(Err& ex) {
@@ -100,6 +104,7 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 
 	GSoapDelegationHandler handler(soap);
 	try {
+		AuthorizationManager::getInstance().authorize(soap);
 		_param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
 
 	} catch (Err& ex) {
@@ -116,6 +121,7 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 
 	GSoapDelegationHandler handler(soap);
 	try {
+		AuthorizationManager::getInstance().authorize(soap);
 		handler.destroy(_delegationID);
 
 	} catch(Err& ex) {

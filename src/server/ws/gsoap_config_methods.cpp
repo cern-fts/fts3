@@ -19,6 +19,7 @@
 
 #include "ws/gsoap_stubs.h"
 #include "ws/ConfigurationHandler.h"
+#include "ws/AuthorizationManager.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -49,6 +50,7 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 	vector<string>::iterator it;
 
 	try {
+		AuthorizationManager::getInstance().authorize(soap);
 		ConfigurationHandler handler;
 		for(it = cfgs.begin(); it < cfgs.end(); it++) {
 			handler.parse(*it);
@@ -78,6 +80,7 @@ int fts3::implcfg__getConfiguration(soap* soap, struct implcfg__getConfiguration
 
 	response.configuration = soap_new_config__Configuration(soap, -1);
 	try {
+		AuthorizationManager::getInstance().authorize(soap);
 		ConfigurationHandler handler;
 		response.configuration->cfg = handler.get();
 
