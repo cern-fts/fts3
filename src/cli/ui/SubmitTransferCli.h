@@ -26,7 +26,7 @@
 #define SUBMITTRANSFERCLI_H_
 
 #include "CliBase.h"
-#include "gsoap_proxy.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 #include <vector>
 
 using namespace std;

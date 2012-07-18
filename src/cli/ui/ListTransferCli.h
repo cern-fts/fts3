@@ -26,7 +26,7 @@
 #define LISTTRANSFERCLI_H_
 
 #include "DnCli.h"
-#include "gsoap_proxy.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 #include "VoNameCli.h"
 
 namespace fts3 { namespace cli {
