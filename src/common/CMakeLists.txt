@@ -16,7 +16,10 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
+set(fts3_include_dir 
+	"${PROJECT_SOURCE_DIR}/src/"
+	"${CMAKE_BINARY_DIR}/src/"
+)
 include_directories (${fts3_include_dir})
 
 file(GLOB fts3_common_sources "*.cpp")
