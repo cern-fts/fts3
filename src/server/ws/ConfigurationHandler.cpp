@@ -375,7 +375,9 @@ void ConfigurationHandler::addShareConfiguration() {
 void ConfigurationHandler::addGroupConfiguration() {
 
 	if (cfgMembers) {
-		// we don't care if the group exist, if not it will be created automatically
+		// if an old group exist under the same name replace it!
+		db->delete_group(name);
+
 		// add the SEs to the given group
 		vector<string>::iterator it;
 		for (it = members.begin(); it < members.end(); it++) {
