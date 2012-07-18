@@ -8,9 +8,11 @@
 #include "RequestLister.h"
 
 #include "db/generic/SingleDbInstance.h"
+
+#include "common/error.h"
 #include "common/logger.h"
-#include "GSoapExceptionHandler.h"
 #include "common/JobStatusHandler.h"
+
 #include "JobStatusCopier.h"
 
 using namespace db;
@@ -56,18 +58,14 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
 void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates) {
 
 	if (!inGivenStates || inGivenStates->item.empty()) {
-		tns3__InvalidArgumentException* ex =
-				GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(soap, "No states were defined");
-		throw ex;
+		throw Err_Custom("No states were defined!");
 	}
 
 	JobStatusHandler& handler = JobStatusHandler::getInstance();
 	vector<string>::iterator it;
 	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); it++) {
 		if(!handler.isStatusValid(*it)) {
-			tns3__InvalidArgumentException* ex =
-					GSoapExceptionHandler<tns3__InvalidArgumentException>::createException(soap, "Unknown job status: " + *it);
-			throw ex;
+			throw Err_Custom("Unknown job status: " + *it);
 		}
 	}
 }

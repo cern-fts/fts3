@@ -102,7 +102,7 @@ public:
 	 *
 	 * @return client DN
 	 */
-	string getClientDN();
+	string getClientDn();
 
 	/**
 	 * Converts a X509 struct to string

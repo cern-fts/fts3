@@ -60,7 +60,7 @@ GSoapDelegationHandler::~GSoapDelegationHandler() {
 
 }
 
-string GSoapDelegationHandler::getClientDN(){
+string GSoapDelegationHandler::getClientDn(){
 	std::cerr << dn << std::endl;
 	return dn;
 }

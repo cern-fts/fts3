@@ -30,6 +30,7 @@
 
 #include "common/JobStatusHandler.h"
 #include "common/logger.h"
+#include "common/error.h"
 
 
 using namespace boost;
@@ -53,10 +54,10 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
 	    return SOAP_FAULT;
 
-	} catch (tns3__TransferException* ex) {
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -72,16 +73,10 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
 		JobSubmitter submitter (soap, _job, true);
 		_param_4._transferSubmit2Return = submitter.submit();
 
-	} catch (string const &e) {
+	} catch(Err& ex) {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-	    return SOAP_FAULT;
-
-	} catch (tns3__TransferException* ex) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -97,16 +92,10 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 		JobSubmitter submitter (soap, _job);
 		_param_5._transferSubmit3Return = submitter.submit();
 
-	} catch (string const &e) {
+	} catch(Err& ex) {
 
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-	    return SOAP_FAULT;
-
-	} catch (tns3__TransferException* ex) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -122,16 +111,10 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 		RequestLister lister(soap, _inGivenStates);
 		_param_7._listRequestsReturn = lister.list();
 
-	} catch (string const &e) {
+	} catch(Err& ex) {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-		return SOAP_FAULT;
-
-	} catch (tns3__TransferException* ex) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -147,16 +130,10 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
 		RequestLister lister(soap, _inGivenStates);
 		_param_8._listRequests2Return = lister.list();
 
-	} catch (string const &e) {
+	} catch(Err& ex) {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-		return SOAP_FAULT;
-
-	} catch (tns3__TransferException* ex) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -227,22 +204,13 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 				delete *it;
 			}
 		} else {
-			tns3__NotExistsException* ex =
-					GSoapExceptionHandler<tns3__NotExistsException>::createException(
-							soap, "requestID <" + _requestID + "> was not found"
-						);
-			throw ex;
+			throw Err_Custom("requestID <" + _requestID + "> was not found");
 		}
 
-	} catch (string const &e) {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-	    return SOAP_FAULT;
+	} catch(Err& ex) {
 
-	} catch (tns3__TransferException* ex) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -292,22 +260,13 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 			}
 
 		} else {
-			tns3__NotExistsException* ex =
-					GSoapExceptionHandler<tns3__NotExistsException>::createException(
-							soap, "requestID <" + _requestID + "> was not found"
-						);
-			throw ex;
+			throw Err_Custom("requestID <" + _requestID + "> was not found");
 		}
 
-	} catch (string const &e) {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-	    return SOAP_FAULT;
+	} catch(Err& ex) {
 
-	} catch (tns3__TransferException* ex) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -361,22 +320,13 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 			}
 
 		} else {
-			tns3__NotExistsException* ex =
-					GSoapExceptionHandler<tns3__NotExistsException>::createException(
-							soap, "requestID <" + _requestID + "> was not found"
-						);
-			throw ex;
+			throw Err_Custom("requestID <" + _requestID + "> was not found");
 		}
 
-	} catch (string const &e) {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown: " << e << commit;
-	    return SOAP_FAULT;
+	} catch(Err& ex) {
 
-	} catch (tns3__TransferException* ex) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << *ex->message << commit;
-		GSoapExceptionHandler<tns3__TransferException> exHandler(soap, ex);
-		exHandler.handle();
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
 		return SOAP_FAULT;
 	}
 
@@ -420,19 +370,19 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancel' request" << commit;
 
 	try{
-	if (_requestIDs) {
-		vector<string> &jobs = _requestIDs->item;
-		std::vector<std::string>::iterator jobsIter;
-		if (!jobs.empty()) {
-			 std::string jobId("");
-			 for (jobsIter = jobs.begin(); jobsIter != jobs.end(); ++jobsIter)
-			 	jobId += *jobsIter; 
-			 
-			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that will be canceled:" << jobId << commit;
-			DBSingleton::instance().getDBObjectInstance()->cancelJob(jobs);			
+		if (_requestIDs) {
+			vector<string> &jobs = _requestIDs->item;
+			std::vector<std::string>::iterator jobsIter;
+			if (!jobs.empty()) {
+				 std::string jobId("");
+				 for (jobsIter = jobs.begin(); jobsIter != jobs.end(); ++jobsIter)
+					jobId += *jobsIter;
+
+				FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that will be canceled:" << jobId << commit;
+				DBSingleton::instance().getDBObjectInstance()->cancelJob(jobs);
+			}
 		}
-	}
-	}catch (...) {
+	} catch (...) {
 	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
 	    return SOAP_FAULT;
 	}
