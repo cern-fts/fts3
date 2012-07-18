@@ -21,7 +21,7 @@ limitations under the License. */
 #include "active_object.h"
 #include "threadpool.h"
 #include "common/traced.h"
-#include "ws/gsoap_stubs.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 
 FTS3_SERVER_NAMESPACE_START
 

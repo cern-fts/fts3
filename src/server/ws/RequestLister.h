@@ -25,7 +25,7 @@
 #ifndef REQUESTLISTER_H_
 #define REQUESTLISTER_H_
 
-#include "gsoap_stubs.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 #include "db/generic/JobStatus.h"
 
 #include <string>

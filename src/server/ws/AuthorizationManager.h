@@ -26,7 +26,7 @@
 #define AUTHORIZATIONMANAGER_H_
 
 #include "common/InstanceHolder.h"
-#include "gsoap_stubs.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <set>
 

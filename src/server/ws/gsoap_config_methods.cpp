@@ -17,7 +17,8 @@
  *	limitations under the License.
  */
 
-#include "ws/gsoap_stubs.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
+
 #include "ws/ConfigurationHandler.h"
 #include "ws/AuthorizationManager.h"
 

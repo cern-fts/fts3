@@ -25,7 +25,7 @@
 #ifndef JOBSUBMITTER_H_
 #define JOBSUBMITTER_H_
 
-#include "gsoap_stubs.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 #include "db/generic/GenericDbIfce.h"
 #include "common/JobParameterHandler.h"
 

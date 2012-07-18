@@ -23,7 +23,7 @@ limitations under the License. */
 #include "common/pointers.h"
 #include "common/error.h"
 #include "common/logger.h"
-#include "ws/gsoap_stubs.h"
+#include "ws-ifce/gsoap/gsoap_stubs.h"
 
 
 FTS3_SERVER_NAMESPACE_START
