@@ -57,6 +57,19 @@ public:
 	virtual ~CfgCli();
 
 	/**
+	 * Initializes the object with command line options.
+	 *
+	 * In addition checks if single quotation marks where used
+	 * around each JSON configuration that was given as an argument.
+	 *
+	 * @param ac - argument count
+	 * @param av - argument array
+	 *
+	 * @see CliBase::initCli(int, char*)
+	 */
+	virtual void parse(int ac, char* av[]);
+
+	/**
 	 * Validates command line options
 	 * 1. Checks the endpoint
 	 * 2. If -h or -V option were used respective informations are printed
@@ -83,6 +96,10 @@ public:
 	 * 			vector containing the value names, otherwise an empty vector
 	 */
 	vector<string> getConfigurations();
+
+private:
+	/// JSON configurations specified by user
+	vector<string> cfgs;
 };
 
 }

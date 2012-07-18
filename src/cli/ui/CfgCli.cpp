@@ -45,6 +45,26 @@ CfgCli::CfgCli() {
 CfgCli::~CfgCli() {
 }
 
+void CfgCli::parse(int ac, char* av[]) {
+
+	// do the basic initialization
+	CliBase::parse(ac, av);
+
+	if (vm.count("cfg")) {
+		cfgs = vm["cfg"].as< vector<string> >();
+	}
+
+	// check JSON configurations
+	vector<string>::iterator it;
+	for (it = cfgs.begin(); it < cfgs.end(); it++) {
+		// check if the configuration is started with an opening brace and ended with a closing brace
+		if (*it->begin() != '{' || *(it->end() - 1) != '}') {
+			// most likely the user didn't used single quotation marks and bash did some pre-parsing
+			throw string("Configuration error: most likely you didn't use single quotation marks (') around a configuration!");
+		}
+	}
+}
+
 GSoapContextAdapter* CfgCli::validate() {
 
 	if (!CliBase::validate()) return 0;
@@ -62,11 +82,5 @@ string CfgCli::getUsageString(string tool) {
 }
 
 vector<string> CfgCli::getConfigurations() {
-
-	// check whether jobid has been given as a parameter
-	if (vm.count("cfg")) {
-		return vm["cfg"].as< vector<string> >();
-	}
-
-	return vector<string>();
+	return cfgs;
 }
