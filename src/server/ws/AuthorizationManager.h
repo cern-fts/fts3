@@ -40,7 +40,6 @@ class AuthorizationManager : public InstanceHolder<AuthorizationManager> {
 	friend class InstanceHolder<AuthorizationManager>;
 
 public:
-	AuthorizationManager();
 	virtual ~AuthorizationManager();
 	void authorize(soap* soap);
 
