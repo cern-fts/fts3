@@ -1926,16 +1926,17 @@ void OracleAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig){
         std::stringstream query;
     	query << "UPDATE t_se_protocol SET ";
 		if( seProtocolConfig->NOSTREAMS > 0){
-			query << " NOSTREAMS =:" << index;
+			query << " NOSTREAMS = :" << index;
 			++index;
 			tag+="1";
 		}
 		if( seProtocolConfig->URLCOPY_TX_TO > 0){
-			query << ", URLCOPY_TX_TO =:" << index;
+			if (index == 2) query << ",";
+			query << " URLCOPY_TX_TO = :" << index;
 			++index;
 			tag+="2";
 		}		
-    		query << " WHERE SE_NAME =:" << index;
+    		query << " WHERE SE_NAME = :" << index;
     try {
         index = 1; //reset index
         oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
@@ -1964,16 +1965,17 @@ void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtoco
         std::stringstream query;
     	query << "UPDATE t_se_protocol SET ";
 		if( seGroupProtocolConfig->NOSTREAMS > 0){
-			query << " NOSTREAMS =:" << index;
+			query << " NOSTREAMS = :" << index;
 			++index;
 			tag+="1";
 		}
 		if( seGroupProtocolConfig->URLCOPY_TX_TO > 0){
-			query << ", URLCOPY_TX_TO =:" << index;
+			if (index == 2) query << ",";
+			query << " URLCOPY_TX_TO = :" << index;
 			++index;
 			tag+="2";
 		}		
-    		query << " WHERE se_group_name =:" << index;
+    		query << " WHERE se_group_name = :" << index;
     try {
         index = 1; //reset index
         oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
