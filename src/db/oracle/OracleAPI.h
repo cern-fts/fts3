@@ -43,6 +43,8 @@ public:
                                  const std::string & failNearLine, const std::string & checksumMethod);
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
+    
+    virtual void getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files);        
 
     virtual std::vector<std::string> getSiteGroupNames();
 

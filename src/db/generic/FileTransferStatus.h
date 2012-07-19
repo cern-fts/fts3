@@ -40,48 +40,16 @@ public:
     ~FileTransferStatus() {
     }
 
-    /**
-     * The logical name of the file being transfered (only used in the FPS).
-     */
     std::string logicalName;
-
-    /**
-     * The source file for the transfer.
-     */
     std::string sourceSURL;
-
-    /**
-     * The destination file for the transfer.
-     */
     std::string destSURL;
-
-    /**
-     * The current state of the file transfer.
-     */
     std::string transferFileState;
-
-    /**
-     * Number of times this transfer has failed (and retried).
-     */
     int numFailures;
-
-    /**
-     * Small explanation on why it went wrong.
-     */
     std::string reason;
-
-    /**
-     * Type of error.
-     */
     std::string reason_class;
-
-    /**
-     * Transfer duration
-     */
-    long duration;
-
+    time_t finish_time;
+    time_t start_time;    
     std::string error_scope;
-
     std::string error_phase;
 
 };

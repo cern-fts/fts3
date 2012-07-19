@@ -532,6 +532,9 @@ CREATE TABLE t_file (
 -- the timestamp when the file is in a terminal state
   ,finish_time		TIMESTAMP WITH TIME ZONE
 --
+-- the timestamp when the file is in a terminal state
+  ,start_time		TIMESTAMP WITH TIME ZONE  
+--
 -- internal file parameters for storing information between retry attempts
   ,internal_file_params    VARCHAR2(255)
 --

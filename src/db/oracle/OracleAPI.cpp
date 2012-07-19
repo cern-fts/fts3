@@ -655,11 +655,46 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 }
 
 /*
-std::vector<FileTransferStatus> OracleAPI::getFileStatus(std::string requestID, int offset, int limit) {
-        std::vector<FileTransferStatus> test;
-        return test;
-}
+  Source:      
+  Destination: 
+  State:       
+  Retries:     0
+  Reason:      
+  Duration:    0
 
+*/
+void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files){
+    std::string query = "SELECT t_file.SOURCE_SURL, t_file.DEST_SURL  t_file.file_state, t_file.reason, t_file.start_time, t_file.finish_time"
+            " FROM t_file WHERE t_file.job_id = :1";
+    const std::string tag = "getTransferFileStatus";
+
+    FileTransferStatus* js = NULL;
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, requestID);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        while (r->next()) {
+		js = new FileTransferStatus();            
+		js->sourceSURL= r->getString(1);
+		js->destSURL= r->getString(2);
+		js->transferFileState = r->getString(3);
+		js->reason = r->getString(4);
+		js->start_time = OracleTypeConversions::toTimeT(r->getTimestamp(5));		
+		js->finish_time= OracleTypeConversions::toTimeT(r->getTimestamp(6));
+
+	    files.push_back(js);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+    } catch (oracle::occi::SQLException const &e) {
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+}    
+
+
+
+/*
 
 TransferJobSummary* OracleAPI::getTransferJobSummary(std::string requestID) {
         return new TransferJobSummary;
@@ -1317,6 +1352,10 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 			query << ", FINISH_TIME=:" << ++index;
 			tag.append("xx");
 		}
+		if( (transfer_status.compare("ACTIVE") == 0) ){
+			query << ", START_TIME=:" << ++index;
+			tag.append("xx1");
+		}		
 		query << ", PID=:" << ++index;
     		query << " WHERE file_id =:" << ++index;
 		query << " and (file_state='READY' OR file_state='ACTIVE')";	
@@ -1332,6 +1371,11 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 		++index;
 		s->setTimestamp(index, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
 		}
+	if( (transfer_status.compare("ACTIVE") == 0) ){
+		time_t timed = time(NULL);
+		++index;
+		s->setTimestamp(index, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
+		}		
 	++index;	
 	s->setInt(index, process_id);
 	++index;
@@ -1349,12 +1393,12 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 
 void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status){
     file_id = "";
-    const std::string reason = "One or more files failed. Please have a look at the details for more information";
+    std::string reason = "One or more files failed. Please have a look at the details for more information";
     const std::string terminal1 = "FINISHED";
     const std::string terminal2 = "FAILED";
     const std::string terminal3 = "CANCELED";    
     bool finished  = true;
-    std::string state("");
+    std::string state = status;
     const std::string tag1 = "updateJobTransferStatus";
     const std::string tag2 = "selectJobTransferStatus";    
     const std::string tag3 = "selectJobNotFinished";        
@@ -1393,10 +1437,13 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     if(finished == true){
         time_t timed = time(NULL);
 	st->setSQL(update);
-	if( state.compare(terminal1)!=0 )
+	if( state.compare(terminal1)==0 ){
         	st->setString(1,terminal1);
-	else
+		reason = std::string("");
+	}
+	else{
 		st->setString(1,terminal2);	
+	}
         st->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
         st->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
         st->setString(4, reason);
