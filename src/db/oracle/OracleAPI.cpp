@@ -664,7 +664,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
 */
 void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files){
-    std::string query = "SELECT t_file.SOURCE_SURL, t_file.DEST_SURL  t_file.file_state, t_file.reason, t_file.start_time, t_file.finish_time"
+    std::string query = "SELECT t_file.SOURCE_SURL, t_file.DEST_SURL, t_file.file_state, t_file.reason, t_file.start_time, t_file.finish_time"
             " FROM t_file WHERE t_file.job_id = :1";
     const std::string tag = "getTransferFileStatus";
 
