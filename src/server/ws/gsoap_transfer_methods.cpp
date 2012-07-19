@@ -143,20 +143,54 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int _limit, struct impltns__getFileStatusResponse &_param_9) {
 
-	// dummy
-	_param_9._getFileStatusReturn = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus(soap, -1);
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus' request" << commit;
 
-	tns3__FileTransferStatus* status = soap_new_tns3__FileTransferStatus(soap, -1);
-	status->destSURL = soap_new_std__string(soap, -1);
-	status->logicalName = soap_new_std__string(soap, -1);
-	status->reason = soap_new_std__string(soap, -1);
-	status->reason_USCOREclass = soap_new_std__string(soap, -1);
-	status->sourceSURL = soap_new_std__string(soap, -1);
-	status->transferFileState = soap_new_std__string(soap, -1);
-	status->duration = 0;
-	status->numFailures = 0;
+	try {
+		AuthorizationManager::getInstance().authorize(soap);
+		vector<FileTransferStatus*> statuses;
+		vector<FileTransferStatus*>::iterator it;
 
-	_param_9._getFileStatusReturn->item.push_back(status);
+		// create response
+		_param_9._getFileStatusReturn = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus(soap, -1);
+		DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, statuses);
+
+		for (it = statuses.begin() + _offset; it < statuses.end() && it < statuses.begin() + _offset + _limit; it++) {
+
+			FileTransferStatus* tmp = *it;
+
+			tns3__FileTransferStatus* status = soap_new_tns3__FileTransferStatus(soap, -1);
+
+			status->destSURL = soap_new_std__string(soap, -1);
+			*status->destSURL = tmp->destSURL;
+
+			status->logicalName = soap_new_std__string(soap, -1);
+			*status->logicalName = tmp->logicalName;
+
+			status->reason = soap_new_std__string(soap, -1);
+			*status->reason = tmp->reason;
+
+			status->reason_USCOREclass = soap_new_std__string(soap, -1);
+			*status->reason_USCOREclass = tmp->reason_class;
+
+			status->sourceSURL = soap_new_std__string(soap, -1);
+			*status->sourceSURL = tmp->sourceSURL;
+
+			status->transferFileState = soap_new_std__string(soap, -1);
+			*status->transferFileState = tmp->transferFileState;
+
+			status->duration = tmp->finish_time - tmp->start_time;
+			status->numFailures = 0;//tmp->numFailures; //TODO retries not implemented yet
+
+			_param_9._getFileStatusReturn->item.push_back(status);
+			delete tmp;
+		}
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "TransferException");
+		return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
@@ -164,22 +198,54 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, int _limit, struct impltns__getFileStatus2Response &_param_10) {
 
-	// dummy
-	_param_10._getFileStatus2Return = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(soap, -1);
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
 
-	tns3__FileTransferStatus2* status = soap_new_tns3__FileTransferStatus2(soap, -1);
-	status->destSURL = soap_new_std__string(soap, -1);
-	status->logicalName = soap_new_std__string(soap, -1);
-	status->reason = soap_new_std__string(soap, -1);
-	status->reason_USCOREclass = soap_new_std__string(soap, -1);
-	status->sourceSURL = soap_new_std__string(soap, -1);
-	status->transferFileState = soap_new_std__string(soap, -1);
-	status->error_USCOREphase = soap_new_std__string(soap, -1);
-	status->error_USCOREscope = soap_new_std__string(soap, -1);
-	status->duration = 0;
-	status->numFailures = 0;
+	try {
+		AuthorizationManager::getInstance().authorize(soap);
+		vector<FileTransferStatus*> statuses;
+		vector<FileTransferStatus*>::iterator it;
 
-	_param_10._getFileStatus2Return->item.push_back(status);
+		// create response
+		_param_10._getFileStatus2Return = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(soap, -1);
+		DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, statuses);
+
+		for (it = statuses.begin() + _offset; it < statuses.end() && it < statuses.begin() + _offset + _limit; it++) {
+
+			FileTransferStatus* tmp = *it;
+
+			tns3__FileTransferStatus2* status = soap_new_tns3__FileTransferStatus2(soap, -1);
+
+			status->destSURL = soap_new_std__string(soap, -1);
+			*status->destSURL = tmp->destSURL;
+
+			status->logicalName = soap_new_std__string(soap, -1);
+			*status->logicalName = tmp->logicalName;
+
+			status->reason = soap_new_std__string(soap, -1);
+			*status->reason = tmp->reason;
+
+			status->reason_USCOREclass = soap_new_std__string(soap, -1);
+			*status->reason_USCOREclass = tmp->reason_class;
+
+			status->sourceSURL = soap_new_std__string(soap, -1);
+			*status->sourceSURL = tmp->sourceSURL;
+
+			status->transferFileState = soap_new_std__string(soap, -1);
+			*status->transferFileState = tmp->transferFileState;
+
+			status->duration = tmp->finish_time - tmp->start_time;
+			status->numFailures = tmp->numFailures;
+
+			_param_10._getFileStatus2Return->item.push_back(status);
+			delete tmp;
+		}
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "TransferException");
+		return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
