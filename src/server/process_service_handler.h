@@ -236,6 +236,15 @@ protected:
 								params.append(" -h ");
 								params.append(to_string(protocol->URLCOPY_TX_TO));
 				}
+				if(std::string(temp->SOURCE_SPACE_TOKEN).length() > 0){
+					params.append(" -k ");
+					params.append(temp->SOURCE_SPACE_TOKEN);
+				}
+				if(std::string(temp->DEST_SPACE_TOKEN).length() > 0){
+					params.append(" -j ");
+					params.append(temp->DEST_SPACE_TOKEN);
+				}
+
 
 				FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
 				pr = new ExecuteProcess(cmd, params, 0);

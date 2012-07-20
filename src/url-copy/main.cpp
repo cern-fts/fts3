@@ -31,6 +31,13 @@
 #include <unistd.h>
 #include <grp.h>
 
+/*
+PENDING
+	src space token
+	dest space token
+	cancel transfer gracefully
+*/
+
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace std;
@@ -50,6 +57,8 @@ static uid_t privid;
 static uid_t pw_uid;
 
 extern std::string stackTrace;
+
+gfalt_params_t params;
 
 static std::vector<std::string> split(const char *str, char c = ':')
 {
@@ -159,7 +168,7 @@ int main(int argc, char **argv) {
     long double source_size = 0;
     long double dest_size = 0;
     GError * tmp_err = NULL; // classical GError/glib error management   
-    gfalt_params_t params = gfalt_params_handle_new(&tmp_err);
+    params = gfalt_params_handle_new(&tmp_err);
     gfal_context_t handle;
     int ret = -1;
     long long transferred_bytes = 0;
@@ -361,6 +370,13 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
     seteuid(pw_uid);
+    
+    if(source_token_desc.length() > 0)
+    	gfalt_set_src_spacetoken(params, source_token_desc.c_str(), NULL);
+
+    if(dest_token_desc.length() > 0)
+    	gfalt_set_dst_spacetoken(params, dest_token_desc.c_str(), NULL);
+
      
     if (gfal_stat(source_url.c_str(), &statbufsrc) < 0) {
 	std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));

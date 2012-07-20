@@ -310,17 +310,18 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
     std::vector<TransferJobs*>::iterator iter;
     std::string selecttag = "getByJobId";
     std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
-                " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.checksum, t_job.CHECKSUM_METHOD, t_file.file_state, t_file.logical_name, "
-            " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, "
-   " t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
-            " t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
-   " t_file.error_scope, t_file.error_phase "
-            " FROM t_file, t_job WHERE"
-   " t_file.job_id = t_job.job_id AND "
-   " t_file.job_finished is NULL AND "
-   " t_file.file_state ='SUBMITTED' AND "   
-   " t_job.job_finished is NULL AND "
-   " t_job.job_id IN(";
+                " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.checksum, t_job.CHECKSUM_METHOD, t_job.SOURCE_SPACE_TOKEN,"
+		" t_job.SPACE_TOKEN,   t_file.file_state, t_file.logical_name, "
+            	" t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, "
+   		" t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
+            	" t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
+   		" t_file.error_scope, t_file.error_phase "
+            	" FROM t_file, t_job WHERE"
+   		" t_file.job_id = t_job.job_id AND "
+   		" t_file.job_finished is NULL AND "
+   		" t_file.file_state ='SUBMITTED' AND "   
+   		" t_job.job_finished is NULL AND "
+   		" t_job.job_id IN(";
     try {
               	
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
@@ -349,6 +350,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 		tr_files->CRED_ID = r->getString(8);
 		tr_files->CHECKSUM = r->getString(9);
 		tr_files->CHECKSUM_METHOD = r->getString(10);		
+		tr_files->SOURCE_SPACE_TOKEN = r->getString(11);		
+		tr_files->DEST_SPACE_TOKEN = r->getString(12);						
                 files.push_back(tr_files);
             }
 	    
@@ -365,12 +368,6 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod) {
-    /*
-            Required fields
-            JOB_ID 				   NOT NULL CHAR(36)
-            JOB_STATE			   	   NOT NULL VARCHAR2(32)
-            USER_DN				   NOT NULL VARCHAR2(1024)
-     */
 
     std::string source;
     std::string destination;
@@ -381,7 +378,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     const std::string currenthost = hostname; //current hostname
     const std::string tag_job_statement = "tag_job_statement";
     const std::string tag_file_statement = "tag_file_statement";
-    const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, storage_class, overwrite_flag,source_token_description,copy_pin_lifetime, lan_connection,fail_nearline, checksum_method) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19)";
+    const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, lan_connection,fail_nearline, checksum_method) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19)";
     const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
 
     try {
@@ -398,9 +395,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->setString(10, currenthost); //submit_host
         s_job_statement->setString(11, delegationID); //cred_id
         s_job_statement->setString(12, myProxyServer); //myproxy_server
-        s_job_statement->setString(13, spaceToken); //storage_class
+        s_job_statement->setString(13, spaceToken); //space_token
         s_job_statement->setString(14, overwrite); //overwrite_flag
-        s_job_statement->setString(15, sourceSpaceToken); //source_token_description
+        s_job_statement->setString(15, sourceSpaceToken); //source_space_token
         s_job_statement->setInt(16, copyPinLifeTime); //copy_pin_lifetime
         s_job_statement->setString(17, lanConnection); //lan_connection
         s_job_statement->setString(18, failNearLine); //fail_nearline	
@@ -2084,7 +2081,7 @@ std::string OracleAPI::get_group_name(std::string se){
     }	
 return group;
 
-};    
+} 
 
 std::vector<std::string> OracleAPI::get_group_names() {
 	const std::string tag = "get_group_names";
