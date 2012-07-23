@@ -33,8 +33,6 @@
 
 /*
 PENDING
-	src space token
-	dest space token
 	cancel transfer gracefully
 */
 
@@ -172,13 +170,14 @@ int main(int argc, char **argv) {
     gfal_context_t handle;
     int ret = -1;
     long long transferred_bytes = 0;
+    UserProxyEnv* cert = NULL;
 
     std::string file_id("");
     std::string job_id(""); //a
     std::string source_url(""); //b
     std::string dest_url(""); //c
     bool overwrite = false; //d
-    int nbstreams = 5; //e
+    int nbstreams =8; //e
     int tcpbuffersize = 0; //f
     int blocksize = 0; //g
     int timeout = 3600; //h
@@ -277,7 +276,7 @@ int main(int argc, char **argv) {
     }       
 
     seteuid(pw_uid); 	
-    UserProxyEnv* cert = NULL;
+
     if(proxy.length() > 0){
 	    // Set Proxy Env    
 	    cert = new UserProxyEnv(proxy);
@@ -292,7 +291,7 @@ int main(int argc, char **argv) {
     g_file_id = file_id;
     g_job_id = job_id;
 
-    fileManagement.getLogStream(logStream);
+    fileManagement.getLogStream(logStream);   
     logger log(logStream);
     
     // register signal SIGINT and signal handler  
@@ -335,21 +334,20 @@ int main(int argc, char **argv) {
     msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);
     msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
     
-
-
     log << fileManagement.timestamp() << "INFO Transfer accepted" << '\n';
-    log << fileManagement.timestamp() << "INFO job_id:" << job_id << '\n'; //a
-    log << fileManagement.timestamp() << "INFO file_id:" << file_id << '\n'; //a
-    log << fileManagement.timestamp() << "INFO source_url:" << source_url << '\n'; //b
-    log << fileManagement.timestamp() << "INFO dest_url:" << dest_url << '\n'; //c
-    log << fileManagement.timestamp() << "INFO overwrite:" << overwrite << '\n'; //d
+    log << fileManagement.timestamp() << "INFO VO:" << vo << '\n'; //a
+    log << fileManagement.timestamp() << "INFO Job id:" << job_id << '\n'; //a
+    log << fileManagement.timestamp() << "INFO File id:" << file_id << '\n'; //a
+    log << fileManagement.timestamp() << "INFO Source url:" << source_url << '\n'; //b
+    log << fileManagement.timestamp() << "INFO Dest url:" << dest_url << '\n'; //c
+    log << fileManagement.timestamp() << "INFO Overwrite enabled:" << overwrite << '\n'; //d
     log << fileManagement.timestamp() << "INFO nbstreams:" << nbstreams << '\n'; //e
     log << fileManagement.timestamp() << "INFO tcpbuffersize:" << tcpbuffersize << '\n'; //f
     log << fileManagement.timestamp() << "INFO blocksize:" << blocksize << '\n'; //g
-    log << fileManagement.timestamp() << "INFO timeout:" << timeout << '\n'; //h
-    log << fileManagement.timestamp() << "INFO daemonize:" << daemonize << '\n'; //i
-    log << fileManagement.timestamp() << "INFO dest_token_desc:" << dest_token_desc << '\n'; //j
-    log << fileManagement.timestamp() << "INFO source_token_desc:" << source_token_desc << '\n'; //k
+    log << fileManagement.timestamp() << "INFO Timeout:" << timeout << '\n'; //h
+    log << fileManagement.timestamp() << "INFO Daemonize:" << daemonize << '\n'; //i
+    log << fileManagement.timestamp() << "INFO Dest space token:" << dest_token_desc << '\n'; //j
+    log << fileManagement.timestamp() << "INFO Sourcespace token:" << source_token_desc << '\n'; //k
     log << fileManagement.timestamp() << "INFO markers_timeout:" << markers_timeout << '\n'; //l
     log << fileManagement.timestamp() << "INFO first_marker_timeout:" << first_marker_timeout << '\n'; //m
     log << fileManagement.timestamp() << "INFO srm_get_timeout:" << srm_get_timeout << '\n'; //n
@@ -363,9 +361,9 @@ int main(int argc, char **argv) {
     log << fileManagement.timestamp() << "INFO fail_nearline:" << fail_nearline << '\n'; //v
     log << fileManagement.timestamp() << "INFO timeout_per_mb:" << timeout_per_mb << '\n'; //w
     log << fileManagement.timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
-    log << fileManagement.timestamp() << "INFO checksum_value:" << checksum_value << '\n'; //z
-    log << fileManagement.timestamp() << "INFO compare_checksum:" << compare_checksum << '\n'; //A
-    log << fileManagement.timestamp() << "INFO proxy:" << proxy << '\n'; //proxy
+    log << fileManagement.timestamp() << "INFO Checksum:" << checksum_value << '\n'; //z
+    log << fileManagement.timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
+    log << fileManagement.timestamp() << "INFO Proxy file:" << proxy << '\n'; //proxy
 
     msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
@@ -389,6 +387,14 @@ int main(int argc, char **argv) {
         goto stop;
     } else {
         seteuid(privid);
+	if(statbufsrc.st_size == 0){
+        	errorMessage = "Source file size is 0";			
+        	log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
+		errorScope = SOURCE;
+		reasonClass = GENERAL_FAILURE;
+		errorPhase = TRANSFER_PREPARATION;
+		goto stop;		
+	}
         log << fileManagement.timestamp() << "INFO Source file size: " << statbufsrc.st_size << '\n';
         source_size = statbufsrc.st_size;
         //conver longlong to string
@@ -487,7 +493,15 @@ int main(int argc, char **argv) {
         goto stop;
     } else {
         seteuid(privid);
-        log << fileManagement.timestamp() << "INFO Dest file size: " << statbufdest.st_size << '\n';
+	if(statbufdest.st_size == 0){
+        	errorMessage = "Destination file size is 0";			
+        	log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
+		errorScope = DESTINATION;
+		reasonClass = GENERAL_FAILURE;
+		errorPhase = TRANSFER_FINALIZATION;
+		goto stop;		
+	}
+        log << fileManagement.timestamp() << "INFO Destination file size: " << statbufdest.st_size << '\n';
         dest_size = statbufdest.st_size;
     }
     msg_ifce::getInstance()->set_timestamp_checksum_dest_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
@@ -495,17 +509,17 @@ int main(int argc, char **argv) {
 
     //check source and dest file sizes
     if (source_size == dest_size) {
-        log << fileManagement.timestamp() << "INFO Source and destination files size is the same" << '\n';
+        log << fileManagement.timestamp() << "INFO Source and destination size match" << '\n';
     } else {
-        log << fileManagement.timestamp() << "ERROR Source and destination file size differ" << '\n';
-        errorMessage = "Source and destination file size differ";
+        log << fileManagement.timestamp() << "ERROR Source and destination size is different" << '\n';
+        errorMessage = "Source and destination size is different";
 	errorScope = DESTINATION;
 	reasonClass = GENERAL_FAILURE;
 	errorPhase = TRANSFER_FINALIZATION;	
         goto stop;
     }
 
-    log << fileManagement.timestamp() << "INFO release all gfal2 resources" << '\n';
+    log << fileManagement.timestamp() << "INFO release gfal2 resources" << '\n';
     seteuid(pw_uid);
     gfalt_params_handle_delete(params,NULL);
     gfal_context_free(handle);
