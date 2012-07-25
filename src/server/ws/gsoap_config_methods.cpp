@@ -75,7 +75,7 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 
 /* ---------------------------------------------------------------------- */
 
-int fts3::implcfg__getConfiguration(soap* soap, struct implcfg__getConfigurationResponse & response) {
+int fts3::implcfg__getConfiguration(soap* soap, std::string vo, std::string name, struct implcfg__getConfigurationResponse & response) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
 
@@ -83,7 +83,7 @@ int fts3::implcfg__getConfiguration(soap* soap, struct implcfg__getConfiguration
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
 		ConfigurationHandler handler;
-		response.configuration->cfg = handler.get();
+		response.configuration->cfg = handler.get(vo, name);
 
 	} catch(std::exception& ex) {
 
@@ -95,6 +95,7 @@ int fts3::implcfg__getConfiguration(soap* soap, struct implcfg__getConfiguration
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
 		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
+		return SOAP_FAULT;
 	}
 
     return SOAP_OK;

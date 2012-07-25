@@ -440,7 +440,9 @@ void ConfigurationHandler::addSeConfiguration() {
 
 }
 
-vector<string> ConfigurationHandler::get() {
+vector<string> ConfigurationHandler::get(string vo, string name) {
+
+	const string share_id = "\"share_type\":\"vo\",\"share_id\":\"" + vo + "\"";
 
 	vector<SeConfig*> seConfig;
 	db->getAllShareConfigNoCritiria(seConfig);
@@ -451,6 +453,14 @@ vector<string> ConfigurationHandler::get() {
 
 		SeConfig* cfg = *it_cfg;
 		
+		if (!vo.empty()) {
+			if (cfg->SHARE_ID != share_id) continue;
+		}
+
+		if (!name.empty()) {
+			if (cfg->SE_NAME != name) continue;
+		}
+
 		string resp =
 			"{"
 				"\"name\":\"" + cfg->SE_NAME + "\","
@@ -466,52 +476,62 @@ vector<string> ConfigurationHandler::get() {
 		delete (cfg);
 	}
 
-	vector<Se*> se;
-	db->getAllSeInfoNoCritiria(se);
+	// we are not interested in protocol specific configuration if vo filter was used
+	if (!vo.empty()) {
 
-	vector<Se*>::iterator it_se;
-	for (it_se = se.begin(); it_se < se.end(); it_se++) {
+		vector<Se*> se;
+		db->getAllSeInfoNoCritiria(se);
 
-		string se_name = (*it_se)->NAME;
+		vector<Se*>::iterator it_se;
+		for (it_se = se.begin(); it_se < se.end(); it_se++) {
 
-		if (!db->is_se_protocol_exist(se_name)) {
+			string se_name = (*it_se)->NAME;
+
+			if (se_name != name) continue;
+
+			if (!db->is_se_protocol_exist(se_name)) {
+				delete *it_se;
+				continue;
+			}
+
+			SeProtocolConfig* cfg = db->get_se_protocol_config(se_name);
+			if (cfg->URLCOPY_TX_TO || cfg->NOSTREAMS) {
+
+				string resp =
+					"{"
+						"\"name\":\"" + se_name + "\","
+						"\"type\":\"" + SE_TYPE + "\","
+						"\"protocol\":"
+						"{";
+				if (cfg->URLCOPY_TX_TO) {
+					resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);
+					if (cfg->NOSTREAMS)
+						resp += ",";
+				}
+
+				if (cfg->NOSTREAMS) {
+					resp += "\"nostreams\":" + lexical_cast<string>(cfg->NOSTREAMS);
+				}
+
+				resp +=
+						"}"
+					"}";
+
+				ret.push_back(resp);
+			}
+
+			delete cfg;
 			delete *it_se;
-			continue;
 		}
-
-		SeProtocolConfig* cfg = db->get_se_protocol_config(se_name);
-		if (cfg->URLCOPY_TX_TO || cfg->NOSTREAMS) {
-
-			string resp =
-				"{"
-					"\"name\":\"" + se_name + "\","
-					"\"type\":\"" + SE_TYPE + "\","
-					"\"parameters\":"
-					"{";
-			if (cfg->URLCOPY_TX_TO) {
-				resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);
-				if (cfg->NOSTREAMS)
-					resp += ",";
-			}
-
-			if (cfg->NOSTREAMS) {
-				resp += "\"nostreams\":" + lexical_cast<string>(cfg->NOSTREAMS);
-			}
-
-			resp +=
-					"}"
-				"}";
-
-			ret.push_back(resp);
-		}
-
-		delete cfg;
-		delete *it_se;
 	}
 
 	vector<string> groups = db->get_group_names();
 	vector<string>::iterator it_gr;
 	for (it_gr = groups.begin(); it_gr < groups.end(); it_gr++) {
+
+		if (!name.empty()) {
+			if (name != *it_gr) continue;
+		}
 
 		string resp =
 				"{"
@@ -523,14 +543,14 @@ vector<string> ConfigurationHandler::get() {
 		vector<string> members = db->get_group_members(*it_gr);
 		vector<string>::iterator it_mbr;
 		for (it_mbr = members.begin(); it_mbr < members.end(); it_mbr++) {
-			resp += "{\"se\":\"" + *it_mbr + "\"}";
+			resp += *it_mbr;
 			if (it_mbr + 1 != members.end()) resp += ",";
 		}
 
 		resp +=	"]}";
 		ret.push_back(resp);
 
-		if (db->is_group_protocol_exist(*it_gr)) {
+		if (vo.empty() && db->is_group_protocol_exist(*it_gr)) {
 			SeProtocolConfig* cfg = db->get_group_protocol_config(*it_gr);
 
 			resp.erase();
@@ -538,7 +558,7 @@ vector<string> ConfigurationHandler::get() {
 					"{"
 						"\"name\":\"" + *it_gr + "\","
 						"\"type\":\"" + GROUP_TYPE + "\","
-						"\"parameters\":"
+						"\"protocol\":"
 						"{";
 			if (cfg->URLCOPY_TX_TO) {
 				resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);

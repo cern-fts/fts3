@@ -229,11 +229,15 @@ public:
 	void addShareConfiguration();
 
 	/**
-	 * Gets the whole configuration regarding all SEs and all SE groups from the DB
+	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
+	 * 	The configuration can also be restricted to a given SE and/or VO.
+	 *
+	 * @param vo - VO name
+	 * @param se - SE name
 	 *
 	 * @return vector containing single configuration entries in JSON format
 	 */
-	vector<string> get();
+	vector<string> get(string vo, string name);
 
 	/**
 	 * Gets protocol configuration for the SE or SE group,
@@ -249,15 +253,15 @@ private:
 
 	/// regular expression describing the whole configuration in JSON format
 	static const string cfg_exp;
-	/// regular expression describing used for retrieving the variable name from sub-configuration
+	/// regular expression used for retrieving the variable name from sub-configuration
 	static const string get_name_exp;
-	/// regular expression describing used for retrieving the variable numeric value from sub-configuration
+	/// regular expression used for retrieving the variable numeric value from sub-configuration
 	static const string get_num_exp;
-	/// regular expression describing used for retrieving the variable string value from sub-configuration
+	/// regular expression used for retrieving the variable string value from sub-configuration
 	static const string get_str_exp;
-	/// regular expression describing used for retrieving the variable vector value from sub-configuration
+	/// regular expression used for retrieving the variable vector value from sub-configuration
 	static const string get_vec_exp;
-	/// regular expression describing used for retrieving the values from parameter structure
+	/// regular expression used for retrieving the values from parameter structure
 	static const string get_par_exp;
 
 	/// JSON null string = 'null'
