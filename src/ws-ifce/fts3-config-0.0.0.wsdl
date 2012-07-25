@@ -74,7 +74,10 @@
 
     <message name="SetConfigurationResponse" />
 
-    <message name="GetConfigurationRequest" />
+    <message name="GetConfigurationRequest">
+		<part name="vo" type="xsd:string"/>
+		<part name="name" type="xsd:string"/>
+    </message>
 
     <message name="GetConfigurationResponse">
         <part name="configuration" type="config:Configuration"/>
