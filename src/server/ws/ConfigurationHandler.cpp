@@ -528,7 +528,8 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 		}
 	}
 
-	if (!vo.empty()) continue;
+	// if we are looking for vo settings the group specific info is ommited
+	if (!vo.empty()) return ret;
 
 	vector<string> groups = db->get_group_names();
 	vector<string>::iterator it_gr;
