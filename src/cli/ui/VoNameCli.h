@@ -78,12 +78,15 @@ public:
 	string getUsageString(string tool);
 
 	/**
-	 * Gets a vector with job IDs.
+	 * Gets the VO name.
 	 *
-	 * @return if job IDs were given as command line parameters a
-	 * 			vector containing job IDs otherwise an empty vector
+	 * @return VO name if it was specified, empty string otherwise
 	 */
 	string getVoName();
+
+private:
+
+	bool pos;
 };
 
 }

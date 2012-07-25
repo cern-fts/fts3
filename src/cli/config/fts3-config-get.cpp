@@ -24,7 +24,7 @@
 
 
 #include "GSoapContextAdapter.h"
-#include "ui/CliBase.h"
+#include "ui/GetCfgCli.h"
 
 #include <string>
 #include <vector>
@@ -41,8 +41,8 @@ int main(int ac, char* av[]) {
 
 	try {
 		// create and initialize the command line utility
-		auto_ptr<CliBase> cli (
-				getCli<CliBase>(ac, av)
+		auto_ptr<GetCfgCli> cli (
+				getCli<GetCfgCli>(ac, av)
 			);
 
 		// validate command line options, and return respective gsoap context
@@ -50,7 +50,7 @@ int main(int ac, char* av[]) {
 		if (!ctx) return 0;
 
 		implcfg__getConfigurationResponse resp;
-		ctx->getConfiguration(resp);
+		ctx->getConfiguration(cli->getVoName(), cli->getName(), resp);
 
 		vector<string> &cfgs = resp.configuration->cfg;
 		vector<string>::iterator it;

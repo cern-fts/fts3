@@ -208,9 +208,11 @@ public:
 	/**
 	 * Remote call to getConfiguration
 	 *
-	 * @param resp server response
+	 * @param vo - vo name that will be used to filter the response
+	 * @param name - SE or SE group name that will be used to filter the response
+	 * @param resp - server response
 	 */
-	void getConfiguration (implcfg__getConfigurationResponse& resp);
+	void getConfiguration (string vo, string name, implcfg__getConfigurationResponse& resp);
 
 
 	/**

@@ -22,7 +22,7 @@
  *      Author: Michał Simon
  */
 
-#include "CfgCli.h"
+#include "SetCfgCli.h"
 
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
@@ -31,7 +31,7 @@ using namespace boost::algorithm;
 using namespace fts3::cli;
 
 
-CfgCli::CfgCli() {
+SetCfgCli::SetCfgCli() {
 
 	// add hidden options (not printed in help)
 	hidden.add_options()
@@ -42,10 +42,10 @@ CfgCli::CfgCli() {
 	p.add("cfg", -1);
 }
 
-CfgCli::~CfgCli() {
+SetCfgCli::~SetCfgCli() {
 }
 
-void CfgCli::parse(int ac, char* av[]) {
+void SetCfgCli::parse(int ac, char* av[]) {
 
 	// do the basic initialization
 	CliBase::parse(ac, av);
@@ -65,7 +65,7 @@ void CfgCli::parse(int ac, char* av[]) {
 	}
 }
 
-GSoapContextAdapter* CfgCli::validate() {
+GSoapContextAdapter* SetCfgCli::validate() {
 
 	if (!CliBase::validate()) return 0;
 
@@ -77,10 +77,12 @@ GSoapContextAdapter* CfgCli::validate() {
 	return ctx;
 }
 
-string CfgCli::getUsageString(string tool) {
+string SetCfgCli::getUsageString(string tool) {
 	return "Usage: " + tool + " [options] CONFIG [CONFIG...]";
 }
 
-vector<string> CfgCli::getConfigurations() {
+vector<string> SetCfgCli::getConfigurations() {
 	return cfgs;
 }
+
+

@@ -26,7 +26,7 @@
 
 using namespace fts3::cli;
 
-VoNameCli::VoNameCli(bool pos) {
+VoNameCli::VoNameCli(bool pos): pos(pos) {
 
 	if (pos) {
 		// add hidden options (not printed in help)
@@ -52,9 +52,11 @@ GSoapContextAdapter* VoNameCli::validate() {
 
 	if (!CliBase::validate()) return 0;
 
-	if (getVoName().empty()) {
-		cout << "The VO name has to be specified" << endl;
-		return 0;
+	if (pos) {
+		if (getVoName().empty()) {
+			cout << "The VO name has to be specified" << endl;
+			return 0;
+		}
 	}
 
 	return ctx;

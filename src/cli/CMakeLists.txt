@@ -68,7 +68,8 @@ set(fts3_cli_common_sources
     ui/CliBase.cpp
     ui/JobIdCli.cpp
     ui/VoNameCli.cpp
-    ui/CfgCli.cpp
+    ui/SetCfgCli.cpp
+    ui/GetCfgCli.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
 )

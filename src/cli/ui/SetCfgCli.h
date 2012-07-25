@@ -16,7 +16,7 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * NameValueCli.h
+ * SetCfgCli.h
  *
  *  Created on: Apr 2, 2012
  *      Author: Michal Simon
@@ -32,14 +32,14 @@
 namespace fts3 { namespace cli {
 
 /**
- * CfgCli provides the user interface for configuring SEs
+ * SetCfgCli provides the user interface for configuring SEs
  *
  * 		- cfg, positional parameter, the configuration in JSON format
  * 			corresponding to a SE (maybe given multiple times to configure
  * 			multiple SEs)
  *
  */
-class CfgCli: public CliBase {
+class SetCfgCli: public CliBase {
 
 public:
 
@@ -49,12 +49,12 @@ public:
 	 * Creates the command line interface for retrieving JSON configurations.
 	 * The name-value pair is market as both: hidden and positional.
 	 */
-	CfgCli();
+	SetCfgCli();
 
 	/**
 	 * Destructor.
 	 */
-	virtual ~CfgCli();
+	virtual ~SetCfgCli();
 
 	/**
 	 * Initializes the object with command line options.
