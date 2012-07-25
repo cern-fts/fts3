@@ -42,8 +42,8 @@ string GetCfgCli::getUsageString(string tool) {
 
 string GetCfgCli::getName() {
 
-	if (vm.count("se")) {
-		return vm["se"].as<string>();
+	if (vm.count("name")) {
+		return vm["name"].as<string>();
 	}
 
 	return string();
