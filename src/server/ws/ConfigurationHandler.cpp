@@ -442,6 +442,9 @@ void ConfigurationHandler::addSeConfiguration() {
 
 vector<string> ConfigurationHandler::get(string vo, string name) {
 
+	to_lower(vo);
+	to_lower(name);
+
 	const string share_id = "\"share_type\":\"vo\",\"share_id\":\"" + vo + "\"";
 
 	vector<SeConfig*> seConfig;
@@ -477,7 +480,7 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 	}
 
 	// we are not interested in protocol specific configuration if vo filter was used
-	if (!vo.empty()) {
+	if (vo.empty()) {
 
 		vector<Se*> se;
 		db->getAllSeInfoNoCritiria(se);
@@ -525,6 +528,8 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 		}
 	}
 
+	if (!vo.empty()) continue;
+
 	vector<string> groups = db->get_group_names();
 	vector<string>::iterator it_gr;
 	for (it_gr = groups.begin(); it_gr < groups.end(); it_gr++) {
@@ -550,7 +555,7 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 		resp +=	"]}";
 		ret.push_back(resp);
 
-		if (vo.empty() && db->is_group_protocol_exist(*it_gr)) {
+		if (db->is_group_protocol_exist(*it_gr)) {
 			SeProtocolConfig* cfg = db->get_group_protocol_config(*it_gr);
 
 			resp.erase();
