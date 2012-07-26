@@ -21,10 +21,10 @@ include_directories (${fts3_include_dir})
 
 
 install(FILES         oracle-drop.sql
-        DESTINATION ${DOC_INSTALL_DIR}/fts3 )
+        DESTINATION ${DOC_INSTALL_DIR} )
 
 install(FILES         oracle-schema.sql
-        DESTINATION ${DOC_INSTALL_DIR}/fts3 )
+        DESTINATION ${DOC_INSTALL_DIR} )
 	
 
 
