@@ -26,6 +26,7 @@ BuildRequires:  gridsite-devel
 BuildRequires:  gfal2-devel
 BuildRequires:  oracle-instantclient-devel
 BuildRequires:  voms-devel
+Requires(pre):  shadow-utils
 
 %description
 The File Transfer Service V3
@@ -57,6 +58,12 @@ FTS3 client
 
 
 %prep
+getent group fts3 >/dev/null || groupadd -r fts3
+getent passwd fts3 >/dev/null || \
+    useradd -r -g fts3 -d /var/log/fts3 -s /sbin/nologin \
+    -c "fts3 urlcopy user" fts3
+exit 0
+
 %setup -qc
 
 
