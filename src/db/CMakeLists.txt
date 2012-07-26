@@ -6,4 +6,5 @@ ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
 add_subdirectory(generic)
 add_subdirectory(oracle)
+add_subdirectory(schema)
 #add_subdirectory(tests)
