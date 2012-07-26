@@ -1,6 +1,6 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        FTS3
 
 Group:          System Environment/Daemons 
@@ -95,6 +95,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -n fts3-client
 %defattr(-,root,root,-)
+%{_bindir}/fts3-config-set
+%{_bindir}/fts3-config-get
+%{_bindir}/fts3-config-del
 %{_bindir}/fts3-transfer-getroles
 %{_bindir}/fts3-transfer-list
 %{_bindir}/fts3-transfer-listvomanagers

@@ -200,6 +200,9 @@ install(TARGETS
     	fts3-transfer-list
     	fts3-transfer-listvomanagers
     	fts3-transfer-getroles
+	fts3-config-get
+	fts3-config-set
+	fts3-config-del
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
 install(TARGETS         fts3_cli_common 
