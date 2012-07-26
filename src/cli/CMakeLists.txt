@@ -145,6 +145,14 @@ add_executable(fts3-config-set
 target_link_libraries (fts3-config-set fts3_cli_common)
 
 # ------------------------------------------------------------------------
+# fts3-config-del command
+
+add_executable(fts3-config-del 
+    config/fts3-config-del.cpp
+)
+target_link_libraries (fts3-config-del fts3_cli_common)
+
+# ------------------------------------------------------------------------
 # fts3-config-get command
 
 add_executable(fts3-config-get 

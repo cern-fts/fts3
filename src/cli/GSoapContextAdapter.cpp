@@ -185,6 +185,10 @@ void GSoapContextAdapter::getConfiguration (string vo, string name, implcfg__get
 		handleSoapFault("Failed to get configuration: getConfiguration.");
 }
 
+void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcfg__delConfigurationResponse& resp) {
+	if (soap_call_implcfg__delConfiguration(ctx, endpoint.c_str(), 0, config, resp))
+		handleSoapFault("Failed to get configuration: getConfiguration.");
+}
 
 void GSoapContextAdapter::handleSoapFault(string msg) {
 	cout << "gsoap fault: ";

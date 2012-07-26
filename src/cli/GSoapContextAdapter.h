@@ -214,6 +214,13 @@ public:
 	 */
 	void getConfiguration (string vo, string name, implcfg__getConfigurationResponse& resp);
 
+	/**
+	 * Remote call to delConfiguration
+	 *
+	 * @param cfg - the configuration that will be deleted
+	 * @param resp - server response
+	 */
+	void delConfiguration(config__Configuration *config, implcfg__delConfigurationResponse &resp);
 
 	/**
 	 * Splits the given string, and sets:
