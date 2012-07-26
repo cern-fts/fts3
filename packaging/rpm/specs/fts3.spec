@@ -58,12 +58,6 @@ FTS3 client
 
 
 %prep
-getent group fts3 >/dev/null || groupadd -r fts3
-getent passwd fts3 >/dev/null || \
-    useradd -r -g fts3 -d /var/log/fts3 -s /sbin/nologin \
-    -c "fts3 urlcopy user" fts3
-exit 0
-
 %setup -qc
 
 
@@ -79,6 +73,12 @@ cd build
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 
+%pre
+getent group fts3 >/dev/null || groupadd -r fts3
+getent passwd fts3 >/dev/null || \
+    useradd -r -g fts3 -d /var/log/fts3 -s /sbin/nologin \
+    -c "fts3 urlcopy user" fts3
+exit 0
 
 %clean
 rm -rf $RPM_BUILD_ROOT
