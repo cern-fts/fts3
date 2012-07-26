@@ -101,3 +101,37 @@ int fts3::implcfg__getConfiguration(soap* soap, std::string vo, std::string name
     return SOAP_OK;
 }
 
+/* ---------------------------------------------------------------------- */
+
+int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__delConfigurationResponse &_param_11) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delConfiguration' request" << commit;
+
+	vector<string>& cfgs = _configuration->cfg;
+	vector<string>::iterator it;
+
+	try {
+		AuthorizationManager::getInstance().authorize(soap);
+		ConfigurationHandler handler;
+		for(it = cfgs.begin(); it < cfgs.end(); it++) {
+			handler.parse(*it);
+			handler.del();
+		}
+
+	} catch(std::exception& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "A std::exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
+		return SOAP_FAULT;
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "ConfigurationException");
+		return SOAP_FAULT;
+	}
+
+	return SOAP_OK;
+}
+
+

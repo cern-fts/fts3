@@ -490,7 +490,9 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 
 			string se_name = (*it_se)->NAME;
 
-			if (se_name != name) continue;
+			if (!name.empty()) {
+				if (se_name != name) continue;
+			}
 
 			if (!db->is_se_protocol_exist(se_name)) {
 				delete *it_se;
@@ -549,7 +551,7 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 		vector<string> members = db->get_group_members(*it_gr);
 		vector<string>::iterator it_mbr;
 		for (it_mbr = members.begin(); it_mbr < members.end(); it_mbr++) {
-			resp += *it_mbr;
+			resp += "\"" + *it_mbr + "\"";
 			if (it_mbr + 1 != members.end()) resp += ",";
 		}
 
@@ -586,5 +588,38 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 	}
 
 	return ret;
+}
+
+void ConfigurationHandler::del() {
+
+	// handle protocol parameters
+	if (cfgProtocolParams) {
+		// check if it's a se or se group
+		if (type == SE_TYPE) {
+
+			SeProtocolConfig tmp;
+			tmp.SE_NAME = name;
+			db->delete_se_protocol_config(&tmp);
+
+		} else if (type == GROUP_TYPE) {
+
+			SeProtocolConfig tmp;
+			tmp.SE_NAME = name;
+			db->delete_se_group_protocol_config(&tmp);
+		}
+	}
+
+	// handle share configuration
+	if (cfgShare) {
+		// the share_id for the DB
+		string id =
+				"\"share_type\":\"" +
+				share_type +
+				"\",\"share_id\":" +
+				(share_id == null_str ? null_str : ("\"" + share_id + "\""))
+				;
+
+		db->deleteSeConfig(name, id, type);
+	}
 }
 

@@ -239,6 +239,15 @@ public:
 	 */
 	vector<string> get(string vo, string name);
 
+
+	/**
+	 * Deletes the configuration specified by the argument
+	 * 	Only share and protocol specific configurations will be deleted.
+	 *
+	 * @param cfg - the configuration that should be deleted
+	 */
+	void del ();
+
 	/**
 	 * Gets protocol configuration for the SE or SE group,
 	 * 	First the 'parse' method has to be called
