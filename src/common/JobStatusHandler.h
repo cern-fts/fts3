@@ -45,6 +45,7 @@ public:
 	 * is still being processed
 	 */
 	enum JobStatusEnum {
+		FTS3_STATUS_FINISHEDDIRTY_ID = -4,
 		FTS3_STATUS_CANCELED_ID = -3,
 		FTS3_STATUS_UNKNOWN_ID = -2,
 	    FTS3_STATUS_FAILED_ID = -1,
@@ -58,6 +59,7 @@ public:
 	/**
 	 * names of transfer job statuses
 	 */
+	static const string FTS3_STATUS_FINISHEDDIRTY;
     static const string FTS3_STATUS_CANCELED;
 	static const string FTS3_STATUS_UNKNOWN;
     static const string FTS3_STATUS_FAILED;

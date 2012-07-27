@@ -14,6 +14,7 @@ using namespace fts3::common;
 using namespace boost;
 
 // initialize string constants
+const string JobStatusHandler::FTS3_STATUS_FINISHEDDIRTY = "FINISHEDDIRTY";
 const string JobStatusHandler::FTS3_STATUS_CANCELED = "CANCELED";
 const string JobStatusHandler::FTS3_STATUS_UNKNOWN = "UNKNOWN";
 const string JobStatusHandler::FTS3_STATUS_FAILED = "FAILED";
@@ -24,6 +25,7 @@ const string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
 
 JobStatusHandler::JobStatusHandler():
 		statusNameToId(map_list_of
+			(FTS3_STATUS_FINISHEDDIRTY, FTS3_STATUS_FINISHEDDIRTY_ID)
 			(FTS3_STATUS_CANCELED, FTS3_STATUS_CANCELED_ID)
 			(FTS3_STATUS_UNKNOWN, FTS3_STATUS_UNKNOWN_ID)
 			(FTS3_STATUS_SUBMITTED, FTS3_STATUS_SUBMITTED_ID)
@@ -32,7 +34,7 @@ JobStatusHandler::JobStatusHandler():
 			(FTS3_STATUS_READY, FTS3_STATUS_READY_ID)
 			(FTS3_STATUS_FAILED, FTS3_STATUS_FAILED_ID).to_container(statusNameToId)) {
 
-	// the constant maps are initialized in initializer list
+	// the constant map is initialized in initializer list
 }
 
 bool JobStatusHandler::isTransferReady(string status) {
