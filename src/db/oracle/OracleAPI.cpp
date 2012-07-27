@@ -1393,9 +1393,13 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     std::string reason = "One or more files failed. Please have a look at the details for more information";
     const std::string terminal1 = "FINISHED";
     const std::string terminal2 = "FAILED";
-    const std::string terminal3 = "CANCELED";    
+    const std::string terminal4 = "FINISHEDDIRTY";    
     bool finished  = true;
     std::string state = status;
+    int finishedDirty = 0;
+    int numberOfFileInJob = 0;
+    int numOfFilesInGivenState = 0;
+    int failedExistInJob = 0;
     const std::string tag1 = "updateJobTransferStatus";
     const std::string tag2 = "selectJobTransferStatus";    
     const std::string tag3 = "selectJobNotFinished";        
@@ -1408,7 +1412,12 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     		"UPDATE t_job "
     		"SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE IN ('READY','ACTIVE') ";				
 		
-    std::string query = "select Num1, Num2  from (select count(*) As Num1 from t_file where job_id=:1), (select count(*) As Num2 from t_file where job_id=:2 and file_state in ('FINISHED','FAILED'))";
+    std::string query = "select Num1, Num2, Num3, Num4  from "
+    			"(select count(*) As Num1 from t_file where job_id=:1), "
+			"(select count(*) As Num2 from t_file where job_id=:2 and file_state in ('CANCELED','FINISHED','FAILED')), "
+			"(select count(*) As Num3 from t_file where job_id=:3 and file_state = 'FINISHED'), "
+			"(select count(*) As Num4 from t_file where job_id=:4 and file_state in ('CANCELED','FAILED')) ";
+						
     
     std::string updateFileJobFinished =
     		"UPDATE t_file "
@@ -1420,33 +1429,49 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
 	job_id = job_id.substr (0,36);
 	st->setString(1,job_id);
 	st->setString(2,job_id);
+	st->setString(3,job_id);
+	st->setString(4,job_id);	
         oracle::occi::ResultSet* r = conn->createResultset(st);
         while (r->next()) {		
-            	int num1 = r->getInt(1);
-            	int num2 = r->getInt(2);		
-		if( num1 != num2){
+            	numberOfFileInJob = r->getInt(1);
+            	numOfFilesInGivenState = r->getInt(2);
+		finishedDirty = r->getInt(3);
+		failedExistInJob = r->getInt(4);
+		if( numberOfFileInJob != numOfFilesInGivenState ){
 			finished = false;
 			break;
 	     }
         }
         conn->destroyResultset(st, r);
    
+    //job finished
     if(finished == true){
         time_t timed = time(NULL);
+	//set job status
 	st->setSQL(update);
-	if( state.compare(terminal1)==0 ){
+	
+	//finisheddirty
+	if( (finishedDirty > 0) &&  (failedExistInJob > 0)){
+        	st->setString(1,terminal4);
+	} // finished
+	else if(numberOfFileInJob == finishedDirty){
         	st->setString(1,terminal1);
-		reason = std::string("");
+		reason = std::string("");	
 	}
-	else{
+	else if (failedExistInJob > 0){ //failed
 		st->setString(1,terminal2);	
 	}
+	else{ //unknown state
+	}	
+	
+	//set reason and timestamps for job
         st->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
         st->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
         st->setString(4, reason);
 	st->setString(5, job_id);
         st->executeUpdate();
 	
+	//set timestamps for file
 	st->setSQL(updateFileJobFinished);
         st->setTimestamp(1, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
         st->setString(2, job_id ); 	
@@ -1454,7 +1479,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
 		
         conn->commit();	  
       }
-     else{   
+     else{   //job not finished
      	if(status.compare("ACTIVE")==0){
 	        st->setSQL(updateJobNotFinished);
 	        st->setString(1,status);       
@@ -1464,9 +1489,11 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
 	}
       }     
       
-      conn->destroyStatement(st, "");      
+      conn->destroyStatement(st, ""); 
+      finishedDirty = 0;     
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
+	finishedDirty = 0;
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
 }    
