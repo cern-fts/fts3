@@ -310,6 +310,9 @@ public:
     virtual void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
     virtual Cred* findGrDPStorageElement(std::string delegationID, std::string dn);
     virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn);    
+    
+    virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname);
+    virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);    
  
     
 private:

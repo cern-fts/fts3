@@ -1,3 +1,20 @@
+
+--
+-- Holds certificate request information
+--
+CREATE TABLE t_debug (
+--
+-- source hostname
+   source_se	VARCHAR2(255),
+--
+-- dest hostanme
+   dest_se		VARCHAR2(255),
+--
+-- debug on/off
+   debug		VARCHAR2(3) default 'off'
+);
+
+
 --
 -- Holds certificate request information
 --

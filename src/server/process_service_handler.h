@@ -153,6 +153,7 @@ protected:
 	std::string destin_hostname("");
 	SeProtocolConfig* protocol = NULL;
 	std::string proxy_file("");
+	bool debug = false;
 
         while (1) {
 	    /*get jobs in submitted state*/
@@ -187,6 +188,12 @@ protected:
 
 				sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
 				destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
+				
+				debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
+				
+				if(debug == true){
+					params.append(" -F ");
+				}
 
 				if(proxy_file.length() > 0) {
 					params.append(" -proxy ");

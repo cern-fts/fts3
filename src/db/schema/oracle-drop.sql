@@ -19,4 +19,5 @@ drop table T_SITE_GROUP cascade constraints;
 drop table T_STAGE_REQ cascade constraints;
 drop table T_TRANSFER cascade constraints;
 drop table T_VO_ACL cascade constraints;
+drop table T_DEBUG cascade constraints;
 exit;

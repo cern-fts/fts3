@@ -147,6 +147,11 @@ uid_t name_to_uid(char const *name)
   return pwbufp->pw_uid;
 }
 
+
+static void log_func(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data) {
+	logStream << fileManagement.timestamp() <<  "DEBUG " << message << '\n';
+}
+
 int main(int argc, char **argv) {
 
     //switch to non-priviledged user to avoid reading the hostcert
@@ -206,9 +211,12 @@ int main(int argc, char **argv) {
     char hostname[1024] = {0};
     std::string proxy("");
     char errorBuffer[2048] = {0};
+    bool debug = false;
 
     for (int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
+        if (temp.compare("-F") == 0)
+            debug = true;	
         if (temp.compare("-D") == 0)
             sourceSiteName = std::string(argv[i + 1]);
         if (temp.compare("-E") == 0)
@@ -369,12 +377,19 @@ int main(int argc, char **argv) {
 
     seteuid(pw_uid);
     
+	
+     /*gfal2 debug logging*/
+    if(debug == true){ 	
+    	gfal_set_verbose(GFAL_VERBOSE_TRACE);
+    	gfal_log_set_handler( (GLogFunc) log_func, NULL);	
+    }    
+    
     if(source_token_desc.length() > 0)
     	gfalt_set_src_spacetoken(params, source_token_desc.c_str(), NULL);
 
     if(dest_token_desc.length() > 0)
     	gfalt_set_dst_spacetoken(params, dest_token_desc.c_str(), NULL);
-
+	
      
     if (gfal_stat(source_url.c_str(), &statbufsrc) < 0) {
 	std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));

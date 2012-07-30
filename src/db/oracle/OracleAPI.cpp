@@ -2335,7 +2335,89 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
 }
 
 
+bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hostname){
+	std::string tag = "getDebugMode";
+	std::string query ;
+	bool debug = false;
+	if(destin_hostname.length() == 0){
+		tag+="1";
+		query = "SELECT source_se, debug FROM t_debug WHERE source_se = :1";
+	}else{
+		query = "SELECT source_se, dest_se, debug FROM t_debug WHERE source_se = :1 AND dest_se = :2";
+	}	
+	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	if(destin_hostname.length() == 0){
+		s->setString(1,source_hostname);
+	}
+	else{
+		s->setString(1,source_hostname);
+		s->setString(2,destin_hostname);			
+	}
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+		
+        if(r->next()) {    
+		if(destin_hostname.length() == 0){
+			debug = std::string(r->getString(2)).compare("on") == 0? true: false;
+		}else{
+			debug = std::string(r->getString(3)).compare("on") == 0? true: false;
+		}
+        }        
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return debug;
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return debug;
+    }	
+return debug;	
 
+}
+
+
+void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode){
+	std::string tag1 = "setDebugModeDelete";
+	std::string tag2 = "setDebugModeInsert";	
+	std::string query1;
+	std::string query2;	
+	
+	if(destin_hostname.length() == 0){
+		query1 = "delete from t_debug where source_se=:1 and dest_se is null";
+		query2 = "insert into t_debug(source_se, debug) values(:1,:2)";	
+		tag1 +="1";
+		tag2 +="1";			
+	}else{
+		query1 = "delete from t_debug where source_se=:1 and dest_se =:2";
+		query2 = "insert into t_debug(source_se,dest_se,debug) values(:1,:2,:3)";	
+	}
+	
+	try{
+		oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);
+		oracle::occi::Statement* s2 = conn->createStatement(query2, tag2);	
+		if(destin_hostname.length() == 0){
+			s1->setString(1, source_hostname);
+			s2->setString(1, source_hostname);
+			s2->setString(2, mode);			
+		}else{
+			s1->setString(1, source_hostname);
+			s1->setString(2, destin_hostname);			
+			s2->setString(1, source_hostname);
+			s2->setString(2, destin_hostname);			
+			s2->setString(3, mode);					
+		}		
+        	s1->executeUpdate();
+        	s2->executeUpdate();		
+		conn->commit();	       	    
+        	conn->destroyStatement(s1, tag1);	
+		conn->destroyStatement(s2, tag2);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+
+}
 
 // the class factories
 extern "C" GenericDbIfce* create() {
