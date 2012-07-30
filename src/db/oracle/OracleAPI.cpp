@@ -2339,30 +2339,16 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
 	std::string tag = "getDebugMode";
 	std::string query ;
 	bool debug = false;
-	if(destin_hostname.length() == 0){
-		tag+="1";
-		query = "SELECT source_se, debug FROM t_debug WHERE source_se = :1";
-	}else{
-		query = "SELECT source_se, dest_se, debug FROM t_debug WHERE source_se = :1 AND dest_se = :2";
-	}	
+	query = "SELECT source_se, dest_se, debug FROM t_debug WHERE source_se = :1 AND (dest_se = :2 or dest_se is null)";
 	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
-	if(destin_hostname.length() == 0){
 		s->setString(1,source_hostname);
-	}
-	else{
-		s->setString(1,source_hostname);
-		s->setString(2,destin_hostname);			
-	}
+		s->setString(2,destin_hostname);
         oracle::occi::ResultSet* r = conn->createResultset(s);
 		
         if(r->next()) {    
-		if(destin_hostname.length() == 0){
-			debug = std::string(r->getString(2)).compare("on") == 0? true: false;
-		}else{
 			debug = std::string(r->getString(3)).compare("on") == 0? true: false;
-		}
         }        
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
