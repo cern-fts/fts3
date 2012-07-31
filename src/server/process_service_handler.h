@@ -306,9 +306,7 @@ protected:
 		    file_id = to_string(temp->FILE_ID);
 		    overwrite = temp->OVERWRITE;
                     source_hostname = extractHostname(temp->SOURCE_SURL);
-                    destin_hostname = extractHostname(temp->DEST_SURL);
-                    sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
-                    destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
+                    destin_hostname = extractHostname(temp->DEST_SURL);                    
 		    source_space_token = temp->SOURCE_SPACE_TOKEN;		
 		    dest_space_token = temp->DEST_SPACE_TOKEN;					    
                         
@@ -319,6 +317,9 @@ protected:
 		   url = file_id + " " + surl + " " + durl + " " + checksum;
 		   urls.push_back(url);		      		    
 		}
+		    
+		    sourceSiteName = siteResolver.getSiteName(surl);
+                    destSiteName = siteResolver.getSiteName(durl);
 		    
 		    createJobFile(job_id, urls);
 
