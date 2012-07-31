@@ -112,7 +112,6 @@ protected:
         assert (config != _vars.end());
         boost::shared_ptr<std::istream> in = DEPENDENCIES::getStream (config->second);
         assert (in.get());
-        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Reading config file " << config->second << commit;
 
         try
         {

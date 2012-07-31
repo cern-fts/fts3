@@ -39,9 +39,16 @@ start() {
     echo
     [ $retval -eq 0 ] && touch $lockfile
     return $retval
-    else	
-        echo "Already running"
-	return $retval
+    else
+        pgrep fts3_server
+	retval=$?
+        if [ -f $lockfile ] && [ $retval -eq 1 ] ; then
+		restart		
+	else
+        	echo "Already running"
+		return $retval
+	fi
+	
     fi
 }
 

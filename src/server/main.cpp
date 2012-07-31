@@ -47,10 +47,6 @@ void fts3_initialize_db_backend()
     std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
     std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
     std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
-
-    
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Connect to " << dbConnectString  << commit;
-
     db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
 }
 
@@ -111,6 +107,10 @@ int main (int argc, char** argv)
         sigemptyset(&action.sa_mask);
         action.sa_flags = SA_RESTART;
         int res = sigaction(SIGINT, &action, NULL);
+        
+	std::string infosys = theServerConfig().get<std::string>("Infosys");
+	if(infosys.length() > 0)
+		setenv("LCG_GFAL_INFOSYS",infosys.c_str(),1);
             
         if (res == -1) 
         {
@@ -120,8 +120,7 @@ int main (int argc, char** argv)
         bool isDaemon = ! FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
 
         if (isDaemon)
-        {
-            std::cout << "Going to daemon mode... by by console!" << std::endl;
+        {            
             daemonize();
         }
         

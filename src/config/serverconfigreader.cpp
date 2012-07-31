@@ -100,7 +100,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
             "Database account password"
         )
-
+        (
+            "Infosys,r",
+            po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),
+            "Set infosys"
+        )
         (
             "TransferLogDirectory,l",
             po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
