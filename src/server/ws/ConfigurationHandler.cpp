@@ -406,7 +406,7 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 		if (share_type == PAIR_SHARE) {
 
 			set<string>::iterator pn_it;
-			for (pn_it == matchingPairNames.begin(); pn_it != matchingPairNames.end(); pn_it++) {
+			for (pn_it = matchingPairNames.begin(); pn_it != matchingPairNames.end(); pn_it++) {
 
 				// the share_id for the DB
 				string id = "\"share_type\":\"pair\",\"share_id\":\"" + *pn_it + "\"";
