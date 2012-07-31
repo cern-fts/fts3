@@ -436,7 +436,13 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 
 void ConfigurationHandler::addGroupConfiguration() {
 
-	set<string> matchingNames = db->getAllMatchingSeNames(name);
+	set<string> matchingNames;
+	// check if it's a pattern or a new SE group name
+	if (name.find("%") == string::npos) {
+		matchingNames.insert(name);
+	} else {
+		matchingNames = db->getAllMatchingSeNames(name);
+	}
 	set<string>::iterator it;
 
 	if (cfgMembers) {
