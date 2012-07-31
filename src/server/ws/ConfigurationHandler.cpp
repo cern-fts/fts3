@@ -479,7 +479,7 @@ void ConfigurationHandler::addGroupConfiguration() {
 	if (cfgProtocolParams) {
 		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
 			shared_ptr<SeProtocolConfig> cfg = getProtocolConfig(*it);
-			if (db->is_group_protocol_exist(name)) {
+			if (db->is_group_protocol_exist(*it)) {
 				db->update_se_group_protocol_config(cfg.get());
 			} else {
 				db->add_se_group_protocol_config(cfg.get());
