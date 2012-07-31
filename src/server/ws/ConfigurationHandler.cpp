@@ -198,7 +198,10 @@ string ConfigurationHandler::getString(string cfg) {
 		return null_str;
 	}
 
-	return what[VALUE];
+	string ret = what[VALUE];
+	replace_all(ret, "*", "%");
+
+	return ret;
 }
 
 vector<string> ConfigurationHandler::getVector(string cfg) {
@@ -219,6 +222,7 @@ vector<string> ConfigurationHandler::getVector(string cfg) {
 
 	for(it = tokens.begin(); it != tokens.end(); it++) {
 		string s = *it;
+		replace_all(s, "*", "%");
 		ret.push_back(s);
 	}
 
@@ -270,7 +274,6 @@ void ConfigurationHandler::add() {
 // is thrown
 set<string> ConfigurationHandler::addSeIfNotExist(string name) {
 
-	replace_all(name, "*", "%");
 	set<string> matches = db->getAllMatchingSeNames(name);
 	// check if it is already in DB
 	if (matches.empty()) {
@@ -437,10 +440,9 @@ void ConfigurationHandler::addGroupConfiguration() {
 
 	set<string> matchingNames;
 	// check if it's a pattern or a new SE group name
-	if (name.find("*") == string::npos) {
+	if (name.find("%") == string::npos) {
 		matchingNames.insert(name);
 	} else {
-		replace_all(name, "*", "%");
 		matchingNames = db->getAllMatchingSeGroupNames(name);
 	}
 	set<string>::iterator it;
