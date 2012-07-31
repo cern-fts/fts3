@@ -109,6 +109,7 @@ public:
     }
 
 protected:
+    SiteName siteResolver;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
         std::vector<int>::iterator iter;
@@ -157,7 +158,7 @@ protected:
         std::vector<TransferFiles*>::iterator fileiter;
         std::string sourceSiteName("");
         std::string destSiteName("");
-        SiteName siteResolver;
+        //SiteName siteResolver;
         std::string source_hostname("");
         std::string destin_hostname("");
         SeProtocolConfig* protocol = NULL;
