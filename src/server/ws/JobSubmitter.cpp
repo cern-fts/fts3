@@ -155,7 +155,7 @@ JobSubmitter::~JobSubmitter() {
 
 string JobSubmitter::submit() {
 
-    DBSingleton::instance().getDBObjectInstance()->submitPhysical(
+    DBSingleton::instance().getDBObjectInstance()->submitPhysical (
     		id,
     		jobs,
     		params.get(JobParameterHandler::FTS3_PARAM_GRIDFTP),
@@ -171,7 +171,9 @@ string JobSubmitter::submit() {
             params.get(JobParameterHandler::FTS3_PARAM_LAN_CONNECTION),
             params.get<int>(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME),
             params.get(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE),
-            params.get(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD));
+            params.get(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD),
+            params.get(JobParameterHandler::FTS3_PARAM_REUSE)
+    	);
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
 	return id;
