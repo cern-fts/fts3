@@ -64,6 +64,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("copy-pin-lifetime", value<int>(), "pin lifetime of the copy of the file (seconds)")
 			("lan-connection", "use LAN as ConnectionType (default = WAN)")
 			("fail-nearline", "fail the transfer if the file is nearline")
+			("reuse,r", "enable session reuse the transfer job")
 			;
 
 	// add hidden options
@@ -429,6 +430,11 @@ tns3__TransferParams* SubmitTransferCli::getParams() {
 		string value = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
 		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME);
 		jobParams->values.push_back(value);
+	}
+
+	if (vm.count("reuse")) {
+		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_REUSE);
+		jobParams->values.push_back("Y");
 	}
 
 	return jobParams;
