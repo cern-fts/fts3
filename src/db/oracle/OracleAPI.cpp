@@ -368,7 +368,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
-        const std::string & failNearLine, const std::string & checksumMethod, std::string & reuse) {
+        const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse) {
 
     std::string source;
     std::string destination;
@@ -913,6 +913,36 @@ void OracleAPI::getSe(Se* &se, std::string seName){
     }
 }
 
+ std::set<std::string> OracleAPI::getAllMatchingSeNames(std::string name) {
+
+	 std::set<std::string> result;
+	    const std::string tag = "getAllMatchingSeNames";
+	    std::string query_stmt =
+	    		"SELECT "
+	            " 	t_se.NAME,  "
+	            "FROM t_se "
+	    		"WHERE t_se.NAME like :1";
+
+
+	    try {
+	        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
+	        s->setString(1, name);
+	        oracle::occi::ResultSet* r = conn->createResultset(s);
+	        while (r->next()) {
+	        	result.insert(
+	        			r->getString(1)
+	        		);
+	        }
+	        conn->destroyResultset(s, r);
+	        conn->destroyStatement(s, tag);
+
+	    } catch (oracle::occi::SQLException const &e) {
+	        conn->rollback();
+	        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	    }
+
+	 return result;
+ }
 
 void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se){
     Se* seData = NULL;

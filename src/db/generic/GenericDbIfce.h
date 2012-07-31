@@ -30,6 +30,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <set>
 #include "JobStatus.h"
 #include "FileTransferStatus.h"
 #include "SePair.h"
@@ -73,7 +74,7 @@ public:
                                  const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksumMethod, std::string & reuse) = 0;
+                                 const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse) = 0;
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) = 0;
     
@@ -242,6 +243,8 @@ public:
 
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
+    virtual std::set<std::string> getAllMatchingSeNames(std::string name);
+
     virtual void getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
     
     virtual void getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE) = 0;    
