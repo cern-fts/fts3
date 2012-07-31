@@ -441,7 +441,7 @@ void ConfigurationHandler::addGroupConfiguration() {
 		matchingNames.insert(name);
 	} else {
 		replace_all(name, "*", "%");
-		matchingNames = db->getAllMatchingSeNames(name);
+		matchingNames = db->getAllMatchingSeGroupNames(name);
 	}
 	set<string>::iterator it;
 
