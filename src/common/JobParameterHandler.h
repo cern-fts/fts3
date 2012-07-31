@@ -63,6 +63,7 @@ public:
 	static const string FTS3_PARAM_FAIL_NEARLINE;
 	static const string FTS3_PARAM_OVERWRITEFLAG;
 	static const string FTS3_PARAM_CHECKSUM_METHOD;
+	static const string FTS3_PARAM_REUSE;
 	///@}
 
 	/**

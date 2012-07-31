@@ -19,6 +19,8 @@ const string JobParameterHandler::FTS3_PARAM_LAN_CONNECTION = "lan_connection";
 const string JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE = "fail_nearline";
 const string JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG = "overwrite";
 const string JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD = "checksum_method";
+const string JobParameterHandler::FTS3_PARAM_REUSE = "reuse";
+
 
 JobParameterHandler::JobParameterHandler() {
 	// set defaults
