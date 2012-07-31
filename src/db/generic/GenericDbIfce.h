@@ -245,6 +245,8 @@ public:
     
     virtual std::set<std::string> getAllMatchingSeNames(std::string name) = 0;
 
+    virtual std::set<std::string> getAllMatchingSeGroupNames(std::string name) = 0;
+
     virtual void getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
     
     virtual void getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE) = 0;    

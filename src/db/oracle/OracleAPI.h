@@ -218,6 +218,8 @@ public:
     /*NEW API*/
     virtual std::set<std::string> getAllMatchingSeNames(std::string name);
 
+    virtual std::set<std::string> getAllMatchingSeGroupNames(std::string name);
+
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se);
 
     virtual void getSe(Se* &se, std::string seName);
