@@ -34,7 +34,7 @@ using namespace boost::assign;
 
 const string ConfigurationHandler::cfg_exp =
 		"\\s*\\{\\s*"
-			"(\"name\"\\s*:\\s*\"[a-zA-Z0-9\\.-]+\")\\s*,\\s*"
+			"(\"name\"\\s*:\\s*\"[\\*a-zA-Z0-9\\.-]+\")\\s*,\\s*"
 			"(\"type\"\\s*:\\s*\"(se|group)\")\\s*,?\\s*"
 			"(\"members\"\\s*:\\s*\\[(\\s*\"[a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+\\])?\\s*,?\\s*"
 			"("
@@ -127,6 +127,7 @@ void ConfigurationHandler::parse(string configuration) {
 
 	// get the name and type
 	name = getString(what[NAME]);
+	replace_all(name, "*", "%");
 	type = getString(what[TYPE]);
 
 	// handle members
@@ -148,6 +149,7 @@ void ConfigurationHandler::parse(string configuration) {
 	if (cfgShare) {
 		share_type = getString(what[SHARE_TYPE]);
 		share_id = getString(what[SHARE_ID]);
+		replace_all(share_id, "*", "%");
 		in = getNumber(what[IN]);
 		out = getNumber(what[OUT]);
 		policy = getString(what[POLICY]);
@@ -264,20 +266,29 @@ void ConfigurationHandler::add() {
 	}
 }
 
-void ConfigurationHandler::addSeIfNotExist(string name) {
+// TODO change the method name, now it not only adds the se to the db if it does not exist
+// it also checks if its a se name pattern with a wildmark, in this case it returns all se
+// name that matches the pattern, if there are no ses that match the pattern an exception
+// is thrown
+set<string> ConfigurationHandler::addSeIfNotExist(string name) {
 
-	Se* se = 0;
-	db->getSe(se, name);
-	if (!se) {
+	set<string> matches = db->getAllMatchingSeNames(name);
+	// check if it is already in DB
+	if (matches.empty()) {
+		// make sure it's not a name with a wildmark
+		size_t found = name.find("%");
+		if (found != string::npos)
+			throw Err_Custom("Wildmarks are not allowed for SEs that do not exist in the DB!");
 		// if not, add a new SE record to the DB
 		db->addSe("", "", "", name, "", "", "", "", "", "", "");
-	} else {
-		// otherwise we only care about the memory
-		delete se;
+		// and update the set
+		matches.insert(name);
 	}
+
+	return matches;
 }
 
-shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig() {
+shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig(string name) {
 
 	shared_ptr<SeProtocolConfig> ret(new SeProtocolConfig);
 
@@ -309,12 +320,13 @@ shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig() {
 	return ret;
 }
 
-void ConfigurationHandler::addShareConfiguration() {
+void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 
 	// in case if its public share the share_id has to be 'null'
 	if (share_type == PUBLIC_SHARE && share_id != null_str)
 		throw Err_Custom("The share_id for public share has to be 'null'!");
 
+	set<string> matchingPairNames;
 	// check if its a pair share
 	if (share_type == PAIR_SHARE) {
 		// in case if its a SE group throw an exception
@@ -322,7 +334,7 @@ void ConfigurationHandler::addShareConfiguration() {
 			throw Err_Custom("The pair share is only allowed for SEs (not for SE groups)!");
 
 		// check if the SE (it's a SE because it's only allowed for SEs) is in the DB
-		addSeIfNotExist(share_id);
+		matchingPairNames = addSeIfNotExist(share_id);
 	}
 
 	// the share_id for the DB
@@ -340,76 +352,138 @@ void ConfigurationHandler::addShareConfiguration() {
 			",\"policy\":\"" + policy + "\""
 			;
 
-	vector<SeAndConfig*> seAndConfig;
-	vector<SeAndConfig*>::iterator it;
+	// loop for each se or se group name that was matching the given patter
+	set<string>::iterator n_it;
+	for (n_it = matchingNames.begin(); n_it != matchingNames.end(); n_it++) {
 
-	// check if the 'SeConfig' exists already in DB
-	db->getAllShareAndConfigWithCritiria(seAndConfig, name, id, type, value);
-	if (!seAndConfig.empty()) {
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Share configuration found in DB, nothing to do!" << commit;
+		set<string> share_ids;
+		vector<SeAndConfig*> seAndConfig;
+		vector<SeAndConfig*>::iterator it;
 
-		// since we did the query using primary key (name + id + type) there must ne only one record
-		delete *seAndConfig.begin();
-		return;
-	}
+		// check if the 'SeConfig' entry exists in the DB
+		db->getAllShareAndConfigWithCritiria(seAndConfig, *n_it, id, type, string());
+		if (!seAndConfig.empty()) {
+			// the cfg is already in DB
+			// due to the wildmarks in share_id there might be more than one share cfgs
+			for (it = seAndConfig.begin(); it < seAndConfig.end(); it++) {
 
-	// check if the 'SeConfig' exists but with different value
-	db->getAllShareAndConfigWithCritiria(seAndConfig, name, id, type, string());
+				SeAndConfig* tmp = *it;
+				// add the share_id to the set containing share_ids that are in the DB
+				share_ids.insert(tmp->SHARE_ID);
 
-	if (seAndConfig.empty()) {
-		// it's not in the database
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
-		db->addSeConfig(name, id, type, value);
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB!" << commit;
-	} else {
-		// it is already in the database
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Updating 'SeConfig' record ..." << commit;
-		DBSingleton::instance().getDBObjectInstance()->updateSeConfig(name, id, type, value);
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The 'SeConfig' record has been updated!" << commit;
+				// if the value is different than the value set by the user it has to be updated
+				if (tmp->SHARE_VALUE != value) {
+					FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Updating 'SeConfig' record ..." << commit;
+					db->updateSeConfig (
+							tmp->SE_NAME,
+							tmp->SHARE_ID,
+							type,
+							value
+						);
+					FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The 'SeConfig' record has been updated!" << commit;
+				} else {
+					// otherwise we are just logging that no modifications were needed
+					FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Share configuration found in DB, nothing to do!" << commit;
+				}
 
-		// since we did the query using primary key (name + id + type) there must ne only one record
-		delete *seAndConfig.begin();
+				delete tmp;
+			}
+
+			// for public share there is only one entry so we are done
+			// for vo share without wildmarks there is only one entry so we are done
+			// for vo share with wildmarks it is not possible to insert new entry into the
+			// DB, the only think we can do is to update some entries therefore we are done
+			if (share_type == PUBLIC_SHARE || share_type == VO_SHARE) continue;
+		}
+
+		// the SE don't have the corresponding cfg entry in the DB
+		// if the share cfg is a public share add an entry to the DB
+		// if the share cfg is a vo share check first if there's a wildmark in the
+		//	VO name, if yes throw an exception, otherwise add an entry to the DB
+		// if the share cfg is a pair share and if the pair se name has a wildmark
+		//	find all SEs of interested and create the share cfgs for all of them
+
+		if (share_type == PAIR_SHARE) {
+
+			set<string>::iterator pn_it;
+			for (pn_it == matchingPairNames.begin(); pn_it != matchingPairNames.end(); pn_it++) {
+
+				// the share_id for the DB
+				string id = "\"share_type\":\"pair\",\"share_id\":\"" + *pn_it + "\"";
+				// check if the share_id is already in DB
+				if (share_ids.count(id)) continue;
+
+				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
+				db->addSeConfig(*n_it, id, type, value);
+				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB!" << commit;
+			}
+
+		} else {
+
+			if (share_type == VO_SHARE) {
+				// it's not in the database
+				size_t found = share_id.find("%");
+				if (found != string::npos)
+					throw Err_Custom("A share configuration cannot be created for a VO share with a wildmark!");
+			}
+
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
+			db->addSeConfig(*n_it, id, type, value);
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB!" << commit;
+		}
 	}
 }
 
 void ConfigurationHandler::addGroupConfiguration() {
 
+	set<string> matchingNames = db->getAllMatchingSeNames(name);
+	set<string>::iterator it;
+
 	if (cfgMembers) {
-		// if an old group exist under the same name replace it!
-		db->delete_group(name);
 
-		// add the SEs to the given group
-		vector<string>::iterator it;
-		for (it = members.begin(); it < members.end(); it++) {
-			// check if the SE exists
-			addSeIfNotExist(*it);
+		// first find all members that match the patterns
+		set<string> matchingMemberNames;
+		vector<string>::iterator m_it;
+		for (m_it = members.begin(); m_it != members.end(); m_it++) {
+			set<string> tmp = addSeIfNotExist(*m_it);
+			matchingMemberNames.insert(tmp.begin(), tmp.end());
+		}
 
-			// check if the SE is a member of a group
-			string gr = db->get_group_name(*it);
-			if (gr.empty()) {
-				// if not, add it to the group
-				db->add_se_to_group(*it, name);
-			} else if (gr != name) {
-				// if its a member of other group throw an exception
-				throw Err_Custom (
-						"The SE: " + *it + " is already a member of another SE group (" + gr + ")!"
-					);
+		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
+			// if an old group exist under the same name replace it!
+			db->delete_group(*it);
+			// add the SEs to the given group
+			set<string>::iterator mm_it;
+			for (mm_it = matchingMemberNames.begin(); mm_it < matchingMemberNames.end(); mm_it++) {
+				// check if the SE is a member of a group
+				string gr = db->get_group_name(*mm_it);
+				if (gr.empty()) {
+					// if not, add it to the group
+					db->add_se_to_group(*mm_it, name);
+				} else /*if (gr != name)*/ { // TODO check now when the group is deleted this check should be unnecessary
+					// if its a member of other group throw an exception
+					throw Err_Custom (
+							"The SE: " + *it + " is already a member of another SE group (" + gr + ")!"
+						);
+				}
 			}
 		}
 	}
 
 	if (cfgProtocolParams) {
-		shared_ptr<SeProtocolConfig> cfg = getProtocolConfig();
-		if (db->is_group_protocol_exist(name)) {
-			db->update_se_group_protocol_config(cfg.get());
-		} else {
-			db->add_se_group_protocol_config(cfg.get());
+		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
+			shared_ptr<SeProtocolConfig> cfg = getProtocolConfig(*it);
+			if (db->is_group_protocol_exist(name)) {
+				db->update_se_group_protocol_config(cfg.get());
+			} else {
+				db->add_se_group_protocol_config(cfg.get());
+			}
 		}
 	}
 
 	if (cfgShare) {
 		// add share configuration (common for SE and SE group)
-		addShareConfiguration();
+		addShareConfiguration(matchingNames);
 	}
 }
 
@@ -422,20 +496,23 @@ void ConfigurationHandler::addSeConfiguration() {
 	}
 
 	// ensure that the SE is in the DB
-	addSeIfNotExist(name);
+	set<string> matchingNames = addSeIfNotExist(name);
+	set<string>::iterator it;
 
 	if (cfgProtocolParams) {
-		shared_ptr<SeProtocolConfig> cfg = getProtocolConfig();
-		if (db->is_se_protocol_exist(name)) {
-			db->update_se_protocol_config(cfg.get());
-		} else {
-			db->add_se_protocol_config(cfg.get());
+		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
+			shared_ptr<SeProtocolConfig> cfg = getProtocolConfig(*it);
+			if (db->is_se_protocol_exist(*it)) {
+				db->update_se_protocol_config(cfg.get());
+			} else {
+				db->add_se_protocol_config(cfg.get());
+			}
 		}
 	}
 
 	if (cfgShare) {
 		// add share configuration (common for SE and SE group)
-		addShareConfiguration();
+		addShareConfiguration(matchingNames);
 	}
 
 }

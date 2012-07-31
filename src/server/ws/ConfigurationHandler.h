@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
@@ -192,9 +193,11 @@ public:
 	/*
 	 * Checks if the SE exists, if not adds it to the DB
 	 *
-	 * @param name - SE name
+	 * @param name - SE name (possibly with wildmarks)
+	 *
+	 * @return a set with all SE names matching the SE name pattern
 	 */
-	void addSeIfNotExist(string name);
+	set<string> addSeIfNotExist(string name);
 
 
 	/**
@@ -226,7 +229,7 @@ public:
 	 * @see addSeConfiguration
 	 * @see addGroupConfiguration
 	 */
-	void addShareConfiguration();
+	void addShareConfiguration(set<string> matchingNames);
 
 	/**
 	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -256,7 +259,7 @@ public:
 	 *
 	 * @see parse
 	 */
-	shared_ptr<SeProtocolConfig> getProtocolConfig();
+	shared_ptr<SeProtocolConfig> getProtocolConfig(string name);
 
 private:
 
