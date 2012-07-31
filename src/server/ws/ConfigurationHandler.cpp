@@ -127,7 +127,6 @@ void ConfigurationHandler::parse(string configuration) {
 
 	// get the name and type
 	name = getString(what[NAME]);
-	replace_all(name, "*", "%");
 	type = getString(what[TYPE]);
 
 	// handle members
@@ -149,7 +148,6 @@ void ConfigurationHandler::parse(string configuration) {
 	if (cfgShare) {
 		share_type = getString(what[SHARE_TYPE]);
 		share_id = getString(what[SHARE_ID]);
-		replace_all(share_id, "*", "%");
 		in = getNumber(what[IN]);
 		out = getNumber(what[OUT]);
 		policy = getString(what[POLICY]);
@@ -272,6 +270,7 @@ void ConfigurationHandler::add() {
 // is thrown
 set<string> ConfigurationHandler::addSeIfNotExist(string name) {
 
+	replace_all(name, "*", "%");
 	set<string> matches = db->getAllMatchingSeNames(name);
 	// check if it is already in DB
 	if (matches.empty()) {
