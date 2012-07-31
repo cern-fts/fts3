@@ -36,7 +36,7 @@ const string ConfigurationHandler::cfg_exp =
 		"\\s*\\{\\s*"
 			"(\"name\"\\s*:\\s*\"[\\*a-zA-Z0-9\\.-]+\")\\s*,\\s*"
 			"(\"type\"\\s*:\\s*\"(se|group)\")\\s*,?\\s*"
-			"(\"members\"\\s*:\\s*\\[(\\s*\"[a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+\\])?\\s*,?\\s*"
+			"(\"members\"\\s*:\\s*\\[(\\s*\"[\\*a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+\\])?\\s*,?\\s*"
 			"("
 				"\"protocol\"\\s*:\\s*"
 				"\\s*\\{\\s*"
