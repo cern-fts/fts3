@@ -1047,7 +1047,7 @@ SHARE_VALUE){
     		query_stmt += " and ";
     	}
 
-        query_stmt.append(" T_SE_VO_SHARE.SE_NAME ='");
+        query_stmt.append(" T_SE_VO_SHARE.SE_NAME like '");
 		query_stmt.append(SE_NAME);
 		query_stmt.append("'");
 		tag.append("1");
@@ -1061,7 +1061,7 @@ SHARE_VALUE){
     		query_stmt += " and ";
     	}
 
-        query_stmt.append(" T_SE_VO_SHARE.SHARE_ID ='");
+        query_stmt.append(" T_SE_VO_SHARE.SHARE_ID like '");
 		query_stmt.append(SHARE_ID);
 		query_stmt.append("'");
 		tag.append("2");
