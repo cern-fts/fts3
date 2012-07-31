@@ -471,7 +471,7 @@ void ConfigurationHandler::addGroupConfiguration() {
 				} else /*if (gr != name)*/ { // TODO check now when the group is deleted this check should be unnecessary
 					// if its a member of other group throw an exception
 					throw Err_Custom (
-							"The SE: " + *it + " is already a member of another SE group (" + gr + ")!"
+							"The SE: " + *mm_it + " is already a member of another SE group (" + gr + ")!"
 						);
 				}
 			}
