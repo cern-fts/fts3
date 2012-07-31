@@ -40,7 +40,7 @@ public:
                                  const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksumMethod);
+                                 const std::string & failNearLine, const std::string & checksumMethod, std::string & reuse);
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
     
@@ -312,7 +312,9 @@ public:
     virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn);    
     
     virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname);
-    virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);    
+    virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode); 
+    
+    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs);       
  
     
 private:

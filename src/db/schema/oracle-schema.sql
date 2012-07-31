@@ -363,6 +363,9 @@ CREATE TABLE t_job (
   ,job_state       	VARCHAR2(32)
                     	CONSTRAINT job_job_state_not_null NOT NULL
 --
+-- Session reuse for this job. Allowed values are Y, (N), NULL
+  ,reuse_job           VARCHAR2(3) 
+--
 -- Canceling flag. Allowed values are Y, (N), NULL
   ,cancel_job           CHAR(1)
 --

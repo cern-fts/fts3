@@ -73,7 +73,7 @@ public:
                                  const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksumMethod) = 0;
+                                 const std::string & failNearLine, const std::string & checksumMethod, std::string & reuse) = 0;
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) = 0;
     
@@ -345,6 +345,8 @@ public:
     
     virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname) = 0;
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode) = 0;
+    
+    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) = 0;    
 };
 
 
