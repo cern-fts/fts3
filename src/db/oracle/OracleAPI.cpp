@@ -23,7 +23,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
     TransferJobs* tr_jobs = NULL;
     std::vector<TransferJobs*>::iterator iter;
     const std::string tag = "getSubmittedJobs";
-    const std::string updateTag = "getSubmittedJobsUpdate";
 
    std::string query_stmt = "SELECT "
             " t_job.job_id, "
@@ -47,16 +46,14 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " t_job.source_token_description,"
             " t_job.copy_pin_lifetime, "
             " t_job.checksum_method "
-            " FROM t_job, t_file"
-            " WHERE t_job.job_id = t_file.job_id"            
-            " AND t_job.job_finished is NULL"
+            " FROM t_job"
+            " WHERE "            
+            " t_job.job_finished is NULL"
             " AND t_job.CANCEL_JOB is NULL"
-            " AND t_file.job_finished is NULL"
 	    " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
-	    " AND t_file.file_state = 'SUBMITTED'"
 	    " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
             " AND rownum <= 30  ORDER BY t_job.priority DESC"
-            " , SYS_EXTRACT_UTC(t_job.submit_time), t_file.job_id, t_file.file_id";
+            " , SYS_EXTRACT_UTC(t_job.submit_time) ";
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
@@ -2444,8 +2441,7 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
 void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs){
     TransferJobs* tr_jobs = NULL;
     std::vector<TransferJobs*>::iterator iter;
-    const std::string tag = "getSubmittedJobs";
-    const std::string updateTag = "getSubmittedJobsUpdate";
+    const std::string tag = "getSubmittedJobsReuse";
 
    std::string query_stmt = "SELECT "
             " t_job.job_id, "
@@ -2469,17 +2465,15 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs){
             " t_job.source_token_description,"
             " t_job.copy_pin_lifetime, "
             " t_job.checksum_method "
-            " FROM t_job, t_file"
-            " WHERE t_job.job_id = t_file.job_id"            
-            " AND t_job.job_finished is NULL"
+            " FROM t_job "
+            " WHERE t_job.job_finished is NULL"
             " AND t_job.CANCEL_JOB is NULL"
-            " AND t_file.job_finished is NULL"
 	    " AND t_job.reuse_job='Y' "
-	    " AND t_file.file_state = 'SUBMITTED'"
-	    " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-            " AND rownum <= 30  ORDER BY t_job.priority DESC"
-            " , SYS_EXTRACT_UTC(t_job.submit_time), t_file.job_id, t_file.file_id";
-
+	    " AND t_job.job_state ='SUBMITTED' "
+	    " AND ROWNUM <= 10 "
+            " ORDER BY t_job.priority DESC"
+            " , SYS_EXTRACT_UTC(t_job.submit_time) ";
+	    	   
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
         oracle::occi::ResultSet* r = conn->createResultset(s);

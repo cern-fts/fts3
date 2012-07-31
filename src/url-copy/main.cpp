@@ -310,16 +310,8 @@ int main(int argc, char **argv) {
     		urlsFile.push_back (line);
   	}
     }
-    
-    std::string t_getSourceUrl("");
-    std::string t_getDestUrl("");
-    std::string t_getChecksumAlg("");
-    std::string t_getChecksum("");
-    std::string t_getFileId("");
-    
                    
     int reuseOrNot = (urlsFile.size()==0)? 1:urlsFile.size(); 
-    std::cerr << "Read " << urlsFile.size() << " lines.\n";
     std::string strArray[4];
     for(int i = 0; i < reuseOrNot; i++)
     {
@@ -430,8 +422,8 @@ int main(int argc, char **argv) {
 	
      
     if (gfal_stat( (strArray[1]).c_str(), &statbufsrc) < 0) {
+        seteuid(privid);    
 	std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
-        seteuid(privid);
         log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
         errorMessage = "Failed to get source file size: " + tempError;		
 	errorScope = SOURCE;

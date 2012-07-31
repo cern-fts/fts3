@@ -285,7 +285,11 @@ protected:
 		std::string overwrite = std::string("");
 		std::string source_space_token = std::string("");		
 		std::string dest_space_token = std::string("");
-		std::string file_id = std::string("");						
+		std::string file_id = std::string("");	
+		std::string checksum = std::string("");
+		std::string url = std::string("");
+		std::string surl = std::string("");
+		std::string durl = std::string("");		
 		
 		TransferFiles* tempUrl = NULL;		
                 /*get the file for each job*/
@@ -293,8 +297,8 @@ protected:
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {		
                     TransferFiles* temp = (TransferFiles*) * fileiter;
 		    tempUrl = temp;
-		    std::string surl = temp->SOURCE_SURL;
-		    std::string durl = temp->DEST_SURL;
+		    surl = temp->SOURCE_SURL;
+		    durl = temp->DEST_SURL;
 		    job_id = temp->JOB_ID;
 		    vo_name = temp->VO_NAME;
 		    cred_id = temp->CRED_ID;
@@ -307,12 +311,10 @@ protected:
                     destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
 		    source_space_token = temp->SOURCE_SPACE_TOKEN;		
 		    dest_space_token = temp->DEST_SPACE_TOKEN;					    
-		    std::string checksum = std::string("");
-		    std::string url = std::string("");
                         
                         if (std::string(temp->CHECKSUM_METHOD).length() > 0) { 
 			if (std::string(temp->CHECKSUM).length() > 0)
-                           	std::string checksum = temp->CHECKSUM;
+                           	checksum = temp->CHECKSUM;
                         }		
 		   url = file_id + " " + surl + " " + durl + " " + checksum;
 		   urls.push_back(url);		      		    
@@ -351,6 +353,7 @@ protected:
                             chown(proxy_file.c_str(), pw_uid, getgid());
                         }
                        
+		        params.append(" -G ");
                         params.append(" -a ");
                         params.append(job_id);                     
                         params.append(" -C ");
@@ -417,20 +420,20 @@ protected:
         while (1) {
             /*get jobs in submitted state*/
             DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-
             /*also get jobs which have been canceled by the client*/
             DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
             if (requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
                 killRunninfJob(requestIDs);
             requestIDs.clear(); /*clean the list*/
 
-            executeUrlcopy(jobs2, false);		
+	    if(jobs2.size() > 0)
+            	executeUrlcopy(jobs2, false);		
 	    
 	    /* --- session reuse section ---*/
 	    /*get jobs in submitted state and session reuse on*/
             DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2);
-	    
-            executeUrlcopy(jobs2, true);			    
+	    if(jobs2.size() > 0)	    
+            	executeUrlcopy(jobs2, true);			    
 	    
             sleep(1);
         } /*end while*/
