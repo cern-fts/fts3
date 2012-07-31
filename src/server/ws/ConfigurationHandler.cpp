@@ -69,7 +69,7 @@ const string ConfigurationHandler::get_str_exp =
 		;
 
 const string ConfigurationHandler::get_vec_exp =
-		"\\s*\".+\"\\s*:\\s*\\[((\\s*\"[a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+)\\]\\s*"
+		"\\s*\".+\"\\s*:\\s*\\[((\\s*\"[\\*a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+)\\]\\s*"
 		;
 
 const string ConfigurationHandler::get_par_exp =
