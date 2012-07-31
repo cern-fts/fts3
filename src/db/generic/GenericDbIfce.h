@@ -243,7 +243,7 @@ public:
 
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
-    virtual std::set<std::string> getAllMatchingSeNames(std::string name);
+    virtual std::set<std::string> getAllMatchingSeNames(std::string name) = 0;
 
     virtual void getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) = 0;
     
