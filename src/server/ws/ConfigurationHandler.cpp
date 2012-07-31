@@ -454,7 +454,7 @@ void ConfigurationHandler::addGroupConfiguration() {
 			db->delete_group(*it);
 			// add the SEs to the given group
 			set<string>::iterator mm_it;
-			for (mm_it = matchingMemberNames.begin(); mm_it < matchingMemberNames.end(); mm_it++) {
+			for (mm_it = matchingMemberNames.begin(); mm_it != matchingMemberNames.end(); mm_it++) {
 				// check if the SE is a member of a group
 				string gr = db->get_group_name(*mm_it);
 				if (gr.empty()) {
