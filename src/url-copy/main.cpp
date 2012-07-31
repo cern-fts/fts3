@@ -51,6 +51,7 @@ static std::string errorScope("");
 static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
+static std::string readFile("");
 
 static uid_t privid;
 static uid_t pw_uid;
@@ -106,7 +107,9 @@ void signalHandler( int signum )
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
     reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer process died");
     logStream.close();
-    fileManagement.archive();    
+    fileManagement.archive();
+    if(reuseFile.length() > 0)
+    	unlink(readFile.c_str());    
     exit(1);     
    }else{
     seteuid(privid);
@@ -121,6 +124,8 @@ void signalHandler( int signum )
     reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user");
     logStream.close();
     fileManagement.archive();    
+    if(reuseFile.length() > 0)
+    	unlink(readFile.c_str());
     sleep(1);
     exit(signum);  
     }
@@ -303,7 +308,7 @@ int main(int argc, char **argv) {
         
     std::vector<std::string> urlsFile;
     std::string line("");
-    std::string readFile = "/var/tmp/"+job_id;
+    readFile = "/var/tmp/"+job_id;
     if(reuseFile.length() > 0){
         std::ifstream infile (readFile.c_str(), std::ios_base::in);
   	while (getline(infile, line, '\n')){
