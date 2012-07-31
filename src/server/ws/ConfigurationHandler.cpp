@@ -465,7 +465,7 @@ void ConfigurationHandler::addGroupConfiguration() {
 				string gr = db->get_group_name(*mm_it);
 				if (gr.empty()) {
 					// if not, add it to the group
-					db->add_se_to_group(*mm_it, name);
+					db->add_se_to_group(*mm_it, *it);
 				} else /*if (gr != name)*/ { // TODO check now when the group is deleted this check should be unnecessary
 					// if its a member of other group throw an exception
 					throw Err_Custom (
