@@ -919,7 +919,7 @@ void OracleAPI::getSe(Se* &se, std::string seName){
 	    const std::string tag = "getAllMatchingSeNames";
 	    std::string query_stmt =
 	    		"SELECT "
-	            " 	t_se.NAME,  "
+	            " 	t_se.NAME  "
 	            "FROM t_se "
 	    		"WHERE t_se.NAME like :1";
 
