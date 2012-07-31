@@ -589,5 +589,8 @@ stop:
     if(cert)
     	delete cert;
 
+    if(reuseFile.length() > 0)
+    	unlink(readFile.c_str());
+
     return EXIT_SUCCESS;
 }
