@@ -52,6 +52,7 @@ static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
+static std::string reuseFile("");
 
 static uid_t privid;
 static uid_t pw_uid;
@@ -216,7 +217,6 @@ int main(int argc, char **argv) {
     std::string proxy("");
     char errorBuffer[2048] = {0};
     bool debug = false;
-    std::string reuseFile = std::string("");
     
     // register signal SIGINT and signal handler  
     signal(SIGINT, signalHandler);      
