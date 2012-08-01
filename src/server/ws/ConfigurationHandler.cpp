@@ -152,6 +152,20 @@ void ConfigurationHandler::parse(string configuration) {
 		out = getNumber(what[OUT]);
 		policy = getString(what[POLICY]);
 	}
+
+	// check the following constraints:
+
+	// make sure a group cannot have a pair configuration (at least for now)
+	if (share_type == PAIR_SHARE && type == GROUP_TYPE)
+		throw Err_Custom("The pair share is only allowed for SEs (not for SE groups)!");
+
+	// in case if it is a public share the share_id has to be 'null'
+	if (share_type == PUBLIC_SHARE && share_id != null_str)
+		throw Err_Custom("The share_id for public share has to be 'null'!");
+
+	// a SE configuration cannot have members
+	if (type == SE_TYPE && cfgMembers)
+		throw Err_Custom("Wrong configuration format: A SE configuration may not have members entry!");
 }
 
 ConfigurationHandler::~ConfigurationHandler() {
@@ -324,17 +338,9 @@ shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig(string name
 
 void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 
-	// in case if its public share the share_id has to be 'null'
-	if (share_type == PUBLIC_SHARE && share_id != null_str)
-		throw Err_Custom("The share_id for public share has to be 'null'!");
-
 	set<string> matchingPairNames;
 	// check if its a pair share
 	if (share_type == PAIR_SHARE) {
-		// in case if its a SE group throw an exception
-		if (type == GROUP_TYPE)
-			throw Err_Custom("The pair share is only allowed for SEs (not for SE groups)!");
-
 		// check if the SE (it's a SE because it's only allowed for SEs) is in the DB
 		matchingPairNames = addSeIfNotExist(share_id);
 	}
@@ -468,7 +474,7 @@ void ConfigurationHandler::addGroupConfiguration() {
 				if (gr.empty()) {
 					// if not, add it to the group
 					db->add_se_to_group(*mm_it, *it);
-				} else /*if (gr != name)*/ { // TODO check now when the group is deleted this check should be unnecessary
+				} else {
 					// if its a member of other group throw an exception
 					throw Err_Custom (
 							"The SE: " + *mm_it + " is already a member of another SE group (" + gr + ")!"
@@ -497,12 +503,6 @@ void ConfigurationHandler::addGroupConfiguration() {
 
 void ConfigurationHandler::addSeConfiguration() {
 
-	// check if some members are specified, if yes throw an exception
-	if (cfgMembers) {
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Wrong configuration format!" << commit;
-		throw Err_Custom("Wrong configuration format: A SE configuration may not have members entry!");
-	}
-
 	// ensure that the SE is in the DB
 	set<string> matchingNames = addSeIfNotExist(name);
 	set<string>::iterator it;
@@ -530,25 +530,26 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 	to_lower(vo);
 	to_lower(name);
 
-	const string share_id = "\"share_type\":\"vo\",\"share_id\":\"" + vo + "\"";
+	replace_all(vo, "*", "%");
+	replace_all(name, "*", "%");
 
-	vector<SeConfig*> seConfig;
-	db->getAllShareConfigNoCritiria(seConfig);
+	// if the name was not provided replace the empty string with a wildmark
+	if (name.empty()) {
+		name = "%";
+	}
+
+	// prepare the share id (if the vo name was not provided it should be empty)
+	const string share_id = vo.empty() ? string() : "\"share_type\":\"vo\",\"share_id\":\"" + vo + "\"";
+
+	// check the share configuration both for a SE and a SE group
+	vector<SeAndConfig*> seAndConfig;
+	db->getAllShareAndConfigWithCritiria(seAndConfig, name, share_id, string(), string());
 
 	vector<string> ret;
-	vector<SeConfig*>::iterator it_cfg;
-	for (it_cfg = seConfig.begin(); it_cfg < seConfig.end(); it_cfg++) {
+	vector<SeAndConfig*>::iterator it_cfg;
+	for (it_cfg = seAndConfig.begin(); it_cfg < seAndConfig.end(); it_cfg++) {
 
-		SeConfig* cfg = *it_cfg;
-		
-		if (!vo.empty()) {
-			if (cfg->SHARE_ID != share_id) continue;
-		}
-
-		if (!name.empty()) {
-			if (cfg->SE_NAME != name) continue;
-		}
-
+		SeAndConfig* cfg = *it_cfg;
 		string resp =
 			"{"
 				"\"name\":\"" + cfg->SE_NAME + "\","
@@ -564,33 +565,34 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 		delete (cfg);
 	}
 
-	// we are not interested in protocol specific configuration if vo filter was used
-	if (vo.empty()) {
+	// if we are looking for vo settings that's it!
+	if (!vo.empty()) return ret;
 
-		vector<Se*> se;
-		db->getAllSeInfoNoCritiria(se);
+	// get all matching names, it can be both SE and SE group names (since the user may give just a wildmark as the name)
+	set<string> matchingNames[2];
+	matchingNames[0] = db->getAllMatchingSeNames(name);
+	matchingNames[1] = db->getAllMatchingSeGroupNames(name);
+	set<string>::iterator it;
 
-		vector<Se*>::iterator it_se;
-		for (it_se = se.begin(); it_se < se.end(); it_se++) {
+	// iterate both over SEs and SE groups
+	for (int isGroup = 0; isGroup < 2; isGroup++) {
+		for (it = matchingNames[isGroup].begin(); it != matchingNames[isGroup].end(); it++) {
 
-			string se_name = (*it_se)->NAME;
-
-			if (!name.empty()) {
-				if (se_name != name) continue;
+			SeProtocolConfig* cfg = 0;
+			if (isGroup) {
+				if (!db->is_group_protocol_exist(*it)) continue;
+				cfg = db->get_group_protocol_config(*it);
+			} else {
+				if (!db->is_se_protocol_exist(*it)) continue;
+				cfg = db->get_se_protocol_config(*it);
 			}
 
-			if (!db->is_se_protocol_exist(se_name)) {
-				delete *it_se;
-				continue;
-			}
-
-			SeProtocolConfig* cfg = db->get_se_protocol_config(se_name);
 			if (cfg->URLCOPY_TX_TO || cfg->NOSTREAMS) {
 
 				string resp =
 					"{"
-						"\"name\":\"" + se_name + "\","
-						"\"type\":\"" + SE_TYPE + "\","
+						"\"name\":\"" + *it + "\","
+						"\"type\":\"" + (isGroup ? GROUP_TYPE : SE_TYPE) + "\","
 						"\"protocol\":"
 						"{";
 				if (cfg->URLCOPY_TX_TO) {
@@ -611,29 +613,23 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 			}
 
 			delete cfg;
-			delete *it_se;
 		}
 	}
 
-	// if we are looking for vo settings the group specific info is ommited
-	if (!vo.empty()) return ret;
+	// if the group (index = 1) set is empty we are done
+	if (matchingNames[1].empty()) return ret;
 
-	vector<string> groups = db->get_group_names();
-	vector<string>::iterator it_gr;
-	for (it_gr = groups.begin(); it_gr < groups.end(); it_gr++) {
-
-		if (!name.empty()) {
-			if (name != *it_gr) continue;
-		}
+	// otherwise we have to look for group members
+	for (it = matchingNames[1].begin(); it != matchingNames[1].end(); it++) {
 
 		string resp =
 				"{"
-					"\"name\":\"" + *it_gr + "\","
+					"\"name\":\"" + *it + "\","
 					"\"type\":\"" + GROUP_TYPE + "\","
 					"\"members\":["
 				;
 
-		vector<string> members = db->get_group_members(*it_gr);
+		vector<string> members = db->get_group_members(*it);
 		vector<string>::iterator it_mbr;
 		for (it_mbr = members.begin(); it_mbr < members.end(); it_mbr++) {
 			resp += "\"" + *it_mbr + "\"";
@@ -643,33 +639,33 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 		resp +=	"]}";
 		ret.push_back(resp);
 
-		if (db->is_group_protocol_exist(*it_gr)) {
-			SeProtocolConfig* cfg = db->get_group_protocol_config(*it_gr);
-
-			resp.erase();
-			resp +=
-					"{"
-						"\"name\":\"" + *it_gr + "\","
-						"\"type\":\"" + GROUP_TYPE + "\","
-						"\"protocol\":"
-						"{";
-			if (cfg->URLCOPY_TX_TO) {
-				resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);
-				if (cfg->NOSTREAMS)
-						resp += ",";
-			}
-
-			if (cfg->NOSTREAMS) {
-				resp += "\"nostreams\":" + lexical_cast<string>(cfg->NOSTREAMS);
-			}
-
-			resp +=
-						"}"
-					"}";
-
-			ret.push_back(resp);
-			delete cfg;
-		}
+//		if (db->is_group_protocol_exist(*it_gr)) {
+//			SeProtocolConfig* cfg = db->get_group_protocol_config(*it_gr);
+//
+//			resp.erase();
+//			resp +=
+//					"{"
+//						"\"name\":\"" + *it_gr + "\","
+//						"\"type\":\"" + GROUP_TYPE + "\","
+//						"\"protocol\":"
+//						"{";
+//			if (cfg->URLCOPY_TX_TO) {
+//				resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);
+//				if (cfg->NOSTREAMS)
+//						resp += ",";
+//			}
+//
+//			if (cfg->NOSTREAMS) {
+//				resp += "\"nostreams\":" + lexical_cast<string>(cfg->NOSTREAMS);
+//			}
+//
+//			resp +=
+//						"}"
+//					"}";
+//
+//			ret.push_back(resp);
+//			delete cfg;
+//		}
 	}
 
 	return ret;
@@ -692,6 +688,13 @@ void ConfigurationHandler::del() {
 			tmp.SE_GROUP_NAME = name;
 			db->delete_se_group_protocol_config(&tmp);
 		}
+	}
+
+	// handle group members
+	if (cfgMembers) {
+		// this one will be called only if the type is a group
+		// otherwise an exception will be thrown during parsing
+		db->delete_group(name);
 	}
 
 	// handle share configuration
