@@ -1,6 +1,6 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        FTS3
 
 Group:          System Environment/Daemons 
