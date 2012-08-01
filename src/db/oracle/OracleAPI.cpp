@@ -1387,8 +1387,8 @@ REQUIRED: SE_NAME
 OPTIONAL: VO_NAME
 */
 void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE){
-    std::string query = "DELETE FROM T_SE_VO_SHARE WHERE SE_NAME ='"+SE_NAME+"'";    
-    			query.append(" AND SHARE_ID ='"+SHARE_ID+"'");	
+    std::string query = "DELETE FROM T_SE_VO_SHARE WHERE SE_NAME like'"+SE_NAME+"'";
+    			query.append(" AND SHARE_ID like '"+SHARE_ID+"'");
     			query.append(" AND SHARE_TYPE ='"+SHARE_TYPE+"'");
 
     try {        
@@ -1663,7 +1663,7 @@ return exists;
 
 bool OracleAPI::is_se_group_exist(std::string group){
 	const std::string tag = "is_se_group_exist";
-	std::string query = "select SE_GROUP_NAME from t_se_group where SE_GROUP_NAME=:1 ";
+	std::string query = "select SE_GROUP_NAME from t_se_group where SE_GROUP_NAME like :1 ";
 	bool exists = false;	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
@@ -1954,9 +1954,9 @@ bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolCo
     return true;
 }
     
-void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig){
+void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
 	const std::string tag = "delete_se_protocol_config";
-	std::string query = "delete from t_se_protocol where SE_NAME=:1 and SE_GROUP_NAME IS NULL ";
+	std::string query = "delete from t_se_protocol where SE_NAME like :1 and SE_GROUP_NAME IS NULL ";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seProtocolConfig->SE_NAME);				    		
@@ -1989,7 +1989,7 @@ void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 
 void OracleAPI::delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
 	const std::string tag = "delete_se_group_protocol_config";
-	std::string query = "delete from t_se_protocol where SE_GROUP_NAME=:1";
+	std::string query = "delete from t_se_protocol where SE_GROUP_NAME like :1";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);    			    		
@@ -2138,10 +2138,10 @@ void OracleAPI::remove_se_from_group(std::string se, std::string group){
 
 void OracleAPI::delete_group(std::string group){
 	const std::string tag = "delete_group";
-	std::string query = "delete from t_se_group where se_group_name=:1";
+	std::string query = "delete from t_se_group where se_group_name like :1";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
-	s->setString(1, group);	    		
+        s->setString(1, group);
         s->executeUpdate();
 	conn->commit();	       	    
         conn->destroyStatement(s, tag);	
