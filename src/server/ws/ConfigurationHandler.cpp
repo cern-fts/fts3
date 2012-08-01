@@ -689,7 +689,7 @@ void ConfigurationHandler::del() {
 		} else if (type == GROUP_TYPE) {
 
 			SeProtocolConfig tmp;
-			tmp.SE_NAME = name;
+			tmp.SE_GROUP_NAME = name;
 			db->delete_se_group_protocol_config(&tmp);
 		}
 	}
