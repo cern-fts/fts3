@@ -92,6 +92,8 @@ static bool checkUrlCopy(){
 
 int main (int argc, char** argv)
 {
+    char *hostcert = "/etc/grid-security/hostcert.pem";
+
     try 
     {
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
@@ -100,6 +102,11 @@ int main (int argc, char** argv)
 		exit(1);
 	}
 		
+        if (fexists(hostcert) != 0){
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert is installed" << commit;
+		exit(1);	
+	}
+
 
         fts3_initialize_db_backend();
         struct sigaction action;

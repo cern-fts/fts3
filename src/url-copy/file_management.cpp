@@ -126,10 +126,23 @@ std::string FileManagement::generateLogFileName(std::string surl, std::string du
     //source
     parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
     shost = base_host;
+        if (base_scheme)
+            free(base_scheme);
+        if (base_host)
+            free(base_host);
+        if (base_path)
+            free(base_path);
 
     //dest
     parse_url(durl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
     dhost = base_host;
+    
+        if (base_scheme)
+            free(base_scheme);
+        if (base_host)
+            free(base_host);
+        if (base_path)
+            free(base_path);
 
     archiveFileName = shost + "__" + dhost;
 
