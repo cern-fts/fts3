@@ -638,34 +638,6 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 
 		resp +=	"]}";
 		ret.push_back(resp);
-
-//		if (db->is_group_protocol_exist(*it_gr)) {
-//			SeProtocolConfig* cfg = db->get_group_protocol_config(*it_gr);
-//
-//			resp.erase();
-//			resp +=
-//					"{"
-//						"\"name\":\"" + *it_gr + "\","
-//						"\"type\":\"" + GROUP_TYPE + "\","
-//						"\"protocol\":"
-//						"{";
-//			if (cfg->URLCOPY_TX_TO) {
-//				resp += "\"urlcopy_tx_to\":" + lexical_cast<string>(cfg->URLCOPY_TX_TO);
-//				if (cfg->NOSTREAMS)
-//						resp += ",";
-//			}
-//
-//			if (cfg->NOSTREAMS) {
-//				resp += "\"nostreams\":" + lexical_cast<string>(cfg->NOSTREAMS);
-//			}
-//
-//			resp +=
-//						"}"
-//					"}";
-//
-//			ret.push_back(resp);
-//			delete cfg;
-//		}
 	}
 
 	return ret;

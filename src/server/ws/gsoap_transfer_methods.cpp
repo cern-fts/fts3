@@ -545,3 +545,11 @@ int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRo
 
 	return SOAP_OK;
 }
+
+/// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
+int fts3::impltns__debugSet(struct soap*, string _source, string _destination, bool _debug, struct impltns__debugSetResponse &_param_16) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
+
+	return SOAP_OK;
+}
