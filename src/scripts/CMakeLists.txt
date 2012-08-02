@@ -39,3 +39,7 @@ install(FILES         fts3-msg-cron.logrotate
 install(FILES         fts3-server.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
 	RENAME fts3-server )
+
+install(FILES         fts3-msg-bulk.logrotate
+        DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
+        RENAME fts3-msg-bulk )
