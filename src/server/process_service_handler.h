@@ -337,9 +337,13 @@ protected:
 
                     FileTransferScheduler scheduler(tempUrl);
                     if (scheduler.schedule()) { /*SET TO READY STATE WHEN TRUE*/
-
+			//set all to ready, special case for session reuse
+			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {		
+                    		TransferFiles* temp = (TransferFiles*) * fileiter;
+				DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
+		    	}
+			
                         debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
-
                         if (debug == true) {
                             params.append(" -F ");
                         }
