@@ -42,13 +42,11 @@ using namespace fts3::common;
 
 SubmitTransferCli::SubmitTransferCli() {
 
-	// but default we don't use checksum
+	// by default we don't use checksum
 	checksum = false;
 
 	// add commandline options specific for fts3-transfer-submit
 	specific.add_options()
-			("source", value<string>(), "Specify source site name.")
-			("destination", value<string>(), "Specify destination site name.")
 			("blocking,b", "Blocking mode, wait until the operation completes.")
 			("file,f", value<string>(&bulk_file), "Name of a configuration file.")
 			("gparam,g", value<string>(), "Gridftp parameters.")
@@ -73,8 +71,6 @@ SubmitTransferCli::SubmitTransferCli() {
 			;
 
 	// add positional (those used without an option switch) command line options
-	p.add("source", 1);
-	p.add("destination", 1);
 	p.add("checksum", 1);
 
 }
@@ -106,24 +102,6 @@ GSoapContextAdapter* SubmitTransferCli::validate() {
 	if (!createJobElements()) return 0;
 
 	return ctx;
-}
-
-string SubmitTransferCli::getSource() {
-
-	// check if source was passed via command line options
-	if (vm.count("source")) {
-		return vm["source"].as<string>();
-	}
-	return "";
-}
-
-string SubmitTransferCli::getDestination() {
-
-	// check if destination was passed via command line options
-	if (vm.count("destination")) {
-		return vm["destination"].as<string>();
-	}
-	return "";
 }
 
 string SubmitTransferCli::getDelegationId() {

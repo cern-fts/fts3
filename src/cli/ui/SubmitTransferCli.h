@@ -25,7 +25,7 @@
 #ifndef SUBMITTRANSFERCLI_H_
 #define SUBMITTRANSFERCLI_H_
 
-#include "CliBase.h"
+#include "SrcDestCli.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 #include <vector>
 
@@ -39,9 +39,6 @@ namespace fts3 { namespace cli {
  * SubmitTransferCli is the command line utility used for the fts3-transfer-submit tool.
  *
  * In addition to the inherited functionalities from CliBase the SubmitTransferCli class provides:
- * 	 	- source (--source), the first positional parameter (passed without any switch option)
- * 	 		parameter is regarded as source
- * 	 	- destination (--destination), the second positional parameter is regarded as destination
  * 	 	- blocking (-b)
  * 	 	- bulk-job file (-f)
  * 	 	- grid ftp parameters (-g)
@@ -60,7 +57,7 @@ namespace fts3 { namespace cli {
  *
  * @see CliBase
  */
-class SubmitTransferCli : public CliBase {
+class SubmitTransferCli : public SrcDestCli {
 
 	/**
 	 * Single job element.
@@ -95,9 +92,9 @@ public:
 	 * Default constructor.
 	 *
 	 * Initializes string fields corresponding to FTS3 parameters. Moreover, creates
-	 * the transfer-submit specific command line options, source, destination and
-	 * checksum are also market as positional options, checksum is a hidden option
-	 * (not printed in help), other oprions are visible.
+	 * the transfer-submit specific command line options, checksum is also marked as
+	 * positional options, checksum is a hidden option (not printed in help),
+	 * other options are visible.
 	 */
 	SubmitTransferCli();
 
@@ -167,20 +164,6 @@ public:
 	 * @see SubmitTransferCli::performChecks()
 	 */
 	string getPassword();
-
-	/**
-	 * Gets the source file name (string) for the job.
-	 *
-	 * @return source string if it was given as a CLI option, or an empty string if not
-	 */
-	string getSource();
-
-	/**
-	 * Gets the destination file name (string) for the job.
-	 *
-	 * @return destination string if it was given as a CLI option, or an empty string if not
-	 */
-	string getDestination();
 
 	/**
 	 * Gets the delegation ID (string).

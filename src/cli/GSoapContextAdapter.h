@@ -232,6 +232,11 @@ public:
 	 */
 	void setInterfaceVersion(string interface);
 
+	/**
+	 *
+	 */
+	void debugSet(string source, string destination, bool debug);
+
 	///@{
 	/**
 	 * A group of methods that check if the FTS3 service supports various functionalities.

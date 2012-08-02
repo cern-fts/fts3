@@ -70,6 +70,8 @@ set(fts3_cli_common_sources
     ui/VoNameCli.cpp
     ui/SetCfgCli.cpp
     ui/GetCfgCli.cpp
+    ui/SrcDestCli.cpp
+    ui/DebugSetCli.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
 )
@@ -159,6 +161,14 @@ add_executable(fts3-config-get
     config/fts3-config-get.cpp
 )
 target_link_libraries (fts3-config-get fts3_cli_common)
+
+# ------------------------------------------------------------------------
+# fts3-debug-set command
+
+add_executable(fts3-debug-set 
+    debug/fts3-debug-set.cpp
+)
+target_link_libraries (fts3-debug-set fts3_cli_common)
 
 # ------------------------------------------------------------------------
 
