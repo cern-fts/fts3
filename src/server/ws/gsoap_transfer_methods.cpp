@@ -547,9 +547,28 @@ int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRo
 }
 
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
-int fts3::impltns__debugSet(struct soap*, string _source, string _destination, bool _debug, struct impltns__debugSetResponse &_param_16) {
+int fts3::impltns__debugSet(struct soap* soap, string _source, string _destination, bool _debug, struct impltns__debugSetResponse &_param_16) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
+
+	try{
+		AuthorizationManager::getInstance().authorize(soap);
+		DBSingleton::instance().getDBObjectInstance()->setDebugMode(
+				_source,
+				_destination,
+				_debug ? "on" : "off"
+			);
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "TransferException");
+
+		return SOAP_FAULT;
+	} catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+	    return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
