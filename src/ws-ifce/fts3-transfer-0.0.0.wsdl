@@ -309,6 +309,16 @@
 
    </message>
 
+   <message name="debugSetRequest">
+   
+      <part name="source" type="xsd:string"/>
+      <part name="destination" type="xsd:string"/>
+      <part name="debug" type="xsd:boolean"/>
+      
+   </message> 
+   
+   <message name="debugSetResponse"/>
+
    <message name="getTransferJobSummary2Response">
 
       <part name="getTransferJobSummary2Return" type="tns3:TransferJobSummary2"/>
@@ -624,7 +634,22 @@
          <fault message="impl:InternalException" name="InternalException"/>
 
       </operation>
+      
+      <operation name="debugSet" parameterOrder="debug">
+      
+         <input message="impl:debugSetRequest" name="debugSetRequest"/>
 
+         <output message="impl:debugSetResponse" name="debugSetResponse"/>
+      
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+         
+      </operation>
 
       <operation name="listRequests" parameterOrder="inGivenStates">
 
@@ -981,6 +1006,48 @@
          </input>
 
          <output name="transferSubmit3Response">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+
+ 	  <operation name="debugSet">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="debugSetRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="debugSetResponse">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 
