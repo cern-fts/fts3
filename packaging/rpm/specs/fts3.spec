@@ -109,6 +109,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/fts3-config-set
 %{_bindir}/fts3-config-get
 %{_bindir}/fts3-config-del
+%{_bindir}/fts3-debug-set
 %{_bindir}/fts3-transfer-getroles
 %{_bindir}/fts3-transfer-list
 %{_bindir}/fts3-transfer-listvomanagers
