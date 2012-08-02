@@ -4,5 +4,5 @@ DbConnectString=
 DbType=oracle
 DbUserName=
 DbPassword=
-TransferLogDirectory=/var/log/fts3i
+TransferLogDirectory=/var/log/fts3
 Infosys=lcg-bdii.cern.ch:2170

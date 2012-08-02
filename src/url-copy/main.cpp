@@ -478,7 +478,7 @@ int main(int argc, char **argv) {
 
     gfalt_set_timeout(params, timeout, NULL);
     gfalt_set_nbstreams(params, nbstreams, NULL);
-    //gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
+    gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
 
     seteuid(privid);
     msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
