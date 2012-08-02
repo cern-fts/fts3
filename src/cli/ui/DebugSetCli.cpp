@@ -50,12 +50,6 @@ DebugSetCli::~DebugSetCli() {
 
 }
 
-void DebugSetCli::parse(int ac, char* av[]) {
-
-	// do the basic initialization, but with hidden parameters are resolved before specific ones
-	CliBase::parse(ac, av);
-}
-
 GSoapContextAdapter* DebugSetCli::validate() {
 
 	// do the standard validation
@@ -76,6 +70,11 @@ GSoapContextAdapter* DebugSetCli::validate() {
 
 	} else {
 		cout << "Debug mode has to be specified (on/off)!" << endl;
+		return 0;
+	}
+
+	if (!vm.count("source")) {
+		cout << "At least one SE name must be provided!" << endl;
 		return 0;
 	}
 

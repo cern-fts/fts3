@@ -52,18 +52,6 @@ public:
 	virtual ~DebugSetCli();
 
 	/**
-	 * Initializes the object with command line options.
-	 *
-	 * In addition sets delegation flag.
-	 *
-	 * @param ac - argument count
-	 * @param av - argument array
-	 *
-	 * @see CliBase::initCli(int, char*)
-	 */
-	virtual void parse(int ac, char* av[]);
-
-	/**
 	 * Validates command line options.
 	 *	Checks that the debug mode was set correctly.
 	 *
