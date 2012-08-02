@@ -95,6 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_initddir}/fts3-server
 %{_initddir}/fts3-msg-cron
 %{_sysconfdir}/logrotate.d/fts3-msg-cron
+%{_sysconfdir}/logrotate.d/fts3-msg-bulk
 %{_sysconfdir}/logrotate.d/fts3-server
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
