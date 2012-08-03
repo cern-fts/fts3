@@ -40,7 +40,8 @@ public:
                                  const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
-                                 const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse);
+                                 const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
+				 const std::string & sourceSE, const std::string & destSe);
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
     
@@ -323,4 +324,5 @@ public:
     
 private:
 	OracleConnection *conn;
+	bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
 };

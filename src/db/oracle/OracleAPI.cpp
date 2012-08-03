@@ -19,6 +19,36 @@ void OracleAPI::init(std::string username, std::string password, std::string con
         conn = new OracleConnection(username, password, connectString);
 }
 
+
+bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe){
+	const std::string tag = "getInOutOfSe";
+	std::string query_stmt = " SELECT count(*) from t_se_vo_share where (se_name=:1 or se_name=:2) "
+				 " and share_value like '%\"in\":0,\"out\":0%'";
+	bool process = true;
+					 
+   try {
+        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
+	s->setString(1, sourceSe);
+	s->setString(2, destSe);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        if (r->next()) {
+		int count = r->getInt(1);
+		if(count > 0)
+			process = false;
+			
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+	return process;
+	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }			
+  return process;    	 
+}
+
+
 void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
     TransferJobs* tr_jobs = NULL;
     std::vector<TransferJobs*>::iterator iter;
@@ -81,7 +111,11 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
             tr_jobs->COPY_PIN_LIFETIME = r->getInt(20);
             tr_jobs->CHECKSUM_METHOD = r->getString(21);
-            jobs.push_back(tr_jobs);
+	    
+	    //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
+	    bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);	    
+	    if(process == true)
+            	jobs.push_back(tr_jobs);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -365,7 +399,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
-        const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse) {
+        const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
+	const std::string & sourceSE, const std::string & destSe) {
 
     std::string source;
     std::string destination;
@@ -378,7 +413,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     const std::string tag_file_statement = "tag_file_statement";
     const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
     " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
-    " lan_connection,fail_nearline, checksum_method, REUSE_JOB) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20)";
+    " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22)";
     const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
 
     try {
@@ -409,6 +444,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
             s_job_statement->setNull(20, oracle::occi::OCCISTRING);
         else
             s_job_statement->setString(20, "Y"); //reuse session for this job
+	s_job_statement->setString(21, sourceSE); //reuse session for this job
+	s_job_statement->setString(22, destSe); //reuse session for this job    
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id
