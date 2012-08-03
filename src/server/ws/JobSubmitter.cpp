@@ -155,9 +155,6 @@ JobSubmitter::~JobSubmitter() {
 
 string JobSubmitter::submit() {
 
-  const std::string se1 = "galway.desy.de";
-  const std::string se2 = "cork.desy.de";  
-
     DBSingleton::instance().getDBObjectInstance()->submitPhysical (
     		id,
     		jobs,
@@ -175,8 +172,8 @@ string JobSubmitter::submit() {
             params.get<int>(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME),
             params.get(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE),
             params.get(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD),
-            params.get(JobParameterHandler::FTS3_PARAM_REUSE), se1, se2
-    	);
+            params.get(JobParameterHandler::FTS3_PARAM_REUSE)
+	    );
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
 	return id;
