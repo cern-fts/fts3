@@ -2642,11 +2642,11 @@ void OracleAPI::setGroupOrSeState(const std::string & se, const std::string & gr
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	if(se.length() > 0){
-		s->setString(1, se);
-		s->setString(2, state);	    		
+		s->setString(1, state);
+		s->setString(2, se);
 	}else{
-		s->setString(1, group);
-		s->setString(2, state);	    			
+		s->setString(1, state);
+		s->setString(2, group);
 	}
         s->executeUpdate();
 	conn->commit();	
