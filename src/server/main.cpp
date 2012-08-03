@@ -47,7 +47,20 @@ void fts3_initialize_db_backend()
     std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
     std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
     std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
-    db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
+    
+    try{
+    	db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
+    } 
+    catch(Err_Custom& e)
+    {            
+        exit(1);
+    }
+    catch(...){
+    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the database, check username/password/connstring" << commit;
+	exit(1);
+    }
+
+   
 }
 
 /* -------------------------------------------------------------------------- */

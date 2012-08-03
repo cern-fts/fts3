@@ -12,7 +12,8 @@ OracleConnection::OracleConnection(std::string username, std::string password, s
 	    conn->setStmtCacheSize(1000);	    
         }
     } catch (oracle::occi::SQLException const &e) {
-	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));   
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	throw Err_Custom(e.what());
     }
 }
 
