@@ -332,6 +332,7 @@ CREATE TABLE t_se_vo_share (
 CREATE TABLE t_se_group(
 	se_group_name varchar2(512) NOT NULL
 	,se_name varchar2(512) NOT NULL
+	,state VARCHAR2(30)
 	,CONSTRAINT t_se_group_pk PRIMARY KEY (se_group_name,se_name)	
 ); 
 --

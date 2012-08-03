@@ -355,6 +355,8 @@ public:
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) = 0;    
     
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
+    
+    virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state) = 0;
 };
 
 

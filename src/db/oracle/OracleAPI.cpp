@@ -22,14 +22,22 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 
 bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe){
 	const std::string tag = "getInOutOfSe";
-	std::string query_stmt = " SELECT count(*) from t_se_vo_share where (se_name=:1 or se_name=:2) "
+	/*std::string query_stmt = " SELECT count(*) from t_se_vo_share where (se_name=:1 or se_name=:2) "
 				 " and share_value like '%\"active\":\"false\"%'";
+	*/
+	
+	std::string query_stmt = " SELECT count(*) from t_se, t_se_group where t_se.name=t_se_group.se_name "
+					" and (t_se_group.se_name=:1 or t_se_group.se_name=:2 or t_se.name=:3 or t_se.name=:4) "
+				 	" and t_se.state='false' or t_se_group.state='false' ";
+		
 	bool process = true;
 					 
    try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
 	s->setString(1, sourceSe);
 	s->setString(2, destSe);
+	s->setString(3, sourceSe);
+	s->setString(4, destSe);	
         oracle::occi::ResultSet* r = conn->createResultset(s);
         if (r->next()) {
 		int count = r->getInt(1);
@@ -2590,6 +2598,36 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
 	s->setString(2, dn);
 	s->setString(3, config);	    		
 	s->setString(4, action);	    		
+        s->executeUpdate();
+	conn->commit();	
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+
+void OracleAPI::setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state){
+	std::string tag = "setGroupOrSeState";
+	std::string query("");
+	
+	if(se.length() > 0){
+		query= "update t_se set state=:1 where name=:2";
+	}else{
+		query= "update t_se_group set state=:1 where se_group_name=:2";
+		tag+="1";
+	}
+	
+    try {
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	if(se.length() > 0){
+		s->setString(1, se);
+		s->setString(2, state);	    		
+	}else{
+		s->setString(1, group);
+		s->setString(2, state);	    			
+	}
         s->executeUpdate();
 	conn->commit();	
         conn->destroyStatement(s, tag);	
