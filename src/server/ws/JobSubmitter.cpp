@@ -31,6 +31,7 @@
 
 #include "GSoapDelegationHandler.h"
 
+#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
 
@@ -38,6 +39,8 @@
 using namespace boost;
 using namespace db;
 using namespace fts3::ws;
+
+const string JobSubmitter::seNameRegex = ".+://([a-zA-Z0-9\\.-]+):\\d+/.+";
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 
@@ -73,12 +76,26 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 		cred = *job->credential;
 	}
 
+	if (!job->transferJobElements.empty()) {
+		string* src = (*job->transferJobElements.begin())->source;
+		string* dest = (*job->transferJobElements.begin())->dest;
+
+		regex re (seNameRegex);
+		smatch what;
+
+		regex_match(*src, what, re, match_extra);
+		sourceSe = what[SE_NAME_REGEX_INDEX];
+
+		regex_match(*dest, what, re, match_extra);
+		destinationSe = what[SE_NAME_REGEX_INDEX];
+	}
+
 	// extract the job elements from tns3__TransferJob object and put them into a vector
     vector<tns3__TransferJobElement * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
-    	// check wether the source and destination files are supported
+    	// check weather the source and destination files are supported
     	if (!checkProtocol(dest)) continue;
     	if (!checkProtocol(src) && !checkIfLfn(src)) continue;
 
@@ -172,8 +189,10 @@ string JobSubmitter::submit() {
             params.get<int>(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME),
             params.get(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE),
             params.get(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD),
-            params.get(JobParameterHandler::FTS3_PARAM_REUSE),"",""
-	    );
+            params.get(JobParameterHandler::FTS3_PARAM_REUSE),
+            sourceSe,
+            destinationSe
+    	);
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
 	return id;

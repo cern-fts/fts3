@@ -100,6 +100,14 @@ private:
 	string cred;
 	/// copy lifetime pin
 	int copyPinLifeTime;
+	/// source SE (it's the same for all files in the transfer job)
+	string sourceSe;
+	/// destination SE (it's the same for all files in the transfer job)
+	string destinationSe;
+	/// regular expression that describes a source or destination (used for getting the SE name)
+	static const string seNameRegex;
+	/// The index of the SE name group (NOT a SE group!!!) in the regular expression
+	static const int SE_NAME_REGEX_INDEX = 1;
 
 	/// maps job parameter values to their names
 	JobParameterHandler params;
