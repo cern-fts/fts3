@@ -21,39 +21,59 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 
 
 bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe){
-	const std::string tag = "getInOutOfSe";
-	/*std::string query_stmt = " SELECT count(*) from t_se_vo_share where (se_name=:1 or se_name=:2) "
-				 " and share_value like '%\"active\":\"false\"%'";
-	*/
-	
-	std::string query_stmt = " SELECT count(*) from t_se, t_se_group where t_se.name=t_se_group.se_name "
-					" and (t_se_group.se_name=:1 or t_se_group.se_name=:2 or t_se.name=:3 or t_se.name=:4) "
-				 	" and t_se.state='false' or t_se_group.state='false' ";
+	std::string tagse = "getInOutOfSese";
+	std::string taggroup = "getInOutOfSegroup";	
+	std::string query_stmt_se = " SELECT count(*) from t_se where "
+					" (t_se.name=:1 or t_se.name=:2) "
+				 	" and t_se.state='false' ";
+	std::string query_stmt_group = " SELECT count(*) from t_se_group where "
+					" (t_se_group.se_name=:1 or t_se_group.se_name=:2) "
+				 	" and t_se_group.state='false' ";
 		
-	bool process = true;
+	bool processSe = true;
+	bool processGroup = true;	
 					 
    try {
-        oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
-	s->setString(1, sourceSe);
-	s->setString(2, destSe);
-	s->setString(3, sourceSe);
-	s->setString(4, destSe);	
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        if (r->next()) {
-		int count = r->getInt(1);
-		if(count > 0)
-			process = false;
-			
+        oracle::occi::Statement* s_se = conn->createStatement(query_stmt_se, tagse);	
+	s_se->setString(1, sourceSe);
+	s_se->setString(2, destSe);
+	oracle::occi::ResultSet* rSe = conn->createResultset(s_se);
+        if (rSe->next()) {
+		int count = rSe->getInt(1);
+		if(count > 0){
+			processSe = false;
+			conn->destroyResultset(s_se, rSe);
+		        conn->destroyStatement(s_se, tagse);
+			return processSe;
+		}
         }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-	return process;
+	
+	oracle::occi::Statement* s_group = conn->createStatement(query_stmt_group, taggroup);	
+	s_group->setString(1, sourceSe);
+	s_group->setString(2, destSe);	        
+	oracle::occi::ResultSet* rGroup = conn->createResultset(s_group);
+        if (rGroup->next()) {
+		int count = rGroup->getInt(1);
+		if(count > 0)
+			processGroup = false;			
+        }
+
+        conn->destroyResultset(s_se, rSe);
+        conn->destroyStatement(s_se, tagse);
+        conn->destroyResultset(s_group, rGroup);
+        conn->destroyStatement(s_group, taggroup);	
+	
+	if(processSe==false || processGroup==false)
+		return false;
+	else
+		return true;
 	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	return true;
     }			
-  return process;    	 
+  return true;    	 
 }
 
 
