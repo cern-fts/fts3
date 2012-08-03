@@ -19,7 +19,7 @@
  * ConfigurationHandler.cpp
  *
  *  Created on: Jun 26, 2012
- *      Author: simonm
+ *      Author: Michał Simon
  */
 
 #include "ConfigurationHandler.h"
@@ -36,6 +36,7 @@ const string ConfigurationHandler::cfg_exp =
 		"\\s*\\{\\s*"
 			"(\"name\"\\s*:\\s*\"[\\*a-zA-Z0-9\\.-]+\")\\s*,\\s*"
 			"(\"type\"\\s*:\\s*\"(se|group)\")\\s*,?\\s*"
+			"(\"active\"\\s*:\\s*\"(true|false)\")?\\s*,?\\s*"
 			"(\"members\"\\s*:\\s*\\[(\\s*\"[\\*a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+\\])?\\s*,?\\s*"
 			"("
 				"\"protocol\"\\s*:\\s*"
@@ -58,6 +59,10 @@ const string ConfigurationHandler::cfg_exp =
 
 const string ConfigurationHandler::get_name_exp =
 		"\\s*\"(.+)\"\\s*:\\s*.+\\s*"
+		;
+
+const string ConfigurationHandler::get_bool_exp =
+		"\\s*\".+\"\\s*:\\s*(true|false)\\s*"
 		;
 
 const string ConfigurationHandler::get_num_exp =
@@ -90,6 +95,7 @@ ConfigurationHandler::ConfigurationHandler():
 		db (DBSingleton::instance().getDBObjectInstance()),
 		cfg_re(cfg_exp),
 		get_name_re(get_name_exp),
+		get_bool_re(get_bool_exp),
 		get_str_re(get_str_exp),
 		get_num_re(get_num_exp),
 		get_vec_re(get_vec_exp),
@@ -128,6 +134,13 @@ void ConfigurationHandler::parse(string configuration) {
 	// get the name and type
 	name = getString(what[NAME]);
 	type = getString(what[TYPE]);
+
+	// handle active state
+	string active_str = what[ACTIVE];
+	cfgActive = !active_str.empty();
+	if (cfgActive) {
+		active = getString(active_str);
+	}
 
 	// handle members
 	string members_str = what[MEMBERS];
@@ -282,11 +295,7 @@ void ConfigurationHandler::add() {
 	}
 }
 
-// TODO change the method name, now it not only adds the se to the db if it does not exist
-// it also checks if its a se name pattern with a wildmark, in this case it returns all se
-// name that matches the pattern, if there are no ses that match the pattern an exception
-// is thrown
-set<string> ConfigurationHandler::addSeIfNotExist(string name) {
+set<string> ConfigurationHandler::handleSeName(string name) {
 
 	set<string> matches = db->getAllMatchingSeNames(name);
 	// check if it is already in DB
@@ -342,7 +351,7 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 	// check if its a pair share
 	if (share_type == PAIR_SHARE) {
 		// check if the SE (it's a SE because it's only allowed for SEs) is in the DB
-		matchingPairNames = addSeIfNotExist(share_id);
+		matchingPairNames = handleSeName(share_id);
 	}
 
 	// the share_id for the DB
@@ -442,6 +451,20 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 	}
 }
 
+void ConfigurationHandler::addActiveStateConfiguration(set<string> matchingNames) {
+
+	set<string>::iterator it;
+	if (type == SE_TYPE) {
+		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
+			db->setGroupOrSeState(*it, string(), active);
+		}
+	} else if (type == GROUP_TYPE) {
+		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
+			db->setGroupOrSeState(string(), *it, active);
+		}
+	}
+}
+
 void ConfigurationHandler::addGroupConfiguration() {
 
 	set<string> matchingNames;
@@ -453,13 +476,17 @@ void ConfigurationHandler::addGroupConfiguration() {
 	}
 	set<string>::iterator it;
 
+	if (cfgActive) {
+		addActiveStateConfiguration(matchingNames);
+	}
+
 	if (cfgMembers) {
 
 		// first find all members that match the patterns
 		set<string> matchingMemberNames;
 		vector<string>::iterator m_it;
 		for (m_it = members.begin(); m_it != members.end(); m_it++) {
-			set<string> tmp = addSeIfNotExist(*m_it);
+			set<string> tmp = handleSeName(*m_it);
 			matchingMemberNames.insert(tmp.begin(), tmp.end());
 		}
 
@@ -504,8 +531,12 @@ void ConfigurationHandler::addGroupConfiguration() {
 void ConfigurationHandler::addSeConfiguration() {
 
 	// ensure that the SE is in the DB
-	set<string> matchingNames = addSeIfNotExist(name);
+	set<string> matchingNames = handleSeName(name);
 	set<string>::iterator it;
+
+	if (cfgActive) {
+		addActiveStateConfiguration(matchingNames);
+	}
 
 	if (cfgProtocolParams) {
 		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {

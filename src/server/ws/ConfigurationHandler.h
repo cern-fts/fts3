@@ -66,18 +66,20 @@ public:
 		NAME,
 		/// the entity type: SE or SE group
 		TYPE,
+		/// the active state: true or false
+		ACTIVE = 4,
 		/// group members (list of SE names)
-		MEMBERS = 4,
+		MEMBERS = 6,
 		/// protocol parameters (substructure)
-		PROTOCOL_PARAMETERS = 6,
+		PROTOCOL_PARAMETERS = 8,
 		/// share configuration (substructure)
-		SHARE = 8,
+		SHARE = 10,
 		/// share type ('public', 'vo' or 'pair')
 		SHARE_TYPE,
 		/// the share id
-		SHARE_ID = 11,
+		SHARE_ID = 13,
 		/// inbound credits
-		IN = 13,
+		IN = 15,
 		/// outbound credits
 		OUT,
 		/// share policy (exclusive or shared)
@@ -197,7 +199,7 @@ public:
 	 *
 	 * @return a set with all SE names matching the SE name pattern
 	 */
-	set<string> addSeIfNotExist(string name);
+	set<string> handleSeName(string name);
 
 
 	/**
@@ -226,10 +228,23 @@ public:
 	 * Both 'addSeConfiguration' and 'addGroupConfiguration' are using this utility
 	 * in order to add the share configuration to the DB.
 	 *
+	 * @param matchingNames - all SE or SE group names that match the given pattern
+	 *
 	 * @see addSeConfiguration
 	 * @see addGroupConfiguration
 	 */
 	void addShareConfiguration(set<string> matchingNames);
+
+	/**
+	 * Both 'addSeConfiguration' and 'addGroupConfiguration' are using this utility
+	 * in order to add the active state configuration to the DB.
+	 *
+	 * @param matchingNames - all SE or SE group names that match the given pattern
+	 *
+	 * @see addSeConfiguration
+	 * @see addGroupConfiguration
+	 */
+	void addActiveStateConfiguration(set<string> matchingNames);
 
 	/**
 	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -267,6 +282,8 @@ private:
 	static const string cfg_exp;
 	/// regular expression used for retrieving the variable name from sub-configuration
 	static const string get_name_exp;
+	/// regular expression used for retrieving the variable boolean value from sub-configuration
+	static const string get_bool_exp;
 	/// regular expression used for retrieving the variable numeric value from sub-configuration
 	static const string get_num_exp;
 	/// regular expression used for retrieving the variable string value from sub-configuration
@@ -283,6 +300,8 @@ private:
 	regex cfg_re;
 	/// regular expression object corresponding to 'get_name_exp'
 	regex get_name_re;
+	/// regular expression object corresponding to 'get_bool_exp'
+	regex get_bool_re;
 	/// regular expression object corresponding to 'get_num_exp'
 	regex get_num_re;
 	/// regular expression object corresponding to 'get_str_exp'
@@ -299,6 +318,8 @@ private:
 	string name;
 	/// entity type: 'se' or 'group'
 	string type;
+	/// active state
+	string active;
 	/// group members (list of SE names'
 	vector<string> members;
 
@@ -313,6 +334,8 @@ private:
 	/// policy (exclusive or shared)
 	string policy;
 
+	/// true if active state has been defined, false otherwise
+	bool cfgActive;
 	/// true if group members have been defined, false otherwise
 	bool cfgMembers;
 	/// true if protocol parameters have been given, false otherwise
