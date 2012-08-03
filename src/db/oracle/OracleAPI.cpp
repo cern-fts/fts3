@@ -2580,6 +2580,26 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs){
 
 }    
 
+void OracleAPI::auditConfiguration(const std::string & dn, const std::string & config, const std::string & action){
+	const std::string tag = "auditConfiguration";
+	std::string query = "INSERT INTO t_config_audit (when, dn, config, action ) VALUES (:1, :2, :3, :4)";
+    try {
+        time_t timed = time(NULL);
+        oracle::occi::Statement* s = conn->createStatement(query, tag);	
+	s->setTimestamp(1, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 		    		
+	s->setString(2, dn);
+	s->setString(3, config);	    		
+	s->setString(4, action);	    		
+        s->executeUpdate();
+	conn->commit();	
+        conn->destroyStatement(s, tag);	
+    } catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+
 // the class factories
 extern "C" GenericDbIfce* create() {
     return new OracleAPI;

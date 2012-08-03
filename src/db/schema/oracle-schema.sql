@@ -2,6 +2,25 @@
 --
 -- Holds certificate request information
 --
+CREATE TABLE t_config_audit (
+--
+-- timestamp
+   when			TIMESTAMP WITH TIME ZONE,
+--
+-- dn
+   dn			VARCHAR2(1024),
+--
+-- what has changed
+   config		VARCHAR2(4096), 
+--
+-- action (insert/update/delete)
+   action		VARCHAR2(100)    
+);
+
+
+--
+-- Holds certificate request information
+--
 CREATE TABLE t_debug (
 --
 -- source hostname

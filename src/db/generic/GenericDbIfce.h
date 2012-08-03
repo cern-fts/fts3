@@ -353,6 +353,8 @@ public:
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode) = 0;
     
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) = 0;    
+    
+    virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
 };
 
 

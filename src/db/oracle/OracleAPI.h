@@ -319,7 +319,9 @@ public:
     virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname);
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode); 
     
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs);       
+    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs); 
+    
+    virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);          
  
     
 private:
