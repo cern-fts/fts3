@@ -424,12 +424,12 @@ void msg_ifce::set_dest_url(transfer_completed* tr_completed, const std::string 
 
 void msg_ifce::set_source_hostname(transfer_completed* tr_completed, const std::string & value) {
     if (tr_completed)
-        tr_completed->source_hostname = get_hostname(value);
+        tr_completed->source_hostname = value;
 }
 
 void msg_ifce::set_dest_hostname(transfer_completed* tr_completed, const std::string & value) {
     if (tr_completed) {
-        tr_completed->dest_hostname = get_hostname(value);
+        tr_completed->dest_hostname = value;
     }
 }
 

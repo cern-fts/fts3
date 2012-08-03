@@ -125,7 +125,7 @@ std::string FileManagement::generateLogFileName(std::string surl, std::string du
     //add surl / durl
     //source
     parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    shost = base_host;
+    shost = std::string(base_host);
         if (base_scheme)
             free(base_scheme);
         if (base_host)
@@ -135,7 +135,7 @@ std::string FileManagement::generateLogFileName(std::string surl, std::string du
 
     //dest
     parse_url(durl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    dhost = base_host;
+    dhost = std::string(base_host);
     
         if (base_scheme)
             free(base_scheme);

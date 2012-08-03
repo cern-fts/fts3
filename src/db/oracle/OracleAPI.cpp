@@ -23,7 +23,7 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe){
 	const std::string tag = "getInOutOfSe";
 	std::string query_stmt = " SELECT count(*) from t_se_vo_share where (se_name=:1 or se_name=:2) "
-				 " and share_value like '%\"in\":0,\"out\":0%'";
+				 " and share_value like '%\"active\":\"false\"%'";
 	bool process = true;
 					 
    try {

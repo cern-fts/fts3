@@ -78,7 +78,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
-    	// check weather the source and destination files are supported
+    	// check wether the source and destination files are supported
     	if (!checkProtocol(dest)) continue;
     	if (!checkProtocol(src) && !checkIfLfn(src)) continue;
 
@@ -172,7 +172,7 @@ string JobSubmitter::submit() {
             params.get<int>(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME),
             params.get(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE),
             params.get(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD),
-            params.get(JobParameterHandler::FTS3_PARAM_REUSE)
+            params.get(JobParameterHandler::FTS3_PARAM_REUSE),"",""
 	    );
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
