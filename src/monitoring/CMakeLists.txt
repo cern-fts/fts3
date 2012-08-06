@@ -18,7 +18,8 @@ cmake_minimum_required(VERSION 2.6)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
 include_directories (BEFORE ../generic)
-include_directories (BEFORE ../../common)
+include_directories (BEFORE ../common)
+include_directories (BEFORE ../config)
 include_directories (.)
 
 set(fts3_msg_ifce_SOURCES msg-ifce.cpp utility_routines.cpp Logger.cpp)
@@ -46,7 +47,7 @@ add_executable (fts3_msg_cron ${fts3_msg_cron_SOURCES})
 target_link_libraries(fts3_msg_cron  ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES}  -lglib-2.0)
 target_link_libraries(fts3_msg_cron ${OCCI_LIBRARY} )
 target_link_libraries(fts3_msg_cron ${CLNTSH_LIBRARY} )
-target_link_libraries(fts3_msg_cron -lpthread )
+target_link_libraries(fts3_msg_cron -lpthread -lfts3_config -lfts3_common -lboost_thread-mt -lrt )
 
 
 install(TARGETS         fts3_msg_bulk 

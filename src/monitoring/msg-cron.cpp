@@ -55,6 +55,9 @@
 #include "Logger.h"
 #include <memory>
 #include <exception>
+#include "config/serverconfig.h"
+#include "common/logger.h"
+#include "common/error.h"
 
 using namespace activemq;
 using namespace activemq::core;
@@ -64,6 +67,8 @@ using namespace decaf::util;
 using namespace decaf::util::concurrent;
 using namespace cms;
 using namespace std;
+using namespace FTS3_COMMON_NAMESPACE;
+using namespace FTS3_CONFIG_NAMESPACE;
 
 //recovery vector in case no data is retrieved
 static vector<std::string> recoveryVector(3, "");
@@ -151,16 +156,14 @@ public:
                 exit(0);
             }
 
-            this->credentials = oracleCredentials();
-            if (this->credentials[0].length() == 0) { /*check to ensure credentials retrieved correctly*/
-                logger::writeLog("Check database username/password", true);
-                exit(0);
-            }
+         	std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
+    	 	std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
+    		std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
 
             try {
                 this->env = oracle::occi::Environment::createEnvironment();
                 if (env)
-                    this->conn = env->createConnection(credentials[0], credentials[1], credentials[2]);
+                    this->conn = env->createConnection(dbUserName, dbPassword, dbConnectString);
                 this->conn->setStmtCacheSize(100);
             } catch (const oracle::occi::SQLException& exc) {
                 errorMessage = "Cannot connect to database server: " + exc.getMessage();
@@ -211,7 +214,7 @@ public:
             string text = "{";
             // fts instance identifier 
             text += "\"fts_id\":\"";
-            text += "" + getFTSEndpoint() + "";
+            text += "" + host + "";
             //text += ""; //null values
             text += "\"";
             // milliseconds since epoc time stamp of the report 
@@ -219,38 +222,21 @@ public:
             text += _getTimestamp();
             text += "\",";
 
-            stmt0 = conn->createStatement("select distinct(vo_name) from T_CHANNEL_VO_SHARE", "sta1");
-            stmt = conn->createStatement("select   T_CHANNEL_VO_SHARE.channel_name, T_CHANNEL_VO_SHARE.channel_limit, T_CHANNEL.CHANNEL_TYPE from T_CHANNEL_VO_SHARE,T_CHANNEL where vo_name=:x and T_CHANNEL.CHANNEL_STATE='Active' and T_CHANNEL.CHANNEL_NAME=T_CHANNEL_VO_SHARE.CHANNEL_NAME", "sta2");
-            stmt2 = conn->createStatement("select  distinct SOURCE_SE,DEST_SE from t_job where CHANNEL_NAME=:x");
-	    stmt3 = conn->createStatement("Select Distinct Num1, Num2 From (Select Count(*) As Num1 From  T_Job Where Job_State='Active' And T_Job.Source_Se=:X  And T_Job.Dest_Se=:Y), (Select Count(*) As Num2  From T_Job where Job_state='Ready' and t_job.SOURCE_SE=:z and t_job.DEST_SE=:e)", "sta3");
+            stmt0 = conn->createStatement("select distinct(vo_name) from T_JOB", "sta1");            
+            stmt2 = conn->createStatement("select  distinct SOURCE_SE,DEST_SE from t_job where vo_name=:x");
+	    stmt3 = conn->createStatement("Select Distinct Num1, Num2 From (Select Count(*) As Num1 From  T_Job Where Job_State='ACTIVE' And T_Job.Source_Se=:X  And	    T_Job.Dest_Se=:Y), (Select Count(*) As Num2  From T_Job where Job_state='READY' and t_job.SOURCE_SE=:z and t_job.DEST_SE=:e)", "sta3");
+
             if (conn) {
                 rs0 = stmt0->executeQuery();
                 while (rs0->next()) {
                     //vo stuff
                     text += "\"vo\":{";
                     // Create an array of the channels 
-                    text += "\"voname\":\"" + rs0->getString(1) + "\",";
+                    text += "\"voname\":\"" + rs0->getString(1) + "\",\"links\":[";
                     // Create a query to get channels names and types
-                    stmt->setString(1, rs0->getString(1));
-                    rs = stmt->executeQuery();
 
-                    // for every channel collecting information
-                    while (rs->next()) {
-
-                        text += "\"channel\":{";
-                        text += "\"channel_name\":\"";
-                        text += rs->getString(1);
-                        text += "\"";
-                        text += ",\"channel_type\":\"";
-                        text += rs->getString(3);
-                        text += "\"";
-
-                        // create an array of links for the channel
-                        text += ",\"links\":[";
-                        // create a query to get all pairs of source_ and dest_ hosts and a number of active transfers for them   		
-                        stmt2->setString(1, rs->getString(1));
-                        rs2 = stmt2->executeQuery();
-
+                    stmt2->setString(1, rs0->getString(1));
+                    rs2 = stmt2->executeQuery();                    
                         //  for every pair source_ dest_ host collecting information
                         while (rs2->next()) {
                             ++links_found;
@@ -268,14 +254,7 @@ public:
                             rs3 = stmt3->executeQuery();
 
                             while (rs3->next()) {
-                                active = rs3->getDouble(1);
-                                max = rs->getDouble(2);
-
-                                if (max != 0)
-                                    ratio = (active / max)*100;
-                                else
-                                    ratio = 0;
-
+                                active = rs3->getInt(1);                              
                                 text += ",\"active\":\"";
                                 text += rs3->getString(1);
                                 text += "\"";
@@ -293,15 +272,11 @@ public:
                         if (links_found > 0)
                             text.resize(text.size() - 1);
 
-                        text += "]";
-
-                        text += "},";
+                        text += "]},";
 
                         links_found = 0;
-                    } //end channel
-                    stmt->closeResultSet(rs);
-                    text.resize(text.size() - 1);
-
+			text.resize(text.size() - 1);
+                    
                     text += "},";
 
                 }
@@ -310,6 +285,7 @@ public:
 
                 text += "}";
                 text += 4; /*add EOT ctrl character*/
+			
 
                 TextMessage* message = session->createTextMessage(text);
                 producer->send(message);
@@ -382,11 +358,7 @@ private:
                 if (stmt0) {
                     //stmt0->closeResultSet(rs0);
                     conn->terminateStatement(stmt0);
-                }
-                if (stmt) {
-                    //stmt->closeResultSet(rs);
-                    conn->terminateStatement(stmt);
-                }
+                }                
                 if (stmt2) {
                     //stmt2->closeResultSet(rs2);
                     conn->terminateStatement(stmt2);
@@ -409,8 +381,9 @@ private:
     }
 };
 
-int main() {
+int main(int argc, char** argv) {
 
+    FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
     MsgProducer producer;
 
     // Start the producer thread.

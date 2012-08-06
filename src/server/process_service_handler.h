@@ -158,7 +158,6 @@ protected:
         std::vector<TransferFiles*>::iterator fileiter;
         std::string sourceSiteName("");
         std::string destSiteName("");
-        //SiteName siteResolver;
         std::string source_hostname("");
         std::string destin_hostname("");
         SeProtocolConfig* protocol = NULL;
