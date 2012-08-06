@@ -11,7 +11,7 @@ CREATE TABLE t_config_audit (
    dn			VARCHAR2(1024),
 --
 -- what has changed
-   config		VARCHAR2(4096), 
+   config		VARCHAR2(4000), 
 --
 -- action (insert/update/delete)
    action		VARCHAR2(100)    
