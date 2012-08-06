@@ -91,7 +91,12 @@ const string ConfigurationHandler::VO_SHARE = "vo";
 const string ConfigurationHandler::PAIR_SHARE = "pair";
 
 
-ConfigurationHandler::ConfigurationHandler():
+ConfigurationHandler::ConfigurationHandler(string dn):
+		updateCount(0),
+		insertCount(0),
+		deleteCount(0),
+		debugCount(0),
+		dn(dn),
 		db (DBSingleton::instance().getDBObjectInstance()),
 		cfg_re(cfg_exp),
 		get_name_re(get_name_exp),
@@ -130,6 +135,9 @@ void ConfigurationHandler::parse(string configuration) {
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Wrong configuration format!" << commit;
 		throw Err_Custom("Wrong configuration format!");
 	}
+
+	// the whole cfg cmd
+	all = what[ALL];
 
 	// get the name and type
 	name = getString(what[NAME]);
@@ -293,6 +301,16 @@ void ConfigurationHandler::add() {
 	} else if (type == GROUP_TYPE) {
 		addGroupConfiguration();
 	}
+
+	if (insertCount) {
+		string action = "insert (x" + lexical_cast<string>(insertCount) + ")";
+		db->auditConfiguration(dn, all, action);
+	}
+
+	if (updateCount) {
+		string action = "update (x" + lexical_cast<string>(updateCount) + ")";
+		db->auditConfiguration(dn, all, action);
+	}
 }
 
 set<string> ConfigurationHandler::handleSeName(string name) {
@@ -306,6 +324,7 @@ set<string> ConfigurationHandler::handleSeName(string name) {
 			throw Err_Custom("Wildmarks are not allowed for SEs that do not exist in the DB!");
 		// if not, add a new SE record to the DB
 		db->addSe("", "", "", name, "", "", "", "", "", "", "");
+		insertCount++;
 		// and update the set
 		matches.insert(name);
 	}
@@ -397,6 +416,7 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 							type,
 							value
 						);
+					updateCount++;
 					FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The 'SeConfig' record has been updated!" << commit;
 				} else {
 					// otherwise we are just logging that no modifications were needed
@@ -432,6 +452,7 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 
 				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
 				db->addSeConfig(*n_it, id, type, value);
+				insertCount++;
 				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB!" << commit;
 			}
 
@@ -446,6 +467,7 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
 			db->addSeConfig(*n_it, id, type, value);
+			insertCount++;
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB!" << commit;
 		}
 	}
@@ -457,10 +479,12 @@ void ConfigurationHandler::addActiveStateConfiguration(set<string> matchingNames
 	if (type == SE_TYPE) {
 		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
 			db->setGroupOrSeState(*it, string(), active);
+			updateCount++;
 		}
 	} else if (type == GROUP_TYPE) {
 		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
 			db->setGroupOrSeState(string(), *it, active);
+			updateCount++;
 		}
 	}
 }
@@ -501,6 +525,8 @@ void ConfigurationHandler::addGroupConfiguration() {
 				if (gr.empty()) {
 					// if not, add it to the group
 					db->add_se_to_group(*mm_it, *it);
+					insertCount++;
+
 				} else {
 					// if its a member of other group throw an exception
 					throw Err_Custom (
@@ -516,8 +542,10 @@ void ConfigurationHandler::addGroupConfiguration() {
 			shared_ptr<SeProtocolConfig> cfg = getProtocolConfig(*it);
 			if (db->is_group_protocol_exist(*it)) {
 				db->update_se_group_protocol_config(cfg.get());
+				updateCount++;
 			} else {
 				db->add_se_group_protocol_config(cfg.get());
+				insertCount++;
 			}
 		}
 	}
@@ -543,8 +571,10 @@ void ConfigurationHandler::addSeConfiguration() {
 			shared_ptr<SeProtocolConfig> cfg = getProtocolConfig(*it);
 			if (db->is_se_protocol_exist(*it)) {
 				db->update_se_protocol_config(cfg.get());
+				updateCount++;
 			} else {
 				db->add_se_protocol_config(cfg.get());
+				insertCount++;
 			}
 		}
 	}
@@ -684,12 +714,14 @@ void ConfigurationHandler::del() {
 			SeProtocolConfig tmp;
 			tmp.SE_NAME = name;
 			db->delete_se_protocol_config(&tmp);
+			deleteCount++;
 
 		} else if (type == GROUP_TYPE) {
 
 			SeProtocolConfig tmp;
 			tmp.SE_GROUP_NAME = name;
 			db->delete_se_group_protocol_config(&tmp);
+			deleteCount++;
 		}
 	}
 
@@ -698,6 +730,7 @@ void ConfigurationHandler::del() {
 		// this one will be called only if the type is a group
 		// otherwise an exception will be thrown during parsing
 		db->delete_group(name);
+		deleteCount++;
 	}
 
 	// handle share configuration
@@ -711,6 +744,10 @@ void ConfigurationHandler::del() {
 				;
 
 		db->deleteSeConfig(name, id, type);
+		deleteCount++;
 	}
+
+	string action = "delete (x" + lexical_cast<string>(deleteCount) + ")";
+	db->auditConfiguration(dn, all, action);
 }
 

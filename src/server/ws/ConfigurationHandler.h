@@ -125,7 +125,7 @@ public:
 	 *
 	 * initializes the regular expression objects and the 'parameterNameToId' map
 	 */
-	ConfigurationHandler();
+	ConfigurationHandler(string dn);
 
 	/**
 	 * Destructor
@@ -314,6 +314,8 @@ private:
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 
+	/// the whole cfg comand
+	string all;
 	/// SE or SE group name
 	string name;
 	/// entity type: 'se' or 'group'
@@ -349,6 +351,19 @@ private:
 	vector<int> parameters;
 	/// number of available protocol parameters
 	static const int PARAMETERS_NMB = 16;
+
+	/// user DN
+	string dn;
+
+	/// number of SQL updates triggered by configuration command
+	int updateCount;
+	/// number of SQL inserts triggered by configuration command
+	int insertCount;
+	/// number of SQL deletes triggered by configuration command
+	int deleteCount;
+	/// number of debug cmd triggered by configuration command
+	int debugCount;
+
 };
 
 }

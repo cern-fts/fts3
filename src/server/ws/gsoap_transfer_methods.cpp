@@ -25,6 +25,7 @@
 
 #include "ws/JobSubmitter.h"
 #include "ws/RequestLister.h"
+#include "ws/GSoapDelegationHandler.h"
 #include "ws/AuthorizationManager.h"
 
 #include "common/JobStatusHandler.h"
@@ -558,6 +559,11 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 				_destination,
 				_debug ? "on" : "off"
 			);
+
+		GSoapDelegationHandler handler (soap);
+		string dn = handler.getClientDn();
+		string cmd = "fts3-debug-set " + _debug ? "on " : "off " + _source + " " + _destination;
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
 
 	} catch(Err& ex) {
 

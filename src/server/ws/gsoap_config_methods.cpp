@@ -21,6 +21,7 @@
 
 #include "ws/ConfigurationHandler.h"
 #include "ws/AuthorizationManager.h"
+#include "ws/GSoapDelegationHandler.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -52,7 +53,11 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
-		ConfigurationHandler handler;
+
+		GSoapDelegationHandler deleg (soap);
+		string dn = deleg.getClientDn();
+
+		ConfigurationHandler handler (dn);
 		for(it = cfgs.begin(); it < cfgs.end(); it++) {
 			handler.parse(*it);
 			handler.add();
@@ -82,7 +87,11 @@ int fts3::implcfg__getConfiguration(soap* soap, std::string vo, std::string name
 	response.configuration = soap_new_config__Configuration(soap, -1);
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
-		ConfigurationHandler handler;
+
+		GSoapDelegationHandler deleg (soap);
+		string dn = deleg.getClientDn();
+
+		ConfigurationHandler handler (dn);
 		response.configuration->cfg = handler.get(vo, name);
 
 	} catch(std::exception& ex) {
@@ -112,7 +121,11 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
-		ConfigurationHandler handler;
+
+		GSoapDelegationHandler deleg (soap);
+		string dn = deleg.getClientDn();
+
+		ConfigurationHandler handler (dn);
 		for(it = cfgs.begin(); it < cfgs.end(); it++) {
 			handler.parse(*it);
 			handler.del();
