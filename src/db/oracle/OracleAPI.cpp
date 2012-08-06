@@ -21,8 +21,8 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 
 
 bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe){
-	std::string tagse = "getInOutOfSese";
-	std::string taggroup = "getInOutOfSegroup";	
+	const std::string tagse = "getInOutOfSese";
+	const std::string taggroup = "getInOutOfSegroup";	
 	std::string query_stmt_se = " SELECT count(*) from t_se where "
 					" (t_se.name=:1 or t_se.name=:2) "
 				 	" and t_se.state='false' ";
@@ -381,23 +381,15 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
    		" t_file.job_finished is NULL AND "
    		" t_file.file_state ='SUBMITTED' AND "   
    		" t_job.job_finished is NULL AND "
-   		" t_job.job_id IN(";
+   		" t_job.job_id=:1 ORDER BY t_file.file_id DESC ";
     try {
-              	
+
+        oracle::occi::Statement* s = conn->createStatement(select,selecttag);              	
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
             TransferJobs* temp = (TransferJobs*) * iter;
             	std::string job_id = std::string(temp->JOB_ID);
-            	jobAppender.append("'");
-   		jobAppender.append(job_id);
-   		jobAppender.append("',");
-        }	    
-	    jobAppender = jobAppender.substr(0, jobAppender.length()-1);
-	    select.append(jobAppender);
-	    select.append(") ORDER BY t_file.file_id DESC ");
-	    		     
-            oracle::occi::Statement* s = conn->createStatement(select,"");	    
+		s->setString(1,job_id);
             oracle::occi::ResultSet* r = conn->createResultset(s);
-	    
             while (r->next()) {	        
                 tr_files = new TransferFiles();
                 tr_files->SOURCE_SURL = r->getString(1);
@@ -414,9 +406,10 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 		tr_files->DEST_SPACE_TOKEN = r->getString(12);						
                 files.push_back(tr_files);
             }
-	    
-            conn->destroyResultset(s, r);
-            conn->destroyStatement(s, "");
+	    conn->destroyResultset(s, r);
+        }	    
+            
+            conn->destroyStatement(s, selecttag);
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -720,15 +713,6 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
 }
 
-/*
-  Source:      
-  Destination: 
-  State:       
-  Retries:     0
-  Reason:      
-  Duration:    0
-
-*/
 void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files){
     std::string query = "SELECT t_file.SOURCE_SURL, t_file.DEST_SURL, t_file.file_state, t_file.reason, t_file.start_time, t_file.finish_time"
             " FROM t_file WHERE t_file.job_id = :1";
@@ -760,174 +744,6 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
 
 
 
-/*
-
-TransferJobSummary* OracleAPI::getTransferJobSummary(std::string requestID) {
-        return new TransferJobSummary;
-}
-
-SePair* OracleAPI::getSEPairName(std::string sePairName) {
-        return new SePair;
-}
-
-void OracleAPI::cancel(std::vector<std::string> requestIDs) {
-}
-
-void OracleAPI::addChannel(std::string channelName, std::string sourceSite, std::string destSite, std::string contact, int numberOfStreams,
-        int numberOfFiles, int bandwidth, int nominalThroughput, std::string state) {
-}
-
-void OracleAPI::setJobPriority(std::string requestID, int priority) {
-}
-
-void OracleAPI::dropChannel(std::string name) {
-}
-
-void OracleAPI::setState(std::string channelName, std::string state, std::string message) {
-}
-
-std::vector<std::string> OracleAPI::listChannels() {
-        std::vector<std::string> test;
-        return test;
-}
-
-void OracleAPI::setNumberOfStreams(std::string channelName, int numberOfStreams, std::string message) {
-}
-
-void OracleAPI::setNumberOfFiles(std::string channelName, int numberOfFiles, std::string message) {
-}
-
-void OracleAPI::setBandwidth(std::string channelName, int utilisation, std::string message) {
-}
-
-void OracleAPI::setContact(std::string channelName, std::string contact, std::string message) {
-}
-
-void OracleAPI::setNominalThroughput(std::string channelName, int nominalThroughput, std::string message) {
-}
-
-void OracleAPI::changeStateForHeldJob(std::string jobID, std::string state) {
-}
-
-void OracleAPI::changeStateForHeldJobs(std::string channelName, std::string state) {
-}
-
-void OracleAPI::addChannelManager(std::string channelName, std::string principal) {
-}
-
-void OracleAPI::removeChannelManager(std::string channelName, std::string principal) {
-}
-
-std::vector<std::string> OracleAPI::listChannelManagers(std::string channelName) {
-        std::vector<std::string> test;
-        return test;
-}
-
-std::map<std::string, std::string> OracleAPI::getChannelManager(std::string channelName, std::vector<std::string> principals) {
-        std::map<std::string, std::string> test;
-        return test;
-}
-
-void OracleAPI::addVOManager(std::string VOName, std::string principal) {
-}
-
-void OracleAPI::removeVOManager(std::string VOName, std::string principal) {
-}
-
-std::vector<std::string> OracleAPI::listVOManagers(std::string VOName) {
-        std::vector<std::string> test;
-        return test;
-
-}
-
-std::map<std::string, std::string> OracleAPI::getVOManager(std::string VOName, std::vector<std::string> principals) {
-        std::map<std::string, std::string> test;
-        return test;
-}
-
-bool OracleAPI::isRequestManager(std::string requestID, std::string clientDN, std::vector<std::string> principals, bool includeOwner) {
-        return true;
-}
-
-void OracleAPI::removeVOShare(std::string channelName, std::string VOName) {
-}
-
-void OracleAPI::setVOShare(std::string channelName, std::string VOName, int share) {
-}
-
-bool OracleAPI::isAgentAvailable(std::string name, std::string type) {
-        return true;
-}
-
-std::string OracleAPI::getSchemaVersion() {
-        return std::string("");
-}
-
-void OracleAPI::setTcpBufferSize(std::string channelName, std::string bufferSize, std::string message) {
-}
-
-void OracleAPI::setTargetDirCheck(std::string channelName, int targetDirCheck, std::string message) {
-}
-
-void OracleAPI::setUrlCopyFirstTxmarkTo(std::string channelName, int urlCopyFirstTxmarkTo, std::string message) {
-}
-
-void OracleAPI::setChannelType(std::string channelName, std::string channelType, std::string message) {
-}
-
-void OracleAPI::setBlockSize(std::string channelName, std::string blockSize, std::string message) {
-}
-
-void OracleAPI::setHttpTimeout(std::string channelName, int httpTimeout, std::string message) {
-}
-
-void OracleAPI::setTransferLogLevel(std::string channelName, std::string transferLogLevel, std::string message) {
-}
-
-void OracleAPI::setPreparingFilesRatio(std::string channelName, double preparingFilesRatio, std::string message) {
-}
-
-void OracleAPI::setUrlCopyPutTimeout(std::string channelName, int urlCopyPutTimeout, std::string message) {
-}
-
-void OracleAPI::setUrlCopyPutDoneTimeout(std::string channelName, int urlCopyPutDoneTimeout, std::string message) {
-}
-
-void OracleAPI::setUrlCopyGetTimeout(std::string channelName, int urlCopyGetTimeout, std::string message) {
-}
-
-void OracleAPI::setUrlCopyGetDoneTimeout(std::string channelName, int urlCopyGetDoneTimeout, std::string message) {
-}
-
-void OracleAPI::setUrlCopyTransferTimeout(std::string channelName, int urlCopyTransferTimeout, std::string message) {
-}
-
-void OracleAPI::setUrlCopyTransferMarkersTimeout(std::string channelName, int urlCopyTransferMarkersTimeout, std::string message) {
-}
-
-void OracleAPI::setUrlCopyNoProgressTimeout(std::string channelName, int urlCopyNoProgressTimeout, std::string message) {
-}
-
-void OracleAPI::setUrlCopyTransferTimeoutPerMB(std::string channelName, double urlCopyTransferTimeoutPerMB, std::string message) {
-}
-
-void OracleAPI::setSrmCopyDirection(std::string channelName, std::string srmCopyDirection, std::string message) {
-}
-
-void OracleAPI::setSrmCopyTimeout(std::string channelName, int srmCopyTimeout, std::string message) {
-}
-
-void OracleAPI::setSrmCopyRefreshTimeout(std::string channelName, int srmCopyRefreshTimeout, std::string message) {
-}
-
-void OracleAPI::removeVOLimit(std::string channelUpperName, std::string voName) {
-}
-
-void OracleAPI::setVOLimit(std::string channelUpperName, std::string voName, int limit) {
-}
- */
-
-/* ********************************* NEW API FTS3 *********************************/
 
 void OracleAPI::getSe(Se* &se, std::string seName){
     const std::string tag = "getSeTest";
