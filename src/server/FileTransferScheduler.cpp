@@ -353,7 +353,7 @@ int FileTransferScheduler::resolveSharedCredits(const string type, string name, 
 	if (hasPublicShared) {
 		// determined which VOs are using the public credits
 		set<string>::iterator v_it;
-		for (v_it = &vosInQueue .begin(); v_it != &vosInQueue .end(); v_it++) {
+		for (v_it = vosInQueue.begin(); v_it != vosInQueue.end(); v_it++) {
 			db->getAllShareAndConfigWithCritiria (
 					seAndConfig,
 					name,
