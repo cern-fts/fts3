@@ -430,7 +430,7 @@ int FileTransferScheduler::resolveSharedCredits(const string type, string name, 
 				// some VOs are using it
 				sumInQueue += value;
 			}
-		} else if (&vosInQueue .find(vo) != &vosInQueue .end()) {
+		} else if (vosInQueue.find(vo) != vosInQueue.end()) {
 			// it is vo-share and the VO is not amongst VOs that have pending files
 			sumInQueue += value;
 		}
