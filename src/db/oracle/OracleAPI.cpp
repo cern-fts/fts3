@@ -172,14 +172,14 @@ void OracleAPI::getSeCreditsInUse (
 	if (!srcSeName.empty()) {
 		query_stmt +=
 //			"	AND t_file.source_surl like :1 "; // srcSeName + "/%
-			"	AND t_file.source_surl like '%://" + srcSeName + ":%/%' ";
+			"	AND t_file.source_surl like '%://" + srcSeName + "%' ";
 			tag.append("2");
 	}
 
 	if (!destSeName.empty()) {
 		query_stmt +=
 //			"	AND t_file.dest_surl like :2 "; // destSeName + "/%
-			"	AND t_file.dest_surl like '%://" + destSeName + ":%/%' ";
+			"	AND t_file.dest_surl like '%://" + destSeName + "%' ";
 		tag.append("3");
 	}
 
@@ -241,7 +241,7 @@ void OracleAPI::getGroupCreditsInUse (
 	if (!srcGroupName.empty()) {
 		query_stmt +=
 //			"	AND t_se.site = :1 " // the se has the information about site name
-			"	AND t_file.source_surl like '%://' || t_se.name || ':%/%' " // srcSeName + "/%
+			"	AND t_file.source_surl like '%://' || t_se.name || '%' " // srcSeName + "/%
 			"	AND t_se.name IN ( "
 			"		SELECT se_name "
 			"		FROM t_se_group "
@@ -253,7 +253,7 @@ void OracleAPI::getGroupCreditsInUse (
 	if (!destGroupName.empty()) {
 		query_stmt +=
 //			"	AND t_se.site = :2 " // the se has the information about site name
-			"	AND t_file.dest_surl like '%://' || t_se.name || ':%/%' " // destSeName + "/%
+			"	AND t_file.dest_surl like '%://' || t_se.name || '%' " // destSeName + "/%
 			"	AND t_se.name IN ( "
 			"		SELECT se_name "
 			"		FROM t_se_group "
@@ -998,7 +998,7 @@ SHARE_VALUE){
     		query_stmt += " and ";
     	}
 
-        query_stmt.append(" T_SE_VO_SHARE.SHARE_VALUE ='");
+        query_stmt.append(" T_SE_VO_SHARE.SHARE_VALUE like '");
 		query_stmt.append(SHARE_VALUE);
 		query_stmt.append("'");
 		tag.append("4");

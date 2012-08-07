@@ -283,17 +283,15 @@ bool FileTransferScheduler::schedule() {
 		return false;
 	}
 
-	// No group pairs !!! :)
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free outbound pair-credits for the source SITE." << commit;
+	if (getFreeCredits(OUTBOUND, PAIR, GROUP_TYPE, srcGroupName, destGroupName) <= 0) {
+		return false;
+	}
 
-//	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free outbound pair-credits for the source SITE." << commit;
-//	if (getFreeCredits(OUTBOUND, PAIR, GROUP_TYPE, srcSiteName, destSiteName) <= 0) {
-//		return false;
-//	}
-//
-//	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free inbound pair-credits for the destination SITE." << commit;
-//	if (getFreeCredits(INBOUND, PAIR, GROUP_TYPE, destSiteName, srcSiteName) <= 0) {
-//		return false;
-//	}
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free inbound pair-credits for the destination SITE." << commit;
+	if (getFreeCredits(INBOUND, PAIR, GROUP_TYPE, destGroupName, srcGroupName) <= 0) {
+		return false;
+	}
 
 	// update file state to READY
 	int updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
