@@ -28,6 +28,8 @@
 
 #include <vector>
 #include <string>
+#include <set>
+#include <map>
 
 #include <boost/regex.hpp>
 
@@ -50,7 +52,7 @@ public:
 	 *
 	 * @param file - the file for which the scheduling decision has to be taken
 	 */
-	FileTransferScheduler(TransferFiles* file);
+	FileTransferScheduler(TransferFiles* file, vector<TransferFiles*> otherFiles = vector<TransferFiles*>());
 
 	/**
 	 * Destructor
@@ -160,6 +162,11 @@ private:
 	int getFreeCredits(IO io, Share share, const string type, string name, string param);
 
 	/**
+	 * TODO
+	 */
+	int resolveSharedCredits(const string type, string name, Share share, IO io);
+
+	/**
 	 * Gets the configuration of the requested type
 	 *
 	 * @param type - type of the entity, either 'se' or 'group'
@@ -196,6 +203,13 @@ private:
 		return "\"share_type\":\"pair\",\"share_id\":\"" + pair + "\"";
 	}
 
+	/**
+	 * Initializes the seNamesToPendingVos map using the a list of pending transfers
+	 *
+	 * @param files - the list of pending files
+	 */
+	void initVosInQueue(vector<TransferFiles*> files);
+
 	/// regular expression object
 	regex re;
 	/// object containing strings that matched the regular expression
@@ -214,12 +228,22 @@ private:
 	/// name of the destination SE group
 	string destGroupName;
 
+	/// the JSON string parameterized with SQL wild-cards used for retrieving all values with shared policy
+	static const string getSharedValue;
+
 	/// The index of the SE name group (NOT a SE group!!!) in the regular expression
 	static const int SE_NAME_REGEX_INDEX = 1;
 	/// The index of the inbound credits group in the regular expression
 	static const int INBOUND_REGEX_INDEX = 1;
 	/// The index of the outbound credits group in the regular expression
 	static const int OUTBOUND_REGEX_INDEX = 2;
+	/// The index of the policy group in the regular expression
+	static const int POLICY_REGEX_INDEX = 3;
+
+	/// shared policy
+	static const string SHARED_POLICY;
+	/// exclusive policy
+	static const string EXCLUSIVE_POLICY;
 
 	/// a SE type string ('se')
 	static const string SE_TYPE;
@@ -231,12 +255,23 @@ private:
 	/// the regular expression used for retrieving the inbound and outbound values
 	/// from the JSON configuration stored in the DB
 	static const string shareValueRegex;
+	/// the regular expression describing the share_id JSON configuration stored in the DB
+	/// (matches only vo and public -share configurations)
+	static const string shareIdRegex;
 
 	/// the default number of outbounds and inbounds credits
 	/// used if the SE has not been configured
 	static const int DEFAULT_VALUE = 50;
 	/// a constant used to emphasize that there are free credits
 	static const int FREE_CREDITS = 1;
+
+	// DB singleton instance
+	GenericDbIfce* db;
+
+	/// maps a SE name to VO names who have pending inbound transfers in the queue
+	set<string> vosInQueueIn;
+	/// maps a SE name to VO names who have pending outbound transfers in the queue
+	set<string> vosInQueueOut;
 };
 
 #endif /* FILETRANSFERSCHEDULER_H_ */

@@ -27,7 +27,6 @@
 #include <boost/lexical_cast.hpp>
 
 #include "FileTransferScheduler.h"
-#include "db/generic/SingleDbInstance.h"
 
 #include "common/logger.h"
 #include "common/JobStatusHandler.h"
@@ -38,10 +37,16 @@ using namespace db;
 const string FileTransferScheduler::SE_TYPE = "se";
 const string FileTransferScheduler::GROUP_TYPE = "group";
 
+const string FileTransferScheduler::SHARED_POLICY = "shared";
+const string FileTransferScheduler::EXCLUSIVE_POLICY = "exclusive";
+
+const string FileTransferScheduler::getSharedValue = "\"in\":%,\"out\":%,\"policy\":\"shared\"";
+const string FileTransferScheduler::shareIdRegex = "\"share_type\":\"(public|vo)\",\"share_id\":(null|\"(.+)\")";
 const string FileTransferScheduler::shareValueRegex = "\"in\":(\\d+),\"out\":(\\d+),\"policy\":\"(\\w+)\"";
 const string FileTransferScheduler::seNameRegex = ".+://([a-zA-Z0-9\\.-]+):\\d+/.+";
 
-FileTransferScheduler::FileTransferScheduler(TransferFiles* file) {
+FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<TransferFiles*> otherFiles) :
+		db (DBSingleton::instance().getDBObjectInstance()) {
 
 	this->file = file;
 
@@ -56,8 +61,10 @@ FileTransferScheduler::FileTransferScheduler(TransferFiles* file) {
 	voName = file->VO_NAME;
 
 	// prepare input for group part
-	srcGroupName = DBSingleton::instance().getDBObjectInstance()->get_group_name(srcSeName);
-	destGroupName = DBSingleton::instance().getDBObjectInstance()->get_group_name(destSeName);
+	srcGroupName = db->get_group_name(srcSeName);
+	destGroupName = db->get_group_name(destSeName);
+
+	initVosInQueue(otherFiles);
 }
 
 FileTransferScheduler::~FileTransferScheduler() {
@@ -76,7 +83,7 @@ FileTransferScheduler::Config FileTransferScheduler::getValue(string type, strin
 	vector<SeAndConfig*> seAndConfig;
 
 	// query the DB
-	DBSingleton::instance().getDBObjectInstance()->getAllShareAndConfigWithCritiria(
+	db->getAllShareAndConfigWithCritiria(
 			seAndConfig,
 			name,
 			shareId,
@@ -152,7 +159,7 @@ int FileTransferScheduler::getCreditsInUse(IO io, Share share, const string type
 	// query for the credits in DB
 	if (type == SE_TYPE) {
 		// we are looking for SE credits
-		DBSingleton::instance().getDBObjectInstance()->getSeCreditsInUse (
+		db->getSeCreditsInUse (
 				creditsInUse,
 				srcSeName,
 				destSeName,
@@ -161,7 +168,7 @@ int FileTransferScheduler::getCreditsInUse(IO io, Share share, const string type
 
 	} else {
 		// we are looking for SE group credits
-		DBSingleton::instance().getDBObjectInstance()->getGroupCreditsInUse (
+		db->getGroupCreditsInUse (
 				creditsInUse,
 				srcGroupName,
 				destGroupName,
@@ -289,9 +296,146 @@ bool FileTransferScheduler::schedule() {
 //	}
 
 	// update file state to READY
-	int updated = DBSingleton::instance().getDBObjectInstance()->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+	int updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
 	if(updated == 0)
 		return false;
 
 	return true;
 }
+
+// SE only TODO
+void FileTransferScheduler::initVosInQueue(vector<TransferFiles*> files) {
+
+	vector<TransferFiles*>::iterator it;
+	for (it = files.begin(); it < files.begin(); it++) {
+		TransferFiles* tmp = *it;
+
+		re.set_expression(seNameRegex);
+		regex_match(tmp->SOURCE_SURL, what, re, match_extra);
+		string srcSeName = what[SE_NAME_REGEX_INDEX];
+		regex_match(tmp->DEST_SURL, what, re, match_extra);
+		string destSeName = what[SE_NAME_REGEX_INDEX];
+
+		if (srcSeName == this->srcSeName) {
+			vosInQueueOut.insert(tmp->VO_NAME);
+		}
+
+		if (destSeName == this->destSeName) {
+			vosInQueueIn.insert(tmp->VO_NAME);
+		}
+	}
+}
+
+// SE only TODO
+int FileTransferScheduler::resolveSharedCredits(const string type, string name, Share share, IO io) {
+
+	// TODO assumption PAIR configuration don't support shared policy
+
+	vector<SeAndConfig*> seAndConfig;
+	// determine if there is public shared configuration for the SE
+	db->getAllShareAndConfigWithCritiria (
+			seAndConfig,
+			name,
+			publicShare(),
+			type,
+			getSharedValue
+		);
+
+	bool hasPublicShared = !seAndConfig.empty();
+
+	// all VOs that have a submitted file in the queue
+	// if there is other policy this should be the vos that are using the credits!!!
+	set<string> &vosInQueue = io == INBOUND ? vosInQueueIn : vosInQueueOut;
+
+	// all VOs that have a pending file and use public-share
+	set<string> vosUsingPublic;
+	// we care only if the public-share has shared policy
+	if (hasPublicShared) {
+		// determined which VOs are using the public credits
+		set<string>::iterator v_it;
+		for (v_it = &vosInQueue .begin(); v_it != &vosInQueue .end(); v_it++) {
+			db->getAllShareAndConfigWithCritiria (
+					seAndConfig,
+					name,
+					voShare(*v_it),
+					type,
+					string()
+				);
+
+			if (seAndConfig.empty()) {
+				// there is no vo-share configuration so it has to use public-share
+				vosUsingPublic.insert(*v_it);
+			}
+		}
+	}
+
+	// select all values with for the given name and type and with shared policy
+	db->getAllShareAndConfigWithCritiria (
+			seAndConfig,
+			name,
+			string(),
+			type,
+			getSharedValue
+		);
+
+	// sum of all the shared inbound/outbound credits
+	int sumAll = 0;
+	// sum of the inbound/outbound credits for submitted files in the queue
+	int sumInQueue = 0;
+	// inbound/outbound of the se/group (name)
+	int credits = 0;
+
+	vector<SeAndConfig*>::iterator it;
+	for (it = seAndConfig.begin(); it < seAndConfig.end(); it++) {
+
+		SeAndConfig* cfg = *it;
+
+		// share id (vo or public)
+		string share_id = cfg->SHARE_ID;
+		// parse the share_id string
+		re.set_expression(shareValueRegex);
+		regex_match(share_id, what, re, match_extra);
+
+		// vo or public
+		string type = what[1];
+		// vo name or empty if its public share
+		string vo = what[3];
+
+		// share value
+		string share_value = cfg->SHARE_VALUE;
+		// parse the share_value string
+		re.set_expression(shareValueRegex);
+		regex_match(share_value, what, re, match_extra);
+
+		int value;
+		switch (io) {
+		case INBOUND:
+			value = lexical_cast<int>(what[INBOUND_REGEX_INDEX]);
+
+			break;
+		case OUTBOUND:
+			value = lexical_cast<int>(what[OUTBOUND_REGEX_INDEX]);
+			break;
+		}
+
+		sumAll += value;
+
+		if (cfg->SE_NAME == name) {
+			credits = value;
+		}
+
+		if (vo.empty()) {
+			// it is public-share
+			if(!vosUsingPublic.empty()) {
+				// some VOs are using it
+				sumInQueue += value;
+			}
+		} else if (&vosInQueue .find(vo) != &vosInQueue .end()) {
+			// it is vo-share and the VO is not amongst VOs that have pending files
+			sumInQueue += value;
+		}
+	}
+
+	return credits / sumInQueue * (sumAll/*TODO - allSharedCreditsInUse*/);
+}
+
