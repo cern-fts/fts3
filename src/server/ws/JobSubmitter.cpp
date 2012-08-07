@@ -40,7 +40,7 @@ using namespace boost;
 using namespace db;
 using namespace fts3::ws;
 
-const string JobSubmitter::seNameRegex = ".+://([a-zA-Z0-9\\.-]+):\\d+/.+";
+const string JobSubmitter::seNameRegex = ".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+";
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 

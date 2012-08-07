@@ -43,7 +43,7 @@ const string FileTransferScheduler::EXCLUSIVE_POLICY = "exclusive";
 const string FileTransferScheduler::getSharedValue = "\"in\":%,\"out\":%,\"policy\":\"shared\"";
 const string FileTransferScheduler::shareIdRegex = "\"share_type\":\"(public|vo)\",\"share_id\":(null|\"(.+)\")";
 const string FileTransferScheduler::shareValueRegex = "\"in\":(\\d+),\"out\":(\\d+),\"policy\":\"(\\w+)\"";
-const string FileTransferScheduler::seNameRegex = ".+://([a-zA-Z0-9\\.-]+):\\d+/.+";
+const string FileTransferScheduler::seNameRegex = ".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+";
 
 FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<TransferFiles*> otherFiles) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
