@@ -585,6 +585,10 @@ CREATE TABLE t_file (
 --
 -- the pid of the process which is executing the file transfer
   ,pid INTEGER
+--
+-- the nominal size of the file (bytes)
+  ,filesize         	INTEGER
+--  
 );
 --
 -- autoinc sequence on file_id
