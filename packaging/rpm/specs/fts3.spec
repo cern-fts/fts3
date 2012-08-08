@@ -88,7 +88,7 @@ FTS3 client CLI tool for submiiting transfers, check status, configure server, e
 %build
 mkdir build
 cd build
-%cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
+cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
 make VERBOSE=1
 
 
