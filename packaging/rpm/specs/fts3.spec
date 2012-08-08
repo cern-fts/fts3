@@ -99,7 +99,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/logrotate.d/fts3-server
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
-%config(noreplace) %{_sysconfdir}/rsyslog.d/fts3syslog.conf
+%{_sysconfdir}/rsyslog.d/fts3syslog.conf
 %{_mandir}/man8/fts3_server.8.gz
 %doc %{_docdir}/fts3/oracle-drop.sql
 %doc %{_docdir}/fts3/oracle-schema.sql
