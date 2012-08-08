@@ -1,60 +1,84 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        7%{?dist}
-Summary:        FTS3
+Release:        8%{?dist}
+Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
 License:        ASL 2.0
 URL:            https://svnweb.cern.ch/trac/fts3/wiki 
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-AutoReqProv: yes
 
 BuildRequires:  cmake
-BuildRequires:  apr-devel
-BuildRequires:  apr-util-devel
-BuildRequires:  activemq-cpp-devel
-BuildRequires:  gsoap-devel
-BuildRequires:  doxygen
-BuildRequires:  libuuid-devel
-BuildRequires:  boost-devel
-BuildRequires:  globus-gsi-credential-devel
-BuildRequires:  CGSI-gSOAP-devel
-BuildRequires:  is-interface-devel
-BuildRequires:  glib2-devel
-BuildRequires:  gridsite-devel
-BuildRequires:  gfal2-devel
-BuildRequires:  oracle-instantclient-devel
-BuildRequires:  voms-devel
+BuildRequires:  apr-devel%{?_isa}
+BuildRequires:  apr-util-devel%{?_isa}
+BuildRequires:  activemq-cpp-devel%{?_isa}
+BuildRequires:  gsoap-devel%{?_isa}
+BuildRequires:  doxygen%{?_isa}
+BuildRequires:  libuuid-devel%{?_isa}
+BuildRequires:  boost-devel%{?_isa}
+BuildRequires:  globus-gsi-credential-devel%{?_isa}
+BuildRequires:  CGSI-gSOAP-devel%{?_isa}
+BuildRequires:  is-interface-devel%{?_isa}
+BuildRequires:  glib2-devel%{?_isa}
+BuildRequires:  gridsite-devel%{?_isa}
+BuildRequires:  gfal2-devel%{?_isa}
+BuildRequires:  oracle-instantclient-devel%{?_isa}
+BuildRequires:  voms-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 %description
 The File Transfer Service V3
 
-%package -n fts3-server
-Summary:        FTS3 server
+%package devel
+Summary:	File Transfer Service V3
+Group:		Applications/Internet
+Requires:	%{name}%{?_isa} = %{version}-%{release}
+BuildRequires:  cmake
+BuildRequires:  apr-devel%{?_isa}
+BuildRequires:  apr-util-devel%{?_isa}
+BuildRequires:  activemq-cpp-devel%{?_isa}
+BuildRequires:  gsoap-devel%{?_isa}
+BuildRequires:  doxygen%{?_isa}
+BuildRequires:  libuuid-devel%{?_isa}
+BuildRequires:  boost-devel%{?_isa}
+BuildRequires:  globus-gsi-credential-devel%{?_isa}
+BuildRequires:  CGSI-gSOAP-devel%{?_isa}
+BuildRequires:  is-interface-devel%{?_isa}
+BuildRequires:  glib2-devel%{?_isa}
+BuildRequires:  gridsite-devel%{?_isa}
+BuildRequires:  gfal2-devel%{?_isa}
+BuildRequires:  oracle-instantclient-devel%{?_isa}
+BuildRequires:  voms-devel%{?_isa}
+
+%description devel
+Development files for File Transfer Service V3
+
+
+%package server
+Summary:        File Transfer Service version 3 server
 Group:          System Environment/Daemons
-Requires:       fts3-common
+Requires:       fts3-libs = %{version}-%{release}
 Requires:       gfal2-plugin-gridftp
 Requires:       gfal2-plugin-srm
 
-%package -n fts3-common
-Summary:        FTS3 common
+%package libs
+Summary:        File Transfer Service version 3 libs
 Group:          System Environment/Libraries
 
-%package -n fts3-client
-Summary:        FTS3 server
+%package client
+Summary:        File Transfer Service version 3 client
 Group:          Applications/Internet
-Requires:       fts3-common
+Requires:       fts3-libs = %{version}-%{release}
 
-%description -n fts3-server
-FTS3 server
+%description server
+FTS3 server is a service which accepts transfer jobs, quering their status, etc
 
-%description -n fts3-common
-FTS3 common
+%description libs
+FTS3 common libraries used across the client and server
 
-%description -n fts3-client
-FTS3 client
+%description client
+FTS3 client CLI tool for submiiting transfers, check status, configure server, etc
 
 
 %prep
@@ -64,7 +88,7 @@ FTS3 client
 %build
 mkdir build
 cd build
-cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
+%cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
 make VERBOSE=1
 
 
@@ -73,18 +97,44 @@ cd build
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 
-%pre
+%pre server
 getent group fts3 >/dev/null || groupadd -r fts3
 getent passwd fts3 >/dev/null || \
     useradd -r -g fts3 -d /var/log/fts3 -s /sbin/nologin \
     -c "fts3 urlcopy user" fts3
 exit 0
 
+%post server
+/sbin/chkconfig --add fts3-server
+/sbin/chkconfig --add fts3-msg-bulk
+/sbin/chkconfig --add fts3-msg-cron
+exit 0
+
+%preun server
+if [ $1 -eq 0 ] ; then
+    /sbin/service fts3-server stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts3-server
+    /sbin/service fts3-msg-bulk stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts3-msg-bulk
+    /sbin/service fts3-msg-cron stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts3-msg-cron
+fi
+exit 0
+
+%postun server
+if [ "$1" -ge "1" ] ; then
+    /sbin/service fts3-server condrestart >/dev/null 2>&1 || :
+    /sbin/service fts3-msg-bulk condrestart >/dev/null 2>&1 || :
+    /sbin/service fts3-msg-cron condrestart >/dev/null 2>&1 || :
+fi
+exit 0
+
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 
-%files -n fts3-server
+%files server
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/fts3
 %{_sbindir}/fts3_msg_cron
@@ -104,7 +154,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc %{_docdir}/fts3/oracle-drop.sql
 %doc %{_docdir}/fts3/oracle-schema.sql
 
-%files -n fts3-client
+%files client
 %defattr(-,root,root,-)
 %{_bindir}/fts3-config-set
 %{_bindir}/fts3-config-get
@@ -115,16 +165,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/fts3-transfer-listvomanagers
 %{_bindir}/fts3-transfer-status
 %{_bindir}/fts3-transfer-submit
-%{_mandir}/man1/fts3-config-get.1.gz
-%{_mandir}/man1/fts3-config-set.1.gz
-%{_mandir}/man1/fts3-transfer-cancel.1.gz
-%{_mandir}/man1/fts3-transfer-getroles.1.gz
-%{_mandir}/man1/fts3-transfer-list.1.gz
-%{_mandir}/man1/fts3-transfer-listvomanagers.1.gz
-%{_mandir}/man1/fts3-transfer-status.1.gz
-%{_mandir}/man1/fts3-transfer-submit.1.gz
+%{_mandir}/man1/fts3-config-get.1*
+%{_mandir}/man1/fts3-config-set.1*
+%{_mandir}/man1/fts3-transfer-cancel.1*
+%{_mandir}/man1/fts3-transfer-getroles.1*
+%{_mandir}/man1/fts3-transfer-list.1*
+%{_mandir}/man1/fts3-transfer-listvomanagers.1*
+%{_mandir}/man1/fts3-transfer-status.1*
+%{_mandir}/man1/fts3-transfer-submit.1*
 
-%files -n fts3-common
+%files libs
 %defattr(-,root,root,-)
 %{_libdir}/libfts3_common.so
 %{_libdir}/libfts3_config.so
@@ -143,4 +193,6 @@ rm -rf $RPM_BUILD_ROOT
 
 
 
-%changelog
+ %changelog
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch>
+ - A bit like a fedora package
