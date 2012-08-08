@@ -4,7 +4,7 @@ Release:        8%{?dist}
 Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
-License:        ASL 2.0
+License:        Apache Software License 2.0
 URL:            https://svnweb.cern.ch/trac/fts3/wiki 
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -191,8 +191,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts3_delegation_api_cpp.so
 %doc
 
-
-
- %changelog
+%changelog
  * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch>
- - A bit like a fedora package
+  - A bit like a fedora package
