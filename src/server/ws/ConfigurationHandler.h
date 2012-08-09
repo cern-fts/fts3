@@ -30,6 +30,7 @@
 #include <map>
 #include <set>
 
+#include <boost/assign.hpp>
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -41,6 +42,7 @@
 namespace fts3 { namespace ws {
 
 using namespace boost;
+using namespace boost::assign;
 using namespace std;
 using namespace fts3::common;
 using namespace db;
@@ -70,16 +72,20 @@ public:
 		ACTIVE = 4,
 		/// group members (list of SE names)
 		MEMBERS = 6,
-		/// protocol parameters (substructure)
-		PROTOCOL_PARAMETERS = 8,
+		/// protocol (object)
+		PROTOCOL = 8,
+		/// protocol pair configuration
+		PROTOCOL_PAIR = 10,
+		/// protocol parameters (list of parameter objects)
+		PROTOCOL_PARAMETERS,
 		/// share configuration (substructure)
-		SHARE = 10,
+		SHARE = 13,
 		/// share type ('public', 'vo' or 'pair')
 		SHARE_TYPE,
 		/// the share id
-		SHARE_ID = 13,
+		SHARE_ID = 16,
 		/// inbound credits
-		IN = 15,
+		IN = 18,
 		/// outbound credits
 		OUT,
 		/// share policy (exclusive or shared)
@@ -87,25 +93,58 @@ public:
 	};
 
 	/**
-	 * The enumeration corresponding to protocol parameters
+	 * protocol parameters
 	 */
-	enum ProtocolParameters {
-		BANDWIDTH = 0,
-		NOSTREAMS,
-		TCP_BUFFER_SIZE,
-		NOMINAL_THROUGHPUT,
-		BLOCKSIZE,
-		HTTP_TO,
-		URLCOPY_PUT_TO,
-		URLCOPY_PUTDONE_TO,
-		URLCOPY_GET_TO,
-		URLCOPY_GET_DONETO,
-		URLCOPY_TX_TO,
-		URLCOPY_TXMARKS_TO,
-		URLCOPY_FIRST_TXMARK_TO,
-		TX_TO_PER_MB,
-		NO_TX_ACTIVITY_TO,
-		PREPARING_FILES_RATIO
+	struct ProtocolParameters {
+//
+//	public:
+//
+//		ProtocolParameters(): parameters (
+//				list_of
+//				(BANDWIDTH)
+//				(NOSTREAMS)
+//				(TCP_BUFFER_SIZE)
+//				(NOMINAL_THROUGHPUT)
+//				(BLOCKSIZE)
+//				(HTTP_TO)
+//				(URLCOPY_PUT_TO)
+//				(URLCOPY_PUTDONE_TO)
+//				(URLCOPY_GET_TO)
+//				(URLCOPY_GET_DONETO)
+//				(URLCOPY_TX_TO)
+//				(URLCOPY_TXMARKS_TO)
+//				(URLCOPY_FIRST_TXMARK_TO)
+//				(TX_TO_PER_MB)
+//				(NO_TX_ACTIVITY_TO)
+//				(PREPARING_FILES_RATIO).to_container(parameters)
+//			) {
+//
+//		}
+//
+		static const string BANDWIDTH;
+		static const string NOSTREAMS;
+		static const string TCP_BUFFER_SIZE;
+		static const string NOMINAL_THROUGHPUT;
+		static const string BLOCKSIZE;
+		static const string HTTP_TO;
+		static const string URLCOPY_PUT_TO;
+		static const string URLCOPY_PUTDONE_TO;
+		static const string URLCOPY_GET_TO;
+		static const string URLCOPY_GET_DONETO;
+		static const string URLCOPY_TX_TO;
+		static const string URLCOPY_TXMARKS_TO;
+		static const string URLCOPY_FIRST_TXMARK_TO;
+		static const string TX_TO_PER_MB;
+		static const string NO_TX_ACTIVITY_TO;
+		static const string PREPARING_FILES_RATIO;
+//
+//		bool isProtocolParameter(const string name) {
+//			return parameters.count(name);
+//		}
+//
+//	private:
+//
+//		const set<string> parameters;
 	};
 
 	/// SE type: 'se'
@@ -179,18 +218,22 @@ public:
 	vector<string> getVector(string cfg);
 
 	/**
-	 * Retrieves a vector containing protocol parameters from
-	 * 	 JSON parameters structure, if a protocol parameter is
-	 * 	 in the configuration it is placed in the vector using
-	 * 	 the 'parameterNameToId' map, otherwise a 0 value is
-	 * 	 placed in the vector
+	 * Retrieves a map value from JSON sub-configuration
 	 *
 	 * @param cfg - the string containing the sub-configuration
 	 *
-	 * @return the vector with the parameters
+	 * @return the vector value of the variable
 	 */
-	vector<int> getParamVector(string cfg);
+	map<string, int> getMap(string cfg);
 
+	/**
+	 * Gets an integer value from the parameters map
+	 *
+	 * @param key - the key used for getting the value from the map
+	 *
+	 * @return integer value (0 if the value string is empty)
+	 */
+	int getParamValue(const string key);
 
 	/*
 	 * Checks if the SE exists, if not adds it to the DB
@@ -274,7 +317,7 @@ public:
 	 *
 	 * @see parse
 	 */
-	shared_ptr<SeProtocolConfig> getProtocolConfig(string name);
+	shared_ptr<SeProtocolConfig> getProtocolConfig(string name, string pair = string());
 
 private:
 
@@ -290,8 +333,6 @@ private:
 	static const string get_str_exp;
 	/// regular expression used for retrieving the variable vector value from sub-configuration
 	static const string get_vec_exp;
-	/// regular expression used for retrieving the values from parameter structure
-	static const string get_par_exp;
 
 	/// JSON null string = 'null'
 	static const string null_str;
@@ -308,8 +349,6 @@ private:
 	regex get_str_re;
 	/// regular expression object corresponding to 'get_vec_exp'
 	regex get_vec_re;
-	/// regular expression object corresponding to 'get_par_exp'
-	regex get_par_re;
 
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
@@ -345,10 +384,10 @@ private:
 	/// true if share configuration has been defined, false otherwise
 	bool cfgShare;
 
-	/// maps the parameter names to respective index
-	const map<string, ProtocolParameters> parameterNameToId;
+	/// protocol pair configuration (empty if no pair was configured)
+	string protocol_pair;
 	/// all parameters that have been set (0 value indicates that the parameter has not been set)
-	vector<int> parameters;
+	map<string, int> parameters;
 	/// number of available protocol parameters
 	static const int PARAMETERS_NMB = 16;
 

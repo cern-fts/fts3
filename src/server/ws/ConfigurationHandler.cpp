@@ -27,10 +27,8 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/assign.hpp>
 
 using namespace fts3::ws;
-using namespace boost::assign;
 
 const string ConfigurationHandler::cfg_exp =
 		"\\s*\\{\\s*"
@@ -41,7 +39,17 @@ const string ConfigurationHandler::cfg_exp =
 			"("
 				"\"protocol\"\\s*:\\s*"
 				"\\s*\\{\\s*"
-					"(\"[a-zA-Z0-9\\.-_]+\"\\s*:\\s*\\d+\\s*,?\\s*)+"
+					"((\"pair\"\\s*:\\s*\"[\\*a-zA-Z0-9\\.-]+\")\\s*,\\s*)?"
+					"("
+						"\"parameters\"\\s*:\\s*\\["
+							"("
+							"\\s*\\{\\s*"
+								"\"name\"\\s*:\\s*\"[a-zA-Z0-9\\.-_]+\"\\s*,\\s*"
+								"\"value\"\\s*:\\s*\\d+\\s*"
+							"\\s*\\}\\s*,?\\s*"
+							")+"
+						"\\]"
+					")"
 				"\\s*\\}\\s*"
 			")?\\s*,?\\s*"
 			"("
@@ -74,11 +82,7 @@ const string ConfigurationHandler::get_str_exp =
 		;
 
 const string ConfigurationHandler::get_vec_exp =
-		"\\s*\".+\"\\s*:\\s*\\[((\\s*\"[\\*a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+)\\]\\s*"
-		;
-
-const string ConfigurationHandler::get_par_exp =
-		"\\s*\".+\"\\s*:\\s*\\{((\\s*\".+\"\\s*:\\s*\\d+\\s*,?)+)\\}\\s*"
+		"\\s*\".+\"\\s*:\\s*\\[(.+)\\]\\s*"
 		;
 
 const string ConfigurationHandler::null_str = "null";
@@ -89,6 +93,24 @@ const string ConfigurationHandler::GROUP_TYPE = "group";
 const string ConfigurationHandler::PUBLIC_SHARE = "public";
 const string ConfigurationHandler::VO_SHARE = "vo";
 const string ConfigurationHandler::PAIR_SHARE = "pair";
+
+
+const string ConfigurationHandler::ProtocolParameters::BANDWIDTH = "bandwidth";
+const string ConfigurationHandler::ProtocolParameters::NOSTREAMS = "nostreams";
+const string ConfigurationHandler::ProtocolParameters::TCP_BUFFER_SIZE = "tcp_buffer_size";
+const string ConfigurationHandler::ProtocolParameters::NOMINAL_THROUGHPUT = "nominal_throughput";
+const string ConfigurationHandler::ProtocolParameters::BLOCKSIZE = "blocksize";
+const string ConfigurationHandler::ProtocolParameters::HTTP_TO = "http_to";
+const string ConfigurationHandler::ProtocolParameters::URLCOPY_PUT_TO = "urlcopy_put_to";
+const string ConfigurationHandler::ProtocolParameters::URLCOPY_PUTDONE_TO = "urlcopy_putdone_to";
+const string ConfigurationHandler::ProtocolParameters::URLCOPY_GET_TO = "urlcopy_get_to";
+const string ConfigurationHandler::ProtocolParameters::URLCOPY_GET_DONETO = "urlcopy_get_doneto";
+const string ConfigurationHandler::ProtocolParameters::URLCOPY_TX_TO = "urlcopy_tx_to";
+const string ConfigurationHandler::ProtocolParameters::URLCOPY_TXMARKS_TO = "urlcopy_txmarks_to";
+const string ConfigurationHandler::ProtocolParameters::URLCOPY_FIRST_TXMARK_TO = "urlcopy_first_txmark_to";
+const string ConfigurationHandler::ProtocolParameters::TX_TO_PER_MB = "tx_to_per_mb";
+const string ConfigurationHandler::ProtocolParameters::NO_TX_ACTIVITY_TO = "no_tx_activity_to";
+const string ConfigurationHandler::ProtocolParameters::PREPARING_FILES_RATIO = "preparing_files_ratio";
 
 
 ConfigurationHandler::ConfigurationHandler(string dn):
@@ -103,26 +125,7 @@ ConfigurationHandler::ConfigurationHandler(string dn):
 		get_bool_re(get_bool_exp),
 		get_str_re(get_str_exp),
 		get_num_re(get_num_exp),
-		get_vec_re(get_vec_exp),
-		get_par_re(get_par_exp),
-		parameterNameToId (map_list_of
-			("bandwidth", BANDWIDTH)
-			("nostreams", NOSTREAMS)
-			("tcp_buffer_size", TCP_BUFFER_SIZE)
-			("nominal_throughput", NOMINAL_THROUGHPUT)
-			("blocksize", BLOCKSIZE)
-			("http_to", HTTP_TO)
-			("urlcopy_put_to", URLCOPY_PUT_TO)
-			("urlcopy_putdone_to", URLCOPY_PUTDONE_TO)
-			("urlcopy_get_to", URLCOPY_GET_TO)
-			("urlcopy_get_doneto", URLCOPY_GET_DONETO)
-			("urlcopy_tx_to", URLCOPY_TX_TO)
-			("urlcopy_txmarks_to", URLCOPY_TXMARKS_TO)
-			("urlcopy_first_txmark_to", URLCOPY_FIRST_TXMARK_TO)
-			("tx_to_per_mb", TX_TO_PER_MB)
-			("no_tx_activity_to", NO_TX_ACTIVITY_TO)
-			("preparing_files_ratio", PREPARING_FILES_RATIO).to_container(parameterNameToId)
-		) {
+		get_vec_re(get_vec_exp) {
 }
 
 void ConfigurationHandler::parse(string configuration) {
@@ -158,10 +161,11 @@ void ConfigurationHandler::parse(string configuration) {
 	}
 
 	// handle protocol parameters
-	string params_str = what[PROTOCOL_PARAMETERS];
-	cfgProtocolParams = !params_str.empty();
+	string protocol_str = what[PROTOCOL];
+	cfgProtocolParams = !protocol_str.empty();
 	if (cfgProtocolParams) {
-		parameters = getParamVector(params_str);
+		protocol_pair = getString(what[PROTOCOL_PAIR]);
+		parameters = getMap(what[PROTOCOL_PARAMETERS]);
 	}
 
 	// handle share configuration
@@ -175,10 +179,6 @@ void ConfigurationHandler::parse(string configuration) {
 	}
 
 	// check the following constraints:
-
-	// make sure a group cannot have a pair configuration (at least for now)
-	if (share_type == PAIR_SHARE && type == GROUP_TYPE)
-		throw Err_Custom("The pair share is only allowed for SEs (not for SE groups)!");
 
 	// in case if it is a public share the share_id has to be 'null'
 	if (share_type == PUBLIC_SHARE && share_id != null_str)
@@ -264,34 +264,47 @@ vector<string> ConfigurationHandler::getVector(string cfg) {
 	return ret;
 }
 
-vector<int> ConfigurationHandler::getParamVector(string cfg) {
+map<string, int> ConfigurationHandler::getMap(string cfg) {
 
-	if (cfg.empty()) return vector<int>();
+	if (cfg.empty()) return map<string, int>();
 
 	static const int VALUE = 1;
+	static const int MAP_KEY = 1;
+	static const int MAP_VALUE = 2;
 
 	smatch what;
-	regex_match(cfg, what, get_par_re, match_extra);
+	regex_match(cfg, what, get_vec_re, match_extra);
 	string tmp = what[VALUE];
 
-	char_separator<char> sep(",");
+	char_separator<char> sep(",{}");
 	tokenizer< char_separator<char> > tokens(tmp, sep);
 	tokenizer< char_separator<char> >::iterator it;
 
-	vector<int> ret(PARAMETERS_NMB, 0);
+	map<string, int> ret;
 
 	for(it = tokens.begin(); it != tokens.end(); it++) {
-		string s = *it;
-		map<string, ProtocolParameters>::const_iterator id = parameterNameToId.find (
-				getName(s)
-			);
-		if (id != parameterNameToId.end()) {
-			ret[id->second] = (getNumber(s));
-		}
 
+		string entry = *it;
+		string k = getString(entry);
+
+		++it;
+		entry = *it;
+		int v = getNumber(entry);
+		ret[k] = v;
 	}
 
 	return ret;
+}
+
+int ConfigurationHandler::getParamValue(const string key) {
+
+	map<string, int>::iterator it = parameters.find(key);
+
+	if (it == parameters.end()) {
+		return 0;
+	}
+
+	return it->second;
 }
 
 void ConfigurationHandler::add() {
@@ -332,7 +345,7 @@ set<string> ConfigurationHandler::handleSeName(string name) {
 	return matches;
 }
 
-shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig(string name) {
+shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig(string name, string pair) {
 
 	shared_ptr<SeProtocolConfig> ret(new SeProtocolConfig);
 
@@ -345,21 +358,21 @@ shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig(string name
 		ret->SE_GROUP_NAME = name;
 	}
 
-	ret->BANDWIDTH = parameters[BANDWIDTH];
-	ret->NOSTREAMS = parameters[NOSTREAMS];
-	ret->TCP_BUFFER_SIZE = parameters[TCP_BUFFER_SIZE];
-	ret->NOMINAL_THROUGHPUT = parameters[NOMINAL_THROUGHPUT];
-	ret->BLOCKSIZE = parameters[BLOCKSIZE];
-	ret->HTTP_TO = parameters[HTTP_TO];
-	ret->URLCOPY_PUT_TO = parameters[URLCOPY_PUT_TO];
-	ret->URLCOPY_PUTDONE_TO = parameters[URLCOPY_PUTDONE_TO];
-	ret->URLCOPY_GET_TO = parameters[URLCOPY_GET_TO];
-	ret->URLCOPY_GETDONE_TO = parameters[URLCOPY_GET_DONETO];
-	ret->URLCOPY_TX_TO = parameters[URLCOPY_TX_TO];
-	ret->URLCOPY_TXMARKS_TO = parameters[URLCOPY_TXMARKS_TO];
-	ret->TX_TO_PER_MB = parameters[TX_TO_PER_MB];
-	ret->NO_TX_ACTIVITY_TO = parameters[NO_TX_ACTIVITY_TO];
-	ret->PREPARING_FILES_RATIO = parameters[PREPARING_FILES_RATIO];
+	ret->BANDWIDTH = getParamValue(ProtocolParameters::BANDWIDTH);
+	ret->NOSTREAMS = getParamValue(ProtocolParameters::NOSTREAMS);
+	ret->TCP_BUFFER_SIZE = getParamValue(ProtocolParameters::TCP_BUFFER_SIZE);
+	ret->NOMINAL_THROUGHPUT = getParamValue(ProtocolParameters::NOMINAL_THROUGHPUT);
+	ret->BLOCKSIZE = getParamValue(ProtocolParameters::BLOCKSIZE);
+	ret->HTTP_TO = getParamValue(ProtocolParameters::HTTP_TO);
+	ret->URLCOPY_PUT_TO = getParamValue(ProtocolParameters::URLCOPY_PUT_TO);
+	ret->URLCOPY_PUTDONE_TO = getParamValue(ProtocolParameters::URLCOPY_PUTDONE_TO);
+	ret->URLCOPY_GET_TO = getParamValue(ProtocolParameters::URLCOPY_GET_TO);
+	ret->URLCOPY_GETDONE_TO = getParamValue(ProtocolParameters::URLCOPY_GET_DONETO);
+	ret->URLCOPY_TX_TO = getParamValue(ProtocolParameters::URLCOPY_TX_TO);
+	ret->URLCOPY_TXMARKS_TO = getParamValue(ProtocolParameters::URLCOPY_TXMARKS_TO);
+	ret->TX_TO_PER_MB = getParamValue(ProtocolParameters::TX_TO_PER_MB);
+	ret->NO_TX_ACTIVITY_TO = getParamValue(ProtocolParameters::NO_TX_ACTIVITY_TO);
+	ret->PREPARING_FILES_RATIO = getParamValue(ProtocolParameters::PREPARING_FILES_RATIO);
 
 	return ret;
 }
@@ -491,6 +504,8 @@ void ConfigurationHandler::addActiveStateConfiguration(set<string> matchingNames
 
 void ConfigurationHandler::addGroupConfiguration() {
 
+	// TODO what if we configure things other than members for a group that does not exist?
+
 	set<string> matchingNames;
 	// check if it's a pattern or a new SE group name
 	if (name.find("%") == string::npos) {
@@ -568,6 +583,7 @@ void ConfigurationHandler::addSeConfiguration() {
 
 	if (cfgProtocolParams) {
 		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
+			// TODO here should be inner for loop looping over pair se if available
 			shared_ptr<SeProtocolConfig> cfg = getProtocolConfig(*it);
 			if (db->is_se_protocol_exist(*it)) {
 				db->update_se_protocol_config(cfg.get());
