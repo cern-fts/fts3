@@ -21,7 +21,7 @@ $_SESSION['connstring']=$config['db']['connstring'];
 </head>
 <body>
 
-<b>FTS 3 Pilot service - <a href="fts3config.php">Configuration</a> - (updated every 200 seconds) </b>
+<b>FTS 3 Pilot service - <a href="fts3config.php">Configuration</a> - (updated every 200 seconds / last 12h jobs fetched) </b>
 
 <form name="frmSearch" method="get" action="fts3jobs.php">
 <table width="599" border="1">
@@ -111,10 +111,10 @@ if($jobid != ""){
 	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where JOB_ID='$jobid' ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
 }
 elseif($vo != "" && $vo!="all"){
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where VO_NAME='$vo' and (SUBMIT_TIME > current_timestamp - 12) ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
+	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where VO_NAME='$vo' and (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour)) ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
 }
 else{
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where (SUBMIT_TIME > current_timestamp - 12)  ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
+	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour))  ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
 }
 
 
