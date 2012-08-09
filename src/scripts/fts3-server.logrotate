@@ -1,8 +1,11 @@
 
 /var/log/fts3/fts3server.log {
-    daily
-    missingok
-    compress
-    delaycompress
-    rotate 15
+        daily
+        missingok
+        rotate 15
+        compress
+        delaycompress
+        postrotate
+                reload rsyslog >/dev/null 2>&1 || true
+        endscript
 }
