@@ -117,13 +117,19 @@ const std::string& OracleTypeConversions::toBoolean(bool b){
 
 
 void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str){
+
+    try{
     // Check if the Clob is Null
     if(clob.isNull()){
         str.clear();
+	clob.close();
         return;
     }
 
-    try{
+    if(clob.isOpen()){
+    	return;
+    }    
+
         // Open the Clob
         clob.open(oracle::occi::OCCI_LOB_READONLY);
         int len = clob.length();

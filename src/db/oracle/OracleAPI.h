@@ -28,6 +28,11 @@
 #include "GenericDbIfce.h"
 #include "OracleConnection.h"
 #include <boost/scoped_ptr.hpp>
+#include "OracleTypeConversions.h"
+#include "threadtraits.h"
+#include "pointers.h"
+
+using namespace FTS3_COMMON_NAMESPACE;
 
 class OracleAPI : public GenericDbIfce {
 public:
@@ -324,9 +329,10 @@ public:
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action); 
     
     virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state);             
- 
     
 private:
 	OracleConnection *conn;
+	OracleTypeConversions *conv;
 	bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
+	mutable ThreadTraits::MUTEX _mutex;
 };

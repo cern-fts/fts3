@@ -1,22 +1,25 @@
 #include "OracleAPI.h"
 #include <fstream>
 #include "error.h"
-#include "OracleTypeConversions.h"
 #include <algorithm>
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-OracleAPI::OracleAPI() : conn(NULL) {
+OracleAPI::OracleAPI() : conn(NULL), conv(NULL) {
 }
 
 OracleAPI::~OracleAPI() {
     if (conn)
         delete conn;
+    if (conv)
+    	delete conv;
 }
 
 void OracleAPI::init(std::string username, std::string password, std::string connectString) {
     if (!conn)
         conn = new OracleConnection(username, password, connectString);
+    if (!conv)
+    	conv = new OracleTypeConversions();	
 }
 
 
@@ -113,6 +116,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND rownum <= 30  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time) ";
 
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
         oracle::occi::ResultSet* r = conn->createResultset(s);
@@ -142,8 +146,11 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
 	    
 	    //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
 	    bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);	    
-	    if(process == true)
+	    if(process == true){
             	jobs.push_back(tr_jobs);
+	    }else{
+	    	delete tr_jobs;
+	    }
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -207,7 +214,7 @@ void OracleAPI::getSeCreditsInUse (
 			tag.append("5");
 		}
 	}
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
 
         oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
@@ -284,7 +291,7 @@ void OracleAPI::getGroupCreditsInUse (
 			tag.append("5");
 		}
 	}
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
 
         oracle::occi::Statement* s = conn->createStatement(query_stmt, "");
@@ -302,8 +309,9 @@ void OracleAPI::getGroupCreditsInUse (
 
 int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
     int updated = 0;
-    const std::string tag = "updateFileStatus";
-    std::string query =
+    const std::string tag1 = "updateFileStatus1";
+    const std::string tag2 = "updateFileStatus2";
+    std::string query1 =
     		"UPDATE t_file "
     		"SET file_state =:1 "
     		"WHERE file_id = :2 AND FILE_STATE='SUBMITTED' ";
@@ -311,24 +319,26 @@ int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
                 "UPDATE t_job "
                 "SET job_state =:1 "
                 "WHERE job_id = :2 AND JOB_STATE='SUBMITTED' ";
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
-        oracle::occi::Statement* s = conn->createStatement(query, "");
-        s->setString(1, status);
-        s->setInt(2, file->FILE_ID);
-	updated = s->executeUpdate();
+        oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);
+        s1->setString(1, status);
+        s1->setInt(2, file->FILE_ID);
+	updated = s1->executeUpdate();
+
 	if(updated == 0){
-	        conn->rollback();	
-		conn->destroyStatement(s, "");			
+		conn->commit();	
+		conn->destroyStatement(s1, tag1);			
 		return 0;
 	}
 	else{
-		s->setSQL(query2);
-	        s->setString(1, status);
-        	s->setString(2, file->JOB_ID);
-	        s->executeUpdate();
+		conn->destroyStatement(s1, tag1);
+		oracle::occi::Statement* s2 = conn->createStatement(query2, tag2);
+	        s2->setString(1, status);
+        	s2->setString(2, file->JOB_ID);
+	        s2->executeUpdate();
         	conn->commit();	
-	        conn->destroyStatement(s, "");
+	        conn->destroyStatement(s2, tag2);
     		return updated;		
 	}
 
@@ -347,7 +357,7 @@ void OracleAPI::updateJObStatus(std::string jobId, const std::string status) {
                 "UPDATE t_job "
                 "SET job_state =:1 "
                 "WHERE job_id = :2 and job_state = 'SUBMITTED'";
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, status);
@@ -382,6 +392,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
    		" t_file.file_state ='SUBMITTED' AND "   
    		" t_job.job_finished is NULL AND "
    		" t_job.job_id=:1 ORDER BY t_file.file_id DESC ";
+	ThreadTraits::LOCK lock(_mutex);		
     try {
 
         oracle::occi::Statement* s = conn->createStatement(select,selecttag);              	
@@ -436,7 +447,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
     " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22)";
     const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s_job_statement = conn->createStatement(job_statement, tag_job_statement);
         s_job_statement->setString(1, jobId); //job_id
@@ -446,7 +457,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->setString(5, cred); //user_cred
         s_job_statement->setInt(6, 3); //priority
         s_job_statement->setString(7, voName); //vo_name
-        s_job_statement->setTimestamp(8, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); //submit_time
+        s_job_statement->setTimestamp(8, conv->toTimestamp(timed, conn->getEnv())); //submit_time
         s_job_statement->setString(9, ""); //internal_job_params
         s_job_statement->setString(10, currenthost); //submit_host
         s_job_statement->setString(11, delegationID); //cred_id
@@ -511,7 +522,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
             js->fileStatus = r->getString(3);
             js->clientDN = r->getString(4);
             js->reason = r->getString(5);
-            js->submitTime = OracleTypeConversions::toTimeT(r->getTimestamp(6));
+            js->submitTime = conv->toTimeT(r->getTimestamp(6));
             js->priority = r->getInt(7);
             js->voName = r->getString(8);
             js->numFiles = r->getInt(9);
@@ -683,7 +694,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
             std::string jid = r->getString(1);
             std::string jstate = r->getString(2);
             std::string reason = r->getString(3);
-            time_t tm = OracleTypeConversions::toTimeT(r->getTimestamp(4));
+            time_t tm = conv->toTimeT(r->getTimestamp(4));
             std::string dn = r->getString(5);
             std::string voName = r->getString(6);
             int fileCount = r->getInt(7);
@@ -729,8 +740,8 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
 		js->destSURL= r->getString(2);
 		js->transferFileState = r->getString(3);
 		js->reason = r->getString(4);
-		js->start_time = OracleTypeConversions::toTimeT(r->getTimestamp(5));		
-		js->finish_time= OracleTypeConversions::toTimeT(r->getTimestamp(6));
+		js->start_time = conv->toTimeT(r->getTimestamp(5));		
+		js->finish_time= conv->toTimeT(r->getTimestamp(6));
 
 	    files.push_back(js);
         }
@@ -1030,7 +1041,7 @@ void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SIT
     std::string query = "INSERT INTO t_se (ENDPOINT, SE_TYPE, SITE, NAME, STATE, VERSION, HOST, SE_TRANSFER_TYPE, SE_TRANSFER_PROTOCOL,SE_CONTROL_PROTOCOL,GOCDB_ID) VALUES (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)";
     std::string tag = "addSe";
     
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, ENDPOINT);
@@ -1160,7 +1171,7 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
 	    			query.append(" AND SE_TRANSFER_PROTOCOL='");
 	    			query.append(SE_TRANSFER_PROTOCOL);			       
 	    			query.append("'");				
-				
+	ThreadTraits::LOCK lock(_mutex);				
     try {
         oracle::occi::Statement* s = conn->createStatement(query, ""); 
 
@@ -1179,7 +1190,7 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
 void OracleAPI::addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE){
     std::string query = "INSERT INTO T_SE_VO_SHARE (SE_NAME, SHARE_ID, SHARE_TYPE, SHARE_VALUE) VALUES (:1,:2,:3,:4)";
     std::string tag = "addSeConfig";
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, SE_NAME);
@@ -1227,7 +1238,7 @@ void OracleAPI::updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
 			query.append(SHARE_TYPE);
 			query.append("'");
 			
-
+	ThreadTraits::LOCK lock(_mutex);
 
     try {
         oracle::occi::Statement* s = conn->createStatement(query, "");
@@ -1248,7 +1259,7 @@ REQUIRED: NAME
 void OracleAPI::deleteSe(std::string NAME){
     std::string query = "DELETE FROM T_SE WHERE NAME = :1";
     std::string tag = "deleteSe";
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, NAME);
@@ -1271,7 +1282,7 @@ void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::s
     std::string query = "DELETE FROM T_SE_VO_SHARE WHERE SE_NAME like'"+SE_NAME+"'";
     			query.append(" AND SHARE_ID like '"+SHARE_ID+"'");
     			query.append(" AND SHARE_TYPE ='"+SHARE_TYPE+"'");
-
+	ThreadTraits::LOCK lock(_mutex);
     try {        
         oracle::occi::Statement* s = conn->createStatement(query, "");
         s->executeUpdate();
@@ -1302,7 +1313,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 		query << ", PID=:" << ++index;
     		query << " WHERE file_id =:" << ++index;
 		query << " and (file_state='READY' OR file_state='ACTIVE')";	
-
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
 	index = 1; //reset index
@@ -1312,12 +1323,12 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 	if( (transfer_status.compare("FINISHED") == 0) || (transfer_status.compare("FAILED") == 0) || (transfer_status.compare("CANCELED") == 0) ){
 		time_t timed = time(NULL);
 		++index;
-		s->setTimestamp(index, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
+		s->setTimestamp(index, conv->toTimestamp(timed, conn->getEnv()));
 		}
 	if( (transfer_status.compare("ACTIVE") == 0) ){
 		time_t timed = time(NULL);
 		++index;
-		s->setTimestamp(index, OracleTypeConversions::toTimestamp(timed, conn->getEnv()));
+		s->setTimestamp(index, conv->toTimestamp(timed, conn->getEnv()));
 		}		
 	++index;	
 	s->setInt(index, process_id);
@@ -1369,7 +1380,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     		"UPDATE t_file "
     		"SET JOB_FINISHED=:1 "
     		"WHERE job_id=:2 ";	    
-	    
+	ThreadTraits::LOCK lock(_mutex);	    
     try {
         oracle::occi::Statement* st = conn->createStatement(query, "");
 	job_id = job_id.substr (0,36);
@@ -1411,15 +1422,15 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
 	}	
 	
 	//set reason and timestamps for job
-        st->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
-        st->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
+        st->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); 
+        st->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv())); 	
         st->setString(4, reason);
 	st->setString(5, job_id);
         st->executeUpdate();
 	
 	//set timestamps for file
 	st->setSQL(updateFileJobFinished);
-        st->setTimestamp(1, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
+        st->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv())); 
         st->setString(2, job_id ); 	
         st->executeUpdate();	
 		
@@ -1453,7 +1464,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs){
 	const std::string cancelFTag = "cancelFTag";
 	std::vector<std::string>::iterator iter;
 	time_t timed = time(NULL);	
-	
+	ThreadTraits::LOCK lock(_mutex);	
 	try{
 	oracle::occi::Statement* st1 = conn->createStatement(cancelJ, cancelJTag);
 	oracle::occi::Statement* st2 = conn->createStatement(cancelF, cancelFTag);
@@ -1462,15 +1473,15 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs){
 	    	std::string jobId = std::string(*iter);
 		
         	st1->setString(1,"CANCELED");
-        	st1->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
-        	st1->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
+        	st1->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); 
+        	st1->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv())); 	
         	st1->setString(4, cancelReason);
 		st1->setString(5, jobId);	    
             	st1->executeUpdate();
 		
         	st2->setString(1,"CANCELED");
-        	st2->setTimestamp(2, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 
-        	st2->setTimestamp(3, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 	
+        	st2->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); 
+        	st2->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv())); 	
         	st2->setString(4, cancelReason);
 		st2->setString(5, jobId);	    		
             	st2->executeUpdate();
@@ -1491,6 +1502,8 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs){
 	const std::string tag1 = "getCancelJobUpdateCancel";
 	std::string query = "select t_file.pid, t_job.job_id from t_file, t_job where t_file.job_id=t_job.job_id and t_file.FILE_STATE='CANCELED' and t_file.PID IS NOT NULL AND t_job.CANCEL_JOB IS NULL ";
 	std::string update = "update t_job SET CANCEL_JOB='Y' where job_id=:1 ";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
         oracle::occi::ResultSet* r = conn->createResultset(s);
@@ -1764,7 +1777,7 @@ SeProtocolConfig* OracleAPI::get_group_protocol_config(std::string group){
 bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 	const std::string tag = "add_se_protocol_config";
 	std::string query = "insert into t_se_protocol(SE_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
-	
+	ThreadTraits::LOCK lock(_mutex);	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seProtocolConfig->SE_NAME);
@@ -1816,7 +1829,7 @@ bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolCo
 	const std::string tag = "add_se_group_protocol_config";
 	std::string query = "insert into t_se_protocol(SE_GROUP_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
 
-	
+	ThreadTraits::LOCK lock(_mutex);	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);
@@ -1838,6 +1851,8 @@ bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolCo
 void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
 	const std::string tag = "delete_se_protocol_config";
 	std::string query = "delete from t_se_protocol where SE_NAME like :1 and SE_GROUP_NAME IS NULL ";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seProtocolConfig->SE_NAME);				    		
@@ -1871,6 +1886,8 @@ void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
 void OracleAPI::delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig){
 	const std::string tag = "delete_se_group_protocol_config";
 	std::string query = "delete from t_se_protocol where SE_GROUP_NAME like :1";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);    			    		
@@ -1907,6 +1924,8 @@ void OracleAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig){
 			tag+="2";
 		}		
     		query << " WHERE SE_NAME = :" << index;
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         index = 1; //reset index
         oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
@@ -1946,6 +1965,8 @@ void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtoco
 			tag+="2";
 		}		
     		query << " WHERE se_group_name = :" << index;
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         index = 1; //reset index
         oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
@@ -1988,6 +2009,8 @@ SeProtocolConfig* OracleAPI::getProtocol(std::string se1, std::string se2){
 void OracleAPI::add_se_to_group(std::string se, std::string group){
 	const std::string tag = "add_se_to_group";
 	std::string query = "insert into t_se_group(se_group_name, se_name) values(:1,:2)";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, group);
@@ -2004,6 +2027,8 @@ void OracleAPI::add_se_to_group(std::string se, std::string group){
 void OracleAPI::remove_se_from_group(std::string se, std::string group){
 	const std::string tag = "remove_se_from_group";
 	std::string query = "delete from t_se_group where se_name=:1 and se_group_name=:2";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, se);
@@ -2020,6 +2045,8 @@ void OracleAPI::remove_se_from_group(std::string se, std::string group){
 void OracleAPI::delete_group(std::string group){
 	const std::string tag = "delete_group";
 	std::string query = "delete from t_se_group where se_group_name like :1";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
         s->setString(1, group);
@@ -2100,14 +2127,29 @@ std::vector<std::string> OracleAPI::get_group_members(std::string name) {
 void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs){
 	const std::string tag = "insertGrDPStorageCacheElement";
 	std::string query = "INSERT INTO t_credential_cache (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES (:1, :2, empty_clob(), empty_clob(), empty_clob())";
+
+ 	const std::string tag1 = "updateGrDPStorageCacheElementxxx";
+	std::string query1 = "UPDATE t_credential_cache SET cert_request=:1, priv_key=:2, voms_attrs=:3 WHERE dlg_id=:4 AND dn=:5";
+
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, dlg_id);
 	s->setString(2, dn);	    			    		
         s->executeUpdate();
 	conn->commit();	       	    
-	updateGrDPStorageCacheElement(dlg_id, dn, cert_request, priv_key, voms_attrs);
-        conn->destroyStatement(s, tag);	
+
+        oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);			    		
+	s1->setString(1, cert_request);
+	s1->setString(2, priv_key);
+	s1->setString(3, voms_attrs);
+	s1->setString(4, dlg_id);
+	s1->setString(5, dn);
+        s1->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s, tag);			
+        conn->destroyStatement(s1, tag1);	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -2115,34 +2157,20 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
 }
 
 void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs){
-	const std::string tag = "updateGrDPStorageCacheElement";
-	int index = 1;
-	std::string query = "UPDATE t_credential_cache SET ";
-	if(cert_request.length() > 0){
-		query.append(" cert_request='"+cert_request+"' ");
-		index++;
-	}
-	if(priv_key.length() > 0){
-		if(index > 1)
-			query.append(", priv_key='"+priv_key+"' ");
-		else	
-			query.append(" priv_key='"+priv_key+"' ");		
-		index++;
-	}	
-	if(voms_attrs.length() > 0){
-		if(index > 1)
-			query.append(", voms_attrs='"+voms_attrs+"' ");
-		else	
-			query.append(" voms_attrs='"+voms_attrs+"' ");		
-		index++;
-	}	
-	query.append(" WHERE dlg_id = '"+dlg_id+"' AND dn = '"+dn+"' ");
-	
+ 	const std::string tag = "updateGrDPStorageCacheElement";
+	std::string query = "UPDATE t_credential_cache SET cert_request=:1, priv_key=:2, voms_attrs=:3 WHERE dlg_id=:4 AND dn=:5";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
-        oracle::occi::Statement* s = conn->createStatement(query, "");			    		
+        oracle::occi::Statement* s = conn->createStatement(query, tag);			    		
+	s->setString(1, cert_request);
+	s->setString(2, priv_key);
+	s->setString(3, voms_attrs);
+	s->setString(4, dlg_id);
+	s->setString(5, dn);
         s->executeUpdate();
 	conn->commit();	       	    
-        conn->destroyStatement(s, "");	
+        conn->destroyStatement(s, tag);	
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -2154,6 +2182,8 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
 	CredCache* cred = NULL;
 	const std::string tag = "findGrDPStorageCacheElement";
 	std::string query = "SELECT dlg_id, dn, voms_attrs, cert_request, priv_key FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1,delegationID);
@@ -2164,9 +2194,9 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
 		cred = new CredCache();
   		cred->delegationID = r->getString(1);
 		cred->DN = r->getString(2);
-		OracleTypeConversions::toString(r->getClob(3), cred->vomsAttributes);
-		OracleTypeConversions::toString(r->getClob(4), cred->certificateRequest);
-		OracleTypeConversions::toString(r->getClob(5), cred->privateKey);
+		conv->toString(r->getClob(3), cred->vomsAttributes);
+		conv->toString(r->getClob(4), cred->certificateRequest);
+		conv->toString(r->getClob(5), cred->privateKey);
         }        
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
@@ -2185,6 +2215,8 @@ return cred;
 void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::string dn){
 	const std::string tag = "deleteGrDPStorageCacheElement";
 	std::string query = "DELETE FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, delegationID);	    		
@@ -2201,15 +2233,30 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
 void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time){
 	const std::string tag = "insertGrDPStorageElement";
 	std::string query = "INSERT INTO t_credential (dlg_id, dn, termination_time, proxy, voms_attrs ) VALUES (:1, :2, :3, empty_clob(), empty_clob())";
+  
+  	const std::string tag1 = "updateGrDPStorageElementxxx";
+	std::string query1 = "UPDATE t_credential SET proxy = :1, voms_attrs = :2, termination_time = :3 WHERE dlg_id = :4 AND dn = :5";
+  
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, dlg_id);
 	s->setString(2, dn);	    		
-	s->setTimestamp(3, OracleTypeConversions::toTimestamp(termination_time, conn->getEnv())); 		    		
+	s->setTimestamp(3, conv->toTimestamp(termination_time, conn->getEnv())); 		    		
         s->executeUpdate();
 	conn->commit();	
-	updateGrDPStorageElement(dlg_id, dn, proxy, voms_attrs, termination_time);       	    
         conn->destroyStatement(s, tag);	
+	
+       oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);	
+	s1->setString(1, proxy);
+	s1->setString(2, voms_attrs);			
+	s1->setTimestamp(3, conv->toTimestamp(termination_time, conn->getEnv())); 
+	s1->setString(4, dlg_id);
+	s1->setString(5, dn);	    			    		
+        s1->executeUpdate();
+	conn->commit();	       	    
+        conn->destroyStatement(s1, tag1);				
+
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -2219,11 +2266,13 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
 void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time){
 	const std::string tag = "updateGrDPStorageElement";
 	std::string query = "UPDATE t_credential SET proxy = :1, voms_attrs = :2, termination_time = :3 WHERE dlg_id = :4 AND dn = :5";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, proxy);
 	s->setString(2, voms_attrs);			
-	s->setTimestamp(3, OracleTypeConversions::toTimestamp(termination_time, conn->getEnv())); 
+	s->setTimestamp(3, conv->toTimestamp(termination_time, conn->getEnv())); 
 	s->setString(4, dlg_id);
 	s->setString(5, dn);	    			    		
         s->executeUpdate();
@@ -2239,6 +2288,8 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
 	Cred* cred = NULL;
 	const std::string tag = "findGrDPStorageElement";
 	std::string query = "SELECT dlg_id, dn, voms_attrs, proxy, termination_time FROM t_credential WHERE dlg_id = :1 AND dn = :2";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1,delegationID);
@@ -2249,9 +2300,9 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
 		cred = new Cred();
 		cred->delegationID = r->getString(1) ;
 		cred->DN = r->getString(2) ;
-		OracleTypeConversions::toString(r->getClob(3), cred->vomsAttributes);
-		OracleTypeConversions::toString(r->getClob(4), cred->proxy);
-		cred->termination_time = OracleTypeConversions::toTimeT(r->getTimestamp(5));						
+		conv->toString(r->getClob(3), cred->vomsAttributes);
+		conv->toString(r->getClob(4), cred->proxy);
+		cred->termination_time = conv->toTimeT(r->getTimestamp(5));						
         }        
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
@@ -2267,6 +2318,8 @@ return cred;
 void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string dn){
 	const std::string tag = "deleteGrDPStorageElement";
 	std::string query = "DELETE FROM t_credential WHERE dlg_id = :1 AND dn = :2";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	s->setString(1, delegationID);	    		
@@ -2324,7 +2377,7 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
 		query1 = "delete from t_debug where source_se=:1 and dest_se =:2";
 		query2 = "insert into t_debug(source_se,dest_se,debug) values(:1,:2,:3)";	
 	}
-	
+	ThreadTraits::LOCK lock(_mutex);	
 	try{
 		oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);
 		oracle::occi::Statement* s2 = conn->createStatement(query2, tag2);	
@@ -2427,10 +2480,12 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs){
 void OracleAPI::auditConfiguration(const std::string & dn, const std::string & config, const std::string & action){
 	const std::string tag = "auditConfiguration";
 	std::string query = "INSERT INTO t_config_audit (when, dn, config, action ) VALUES (:1, :2, :3, :4)";
+
+	ThreadTraits::LOCK lock(_mutex);
     try {
         time_t timed = time(NULL);
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
-	s->setTimestamp(1, OracleTypeConversions::toTimestamp(timed, conn->getEnv())); 		    		
+	s->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv())); 		    		
 	s->setString(2, dn);
 	s->setString(3, config);	    		
 	s->setString(4, action);	    		
@@ -2454,7 +2509,7 @@ void OracleAPI::setGroupOrSeState(const std::string & se, const std::string & gr
 		query= "update t_se_group set state=:1 where se_group_name=:2";
 		tag+="1";
 	}
-	
+    ThreadTraits::LOCK lock(_mutex);	
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);	
 	if(se.length() > 0){
@@ -2472,6 +2527,7 @@ void OracleAPI::setGroupOrSeState(const std::string & se, const std::string & gr
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }	
 }
+
 
 
 // the class factories

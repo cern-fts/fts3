@@ -35,12 +35,15 @@ class OracleTypeConversions{
 
 public:
 
+    OracleTypeConversions(){}
+    virtual ~OracleTypeConversions(){}
+
 /*
  * toTimeT
  *
  * Convert a Timestamp into a time value
  */
- static time_t toTimeT(const ::oracle::occi::Timestamp& timestamp);
+ time_t toTimeT(const ::oracle::occi::Timestamp& timestamp);
  
  
 /*
@@ -48,41 +51,41 @@ public:
  *
  * Convert a time value into a Timestamp 
  */
- static oracle::occi::Timestamp toTimestamp(time_t t, oracle::occi::Environment* env);
+ oracle::occi::Timestamp toTimestamp(time_t t, oracle::occi::Environment* env);
  
  /*
  * toLongLong
  *
  * Convert a Number into a longlong
  */
- static longlong toLongLong(const ::oracle::occi::Number& number, oracle::occi::Environment* env);
+ longlong toLongLong(const ::oracle::occi::Number& number, oracle::occi::Environment* env);
  
  /*
  * toNumber
  *
  * Convert a longlong into a Number
  */
- static oracle::occi::Number toNumber(longlong n, oracle::occi::Environment* env);
+ oracle::occi::Number toNumber(longlong n, oracle::occi::Environment* env);
  
  /*
  * toBoolean
  *
  * Convert a Char into a boolean
  */
- static bool toBoolean(const std::string& str, bool defaultValue) ;
+ bool toBoolean(const std::string& str, bool defaultValue) ;
  
  /*
  * toBoolean
  *
  * Convert a Boolean into a String
  */
- static const std::string& toBoolean(bool b) ;
+ const std::string& toBoolean(bool b) ;
  
  /*
  * toString
  *
  * Read a Clob into a String
  */
- static void toString(::oracle::occi::Clob clob, std::string& str);
+ void toString(::oracle::occi::Clob clob, std::string& str);
 
 };

@@ -43,6 +43,7 @@
 #include "SeProtocolConfig.h"
 #include "CredCache.h"
 #include "Cred.h"
+#include "definitions.h"
 
 /**
  * GenericDbIfce class declaration
@@ -357,6 +358,8 @@ public:
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
     
     virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state) = 0;
+    
+ 
 };
 
 
