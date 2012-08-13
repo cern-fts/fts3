@@ -95,7 +95,5 @@ public:
 private:
     oracle::occi::Environment* env;
     oracle::occi::Connection* conn;
-    oracle::occi::ResultSet* r;
-    oracle::occi::Statement* s;
 
 };

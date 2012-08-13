@@ -2,7 +2,6 @@
 #include <ctype.h>
 #include <cstdlib>
 #include <unistd.h>
-#include <iostream>
 #include <string>
 #include <sys/stat.h>
 #include <vector>
@@ -31,6 +30,7 @@
 #include <unistd.h>
 #include <grp.h>
 #include <boost/tokenizer.hpp>
+#include <cstdio>
 
 /*
 PENDING
@@ -60,6 +60,43 @@ static uid_t pw_uid;
 extern std::string stackTrace;
 
 gfalt_params_t params;
+
+
+FILE * pFile;
+int fd;
+int restore_fd;
+char *ptr;
+
+static void debugFile(){
+			/* fname defines the template for the temporary file.  */    			
+    			pFile = tmpfile ();
+   			//create and open a temp file 
+	 	        fd = open(ptr, O_WRONLY | O_TRUNC | O_CREAT); 	 	        
+	 	        //redirect  to this temp file  
+	 	        restore_fd = dup(1); 
+	 	        dup2(fd, 2); 	 	 	 	       
+}
+
+
+static void releaseDebug(){
+	 	        close(fd); 
+	 	        dup2(restore_fd, 2); 
+	 	        close(restore_fd); 
+	 	 
+	 	        std::string line; 
+	 	        std::ifstream myfile(ptr); 
+	 	        if (myfile.is_open()) { 
+	 	            while (!myfile.eof()) { 
+	 	                getline(myfile, line); 
+	 	                //read the temp file and print to warn() 
+	 	                logStream  << fileManagement.timestamp() << "DEBUG " << line << '\n';
+	 	            } 
+	 	            myfile.close(); 
+	 	        } 
+	 	 
+	 	        //get rid of the file 
+	 	        remove(ptr); 
+}
 
 static std::vector<std::string> split(const char *str, char c = ':') {
     std::vector<std::string> result;
@@ -415,7 +452,10 @@ int main(int argc, char **argv) {
 
         /*gfal2 debug logging*/
         if (debug == true) {
-            gfal_set_verbose(GFAL_VERBOSE_TRACE);
+	    /*seteuid(privid);
+	    	debugFile();
+	    seteuid(pw_uid);*/
+            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
             gfal_log_set_handler((GLogFunc) log_func, NULL);
         }
 
@@ -581,7 +621,9 @@ stop:
 
         logStream.close();
         fileManagement.archive();
-
+ 	/*if (debug == true){ 
+	    releaseDebug();
+	}*/ 
 
     }//end for reuse loop	
 

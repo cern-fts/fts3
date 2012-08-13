@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 2.6)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
-include_directories (BEFORE ../generic)
+include_directories (BEFORE ../db/generic)
 include_directories (BEFORE ../common)
 include_directories (BEFORE ../config)
 include_directories (.)

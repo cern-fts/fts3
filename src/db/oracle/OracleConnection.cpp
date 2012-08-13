@@ -40,11 +40,17 @@ oracle::occi::ResultSet* OracleConnection::createResultset(oracle::occi::Stateme
 
 oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std::string tag) {
     
-        if (conn)
-            s = conn->createStatement(sql, tag);
-        else
-            s = NULL;
-	return s;	    
+    oracle::occi::Statement* s = NULL;
+   // Check if the statement is already cached
+    if(true == conn->isCached("",tag)){
+    	s = conn->createStatement("", tag);
+	return s;
+    }else{
+        s = conn->createStatement(sql, tag);
+	return s;
+    }
+     
+  return s;	    
 }
 
 void OracleConnection::destroyResultset(oracle::occi::Statement* s, oracle::occi::ResultSet* r) {

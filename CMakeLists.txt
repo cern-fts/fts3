@@ -32,10 +32,10 @@ link_directories (${PROJECT_BINARY_DIR}/src/cli)
 link_directories (${PROJECT_BINARY_DIR}/src/monitoring) 
 link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
 #set(CMAKE_EXE_FLAGS  "${CMAKE_EXE_FLAGS} -pg")
 #set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -pg")
-
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef  -Wno-unused")
 
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
@@ -59,6 +59,7 @@ find_package(Boost)
 find_package(APR 1.2.7 REQUIRED)
 find_package(APRUtil 1.2.7 REQUIRED)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
+find_package(GEOIP)
 
 add_subdirectory(test)
 add_subdirectory(src)

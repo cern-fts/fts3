@@ -119,6 +119,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
 	ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
+        s->setPrefetchRowCount( 30 );
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -395,7 +396,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 	ThreadTraits::LOCK lock(_mutex);		
     try {
 
-        oracle::occi::Statement* s = conn->createStatement(select,selecttag);              	
+        oracle::occi::Statement* s = conn->createStatement(select,selecttag);
+        s->setPrefetchRowCount( 1000 );
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
             TransferJobs* temp = (TransferJobs*) * iter;
             	std::string job_id = std::string(temp->JOB_ID);
@@ -2441,6 +2443,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs){
 	    	   
     try {
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
+        s->setPrefetchRowCount( 10 );
         oracle::occi::ResultSet* r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
