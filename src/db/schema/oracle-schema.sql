@@ -586,9 +586,11 @@ CREATE TABLE t_file (
 -- the pid of the process which is executing the file transfer
   ,pid INTEGER
 --
--- the nominal size of the file (bytes)
-  ,filesize         	INTEGER
---  
+-- transfer duration
+  ,TX_DURATION		NUMBER(12,3)
+--
+-- Average throughput
+  ,throughput           NUMBER
 );
 --
 -- autoinc sequence on file_id
