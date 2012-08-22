@@ -18,6 +18,7 @@ cmake_minimum_required(VERSION 2.6)
 project(fts3)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
+SET(CMAKE_COLOR_MAKEFILE ON)
 
 link_directories (/usr/lib64/gfal2-plugins)
 link_directories (${PROJECT_BINARY_DIR}/src/cred)
@@ -31,8 +32,9 @@ link_directories (${PROJECT_BINARY_DIR}/src/db/generic)
 link_directories (${PROJECT_BINARY_DIR}/src/cli)
 link_directories (${PROJECT_BINARY_DIR}/src/monitoring) 
 link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli) 
+#link_directories (${PROJECT_BINARY_DIR}/src/optimizer) 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-overflow  -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions -Wsign-conversion -Wsign-promo -Wstrict-overflow=5")
 #set(CMAKE_EXE_FLAGS  "${CMAKE_EXE_FLAGS} -pg")
 #set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -pg")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef  -Wno-unused")
