@@ -436,12 +436,8 @@ int main(int argc, char **argv) {
 
         /*gfal2 debug logging*/
         if (debug == true) {
-	    //seteuid(privid);
-            //std::cerr.rdbuf( oss.rdbuf() );
-	    //int  = freopen (fileManagement.getLogFileName().c_str(),"a",stderr);
-	    //seteuid(pw_uid);
-	    //| GFAL_VERBOSE_TRACE_PLUGIN
-            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
+	    //ADD when file is provided in gfal2 API GFAL_VERBOSE_TRACE_PLUGIN
+            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE );
             gfal_log_set_handler((GLogFunc) log_func, NULL);
         }
 

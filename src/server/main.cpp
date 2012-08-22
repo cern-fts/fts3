@@ -65,7 +65,6 @@ void fts3_initialize_logfile(){
 			   }
 			   if ( indata.good() ){
       				getline (indata,line);
-      				std::cout << line << endl;
     			   }
     			    indata.close();
 			    if(line.length() > 0){

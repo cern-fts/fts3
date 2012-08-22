@@ -253,10 +253,14 @@ bool FileTransferScheduler::schedule(bool optimize) {
 		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimization is ON" << commit;
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);		
 		// update file state to READY
-		int updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-		if(updated == 0)
-			return false;
-
+		if(allowed){
+			int updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+			if(updated == 0){
+				return false;
+			}else{
+				return true;
+			}
+		}
 		return true;
 	}
 

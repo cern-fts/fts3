@@ -95,10 +95,10 @@ make %{?_smp_mflags}
 
 %install
 if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi
-mkdir -p %{buildroot}%{_var}/lib/fts3
-mkdir -p %{buildroot}%{_var}/log/fts3
 cd build
 rm -rf $RPM_BUILD_ROOT
+mkdir -p %{buildroot}%{_var}/lib/fts3
+mkdir -p %{buildroot}%{_var}/log/fts3
 make install DESTDIR=$RPM_BUILD_ROOT
 
 
@@ -145,8 +145,8 @@ rm -rf $RPM_BUILD_ROOT
 %files server
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/fts3
-%dir %attr(0755,fts3,fts3) %{_var}/lib/fts3
-%dir %attr(0755,fts3,fts3) %{_var}/log/fts3
+%dir %attr(0755,fts3,root) %{_var}/lib/fts3
+%dir %attr(0755,fts3,root) %{_var}/log/fts3
 %{_sbindir}/fts3_msg_cron
 %{_sbindir}/fts3_msg_bulk
 %{_sbindir}/fts3_server
@@ -192,7 +192,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts3_db_oracle.so
 %{_libdir}/libfts3_msg_ifce.so
 %{_libdir}/libfts3_proxy.so
-%{_libdir}/libfts3_optimizer.so
 %{_libdir}/libfts3_server_gsoap_transfer.so
 %{_libdir}/libfts3_server_lib.so
 %{_libdir}/libfts3_cli_common.so

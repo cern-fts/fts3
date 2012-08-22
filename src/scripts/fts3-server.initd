@@ -34,6 +34,7 @@ start() {
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure
+    /etc/init.d/rsyslog restart
     fts3_server    
     retval=$?
     echo

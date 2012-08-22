@@ -5,6 +5,6 @@
     delaycompress
     sharedscripts
     postrotate
-        /bin/kill -HUP `cat /var/run/syslogd.pid 2> /dev/null` 2> /dev/null || true
+        /etc/init.d/rsyslog restart 2> /dev/null || true
     endscript
 }
