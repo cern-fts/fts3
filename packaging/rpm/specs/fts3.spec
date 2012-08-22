@@ -94,7 +94,6 @@ make %{?_smp_mflags}
 
 
 %install
-if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi
 cd build
 rm -rf $RPM_BUILD_ROOT
 mkdir -p %{buildroot}%{_var}/lib/fts3
@@ -123,7 +122,6 @@ if [ $1 -eq 0 ] ; then
     /sbin/chkconfig --del fts3-msg-bulk
     /sbin/service fts3-msg-cron stop >/dev/null 2>&1
     /sbin/chkconfig --del fts3-msg-cron
-    rm -fr /dev/shm/fts3mq
 fi
 exit 0
 
@@ -137,7 +135,6 @@ exit 0
 
 
 %clean
-rm -fr /dev/shm/fts3mq
 rm -rf $RPM_BUILD_ROOT
 
 
