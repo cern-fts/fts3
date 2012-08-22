@@ -4,9 +4,9 @@ Release:        11%{?dist}
 Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
-License:        Apache Software License 2.0
+License:        Apache Software License
 URL:            https://svnweb.cern.ch/trac/fts3/wiki 
-Source0:        %{name}-%{version}.tar.gz
+Source0:        http://%{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  cmake
@@ -32,9 +32,9 @@ Requires(pre):  shadow-utils
 The File Transfer Service V3
 
 %package devel
-Summary:	File Transfer Service V3
-Group:		Applications/Internet
-Requires:	%{name}%{?_isa} = %{version}-%{release}
+Summary: File Transfer Service V3
+Group: Applications/Internet
+Requires: %{name}%{?_isa} = %{version}-%{release}
 BuildRequires:  cmake
 BuildRequires:  apr-devel%{?_isa}
 BuildRequires:  apr-util-devel%{?_isa}
@@ -57,20 +57,20 @@ Development files for File Transfer Service V3
 
 
 %package server
-Summary:        File Transfer Service version 3 server
-Group:          System Environment/Daemons
-Requires:       fts3-libs = %{version}-%{release}
-Requires:       gfal2-plugin-gridftp
-Requires:       gfal2-plugin-srm
+Summary: File Transfer Service version 3 server
+Group: System Environment/Daemons
+Requires: fts3-libs = %{version}-%{release}
+Requires: gfal2-plugin-gridftp
+Requires: gfal2-plugin-srm
 
 %package libs
-Summary:        File Transfer Service version 3 libs
-Group:          System Environment/Libraries
+Summary: File Transfer Service version 3 libs
+Group: System Environment/Libraries
 
 %package client
-Summary:        File Transfer Service version 3 client
-Group:          Applications/Internet
-Requires:       fts3-libs = %{version}-%{release}
+Summary: File Transfer Service version 3 client
+Group: Applications/Internet
+Requires: fts3-libs = %{version}-%{release}
 
 %description server
 FTS3 server is a service which accepts transfer jobs, quering their status, etc
@@ -79,7 +79,7 @@ FTS3 server is a service which accepts transfer jobs, quering their status, etc
 FTS3 common libraries used across the client and server
 
 %description client
-FTS3 client CLI tool for submiiting transfers, check status, configure server, etc
+FTS3 client CLI tool for submitting transfers, check status, configure server, etc
 
 
 %prep
@@ -202,5 +202,5 @@ rm -rf $RPM_BUILD_ROOT
 %doc
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch>
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-11
   - A bit like a fedora package
