@@ -24,7 +24,7 @@ limitations under the License. */
 #include "common/logger.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
-
+#include <fstream>
 #include "server.h"
 #include "daemonize.h"
 
@@ -32,6 +32,13 @@ using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 /* -------------------------------------------------------------------------- */
+/* -------------------------------------------------------------------------- */
+static int fexists(const char *filename) {
+    struct stat buffer;
+    if (stat(filename, &buffer) == 0) return 0;
+    return -1;
+}
+
 
 /// Handler of SIGCHLD
 void _handle_sigint(int)
@@ -41,6 +48,47 @@ void _handle_sigint(int)
 }
 
 /* -------------------------------------------------------------------------- */
+void fts3_initialize_logfile(){
+	std::ifstream indata; 
+	std::ofstream outputfile;
+	string line("");
+        std::vector<std::string> pathV;
+        std::vector<std::string>::iterator iter;
+	char *token = NULL;
+		
+	char*  path = "/etc/rsyslog.d/fts3syslog.conf";
+	if (fexists(path) == 0){
+			indata.open(path); // opens the file
+   			if(!indata) { // file couldn't be opened
+      				std::cerr << "Error: file " << path <<" <<could not be opened" << endl;
+				return;
+			   }
+			   if ( indata.good() ){
+      				getline (indata,line);
+      				std::cout << line << endl;
+    			   }
+    			    indata.close();
+			    if(line.length() > 0){
+			        char *copy = (char *) malloc(strlen(line.c_str()) + 1);
+				strcpy(copy, line.c_str());
+			    	token = strtok(copy, " ");
+				while ( (token = strtok(0, " ")) != NULL) {
+            				pathV.push_back(std::string(token));
+        			}
+				free(copy);
+        			copy = NULL;
+				if(pathV.size() == 3){
+					std::string f = pathV[2];
+					if(f.length() > 0){
+						if (fexists(f.c_str()) != 0){
+							 outputfile.open(f.c_str());
+							 outputfile.close();
+						}
+					}
+				}
+			    }
+	}
+}
 
 void fts3_initialize_db_backend()
 {
@@ -63,12 +111,6 @@ void fts3_initialize_db_backend()
    
 }
 
-/* -------------------------------------------------------------------------- */
-static int fexists(const char *filename) {
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
 
 
 
@@ -109,6 +151,9 @@ int main (int argc, char** argv)
 
     try 
     {
+
+    	fts3_initialize_logfile();
+	
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
 	if(false == checkUrlCopy()){
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts3_url_copy process is set in the PATH env variable" << commit;

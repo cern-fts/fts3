@@ -54,6 +54,7 @@ const std::string& ServerConfig::_get_str(const std::string& aVariable)
     if (itr == _vars.end())
     {
     	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Server config variable " + aVariable + " not defined."));
+	exit(1);
     }
 
     // No worry, it will not be 0 pointer due to the exception

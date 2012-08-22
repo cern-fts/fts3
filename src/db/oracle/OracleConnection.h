@@ -90,10 +90,26 @@ public:
     	return env;
 	}
     
+    void initConn();    
     
+    void destroyConn();        
+    
+    bool isAlive();
+    
+    bool checkConn();
+    
+    oracle::occi::Connection* getConn(){
+        if(conn)
+		return conn;
+
+	checkConn();
+    	}    
 
 private:
     oracle::occi::Environment* env;
     oracle::occi::Connection* conn;
+    std::string username_;
+    std::string password_;
+    std::string connectString_;
 
 };

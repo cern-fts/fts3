@@ -23,10 +23,12 @@ add_subdirectory(db)
 add_subdirectory(cred)
 add_subdirectory(delegation-cli)
 add_subdirectory(cli)
+#add_subdirectory(optimizer)
 add_subdirectory(server)
 add_subdirectory(monitoring)
 add_subdirectory(url-copy)
 add_subdirectory(scripts)
+
 
 
 

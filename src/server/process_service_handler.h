@@ -39,11 +39,15 @@ limitations under the License. */
 #include <sys/stat.h>
 #include <pwd.h>
 #include <fstream>
+#include "config/serverconfig.h"
+#include "definitions.h"
+
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
+using namespace FTS3_CONFIG_NAMESPACE;
 
 uid_t name_to_uid(char const *name) {
     if (!name)
@@ -75,6 +79,7 @@ class ProcessServiceHandler : public TRAITS::ActiveObjectType {
 protected:
 
     using TRAITS::ActiveObjectType::_enqueue;
+    std::string enableOptimization;
 
 public:
 
@@ -91,6 +96,7 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessServiceHandler", desc) {
+        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
     }
 
     /* ---------------------------------------------------------------------- */
@@ -136,20 +142,19 @@ protected:
             free(base_path);
         return hostname;
     }
-    
-    
-    void createJobFile(std::string job_id, std::vector<std::string>& files){
+
+    void createJobFile(std::string job_id, std::vector<std::string>& files) {
         std::vector<std::string>::iterator iter;
-        std::string filename = "/var/tmp/"+job_id;
-    	std::ofstream fout; 
-	fout.open(filename.c_str(), ios :: out);
-	for (iter = files.begin(); iter != files.end(); ++iter) {
-		fout << *iter << std::endl; 
-	}
-	fout.close( );   
-    }    
-    
-    void executeUrlcopy(std::vector<TransferJobs*>& jobs2, bool reuse){
+        std::string filename = "/var/lib/fts3/" + job_id;
+        std::ofstream fout;
+        fout.open(filename.c_str(), ios::out);
+        for (iter = files.begin(); iter != files.end(); ++iter) {
+            fout << *iter << std::endl;
+        }
+        fout.close();
+    }
+
+    void executeUrlcopy(std::vector<TransferJobs*>& jobs2, bool reuse) {
         const std::string cmd = "fts3_url_copy";
         std::string params = std::string("");
         ExecuteProcess *pr = NULL;
@@ -163,15 +168,21 @@ protected:
         SeProtocolConfig* protocol = NULL;
         std::string proxy_file("");
         bool debug = false;
-    
-        if(reuse == false){
+        OptimizerSample* opt_config = NULL;
+
+        if (reuse == false) {
             if (jobs2.size() > 0) {
                 /*get the file for each job*/
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
+                    int BufSize = 0;
+                    int NumOfFiles = 0;
+                    int StreamsperFile = 0;
+                    int Timeout = 0;
                     TransferFiles* temp = (TransferFiles*) * fileiter;
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);
+
                     protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
                     proxy_file = get_proxy_cert(
                             temp->DN, // user_dn
@@ -183,8 +194,29 @@ protected:
                             false,
                             "");
 
+                    bool optimize = false;
+                    if (enableOptimization.compare("true") == 0) {
+		        optimize = true;
+                        opt_config = new OptimizerSample();
+                        DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                        BufSize = opt_config->getBufSize();
+                        NumOfFiles = opt_config->getNumOfFiles();
+                        StreamsperFile = opt_config->getStreamsperFile();
+                        Timeout = opt_config->getTimeout();
+                        if (opt_config->file_id == 0 && BufSize == DEFAULT_BUFFSIZE && Timeout == DEFAULT_TIMEOUT && StreamsperFile == DEFAULT_NOSTREAMS) /*meaning first timer for optimization*/ {
+                            DBSingleton::instance().getDBObjectInstance()->addOptimizer(source_hostname, destin_hostname, temp->FILE_ID, StreamsperFile, Timeout, BufSize, 0);
+                            DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, temp->FILE_ID);
+                        } else {
+
+
+                        }
+
+                        delete opt_config;
+                        opt_config = NULL;
+                    }
+
                     FileTransferScheduler scheduler(temp);
-                    if (scheduler.schedule()) { /*SET TO READY STATE WHEN TRUE*/
+                    if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
 
                         sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
                         destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
@@ -235,13 +267,34 @@ protected:
                         if (std::string(temp->OVERWRITE).length() > 0) {
                             params.append(" -d ");
                         }
-                        if (protocol != NULL && protocol->NOSTREAMS > 0) {
+                        if (enableOptimization.compare("true") == 0) {
                             params.append(" -e ");
-                            params.append(to_string(protocol->NOSTREAMS));
+                            params.append(to_string(StreamsperFile));
+                        } else {
+                            if (protocol != NULL && protocol->NOSTREAMS > 0) {
+                                params.append(" -e ");
+                                params.append(to_string(protocol->NOSTREAMS));
+                            }
                         }
-                        if (protocol != NULL && protocol->URLCOPY_TX_TO > 0) {
+
+                        if (enableOptimization.compare("true") == 0) {
+                            params.append(" -f ");
+                            params.append(to_string(BufSize));
+                        } else {
+                            if (protocol != NULL && protocol->TCP_BUFFER_SIZE > 0) {
+                                params.append(" -f ");
+                                params.append(to_string(protocol->TCP_BUFFER_SIZE));
+                            }
+                        }
+
+                        if (enableOptimization.compare("true") == 0) {
                             params.append(" -h ");
-                            params.append(to_string(protocol->URLCOPY_TX_TO));
+                            params.append(to_string(Timeout));
+                        } else {
+                            if (protocol != NULL && protocol->URLCOPY_TX_TO > 0) {
+                                params.append(" -h ");
+                                params.append(to_string(protocol->URLCOPY_TX_TO));
+                            }
                         }
                         if (std::string(temp->SOURCE_SPACE_TOKEN).length() > 0) {
                             params.append(" -k ");
@@ -274,136 +327,180 @@ protected:
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
                     delete *fileiter;
                 files.clear();
-            } 
-	  } else{ /*reuse session*/
-             if (jobs2.size() > 0) {
-	        std::vector<std::string> urls;
-		std::string job_id = std::string("");
-		std::string vo_name = std::string("");
-		std::string cred_id = std::string("");
-		std::string dn = std::string("");
-		std::string overwrite = std::string("");
-		std::string source_space_token = std::string("");		
-		std::string dest_space_token = std::string("");
-		std::string file_id = std::string("");	
-		std::string checksum = std::string("");
-		std::string url = std::string("");
-		std::string surl = std::string("");
-		std::string durl = std::string("");		
-		
-		TransferFiles* tempUrl = NULL;		
+            }
+        } else { /*reuse session*/
+            if (jobs2.size() > 0) {
+                std::vector<std::string> urls;
+                std::string job_id = std::string("");
+                std::string vo_name = std::string("");
+                std::string cred_id = std::string("");
+                std::string dn = std::string("");
+                std::string overwrite = std::string("");
+                std::string source_space_token = std::string("");
+                std::string dest_space_token = std::string("");
+                std::string file_id = std::string("");
+                std::string checksum = std::string("");
+                std::string url = std::string("");
+                std::string surl = std::string("");
+                std::string durl = std::string("");
+                int BufSize = 0;
+                int NumOfFiles = 0;
+                int StreamsperFile = 0;
+                int Timeout = 0;
+		    
+                TransferFiles* tempUrl = NULL;
                 /*get the file for each job*/
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
-                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {		
+                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
                     TransferFiles* temp = (TransferFiles*) * fileiter;
-		    tempUrl = temp;
-		    surl = temp->SOURCE_SURL;
-		    durl = temp->DEST_SURL;
-		    job_id = temp->JOB_ID;
-		    vo_name = temp->VO_NAME;
-		    cred_id = temp->CRED_ID;
-		    dn = temp->DN;
-		    file_id = to_string(temp->FILE_ID);
-		    overwrite = temp->OVERWRITE;
+                    tempUrl = temp;
+                    surl = temp->SOURCE_SURL;
+                    durl = temp->DEST_SURL;
+                    job_id = temp->JOB_ID;
+                    vo_name = temp->VO_NAME;
+                    cred_id = temp->CRED_ID;
+                    dn = temp->DN;
+                    file_id = to_string(temp->FILE_ID);
+                    overwrite = temp->OVERWRITE;
                     source_hostname = extractHostname(temp->SOURCE_SURL);
-                    destin_hostname = extractHostname(temp->DEST_SURL);                    
-		    source_space_token = temp->SOURCE_SPACE_TOKEN;		
-		    dest_space_token = temp->DEST_SPACE_TOKEN;					    
-                        
-                        if (std::string(temp->CHECKSUM_METHOD).length() > 0) { 
-			if (std::string(temp->CHECKSUM).length() > 0)
-                           	checksum = temp->CHECKSUM;
-                        }		
-		   url = file_id + " " + surl + " " + durl + " " + checksum;
-		   urls.push_back(url);		      		    
-		}
-		    
-		    sourceSiteName = siteResolver.getSiteName(surl);
-                    destSiteName = siteResolver.getSiteName(durl);
-		    
-		    createJobFile(job_id, urls);
+                    destin_hostname = extractHostname(temp->DEST_SURL);
+                    source_space_token = temp->SOURCE_SPACE_TOKEN;                    dest_space_token = temp->DEST_SPACE_TOKEN;                    
 
-                    protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
-                    proxy_file = get_proxy_cert(
-                            dn, // user_dn
-                            cred_id, // user_cred
-                            vo_name, // vo_name
-                            "",
-                            "", // assoc_service
-                            "", // assoc_service_type
-                            false,
-                            "");
+                    if (std::string(temp->CHECKSUM_METHOD).length() > 0) {
+                        if (std::string(temp->CHECKSUM).length() > 0)
+                            checksum = temp->CHECKSUM;
+                    }
+                    url = file_id + " " + surl + " " + durl + " " + checksum;
+                    urls.push_back(url);
+                }
 
-                    FileTransferScheduler scheduler(tempUrl);
-                    if (scheduler.schedule()) { /*SET TO READY STATE WHEN TRUE*/
-			//set all to ready, special case for session reuse
-			for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {		
-                    		TransferFiles* temp = (TransferFiles*) * fileiter;
-				DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
-		    	}
-			
-                        debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
-                        if (debug == true) {
-                            params.append(" -F ");
-                        }
+                sourceSiteName = siteResolver.getSiteName(surl);
+                destSiteName = siteResolver.getSiteName(durl);
 
-                        if (proxy_file.length() > 0) {
-                            params.append(" -proxy ");
-                            params.append(proxy_file);
-                            /*make sure proxy is readable    */
-                            chmod(proxy_file.c_str(), (mode_t) 0600);
-                            char user[ ] = "fts3";
-                            uid_t pw_uid;
-                            pw_uid = name_to_uid(user);
-                            chown(proxy_file.c_str(), pw_uid, getgid());
-                        }
-                       
-		        params.append(" -G ");
-                        params.append(" -a ");
-                        params.append(job_id);                     
-                        params.append(" -C ");
-                        params.append(vo_name);
-                        if (sourceSiteName.length() > 0) {
-                            params.append(" -D ");
-                            params.append(sourceSiteName);
-                        }
-                        if (destSiteName.length() > 0) {
-                            params.append(" -E ");
-                            params.append(destSiteName);
-                        }
-                        if (std::string(overwrite).length() > 0) {
-                            params.append(" -d ");
-                        }
+                createJobFile(job_id, urls);
+
+                protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
+                proxy_file = get_proxy_cert(
+                        dn, // user_dn
+                        cred_id, // user_cred
+                        vo_name, // vo_name
+                        "",
+                        "", // assoc_service
+                        "", // assoc_service_type
+                        false,
+                        "");
+		
+		bool optimize = false;
+                /*Use Swei code for bufefr size because it uses RTT and counties and stuff*/
+                if (enableOptimization.compare("true") == 0) {
+		    optimize = true;
+                    opt_config = new OptimizerSample();
+                    DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                    BufSize = opt_config->getBufSize();
+                    NumOfFiles = opt_config->getNumOfFiles();
+                    StreamsperFile = opt_config->getStreamsperFile();
+                    Timeout = opt_config->getTimeout();
+                    if (opt_config->file_id == 0 && BufSize == DEFAULT_BUFFSIZE && Timeout == DEFAULT_TIMEOUT && StreamsperFile == DEFAULT_NOSTREAMS) /*meaning first timer for optimization*/ {
+                        DBSingleton::instance().getDBObjectInstance()->addOptimizer(source_hostname, destin_hostname, 1, StreamsperFile, Timeout, BufSize, 0);
+                        DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 1);
+                    } else {
+
+
+                    }
+
+                    delete opt_config;
+                    opt_config = NULL;
+                }
+
+                FileTransferScheduler scheduler(tempUrl);
+                if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
+                    //set all to ready, special case for session reuse
+                    for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
+                        TransferFiles* temp = (TransferFiles*) * fileiter;
+                        DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
+                    }
+
+                    debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
+                    if (debug == true) {
+                        params.append(" -F ");
+                    }
+
+                    if (proxy_file.length() > 0) {
+                        params.append(" -proxy ");
+                        params.append(proxy_file);
+                        /*make sure proxy is readable    */
+                        chmod(proxy_file.c_str(), (mode_t) 0600);
+                        char user[ ] = "fts3";
+                        uid_t pw_uid;
+                        pw_uid = name_to_uid(user);
+                        chown(proxy_file.c_str(), pw_uid, getgid());
+                    }
+
+                    params.append(" -G ");
+                    params.append(" -a ");
+                    params.append(job_id);
+                    params.append(" -C ");
+                    params.append(vo_name);
+                    if (sourceSiteName.length() > 0) {
+                        params.append(" -D ");
+                        params.append(sourceSiteName);
+                    }
+                    if (destSiteName.length() > 0) {
+                        params.append(" -E ");
+                        params.append(destSiteName);
+                    }
+                    if (std::string(overwrite).length() > 0) {
+                        params.append(" -d ");
+                    }
+                    if (enableOptimization.compare("true") == 0) {
+                        params.append(" -e ");
+                        params.append(to_string(StreamsperFile));
+                    } else {
                         if (protocol != NULL && protocol->NOSTREAMS > 0) {
                             params.append(" -e ");
                             params.append(to_string(protocol->NOSTREAMS));
                         }
+                    }
+                    if (enableOptimization.compare("true") == 0) {
+                        params.append(" -f ");
+                        params.append(to_string(BufSize));
+                    } else {
+                        if (protocol != NULL && protocol->TCP_BUFFER_SIZE > 0) {
+                            params.append(" -f ");
+                            params.append(to_string(protocol->TCP_BUFFER_SIZE));
+                        }
+                    }
+                    if (enableOptimization.compare("true") == 0) {
+                        params.append(" -h ");
+                        params.append(to_string(Timeout));
+                    } else {
                         if (protocol != NULL && protocol->URLCOPY_TX_TO > 0) {
                             params.append(" -h ");
                             params.append(to_string(protocol->URLCOPY_TX_TO));
                         }
-                        if (std::string(source_space_token).length() > 0) {
-                            params.append(" -k ");
-                            params.append(source_space_token);
-                        }
-                        if (std::string(dest_space_token).length() > 0) {
-                            params.append(" -j ");
-                            params.append(dest_space_token);
-                        }
-
-
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
-                        pr = new ExecuteProcess(cmd, params, 0);
-                        if (pr) {
-                            pr->executeProcessShell();
-                            delete pr;
-                        }
-
-                        params.clear();
+                    }
+                    if (std::string(source_space_token).length() > 0) {
+                        params.append(" -k ");
+                        params.append(source_space_token);
+                    }
+                    if (std::string(dest_space_token).length() > 0) {
+                        params.append(" -j ");
+                        params.append(dest_space_token);
                     }
 
-                    if (protocol)
-                        delete protocol;                
+
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
+                    pr = new ExecuteProcess(cmd, params, 0);
+                    if (pr) {
+                        pr->executeProcessShell();
+                        delete pr;
+                    }
+
+                    params.clear();
+                }
+
+                if (protocol)
+                    delete protocol;
 
                 /** cleanup resources */
                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
@@ -412,36 +509,45 @@ protected:
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
                     delete *fileiter;
                 files.clear();
-            } 	  
-	  }
+            }
+        }
     }
-    
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
         std::vector<int> requestIDs;
         std::vector<TransferJobs*> jobs2;
-	
-        while (1) {
-            /*get jobs in submitted state*/
-            DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
-            /*also get jobs which have been canceled by the client*/
-            DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-            if (requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
-                killRunninfJob(requestIDs);
-            requestIDs.clear(); /*clean the list*/
 
-	    if(jobs2.size() > 0)
-            	executeUrlcopy(jobs2, false);		
-	    
-	    /* --- session reuse section ---*/
-	    /*get jobs in submitted state and session reuse on*/
-            DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2);
-	    if(jobs2.size() > 0)	    
-            	executeUrlcopy(jobs2, true);			    
-	    
-            sleep(1);
+        while (1) {
+            try {
+                /*get jobs in submitted state*/
+                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+                /*also get jobs which have been canceled by the client*/
+                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                if (requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
+                    killRunninfJob(requestIDs);
+                requestIDs.clear(); /*clean the list*/
+
+                if (jobs2.size() > 0)
+                    executeUrlcopy(jobs2, false);
+
+                /* --- session reuse section ---*/
+                /*get jobs in submitted state and session reuse on*/
+                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2);
+                if (jobs2.size() > 0)
+                    executeUrlcopy(jobs2, true);
+
+                sleep(1);
+            } catch (...) {
+                if (!jobs2.empty()) {
+                    std::vector<TransferJobs*>::iterator iter2;
+                    for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                        delete *iter2;
+                    jobs2.clear();
+                }
+            }
         } /*end while*/
+
     }
 
     /* ---------------------------------------------------------------------- */

@@ -1,6 +1,6 @@
 /*
  *	Copyright notice:
- *	Copyright © Members of the EMI Collaboration, 2010.
+ *	Copyright � Members of the EMI Collaboration, 2010.
  *
  *	See www.eu-emi.eu for details on the copyright holders
  *
@@ -20,7 +20,7 @@
  * FileTransferScheduler.h
  *
  *  Created on: May 7, 2012
- *      Author: Michał Simon
+ *      Author: Micha\u0142 Simon
  */
 
 #ifndef FILETRANSFERSCHEDULER_H_
@@ -31,9 +31,12 @@
 #include <set>
 #include <map>
 
-#include <boost/regex.hpp>
+#include "boost/tuple/tuple.hpp"
+#include <boost/optional.hpp>
 
 #include "db/generic/SingleDbInstance.h"
+
+#include "common/CfgBlocks.h"
 
 using namespace std;
 using namespace boost;
@@ -65,7 +68,7 @@ public:
 	 *
 	 * @return returns true if file status has been changed to Ready, false otherwise
 	 */
-	bool schedule();
+	bool schedule(bool optimize);
 
 private:
 
@@ -89,52 +92,6 @@ private:
 		PUBLIC,
 		/// VO is used to emphasize that we are interested in pairshare credits
 		PAIR
-	};
-
-	/**
-	 * The Config structure has the information about a SE configuration.
-	 * 	If the set field is set to true the data have been read from DB.
-	 */
-	struct Config {
-		/// the inbound credits
-		int inbound;
-		/// the outbound credits
-		int outbound;
-		/// true if the date have been read from DB, false means that the data are junk
-		bool set;
-
-		/**
-		 * Default constructor. Sets set to false.
-		 */
-		Config() {
-			set = false;
-		}
-
-		/**
-		 * bool casting operator
-		 *
-		 * @return the value of set field
-		 */
-		operator bool() const {
-			return set;
-		}
-
-		/**
-		 * indexing operator
-		 *
-		 * 	@return the number of inbound credits if the argument was INBOUND,
-		 * 			the number of outbound credits if the argument was OUTBOUND,
-		 * 			0 otherwise
-		 */
-		int operator[] (IO index) {
-
-			switch(index) {
-			case INBOUND: return inbound;
-			case OUTBOUND: return outbound;
-			default: return 0;
-			}
-		}
-
 	};
 
 	/**
@@ -174,33 +131,21 @@ private:
 	 * @param shareId - the share ID of the configuration, should be obtained
 	 * 					by using either voShare, publicShare or pairShare
 	 */
-	Config getValue (const string type, string name, string shareId);
+	optional< tuple<int, int, string> > getValue (const string type, string name, string shareId);
 
 	/**
-	 * Constructs the share ID of voshare type
+	 * Gets either inbound or outbound credits
 	 *
-	 * @return the voshare ID string for given vo name
-	 */
-	inline string voShare(string vo) {
-		return "\"share_type\":\"vo\",\"share_id\":\"" + vo + "\"";
-	};
-
-	/**
-	 * Constructs the share ID of publicshare type
+	 * @param val - tuple containing cfg value
+	 * @param io - specifies if we are interested in outbound or inbound credits
 	 *
-	 * @return the publicshare ID string
+	 * @return the number of outbound/inbound credits
 	 */
-	inline string publicShare() {
-		return "\"share_type\":\"public\",\"share_id\":null";
-	};
-
-	/**
-	 * Constructs the share ID of pairshare type
-	 *
-	 * @return  the pairshare ID string
-	 */
-	inline string pairShare(string pair) {
-		return "\"share_type\":\"pair\",\"share_id\":\"" + pair + "\"";
+	int getCredits(tuple<int, int, string> val, IO io) {
+		switch (io) {
+		case INBOUND: return get<CfgBlocks::INBOUND>(val);
+		case OUTBOUND: return get<CfgBlocks::OUTBOUND>(val);
+		}
 	}
 
 	/**
@@ -209,11 +154,6 @@ private:
 	 * @param files - the list of pending files
 	 */
 	void initVosInQueue(vector<TransferFiles*> files);
-
-	/// regular expression object
-	regex re;
-	/// object containing strings that matched the regular expression
-	smatch what;
 
 	/// pointer to the file that has to be scheduled
 	TransferFiles* file;
@@ -227,37 +167,6 @@ private:
 	string srcGroupName;
 	/// name of the destination SE group
 	string destGroupName;
-
-	/// the JSON string parameterized with SQL wild-cards used for retrieving all values with shared policy
-	static const string getSharedValue;
-
-	/// The index of the SE name group (NOT a SE group!!!) in the regular expression
-	static const int SE_NAME_REGEX_INDEX = 1;
-	/// The index of the inbound credits group in the regular expression
-	static const int INBOUND_REGEX_INDEX = 1;
-	/// The index of the outbound credits group in the regular expression
-	static const int OUTBOUND_REGEX_INDEX = 2;
-	/// The index of the policy group in the regular expression
-	static const int POLICY_REGEX_INDEX = 3;
-
-	/// shared policy
-	static const string SHARED_POLICY;
-	/// exclusive policy
-	static const string EXCLUSIVE_POLICY;
-
-	/// a SE type string ('se')
-	static const string SE_TYPE;
-	/// a SE group type string ('group')
-	static const string GROUP_TYPE;
-
-	/// the regular expression used for retrieving the SE name from source or destination name
-	static const string seNameRegex;
-	/// the regular expression used for retrieving the inbound and outbound values
-	/// from the JSON configuration stored in the DB
-	static const string shareValueRegex;
-	/// the regular expression describing the share_id JSON configuration stored in the DB
-	/// (matches only vo and public -share configurations)
-	static const string shareIdRegex;
 
 	/// the default number of outbounds and inbounds credits
 	/// used if the SE has not been configured

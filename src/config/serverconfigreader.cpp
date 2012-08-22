@@ -106,6 +106,16 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "Set infosys"
         )
         (
+            "Alias,a",
+            po::value<std::string>( &(_vars["Alias"]) )->default_value(""),
+            "Set the alias for FTS 3 endpoint"
+        )
+        (
+            "Optimizer,o",
+            po::value<std::string>( &(_vars["Optimizer"]) )->default_value("true"),
+            "Control auto-tunning activation"
+        )		
+        (
             "TransferLogDirectory,l",
             po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
             "Directory where the individual transfer logs are written"

@@ -27,8 +27,12 @@ class Reporter {
 public:
 	Reporter();
 	~Reporter();
-	void constructMessage(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message);
-
+	void constructMessage(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message,  double timeInSecs,  double fileSize);
+        unsigned int nostreams;
+	unsigned int timeout;
+	unsigned int buffersize;
+	std::string source_se;
+	std::string dest_se;	
 
 private:
 	struct message* msg;

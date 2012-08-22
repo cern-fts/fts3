@@ -724,7 +724,7 @@ bool send_message(std::string & text)
        int fd2 = 0;
        int fd3 = 0;
        
-       size_t writen;
+       ssize_t writen;
 
        //ignore SIGPIPE signal, will be handled by EPIPE errno
        sigignore(SIGPIPE);
@@ -746,19 +746,19 @@ bool send_message(std::string & text)
 
      	writen = write(fd, text.c_str(), text.length());
 	
-   if(  ((size_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  { 
+   if(  ((ssize_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  { 
 	   errno = 0; //reset it 
            writen =  write(fd2, text.c_str(), text.length());              
-           if(  ((size_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  {
+           if(  ((ssize_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  {
              errno = 0; //rest it again
              writen =  write(fd3, text.c_str(), text.length());
-               if(  ((size_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  {
+               if(  ((ssize_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  {
                  msgSent = false;
             }
           }
 	}
 
-      if( ((size_t)writen == text.length())){        
+      if( ((ssize_t)writen == text.length())){        
          msgSent = true;
 	 }
  

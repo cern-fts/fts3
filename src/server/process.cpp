@@ -111,7 +111,7 @@ std::string ExecuteProcess::generate_request_id(const std::string& prefix) {
 int ExecuteProcess::execProcessLog(int argc, char** argv) {
     int status = 0;
     int fdpipe[2];
-    size_t write_size;
+    ssize_t  write_size;
     argc = 0;
     int value = 0;
     value = pipe(fdpipe);
@@ -135,7 +135,8 @@ int ExecuteProcess::execProcessLog(int argc, char** argv) {
         close(fdpipe[1]);
 
         char readbuf[1024] = {0};
-        int bytes, wpval;
+        ssize_t  bytes;
+	pid_t wpval;
 
         while ((wpval = waitpid(pid, &status, WNOHANG)) == 0) {
             while ((bytes = read(fdpipe[0], readbuf, sizeof (readbuf) - 1)) > 0) {
@@ -188,7 +189,7 @@ int ExecuteProcess::executeProcessShell() {
 
 int ExecuteProcess::execProcessShellLog(const char* SHELL) {
     int status = 0;
-    size_t write_size;
+    ssize_t write_size;
     int fdpipe[2];
     int value = 0;
     value = pipe(fdpipe);
@@ -213,7 +214,8 @@ int ExecuteProcess::execProcessShellLog(const char* SHELL) {
         close(fdpipe[1]);
 
         char readbuf[1024];
-        int bytes, wpval;
+        ssize_t bytes;
+	pid_t wpval;
 
         while ((wpval = waitpid(pid, &status, WNOHANG)) == 0) {
             while ((bytes = read(fdpipe[0], readbuf, sizeof (readbuf) - 1)) > 0) {

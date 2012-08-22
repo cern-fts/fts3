@@ -21,6 +21,7 @@
 #include "Handle.h"
 #include "common/logger.h"
 #include "common/error.h"
+#include "SingleDbInstance.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -43,6 +44,7 @@ extern "C"{
 #include <boost/scoped_ptr.hpp>
 
 using boost::scoped_ptr;
+using namespace db;
 
 namespace {
 const char * const TMP_DIRECTORY = "/tmp";
@@ -86,16 +88,24 @@ void CredService::get(
     if(fname.length() > (FILENAME_MAX - 7)){
         //m_log_error("Invalid credential file name generated: length exceeded");
         //throw LogicError("Invalid credential file name generated");
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Invalid credential file name generated" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Invalid credential file name generated" << commit;
     }
     
     // Check if the Proxy Certificate is already there and it's valid
     if(true == isValidProxy(fname)){
         filename = fname;
-        //m_log_debug("Proxy Certificate is already on file " << filename);
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is already on file " << filename << commit;
         return;
     }
+    
+    // Check if the database contains a valid proxy for this dlg id and DN
+    if(false == DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) ){
+        filename = fname;
+	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << "and DN " << userDn << " is expired in DB, need renewal!" << commit;
+        return;
+    }
+        
+    
     
     // Create a Temporary File
     Handle h;
@@ -139,24 +149,19 @@ bool CredService::isValidProxy(const std::string& filename){
     // Check if it's valid
     time_t lifetime = get_proxy_lifetime(filename);
     if(lifetime < 0){
-        //m_log_debug("Proxy Certificate expired");
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate expired" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy Certificate expired" << commit;
         return false;
     }
-    /*m_log_debug("Proxy filename :" << filename);
-    m_log_debug("Lifetime       : " << lifetime);
-    m_log_debug("Min Valid  time: " << this->minValidityTime());*/
+
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy filename :" << filename << commit;    	
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Lifetime       : " << lifetime << commit;    	
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Min Valid  time: " << this->minValidityTime() << commit;    	
 
     // casting to unsigned long is safe, condition lifetime < 0 already checked
     if(this->minValidityTime() >= (unsigned long)lifetime){ 
-        //m_log_debug("Proxy Certificate should be renewed");
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate should be renewed" << commit;    	
         return false;
     }
-    //m_log_debug("Proxy Certificate is still valid");
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is still valid" << commit;    
     
     return true;

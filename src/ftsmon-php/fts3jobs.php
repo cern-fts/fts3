@@ -1,8 +1,17 @@
 <?php
 session_start();
 
-$config = parse_ini_file('fts3config.ini', 1);
+$config = parse_ini_file('/etc/fts3config.ini', 1);
 
+if (!isset ($_GET['vo']))
+{
+   $_GET['vo'] = "all";
+}
+
+if (!isset ($_GET['jobid']))
+{
+   $_GET['jobid'] = "";
+}
 
 // store session data
 $_SESSION['user']=$config['db']['user'];
@@ -108,19 +117,23 @@ $jobid = $_GET['jobid'];
 
 
 if($jobid != ""){
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where JOB_ID='$jobid' ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
+	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where JOB_ID='$jobid' ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
 }
 elseif($vo != "" && $vo!="all"){
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where VO_NAME='$vo' and (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour)) ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
+	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where VO_NAME='$vo' and (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour)) ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
 }
 else{
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME FROM T_JOB where (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour))  ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) ";
+	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour))  ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
 }
 
+try {
+   $conn = new PDO("oci:dbname=".$_SESSION['connstring'],$_SESSION['user'],$_SESSION['pass']);
+}
+catch(PDOException $e) {
+   die("Could not connect to the database\n");
+}
 
-$objConnect = oci_connect($_SESSION['user'],$_SESSION['pass'],$_SESSION['connstring']);
-$objParse = oci_parse ($objConnect, $strSQL);
-oci_execute ($objParse);
+$stmt = $conn->query($strSQL);
 
 ?>
 <table width="100%" border="1">
@@ -131,12 +144,13 @@ oci_execute ($objParse);
 <th > <div align="center">DEST SE </div></th>
 <th > <div align="center">JOB STATE </div></th>
 <th > <div align="center">SUBMIT TIME </div></th>
-
+<th > <div align="center">FINISH TIME </div></th>
+<th > <div align="center">SOURCE SPACETOKEN </div></th>
+<th > <div align="center">DEST SPACETOKEN </div></th>
 </tr>
 <?php
-while($objResult = oci_fetch_array($objParse,OCI_BOTH))
+while($objResult = $stmt->fetch(PDO::FETCH_BOTH))
 {
-
 if( $objResult["JOB_STATE"] == "FINISHED"){
 ?>
 <tr >
@@ -146,6 +160,9 @@ if( $objResult["JOB_STATE"] == "FINISHED"){
 <td><?php echo $objResult["DEST_SE"];?></td>
 <td bgcolor="#00FF00"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
+<td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
+<td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
 <?php
 }
@@ -158,6 +175,9 @@ if( $objResult["JOB_STATE"] == "FAILED"){
 <td><?php echo $objResult["DEST_SE"];?></td>
 <td bgcolor="red"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
+<td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
+<td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
 <?php
 }
@@ -170,6 +190,9 @@ if( $objResult["JOB_STATE"] == "ACTIVE"){
 <td><?php echo $objResult["DEST_SE"];?></td>
 <td bgcolor="#00FFFF"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
+<td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
+<td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
 <?php
 }
@@ -182,6 +205,9 @@ if( $objResult["JOB_STATE"] == "FINISHEDDIRTY"){
 <td><?php echo $objResult["DEST_SE"];?></td>
 <td bgcolor="yellow"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
+<td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
+<td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
 <?php
 }
@@ -194,6 +220,9 @@ if( $objResult["JOB_STATE"] == "CANCELED"){
 <td><?php echo $objResult["DEST_SE"];?></td>
 <td bgcolor="#FF0000"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
+<td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
+<td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
 <?php
 }
@@ -201,7 +230,6 @@ if( $objResult["JOB_STATE"] == "CANCELED"){
 ?>
 </table>
 <?php
-oci_close($objConnect);
 ?>
 </body>
 </html>

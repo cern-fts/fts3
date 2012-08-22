@@ -1,5 +1,42 @@
 
 --
+-- Holds optimization parameters
+--
+CREATE TABLE t_optimize (
+--
+-- file id
+   file_id	INTEGER NOT NULL,
+--
+-- source se
+   source_se	VARCHAR2(255),
+--
+-- dest se	
+   dest_se	VARCHAR2(255),
+--
+-- number of streams
+   nostreams       	NUMBER default NULL,
+--
+-- timeout
+   timeout       	NUMBER default NULL,
+--
+-- active transfers
+   active       	NUMBER default NULL,
+--
+-- throughput
+   throughput       	NUMBER default NULL,
+--
+-- tcp buffer size
+   buffer       	NUMBER default NULL,   
+--
+-- the nominal size of the file (bytes)
+  filesize         	NUMBER default NULL,  
+--
+-- set primary key
+   CONSTRAINT t_optimize_pk PRIMARY KEY (source_se,dest_se,nostreams,timeout,buffer)
+);
+
+
+--
 -- Holds certificate request information
 --
 CREATE TABLE t_config_audit (
@@ -587,7 +624,7 @@ CREATE TABLE t_file (
   ,pid INTEGER
 --
 -- transfer duration
-  ,TX_DURATION		NUMBER(12,3)
+  ,TX_DURATION		NUMBER
 --
 -- Average throughput
   ,throughput           NUMBER
@@ -800,21 +837,6 @@ CREATE TABLE t_stage_req (
 
 
 --
--- Trigger to set the job finished t_job, t_file, t_transfer, t_stage_req
---
-CREATE OR REPLACE TRIGGER SET_JOB_FINISHED
-BEFORE UPDATE ON T_JOB
-FOR EACH ROW
-WHEN ( new.job_state IN ('Finished','FinishedDirty','Failed','Canceled') )
-BEGIN
-  SELECT SYSTIMESTAMP INTO :new.job_finished FROM DUAL;
-  UPDATE T_FILE SET job_finished=:new.job_finished WHERE T_FILE.job_id=:new.job_id;
-  UPDATE T_TRANSFER SET job_finished=:new.job_finished WHERE T_TRANSFER.job_id=:new.job_id;
-  UPDATE T_STAGE_REQ SET job_finished=:new.job_finished WHERE T_STAGE_REQ.job_id=:new.job_id;
-END;
-/
-
---
 --
 -- Index Section 
 --
@@ -845,6 +867,13 @@ CREATE INDEX transfer_file_id           ON t_transfer(file_id);
 CREATE INDEX transfer_job_id            ON t_transfer(job_id);
 CREATE INDEX transfer_transfer_state    ON t_transfer(transfer_state);
 CREATE INDEX transfer_jobfinished_id    ON t_transfer(job_finished);
+
+CREATE INDEX optimize_source_se         ON t_optimize(source_se);
+CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
+CREATE INDEX optimize_nostreams         ON t_optimize(nostreams);
+CREATE INDEX optimize_timeout           ON t_optimize(timeout);
+CREATE INDEX optimize_buffer            ON t_optimize(buffer);
+
 
 --------------------------------------------------------------------------------------
 -- Indices suggested by M. Anjo in order to improve performances and reduce the DB load

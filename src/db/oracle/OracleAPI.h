@@ -71,7 +71,7 @@ public:
 
     virtual void getGroupCreditsInUse(int &creditsInUse, std::string srcGroupName, std::string destGroupName, std::string voName);
 
-    virtual int updateFileStatus(TransferFiles* file, const std::string status);
+    virtual unsigned int updateFileStatus(TransferFiles* file, const std::string status);
 
  
 
@@ -102,7 +102,7 @@ public:
 
     virtual void deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE);
     
-    virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id);    
+    virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);    
     
     virtual void updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status); 
     
@@ -182,7 +182,22 @@ public:
     
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action); 
     
-    virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state);             
+    virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state);
+    
+    virtual void fetchOptimizationConfig(std::vector<OptimizerSample*>& ops, const std::string & source_hostname, const std::string & destin_hostname); 
+    
+    virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname); 
+    
+    virtual void updateOptimizer(std::string file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname);
+    
+    virtual void addOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);        
+    
+    virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id);
+    
+    virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);  
+    
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);                             
+    
     
 private:
 	OracleConnection *conn;

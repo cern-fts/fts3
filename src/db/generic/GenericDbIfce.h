@@ -44,6 +44,7 @@
 #include "CredCache.h"
 #include "Cred.h"
 #include "definitions.h"
+#include "OptimizerSample.h"
 
 /**
  * GenericDbIfce class declaration
@@ -241,7 +242,7 @@ public:
 
     virtual void getGroupCreditsInUse(int &creditsInUse, std::string srcSeName, std::string destSeName, std::string voName) = 0;
 
-    virtual int updateFileStatus(TransferFiles* file, const std::string status) = 0;
+    virtual unsigned int updateFileStatus(TransferFiles* file, const std::string status) = 0;
 
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
@@ -267,7 +268,7 @@ public:
 
     virtual void deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) = 0;
     
-    virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id) = 0;    
+    virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration) = 0;    
     
     virtual void updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status) = 0;
     
@@ -359,7 +360,19 @@ public:
     
     virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state) = 0;
     
- 
+    virtual void fetchOptimizationConfig(std::vector<OptimizerSample*>& ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;
+    
+    virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;
+    
+    virtual void updateOptimizer(std::string file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname) = 0;
+    
+    virtual void addOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers) = 0;    
+    
+    virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id) = 0; 
+    
+    virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
+    
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;           
 };
 
 

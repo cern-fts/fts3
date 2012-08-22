@@ -149,6 +149,8 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 	string req (reqtxt);
 
 	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn);
+
+	try{
 	if (cache) {
 		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
 				delegationId,
@@ -168,7 +170,11 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 				fqansToString(attrs)
 			);
 	}
-
+        }
+	catch(...){
+		if (reqtxt) free (reqtxt); reqtxt=NULL;
+		if (keytxt) free (keytxt); keytxt=NULL; 
+	}
 	if (reqtxt) free (reqtxt);
 	if (keytxt) free (keytxt);
 

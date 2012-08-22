@@ -21,4 +21,5 @@ drop table T_TRANSFER cascade constraints;
 drop table T_VO_ACL cascade constraints;
 drop table T_DEBUG cascade constraints;
 drop table T_CONFIG_AUDIT cascade constraints;
+drop table t_optimize cascade constraints;
 exit;

@@ -31,7 +31,8 @@
 #include <grp.h>
 #include <boost/tokenizer.hpp>
 #include <cstdio>
-
+#include <ctime>
+#include "definitions.h"
 /*
 PENDING
         cancel transfer gracefully
@@ -53,50 +54,59 @@ static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
 static std::string reuseFile("");
-
+double source_size = 0;
+double dest_size = 0;
+double diff = 0;
+std::time_t start;
 static uid_t privid;
 static uid_t pw_uid;
+static     std::string file_id("");
+static     std::string job_id(""); //a
+static     std::string source_url(""); //b
+static     std::string dest_url(""); //c
+static     bool overwrite = false; //d
+static     unsigned int nbstreams = DEFAULT_NOSTREAMS; //e
+static     unsigned int tcpbuffersize = DEFAULT_BUFFSIZE; //f
+static     unsigned int blocksize = 0; //g
+static     unsigned int timeout = DEFAULT_TIMEOUT; //h
+static     bool daemonize = true; //i
+static     std::string dest_token_desc(""); //j
+static     std::string source_token_desc(""); //k
+static     unsigned int markers_timeout = 180; //l
+static     unsigned int first_marker_timeout = 180; //m
+static     unsigned int srm_get_timeout = 180; //n
+static     unsigned int srm_put_timeout = 180; //o	
+static     unsigned int http_timeout = 180; //p
+static     bool dont_ping_source = false; //q
+static     bool dont_ping_dest = false; //r
+static     bool disable_dir_check = false; //s
+static     unsigned int copy_pin_lifetime = 0; //t
+static     bool lan_connection = false; //u
+static     bool fail_nearline = false; //v
+static     unsigned int timeout_per_mb = 0; //w
+static     unsigned int no_progress_timeout = 180; //x
+static     std::string algorithm(""); //y
+static     std::string checksum_value(""); //z
+static     bool compare_checksum = false; //A
+static     std::string vo("");
+static     std::string sourceSiteName("");
+static     std::string destSiteName("");
+static     char hostname[1024] = {0};
+static     std::string proxy("");
+static     char errorBuffer[2048] = {0};
+static     bool debug = false;
 
 extern std::string stackTrace;
 
 gfalt_params_t params;
 
-
-FILE * pFile;
-int fd;
-int restore_fd;
-char *ptr;
-
-static void debugFile(){
-			/* fname defines the template for the temporary file.  */    			
-    			pFile = tmpfile ();
-   			//create and open a temp file 
-	 	        fd = open(ptr, O_WRONLY | O_TRUNC | O_CREAT); 	 	        
-	 	        //redirect  to this temp file  
-	 	        restore_fd = dup(1); 
-	 	        dup2(fd, 2); 	 	 	 	       
+std::string srmVersion(const std::string & url){
+	if (url.compare(0, 6, "srm://") == 0)
+		return std::string("2.2.0");
+		
+	return std::string("");		
 }
 
-
-static void releaseDebug(){
-	 	        close(fd); 
-	 	        dup2(restore_fd, 2); 
-	 	        close(restore_fd); 
-	 	 
-	 	        std::string line; 
-	 	        std::ifstream myfile(ptr); 
-	 	        if (myfile.is_open()) { 
-	 	            while (!myfile.eof()) { 
-	 	                getline(myfile, line); 
-	 	                //read the temp file and print to warn() 
-	 	                logStream  << fileManagement.timestamp() << "DEBUG " << line << '\n';
-	 	            } 
-	 	            myfile.close(); 
-	 	        } 
-	 	 
-	 	        //get rid of the file 
-	 	        remove(ptr); 
-}
 
 static std::vector<std::string> split(const char *str, char c = ':') {
     std::vector<std::string> result;
@@ -116,7 +126,7 @@ static std::vector<std::string> split(const char *str, char c = ':') {
     return result;
 }
 
-void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpointer user_data) {
+static void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpointer user_data) {
 
     size_t avg = gfalt_copy_get_average_baudrate(h, NULL) / 1024;
     size_t inst = gfalt_copy_get_instant_baudrate(h, NULL) / 1024;
@@ -124,7 +134,7 @@ void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpoi
     time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
 
     logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed << commit;
+    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed << commit;
 }
 
 void signalHandler(int signum) {
@@ -138,7 +148,10 @@ void signalHandler(int signum) {
         msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-        reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer process died");
+	reporter.timeout = timeout;
+	reporter.nostreams = nbstreams;
+	reporter.buffersize = tcpbuffersize;			
+        reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer process died", diff, source_size);
         logStream.close();
         fileManagement.archive();
         if (reuseFile.length() > 0)
@@ -154,7 +167,10 @@ void signalHandler(int signum) {
         msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-        reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user");
+	reporter.timeout = timeout;
+	reporter.nostreams = nbstreams;
+	reporter.buffersize = tcpbuffersize;			
+        reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user", diff, source_size);
         logStream.close();
         fileManagement.archive();
         if (reuseFile.length() > 0)
@@ -202,50 +218,12 @@ int main(int argc, char **argv) {
     //transfer_completed tr_completed;
     struct stat statbufsrc;
     struct stat statbufdest;
-    long double source_size = 0;
-    long double dest_size = 0;
     GError * tmp_err = NULL; // classical GError/glib error management   
     params = gfalt_params_handle_new(&tmp_err);
     gfal_context_t handle;
     int ret = -1;
     long long transferred_bytes = 0;
     UserProxyEnv* cert = NULL;
-
-    std::string file_id("");
-    std::string job_id(""); //a
-    std::string source_url(""); //b
-    std::string dest_url(""); //c
-    bool overwrite = false; //d
-    int nbstreams = 8; //e
-    int tcpbuffersize = 0; //f
-    int blocksize = 0; //g
-    int timeout = 3600; //h
-    bool daemonize = true; //i
-    std::string dest_token_desc(""); //j
-    std::string source_token_desc(""); //k
-    int markers_timeout = 180; //l
-    int first_marker_timeout = 180; //m
-    int srm_get_timeout = 180; //n
-    int srm_put_timeout = 180; //o	
-    int http_timeout = 180; //p
-    bool dont_ping_source = false; //q
-    bool dont_ping_dest = false; //r
-    bool disable_dir_check = false; //s
-    int copy_pin_lifetime = 0; //t
-    bool lan_connection = false; //u
-    bool fail_nearline = false; //v
-    int timeout_per_mb = 0; //w
-    int no_progress_timeout = 180; //x
-    std::string algorithm(""); //y
-    std::string checksum_value(""); //z
-    bool compare_checksum = false; //A
-    std::string vo("");
-    std::string sourceSiteName("");
-    std::string destSiteName("");
-    char hostname[1024] = {0};
-    std::string proxy("");
-    char errorBuffer[2048] = {0};
-    bool debug = false;
 
     // register signal SIGINT and signal handler  
     signal(SIGINT, signalHandler);
@@ -338,7 +316,7 @@ int main(int argc, char **argv) {
 
     std::vector<std::string> urlsFile;
     std::string line("");
-    readFile = "/var/tmp/" + job_id;
+    readFile = "/var/lib/fts3/" + job_id;
     if (reuseFile.length() > 0) {
         std::ifstream infile(readFile.c_str(), std::ios_base::in);
         while (getline(infile, line, '\n')) {
@@ -346,9 +324,9 @@ int main(int argc, char **argv) {
         }
     }
 
-    int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
+    unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
     std::string strArray[4];
-    for (int i = 0; i < reuseOrNot; i++) {
+    for (unsigned int i = 0; i < reuseOrNot; i++) {
         if (reuseFile.length() > 0) {
             std::string mid_str(urlsFile[i]);
             typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -378,16 +356,21 @@ int main(int argc, char **argv) {
 		wait for it to finish
 		then set the process to ACTIVE
 	*/
-
-        reporter.constructMessage(job_id, strArray[0], "ACTIVE", "");
+	reporter.timeout = timeout;
+	reporter.nostreams = nbstreams;
+	reporter.buffersize = tcpbuffersize;
+	reporter.source_se = fileManagement.getSourceHostname();
+	reporter.dest_se = fileManagement.getDestHostname();
+		
+        reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
 
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
 
         msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());
         msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement.getLogFileName());
-        msg_ifce::getInstance()->set_source_srm_version(&tr_completed, "2.2");
-        msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, "2.2");
+        msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(strArray[1]));
+        msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(strArray[2]));
         msg_ifce::getInstance()->set_source_url(&tr_completed, strArray[1]);
         msg_ifce::getInstance()->set_dest_url(&tr_completed, strArray[2]);
         msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement.getSourceHostname());
@@ -398,16 +381,16 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_dest_site_name(&tr_completed, destSiteName);
 
 
-        std::string nstream_to_string = to_string<int>(nbstreams, std::dec);
+        std::string nstream_to_string = to_string<unsigned int>(nbstreams, std::dec);
         msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
 
-        std::string tcpbuffer_to_string = to_string<int>(tcpbuffersize, std::dec);
+        std::string tcpbuffer_to_string = to_string<unsigned int>(tcpbuffersize, std::dec);
         msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, tcpbuffer_to_string.c_str());
 
-        std::string block_to_string = to_string<int>(blocksize, std::dec);
+        std::string block_to_string = to_string<unsigned int>(blocksize, std::dec);
         msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
 
-        std::string timeout_to_string = to_string<int>(timeout, std::dec);
+        std::string timeout_to_string = to_string<unsigned int>(timeout, std::dec);
         msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
 
         msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, dest_token_desc);
@@ -415,6 +398,7 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
         log << fileManagement.timestamp() << "INFO Transfer accepted" << '\n';
+        log << fileManagement.timestamp() << "INFO Proxy:" << proxy << '\n';
         log << fileManagement.timestamp() << "INFO VO:" << vo << '\n'; //a
         log << fileManagement.timestamp() << "INFO Job id:" << job_id << '\n'; //a
         log << fileManagement.timestamp() << "INFO File id:" << strArray[0] << '\n'; //a
@@ -452,9 +436,11 @@ int main(int argc, char **argv) {
 
         /*gfal2 debug logging*/
         if (debug == true) {
-	    /*seteuid(privid);
-	    	debugFile();
-	    seteuid(pw_uid);*/
+	    //seteuid(privid);
+            //std::cerr.rdbuf( oss.rdbuf() );
+	    //int  = freopen (fileManagement.getLogFileName().c_str(),"a",stderr);
+	    //seteuid(pw_uid);
+	    //| GFAL_VERBOSE_TRACE_PLUGIN
             gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
             gfal_log_set_handler((GLogFunc) log_func, NULL);
         }
@@ -464,6 +450,8 @@ int main(int argc, char **argv) {
 
         if (dest_token_desc.length() > 0)
             gfalt_set_dst_spacetoken(params, dest_token_desc.c_str(), NULL);
+
+	gfalt_set_create_parent_dir(params, TRUE, &tmp_err);
 
 
         if (gfal_stat((strArray[1]).c_str(), &statbufsrc) < 0) {
@@ -526,14 +514,19 @@ int main(int argc, char **argv) {
 
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-        log << fileManagement.timestamp() << "INFO begin copy" << '\n';
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
+        log << fileManagement.timestamp() << "INFO Transfer Started" << '\n';
+        //FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
 
         msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+
+	//calculate tr time in seconds
+	start = std::time(NULL);
+
         seteuid(pw_uid);
         if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
             seteuid(privid);
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
+            diff = std::difftime (std::time(NULL),start);	    
+            //FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
             log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
             errorMessage = std::string(tmp_err->message);
             errorScope = TRANSFER;
@@ -543,7 +536,8 @@ int main(int argc, char **argv) {
             goto stop;
         } else {
             seteuid(privid);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully" << commit;
+            diff = difftime (std::time(NULL),start);	    
+            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully in " << diff << "secs" << commit;
             log << fileManagement.timestamp() << "INFO Transfer completed successfully" << '\n';
         }
 
@@ -607,23 +601,29 @@ stop:
         msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
         if (errorMessage.length() > 0) {
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-            reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage);
+	    reporter.timeout = timeout;
+	    reporter.nostreams = nbstreams;
+	    reporter.buffersize = tcpbuffersize;			
+            reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
         } else {
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "");
-            reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage);
+            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
+	    reporter.timeout = timeout;
+	    reporter.nostreams = nbstreams;
+	    reporter.buffersize = tcpbuffersize;				    
+            reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
         }
 
-        if (errorMessage.length() > 0)
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << errorMessage << commit;
-
+        //if (errorMessage.length() > 0)
+            //FTS3_COMMON_LOGGER_NEWLOG(ERR) << job_id << " " << errorMessage << commit;
+		   
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
         logStream.close();
         fileManagement.archive();
- 	/*if (debug == true){ 
-	    releaseDebug();
-	}*/ 
+ 	if (debug == true){ 
+	    //log << fileManagement.timestamp() << "DEBUG " << oss.str()  << '\n';
+	} 
 
     }//end for reuse loop	
 

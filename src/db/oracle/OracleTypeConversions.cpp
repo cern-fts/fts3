@@ -42,6 +42,7 @@ time_t OracleTypeConversions::toTimeT(const ::oracle::occi::Timestamp& timestamp
             t = mktime(&tmp_tm);
             if((time_t)-1 == t){
                // m_log_error("Cannot Convert Timestamp " << timestamp.toText("dd/mm/yyyy hh:mi:ss [tzh:tzm]",0));
+	       FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Cannot Convert Timestamp"));
             } else {
                 t -= timezone;
             }

@@ -34,9 +34,9 @@
 #include <iostream>
 
 ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, int userRequestedDelegationExpTime):
-		userRequestedDelegationExpTime(userRequestedDelegationExpTime),
 		delegationId(delegationId),
-		endpoint(endpoint) {
+		endpoint(endpoint),
+		userRequestedDelegationExpTime(userRequestedDelegationExpTime) {
 
     dctx = glite_delegation_new(endpoint.c_str());
     if (dctx == NULL) {

@@ -27,6 +27,7 @@ include_directories (${PROJECT_SOURCE_DIR}/src/url-copy/)
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/cred/)
+#include_directories (${PROJECT_SOURCE_DIR}/src/optimizer/)
 include_directories (/usr/lib64/glib-2.0/include)
 include_directories (/usr/include/glib-2.0)
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
@@ -78,7 +79,7 @@ target_link_libraries(fts3_server_lib
 # Server executable
 add_executable (fts3_server main.cpp)
 add_dependencies(fts3_server fts3_server_lib)
-target_link_libraries(fts3_server -lfts3_server_lib -lfts3_proxy )
+target_link_libraries(fts3_server ${fts3_libs} -lfts3_server_lib -lfts3_proxy -lfts3_config -lfts3_common -lfts3_db_generic -lfts3_server_gsoap_transfer -lgsoap++ -lfts3_ws_ifce_server )
 
 # ------------------------------------------------------------------------
 # man pages

@@ -28,7 +28,11 @@
 #include "compress.h"
 #include "Logger.h"
 #include <signal.h>
+#include "error.h"
+#include "logger.h"
+#include "serverconfig.h"
 
+using namespace FTS3_COMMON_NAMESPACE;
 
 string started[] = {"agent_fqdn", "transfer_id", "endpnt", "timestamp", "src_srm_v", "dest_srm_v",
     "vo", "src_url", "dst_url", "src_hostname", "dst_hostname", "src_site_name", "dst_site_name", "t_channel",
@@ -63,10 +67,8 @@ MsgProducer::MsgProducer() {
     this->useTopic = useTopic;
     this->sessionTransacted = sessionTransacted;
     connectionIsOK = false;
-    char hostname[1024] = {0};
-    hostname[1023] = '\0';
-    gethostname(hostname, 1023);    
-    FTSEndpoint = std::string(hostname);
+    FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
+    FTSEndpoint = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("Alias");    
     readConfig();
     }
 

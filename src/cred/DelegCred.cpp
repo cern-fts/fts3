@@ -67,17 +67,14 @@ void DelegCred::getNewCertificate(const std::string& userDn, const std::string& 
     try{
         // Get the Cred Id
         cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(cred_id,userDn);
-        //scoped_ptr<Cred> c(cred);
-	//m_log_debug("Get the Cred Id " << cred_id << " " << userDn);
+   
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the Cred Id " << cred_id << " " << userDn << commit;
         
         // write the content of the certificate property into the file
         std::ofstream ofs(filename.c_str(), std::ios_base::binary);
-	//m_log_debug("write the content of the certificate property into the file " << filename);
+	
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "write the content of the certificate property into the file " << filename << commit;
-        if(ofs.bad()){
-            //m_log_error("Failed open file " << filename << " for writing");
-            //throw DelegCredException("Cannot open file for storing the new proxy certificate");
+        if(ofs.bad()){        
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed open file " << filename << " for writing" << commit;
         }
         // write the Content of the certificate
@@ -91,9 +88,6 @@ void DelegCred::getNewCertificate(const std::string& userDn, const std::string& 
     } catch(const std::exception& exc){
 	if(cred)
 		delete cred;    
-        // Invalid Cred Id 
-        //m_log_error("Failed to get certificate for user <" << userDn << ">. Reason is: " << exc.what());
-        //throw DelegCredException("Cannot get certificate from Data Source");
 	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to get certificate for user <" << userDn << ">. Reason is: " << exc.what() << commit;
     } 
 }

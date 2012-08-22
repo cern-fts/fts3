@@ -59,10 +59,10 @@ public:
     void rename(const std::string& name)  {
         // Check Preconditions
         if(m_filename.empty()){
-   	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "empty TempFile name" << commit;
+   	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty TempFile name" << commit;
         }
         if(name.empty()){
-   	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "empty destination name" << commit;	
+   	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty destination name" << commit;	
         }
         // Rename File
         int r = ::rename(m_filename.c_str(),name.c_str());

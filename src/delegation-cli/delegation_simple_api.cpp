@@ -7,8 +7,8 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include "cgsi_plugin.h"
 #include "globus_gsi_system_config.h"
+#include "cgsi_plugin.h"
 #include "gridsite.h"
 #include "delegation.nsmap"
 #include "delegation-simple.h"

@@ -14,10 +14,17 @@ session_start();
 <a href="fts3jobs.php?jobid="> Back to job listing</a>
 <?php
 
-$objConnect = oci_connect($_SESSION['user'],$_SESSION['pass'],$_SESSION['connstring']);
 $strSQL = "SELECT  WHEN, DN,CONFIG FROM T_CONFIG_AUDIT where action like '%insert%'";
-$objParse = oci_parse ($objConnect, $strSQL);
-oci_execute ($objParse);
+
+try {
+   $conn = new PDO("oci:dbname=".$_SESSION['connstring'],$_SESSION['user'],$_SESSION['pass']);
+}
+catch(PDOException $e) {
+   die("Could not connect to the database\n");
+}
+
+$stmt = $conn->query($strSQL);
+
 echo "<table>";
 echo "<tr>";
 echo "<td>Timeastamp";
@@ -27,7 +34,7 @@ echo "</td>";
 echo "<td>Configuration";
 echo "</td>";
 echo "</tr>";
-while($objResult = oci_fetch_array($objParse,OCI_BOTH))
+while($objResult = $stmt->fetch(PDO::FETCH_BOTH))
 {
  echo "<tr>";
  echo "<td>";

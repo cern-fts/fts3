@@ -14,8 +14,8 @@ void parse_url(const char *url,
 
     if(p > url && *p == ':')
     {
-        *scheme = (char*) malloc(p - url + 1);
-        strncpy(*scheme, url, p - url);
+        *scheme = (char*) malloc((size_t) (p - url + 1));
+        strncpy(*scheme, url, (size_t) (p - url));
         (*scheme)[p - url] = '\0';
         url = p+1;
     }    
@@ -39,8 +39,8 @@ void parse_url(const char *url,
         else
             q = p;
 
-        *host = (char*) malloc(q - url + 1);
-        strncpy(*host, url, q - url);
+        *host = (char*) malloc((size_t) (q - url + 1));
+        strncpy(*host, url, (size_t) (q - url));
         (*host)[q - url] = '\0';
         url = p;
     }

@@ -105,17 +105,22 @@ protected:
     	struct message msg;
 	qm->receive(&msg);
       std::string job = std::string(msg.job_id).substr (0,36);    
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Transfer status: " << job  << commit;
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": " << msg.file_id  << commit;      
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": " <<  msg.transfer_status  << commit;            
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": " <<  msg.transfer_message  << commit; 
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": " <<  msg.process_id  << commit;   
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Transfer status: " << " : Job id  :" << job  << commit;
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": File id :" << msg.file_id  << commit;      
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": State   :" <<  msg.transfer_status  << commit;            
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Message :" <<  msg.transfer_message  << commit; 
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": PID     :" <<  msg.process_id  << commit;
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Duration:" <<  msg.timeInSecs  << commit; //in secs  
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Size    :" <<  msg.filesize  << commit;   //in bytes 
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Source  :" <<  msg.source_se  << commit;   //source se
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Dest    :" <<  msg.dest_se  << commit;   //dest_se                    
       
-      DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(std::string(msg.job_id), std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id );
-      DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), std::string(msg.job_id), std::string(msg.transfer_status));      
-                    
+      DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(std::string(msg.job_id), std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id, msg.filesize, msg.timeInSecs);
+      DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), std::string(msg.job_id), std::string(msg.transfer_status));          
+      if( std::string(msg.transfer_status).compare("FINISHED") == 0)
+      	DBSingleton::instance().getDBObjectInstance()->updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs, msg.nostreams, msg.timeout, msg.buffersize, std::string(msg.source_se), std::string(msg.dest_se) );      
       }
-      usleep(10000);
+      usleep(100000);
       }
     }
 

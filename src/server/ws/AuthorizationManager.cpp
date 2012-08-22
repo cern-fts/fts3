@@ -35,7 +35,13 @@ using namespace fts3::ws;
 using namespace boost;
 using namespace boost::assign;
 
-AuthorizationManager::AuthorizationManager() : voNames(list_of
+AuthorizationManager::AuthorizationManager() : voNames(
+		list_of
+		("t2k.org")
+		("snoplus.snolab.ca")
+		("mice")
+		("na62.vo.gridpp.ac.uk")
+		("superbvo.org")
 		("dteam")
 		("cms")
 		("atlas")

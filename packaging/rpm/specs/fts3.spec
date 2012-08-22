@@ -1,6 +1,6 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        10%{?dist}
+Release:        11%{?dist}
 Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
@@ -26,6 +26,7 @@ BuildRequires:  gfal2-devel%{?_isa}
 BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
 Requires(pre):  shadow-utils
+
 
 %description
 The File Transfer Service V3
@@ -88,14 +89,18 @@ FTS3 client CLI tool for submiiting transfers, check status, configure server, e
 %build
 mkdir build
 cd build
-cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
-make VERBOSE=1
+%cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
+make %{?_smp_mflags}
 
 
 %install
+if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi
+mkdir -p %{buildroot}%{_var}/lib/fts3
+mkdir -p %{buildroot}%{_var}/log/fts3
 cd build
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+
 
 %pre server
 getent group fts3 >/dev/null || groupadd -r fts3
@@ -118,6 +123,7 @@ if [ $1 -eq 0 ] ; then
     /sbin/chkconfig --del fts3-msg-bulk
     /sbin/service fts3-msg-cron stop >/dev/null 2>&1
     /sbin/chkconfig --del fts3-msg-cron
+    rm -fr /dev/shm/fts3mq
 fi
 exit 0
 
@@ -131,12 +137,16 @@ exit 0
 
 
 %clean
+rm -fr /dev/shm/fts3mq
 rm -rf $RPM_BUILD_ROOT
+
 
 
 %files server
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/fts3
+%dir %attr(0755,fts3,fts3) %{_var}/lib/fts3
+%dir %attr(0755,fts3,fts3) %{_var}/log/fts3
 %{_sbindir}/fts3_msg_cron
 %{_sbindir}/fts3_msg_bulk
 %{_sbindir}/fts3_server
@@ -182,6 +192,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts3_db_oracle.so
 %{_libdir}/libfts3_msg_ifce.so
 %{_libdir}/libfts3_proxy.so
+%{_libdir}/libfts3_optimizer.so
 %{_libdir}/libfts3_server_gsoap_transfer.so
 %{_libdir}/libfts3_server_lib.so
 %{_libdir}/libfts3_cli_common.so
