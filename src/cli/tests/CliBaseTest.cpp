@@ -41,30 +41,71 @@ class CliBaseTester : public CliBase {
 	string getUsageString(string tool) {return tool;};
 };
 
-BOOST_FIXTURE_TEST_CASE (CliBase_Test1, CliBaseTester) {
+BOOST_AUTO_TEST_CASE (CliBase_Test1) {
 
 	// has to be const otherwise is deprecated
-	const char* av[] = {"prog_name", "-h", "-q", "-v", "-s", "http://hostname:1234/service", "-V"};
-	parse(7, const_cast<char**>(av));
+	char* av[] = {
+			"prog_name",
+			"-h",
+			"-q",
+			"-v",
+			"-s",
+			"https://fts3-server:8080",
+			"-V"
+		};
+
+	// argument count
+	int ac = 7;
+
+	auto_ptr<CliBaseTester> cli (
+			getCli<CliBaseTester>(ac, av)
+		);
+
+	cli->mute();
+
 	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(vm.count("help") && vm.count("quite") && vm.count("verbose") && vm.count("service") && vm.count("version"));
+	BOOST_CHECK(cli->printHelp(string()));
+	BOOST_CHECK(cli->isQuite());
+	BOOST_CHECK(cli->isVerbose());
+	BOOST_CHECK(cli->printVersion());
+
 	// the endpoint shouldn't be empty since it's starting with http
-	BOOST_CHECK(!getService().empty());
+	BOOST_CHECK(!cli->getService().empty());
+
+	cli->unmute();
 }
 
-BOOST_FIXTURE_TEST_CASE (CliBase_Test2, CliBaseTester) {
+BOOST_AUTO_TEST_CASE (CliBase_Test2) {
 
 	// has to be const otherwise is deprecated
-	const char* av[] = {"prog_name", "--help", "--quite", "--verbose", "--service", "hostname:1234/service", "--version"};
+	char* av[] = {
+			"prog_name",
+			"--help",
+			"--quite",
+			"--verbose",
+			"--service",
+			"https://fts3-server:8080",
+			"--version"
+		};
 
-	mute();
-	parse(7, const_cast<char**>(av));
-	unmute();
+	// argument count
+	int ac = 7;
+
+	auto_ptr<CliBaseTester> cli (
+			getCli<CliBaseTester>(ac, av)
+		);
+
+	cli->mute();
 
 	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(vm.count("help") && vm.count("quite") && vm.count("verbose") && vm.count("service") && vm.count("version"));
+	BOOST_CHECK(cli->printHelp(string()));
+	BOOST_CHECK(cli->isQuite());
+	BOOST_CHECK(cli->isVerbose());
+	BOOST_CHECK(cli->printVersion());
 	// the endpoint should be empty since it's not starting with http, https, httpd
-	BOOST_CHECK(getService().empty());
+	BOOST_CHECK(!cli->getService().empty());
+
+	cli->unmute();
 }
 
 
