@@ -23,51 +23,86 @@
  */
 
 //#ifdef FTS3_COMPILE_WITH_UNITTEST
-#include "gsoap_transfer_proxy.h"
-
 #include "ui/ListTransferCli.h"
 #include "unittest/testsuite.h"
-#include "common/InstanceHolder.h"
 
 using namespace fts3::cli;
-using namespace fts3::common;
 
 
-typedef InstanceHolder<FileTransferSoapBindingProxy> ServiceProxyInstanceHolder;
-
-BOOST_FIXTURE_TEST_CASE (ListTransferCli_VO_Test1, ListTransferCli) {
+BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test1) {
 
         // has to be const otherwise is deprecated
-        const char* av[] = {"prog_name", "-o", "vo"};
-        parse(4, const_cast<char**>(av));
+        char* av[] = {
+        		"prog_name",
+    			"-s",
+    			"https://fts3-server:8080",
+        		"-o",
+        		"vo"
+        	};
 
-        BOOST_CHECK(getVOName().compare("vo") == 0);
+    	// argument count
+    	int ac = 5;
+
+    	auto_ptr<ListTransferCli> cli (
+    			getCli<ListTransferCli>(ac, av)
+    		);
+
+        BOOST_CHECK(cli->getVoName().compare("vo") == 0);
 }
 
-BOOST_FIXTURE_TEST_CASE (ListTransferCli_VO_Test2, ListTransferCli) {
+BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test2) {
 
         // has to be const otherwise is deprecated
-        const char* av[] = {"prog_name", "--voname", "vo"};
-        parse(4, const_cast<char**>(av));
+        char* av[] = {
+        		"prog_name",
+    			"-s",
+    			"https://fts3-server:8080",
+        		"--voname",
+        		"vo"
+        	};
 
-        BOOST_CHECK(getVOName().compare("vo") == 0);
+    	// argument count
+    	int ac = 5;
+
+    	auto_ptr<ListTransferCli> cli (
+    			getCli<ListTransferCli>(ac, av)
+    		);
+
+        BOOST_CHECK(cli->getVoName() == "vo");
 }
 
-BOOST_FIXTURE_TEST_CASE (ListTransferCli_Status_Test, ListTransferCli) {
+BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test) {
 
 	// has to be const otherwise is deprecated
-	const char* av[] = {"prog_name", "status1", "status2", "status3", "status4", "status5", "status6"};
-	parse(7, const_cast<char**>(av));
+	char* av[] = {
+			"prog_name",
+			"-s",
+			"https://fts3-server:8080",
+			"status1",
+			"status2",
+			"status3",
+			"status4",
+			"status5",
+			"status6"
+		};
 
-	FileTransferSoapBindingProxy& service = ServiceProxyInstanceHolder::getInstance();
-	impl__ArrayOf_USCOREsoapenc_USCOREstring* arr = getStatusArray(&service);
+	// argument count
+	int ac = 9;
+
+	auto_ptr<ListTransferCli> cli (
+			getCli<ListTransferCli>(ac, av)
+		);
+
+	cli->validate(false);
+
+	impltns__ArrayOf_USCOREsoapenc_USCOREstring* arr = cli->getStatusArray();
 	const vector<string>& statuses = arr->item;
 	BOOST_CHECK(statuses.size() == 6);
-	BOOST_CHECK(statuses[0].compare("status1") == 0);
-	BOOST_CHECK(statuses[1].compare("status2") == 0);
-	BOOST_CHECK(statuses[2].compare("status3") == 0);
-	BOOST_CHECK(statuses[3].compare("status4") == 0);
-	BOOST_CHECK(statuses[4].compare("status5") == 0);
-	BOOST_CHECK(statuses[5].compare("status6") == 0);
+	BOOST_CHECK(statuses[0] == "status1");
+	BOOST_CHECK(statuses[1] == "status2");
+	BOOST_CHECK(statuses[2] == "status3");
+	BOOST_CHECK(statuses[3] == "status4");
+	BOOST_CHECK(statuses[4] == "status5");
+	BOOST_CHECK(statuses[5] == "status6");
 }
 

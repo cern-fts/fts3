@@ -29,15 +29,20 @@
 
 using namespace fts3::cli;
 
-BOOST_FIXTURE_TEST_CASE (TransferStatusCli_Test, TransferStatusCli) {
+BOOST_AUTO_TEST_CASE (TransferStatusCli_Test) {
 
 	// has to be const otherwise is deprecated
-	const char* av[] = {"prog_name",
+	char* av[] = {
+			"prog_name",
 			"-l"
-	};
+		};
 
-	parse(2, const_cast<char**>(av));
+	int ac = 2;
 
-	BOOST_CHECK(list());
+	auto_ptr<TransferStatusCli> cli (
+			getCli<TransferStatusCli>(ac, av)
+		);
+
+	BOOST_CHECK(cli->list());
 }
 

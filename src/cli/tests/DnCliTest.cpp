@@ -30,22 +30,47 @@
 using namespace fts3::cli;
 
 
-BOOST_FIXTURE_TEST_CASE (DnCli_Test1, DnCli) {
+BOOST_AUTO_TEST_CASE (DnCli_Test1) {
 	// has to be const otherwise is deprecated
-	const char* av[] = {"prog_name", "-u", "userdn"};
-	parse(3, const_cast<char**>(av));
+	char* av[] = {
+			"prog_name",
+			"-s",
+			"https://fts3-server:8080",
+			"-u",
+			"userdn"
+		};
+
+	// argument count
+	int ac = 5;
+
+	auto_ptr<DnCli> cli (
+			getCli<DnCli>(ac, av)
+		);
+
 	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(vm.count("userdn"));
+	BOOST_CHECK(!cli->getUserDn().empty());
 	// the endpoint shouldn't be empty since it's starting with http
-	BOOST_CHECK(getUserDn().compare("userdn") == 0);
+	BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
 }
 
-BOOST_FIXTURE_TEST_CASE (DnCli_Test2, DnCli) {
+BOOST_AUTO_TEST_CASE (DnCli_Test2) {
 	// has to be const otherwise is deprecated
-	const char* av[] = {"prog_name", "--userdn", "userdn"};
-	parse(3, const_cast<char**>(av));
+	char* av[] = {
+			"prog_name",
+			"-s",
+			"https://fts3-server:8080",
+			"--userdn",
+			"userdn"
+		};
+
+	int ac = 5;
+
+	auto_ptr<DnCli> cli (
+			getCli<DnCli>(ac, av)
+		);
+
 	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(vm.count("userdn"));
+	BOOST_CHECK(!cli->getUserDn().empty());
 	// the endpoint shouldn't be empty since it's starting with http
-	BOOST_CHECK(getUserDn().compare("userdn") == 0);
+	BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
 }
