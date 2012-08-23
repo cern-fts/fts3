@@ -908,6 +908,193 @@ INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 
 
 
+-- -----------------------------------------------------------------------------
+-- History tables
+-- -----------------------------------------------------------------------------
+
+-- temporary table for the jobs to be deleted
+CREATE TABLE x_jobids (
+    job_id  CHAR(36)
+        CONSTRAINT x_jobids_pk PRIMARY KEY
+);
+
+-- temporary table for the files to be deleted
+CREATE TABLE x_fileids (
+    file_id  NUMBER(38)
+        CONSTRAINT x_fileids_pk PRIMARY KEY
+);
+
+CREATE TABLE t_history_log (
+    starttime   TIMESTAMP(6) WITH TIME ZONE,
+    finishtime  TIMESTAMP(6) WITH TIME ZONE,
+    jobs        NUMBER,
+    files       NUMBER,
+    transfers   NUMBER,
+    errcode     NUMBER,
+    errmsg      VARCHAR2(2048)
+);
+
+--
+-- The following t_job_history, t_file_history and t_transfer_history
+-- tables should be exact copies of the t_job, t_file and t_transfer
+-- tables above. Please update them, if those change!
+--
+CREATE TABLE t_job_history (
+   job_id		CHAR(36)
+                    	CONSTRAINT job_h_job_id_pk PRIMARY KEY
+  ,job_state       	VARCHAR2(32)
+  ,reuse_job            VARCHAR2(3)
+  ,cancel_job           CHAR(1)
+  ,job_params       	VARCHAR2(255)
+  ,source            VARCHAR2(255)
+  ,dest              VARCHAR2(255)
+  ,source_se         VARCHAR2(255)
+  ,dest_se           VARCHAR2(255)
+  ,user_dn          	VARCHAR2(1024)
+  ,agent_dn         	VARCHAR2(1024)
+  ,user_cred        	VARCHAR2(255)
+  ,cred_id              VARCHAR2(100)
+  ,voms_cred            BLOB
+  ,vo_name              VARCHAR2(50)
+  ,reason           	VARCHAR2(1024)
+  ,submit_time      	TIMESTAMP WITH TIME ZONE
+  ,finish_time      	TIMESTAMP WITH TIME ZONE
+  ,priority      	INTEGER DEFAULT 3
+  ,submit_host		VARCHAR2(255)
+  ,max_time_in_queue	INTEGER
+  ,space_token          VARCHAR2(255)
+  ,storage_class        VARCHAR2(255)
+  ,myproxy_server       VARCHAR2(255)
+  ,src_catalog          VARCHAR2(1024)
+  ,src_catalog_type     VARCHAR2(1024)
+  ,dest_catalog          VARCHAR2(1024)
+  ,dest_catalog_type     VARCHAR2(1024)
+  ,internal_job_params   VARCHAR2(255)
+  ,overwrite_flag        CHAR(1)
+  ,job_finished          TIMESTAMP WITH TIME ZONE
+  ,source_space_token VARCHAR2(255)
+  ,source_token_description VARCHAR2(255) 
+  ,copy_pin_lifetime INTEGER default NULL
+  ,lan_connection CHAR(1) default NULL
+  ,fail_nearline CHAR(1) default NULL
+  ,checksum_method CHAR(1) default NULL);
+
+CREATE TABLE t_file_history (
+   file_id		INTEGER
+		        CONSTRAINT file_h_file_id_pk PRIMARY KEY
+   ,job_id		CHAR(36)
+  ,file_state		VARCHAR2(32)
+  ,logical_name      	VARCHAR2(1100)
+  ,source_surl      	VARCHAR2(1100)
+  ,dest_surl		VARCHAR2(1100)
+  ,agent_dn		VARCHAR2(1024)
+  ,error_scope          VARCHAR2(32)
+  ,error_phase          VARCHAR2(32)
+  ,reason_class		VARCHAR2(32)
+  ,reason           	VARCHAR2(1024)
+  ,num_failures         INTEGER
+  ,current_failures	INTEGER
+  ,catalog_failures	INTEGER
+  ,prestage_failures	INTEGER
+  ,filesize         	INTEGER
+  ,checksum         	VARCHAR2(100)
+  ,finish_time		TIMESTAMP WITH TIME ZONE
+  ,start_time		TIMESTAMP WITH TIME ZONE 
+  ,internal_file_params    VARCHAR2(255)
+  ,job_finished          TIMESTAMP WITH TIME ZONE 
+);
+  
+CREATE TABLE t_transfer_history (
+   request_id           VARCHAR2(255)
+  ,file_id              INTEGER
+  ,transfer_id          INTEGER
+  ,job_id               CHAR(36)
+  ,transfer_state       VARCHAR2(32)
+  ,source_turl          VARCHAR2(1100)
+  ,dest_turl            VARCHAR2(1100)
+  ,source_srm_token     VARCHAR2(256)
+  ,dest_srm_token       VARCHAR2(256)
+  ,source_host          VARCHAR2(256)
+  ,dest_host            VARCHAR2(256)  
+  ,transfer_time        TIMESTAMP WITH TIME ZONE
+  ,prepare_time         TIMESTAMP WITH TIME ZONE
+  ,duration             NUMBER(12,2)
+  ,src_prep_duration    NUMBER(12,3)
+  ,dest_prep_duration   NUMBER(12,3)
+  ,tx_duration          NUMBER(12,3)
+  ,src_final_duration   NUMBER(12,3)
+  ,dest_final_duration  NUMBER(12,3)
+  ,bytes_written        INTEGER
+  ,throughput           NUMBER
+  ,error_scope          VARCHAR2(32)
+  ,error_phase          VARCHAR2(32)
+  ,reason_class         VARCHAR2(32)
+  ,reason               VARCHAR2(1024)
+  ,filesize         	INTEGER
+  ,transfer_type      	VARCHAR(32)
+  ,finish_time          TIMESTAMP WITH TIME ZONE
+  ,job_finished         TIMESTAMP WITH TIME ZONE DEFAULT NULL
+  ,CONSTRAINT transfer_h_pk PRIMARY KEY (request_id, file_id)
+);
+
+
+------------------------------------------------------------------
+--         tables for history cleanup of the history 		--
+------------------------------------------------------------------
+CREATE TABLE t_history_purge_log (
+    starttime   TIMESTAMP(6) WITH TIME ZONE,
+    finishtime  TIMESTAMP(6) WITH TIME ZONE,
+    jobs        NUMBER,
+    files       NUMBER,
+    transfers   NUMBER,
+    errcode     NUMBER,
+    errmsg      VARCHAR2(2048)
+);
+
+
+-- temporary table for the jobs to be deleted
+CREATE TABLE x_purge_jobids (
+    job_id  CHAR(36)
+        CONSTRAINT x_purge_jobids_pk PRIMARY KEY
+);
+
+-- temporary table for the files to be deleted
+CREATE TABLE x_purge_fileids (
+    file_id  NUMBER(38)
+        CONSTRAINT x_purgefileids_pk PRIMARY KEY
+);
+
+
+
+-- -----------------------------------------------------------------------------
+-- Plug-in registration tables
+-- -----------------------------------------------------------------------------
+
+
+CREATE TABLE t_fts_plugin (
+	packagename              VARCHAR2(100) NOT NULL
+        CONSTRAINT fts_plugin_pk PRIMARY KEY,
+	description              VARCHAR2(1024) NOT NULL,
+	author                   VARCHAR2(100) NOT NULL,
+	dateadded                TIMESTAMP(6) WITH TIME ZONE DEFAULT systimestamp,
+	packageversion           VARCHAR2(10) NOT NULL,
+	requirepackageschemamin  VARCHAR2(10),
+	requirepackageschemamax  VARCHAR2(10),
+	requirecoreschemamin     VARCHAR2(10) NOT NULL,
+	requirecoreschemamax     VARCHAR2(10),
+    -- there should be a field in t_schema_vers if
+    -- it is a PRODUCTION or TEST database
+	requiremaxdbstate        VARCHAR2(15) NOT NULL
+	    CONSTRAINT fts_plugin_reqdbstate CHECK (requireMaxDbState IN ('PRODUCTION', 'TEST')) 
+);
+
+CREATE TABLE t_fts_plugin_schema (
+	packagename    VARCHAR2(100) NOT NULL
+        CONSTRAINT fts_plugin_schema_pk PRIMARY KEY,
+	schemaversion  VARCHAR2(10)
+);
+
+
 
 
 exit;
