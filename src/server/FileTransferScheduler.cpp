@@ -247,13 +247,13 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 
 bool FileTransferScheduler::schedule(bool optimize) {
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FileTransferScheduler::schedule()" << commit;
+	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FileTransferScheduler::schedule()" << commit;
 
-	if(optimize){
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimization is ON" << commit;
+	if(optimize == true){
+		//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimization is ON" << commit;
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);		
 		// update file state to READY
-		if(allowed){
+		if(allowed == true){
 			int updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
 			if(updated == 0){
 				return false;
@@ -261,7 +261,7 @@ bool FileTransferScheduler::schedule(bool optimize) {
 				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FileTransferScheduler::schedule()" << commit;

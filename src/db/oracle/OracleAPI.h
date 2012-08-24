@@ -184,13 +184,11 @@ public:
     
     virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state);
     
-    virtual void fetchOptimizationConfig(std::vector<OptimizerSample*>& ops, const std::string & source_hostname, const std::string & destin_hostname); 
-    
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname); 
     
     virtual void updateOptimizer(std::string file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname);
     
-    virtual void addOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);        
+    virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);        
     
     virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id);
     

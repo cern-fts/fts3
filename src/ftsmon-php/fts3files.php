@@ -16,7 +16,7 @@ session_start();
 
 <?php
 $jobid = $_GET['jobid'];
-$strSQL = "SELECT  JOB_ID, SOURCE_SURL,DEST_SURL,FILE_STATE, FILESIZE, REASON, START_TIME, FINISH_TIME, THROUGHPUT, CHECKSUM FROM T_FILE WHERE JOB_ID='$jobid' ORDER BY t_file.file_id DESC, SYS_EXTRACT_UTC(t_file.start_time) ";
+$strSQL = "SELECT  JOB_ID, SOURCE_SURL,DEST_SURL,FILE_STATE, FILESIZE, REASON, START_TIME, FINISH_TIME, THROUGHPUT, CHECKSUM,TX_DURATION FROM T_FILE WHERE JOB_ID='$jobid' ORDER BY t_file.file_id DESC, SYS_EXTRACT_UTC(t_file.start_time) ";
 
 try {
    $conn = new PDO("oci:dbname=".$_SESSION['connstring'],$_SESSION['user'],$_SESSION['pass']);
@@ -43,10 +43,96 @@ $stmt = $conn->query($strSQL);
 
 </tr>
 <?php
+$k = 1024;
+$m = 1048576;
+$g = 1073741824;
+
+function to_bytes($value, $unit)
+{
+  global $k, $m, $g;
+  switch (trim($unit))
+  {
+    case "b": //bytes
+      return ($value / 8);
+    case "Kb": //Kilobits
+      return (($value * $k) / 8);
+    case "Mb": // Megabits
+      return (($value * $m) / 8);
+    case "Gb": // Gigabits
+      return (($value * $g) / 8);
+    case "B": // Bytes
+      return $value;
+    case "KB": // Kilobytes
+      return ($value * $k);
+    case "MB": // Megabytes
+      return ($value * $m);
+    case "GB": // Gigabytes
+      return ($value * $g);
+    default: return 0;
+  }
+}
+
+function bytes_to($value, $unit)
+{
+  global $k, $m, $g;
+  switch (trim($unit))
+  {
+    case "b": //bytes
+      return ($value * 8);
+    case "Kb": //Kilobits
+      return (($value * 8) / $k);
+    case "Mb": // Megabits
+      return (($value * 8) / $m);
+    case "Gb": // Gigabits
+      return (($value * 8) / $g);
+    case "B": // Bytes
+      return $value;
+    case "KB": // Kilobytes
+      return ($value / $k);
+      //return bcdiv($value, $k, 4);
+    case "MB": // Megabytes
+      return ($value / $m);
+    case "GB": // Gigabytes
+      return ($value / $g);
+    default: return 0;
+  }
+}
+
+
+# ##############################
+
+$Suffix=array(" b/sec"," kbit/sec"," Mbit/sec"," Gbit/sec"); 
+
+function formatBytes($bytes){ 
+	global $Suffix;    
+        $i = 0;
+        $dblSByte=0;
+        if($bytes < 1024){
+				
+		return (string)(round($bytes,2).$Suffix[0]);	
+	}else{
+        	for ($i = 0; (int)($bytes / 1024) > 0; $i++, $bytes /= 1024)
+            		$dblSByte = $bytes / 1024.0;
+	}
+	#echo $dblSByte;
+	#echo "<br>";
+        return (string)(round($dblSByte,2).$Suffix[$i]);
+}
+
+function startsWith($haystack,$needle,$case=true) {
+    if($case){return (strcmp(substr($haystack, 0, strlen($needle)),$needle)===0);}
+    return (strcasecmp(substr($haystack, 0, strlen($needle)),$needle)===0);
+    }
+
 while($objResult = $stmt->fetch(PDO::FETCH_BOTH) )
 {
 
 if( $objResult["FILE_STATE"] == "FINISHED"){
+
+$fsize = $objResult["FILESIZE"];
+$tx_time = $objResult["TX_DURATION"];
+$duration = $fsize / $tx_time;
+$total = formatBytes($duration);
 ?>
 <tr bgcolor="#00FF00">
 <td><?php echo $objResult["JOB_ID"];?></td>
@@ -58,7 +144,7 @@ if( $objResult["FILE_STATE"] == "FINISHED"){
 <td><?php echo $objResult["REASON"];?></td>
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
-<td><?php echo $objResult["THROUGHPUT"];?> Mbit/s</td>
+<td><?php echo $total; ?></td>
 </tr>
 <?php
 }
@@ -74,7 +160,7 @@ if( $objResult["FILE_STATE"] == "FAILED"){
 <td><?php echo $objResult["REASON"];?></td>
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
-<td><?php echo $objResult["THROUGHPUT"];?> Mbit/s</td>
+<td></td>
 </tr>
 <?php
 }
@@ -90,7 +176,7 @@ if( $objResult["FILE_STATE"] == "ACTIVE"){
 <td><?php echo $objResult["REASON"];?></td>
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
-<td><?php echo $objResult["THROUGHPUT"];?> Mbit/s</td>
+<td> </td>
 </tr>
 <?php
 }
@@ -106,7 +192,7 @@ if( $objResult["FILE_STATE"] == "CANCELED"){
 <td><?php echo $objResult["REASON"];?></td>
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
-<td><?php echo $objResult["THROUGHPUT"];?> Mbit/s</td>
+<td> </td>
 </tr>
 <?php
 }

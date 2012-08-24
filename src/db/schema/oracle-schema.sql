@@ -29,10 +29,10 @@ CREATE TABLE t_optimize (
    buffer       	NUMBER default NULL,   
 --
 -- the nominal size of the file (bytes)
-  filesize         	NUMBER default NULL,  
+  filesize         	NUMBER default NULL,
 --
--- set primary key
-   CONSTRAINT t_optimize_pk PRIMARY KEY (source_se,dest_se,nostreams,timeout,buffer)
+-- timestamp
+   when			TIMESTAMP WITH TIME ZONE  
 );
 
 

@@ -118,7 +118,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-            " AND rownum <= 30  ORDER BY t_job.priority DESC"
+            " AND rownum =1  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time) ";
 
     //ThreadTraits::LOCK lock(_mutex);
@@ -1508,7 +1508,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
         conn->rollback();
         finishedDirty = 0;
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -1522,9 +1522,9 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
     time_t timed = time(NULL);
     //ThreadTraits::LOCK lock(_mutex);	
     try {
-        if ( false == conn->checkConn() )
-		return;
-		
+        if (false == conn->checkConn())
+            return;
+
         oracle::occi::Statement* st1 = conn->createStatement(cancelJ, cancelJTag);
         oracle::occi::Statement* st2 = conn->createStatement(cancelF, cancelFTag);
 
@@ -1552,7 +1552,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -1564,8 +1564,8 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
 
     //ThreadTraits::LOCK lock(_mutex);
     try {
-        if ( false == conn->checkConn() )
-		return;
+        if (false == conn->checkConn())
+            return;
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         oracle::occi::ResultSet* r = conn->createResultset(s);
         oracle::occi::Statement* s1 = conn->createStatement(update, tag1);
@@ -1586,7 +1586,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -1612,7 +1612,7 @@ bool OracleAPI::is_se_group_member(std::string se) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return exists;
     }
     return exists;
@@ -1636,7 +1636,7 @@ bool OracleAPI::is_se_group_exist(std::string group) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return exists;
     }
     return exists;
@@ -1661,7 +1661,7 @@ bool OracleAPI::is_se_protocol_exist(std::string se) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return exists;
     }
     return exists;
@@ -1685,7 +1685,7 @@ bool OracleAPI::is_group_protocol_exist(std::string group) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return exists;
     }
     return exists;
@@ -1741,7 +1741,7 @@ SeProtocolConfig* OracleAPI::get_se_protocol_config(std::string se) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return seProtocolConfig;
     }
     return seProtocolConfig;
@@ -1807,7 +1807,7 @@ SeProtocolConfig* OracleAPI::get_se_group_protocol_config(std::string se) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return seProtocolConfig;
     }
     return seProtocolConfig;
@@ -1838,7 +1838,7 @@ SeProtocolConfig* OracleAPI::get_group_protocol_config(std::string group) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
     return seProtocolConfig;
 }
@@ -1859,7 +1859,7 @@ bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return false;
     }
     return true;
@@ -1911,7 +1911,7 @@ bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolCo
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return false;
     }
 
@@ -1932,7 +1932,7 @@ void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -1968,7 +1968,7 @@ void OracleAPI::delete_se_group_protocol_config(SeProtocolConfig* seGroupProtoco
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2015,7 +2015,7 @@ void OracleAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2056,7 +2056,7 @@ void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtoco
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2092,7 +2092,7 @@ void OracleAPI::add_se_to_group(std::string se, std::string group) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2111,7 +2111,7 @@ void OracleAPI::remove_se_from_group(std::string se, std::string group) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2129,7 +2129,7 @@ void OracleAPI::delete_group(std::string group) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2150,7 +2150,7 @@ std::string OracleAPI::get_group_name(std::string se) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return group;
     }
     return group;
@@ -2172,7 +2172,7 @@ std::vector<std::string> OracleAPI::get_group_names() {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
     return group;
 }
@@ -2193,7 +2193,7 @@ std::vector<std::string> OracleAPI::get_group_members(std::string name) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
     return members;
 }
@@ -2228,7 +2228,7 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2250,7 +2250,7 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2280,7 +2280,7 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return cred;
     }
     return cred;
@@ -2301,7 +2301,7 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2335,7 +2335,7 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2357,7 +2357,7 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2387,7 +2387,7 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return cred;
     }
     return cred;
@@ -2408,7 +2408,7 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2433,7 +2433,7 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return debug;
     }
     return debug;
@@ -2478,7 +2478,7 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2514,14 +2514,14 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND t_job.reuse_job='Y' "
             " AND t_job.job_state ='SUBMITTED' "
-            " AND ROWNUM <= 10 "
+            " AND ROWNUM =1 "
             " ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time) ";
 
     try {
-        if ( false == conn->checkConn() )
-		return;
-		
+        if (false == conn->checkConn())
+            return;
+
         oracle::occi::Statement* s = conn->createStatement(query_stmt, tag);
         s->setPrefetchRowCount(10);
         oracle::occi::ResultSet* r = conn->createResultset(s);
@@ -2556,7 +2556,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 
 }
@@ -2579,7 +2579,7 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
@@ -2609,109 +2609,69 @@ void OracleAPI::setGroupOrSeState(const std::string & se, const std::string & gr
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
-    }
-}
 
-/*CHECK ONLY THE ACTIVE TRANSFER FOR THIS PAIR*/
-void OracleAPI::fetchOptimizationConfig(std::vector<OptimizerSample*>& ops, const std::string & source_hostname, const std::string & destin_hostname) {
-    OptimizerSample* opt = NULL;
-    std::vector<OptimizerSample*>::iterator iter;
-    const std::string tag = "fetchOptimizationConfig";
-    const std::string tag_in_out = "fetchOptimizationConfigInOut";
-    SeProtocolConfig* config = NULL;
-    std::string query_stmt_throuput = "SELECT "
-            " t_file.THROUGHPUT, "
-            " FROM t_file, t_job"
-            " WHERE "
-            " t_file.job_id = t_job=job_id"
-            " t_file.job_finished is not NULL"
-            " AND t_file.file_state ='FINISHED' "
-            " AND t_job.SOURCE_SE = :1 "
-            " AND t_job.DEST_SE = :2 "
-            " AND rownum <= 20  ORDER BY "
-            " , SYS_EXTRACT_UTC(t_file.finish_time) ";
-
-    //ThreadTraits::LOCK lock(_mutex);
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query_stmt_throuput, tag);
-        s->setString(1, source_hostname);
-        s->setString(2, destin_hostname);
-        s->setPrefetchRowCount(20);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        while (r->next()) {
-            opt = new OptimizerSample();
-            opt->goodput = r->getDouble(1);
-            ops.push_back(opt);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
-        if (!ops.empty()) {
-            config = getProtocol(source_hostname, destin_hostname);
-            if (config) {
-                for (iter = ops.begin(); iter != ops.end(); ++iter) {
-                    (*iter)->streamsperfile = config->NOSTREAMS;
-                    (*iter)->bufsize = config->TCP_BUFFER_SIZE;
-                }
-            }
-        }
-    } catch (oracle::occi::SQLException const &e) {
-        conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
     }
 }
 
 /*custom optimization stuff*/
 
-/*TODO: consider ACTIVE at the time of transfer*/
 void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) {
     const std::string tag = "fetchOptimizationConfig2XXX";
     const std::string tag1 = "fetchOptimizationConfig2YYY";
     const std::string tag2 = "fetchOptimizationConfig2YYYXXX";
+    const std::string tag3 = "fetchOptimizationConfig2ZZZZ";
+    const std::string tag4 = "111fetchOptimizationConfig2ZZZZ";
     int foundNoThrouput = 0;
     int foundNoRecords = 0;
 
     std::string query_stmt_throuput = " select throughput, active, nostreams, timeout, buffer "
-					  " from "
-					  " (select throughput, active, nostreams, timeout, buffer "
-					  " from t_optimize "
-					  " where "
-					  " source_se = :1 and dest_se=:2 "
-					  " order by abs(((select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' "
-					  " and  t_job.job_id = t_file.job_id and t_job.source_se=:3 and "
-					  " t_job.dest_se=:4))-active), abs(500-throughput) ) "
-					  " where rownum=1";
-	    
-	    
+            " from "
+            " (select throughput, active, nostreams, timeout, buffer "
+            " from t_optimize "
+            " where "
+            " source_se = :1 and dest_se=:2 "
+            " order by abs(((select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' "
+            " and  t_job.job_id = t_file.job_id and t_job.source_se=:3 and "
+            " t_job.dest_se=:4))-active), abs(500-throughput) desc) where rownum=1 ";
 
-    std::string query_stmt_throuput1 = "  SELECT count(*), (select count(*) from t_optimize where source_se = :1 and dest_se=:2 and rownum=1) "
+    std::string query_stmt_throuput1 = "  SELECT count(*) "
             " FROM t_optimize WHERE  "
-            " throughput is NULL and source_se = :3 and dest_se=:4 group by 1 ";
+            " throughput is NULL and source_se = :1 and dest_se=:2 ";
 
     std::string query_stmt_throuput2 = "   SELECT  active, nostreams, timeout, buffer "
             "  FROM t_optimize WHERE  "
             "  source_se = :1 and dest_se=:2 "
-            "  and throughput is NULL and rownum=1";
+            "  and throughput is NULL and file_id != 1 ";
+
+    std::string query_stmt_throuput3 = " select count(*) from t_optimize where source_se = :1 and dest_se=:2";
+
+    std::string query_stmt_throuput4 = "update t_optimize set file_id=1 where nostreams=:1 and buffer=:2 and timeout=:3 and source_se=:4 and dest_se=:5";
 
     try {
-        if ( false == conn->checkConn() )
-		return;
+        if (false == conn->checkConn())
+            return;
+
+        oracle::occi::Statement* s3 = conn->createStatement(query_stmt_throuput3, tag3);
+        s3->setString(1, source_hostname);
+        s3->setString(2, destin_hostname);
+        oracle::occi::ResultSet* r3 = conn->createResultset(s3);
+        if (r3->next()) {
+            foundNoRecords = r3->getInt(1);
+        }
+        conn->destroyResultset(s3, r3);
+        conn->destroyStatement(s3, tag3);
+
         oracle::occi::Statement* s1 = conn->createStatement(query_stmt_throuput1, tag1);
         s1->setString(1, source_hostname);
         s1->setString(2, destin_hostname);
-        s1->setString(3, source_hostname);
-        s1->setString(4, destin_hostname);	
         oracle::occi::ResultSet* r1 = conn->createResultset(s1);
         if (r1->next()) {
             foundNoThrouput = r1->getInt(1);
-            foundNoRecords  = r1->getInt(2);	    
         }
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1);
 
-        if ( foundNoRecords > 0 && foundNoThrouput == 0 ) { //ALL records for this SE/DEST are having throughput
+        if (foundNoRecords > 0 && foundNoThrouput == 0) { //ALL records for this SE/DEST are having throughput
             oracle::occi::Statement* s = conn->createStatement(query_stmt_throuput, tag);
             s->setString(1, source_hostname);
             s->setString(2, destin_hostname);
@@ -2724,16 +2684,16 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 ops->streamsperfile = r->getInt(2);
                 ops->timeout = r->getInt(3);
                 ops->bufsize = r->getInt(4);
-		ops->file_id = 1;
+                ops->file_id = 1;
             } else {
                 ops->streamsperfile = DEFAULT_NOSTREAMS;
                 ops->timeout = DEFAULT_TIMEOUT;
                 ops->bufsize = DEFAULT_BUFFSIZE;
-		ops->file_id = 0;
+                ops->file_id = 0;
             }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag);
-        } else if (foundNoRecords > 0 && foundNoThrouput > 0 ){ //found records in the DB but are some without throughput 
+        } else if (foundNoRecords > 0 && foundNoThrouput > 0) { //found records in the DB but are some without throughput 
             oracle::occi::Statement* s = conn->createStatement(query_stmt_throuput2, tag2);
             s->setString(1, source_hostname);
             s->setString(2, destin_hostname);
@@ -2744,131 +2704,191 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 ops->streamsperfile = r->getInt(2);
                 ops->timeout = r->getInt(3);
                 ops->bufsize = r->getInt(4);
-		ops->file_id = 1;
+                ops->file_id = 1; //sampled, not being picked again
+                oracle::occi::Statement* s4 = conn->createStatement(query_stmt_throuput4, tag4);
+                s4->setInt(1, ops->streamsperfile);
+                s4->setInt(2, ops->bufsize);
+                s4->setInt(3, ops->timeout);
+                s4->setString(4, source_hostname);
+                s4->setString(5, destin_hostname);
+                s4->executeUpdate();
+                conn->commit();
+                conn->destroyStatement(s4, tag4);
             } else {
                 ops->streamsperfile = DEFAULT_NOSTREAMS;
                 ops->timeout = DEFAULT_TIMEOUT;
                 ops->bufsize = DEFAULT_BUFFSIZE;
-		ops->file_id = 0;
+                ops->file_id = 0;
             }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag2);
 
-        } else { 
-                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                ops->timeout = DEFAULT_TIMEOUT;
-                ops->bufsize = DEFAULT_BUFFSIZE;
-		ops->file_id = 0;
+        } else {
+            ops->streamsperfile = DEFAULT_NOSTREAMS;
+            ops->timeout = DEFAULT_TIMEOUT;
+            ops->bufsize = DEFAULT_BUFFSIZE;
+            ops->file_id = 0;
         }
-         
+
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
 void OracleAPI::updateOptimizer(std::string file_id, double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
-    const std::string tag = "updateOptimizer";
-    std::string query = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and "
-    			" t_job.job_id = t_file.job_id and t_job.source_se=:3 and t_job.dest_se=:4) "
-     			" WHERE nostreams = :5 and timeout=:6 and buffer=:7 and source_se=:8 and dest_se=:9 ";
-
+    const std::string tag1 = "updateOptimizer1";
+    const std::string tag2 = "updateOptimizer2";
+    const std::string tag3 = "updateOptimizer3";
     double throughput = 0;
+    bool activeExists = false;
+    int active = 0;
+
+    std::string query1 = " select active from t_optimize where "
+            " active=(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' "
+            " and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2)"
+            " and nostreams = :3 and timeout=:4 and buffer=:5 and source_se=:6 and dest_se=:7 ";
+
+    std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, when=:4 "
+            " WHERE nostreams = :5 and timeout=:6 and buffer=:7 and source_se=:8 and dest_se=:9 ";
+
     try {
-        if(filesize > 0 && timeInSecs> 0)
-		throughput = convertBtoM(filesize, timeInSecs);	
-	else	
-		throughput = convertBtoM(filesize, 1);		
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-	if(filesize <= 0)
-		filesize = 0;
-        s->setDouble(1, filesize);	
-        s->setDouble(2, throughput);
-	s->setString(3, source_hostname);
-	s->setString(4, destin_hostname);	
-	if(nostreams <= 0)
-		nostreams = 0;	
-	s->setInt(5, nostreams);
-	if(timeout <= 0)
-		timeout = 0;		
-        s->setInt(6, timeout);
-	if(buffersize <= 0)
-		buffersize = 0;			
-        s->setInt(7, buffersize);
-	s->setString(8, source_hostname);
-	s->setString(9, destin_hostname);				
-        s->executeUpdate();
-        conn->commit();
-        conn->destroyStatement(s, tag);
+        time_t now = std::time(NULL);
+        oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);
+        s1->setString(1, source_hostname);
+        s1->setString(2, destin_hostname);
+        s1->setInt(3, nostreams);
+        s1->setInt(4, timeout);
+        s1->setInt(5, buffersize);
+        s1->setString(6, source_hostname);
+        s1->setString(7, destin_hostname);
+        oracle::occi::ResultSet* r1 = conn->createResultset(s1);
+        if (r1->next()) {
+            activeExists = true;
+            active = r1->getInt(1);
+        }
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+
+        if (filesize > 0 && timeInSecs > 0)
+            throughput = convertBtoM(filesize, timeInSecs);
+        else
+            throughput = convertBtoM(filesize, 1);
+        if (filesize <= 0)
+            filesize = 0;
+        if (nostreams <= 0)
+            nostreams = 0;
+        if (timeout <= 0)
+            timeout = 0;
+        if (buffersize <= 0)
+            buffersize = 0;
+        if (activeExists) { //update
+            oracle::occi::Statement* s2 = conn->createStatement(query2, tag2);
+            s2->setDouble(1, filesize);
+            s2->setDouble(2, throughput);
+            s2->setInt(3, active);
+	    s2->setTimestamp(4, conv->toTimestamp(now, conn->getEnv()));	    
+            s2->setInt(5, nostreams);
+            s2->setInt(6, timeout);
+            s2->setInt(7, buffersize);
+            s2->setString(8, source_hostname);
+            s2->setString(9, destin_hostname);
+            s2->executeUpdate();
+            conn->commit();
+            conn->destroyStatement(s2, tag2);
+        } else { //insert new
+            addOptimizer(now, throughput, source_hostname, destin_hostname, 1, nostreams, timeout, buffersize, active);
+        }
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
     }
 }
 
-void OracleAPI::addOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers) {
+void OracleAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers) {
     const std::string tag = "addOptimizer";
+    const std::string tag1 = "addOptimizer1";
     std::string query = "insert into "
-            " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer) "
-            " values(:1,:2,:3,:4,:5,0,:6) ";
+            " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, when) "
+            " values(:1,:2,:3,:4,:5,(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and "
+            " t_job.source_se=:6 and t_job.dest_se=:7),:8,:9,:10) ";
 
     try {
-        if ( false == conn->checkConn() )
-		return;
-		
+        if (false == conn->checkConn())
+            return;
+
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setInt(1, file_id);
         s->setString(2, source_hostname);
         s->setString(3, destin_hostname);
         s->setInt(4, nostreams);
         s->setInt(5, timeout);
-        s->setInt(6, buffersize);
+        s->setString(6, source_hostname);
+        s->setString(7, destin_hostname);
+        s->setInt(8, buffersize);
+        s->setDouble(9, throughput);
+	s->setTimestamp(10, conv->toTimestamp(when, conn->getEnv()));
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
+
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
 void OracleAPI::initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id) {
     const std::string tag = "initOptimizer";
-    std::string query = "insert into t_optimize(source_se, dest_se,timeout,nostreams,buffer, file_id ) values(:1,:2,:3,:4,:5,:6) ";
+    const std::string tag1 = "initOptimizer2";
+    std::string query = "insert into t_optimize(source_se, dest_se,timeout,nostreams,buffer, file_id ) values(:1,:2,:3,:4,:5,0) ";
+    std::string query1 = "select count(*) from t_optimize where source_se=:1 and dest_se=:2";
+    int foundRecords = 0;
 
     try {
-        if ( false == conn->checkConn() )
-		return;
-		
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        if (false == conn->checkConn())
+            return;
 
-        for (unsigned int x = 0; x < timeoutslen; x++) {
-            for (unsigned int y = 0; y < nostreamslen; y++) {
-                for (unsigned int z = 0; z < buffsizeslen; z++) {
-                    s->setString(1, source_hostname);
-                    s->setString(2, destin_hostname);
-                    s->setInt(3, timeouts[x]);
-                    s->setInt(4, nostreams[y]);
-                    s->setInt(5, buffsizes[z]);
-		    s->setInt(6, file_id);
-                    s->executeUpdate();
+        oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);
+        s1->setString(1, source_hostname);
+        s1->setString(2, destin_hostname);
+        oracle::occi::ResultSet* r1 = conn->createResultset(s1);
+        if (r1->next()) {
+            foundRecords = r1->getInt(1);
+        }
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+
+
+        if (foundRecords == 0) {
+            oracle::occi::Statement* s = conn->createStatement(query, tag);
+
+            for (unsigned register int x = 0; x < timeoutslen; x++) {
+                for (unsigned register int y = 0; y < nostreamslen; y++) {
+                    for (unsigned register int z = 0; z < buffsizeslen; z++) {
+                        s->setString(1, source_hostname);
+                        s->setString(2, destin_hostname);
+                        s->setInt(3, timeouts[x]);
+                        s->setInt(4, nostreams[y]);
+                        s->setInt(5, buffsizes[z]);
+                        //s->setInt(6, file_id);
+                        s->executeUpdate();
+                    }
                 }
             }
+            conn->commit();
+            conn->destroyStatement(s, tag);
         }
-        conn->commit();
-        conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
     }
 }
 
-
-bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::string & dn){
+bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::string & dn) {
 
     bool valid = true;
     const std::string tag = "isCredentialExpired";
@@ -2883,11 +2903,11 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
         oracle::occi::ResultSet* r = conn->createResultset(s);
 
         if (r->next()) {
-	        time_t lifetime = std::time(NULL);
-		time_t term_time = conv->toTimeT(r->getTimestamp(1));			
-		if(term_time < lifetime)
-			valid = false;
-		                                    
+            time_t lifetime = std::time(NULL);
+            time_t term_time = conv->toTimeT(r->getTimestamp(1));
+            if (term_time < lifetime)
+                valid = false;
+
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -2895,7 +2915,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
+
         return valid;
     }
     return valid;
@@ -2905,69 +2925,77 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
  1:(Active transfers between source-dest)
  2:(active tr when max throughput)
         if( 1 < 2 ) 
-		start
+                start
         else 
-		do not start
-*/
-bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname){
+                do not start
+ */
+bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname) {
     const std::string tag1 = "isTrAllowed1";
     const std::string tag2 = "isTrAllowed2";
     bool allowed = true;
+    double actThr = 0;
+    double thr = 0;
+    int act = 0;
     std::string query_stmt1 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 ";
-			     
-    std::string query_stmt2 = " select active, throughput from t_optimize where "
-    				" throughput is not null  and active is not null  and source_se=:1 and dest_se=:2 "
-				" and ( active=0 or active=(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and "
-				" t_job.source_se=:3 and t_job.dest_se=:4) "
-				" or active=(select min(active) from t_optimize where active > 5) or active=(select max(active) from t_optimize where active < 5) ) "
-				" order by abs(500-throughput) asc";
 
+    std::string query_stmt2 = " select avg(throughput) from t_optimize "
+    				" where active>=(select count(*) from  t_file, t_job where "
+				" t_file.file_state='ACTIVE' and  t_job.job_id = t_file.job_id and "
+				" t_job.source_se=:1 and t_job.dest_se=:2)  and  "
+				" source_se=:3  and dest_se=:4 and t_optimize.when "
+				" is not null   order by SYS_EXTRACT_UTC(when) desc";
     try {
         oracle::occi::Statement* s1 = conn->createStatement(query_stmt1, tag1);
         s1->setString(1, source_hostname);
-        s1->setString(2, destin_hostname);		
+        s1->setString(2, destin_hostname);
         s1->setPrefetchRowCount(1);
         oracle::occi::ResultSet* r1 = conn->createResultset(s1);
         if (r1->next()) {
-		int act = r1->getInt(1);
-		if(act == 0){ //no active, start transfering
-		        conn->destroyResultset(s1, r1);
-		        conn->destroyStatement(s1, tag1);
-			return allowed;
-		}else{ 
-			oracle::occi::Statement* s2 = conn->createStatement(query_stmt2, tag2);
-			s2->setString(1, source_hostname);
-        		s2->setString(2, destin_hostname);
-        		s2->setString(3, source_hostname);
-        		s2->setString(4, destin_hostname);				
-        		s2->setPrefetchRowCount(1);
-        		oracle::occi::ResultSet* r2 = conn->createResultset(s2);
-			if (r2->next()) {
-				double actThr = r2->getInt(1);			
-				double thr = r2->getInt(2);				
-				if( act<100 && thr>1.0){
-					allowed = true;			
-				}else{
-					allowed = false;				
-				}
+            act = r1->getInt(1);
+            if (act == 0) { //no active, start transfering
+                conn->destroyResultset(s1, r1);
+                conn->destroyStatement(s1, tag1);
+                return allowed;
+            } else {
+                oracle::occi::Statement* s2 = conn->createStatement(query_stmt2, tag2);
+                s2->setString(1, source_hostname);
+                s2->setString(2, destin_hostname);
+                s2->setString(3, source_hostname);
+                s2->setString(4, destin_hostname);
+                s2->setPrefetchRowCount(1);
+                oracle::occi::ResultSet* r2 = conn->createResultset(s2);
+                if (r2->next()) { //found records in t_optimize
+                    actThr = r2->getInt(1); //throughput
+                    //thr = r2->getInt(2);
+                    if (actThr > 1.0 && act<25) {
+                        allowed = true;
+                    } else {
+                        allowed = false;
+                    }
+                } else { //no records yet in t_optimize
+                    if (act < 25) {
+                        allowed = true;
+                    } else {
+                        allowed = false;
+                    }
+                }
 
-			}
-			conn->destroyResultset(s1, r1);
-			conn->destroyStatement(s1, tag1);			
-			conn->destroyResultset(s2, r2);
-		        conn->destroyStatement(s2, tag2);
-			return true;
-		}
+                conn->destroyResultset(s1, r1);
+                conn->destroyStatement(s1, tag1);
+                conn->destroyResultset(s2, r2);
+                conn->destroyStatement(s2, tag2);
+                return allowed;
+            }
         }
-	conn->destroyResultset(s1, r1);
-	conn->destroyStatement(s1, tag1);	
-	return allowed;
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+        return allowed;
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-	return allowed;
+        return allowed;
     }
-  return allowed;  
+    return allowed;
 }
 
 // the class factories
@@ -2977,5 +3005,6 @@ extern "C" GenericDbIfce* create() {
 }
 
 extern "C" void destroy(GenericDbIfce* p) {
-    delete p;
+    if(p)
+    	delete p;
 }

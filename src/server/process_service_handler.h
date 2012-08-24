@@ -183,6 +183,23 @@ protected:
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);
 
+                    bool optimize = false;
+                    if (enableOptimization.compare("true") == 0) {
+		        optimize = true;
+                        opt_config = new OptimizerSample();
+			DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
+                        DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                        BufSize = opt_config->getBufSize();
+                        NumOfFiles = opt_config->getNumOfFiles();
+                        StreamsperFile = opt_config->getStreamsperFile();
+                        Timeout = opt_config->getTimeout();                       
+                        delete opt_config;
+                        opt_config = NULL;
+                    }
+
+                    FileTransferScheduler scheduler(temp);
+                    if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
+
                     protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
                     proxy_file = get_proxy_cert(
                             temp->DN, // user_dn
@@ -194,29 +211,6 @@ protected:
                             false,
                             "");
 
-                    bool optimize = false;
-                    if (enableOptimization.compare("true") == 0) {
-		        optimize = true;
-                        opt_config = new OptimizerSample();
-                        DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                        BufSize = opt_config->getBufSize();
-                        NumOfFiles = opt_config->getNumOfFiles();
-                        StreamsperFile = opt_config->getStreamsperFile();
-                        Timeout = opt_config->getTimeout();
-                        if (opt_config->file_id == 0 && BufSize == DEFAULT_BUFFSIZE && Timeout == DEFAULT_TIMEOUT && StreamsperFile == DEFAULT_NOSTREAMS) /*meaning first timer for optimization*/ {
-                            DBSingleton::instance().getDBObjectInstance()->addOptimizer(source_hostname, destin_hostname, temp->FILE_ID, StreamsperFile, Timeout, BufSize, 0);
-                            DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, temp->FILE_ID);
-                        } else {
-
-
-                        }
-
-                        delete opt_config;
-                        opt_config = NULL;
-                    }
-
-                    FileTransferScheduler scheduler(temp);
-                    if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
 
                         sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
                         destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
@@ -379,6 +373,24 @@ protected:
 
                 createJobFile(job_id, urls);
 
+
+		bool optimize = false;
+                /*Use Swei code for bufefr size because it uses RTT and counties and stuff*/
+                if (enableOptimization.compare("true") == 0) {
+		    optimize = true;
+                    opt_config = new OptimizerSample();
+   		    DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
+                    DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                    BufSize = opt_config->getBufSize();
+                    NumOfFiles = opt_config->getNumOfFiles();
+                    StreamsperFile = opt_config->getStreamsperFile();
+                    Timeout = opt_config->getTimeout();
+                    delete opt_config;
+                    opt_config = NULL;
+                }
+
+                FileTransferScheduler scheduler(tempUrl);
+                if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
                 protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
                 proxy_file = get_proxy_cert(
                         dn, // user_dn
@@ -390,30 +402,7 @@ protected:
                         false,
                         "");
 		
-		bool optimize = false;
-                /*Use Swei code for bufefr size because it uses RTT and counties and stuff*/
-                if (enableOptimization.compare("true") == 0) {
-		    optimize = true;
-                    opt_config = new OptimizerSample();
-                    DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                    BufSize = opt_config->getBufSize();
-                    NumOfFiles = opt_config->getNumOfFiles();
-                    StreamsperFile = opt_config->getStreamsperFile();
-                    Timeout = opt_config->getTimeout();
-                    if (opt_config->file_id == 0 && BufSize == DEFAULT_BUFFSIZE && Timeout == DEFAULT_TIMEOUT && StreamsperFile == DEFAULT_NOSTREAMS) /*meaning first timer for optimization*/ {
-                        DBSingleton::instance().getDBObjectInstance()->addOptimizer(source_hostname, destin_hostname, 1, StreamsperFile, Timeout, BufSize, 0);
-                        DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 1);
-                    } else {
 
-
-                    }
-
-                    delete opt_config;
-                    opt_config = NULL;
-                }
-
-                FileTransferScheduler scheduler(tempUrl);
-                if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
                     //set all to ready, special case for session reuse
                     for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
                         TransferFiles* temp = (TransferFiles*) * fileiter;
@@ -537,7 +526,7 @@ protected:
                 if (jobs2.size() > 0)
                     executeUrlcopy(jobs2, true);
 
-                sleep(1);
+                usleep(500000);
             } catch (...) {
                 if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::iterator iter2;

@@ -96,6 +96,7 @@ make %{?_smp_mflags}
 %install
 cd build
 rm -rf $RPM_BUILD_ROOT
+if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/log/fts3
 make install DESTDIR=$RPM_BUILD_ROOT
@@ -135,6 +136,7 @@ exit 0
 
 
 %clean
+if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
 rm -rf $RPM_BUILD_ROOT
 
 

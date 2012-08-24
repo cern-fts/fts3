@@ -158,7 +158,6 @@ void signalHandler(int signum) {
             unlink(readFile.c_str());
         exit(1);
     } else {
-        seteuid(privid);
         logStream << fileManagement.timestamp() << "WARN Interrupt signal received, transfer canceled" << '\n';
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
         msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
@@ -430,6 +429,7 @@ int main(int argc, char **argv) {
         log << fileManagement.timestamp() << "INFO Proxy file:" << proxy << '\n'; //proxy
 
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+
 
         seteuid(pw_uid);
 
