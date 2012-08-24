@@ -17,9 +17,9 @@ cmake_minimum_required(VERSION 2.6)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
-include_directories (BEFORE ../db/generic)
-include_directories (BEFORE ../common)
-include_directories (BEFORE ../config)
+include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
+include_directories (${PROJECT_SOURCE_DIR}/src/common/)
+include_directories (${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (.)
 
 set(fts3_msg_ifce_SOURCES msg-ifce.cpp utility_routines.cpp Logger.cpp)
