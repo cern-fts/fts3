@@ -20,8 +20,8 @@ set(fts3_delegation_api_simple_SOURCES uri.cpp util.cpp cfg.cpp delegation_simpl
 add_library(fts3_delegation_api_simple SHARED ${fts3_delegation_api_simple_SOURCES})
 target_link_libraries(fts3_delegation_api_simple -lgridsite -lglib-2.0 -lgsoap++ -lcgsi_plugin_cpp )
 target_link_libraries(fts3_delegation_api_simple -lfts3_delegation_api_cpp )
-target_link_libraries(fts3_delegation_api_simple -lfts3_common )
-target_link_libraries(fts3_delegation_api_simple -lfts3_config )
+#target_link_libraries(fts3_delegation_api_simple -lfts3_common )
+#target_link_libraries(fts3_delegation_api_simple -lfts3_config )
 
 install(TARGETS         fts3_delegation_api_simple 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
