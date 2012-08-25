@@ -27,7 +27,12 @@ file(GLOB fts3_common_sources "*.cpp")
 add_library(fts3_common SHARED ${fts3_common_sources})
 target_link_libraries(fts3_common ${Boost_LIBRARIES} )
 target_link_libraries(fts3_common -lboost_regex)
-target_link_libraries(fts3_common -lboost_unit_test_framework )
+
+if(FTS3_COMPILE_WITH_UNITTEST)
+	target_link_libraries(fts3_common -lboost_unit_test_framework )
+endif()
+
+
 
 install(TARGETS         fts3_common 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
