@@ -97,6 +97,7 @@ add_library(fts3_ws_ifce_server SHARED
     ${generated_files_dir}/${gsoap_prefix}Server.cpp
 )
 set_target_properties(fts3_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
+add_dependencies(fts3_ws_ifce_server fts3_common)
 target_link_libraries(fts3_ws_ifce_server -lgsoap++)
 
 # Client side library 
