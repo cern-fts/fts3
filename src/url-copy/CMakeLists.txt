@@ -24,6 +24,12 @@ include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/server/)
 include_directories (${PROJECT_SOURCE_DIR}/src/monitoring/)
+
+include_directories (${PROJECT_BINARY_DIR}/src/db/generic/)
+include_directories (${PROJECT_BINARY_DIR}/src/common/)
+include_directories (${PROJECT_BINARY_DIR}/src/server/)
+include_directories (${PROJECT_BINARY_DIR}/src/monitoring/)
+
 include_directories (${fts3_include_dir})
 include_directories (/usr/include/gfal2)
 include_directories (/usr/include/glib-2.0)
