@@ -1,7 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 
 include_directories (.)
-include_directories (../common)
+include_directories (${PROJECT_SOURCE_DIR}/src/common/)
+include_directories (${PROJECT_SOURCE_DIR}/src/config/)
+include_directories (${PROJECT_BINARY_DIR}/src/common/)
+include_directories (${PROJECT_BINARY_DIR}/src/config/)
 include_directories (${PROJECT_BINARY_DIR}/src/ws-ifce/gsoap)
 include_directories (/usr/include/glib-2.0)
 include_directories (/usr/lib64/glib-2.0/include)
