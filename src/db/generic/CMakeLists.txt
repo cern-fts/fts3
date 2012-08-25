@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 include_directories (.)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/config/)
-include_directories (${PROJECT_BINARY_DIR}/src/config/)
+include_directories (${PROJECT_BINARY_DIR}/src/common/)
 include_directories (${PROJECT_BINARY_DIR}/src/config/)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
