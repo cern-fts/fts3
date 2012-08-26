@@ -14,10 +14,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts3_db_generic_SOURCES SingleDbInstance.cpp DynamicLibraryManager.cpp DynamicLibraryManagerException.cpp)
 
 add_library(fts3_db_generic SHARED ${fts3_db_generic_SOURCES})
-target_link_libraries(fts3_db_generic -ldl )
-target_link_libraries(fts3_db_generic -lpthread )
+target_link_libraries(fts3_db_generic -ldl)
+target_link_libraries(fts3_db_generic -lpthread)
 #target_link_libraries(fts3_db_generic -lfts3_common )
-target_link_libraries(fts3_db_generic -lfts3_config )
+target_link_libraries(fts3_db_generic -lfts3_config)
 
 install(TARGETS         fts3_db_generic 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

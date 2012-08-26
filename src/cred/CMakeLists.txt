@@ -18,10 +18,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts3_proxy_SOURCES cred-utility.cpp CredService.cpp DelegCred.cpp utility.cpp)
 
 add_library(fts3_proxy SHARED ${fts3_proxy_SOURCES})
-target_link_libraries(fts3_proxy -ldl )
-target_link_libraries(fts3_proxy -lpthread )
+target_link_libraries(fts3_proxy -ldl)
+target_link_libraries(fts3_proxy -lpthread)
 #target_link_libraries(fts3_proxy -lfts3_common )
-target_link_libraries(fts3_proxy -lfts3_config -lglobus_common -lglobus_gsi_credential )
+target_link_libraries(fts3_proxy -lfts3_config -lglobus_common -lglobus_gsi_credential)
 
 install(TARGETS         fts3_proxy 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
