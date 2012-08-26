@@ -51,9 +51,9 @@ public:
 
 	template<class OP_TYPE>	void enqueue(OP_TYPE& op) {
 		element_type tptr(new Task<OP_TYPE>(op));
-		FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << tptr->id() << " is waiting for enqueuing" << commit;
+		//FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << tptr->id() << " is waiting for enqueuing" << commit;
 		_queue.push(tptr);
-		FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << tptr->id() << " is enqueued" << commit;
+		//FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << tptr->id() << " is enqueued" << commit;
 	}
 
 	element_type pop(const Timeout& td);
@@ -91,7 +91,7 @@ struct NoThreads {
 	{
 		FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "Task (" << desc << ") is executed immediately" << commit;
 		op();
-		FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << " Task is finished" << commit;
+		//FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << " Task is finished" << commit;
 	}
 };
 

@@ -64,13 +64,13 @@ public:
 		std::stringstream s;
 		s << _classPrefix(classPrefix) << postfix;
 		_id = s.str();
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << id() << " created" << commit;
+		//FTS3_COMMON_LOGGER_NEWLOG(INFO) << id() << " created" << commit;
 	}
 	
 	Traced(const Traced& t) : TracedBase(), _id(t._id) {}	
 	
 	virtual ~Traced() {
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << id() << " deleted" << commit;
+		//FTS3_COMMON_LOGGER_NEWLOG(INFO) << id() << " deleted" << commit;
 	}
 	
 	/** Return the object ID. */

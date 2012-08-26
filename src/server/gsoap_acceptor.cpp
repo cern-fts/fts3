@@ -34,7 +34,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), port, 100);
 
     if (sock >= 0) {
-        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service bound to socket " << sock << commit;
+        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
     } else {
         FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
         exit(1);
@@ -64,7 +64,7 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
 
     if (sock >= 0) {
 
-        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New connection, bound to socket " << sock << commit;
+        //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New connection, bound to socket " << sock << commit;
         handler.reset (
         		new GSoapRequestHandler(*this)
         	);

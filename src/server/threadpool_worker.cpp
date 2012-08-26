@@ -30,7 +30,7 @@ Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id)
 	: _tracer("ThreadPoolWorker", id)
 {
 	tg.create_thread(boost::bind(&Worker::_doWork, this));	
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread ID: " << boost::this_thread::get_id() << commit;
+	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread ID: " << boost::this_thread::get_id() << commit;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -43,12 +43,12 @@ void Worker::_doWork()
 
 		if (task.get() != NULL) 
         {
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << _tracer.id() << " is working on " 
+			//FTS3_COMMON_LOGGER_NEWLOG(INFO) << _tracer.id() << " is working on " 
                 << task->id() << commit;
 		
             task->execute();
 			
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << _tracer.id() << " finished " << task->id() << commit;
+            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << _tracer.id() << " finished " << task->id() << commit;
 		}
 	}
 }
