@@ -31,9 +31,9 @@ GSoapRequestHandler::~GSoapRequestHandler() {
 }
 
 void GSoapRequestHandler::handle() {
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
+    //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
     fts3_serve(ctx);
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
+    //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
 }
 
 FTS3_SERVER_NAMESPACE_END

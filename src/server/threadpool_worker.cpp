@@ -44,7 +44,7 @@ void Worker::_doWork()
 		if (task.get() != NULL) 
         {
 			//FTS3_COMMON_LOGGER_NEWLOG(INFO) << _tracer.id() << " is working on " 
-                << task->id() << commit;
+                //<< task->id() << commit;
 		
             task->execute();
 			

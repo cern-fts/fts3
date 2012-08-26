@@ -50,7 +50,7 @@ set(fts3_cli_libs
     ${fts3_cli_internal_libs}
     gridsite
     cgsi_plugin_cpp
-    boost_program_options
+    boost_program_options-mt
     boost_thread-mt
     is_ifce
     fts3_delegation_api_simple

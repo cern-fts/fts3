@@ -33,7 +33,7 @@ link_directories (${PROJECT_BINARY_DIR}/src/monitoring)
 link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli) 
  
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-overflow  -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions -Wsign-conversion -Wsign-promo -Wstrict-overflow=5")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -fno-strict-overflow  -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector -finstrument-functions -Wsign-conversion -Wsign-promo -Wstrict-overflow=5")
 
 
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
@@ -48,6 +48,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     #set(CMAKE_EXE_FLAGS "${CMAKE_EXE_FLAGS} ")
     #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ")
     ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)   
+    #ADD_DEFINITIONS(-D_GLIBCXX_DEBUG)
 endif ()
 
 set(BOOST_LIBRARYDIR /usr/lib64)
