@@ -68,7 +68,7 @@ target_link_libraries(fts3_server_lib
 	-lfts3_server_gsoap_transfer 
 	${LIBUUID_LIBRARIES} 
 	-lboost_thread-mt 
-	-lboost_regex 
+	-lboost_regex-mt 
 	-lis_ifce 
 	-lldap_r 
 	-lglib-2.0 
