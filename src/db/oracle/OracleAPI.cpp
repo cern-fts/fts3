@@ -2513,7 +2513,9 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
         conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
+	      if(s){
 	        conn->destroyStatement(s, tag);	
+	      }
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -2848,6 +2850,8 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;
 	oracle::occi::Statement* s4 = NULL;
+	
+	
     try {
         if (false == conn->checkConn())
             return;
@@ -3043,11 +3047,17 @@ void OracleAPI::updateOptimizer(std::string file_id, double filesize, double tim
         }
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
+	  if(s1 && r1){
 	        conn->destroyResultset(s1, r1);
 	        conn->destroyStatement(s1, tag1);
+		}
+	  if(s2){
 		conn->destroyStatement(s2, tag2);
+		}
+	   if(s3 && r3){
 	        conn->destroyResultset(s3, r3);
 	        conn->destroyStatement(s3, tag3);		
+	  }
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -3219,6 +3229,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 	oracle::occi::ResultSet* r1 = NULL;
 	oracle::occi::Statement* s2 = NULL;
 	oracle::occi::ResultSet* r2 = NULL;
+	
+	
     try {
     
         if (false == conn->checkConn())
@@ -3273,10 +3285,14 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+	      if(s1 && r1){
                 conn->destroyResultset(s1, r1);
                 conn->destroyStatement(s1, tag1);
+		}
+	      if(s2 && r2){	
                 conn->destroyResultset(s2, r2);
                 conn->destroyStatement(s2, tag2);		
+	      }
 	}
         return allowed;
     }
