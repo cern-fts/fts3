@@ -2318,7 +2318,7 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
     std::string query1 = "UPDATE t_credential_cache SET cert_request=:1, priv_key=:2, voms_attrs=:3 WHERE dlg_id=:4 AND dn=:5";
 
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
     oracle::occi::Statement* s1 = NULL;
     try {
@@ -2357,7 +2357,7 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
     const std::string tag = "updateGrDPStorageCacheElement";
     std::string query = "UPDATE t_credential_cache SET cert_request=:1, priv_key=:2, voms_attrs=:3 WHERE dlg_id=:4 AND dn=:5";
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
     try {
     
@@ -2388,7 +2388,7 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
     const std::string tag = "findGrDPStorageCacheElement";
     std::string query = "SELECT dlg_id, dn, voms_attrs, cert_request, priv_key FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     try {
@@ -2429,7 +2429,7 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
     const std::string tag = "deleteGrDPStorageCacheElement";
     std::string query = "DELETE FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     try {
         if (false == conn->checkConn())
             return;    
@@ -2454,7 +2454,7 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
     const std::string tag1 = "updateGrDPStorageElementxxx";
     std::string query1 = "UPDATE t_credential SET proxy = :1, voms_attrs = :2, termination_time = :3 WHERE dlg_id = :4 AND dn = :5";
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
     oracle::occi::Statement* s1 = NULL;
     try {
@@ -2495,7 +2495,7 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
     const std::string tag = "updateGrDPStorageElement";
     std::string query = "UPDATE t_credential SET proxy = :1, voms_attrs = :2, termination_time = :3 WHERE dlg_id = :4 AND dn = :5";
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
     try {
     
@@ -2526,7 +2526,7 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
     const std::string tag = "findGrDPStorageElement";
     std::string query = "SELECT dlg_id, dn, voms_attrs, proxy, termination_time FROM t_credential WHERE dlg_id = :1 AND dn = :2";
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     try {
@@ -2567,7 +2567,7 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
     const std::string tag = "deleteGrDPStorageElement";
     std::string query = "DELETE FROM t_credential WHERE dlg_id = :1 AND dn = :2";
 
-    //ThreadTraits::LOCK lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     try {
     
         if (false == conn->checkConn())
@@ -2931,14 +2931,21 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
-	        conn->destroyResultset(s3, r3);
-	        conn->destroyStatement(s3, tag3);
-	        conn->destroyResultset(s1, r1);
-        	conn->destroyStatement(s1, tag1);
-                conn->destroyResultset(s, r);
-                conn->destroyStatement(s, tag2);				
-		conn->destroyStatement(s, tag);
-		conn->destroyStatement(s4, tag4);				
+		if(s3 && r3){
+	        	conn->destroyResultset(s3, r3);
+	        	conn->destroyStatement(s3, tag3);
+		}
+		if(s1 && r1){
+	        	conn->destroyResultset(s1, r1);
+        		conn->destroyStatement(s1, tag1);
+		}
+		if(s && r){
+                	conn->destroyResultset(s, r);
+                	conn->destroyStatement(s, tag2);				
+		}
+		if(s4){		
+			conn->destroyStatement(s4, tag4);				
+		}
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
