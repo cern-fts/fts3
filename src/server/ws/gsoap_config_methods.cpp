@@ -26,7 +26,9 @@
 #include "db/generic/SingleDbInstance.h"
 
 #include "common/logger.h"
-#include <common/error.h>
+#include "common/error.h"
+
+#include "DrainMode.h"
 
 #include <vector>
 #include <string>
@@ -147,4 +149,10 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 	return SOAP_OK;
 }
 
+/* ---------------------------------------------------------------------- */
 
+int fts3::implcfg__doDrain(soap* soap, bool drain, struct implcfg__doDrainResponse &_param_13) {
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'doDrain' request" << commit;
+	DrainMode::getInstance() = drain;
+	return SOAP_OK;
+}
