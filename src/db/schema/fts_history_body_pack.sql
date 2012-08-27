@@ -31,7 +31,7 @@ as
 begin
   execute immediate('insert into x_jobids
                      select distinct(job_id) from t_job where
-                       t_job.job_state IN (''Finished'', ''Failed'', ''Canceled'', ''FinishedDirty'')
+                       t_job.job_state IN (''FINISHED'', ''FAILED'', ''CANCELED'', ''FINISHEDDIRTY'')
                        and t_job.job_finished < ( systimestamp - interval '''||v_days||''' DAY )
                        and rownum <= '||v_jobs);
 
