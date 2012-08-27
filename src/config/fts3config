@@ -1,4 +1,4 @@
-Port=8080
+Port=8443
 IP=0.0.0.0
 DbConnectString=
 DbType=oracle
