@@ -68,6 +68,13 @@
         </schema>
     </wsdl:types>
 
+    <message name="DrainRequest">
+		<part name="drain" type="xsd:boolean"/>
+    </message>
+
+    <message name="DrainResponse"/>
+
+
     <message name="SetConfigurationRequest">
         <part name="configuration" type="config:Configuration"/>
     </message>
@@ -127,6 +134,14 @@
         <operation name="getConfiguration">
             <input message="impl:GetConfigurationRequest" name="GetConfigurationRequest"/>
             <output message="impl:GetConfigurationResponse" name="GetConfigurationResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="doDrain">
+            <input message="impl:DrainRequest" name="DrainRequest"/>
+            <output message="impl:GetConfigurationResponse" name="DrainResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
@@ -201,6 +216,30 @@
             </input>
 
             <output name="GetConfigurationResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+        
+		<operation name="doDrain">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="DrainRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="DrainResponse">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </output>
 
