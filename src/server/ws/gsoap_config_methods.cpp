@@ -48,7 +48,7 @@ using namespace fts3::ws;
 
 int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__setConfigurationResponse &response) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
 
 	vector<string>& cfgs = _configuration->cfg;
 	vector<string>::iterator it;
@@ -84,7 +84,7 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 
 int fts3::implcfg__getConfiguration(soap* soap, std::string vo, std::string name, struct implcfg__getConfigurationResponse & response) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
 
 	response.configuration = soap_new_config__Configuration(soap, -1);
 	try {
@@ -116,7 +116,7 @@ int fts3::implcfg__getConfiguration(soap* soap, std::string vo, std::string name
 
 int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__delConfigurationResponse &_param_11) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delConfiguration' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delConfiguration' request" << commit;
 
 	vector<string>& cfgs = _configuration->cfg;
 	vector<string>::iterator it;
@@ -152,7 +152,8 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 /* ---------------------------------------------------------------------- */
 
 int fts3::implcfg__doDrain(soap* soap, bool drain, struct implcfg__doDrainResponse &_param_13) {
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'doDrain' request" << commit;
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turing " << (drain ? "on" : "off") << " the drain mode" << commit;
 	DrainMode::getInstance() = drain;
 	return SOAP_OK;
 }

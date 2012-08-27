@@ -184,9 +184,16 @@ ConfigurationHandler::~ConfigurationHandler() {
 
 void ConfigurationHandler::add() {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is setting a configuration for ";
+
 	if (type == CfgBlocks::SE_TYPE) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "SE: " << name << commit;
 		addSeConfiguration();
+
 	} else if (type == CfgBlocks::GROUP_TYPE) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "SE group: " << name << commit;
 		addGroupConfiguration();
 	}
 
@@ -478,6 +485,21 @@ void ConfigurationHandler::addSeConfiguration() {
 // TODO create CfgBuilder !!!
 vector<string> ConfigurationHandler::get(string vo, string name) {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is getting configuration";
+	if (!vo.empty() || !name.empty()) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << " for";
+
+		if (!vo.empty()) {
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " VO: " << vo;
+		}
+
+		if (!name.empty()) {
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " name: " << name;
+		}
+	}
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
+
 	to_lower(vo);
 	to_lower(name);
 
@@ -595,6 +617,8 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 }
 
 void ConfigurationHandler::del() {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is deleting configuration" << commit;
 
 	// handle protocol parameters
 	if (cfgProtocolParams) {
