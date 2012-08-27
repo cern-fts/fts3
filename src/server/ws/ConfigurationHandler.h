@@ -19,7 +19,7 @@
  * ConfigurationHandler.h
  *
  *  Created on: Jun 26, 2012
- *      Author: simonm
+ *      Author: Michał Simon
  */
 
 #ifndef CONFIGURATIONHANDLER_H_
@@ -33,9 +33,11 @@
 #include <boost/assign.hpp>
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "common/error.h"
 #include "common/logger.h"
+#include "common/CfgBlocks.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -56,71 +58,24 @@ class ConfigurationHandler {
 public:
 
 	/**
-	 * Enumeration that enumerates all
-	 * important configuration parameters
-	 * in the regular expression that
-	 * describes the JSON SE configuration
+	 * Functional object that replaces fts3 wildcard '*' with sql wild card '%'
 	 */
-	enum {
-		/// the whole JSON configuration (if the configuration matches the regular expression it is stored under index=0)
-		ALL = 0,
-		/// SE or SE group name
-		NAME,
-		/// the entity type: SE or SE group
-		TYPE,
-		/// the active state: true or false
-		ACTIVE = 4,
-		/// group members (list of SE names)
-		MEMBERS = 6,
-		/// protocol (object)
-		PROTOCOL = 8,
-		/// protocol pair configuration
-		PROTOCOL_PAIR = 10,
-		/// protocol parameters (list of parameter objects)
-		PROTOCOL_PARAMETERS,
-		/// share configuration (substructure)
-		SHARE = 13,
-		/// share type ('public', 'vo' or 'pair')
-		SHARE_TYPE,
-		/// the share id
-		SHARE_ID = 16,
-		/// inbound credits
-		IN = 18,
-		/// outbound credits
-		OUT,
-		/// share policy (exclusive or shared)
-		POLICY
-	};
+	struct WildcardReplacer {
+
+		/**
+		 * Replaces fts wildcard ('*') with sql wildcard ('%') in a given string
+		 *
+		 * @param str - the string that is being processed
+		 */
+		void operator() (string& str) {
+			replace_all(str, CfgBlocks::FTS_WILDCARD, CfgBlocks::SQL_WILDCARD);
+		}
+	} replacer; //< WildcardReplacer object
 
 	/**
 	 * protocol parameters
 	 */
 	struct ProtocolParameters {
-//
-//	public:
-//
-//		ProtocolParameters(): parameters (
-//				list_of
-//				(BANDWIDTH)
-//				(NOSTREAMS)
-//				(TCP_BUFFER_SIZE)
-//				(NOMINAL_THROUGHPUT)
-//				(BLOCKSIZE)
-//				(HTTP_TO)
-//				(URLCOPY_PUT_TO)
-//				(URLCOPY_PUTDONE_TO)
-//				(URLCOPY_GET_TO)
-//				(URLCOPY_GET_DONETO)
-//				(URLCOPY_TX_TO)
-//				(URLCOPY_TXMARKS_TO)
-//				(URLCOPY_FIRST_TXMARK_TO)
-//				(TX_TO_PER_MB)
-//				(NO_TX_ACTIVITY_TO)
-//				(PREPARING_FILES_RATIO).to_container(parameters)
-//			) {
-//
-//		}
-//
 		static const string BANDWIDTH;
 		static const string NOSTREAMS;
 		static const string TCP_BUFFER_SIZE;
@@ -137,27 +92,7 @@ public:
 		static const string TX_TO_PER_MB;
 		static const string NO_TX_ACTIVITY_TO;
 		static const string PREPARING_FILES_RATIO;
-//
-//		bool isProtocolParameter(const string name) {
-//			return parameters.count(name);
-//		}
-//
-//	private:
-//
-//		const set<string> parameters;
 	};
-
-	/// SE type: 'se'
-	static const string SE_TYPE;
-	/// SE group type: 'group'
-	static const string GROUP_TYPE;
-
-	/// publicshare: 'public'
-	static const string PUBLIC_SHARE;
-	/// voshare: 'vo'
-	static const string VO_SHARE;
-	/// pairshare: 'pair'
-	static const string PAIR_SHARE;
 
 	/**
 	 * Constructor
@@ -180,60 +115,6 @@ public:
 	 * 	@param configuration - string containing the configuration in JSON format
 	 */
 	void parse(string configuration);
-
-	/**
-	 * Retrieves the variable name from JSON sub-configuration
-	 *
-	 * @param cfg - the string containing the sub-configuration
-	 *
-	 * @return the name of the variable
-	 */
-	string getName(string cfg);
-
-	/**
-	 * Retrieves a numeric value from JSON sub-configuration
-	 *
-	 * @param cfg - the string containing the sub-configuration
-	 *
-	 * @return the numeric value of the variable
-	 */
-	int getNumber(string cfg);
-
-	/**
-	 * Retrieves a string value from JSON sub-configuration
-	 *
-	 * @param cfg - the string containing the sub-configuration
-	 *
-	 * @return the string value of the variable
-	 */
-	string getString(string cfg );
-
-	/**
-	 * Retrieves a vector value from JSON sub-configuration
-	 *
-	 * @param cfg - the string containing the sub-configuration
-	 *
-	 * @return the vector value of the variable
-	 */
-	vector<string> getVector(string cfg);
-
-	/**
-	 * Retrieves a map value from JSON sub-configuration
-	 *
-	 * @param cfg - the string containing the sub-configuration
-	 *
-	 * @return the vector value of the variable
-	 */
-	map<string, int> getMap(string cfg);
-
-	/**
-	 * Gets an integer value from the parameters map
-	 *
-	 * @param key - the key used for getting the value from the map
-	 *
-	 * @return integer value (0 if the value string is empty)
-	 */
-	int getParamValue(const string key);
 
 	/*
 	 * Checks if the SE exists, if not adds it to the DB
@@ -321,34 +202,16 @@ public:
 
 private:
 
-	/// regular expression describing the whole configuration in JSON format
-	static const string cfg_exp;
-	/// regular expression used for retrieving the variable name from sub-configuration
-	static const string get_name_exp;
-	/// regular expression used for retrieving the variable boolean value from sub-configuration
-	static const string get_bool_exp;
-	/// regular expression used for retrieving the variable numeric value from sub-configuration
-	static const string get_num_exp;
-	/// regular expression used for retrieving the variable string value from sub-configuration
-	static const string get_str_exp;
-	/// regular expression used for retrieving the variable vector value from sub-configuration
-	static const string get_vec_exp;
-
-	/// JSON null string = 'null'
-	static const string null_str;
-
-	/// regular expression object corresponding to 'cfg_exp'
-	regex cfg_re;
-	/// regular expression object corresponding to 'get_name_exp'
-	regex get_name_re;
-	/// regular expression object corresponding to 'get_bool_exp'
-	regex get_bool_re;
-	/// regular expression object corresponding to 'get_num_exp'
-	regex get_num_re;
-	/// regular expression object corresponding to 'get_str_exp'
-	regex get_str_re;
-	/// regular expression object corresponding to 'get_vec_exp'
-	regex get_vec_re;
+	/**
+	 * Converts boolean to string:
+	 * 	true 	-> 'true'
+	 * 	false 	-> 'false'
+	 *
+	 * 	@param b - boolean value
+	 *
+	 * 	@return if the parameter was true - 'true', otherwise 'false'
+	 */
+	string str(bool b);
 
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
@@ -360,14 +223,14 @@ private:
 	/// entity type: 'se' or 'group'
 	string type;
 	/// active state
-	string active;
+	bool active;
 	/// group members (list of SE names'
 	vector<string> members;
 
 	/// share type: 'public', 'vo' or 'pair'
 	string share_type;
 	/// share id
-	string share_id;
+	string id;
 	/// inbound credits
 	int in;
 	/// outbound credits
@@ -381,6 +244,8 @@ private:
 	bool cfgMembers;
 	/// true if protocol parameters have been given, false otherwise
 	bool cfgProtocolParams;
+	/// true if protocol pair have been specified, false otherwise
+	bool cfgProtocolPair;
 	/// true if share configuration has been defined, false otherwise
 	bool cfgShare;
 
@@ -402,7 +267,6 @@ private:
 	int deleteCount;
 	/// number of debug cmd triggered by configuration command
 	int debugCount;
-
 };
 
 }

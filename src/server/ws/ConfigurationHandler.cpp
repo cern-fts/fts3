@@ -24,75 +24,16 @@
 
 #include "ConfigurationHandler.h"
 
+#include <sstream>
+#include <algorithm>
+
+#include <boost/optional.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
+
+#include "common/CfgParser.h"
 
 using namespace fts3::ws;
-
-const string ConfigurationHandler::cfg_exp =
-		"\\s*\\{\\s*"
-			"(\"name\"\\s*:\\s*\"[\\*a-zA-Z0-9\\.-]+\")\\s*,\\s*"
-			"(\"type\"\\s*:\\s*\"(se|group)\")\\s*,?\\s*"
-			"(\"active\"\\s*:\\s*\"(true|false)\")?\\s*,?\\s*"
-			"(\"members\"\\s*:\\s*\\[(\\s*\"[\\*a-zA-Z0-9\\.-]+\"\\s*,?\\s*)+\\])?\\s*,?\\s*"
-			"("
-				"\"protocol\"\\s*:\\s*"
-				"\\s*\\{\\s*"
-					"((\"pair\"\\s*:\\s*\"[\\*a-zA-Z0-9\\.-]+\")\\s*,\\s*)?"
-					"("
-						"\"parameters\"\\s*:\\s*\\["
-							"("
-							"\\s*\\{\\s*"
-								"\"name\"\\s*:\\s*\"[a-zA-Z0-9\\.-_]+\"\\s*,\\s*"
-								"\"value\"\\s*:\\s*\\d+\\s*"
-							"\\s*\\}\\s*,?\\s*"
-							")+"
-						"\\]"
-					")"
-				"\\s*\\}\\s*"
-			")?\\s*,?\\s*"
-			"("
-				"\"share\"\\s*:\\s*"
-				"\\s*\\{\\s*"
-					"(\"share_type\"\\s*:\\s*\"(public|vo|pair)\")\\s*,\\s*"
-					"(\"share_id\"\\s*:\\s*(null|\".+\"))\\s*,\\s*"
-					"(\"in\"\\s*:\\s*\\d+)\\s*,\\s*"
-					"(\"out\"\\s*:\\s*\\d+)\\s*,\\s*"
-					"(\"policy\"\\s*:\\s*\"(shared|exclusive)\")"
-				"\\s*\\}\\s*"
-			")?"
-		"\\s*\\}\\s*"
-		;
-
-const string ConfigurationHandler::get_name_exp =
-		"\\s*\"(.+)\"\\s*:\\s*.+\\s*"
-		;
-
-const string ConfigurationHandler::get_bool_exp =
-		"\\s*\".+\"\\s*:\\s*(true|false)\\s*"
-		;
-
-const string ConfigurationHandler::get_num_exp =
-		"\\s*\".+\"\\s*:\\s*(\\d+)\\s*"
-		;
-
-const string ConfigurationHandler::get_str_exp =
-		"\\s*\\{?\\s*\".+\"\\s*:\\s*((null)|\"(.+)\")\\s*\\}?\\s*"
-		;
-
-const string ConfigurationHandler::get_vec_exp =
-		"\\s*\".+\"\\s*:\\s*\\[(.+)\\]\\s*"
-		;
-
-const string ConfigurationHandler::null_str = "null";
-
-const string ConfigurationHandler::SE_TYPE = "se";
-const string ConfigurationHandler::GROUP_TYPE = "group";
-
-const string ConfigurationHandler::PUBLIC_SHARE = "public";
-const string ConfigurationHandler::VO_SHARE = "vo";
-const string ConfigurationHandler::PAIR_SHARE = "pair";
 
 
 const string ConfigurationHandler::ProtocolParameters::BANDWIDTH = "bandwidth";
@@ -119,199 +60,133 @@ ConfigurationHandler::ConfigurationHandler(string dn):
 		deleteCount(0),
 		debugCount(0),
 		dn(dn),
-		db (DBSingleton::instance().getDBObjectInstance()),
-		cfg_re(cfg_exp),
-		get_name_re(get_name_exp),
-		get_bool_re(get_bool_exp),
-		get_str_re(get_str_exp),
-		get_num_re(get_num_exp),
-		get_vec_re(get_vec_exp) {
+		db (DBSingleton::instance().getDBObjectInstance()) {
 }
 
 void ConfigurationHandler::parse(string configuration) {
 
 	to_lower(configuration);
 
-	smatch what;
-	bool matches = regex_match(configuration, what, cfg_re, match_extra);
-	if(!matches){
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Wrong configuration format!" << commit;
-		throw Err_Custom("Wrong configuration format!");
-	}
+	CfgParser parser (configuration);
 
 	// the whole cfg cmd
-	all = what[ALL];
+	all = configuration;
 
-	// get the name and type
-	name = getString(what[NAME]);
-	type = getString(what[TYPE]);
+	// get the SE/SE group name
+	optional<string> name = parser.get<string>("name");
+	if (name.is_initialized()) {
+		this->name = name.get();
+	} else {
+		// name is not optional!!!
+		throw Err_Custom("SE/SE group name is obligatory");
+	}
+
+	// get the type
+	optional<string> type = parser.get<string>("type");
+	if (type.is_initialized()) {
+		this->type = type.get();
+		// make sure the type is either 'se' or 'group'
+        if (!CfgBlocks::isValidType(this->type)) {
+        	throw Err_Custom("configuration type value may be either 'se' or 'group'");
+        }
+	} else {
+		// type is also obligatory!!!
+		throw Err_Custom("configuration type is obligatory");
+	}
 
 	// handle active state
-	string active_str = what[ACTIVE];
-	cfgActive = !active_str.empty();
-	if (cfgActive) {
-		active = getString(active_str);
+	optional<bool> active = parser.get<bool>("active");
+	if ( (cfgActive = active.is_initialized()) ) {
+		this->active = active.get();
 	}
 
 	// handle members
-	string members_str = what[MEMBERS];
-	cfgMembers = !members_str.empty();
-	if (cfgMembers) {
-		members = getVector(members_str);
+	optional< vector<string> > members = parser.get< vector<string> >("members");
+	if ( (cfgMembers = members.is_initialized()) ) {
+
+		if (this->type == CfgBlocks::SE_TYPE)
+			throw Err_Custom("the member array may only be specified for a SE group");
+
+		this->members = members.get();
+	}
+
+	// handle protocol pair
+	optional<string> protocol_pair = parser.get<string>("protocol.pair");
+	if ( (cfgProtocolPair = protocol_pair.is_initialized()) ) {
+		this->protocol_pair = protocol_pair.get();
 	}
 
 	// handle protocol parameters
-	string protocol_str = what[PROTOCOL];
-	cfgProtocolParams = !protocol_str.empty();
-	if (cfgProtocolParams) {
-		protocol_pair = getString(what[PROTOCOL_PAIR]);
-		parameters = getMap(what[PROTOCOL_PARAMETERS]);
+	optional< map<string, int> > parameters = parser.get< map<string, int> >("protocol.parameters");
+	if ( (cfgProtocolParams = parameters.is_initialized()) ){
+		this->parameters = parameters.get();
 	}
 
-	// handle share configuration
-	cfgShare = !string(what[SHARE]).empty();
-	if (cfgShare) {
-		share_type = getString(what[SHARE_TYPE]);
-		share_id = getString(what[SHARE_ID]);
-		in = getNumber(what[IN]);
-		out = getNumber(what[OUT]);
-		policy = getString(what[POLICY]);
+	// handle share configuration:
+	optional<string> share_type = parser.get<string>("share.type");
+	if ( (cfgShare = share_type.is_initialized()) ) {
+
+		this->share_type = share_type.get();
+		// make sure the type is either 'public', 'vo' or 'pair'
+        smatch what;
+        if (!CfgBlocks::isValidShareType(this->share_type)) {
+        	throw Err_Custom("share type value may be either 'public', 'vo' or 'pair'");
+        }
+
+		optional<string> id = parser.get<string>("share.id");
+
+		if (this->share_type != CfgBlocks::PUBLIC_SHARE_TYPE && !id.is_initialized()) {
+			throw Err_Custom("the share.id has to be specified for " + this->share_type);
+		}
+
+		if (id.is_initialized()) {
+			if (this->share_type == CfgBlocks::PUBLIC_SHARE_TYPE )
+				throw Err_Custom("the share.id should not be specified for public-share");
+
+			this->id = id.get();
+		}
+
+		optional<int> in = parser.get<int>("share.in");
+		if (!in.is_initialized())
+			throw Err_Custom("the share.in has to be specified");
+
+		this->in = in.get();
+
+		optional<int> out = parser.get<int>("share.out");
+		if (!out.is_initialized())
+			throw Err_Custom("the share.out has to be specified");
+
+		this->out = out.get();
+
+		optional<string> policy = parser.get<string>("share.policy");
+		if (!policy.is_initialized())
+			throw Err_Custom("the share.policy has to be specified");
+
+		this->policy = policy.get();
+
+		// make sure the policy is either 'shared' or 'exclusive'
+        if (!CfgBlocks::isValidPolicy(this->policy)) {
+        	throw Err_Custom("share policy value may be either 'shared' or 'exclusive'");
+        }
 	}
 
-	// check the following constraints:
+	// handle wildcards
+	replacer(this->name);
+	replacer(this->protocol_pair);
+	replacer(this->id);
 
-	// in case if it is a public share the share_id has to be 'null'
-	if (share_type == PUBLIC_SHARE && share_id != null_str)
-		throw Err_Custom("The share_id for public share has to be 'null'!");
-
-	// a SE configuration cannot have members
-	if (type == SE_TYPE && cfgMembers)
-		throw Err_Custom("Wrong configuration format: A SE configuration may not have members entry!");
+	for_each(this->members.begin(), this->members.end(), replacer);
 }
 
 ConfigurationHandler::~ConfigurationHandler() {
 
 }
 
-string ConfigurationHandler::getName(string cfg) {
-
-	if (cfg.empty()) return string();
-
-	static const int VALUE = 1;
-	smatch what;
-	regex_match(cfg, what, get_name_re, match_extra);
-
-	return what[VALUE];
-}
-
-int ConfigurationHandler::getNumber(string cfg) {
-
-	if (cfg.empty()) return 0;
-
-	static const int VALUE = 1;
-	smatch what;
-	regex_match(cfg, what, get_num_re, match_extra);
-	string value = what[VALUE];
-
-	if (value.empty()) return 0;
-
-	return lexical_cast<int>(value);
-}
-
-string ConfigurationHandler::getString(string cfg) {
-
-	if (cfg.empty()) return string();
-
-	static const int STR_NULL = 2;
-	static const int VALUE = 3;
-
-	smatch what;
-	regex_match(cfg, what, get_str_re, match_extra);
-
-	string null = what[STR_NULL];
-	if (!null.empty()) {
-		return null_str;
-	}
-
-	string ret = what[VALUE];
-	replace_all(ret, "*", "%");
-
-	return ret;
-}
-
-vector<string> ConfigurationHandler::getVector(string cfg) {
-
-	if (cfg.empty()) return vector<string>();
-
-	static const int VALUE = 1;
-
-	smatch what;
-	regex_match(cfg, what, get_vec_re, match_extra);
-	string tmp = what[VALUE];
-
-	char_separator<char> sep(",\"");
-	tokenizer< char_separator<char> > tokens(tmp, sep);
-	tokenizer< char_separator<char> >::iterator it;
-
-	vector<string> ret;
-
-	for(it = tokens.begin(); it != tokens.end(); it++) {
-		string s = *it;
-		replace_all(s, "*", "%");
-		ret.push_back(s);
-	}
-
-	return ret;
-}
-
-map<string, int> ConfigurationHandler::getMap(string cfg) {
-
-	if (cfg.empty()) return map<string, int>();
-
-	static const int VALUE = 1;
-	static const int MAP_KEY = 1;
-	static const int MAP_VALUE = 2;
-
-	smatch what;
-	regex_match(cfg, what, get_vec_re, match_extra);
-	string tmp = what[VALUE];
-
-	char_separator<char> sep(",{}");
-	tokenizer< char_separator<char> > tokens(tmp, sep);
-	tokenizer< char_separator<char> >::iterator it;
-
-	map<string, int> ret;
-
-	for(it = tokens.begin(); it != tokens.end(); it++) {
-
-		string entry = *it;
-		string k = getString(entry);
-
-		++it;
-		entry = *it;
-		int v = getNumber(entry);
-		ret[k] = v;
-	}
-
-	return ret;
-}
-
-int ConfigurationHandler::getParamValue(const string key) {
-
-	map<string, int>::iterator it = parameters.find(key);
-
-	if (it == parameters.end()) {
-		return 0;
-	}
-
-	return it->second;
-}
-
 void ConfigurationHandler::add() {
 
-	if (type == SE_TYPE) {
+	if (type == CfgBlocks::SE_TYPE) {
 		addSeConfiguration();
-	} else if (type == GROUP_TYPE) {
+	} else if (type == CfgBlocks::GROUP_TYPE) {
 		addGroupConfiguration();
 	}
 
@@ -331,10 +206,10 @@ set<string> ConfigurationHandler::handleSeName(string name) {
 	set<string> matches = db->getAllMatchingSeNames(name);
 	// check if it is already in DB
 	if (matches.empty()) {
-		// make sure it's not a name with a wildmark
-		size_t found = name.find("%");
+		// make sure it's not a name with a wildcard
+		size_t found = name.find(CfgBlocks::SQL_WILDCARD);
 		if (found != string::npos)
-			throw Err_Custom("Wildmarks are not allowed for SEs that do not exist in the DB!");
+			throw Err_Custom("Wildcards are not allowed for SEs that do not exist in the DB!");
 		// if not, add a new SE record to the DB
 		db->addSe("", "", "", name, "", "", "", "", "", "", "");
 		insertCount++;
@@ -349,30 +224,32 @@ shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig(string name
 
 	shared_ptr<SeProtocolConfig> ret(new SeProtocolConfig);
 
-	if (type == SE_TYPE) {
+	if (type == CfgBlocks::SE_TYPE) {
 
 		ret->SE_NAME = name;
 
-	} else if (type == GROUP_TYPE) {
+	} else if (type == CfgBlocks::GROUP_TYPE) {
 
 		ret->SE_GROUP_NAME = name;
 	}
 
-	ret->BANDWIDTH = getParamValue(ProtocolParameters::BANDWIDTH);
-	ret->NOSTREAMS = getParamValue(ProtocolParameters::NOSTREAMS);
-	ret->TCP_BUFFER_SIZE = getParamValue(ProtocolParameters::TCP_BUFFER_SIZE);
-	ret->NOMINAL_THROUGHPUT = getParamValue(ProtocolParameters::NOMINAL_THROUGHPUT);
-	ret->BLOCKSIZE = getParamValue(ProtocolParameters::BLOCKSIZE);
-	ret->HTTP_TO = getParamValue(ProtocolParameters::HTTP_TO);
-	ret->URLCOPY_PUT_TO = getParamValue(ProtocolParameters::URLCOPY_PUT_TO);
-	ret->URLCOPY_PUTDONE_TO = getParamValue(ProtocolParameters::URLCOPY_PUTDONE_TO);
-	ret->URLCOPY_GET_TO = getParamValue(ProtocolParameters::URLCOPY_GET_TO);
-	ret->URLCOPY_GETDONE_TO = getParamValue(ProtocolParameters::URLCOPY_GET_DONETO);
-	ret->URLCOPY_TX_TO = getParamValue(ProtocolParameters::URLCOPY_TX_TO);
-	ret->URLCOPY_TXMARKS_TO = getParamValue(ProtocolParameters::URLCOPY_TXMARKS_TO);
-	ret->TX_TO_PER_MB = getParamValue(ProtocolParameters::TX_TO_PER_MB);
-	ret->NO_TX_ACTIVITY_TO = getParamValue(ProtocolParameters::NO_TX_ACTIVITY_TO);
-	ret->PREPARING_FILES_RATIO = getParamValue(ProtocolParameters::PREPARING_FILES_RATIO);
+	// we are relaying here on the fact that if a parameter is not in the map
+	// the default value will be returned which is 0
+	ret->BANDWIDTH = parameters[ProtocolParameters::BANDWIDTH];
+	ret->NOSTREAMS = parameters[ProtocolParameters::NOSTREAMS];
+	ret->TCP_BUFFER_SIZE = parameters[ProtocolParameters::TCP_BUFFER_SIZE];
+	ret->NOMINAL_THROUGHPUT = parameters[ProtocolParameters::NOMINAL_THROUGHPUT];
+	ret->BLOCKSIZE = parameters[ProtocolParameters::BLOCKSIZE];
+	ret->HTTP_TO = parameters[ProtocolParameters::HTTP_TO];
+	ret->URLCOPY_PUT_TO = parameters[ProtocolParameters::URLCOPY_PUT_TO];
+	ret->URLCOPY_PUTDONE_TO = parameters[ProtocolParameters::URLCOPY_PUTDONE_TO];
+	ret->URLCOPY_GET_TO = parameters[ProtocolParameters::URLCOPY_GET_TO];
+	ret->URLCOPY_GETDONE_TO = parameters[ProtocolParameters::URLCOPY_GET_DONETO];
+	ret->URLCOPY_TX_TO = parameters[ProtocolParameters::URLCOPY_TX_TO];
+	ret->URLCOPY_TXMARKS_TO = parameters[ProtocolParameters::URLCOPY_TXMARKS_TO];
+	ret->TX_TO_PER_MB = parameters[ProtocolParameters::TX_TO_PER_MB];
+	ret->NO_TX_ACTIVITY_TO = parameters[ProtocolParameters::NO_TX_ACTIVITY_TO];
+	ret->PREPARING_FILES_RATIO = parameters[ProtocolParameters::PREPARING_FILES_RATIO];
 
 	return ret;
 }
@@ -381,25 +258,20 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 
 	set<string> matchingPairNames;
 	// check if its a pair share
-	if (share_type == PAIR_SHARE) {
+	if (share_type == CfgBlocks::PAIR_SHARE_TYPE) {
 		// check if the SE (it's a SE because it's only allowed for SEs) is in the DB
-		matchingPairNames = handleSeName(share_id);
+		matchingPairNames = handleSeName(id);
 	}
 
 	// the share_id for the DB
-	string id =
-			"\"share_type\":\"" +
-			share_type +
-			"\",\"share_id\":" +
-			(share_id == null_str ? null_str : ("\"" + share_id + "\""))
-			;
+	string share_id = CfgBlocks::shareId(share_type, id);
 
 	// the share_value for the DB
-	string value =
-			"\"in\":" + lexical_cast<string>(in) +
-			",\"out\":" + lexical_cast<string>(out) +
-			",\"policy\":\"" + policy + "\""
-			;
+	string value = CfgBlocks::shareValue(
+			lexical_cast<string>(in),
+			lexical_cast<string>(out),
+			policy
+		);
 
 	// loop for each se or se group name that was matching the given patter
 	set<string>::iterator n_it;
@@ -410,10 +282,10 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 		vector<SeAndConfig*>::iterator it;
 
 		// check if the 'SeConfig' entry exists in the DB
-		db->getAllShareAndConfigWithCritiria(seAndConfig, *n_it, id, type, string());
+		db->getAllShareAndConfigWithCritiria(seAndConfig, *n_it, share_id, type, string());
 		if (!seAndConfig.empty()) {
 			// the cfg is already in DB
-			// due to the wildmarks in share_id there might be more than one share cfgs
+			// due to the wildcards in share_id there might be more than one share cfgs
 			for (it = seAndConfig.begin(); it < seAndConfig.end(); it++) {
 
 				SeAndConfig* tmp = *it;
@@ -440,26 +312,26 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 			}
 
 			// for public share there is only one entry so we are done
-			// for vo share without wildmarks there is only one entry so we are done
-			// for vo share with wildmarks it is not possible to insert new entry into the
-			// DB, the only think we can do is to update some entries therefore we are done
-			if (share_type == PUBLIC_SHARE || share_type == VO_SHARE) continue;
+			// for vo share without wildcards there is only one entry so we are done
+			// for vo share with wildcards it is not possible to insert new entry into the
+			// DB, the only thing we can do is to update some entries therefore we are done
+			if (share_type == CfgBlocks::PUBLIC_SHARE_TYPE || share_type == CfgBlocks::VO_SHARE_TYPE) continue;
 		}
 
 		// the SE don't have the corresponding cfg entry in the DB
 		// if the share cfg is a public share add an entry to the DB
-		// if the share cfg is a vo share check first if there's a wildmark in the
+		// if the share cfg is a vo share check first if there's a wildcard in the
 		//	VO name, if yes throw an exception, otherwise add an entry to the DB
-		// if the share cfg is a pair share and if the pair se name has a wildmark
+		// if the share cfg is a pair share and if the pair se name has a wildcard
 		//	find all SEs of interested and create the share cfgs for all of them
 
-		if (share_type == PAIR_SHARE) {
+		if (share_type == CfgBlocks::PAIR_SHARE_TYPE) {
 
 			set<string>::iterator pn_it;
 			for (pn_it = matchingPairNames.begin(); pn_it != matchingPairNames.end(); pn_it++) {
 
 				// the share_id for the DB
-				string id = "\"share_type\":\"pair\",\"share_id\":\"" + *pn_it + "\"";
+				string id = CfgBlocks::pairShare(*pn_it);
 				// check if the share_id is already in DB
 				if (share_ids.count(id)) continue;
 
@@ -471,15 +343,15 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 
 		} else {
 
-			if (share_type == VO_SHARE) {
+			if (share_type == CfgBlocks::VO_SHARE_TYPE) {
 				// it's not in the database
-				size_t found = share_id.find("%");
+				size_t found = share_id.find(CfgBlocks::SQL_WILDCARD);
 				if (found != string::npos)
-					throw Err_Custom("A share configuration cannot be created for a VO share with a wildmark!");
+					throw Err_Custom("A share configuration cannot be created for a VO share with a wildcard!");
 			}
 
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Adding new 'SeConfig' record to the DB ..." << commit;
-			db->addSeConfig(*n_it, id, type, value);
+			db->addSeConfig(*n_it, share_id, type, value);
 			insertCount++;
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New 'SeConfig' record has been added to the DB!" << commit;
 		}
@@ -489,14 +361,14 @@ void ConfigurationHandler::addShareConfiguration(set<string> matchingNames) {
 void ConfigurationHandler::addActiveStateConfiguration(set<string> matchingNames) {
 
 	set<string>::iterator it;
-	if (type == SE_TYPE) {
+	if (type == CfgBlocks::SE_TYPE) {
 		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
-			db->setGroupOrSeState(*it, string(), active);
+			db->setGroupOrSeState(*it, string(), str(active));
 			updateCount++;
 		}
-	} else if (type == GROUP_TYPE) {
+	} else if (type == CfgBlocks::GROUP_TYPE) {
 		for (it = matchingNames.begin(); it != matchingNames.end(); it++) {
-			db->setGroupOrSeState(string(), *it, active);
+			db->setGroupOrSeState(string(), *it, str(active));
 			updateCount++;
 		}
 	}
@@ -508,7 +380,7 @@ void ConfigurationHandler::addGroupConfiguration() {
 
 	set<string> matchingNames;
 	// check if it's a pattern or a new SE group name
-	if (name.find("%") == string::npos) {
+	if (name.find(CfgBlocks::SQL_WILDCARD) == string::npos) {
 		matchingNames.insert(name);
 	} else {
 		matchingNames = db->getAllMatchingSeGroupNames(name);
@@ -602,21 +474,23 @@ void ConfigurationHandler::addSeConfiguration() {
 
 }
 
+
+// TODO create CfgBuilder !!!
 vector<string> ConfigurationHandler::get(string vo, string name) {
 
 	to_lower(vo);
 	to_lower(name);
 
-	replace_all(vo, "*", "%");
-	replace_all(name, "*", "%");
+	replacer(vo);
+	replacer(name);
 
-	// if the name was not provided replace the empty string with a wildmark
+	// if the name was not provided replace the empty string with a wildcard
 	if (name.empty()) {
-		name = "%";
+		name = CfgBlocks::SQL_WILDCARD;
 	}
 
 	// prepare the share id (if the vo name was not provided it should be empty)
-	const string share_id = vo.empty() ? string() : "\"share_type\":\"vo\",\"share_id\":\"" + vo + "\"";
+	const string share_id = vo.empty() ? string() : CfgBlocks::voShare(vo);
 
 	// check the share configuration both for a SE and a SE group
 	vector<SeAndConfig*> seAndConfig;
@@ -645,7 +519,7 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 	// if we are looking for vo settings that's it!
 	if (!vo.empty()) return ret;
 
-	// get all matching names, it can be both SE and SE group names (since the user may give just a wildmark as the name)
+	// get all matching names, it can be both SE and SE group names (since the user may give just a wildcard as the name)
 	set<string> matchingNames[2];
 	matchingNames[0] = db->getAllMatchingSeNames(name);
 	matchingNames[1] = db->getAllMatchingSeGroupNames(name);
@@ -669,7 +543,7 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 				string resp =
 					"{"
 						"\"name\":\"" + *it + "\","
-						"\"type\":\"" + (isGroup ? GROUP_TYPE : SE_TYPE) + "\","
+						"\"type\":\"" + (isGroup ? CfgBlocks::GROUP_TYPE : CfgBlocks::SE_TYPE) + "\","
 						"\"protocol\":"
 						"{";
 				if (cfg->URLCOPY_TX_TO) {
@@ -702,7 +576,7 @@ vector<string> ConfigurationHandler::get(string vo, string name) {
 		string resp =
 				"{"
 					"\"name\":\"" + *it + "\","
-					"\"type\":\"" + GROUP_TYPE + "\","
+					"\"type\":\"" + CfgBlocks::GROUP_TYPE + "\","
 					"\"members\":["
 				;
 
@@ -725,14 +599,14 @@ void ConfigurationHandler::del() {
 	// handle protocol parameters
 	if (cfgProtocolParams) {
 		// check if it's a se or se group
-		if (type == SE_TYPE) {
+		if (type == CfgBlocks::SE_TYPE) {
 
 			SeProtocolConfig tmp;
 			tmp.SE_NAME = name;
 			db->delete_se_protocol_config(&tmp);
 			deleteCount++;
 
-		} else if (type == GROUP_TYPE) {
+		} else if (type == CfgBlocks::GROUP_TYPE) {
 
 			SeProtocolConfig tmp;
 			tmp.SE_GROUP_NAME = name;
@@ -752,18 +626,19 @@ void ConfigurationHandler::del() {
 	// handle share configuration
 	if (cfgShare) {
 		// the share_id for the DB
-		string id =
-				"\"share_type\":\"" +
-				share_type +
-				"\",\"share_id\":" +
-				(share_id == null_str ? null_str : ("\"" + share_id + "\""))
-				;
+		string share_id = CfgBlocks::shareId(share_type, id);
 
-		db->deleteSeConfig(name, id, type);
+		db->deleteSeConfig(name, share_id, type);
 		deleteCount++;
 	}
 
 	string action = "delete (x" + lexical_cast<string>(deleteCount) + ")";
 	db->auditConfiguration(dn, all, action);
+}
+
+string ConfigurationHandler::str(bool b) {
+	stringstream ss;
+	ss << boolalpha << b;
+	return ss.str();
 }
 

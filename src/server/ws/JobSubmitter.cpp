@@ -28,10 +28,10 @@
 
 #include "common/logger.h"
 #include "common/error.h"
+#include "CfgBlocks.h"
 
 #include "GSoapDelegationHandler.h"
 
-#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 #include <algorithm>
 
@@ -39,8 +39,6 @@
 using namespace boost;
 using namespace db;
 using namespace fts3::ws;
-
-const string JobSubmitter::seNameRegex = ".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+";
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 
@@ -80,14 +78,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 		string* src = (*job->transferJobElements.begin())->source;
 		string* dest = (*job->transferJobElements.begin())->dest;
 
-		regex re (seNameRegex);
-		smatch what;
-
-		regex_match(*src, what, re, match_extra);
-		sourceSe = what[SE_NAME_REGEX_INDEX];
-
-		regex_match(*dest, what, re, match_extra);
-		destinationSe = what[SE_NAME_REGEX_INDEX];
+		sourceSe = CfgBlocks::fileUrlToSeName(*src).get();
+		destinationSe = CfgBlocks::fileUrlToSeName(*dest).get();
 	}
 
 	// extract the job elements from tns3__TransferJob object and put them into a vector
