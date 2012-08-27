@@ -19,12 +19,20 @@ using namespace fts3::common;
 
 RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates): soap(soap) {
 
+	GSoapDelegationHandler handler (soap);
+	string dn = handler.getClientDn();
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is listing transfer job requests" << commit;
+
 	checkGivenStates (inGivenStates);
 	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", "", "");
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
 }
 
 RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo): soap(soap) {
+
+	GSoapDelegationHandler handler (soap);
+	string user = handler.getClientDn();
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << user << " is listing transfer job requests" << commit;
 
 	checkGivenStates (inGivenStates);
 	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", dn, vo);

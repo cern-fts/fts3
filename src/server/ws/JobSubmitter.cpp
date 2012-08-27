@@ -42,12 +42,12 @@ using namespace fts3::ws;
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
-
 	GSoapDelegationHandler handler (soap);
 	delegationId = handler.makeDelegationId();
 	vo = handler.getClientVo();
 	dn = handler.getClientDn();
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
@@ -186,7 +186,7 @@ string JobSubmitter::submit() {
             destinationSe
     	);
 
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted successfully" << commit;
 	return id;
 }
 

@@ -43,7 +43,7 @@ using namespace std;
 /// Web service operation 'transferSubmit' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmitResponse &_param_3) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
@@ -63,7 +63,7 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
 /// Web service operation 'transferSubmit2' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct impltns__transferSubmit2Response &_param_4) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
@@ -83,7 +83,7 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
 /// Web service operation 'transferSubmit3' (returns error code or SOAP_OK)
 int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct impltns__transferSubmit3Response &_param_5) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
@@ -103,7 +103,7 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 /// Web service operation 'listRequests' (returns error code or SOAP_OK)
 int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct impltns__listRequestsResponse &_param_7) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
@@ -123,7 +123,7 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 /// Web service operation 'listRequests2' (returns error code or SOAP_OK)
 int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, string _forDN, string _forVO, struct impltns__listRequests2Response &_param_8) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
@@ -442,10 +442,13 @@ int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__g
 /// Web service operation 'cancel' (returns error code or SOAP_OK)
 int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct impltns__cancelResponse &_param_14) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'cancel' request" << commit;
-
-	try{
+	try {
 		AuthorizationManager::getInstance().authorize(soap);
+
+		GSoapDelegationHandler handler (soap);
+		string dn = handler.getClientDn();
+
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "is canceling a transfer job" << commit;
 
 		if (_requestIDs) {
 			vector<string> &jobs = _requestIDs->item;
@@ -550,11 +553,21 @@ int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRo
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
 int fts3::impltns__debugSet(struct soap* soap, string _source, string _destination, bool _debug, struct impltns__debugSetResponse &_param_16) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'debugSet' request" << commit;
 
-	try{
+	try {
+
+		GSoapDelegationHandler handler (soap);
+		string dn = handler.getClientDn();
+
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn;
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << " is turning " << (_debug ? "on" : "off") << "the debug mode for " << _source;
+		if (!_destination.empty()) {
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " and " << _destination << " pair" << commit;
+		}
+
 		AuthorizationManager::getInstance().authorize(soap);
-		DBSingleton::instance().getDBObjectInstance()->setDebugMode(
+		DBSingleton::instance().getDBObjectInstance()->setDebugMode (
 				_source,
 				_destination,
 				_debug ? "on" : "off"
