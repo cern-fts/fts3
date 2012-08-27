@@ -133,6 +133,8 @@ string GSoapDelegationHandler::handleDelegationId(string delegationId) {
 
 string GSoapDelegationHandler::getProxyReq(string delegationId) {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate request" << commit;
+
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
@@ -181,6 +183,8 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 }
 
 delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets new proxy certificate request" << commit;
 
 	string delegationId = makeDelegationId();
 	if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
@@ -304,6 +308,8 @@ string GSoapDelegationHandler::fqansToString(vector<string> attrs) {
 
 void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " puts proxy certificate" << commit;
+
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
@@ -342,6 +348,8 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 }
 
 string GSoapDelegationHandler::renewProxyReq(string delegationId) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " renews proxy certificate" << commit;
 
 	// it is different to gridsite implementation but it is done like that in delegation-java
 	// in GliteDelegation.java
@@ -388,6 +396,8 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 
 time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate trmination time" << commit;
+
 	delegationId = makeDelegationId(); // should return always the same delegation ID for the same user
 
 	time_t time;
@@ -404,6 +414,8 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 }
 
 void GSoapDelegationHandler::destroy(string delegationId) {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " destroys proxy certificate" << commit;
 
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
