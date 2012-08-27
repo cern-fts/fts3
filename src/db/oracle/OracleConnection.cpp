@@ -146,20 +146,27 @@ oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std:
 }
 
 void OracleConnection::destroyResultset(oracle::occi::Statement* s, oracle::occi::ResultSet* r) {
-    if(s) 
-        s->closeResultSet(r);
-  
+    if(s){
+    	if(r){ 
+        	s->closeResultSet(r);
+	}
+   }
 }
 
 void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string tag) {
 
  if(conn){
-   if(tag.length() == 0)
+   if(tag.length() == 0){
+     if(s){
         conn->terminateStatement(s);
-   else
-        conn->terminateStatement(s, tag);
+	}
+   }
+   else{
+   	if(s){
+        	conn->terminateStatement(s, tag);
+	}
+   }
  }	
-   
 }
 
 void OracleConnection::commit() {

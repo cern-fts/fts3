@@ -46,6 +46,7 @@ class ProcessQueueHandler : public TRAITS::ActiveObjectType {
 protected:
 
     using TRAITS::ActiveObjectType::_enqueue;
+    std::string enableOptimization;
 
 public:
 
@@ -62,6 +63,7 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessQueueHandler", desc), qm(NULL) {
+    enableOptimization = theServerConfig().get<std::string > ("Optimizer");
     
      try {
         qm = new QueueManager(true);
@@ -99,7 +101,7 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-    
+    try{
     while(1){ /*need to receive more than one messages at a time*/    
      for(int i = 0; i < 50; i++){
     	struct message msg;
@@ -115,12 +117,17 @@ protected:
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Source  :" <<  msg.source_se  << commit;   //source se
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Dest    :" <<  msg.dest_se  << commit;   //dest_se                    
       
-      DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(std::string(msg.job_id), std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id, msg.filesize, msg.timeInSecs);
-      DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), std::string(msg.job_id), std::string(msg.transfer_status));          
-      if( std::string(msg.transfer_status).compare("FINISHED") == 0)
-      	DBSingleton::instance().getDBObjectInstance()->updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs, msg.nostreams, msg.timeout, msg.buffersize, std::string(msg.source_se), std::string(msg.dest_se) );      
+      DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(job, std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id, msg.filesize, msg.timeInSecs);
+      DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
+      if( std::string(msg.transfer_status).compare("FINISHED") == 0  && enableOptimization.compare("true") == 0){
+      		DBSingleton::instance().getDBObjectInstance()->updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs, msg.nostreams, msg.timeout, msg.buffersize, std::string(msg.source_se), std::string(msg.dest_se) );      
+	}
       }
       usleep(100000);
+      }
+      }
+      catch(...){
+      	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Message queue raised an exception"  << commit;                    
       }
     }
 

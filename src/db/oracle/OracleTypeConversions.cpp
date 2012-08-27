@@ -139,6 +139,7 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
 		return;
 	}
 
+    if(clob.isOpen()){
         // reserve some space on the string
         str.resize(len, 0);
         char * buffer = &(*(str.begin()));
@@ -151,6 +152,7 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
  
         // Close the Clob and the related stream
         clob.close();
+      }
     } catch(const ::oracle::occi::SQLException&  exc){
         //Close the Clob
         try{

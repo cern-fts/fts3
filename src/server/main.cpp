@@ -160,7 +160,7 @@ int main (int argc, char** argv)
 	}
 		
         if (fexists(hostcert) != 0){
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert is installed" << commit;
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert/key are installed" << commit;
 		exit(1);	
 	}
 

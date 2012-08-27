@@ -176,7 +176,6 @@ protected:
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
                     int BufSize = 0;
-                    int NumOfFiles = 0;
                     int StreamsperFile = 0;
                     int Timeout = 0;
                     TransferFiles* temp = (TransferFiles*) * fileiter;
@@ -190,7 +189,6 @@ protected:
 			DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
                         DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                         BufSize = opt_config->getBufSize();
-                        NumOfFiles = opt_config->getNumOfFiles();
                         StreamsperFile = opt_config->getStreamsperFile();
                         Timeout = opt_config->getTimeout();                       
                         delete opt_config;
@@ -338,7 +336,6 @@ protected:
                 std::string surl = std::string("");
                 std::string durl = std::string("");
                 int BufSize = 0;
-                int NumOfFiles = 0;
                 int StreamsperFile = 0;
                 int Timeout = 0;
 		    
@@ -382,7 +379,6 @@ protected:
    		    DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
                     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                     BufSize = opt_config->getBufSize();
-                    NumOfFiles = opt_config->getNumOfFiles();
                     StreamsperFile = opt_config->getStreamsperFile();
                     Timeout = opt_config->getTimeout();
                     delete opt_config;

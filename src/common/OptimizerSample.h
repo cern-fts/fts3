@@ -13,6 +13,7 @@ public:
 	int getBufSize();
 	float getGoodput();
 	int getTimeout();
+	
 	int streamsperfile;
 	int numoffiles;
 	int bufsize;
