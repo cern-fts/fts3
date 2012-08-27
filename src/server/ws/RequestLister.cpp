@@ -9,6 +9,8 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include "GSoapDelegationHandler.h"
+
 #include "common/error.h"
 #include "common/logger.h"
 #include "common/JobStatusHandler.h"
