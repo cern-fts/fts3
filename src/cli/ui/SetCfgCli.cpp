@@ -84,7 +84,7 @@ void SetCfgCli::parse(int ac, char* av[]) {
 
 optional<GSoapContextAdapter&> SetCfgCli::validate(bool init) {
 
-	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
+	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
 	if (getConfigurations().empty() && !vm.count("drain")) {
 		cout << "No parameters have been specified." << endl;

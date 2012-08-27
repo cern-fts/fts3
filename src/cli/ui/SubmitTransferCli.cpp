@@ -93,7 +93,7 @@ void SubmitTransferCli::parse(int ac, char* av[]) {
 optional<GSoapContextAdapter&> SubmitTransferCli::validate(bool init) {
 
 	// do the standard validation
-	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
+	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
 	// perform standard checks in order to determine if the job was well specified
 	if(!performChecks()) return optional<GSoapContextAdapter&>();

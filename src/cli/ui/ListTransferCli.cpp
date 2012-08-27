@@ -45,7 +45,7 @@ ListTransferCli::~ListTransferCli() {
 optional<GSoapContextAdapter&> ListTransferCli::validate(bool init) {
 
 	// do the standard validation
-	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
+	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
 	// checks if requested features are supported
 	if(!checkIfFeaturesSupported()) return 0;

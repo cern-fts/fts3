@@ -50,7 +50,7 @@ VoNameCli::~VoNameCli() {
 
 optional<GSoapContextAdapter&> VoNameCli::validate(bool init) {
 
-	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
+	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
 	if (pos) {
 		if (getVoName().empty()) {
