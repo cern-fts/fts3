@@ -42,8 +42,9 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
 		// get the source file, the destination file and the FTS3 service endpoint
     	string source = cli->getSource(), destination = cli->getDestination();
@@ -65,7 +66,7 @@ int main(int ac, char* av[]) {
 
 			// submit the job
 			impltns__transferSubmit3Response resp;
-			ctx->transferSubmit3(&job, resp);
+			ctx.transferSubmit3(&job, resp);
 
 			// retrieve the job ID
 			jobId = resp._transferSubmit3Return;
@@ -86,7 +87,7 @@ int main(int ac, char* av[]) {
 
 				// submit the job
 				impltns__transferSubmit2Response resp;
-				ctx->transferSubmit2(&job, resp);
+				ctx.transferSubmit2(&job, resp);
 
 				// retrieve the job ID
 				jobId = resp._transferSubmit2Return;
@@ -94,12 +95,12 @@ int main(int ac, char* av[]) {
 			} else {
 
 				// set the credential (Password)
-				job.credential = soap_new_std__string(*ctx, -1);
+				job.credential = soap_new_std__string(ctx, -1);
 				*job.credential = cli->getPassword();
 
 				// submit the job
 				impltns__transferSubmitResponse resp;
-				ctx->transferSubmit(&job, resp);
+				ctx.transferSubmit(&job, resp);
 
 				// retrieve the job ID
 				jobId = resp._transferSubmitReturn;
@@ -114,7 +115,7 @@ int main(int ac, char* av[]) {
 			// wait until the transfer is ready
 			do {
 				sleep(2);
-				ctx->getTransferJobStatus(jobId, resp);
+				ctx.getTransferJobStatus(jobId, resp);
 			} while (!JobStatusHandler::getInstance().isTransferReady(*resp._getTransferJobStatusReturn->jobStatus));
 		}
 

@@ -24,14 +24,22 @@
 
 #include "SetCfgCli.h"
 
+#include "common/CfgParser.h"
+
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 
 using namespace boost::algorithm;
+using namespace fts3::common;
 using namespace fts3::cli;
 
 
 SetCfgCli::SetCfgCli() {
+
+	// add commandline options specific for fts3-transfer-submit
+	specific.add_options()
+			("drain", value<string>(), "If set to 'on' drains the given endpoint.")
+			;
 
 	// add hidden options (not printed in help)
 	hidden.add_options()
@@ -50,6 +58,12 @@ void SetCfgCli::parse(int ac, char* av[]) {
 	// do the basic initialization
 	CliBase::parse(ac, av);
 
+	if (vm.count("drain")) {
+		if (vm["drain"].as<string>() != "on" && vm["drain"].as<string>() != "off") {
+			throw string("drain may only take on/off values!");
+		}
+	}
+
 	if (vm.count("cfg")) {
 		cfgs = vm["cfg"].as< vector<string> >();
 	}
@@ -62,19 +76,22 @@ void SetCfgCli::parse(int ac, char* av[]) {
 			// most likely the user didn't used single quotation marks and bash did some pre-parsing
 			throw string("Configuration error: most likely you didn't use single quotation marks (') around a configuration!");
 		}
+
+		// parse the configuration, check if its valid JSON format, and valid configuration
+		CfgParser c(*it);
 	}
 }
 
-GSoapContextAdapter* SetCfgCli::validate() {
+optional<GSoapContextAdapter&> SetCfgCli::validate(bool init) {
 
-	if (!CliBase::validate()) return 0;
+	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
 
-	if (getConfigurations().empty()) {
+	if (getConfigurations().empty() && !vm.count("drain")) {
 		cout << "No parameters have been specified." << endl;
-		return 0;
+		return optional<GSoapContextAdapter&>();
 	}
 
-	return ctx;
+	return *ctx;
 }
 
 string SetCfgCli::getUsageString(string tool) {
@@ -83,6 +100,15 @@ string SetCfgCli::getUsageString(string tool) {
 
 vector<string> SetCfgCli::getConfigurations() {
 	return cfgs;
+}
+
+optional<bool> SetCfgCli::drain() {
+
+	if (vm.count("drain")) {
+		return vm["drain"].as<string>() == "on";
+	}
+
+	return optional<bool>();
 }
 
 

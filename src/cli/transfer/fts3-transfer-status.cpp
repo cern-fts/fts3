@@ -42,8 +42,9 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
 		// get job IDs that have to be check
 		vector<string> jobIds = cli->getJobIds();
@@ -55,12 +56,12 @@ int main(int ac, char* av[]) {
 
 			if (cli->isVerbose()) {
 
-				if (ctx->isItVersion330()) {
+				if (ctx.isItVersion330()) {
 					// if version higher than 3.3.0 use getTransferJobSummary2
 
 					// do the request
 					impltns__getTransferJobSummary2Response resp;
-					ctx->getTransferJobSummary2(jobId, resp);
+					ctx.getTransferJobSummary2(jobId, resp);
 
 					// print the response
 					if (resp._getTransferJobSummary2Return) {
@@ -80,7 +81,7 @@ int main(int ac, char* av[]) {
 
 					// do the request
 					impltns__getTransferJobSummaryResponse resp;
-					ctx->getTransferJobSummary(jobId, resp);
+					ctx.getTransferJobSummary(jobId, resp);
 
 					// print the response
 					if (resp._getTransferJobSummaryReturn) {
@@ -98,7 +99,7 @@ int main(int ac, char* av[]) {
 
 				// do the request
 				impltns__getTransferJobStatusResponse resp;
-				ctx->getTransferJobStatus(jobId, resp);
+				ctx.getTransferJobStatus(jobId, resp);
 
 		    	// print the response
 		    	if (resp._getTransferJobStatusReturn) {
@@ -112,7 +113,7 @@ int main(int ac, char* av[]) {
 
 				// do the request
 				impltns__getFileStatusResponse resp;
-				ctx->getFileStatus(jobId, resp);
+				ctx.getFileStatus(jobId, resp);
 
 				if (resp._getFileStatusReturn) {
 

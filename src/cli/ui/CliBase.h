@@ -28,6 +28,7 @@
 #include "GSoapContextAdapter.h"
 
 #include <boost/program_options.hpp>
+#include <boost/optional.hpp>
 #include <fstream>
 
 using namespace boost::program_options;
@@ -35,6 +36,8 @@ using namespace std;
 
 
 namespace fts3 { namespace cli {
+
+using namespace boost;
 
 /**
  * CliBase is a base class for developing FTS3 command line tools.
@@ -50,6 +53,7 @@ namespace fts3 { namespace cli {
  *  to use the given command line tool.
  */
 class CliBase {
+
 public:
 
 	/**
@@ -88,7 +92,7 @@ public:
 	 * @return GSoapContexAdapter instance, or null if all activities
 	 * 				requested using program options have been done.
 	 */
-	virtual GSoapContextAdapter* validate();
+	virtual optional<GSoapContextAdapter&> validate(bool init = true);
 
 	/**
 	 * Prints help message if the -h option has been used.
@@ -136,17 +140,6 @@ public:
 	 */
 	virtual string getUsageString(string tool);
 
-protected:
-
-	/**
-	 * Discovers the FTS3 service (if the -s option has not been used).
-	 *
-	 * Uses ServiceDiscoveryIfce to find a FTS3 service.
-	 *
-	 * @return FTS3 service string
-	 */
-	string discoverService();
-
 	/**
 	 * Mutes the cout stream
 	 * 	(used in unit tests)
@@ -158,6 +151,17 @@ protected:
 	 * 	(used in unit tests)
 	 */
 	void unmute();
+
+protected:
+
+	/**
+	 * Discovers the FTS3 service (if the -s option has not been used).
+	 *
+	 * Uses ServiceDiscoveryIfce to find a FTS3 service.
+	 *
+	 * @return FTS3 service string
+	 */
+	string discoverService();
 
 	/**
 	 * a map containing parsed options

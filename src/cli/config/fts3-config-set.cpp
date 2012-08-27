@@ -25,6 +25,7 @@
 
 #include "GSoapContextAdapter.h"
 #include "ui/SetCfgCli.h"
+#include "common/error.h"
 
 #include <string>
 #include <vector>
@@ -32,6 +33,7 @@
 
 using namespace std;
 using namespace fts3::cli;
+using namespace fts3::common;
 
 /**
  * This is the entry point for the fts3-config-set command line tool.
@@ -45,20 +47,32 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
 
-		config__Configuration *config = soap_new_config__Configuration(*ctx, -1);
+		if (!opt.is_initialized()) return 0;
+
+		GSoapContextAdapter& ctx = opt.get();
+
+		optional<bool> drain = cli->drain();
+		if (drain.is_initialized()) {
+			ctx.doDrain(drain.get());
+			return 0;
+		}
+
+		config__Configuration *config = soap_new_config__Configuration(ctx, -1);
 		config->cfg = cli->getConfigurations();
 
 		implcfg__setConfigurationResponse resp;
-		ctx->setConfiguration(config, resp);
+		ctx.setConfiguration(config, resp);
 
     } catch(std::exception& e) {
         cerr << "error: " << e.what() << "\n";
         return 1;
     } catch(string& ex) {
     	cout << ex << endl;
+    	return 1;
+    } catch(Err& ex) {
+    	cout << ex.what() << endl;
     	return 1;
     } catch(...) {
         cerr << "Exception of unknown type!\n";

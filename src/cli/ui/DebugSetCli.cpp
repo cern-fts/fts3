@@ -40,7 +40,7 @@ DebugSetCli::DebugSetCli() {
 	// the 'debug' should be the first positional parameter
 	positional_options_description tmp;
 	tmp.add("debug", 1);
-	for (int i = 0; i < p.max_total_count(); i++)
+	for (unsigned i = 0; i < p.max_total_count(); i++)
 		tmp.add(p.name_for_position(i).c_str(), i + 1);
 
 	p = tmp;
@@ -50,10 +50,10 @@ DebugSetCli::~DebugSetCli() {
 
 }
 
-GSoapContextAdapter* DebugSetCli::validate() {
+optional<GSoapContextAdapter&> DebugSetCli::validate(bool init) {
 
 	// do the standard validation
-	if (!CliBase::validate()) return 0;
+	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
 	// set the debug mode
 	if (vm.count("debug")) {
@@ -78,7 +78,7 @@ GSoapContextAdapter* DebugSetCli::validate() {
 		return 0;
 	}
 
-	return ctx;
+	return *ctx;
 }
 
 string DebugSetCli::getUsageString(string tool) {

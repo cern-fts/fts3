@@ -40,16 +40,16 @@ TransferStatusCli::TransferStatusCli() {
 TransferStatusCli::~TransferStatusCli() {
 }
 
-GSoapContextAdapter* TransferStatusCli::validate() {
+optional<GSoapContextAdapter&> TransferStatusCli::validate(bool init) {
 
-	if (!CliBase::validate()) return 0;
+	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
 
 	if (getJobIds().empty()) {
 		cout << "No request ID specified." << endl;
 		return 0;
 	}
 
-	return ctx;
+	return *ctx;
 }
 
 bool TransferStatusCli::list() {

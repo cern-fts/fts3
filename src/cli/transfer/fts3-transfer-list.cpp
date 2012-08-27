@@ -47,8 +47,9 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
 		if (!cli->checkIfFeaturesSupported()) {
 			return 0;
@@ -58,17 +59,17 @@ int main(int ac, char* av[]) {
 
 		vector<tns3__JobStatus * > statuses;
 
-		if (ctx->isUserVoRestrictListingSupported()) {
+		if (ctx.isUserVoRestrictListingSupported()) {
 
 			impltns__listRequests2Response resp;
-			ctx->listRequests2(array, cli->getUserDn(), cli->getVoName(), resp);
+			ctx.listRequests2(array, cli->getUserDn(), cli->getVoName(), resp);
 
 			statuses = resp._listRequests2Return->item;
 
 		} else {
 
 			impltns__listRequestsResponse resp;
-			ctx->listRequests(array, resp);
+			ctx.listRequests(array, resp);
 
 			statuses = resp._listRequestsReturn->item;
 		}

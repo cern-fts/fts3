@@ -46,11 +46,12 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
 		implcfg__getConfigurationResponse resp;
-		ctx->getConfiguration(cli->getVoName(), cli->getName(), resp);
+		ctx.getConfiguration(cli->getVoName(), cli->getName(), resp);
 
 		vector<string> &cfgs = resp.configuration->cfg;
 		vector<string>::iterator it;

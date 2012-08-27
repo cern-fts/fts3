@@ -42,15 +42,15 @@ ListTransferCli::ListTransferCli(): VoNameCli(false) {
 ListTransferCli::~ListTransferCli() {
 }
 
-GSoapContextAdapter* ListTransferCli::validate() {
+optional<GSoapContextAdapter&> ListTransferCli::validate(bool init) {
 
 	// do the standard validation
-	if (!CliBase::validate()) return 0;
+	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
 
 	// checks if requested features are supported
 	if(!checkIfFeaturesSupported()) return 0;
 
-	return ctx;
+	return *ctx;
 }
 
 string ListTransferCli::getUsageString(string tool) {

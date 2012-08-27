@@ -126,7 +126,7 @@ public:
 	 * @return GSoapContexAdapter instance, or null if all activities
 	 * 				requested using program options have been done.
 	 */
-	virtual GSoapContextAdapter* validate();
+	optional<GSoapContextAdapter&> validate(bool init = true);
 
 	/**
 	 * Creates job elements.

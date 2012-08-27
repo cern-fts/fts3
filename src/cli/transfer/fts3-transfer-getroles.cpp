@@ -44,13 +44,14 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
 		string dn = cli->getUserDn();
 		if (dn.empty()) {
 			impltns__getRolesResponse resp;
-			ctx->getRoles(resp);
+			ctx.getRoles(resp);
 
 			tns3__Roles* roles = resp.getRolesReturn;
 
@@ -82,7 +83,7 @@ int main(int ac, char* av[]) {
 
 		} else {
 			impltns__getRolesOfResponse resp;
-			ctx->getRolesOf(dn, resp);
+			ctx.getRolesOf(dn, resp);
 
 			tns3__Roles* roles = resp._getRolesOfReturn;
 

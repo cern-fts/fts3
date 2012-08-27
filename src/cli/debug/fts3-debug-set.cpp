@@ -43,11 +43,12 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
 		// submit the job
-		ctx->debugSet(
+		ctx.debugSet(
 				cli->getSource(),
 				cli->getDestination(),
 				cli->getDebugMode()

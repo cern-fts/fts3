@@ -45,14 +45,15 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
-		config__Configuration *config = soap_new_config__Configuration(*ctx, -1);
+		config__Configuration *config = soap_new_config__Configuration(ctx, -1);
 		config->cfg = cli->getConfigurations();
 
 		implcfg__delConfigurationResponse resp;
-		ctx->delConfiguration(config, resp);
+		ctx.delConfiguration(config, resp);
 
     } catch(std::exception& e) {
         cerr << "error: " << e.what() << "\n";

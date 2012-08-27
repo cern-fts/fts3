@@ -48,9 +48,9 @@ VoNameCli::VoNameCli(bool pos): pos(pos) {
 VoNameCli::~VoNameCli() {
 }
 
-GSoapContextAdapter* VoNameCli::validate() {
+optional<GSoapContextAdapter&> VoNameCli::validate(bool init) {
 
-	if (!CliBase::validate()) return 0;
+	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
 
 	if (pos) {
 		if (getVoName().empty()) {
@@ -59,7 +59,7 @@ GSoapContextAdapter* VoNameCli::validate() {
 		}
 	}
 
-	return ctx;
+	return *ctx;
 }
 
 string VoNameCli::getUsageString(string tool) {

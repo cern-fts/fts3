@@ -197,6 +197,13 @@ void GSoapContextAdapter::debugSet(string source, string destination, bool debug
 	}
 }
 
+void GSoapContextAdapter::doDrain(bool drain) {
+	implcfg__doDrainResponse resp;
+	if (soap_call_implcfg__doDrain(ctx, endpoint.c_str(), 0, drain, resp)) {
+		handleSoapFault("Failed to get configuration: debugSet.");
+	}
+}
+
 void GSoapContextAdapter::handleSoapFault(string msg) {
 	cout << "gsoap fault: ";
 	soap_stream_fault(ctx, cout);

@@ -46,10 +46,11 @@ int main(int ac, char* av[]) {
 			);
 
 		// validate command line options, and return respective gsoap context
-		GSoapContextAdapter* ctx = cli->validate();
-		if (!ctx) return 0;
+		optional<GSoapContextAdapter&> opt = cli->validate();
+		if (!opt.is_initialized()) return 0;
+		GSoapContextAdapter& ctx = opt.get();
 
-		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(*ctx, -1);
+		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
 		vector<string> &jobs = rqst->item;
 		jobs = cli->getJobIds();
 
@@ -59,7 +60,7 @@ int main(int ac, char* av[]) {
 		}
 
 		impltns__cancelResponse resp;
-		ctx->cancel(rqst, resp);
+		ctx.cancel(rqst, resp);
 
 		vector<string>::iterator it;
 

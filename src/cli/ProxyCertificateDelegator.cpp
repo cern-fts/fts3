@@ -124,7 +124,7 @@ bool ProxyCertificateDelegator::delegate() {
                 renewDelegation = true; // renew rather than put
             } else {
                 // we cannot improve the proxy on the server
-                cout << "Delegated proxy on server has less than 4 hours left." << endl;
+                cout << "Delegated proxy on server has less than 6 hours left." << endl;
                 cout << "But the local proxy has less time left than the one on the server, so cannot be used to refresh it!" << endl;
                 cout << "Remaining time on server for this credential is "
                      << (long int)((timeLeftOnServer) / 3600)

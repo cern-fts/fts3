@@ -26,10 +26,14 @@
 #define NAMEVALUECLI_H_
 
 #include "CliBase.h"
+
 #include <vector>
+#include <boost/optional.hpp>
 
 
 namespace fts3 { namespace cli {
+
+using namespace boost;
 
 /**
  * SetCfgCli provides the user interface for configuring SEs
@@ -80,7 +84,7 @@ public:
 	 * @return GSoapContexAdapter instance, or null if all activities
 	 * 				requested using program options have been done.
 	 */
-	virtual GSoapContextAdapter* validate();
+	virtual optional<GSoapContextAdapter&> validate(bool init = true);
 
 	/**
 	 * Gives the instruction how to use the command line tool.
@@ -96,6 +100,13 @@ public:
 	 * 			vector containing the value names, otherwise an empty vector
 	 */
 	vector<string> getConfigurations();
+
+	/**
+	 * Checks the drain option
+	 *
+	 * @return true if on was used and false if off was used, otherwise the optional is not initialized
+	 */
+	optional<bool> drain();
 
 private:
 	/// JSON configurations specified by user

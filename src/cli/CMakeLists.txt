@@ -64,14 +64,17 @@ endif ()
 # Common CLI library
 
 set(fts3_cli_common_sources
-    ui/DnCli.cpp
-    ui/CliBase.cpp
-    ui/JobIdCli.cpp
-    ui/VoNameCli.cpp
-    ui/SetCfgCli.cpp
-    ui/GetCfgCli.cpp
-    ui/SrcDestCli.cpp
-    ui/DebugSetCli.cpp
+	ui/CliBase.cpp
+	ui/DebugSetCli.cpp
+	ui/DnCli.cpp
+	ui/GetCfgCli.cpp
+	ui/JobIdCli.cpp
+	ui/ListTransferCli.cpp
+	ui/SetCfgCli.cpp
+	ui/SrcDestCli.cpp
+	ui/SubmitTransferCli.cpp
+	ui/TransferStatusCli.cpp
+	ui/VoNameCli.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
 )

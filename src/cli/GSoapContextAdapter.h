@@ -233,9 +233,14 @@ public:
 	void setInterfaceVersion(string interface);
 
 	/**
-	 *
+	 * TODO
 	 */
 	void debugSet(string source, string destination, bool debug);
+
+	/**
+	 * TODO
+	 */
+	void doDrain(bool drain);
 
 	///@{
 	/**

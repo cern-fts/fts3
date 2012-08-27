@@ -90,18 +90,18 @@ void SubmitTransferCli::parse(int ac, char* av[]) {
 	}
 }
 
-GSoapContextAdapter* SubmitTransferCli::validate() {
+optional<GSoapContextAdapter&> SubmitTransferCli::validate(bool init) {
 
 	// do the standard validation
-	if (!CliBase::validate()) return 0;
+	if (!CliBase::validate(init)) return optional<GSoapContextAdapter&>();
 
 	// perform standard checks in order to determine if the job was well specified
-	if(!performChecks()) return 0;
+	if(!performChecks()) return optional<GSoapContextAdapter&>();
 
 	// prepare job elements
-	if (!createJobElements()) return 0;
+	if (!createJobElements()) return optional<GSoapContextAdapter&>();
 
-	return ctx;
+	return *ctx;
 }
 
 string SubmitTransferCli::getDelegationId() {

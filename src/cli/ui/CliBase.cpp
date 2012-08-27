@@ -31,7 +31,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_array.hpp>
 
-using namespace boost;
 using namespace fts3::cli;
 
 
@@ -94,10 +93,10 @@ void CliBase::parse(int ac, char* av[]) {
 	}
 }
 
-GSoapContextAdapter* CliBase::validate() {
+optional<GSoapContextAdapter&> CliBase::validate(bool init) {
 
 	// if applicable print help or version and exit, nothing else needs to be done
-	if (printHelp(toolname) || printVersion()) return 0;
+	if (printHelp(toolname) || printVersion()) return optional<GSoapContextAdapter&>();
 
 	// if endpoint could not be determined, we cannot do anything
 	if (endpoint.empty()) {
@@ -106,14 +105,14 @@ GSoapContextAdapter* CliBase::validate() {
 
 	// create and initialize gsoap context
 	ctx = new GSoapContextAdapter(endpoint);
-	ctx->init();
+	if (init) ctx->init();
 
 	// if verbose print general info
 	if (isVerbose()) {
 		ctx->printInfo();
 	}
 
-	return ctx;
+	return *ctx;
 }
 
 string CliBase::getUsageString(string tool) {
