@@ -41,6 +41,7 @@ limitations under the License. */
 #include <fstream>
 #include "config/serverconfig.h"
 #include "definitions.h"
+#include "DrainMode.h"
 
 
 FTS3_SERVER_NAMESPACE_START
@@ -502,8 +503,18 @@ protected:
     void executeTransfer_a() {
         std::vector<int> requestIDs;
         std::vector<TransferJobs*> jobs2;
-
+	static bool drainMode = false;
         while (1) {
+	
+	    if(DrainMode::getInstance()){
+                if(!drainMode)
+	    		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
+		drainMode = true;
+		continue;
+	    }else{
+		drainMode=false;
+	    }
+	
             try {
                 /*get jobs in submitted state*/
                 DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);

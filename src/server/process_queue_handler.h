@@ -116,11 +116,12 @@ protected:
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Size    :" <<  msg.filesize  << commit;   //in bytes 
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Source  :" <<  msg.source_se  << commit;   //source se
       FTS3_COMMON_LOGGER_NEWLOG (INFO) << "           " << job << ": Dest    :" <<  msg.dest_se  << commit;   //dest_se                    
-      
+
       DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(job, std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id, msg.filesize, msg.timeInSecs);
       DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
       if( std::string(msg.transfer_status).compare("FINISHED") == 0  && enableOptimization.compare("true") == 0){
-      		DBSingleton::instance().getDBObjectInstance()->updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs, msg.nostreams, msg.timeout, msg.buffersize, std::string(msg.source_se), std::string(msg.dest_se) );      
+        if( msg.nostreams != DEFAULT_NOSTREAMS && msg.buffersize != DEFAULT_BUFFSIZE && msg.timeout != DEFAULT_TIMEOUT)
+    		DBSingleton::instance().getDBObjectInstance()->updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs, msg.nostreams, msg.timeout, msg.buffersize, std::string(msg.source_se), std::string(msg.dest_se) );      
 	}
       }
       usleep(100000);
