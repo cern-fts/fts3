@@ -229,7 +229,7 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 
 		log << ", using public-share configuration: ";
 		log << credits;
-		log << (io == INBOUND ? "inbound cerdits, " : "outbound credits, ");
+		log << (io == INBOUND ? " inbound cerdits, " : " outbound credits, ");
 		log << "currently " << creditsInUse << " in use";
 		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
 
@@ -248,7 +248,7 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 
 	log << ", using default configuration: ";
 	log << DEFAULT_VALUE;
-	log << (io == INBOUND ? "inbound cerdits, " : "outbound credits, ");
+	log << (io == INBOUND ? " inbound cerdits, " : " outbound credits, ");
 	log << "currently " << creditsInUse << " in use";
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
 
@@ -258,19 +258,19 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 
 bool FileTransferScheduler::schedule(bool optimize) {
 
-	if(optimize == true) {
-		bool allowed = db->isTrAllowed(srcSeName, destSeName);		
-		// update file state to READY
-		if(allowed == true) {
-			unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-			if(updated == 0) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-		return false;
-	}
+//	if(optimize == true) {
+//		bool allowed = db->isTrAllowed(srcSeName, destSeName);
+//		// update file state to READY
+//		if(allowed == true) {
+//			unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+//			if(updated == 0) {
+//				return false;
+//			} else {
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
 
 	if (getFreeCredits(OUTBOUND, VO, CfgBlocks::SE_TYPE, srcSeName, voName) <= 0) {
 		return false;
