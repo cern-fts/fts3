@@ -117,13 +117,13 @@ $jobid = $_GET['jobid'];
 
 
 if($jobid != ""){
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where JOB_ID='$jobid' ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
+	$strSQL = "SELECT  USER_DN, JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where JOB_ID='$jobid' ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
 }
 elseif($vo != "" && $vo!="all"){
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where VO_NAME='$vo' and (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour)) ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
+	$strSQL = "SELECT  USER_DN, JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where VO_NAME='$vo' and (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour)) ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
 }
 else{
-	$strSQL = "SELECT  JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour))  ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
+	$strSQL = "SELECT  USER_DN, JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN,SPACE_TOKEN FROM T_JOB where (SUBMIT_TIME > (CURRENT_TIMESTAMP - interval '12' hour))  ORDER BY SYS_EXTRACT_UTC(t_job.SUBMIT_TIME) DESC ";
 }
 
 try {
@@ -136,6 +136,9 @@ catch(PDOException $e) {
 $stmt = $conn->query($strSQL);
 
 ?>
+
+<a href="fts3queue.php">Queue</a>
+
 <table width="100%" border="1">
 <tr>
 <th > <div align="center">JOB ID </div></th>
@@ -145,6 +148,7 @@ $stmt = $conn->query($strSQL);
 <th > <div align="center">JOB STATE </div></th>
 <th > <div align="center">SUBMIT TIME </div></th>
 <th > <div align="center">FINISH TIME </div></th>
+<th > <div align="center">USER DN</div></th>
 <th > <div align="center">SOURCE SPACETOKEN </div></th>
 <th > <div align="center">DEST SPACETOKEN </div></th>
 </tr>
@@ -161,6 +165,7 @@ if( $objResult["JOB_STATE"] == "FINISHED"){
 <td bgcolor="#00FF00"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["USER_DN"];?></td>
 <td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
 <td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
@@ -176,6 +181,7 @@ if( $objResult["JOB_STATE"] == "FAILED"){
 <td bgcolor="red"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["USER_DN"];?></td>
 <td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
 <td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
@@ -191,6 +197,7 @@ if( $objResult["JOB_STATE"] == "ACTIVE"){
 <td bgcolor="#00FFFF"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["USER_DN"];?></td>
 <td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
 <td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
@@ -206,6 +213,7 @@ if( $objResult["JOB_STATE"] == "FINISHEDDIRTY"){
 <td bgcolor="yellow"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["USER_DN"];?></td>
 <td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
 <td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>
@@ -221,6 +229,7 @@ if( $objResult["JOB_STATE"] == "CANCELED"){
 <td bgcolor="#FF0000"><?php echo $objResult["JOB_STATE"];?></td>
 <td><?php echo $objResult["SUBMIT_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
+<td><?php echo $objResult["USER_DN"];?></td>
 <td><?php echo $objResult["SOURCE_SPACE_TOKEN"];?></td>
 <td><?php echo $objResult["SPACE_TOKEN"];?></td>
 </tr>

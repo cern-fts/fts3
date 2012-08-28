@@ -1567,6 +1567,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
             }
         }
         conn->destroyResultset(st, r);
+	r = NULL;
 
         //job finished
         if (finished == true) {
@@ -1612,8 +1613,10 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
         conn->destroyStatement(st, "");
         finishedDirty = 0;
     } catch (oracle::occi::SQLException const &e) {
-        if(conn && st && r){
-		conn->destroyResultset(st, r);
+       if(conn && st && r){
+    		conn->destroyResultset(st, r);
+	}
+       if(conn && st){
 		conn->destroyStatement(st, "");
 	}
         conn->rollback();
@@ -2830,18 +2833,16 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
             " and  t_job.job_id = t_file.job_id and t_job.source_se=:3 and "
             " t_job.dest_se=:4))-active), abs(500-throughput) desc) where rownum=1 ";
 
-    std::string query_stmt_throuput2 = "   SELECT  nostreams, timeout, buffer "
+    std::string query_stmt_throuput2 = " SELECT  nostreams, timeout, buffer "
             "  FROM t_optimize WHERE  "
             "  source_se = :1 and dest_se=:2 "
-            "  and throughput is NULL and file_id != 1 ";
+            "  and throughput is NULL and file_id=0 and rownum=1 ";
 
     std::string query_stmt_throuput1 = "  SELECT count(*) "
             " FROM t_optimize WHERE  "
-            " throughput is NULL and source_se = :1 and dest_se=:2 ";
+            " throughput is NULL and source_se = :1 and dest_se=:2 and file_id=0 ";
 
     std::string query_stmt_throuput3 = " select count(*) from t_optimize where source_se = :1 and dest_se=:2";
-
-    std::string query_stmt_throuput4 = "update t_optimize set file_id=1 where nostreams=:1 and buffer=:2 and timeout=:3 and source_se=:4 and dest_se=:5";
 
 	oracle::occi::Statement* s3 = NULL;
 	oracle::occi::ResultSet* r3 = NULL;
@@ -2849,8 +2850,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 	oracle::occi::ResultSet* r1 = NULL;
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;
-	oracle::occi::Statement* s4 = NULL;
-	
 	
     try {
         if (false == conn->checkConn())
@@ -2875,6 +2874,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
         }
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1);
+
 
         if (foundNoRecords > 0 && foundNoThrouput == 0) { //ALL records for this SE/DEST are having throughput
             s = conn->createStatement(query_stmt_throuput, tag);
@@ -2907,16 +2907,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 ops->streamsperfile = r->getInt(1);
                 ops->timeout = r->getInt(2);
                 ops->bufsize = r->getInt(3);
-                ops->file_id = 1; //sampled, not being picked again
-                s4 = conn->createStatement(query_stmt_throuput4, tag4);
-                s4->setInt(1, ops->streamsperfile);
-                s4->setInt(2, ops->bufsize);
-                s4->setInt(3, ops->timeout);
-                s4->setString(4, source_hostname);
-                s4->setString(5, destin_hostname);
-                s4->executeUpdate();
-                conn->commit();
-                conn->destroyStatement(s4, tag4);
+                ops->file_id = 1; //sampled, not being picked again              
             } else {
                 ops->streamsperfile = DEFAULT_NOSTREAMS;
                 ops->timeout = DEFAULT_TIMEOUT;
@@ -2946,10 +2937,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 		if(s && r){
                 	conn->destroyResultset(s, r);
                 	conn->destroyStatement(s, tag2);				
-		}
-		if(s4){		
-			conn->destroyStatement(s4, tag4);				
-		}
+		}		
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -3139,7 +3127,6 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                         s->setInt(3, timeouts[x]);
                         s->setInt(4, nostreams[y]);
                         s->setInt(5, buffsizes[z]);
-                        //s->setInt(6, file_id);
                         s->executeUpdate();
                     }
                 }
@@ -3149,9 +3136,13 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
         }
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
+		   if(s1 && r1){
 	            conn->destroyResultset(s1, r1);
 	            conn->destroyStatement(s1, tag1);
+		    }
+		    if(s){
 	            conn->destroyStatement(s, tag);
+		     }
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -3218,18 +3209,20 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     int act = 0;
     std::string query_stmt1 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 ";
 
-    std::string query_stmt2 = " select avg(throughput) from t_optimize "
-    				" where active>=(select count(*) from  t_file, t_job where "
-				" t_file.file_state='ACTIVE' and  t_job.job_id = t_file.job_id and "
-				" t_job.source_se=:1 and t_job.dest_se=:2)  and  "
-				" source_se=:3  and dest_se=:4 and t_optimize.when "
-				" is not null   order by SYS_EXTRACT_UTC(when) desc";
+ 			
+    std::string query_stmt2 = " select avg(throughput) from t_optimize  "
+				  " where (active=(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' "
+	 			  " and  t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2) or "
+				  " active=(select max(active) from t_optimize where active < (select count(*) from  t_file, t_job where "
+				  " t_file.file_state='ACTIVE' and  t_job.job_id = t_file.job_id and t_job.source_se=:3 and t_job.dest_se=:4 "
+				  " )))  and  source_se=:5  and dest_se=:6 and t_optimize.when  is not null order by "
+				  " SYS_EXTRACT_UTC(when) desc";
+				
 				
 	oracle::occi::Statement* s1 = NULL;
 	oracle::occi::ResultSet* r1 = NULL;
 	oracle::occi::Statement* s2 = NULL;
 	oracle::occi::ResultSet* r2 = NULL;
-	
 	
     try {
     
@@ -3253,6 +3246,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 s2->setString(2, destin_hostname);
                 s2->setString(3, source_hostname);
                 s2->setString(4, destin_hostname);
+                s2->setString(5, source_hostname);
+                s2->setString(6, destin_hostname);		
                 s2->setPrefetchRowCount(1);
                 r2 = conn->createResultset(s2);
                 if (r2->next()) { //found records in t_optimize
@@ -3297,6 +3292,36 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         return allowed;
     }
     return allowed;
+}
+
+
+bool OracleAPI::setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize){
+
+     const std::string tag4 = "setAllowed";
+    std::string query_stmt_throuput4 = "update t_optimize set file_id=1 where nostreams=:1 and buffer=:2 and timeout=:3 and source_se=:4 and dest_se=:5";
+   oracle::occi::Statement* s4 = NULL;
+  try {
+    
+        if (false == conn->checkConn())
+            return false;
+	    
+ 		s4 = conn->createStatement(query_stmt_throuput4, tag4);
+                s4->setInt(1, nostreams);
+                s4->setInt(2, buffersize);
+                s4->setInt(3, timeout);
+                s4->setString(4, source_se);
+                s4->setString(5, dest);
+                s4->executeUpdate();
+                conn->commit();
+                conn->destroyStatement(s4, tag4);		
+	}	
+   catch (oracle::occi::SQLException const &e) {
+        conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));		
+		if(s4){		
+			conn->destroyStatement(s4, tag4);				
+		}
+	}
 }
 
 // the class factories

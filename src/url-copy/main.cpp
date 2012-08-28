@@ -435,8 +435,7 @@ int main(int argc, char **argv) {
 
 
         /*gfal2 debug logging*/
-        if (debug == true) {
-	    //ADD when file is provided in gfal2 API GFAL_VERBOSE_TRACE_PLUGIN
+        if (debug == true) {	   
             gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN );
 	    seteuid(privid);
             	freopen (fileManagement.getLogFileFullPath().c_str(),"w",stderr);
@@ -503,6 +502,7 @@ int main(int argc, char **argv) {
 
         gfalt_set_timeout(params, timeout, NULL);
         gfalt_set_nbstreams(params, nbstreams, NULL);
+	gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL); 
         gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
 
         seteuid(privid);
@@ -619,11 +619,11 @@ stop:
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
         logStream.close();
-        fileManagement.archive();
  	if (debug == true){ 
-		fclose (stderr);    
-	//log << fileManagement.timestamp() << "DEBUG " << oss.str()  << '\n';
+		fclose (stderr);    	
 	} 
+        fileManagement.archive();
+
 
     }//end for reuse loop	
 

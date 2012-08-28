@@ -236,7 +236,9 @@ public:
     
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
     
-    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;           
+    virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;   
+    
+    virtual bool setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize) = 0;               
 };
 
 
