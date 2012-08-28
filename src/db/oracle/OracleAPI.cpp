@@ -128,7 +128,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-            " AND rownum =1  ORDER BY t_job.priority DESC"
+            " AND rownum <=10  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time) ";
 
     oracle::occi::Statement* s = NULL;
@@ -3295,7 +3295,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 }
 
 
-bool OracleAPI::setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize){
+void OracleAPI::setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize){
 
      const std::string tag4 = "setAllowed";
     std::string query_stmt_throuput4 = "update t_optimize set file_id=1 where nostreams=:1 and buffer=:2 and timeout=:3 and source_se=:4 and dest_se=:5";
@@ -3303,7 +3303,7 @@ bool OracleAPI::setAllowed(const std::string & source_se, const std::string & de
   try {
     
         if (false == conn->checkConn())
-            return false;
+            return;
 	    
  		s4 = conn->createStatement(query_stmt_throuput4, tag4);
                 s4->setInt(1, nostreams);

@@ -196,7 +196,7 @@ public:
     
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);   
     
-    virtual bool setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize); 
+    virtual void setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize); 
     
     
 private:
