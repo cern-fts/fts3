@@ -27,6 +27,8 @@
 #include <boost/lexical_cast.hpp>
 #include "boost/tuple/tuple.hpp"
 
+#include <sstream>
+
 #include "FileTransferScheduler.h"
 
 #include "common/logger.h"
@@ -64,12 +66,6 @@ FileTransferScheduler::~FileTransferScheduler() {
 
 optional< tuple<int, int, string> > FileTransferScheduler::getValue(string type, string name, string shareId) {
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get configuration for: "
-			<< type << ", "
-			<< name << ", "
-			<< shareId
-			<< commit;
-
 	vector<SeAndConfig*> seAndConfig;
 
 	// query the DB
@@ -92,28 +88,15 @@ optional< tuple<int, int, string> > FileTransferScheduler::getValue(string type,
 				(*seAndConfig.begin())->SHARE_VALUE
 			);
 
-		FTS3_COMMON_LOGGER_NEWLOG(INFO)
-			<< "Inbound: " << get<CfgBlocks::INBOUND>(val.get())
-			<< ", outbound: " << get<CfgBlocks::OUTBOUND>(val.get())
-			<< commit;
-
 		// free the memory
 		delete *seAndConfig.begin();
 
-	} else {
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "No configuration found." << commit;
 	}
 
 	return val;
 }
 
 int FileTransferScheduler::getCreditsInUse(IO io, Share share, const string type) {
-
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Looking for credits in use for: "
-			<< (io == INBOUND ? "inbound" : "outbound") << ", "
-			<< (share == PAIR ? "pair" : share == VO ? "vo" : "public") << "share, "
-			<< (type == CfgBlocks::SE_TYPE ? "SE" : "SE group")
-			<< commit;
 
 	int creditsInUse = 0;
 
@@ -168,8 +151,6 @@ int FileTransferScheduler::getCreditsInUse(IO io, Share share, const string type
 			);
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Credits in use: " << creditsInUse << commit;
-
 	return creditsInUse;
 }
 
@@ -178,15 +159,20 @@ int FileTransferScheduler::getCreditsInUse(IO io, Share share, const string type
 // it means the se not configured to accept this kind of transfers
 int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type, string name, string param) {
 
+	stringstream log;
+
 	// if the SE does not belong to a SE group
-	if (name.empty()) return FREE_CREDITS;
+	if (name.empty() && type == CfgBlocks::GROUP_TYPE) {
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Looking for: "
-			<< (io == OUTBOUND ? "outbound" : "inbound") << " credits, "
-			<< (share == VO ? "vo" : "pair") << "share: " << param << ", "
-			<< (type == CfgBlocks::SE_TYPE ? "SE" : "SE group") << ": " << name
-			<< commit;
+		log << (io == INBOUND ? "Destination SE " : "Source SE ");
+		log << "is not a member of a group therefore there are no group-related constraints";
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
 
+		return FREE_CREDITS;
+	}
+
+	log << (type == CfgBlocks::SE_TYPE ? "SE: " : "SE group: ");
+	log << name << " ";
 
 	optional< tuple<int, int, string> > val;
 
@@ -200,9 +186,11 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 		val = getValue(type, name, CfgBlocks::pairShare(param));
 		// if there is no cfg there are no constraints
 		if (!val.is_initialized()) {
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "There are no constraints in the DB in respect to the "
-					<< (type == CfgBlocks::SE_TYPE ? "SE" : "SE group") << "-pair configuration."
-					<< commit;
+
+			log << " has no pair-share configuration for ";
+			log << param << " therefore there are no pair-related constraints";
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+
 			return FREE_CREDITS;
 		}
 		break;
@@ -214,100 +202,110 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 	if (val.is_initialized()) {
 
 		int credits = getCredits(val.get(), io);
-		return  credits - getCreditsInUse(io, share, type);
+		int creditsInUse = getCreditsInUse(io, share, type);
+
+		log << " has a ";
+		log << (share == VO ? "vo-share " : "pair-share ");
+		log << "configuration: " << credits;
+		log << (io == INBOUND ? "inbound cerdits, " : "outbound credits, ");
+		log << "currently " << creditsInUse << " in use";
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+
+		return  credits - creditsInUse;
 	}
+
+	log << " has no vo-share configuration";
 
 	// look for the number of credits in use for public share (it will be the same for default)
 	int creditsInUse = getCreditsInUse(io, PUBLIC, type);
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Looking for: "
-			<< (io == OUTBOUND ? "outbound" : "inbound") << " credits, "
-			<< "publicshare, "
-			<< (type == CfgBlocks::SE_TYPE ? "SE" : "SE group") << ": " << name
-			<< commit;
 	// look for public share
 	val = getValue(type, name, CfgBlocks::publicShare());
 
 	// if a cfg has been found, and return the difference
 	if (val.is_initialized()) {
+
 		int credits  = getCredits(val.get(), io);
+
+		log << ", using public-share configuration: ";
+		log << credits;
+		log << (io == INBOUND ? "inbound cerdits, " : "outbound credits, ");
+		log << "currently " << creditsInUse << " in use";
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+
 		return credits - creditsInUse;
 	}
 
+	log << " and no public-share configuration";
+
 	if (type == CfgBlocks::GROUP_TYPE) {
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "There are no SE group settings in the DB!" << commit;
+
+		log << ", therefore there are no group-related constraints";
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+
 		return FREE_CREDITS;
 	}
 
-	int defval = DEFAULT_VALUE;
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The default value (" << defval << ") is used." << commit;
+	log << ", using default configuration: ";
+	log << DEFAULT_VALUE;
+	log << (io == INBOUND ? "inbound cerdits, " : "outbound credits, ");
+	log << "currently " << creditsInUse << " in use";
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+
 	// otherwise return the difference for the default value
 	return DEFAULT_VALUE - creditsInUse;
 }
 
 bool FileTransferScheduler::schedule(bool optimize) {
 
-	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FileTransferScheduler::schedule()" << commit;
-
-	if(optimize == true){
-		//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimization is ON" << commit;
+	if(optimize == true) {
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);		
 		// update file state to READY
-		if(allowed == true){
-			int updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-			if(updated == 0){
+		if(allowed == true) {
+			unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+			if(updated == 0) {
 				return false;
-			}else{
+			} else {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FileTransferScheduler::schedule()" << commit;
-
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free outbound credits for the source SE." << commit;
 	if (getFreeCredits(OUTBOUND, VO, CfgBlocks::SE_TYPE, srcSeName, voName) <= 0) {
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free inbound credits for the destination SE." << commit;
 	if (getFreeCredits(INBOUND, VO, CfgBlocks::SE_TYPE, destSeName, voName) <= 0) {
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free outbound pair-credits for the source SE." << commit;
 	if (getFreeCredits(OUTBOUND, PAIR, CfgBlocks::SE_TYPE, srcSeName, destSeName) <= 0) {
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free inbound pair-credits for the destination SE." << commit;
 	if (getFreeCredits(INBOUND, PAIR, CfgBlocks::SE_TYPE, destSeName, srcSeName) <= 0) {
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free outbound credits for the source GROUP." << commit;
 	if (getFreeCredits(OUTBOUND, VO, CfgBlocks::GROUP_TYPE, srcGroupName, voName) <= 0) {
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free inbound credits for the destination GROUP." << commit;
 	if (getFreeCredits(INBOUND, VO, CfgBlocks::GROUP_TYPE, destGroupName, voName) <= 0) {
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free outbound pair-credits for the source SITE." << commit;
 	if (getFreeCredits(OUTBOUND, PAIR, CfgBlocks::GROUP_TYPE, srcGroupName, destGroupName) <= 0) {
 		return false;
 	}
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Checking if there are free inbound pair-credits for the destination SITE." << commit;
 	if (getFreeCredits(INBOUND, PAIR, CfgBlocks::GROUP_TYPE, destGroupName, srcGroupName) <= 0) {
 		return false;
 	}
 
 	// update file state to READY
-	int updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+	unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
 	if(updated == 0)
 		return false;
 
