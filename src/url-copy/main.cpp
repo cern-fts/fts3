@@ -437,7 +437,10 @@ int main(int argc, char **argv) {
         /*gfal2 debug logging*/
         if (debug == true) {
 	    //ADD when file is provided in gfal2 API GFAL_VERBOSE_TRACE_PLUGIN
-            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE );
+            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN );
+	    seteuid(privid);
+            	freopen (fileManagement.getLogFileFullPath().c_str(),"w",stderr);
+            seteuid(pw_uid);
             gfal_log_set_handler((GLogFunc) log_func, NULL);
         }
 
@@ -618,7 +621,8 @@ stop:
         logStream.close();
         fileManagement.archive();
  	if (debug == true){ 
-	    //log << fileManagement.timestamp() << "DEBUG " << oss.str()  << '\n';
+		fclose (stderr);    
+	//log << fileManagement.timestamp() << "DEBUG " << oss.str()  << '\n';
 	} 
 
     }//end for reuse loop	

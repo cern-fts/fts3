@@ -18,6 +18,11 @@
 using namespace FTS3_CONFIG_NAMESPACE;
 using namespace std;
 
+static int fexists(const char *filename) {
+    struct stat buffer;
+    if (stat(filename, &buffer) == 0) return 0;
+    return -1;
+}
 
 FileManagement::FileManagement() {
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
@@ -38,6 +43,7 @@ FileManagement::~FileManagement() {
 void FileManagement::getLogStream(std::ofstream& logStream) {
     fname = generateLogFileName(source_url, dest_url, file_id, job_id);
     log = logFileName + "/" + fname;
+    fullPath = log + ".debug";
     logStream.open(log.c_str(), ios::app);
 }
 
@@ -97,6 +103,11 @@ void FileManagement::archive() {
     directoryExists(arcFileName.c_str());
     arcFileName += "/" + fname; 
     rename(log.c_str(), arcFileName.c_str());
+    if (fexists(fullPath.c_str()) == 0){
+        std::string debugArchFile = arcFileName + ".debug";
+	rename(fullPath.c_str(), debugArchFile.c_str());
+    }   
+    
 }
 
 std::string FileManagement::dateDir(){

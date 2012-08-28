@@ -38,17 +38,20 @@ public:
     void setDestUrl(std::string& dest_url);
     void setFileId(std::string& file_id);
     void setJobId(std::string& job_id);
-    std::string getLogFileName(){
+    inline std::string getLogFileFullPath(){
+	return fullPath;
+    }
+    inline std::string getLogFileName(){
     	return fname;
     }
-    std::string getSePair(){
+    inline std::string getSePair(){
     	std::string pair = shost + "__" + dhost;
     	return pair;
     }
-    std::string getSourceHostname(){
+    inline std::string getSourceHostname(){
     	return shost;
     }
-    std::string getDestHostname(){
+    inline std::string getDestHostname(){
     	return dhost;
     }
 
@@ -64,4 +67,5 @@ private:
     std::string dhost;
     std::string dateArch;
     std::string log;
+    std::string fullPath;
 };
