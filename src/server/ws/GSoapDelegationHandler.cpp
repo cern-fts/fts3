@@ -396,7 +396,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 
 time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate trmination time" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate termination time" << commit;
 
 	delegationId = makeDelegationId(); // should return always the same delegation ID for the same user
 
@@ -408,7 +408,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 		delete cred;
 
 	} else
-		throw Err_Custom("Failed to retrieve storage element from DB!");
+		throw Err_Custom("Failed to retrieve termination time for DN " + dn);
 
 	return time;
 }
