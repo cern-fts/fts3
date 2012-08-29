@@ -128,7 +128,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-            " AND rownum <=10  ORDER BY t_job.priority DESC"
+            " AND rownum <=25  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time) ";
 
     oracle::occi::Statement* s = NULL;
@@ -139,7 +139,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
 		return;
 
         s = conn->createStatement(query_stmt, tag);
-        s->setPrefetchRowCount(1);
+        s->setPrefetchRowCount(25);
 	r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -1453,7 +1453,6 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     query << ", THROUGHPUT=:" << ++index;
     query << " WHERE file_id =:" << ++index;
     query << " and (file_state='READY' OR file_state='ACTIVE')";
-    //ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
     try {
         s = conn->createStatement(query.str(), tag);
@@ -1628,7 +1627,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
 
 void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
     const std::string cancelReason = "Job canceled by the user";
-    std::string cancelJ = "update t_job SET  JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE job_id = :5";
+    std::string cancelJ = "update t_job SET  JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE job_id = :5 AND job_state not in('FINISHEDDIRTY','FINISHED','FAILED')";
     std::string cancelF = "update t_file set file_state=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE JOB_ID=:5 AND file_state not in('FINISHEDDIRTY','FINISHED','FAILED')";
     const std::string cancelJTag = "cancelJTag";
     const std::string cancelFTag = "cancelFTag";
@@ -2665,6 +2664,7 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
         }
         s1->executeUpdate();
         s2->executeUpdate();
+
         conn->commit();
         conn->destroyStatement(s1, tag1);
         conn->destroyStatement(s2, tag2);
@@ -2707,7 +2707,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND t_job.reuse_job='Y' "
             " AND t_job.job_state ='SUBMITTED' "
-            " AND ROWNUM =1 "
+            " AND ROWNUM <=25 "
             " ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time) ";
 
@@ -2718,7 +2718,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
             return;
 
         s = conn->createStatement(query_stmt, tag);
-        s->setPrefetchRowCount(1);
+        s->setPrefetchRowCount(25);
         r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -2945,7 +2945,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     }
 }
 
-void OracleAPI::updateOptimizer(std::string file_id, double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+void OracleAPI::updateOptimizer(std::string file_id, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
     const std::string tag1 = "updateOptimizer1";
     const std::string tag2 = "updateOptimizer2";
     const std::string tag3 = "updateOptimizer3";
@@ -2958,20 +2958,17 @@ void OracleAPI::updateOptimizer(std::string file_id, double filesize, double tim
             " and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2)"
             " and nostreams = :3 and timeout=:4 and buffer=:5 and source_se=:6 and dest_se=:7 ";
 
-    std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, when=:4 "
-            " WHERE nostreams = :5 and timeout=:6 and buffer=:7 and source_se=:8 and dest_se=:9 ";
-	    
+    std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, when=:4, timeout=:5 "
+            " WHERE nostreams = :6 and timeout=:7 and buffer=:8 and source_se=:9 and dest_se=:10 ";	    
     std::string query3 = "select count(*) from t_optimize where source_se=:1 and dest_se=:2";	    
-
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
     oracle::occi::Statement* s2 = NULL;
     oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;    
-    
-    
+    oracle::occi::ResultSet* r3 = NULL; 
     try {
     
+           
         if (false == conn->checkConn())
             return;
     
@@ -2999,9 +2996,7 @@ void OracleAPI::updateOptimizer(std::string file_id, double filesize, double tim
         if (filesize <= 0)
             filesize = 0;
         if (nostreams <= 0)
-            nostreams = 0;
-        if (timeout <= 0)
-            timeout = 0;
+            nostreams = DEFAULT_NOSTREAMS;
         if (buffersize <= 0)
             buffersize = 0;
         if (activeExists) { //update
@@ -3010,11 +3005,15 @@ void OracleAPI::updateOptimizer(std::string file_id, double filesize, double tim
             s2->setDouble(2, throughput);
             s2->setInt(3, active);
 	    s2->setTimestamp(4, conv->toTimestamp(now, conn->getEnv()));	    
-            s2->setInt(5, nostreams);
-            s2->setInt(6, timeout);
-            s2->setInt(7, buffersize);
-            s2->setString(8, source_hostname);
-            s2->setString(9, destin_hostname);
+    	    if (timeInSecs <= DEFAULT_TIMEOUT)	    
+            	s2->setInt(5, DEFAULT_TIMEOUT);
+	    else
+            	s2->setInt(5, timeout);	    
+            s2->setInt(6, nostreams);
+	    s2->setInt(7, timeout);			
+            s2->setInt(8, buffersize);
+            s2->setString(9, source_hostname);
+            s2->setString(10, destin_hostname);
             s2->executeUpdate();
             conn->commit();
             conn->destroyStatement(s2, tag2);
@@ -3294,12 +3293,18 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
-
-void OracleAPI::setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize){
+/*INTERNAL_FILE_PARAMS*/
+void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize){
 
      const std::string tag4 = "setAllowed";
+     const std::string tag5 = "setAllowed111";     
+     const std::string tag6 = "setAllowed222";          
     std::string query_stmt_throuput4 = "update t_optimize set file_id=1 where nostreams=:1 and buffer=:2 and timeout=:3 and source_se=:4 and dest_se=:5";
-   oracle::occi::Statement* s4 = NULL;
+    std::string query_stmt_throuput5 = "update t_file set INTERNAL_FILE_PARAMS=:1 where file_id=:2 and job_id=:3";    
+    std::string query_stmt_throuput6 = "update t_file set INTERNAL_FILE_PARAMS=:1 where job_id=:2";        
+    oracle::occi::Statement* s4 = NULL;
+    oracle::occi::Statement* s5 = NULL;    
+    oracle::occi::Statement* s6 = NULL;        
   try {
     
         if (false == conn->checkConn())
@@ -3314,6 +3319,25 @@ void OracleAPI::setAllowed(const std::string & source_se, const std::string & de
                 s4->executeUpdate();
                 conn->commit();
                 conn->destroyStatement(s4, tag4);		
+		
+  	        std::stringstream params;
+		params << "nostreams:" << nostreams << ",timeout:"<< timeout << ",buffersize:" << buffersize;
+		if(file_id != -1){		
+ 		s5 = conn->createStatement(query_stmt_throuput5, tag5);
+                s5->setString(1, params.str());
+                s5->setInt(2, file_id);
+                s5->setString(3, job_id);
+                s5->executeUpdate();
+                conn->commit();
+                conn->destroyStatement(s5, tag5);
+		}else{
+ 		s6 = conn->createStatement(query_stmt_throuput6, tag6);
+                s6->setString(1, params.str());
+                s6->setString(2, job_id);
+                s6->executeUpdate();
+                conn->commit();
+                conn->destroyStatement(s6, tag6);		
+		}
 	}	
    catch (oracle::occi::SQLException const &e) {
         conn->rollback();
@@ -3321,6 +3345,12 @@ void OracleAPI::setAllowed(const std::string & source_se, const std::string & de
 		if(s4){		
 			conn->destroyStatement(s4, tag4);				
 		}
+		if(s5){		
+			conn->destroyStatement(s5, tag5);				
+		}		
+		if(s6){		
+			conn->destroyStatement(s6, tag6);				
+		}				
 	}
 }
 

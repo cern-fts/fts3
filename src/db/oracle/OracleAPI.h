@@ -186,7 +186,7 @@ public:
     
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname); 
     
-    virtual void updateOptimizer(std::string file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname);
+    virtual void updateOptimizer(std::string file_id , double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname);
     
     virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);        
     
@@ -196,7 +196,7 @@ public:
     
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);   
     
-    virtual void setAllowed(const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize); 
+    virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize); 
     
     
 private:

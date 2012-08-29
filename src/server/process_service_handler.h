@@ -200,7 +200,7 @@ protected:
                     if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
 		    
 		    if(optimize){
-		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }
                     protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
                     proxy_file = get_proxy_cert(
@@ -393,7 +393,7 @@ protected:
                 if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
 		
 		    if(optimize){
-		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }
 		
                 protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);

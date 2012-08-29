@@ -16,7 +16,7 @@ session_start();
 
 <?php
 $jobid = $_GET['jobid'];
-$strSQL = "SELECT  JOB_ID, SOURCE_SURL,DEST_SURL,FILE_STATE, FILESIZE, REASON, START_TIME, FINISH_TIME, THROUGHPUT, CHECKSUM,TX_DURATION FROM T_FILE WHERE JOB_ID='$jobid' ORDER BY t_file.file_id DESC, SYS_EXTRACT_UTC(t_file.start_time) ";
+$strSQL = "SELECT  INTERNAL_FILE_PARAMS,JOB_ID, SOURCE_SURL,DEST_SURL,FILE_STATE, FILESIZE, REASON, START_TIME, FINISH_TIME, THROUGHPUT, CHECKSUM,TX_DURATION FROM T_FILE WHERE JOB_ID='$jobid' ORDER BY t_file.file_id DESC, SYS_EXTRACT_UTC(t_file.start_time) ";
 
 try {
    $conn = new PDO("oci:dbname=".$_SESSION['connstring'],$_SESSION['user'],$_SESSION['pass']);
@@ -40,6 +40,7 @@ $stmt = $conn->query($strSQL);
 <th > <div align="center">START TIME </div></th>
 <th > <div align="center">FINISH TIME </div></th>
 <th > <div align="center">THROUGHPUT </div></th>
+<th > <div align="center">PARAMS </div></th>
 
 </tr>
 <?php
@@ -145,6 +146,7 @@ $total = formatBytes($duration);
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
 <td><?php echo $total; ?></td>
+<td><?php echo $objResult["INTERNAL_FILE_PARAMS"];?></td>
 </tr>
 <?php
 }
@@ -161,6 +163,7 @@ if( $objResult["FILE_STATE"] == "FAILED"){
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
 <td></td>
+<td><?php echo $objResult["INTERNAL_FILE_PARAMS"];?></td>
 </tr>
 <?php
 }
@@ -177,6 +180,7 @@ if( $objResult["FILE_STATE"] == "ACTIVE"){
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
 <td> </td>
+<td><?php echo $objResult["INTERNAL_FILE_PARAMS"];?></td>
 </tr>
 <?php
 }
@@ -193,6 +197,7 @@ if( $objResult["FILE_STATE"] == "CANCELED"){
 <td><?php echo $objResult["START_TIME"];?></td>
 <td><?php echo $objResult["FINISH_TIME"];?></td>
 <td> </td>
+<td><?php echo $objResult["INTERNAL_FILE_PARAMS"];?></td>
 </tr>
 <?php
 }
