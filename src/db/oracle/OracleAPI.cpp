@@ -3180,7 +3180,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 conn->destroyResultset(s1, r1);
                 conn->destroyStatement(s1, tag1);
                 return allowed;
-            } else {
+            } else { //there are active transfers for this pair
                 s2 = conn->createStatement(query_stmt2, tag2);
                 s2->setString(1, source_hostname);
                 s2->setString(2, destin_hostname);
@@ -3191,8 +3191,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 s2->setPrefetchRowCount(1);
                 r2 = conn->createResultset(s2);
                 if (r2->next()) { //found records in t_optimize
-                    actThr = r2->getInt(1); //throughput
-                    //thr = r2->getInt(2);
+                    actThr = r2->getInt(1); //throughput                   
                     if (actThr > 1.0 && act<25) {
                         allowed = true;
                     } else {

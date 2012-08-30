@@ -128,13 +128,14 @@ static std::vector<std::string> split(const char *str, char c = ':') {
 
 static void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpointer user_data) {
 
+   if(h){	
     size_t avg = gfalt_copy_get_average_baudrate(h, NULL) / 1024;
     size_t inst = gfalt_copy_get_instant_baudrate(h, NULL) / 1024;
     size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
     time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
-
     logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
-    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed << commit;
+   }
+    
 }
 
 void signalHandler(int signum) {
@@ -198,7 +199,9 @@ uid_t name_to_uid(char const *name) {
 }
 
 static void log_func(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data) {
+  if(message){
     logStream << fileManagement.timestamp() << "DEBUG " << message << '\n';
+  }
 }
 
 int main(int argc, char **argv) {

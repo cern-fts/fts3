@@ -28,11 +28,11 @@ struct message{
  
  
 #define DEFAULT_TIMEOUT 3600
-const int timeouts[] = {3600,  5000, 6000,  9000, 11000,  13000, 14000};
+const int timeouts[] = {4000, 5000, 6000,  9000, 11000,  13000, 14000};
 const size_t timeoutslen = (sizeof (timeouts) / sizeof *(timeouts));
 
 #define DEFAULT_NOSTREAMS 8
-const int nostreams[] = {2, 4, 6, 8, 10};
+const int nostreams[] = {4, 6, 8, 10, 12};
 const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
 
 
