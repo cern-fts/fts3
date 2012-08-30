@@ -27,9 +27,12 @@ limitations under the License. */
 #include <fstream>
 #include "server.h"
 #include "daemonize.h"
+#include "signal_logger.h"
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
+
+extern std::string stackTrace;
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -43,6 +46,7 @@ static int fexists(const char *filename) {
 /// Handler of SIGCHLD
 void _handle_sigint(int)
 {
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     theServer().stop();
     exit(EXIT_SUCCESS);
 }
@@ -149,8 +153,13 @@ int main (int argc, char** argv)
     char *hostcert = "/etc/grid-security/hostcert.pem";
 
     try 
-    {
-
+    {    
+        REGISTER_SIGNAL(SIGABRT);
+        REGISTER_SIGNAL(SIGSEGV);
+        REGISTER_SIGNAL(SIGTERM);
+        REGISTER_SIGNAL(SIGBUS);
+	REGISTER_SIGNAL(SIGFPE);
+			
     	fts3_initialize_logfile();
 	
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);

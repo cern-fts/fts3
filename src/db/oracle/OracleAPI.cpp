@@ -83,10 +83,14 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+	    if(s_se && rSe){
 	        conn->destroyResultset(s_se, rSe);
 	        conn->destroyStatement(s_se, tagse);
+		}
+	     if(s_group && rGroup){	
         	conn->destroyResultset(s_group, rGroup);
 	        conn->destroyStatement(s_group, taggroup);
+		}
 
 	}
 	
@@ -180,8 +184,10 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+	      if(s && r){
 	        conn->destroyResultset(s, r);
 	        conn->destroyStatement(s, tag);
+		}
 	}
     }
 
@@ -257,6 +263,7 @@ void OracleAPI::getSeCreditsInUse(
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+	    if(s && r)
 	        conn->destroyResultset(s, r);
         	conn->destroyStatement(s, "");
 	}
@@ -343,8 +350,10 @@ void OracleAPI::getGroupCreditsInUse(
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+	       if(s && r){
 	        conn->destroyResultset(s, r);
         	conn->destroyStatement(s, "");
+		}
 	}
 		
     }
@@ -422,7 +431,9 @@ void OracleAPI::updateJObStatus(std::string jobId, const std::string status) {
 
     } catch (oracle::occi::SQLException const &e) {
 	if(conn){
+	     if(s){
         	conn->destroyStatement(s, tag);	
+		}
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -487,7 +498,9 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+	     if(s){
 		conn->destroyStatement(s, selecttag);
+		}
 	}
 		
     }
@@ -570,8 +583,12 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+	      if(s_job_statement){
 	        conn->destroyStatement(s_job_statement, tag_job_statement);
+		}
+		if(s_file_statement){
         	conn->destroyStatement(s_file_statement, tag_file_statement);	
+		}
 	}		
     }
 }
@@ -609,8 +626,10 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     } catch (oracle::occi::SQLException const &e) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
+		if(s && r){
 	        conn->destroyResultset(s, r);
         	conn->destroyStatement(s, tag);
+		}
 	}
 		
     }
@@ -808,8 +827,10 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
     } catch (oracle::occi::SQLException const &e) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, "");	
+		if(s && r){
+	        	conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, "");	
+		}
 	}
 		
     }
@@ -844,8 +865,10 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
     } catch (oracle::occi::SQLException const &e) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
-	        conn->destroyResultset(s, r);
-	        conn->destroyStatement(s, tag);
+		if(s && r){
+	        	conn->destroyResultset(s, r);
+	        	conn->destroyStatement(s, tag);
+		}
 	}
     }
 
@@ -2554,8 +2577,10 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
         return debug;
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
+		if(s && r){
 	        conn->destroyResultset(s, r);
         	conn->destroyStatement(s, tag);	
+		}
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -2688,8 +2713,10 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
 
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
+		if(s && r){
 	        conn->destroyResultset(s, r);
 	        conn->destroyStatement(s, tag);
+		}
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -2999,7 +3026,7 @@ void OracleAPI::addOptimizer(time_t when, double throughput, const std::string &
             " t_job.source_se=:6 and t_job.dest_se=:7),:8,:9,:10) ";
 
     oracle::occi::Statement* s = NULL;
-    ThreadTraits::LOCK lock(_mutex);
+    //ThreadTraits::LOCK lock(_mutex);
     try {
         if (false == conn->checkConn())
             return;
@@ -3145,7 +3172,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     const std::string tag2 = "isTrAllowed2";
     bool allowed = true;
     double actThr = 0;
-    double thr = 0;
     int act = 0;
     std::string query_stmt1 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 ";
 
@@ -3163,6 +3189,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 	oracle::occi::ResultSet* r1 = NULL;
 	oracle::occi::Statement* s2 = NULL;
 	oracle::occi::ResultSet* r2 = NULL;
+	ThreadTraits::LOCK lock(_mutex);
 	
     try {
     
@@ -3192,7 +3219,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 r2 = conn->createResultset(s2);
                 if (r2->next()) { //found records in t_optimize
                     actThr = r2->getInt(1); //throughput                   
-                    if (actThr > 1.0 && act<25) {
+                    if (actThr > 1.0 || act<5) {
                         allowed = true;
                     } else {
                         allowed = false;
