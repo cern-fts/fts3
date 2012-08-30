@@ -26,5 +26,14 @@ install(FILES         oracle-drop.sql
 install(FILES         oracle-schema.sql
         DESTINATION ${DOC_INSTALL_DIR} )
 	
+install(FILES         fts_purge_pack.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+	
+install(FILES         fts_purge_body_pack.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
 
-
+install(FILES         fts_history_pack.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+	
+install(FILES         fts_history_body_pack.sql
+        DESTINATION ${DOC_INSTALL_DIR} )		

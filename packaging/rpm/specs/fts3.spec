@@ -1,6 +1,6 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        13%{?dist}
+Release:        14%{?dist}
 Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
@@ -162,6 +162,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/fts3_server.8.gz
 %doc %{_docdir}/fts3/oracle-drop.sql
 %doc %{_docdir}/fts3/oracle-schema.sql
+%doc %{_docdir}/fts3/fts_purge_pack.sql
+%doc %{_docdir}/fts3/fts_purge_body_pack.sql
+%doc %{_docdir}/fts3/fts_history_pack.sql
+%doc %{_docdir}/fts3/fts_history_body_pack.sql
 
 %files client
 %defattr(-,root,root,-)
