@@ -13,7 +13,7 @@ session_start();
 </head>
 <body>
 
-<b>FTS 3 Pilot service  - Statistics</b></br></br>
+<b>FTS 3 Pilot service  - Statistics (last 12h jobs fetched)</b></br></br>
 <b>Results are valid ONLY when Optimizer is enabled</b>
 
 <?php
@@ -59,7 +59,7 @@ while($objResult = $stmt2->fetch(PDO::FETCH_BOTH))
 	$line .= $voName.": ".$actPerVo."</br>";	
 }
 
-$distinctSe = "select distinct source_se,dest_se from t_optimize where throughput is not null";
+$distinctSe = "select distinct source_se,dest_se from t_optimize where throughput is not null and (when > (CURRENT_TIMESTAMP - interval '12' hour))";
 $stmt4 = $conn ->query($distinctSe);
 $avgThr = "";
 $avgDurPerSePairxx = "";
@@ -67,13 +67,13 @@ while($objResult4 = $stmt4->fetch(PDO::FETCH_BOTH))
 {
 	$source = $objResult4["SOURCE_SE"];
 	$dest = $objResult4["DEST_SE"];	
-	$totalActivePerSePair = "select avg(throughput) from t_optimize where source_se='$source' and dest_se='$dest' and throughput is not null ";
+	$totalActivePerSePair = "select avg(throughput) from t_optimize where source_se='$source' and dest_se='$dest' and throughput is not null and and (when > (CURRENT_TIMESTAMP - interval '12' hour)) ";
 	$stmt5 = $conn->prepare($totalActivePerSePair);
 	$stmt5->execute();
 	$actPerSePair = $stmt5->fetchColumn();
 	$avgThr .= $source." -> ".$dest." : ".round($actPerSePair,2)." Mbit/sec</br>";
 	
-	$totalDurationPerSePair = "select avg(TX_DURATION) from t_file where source_surl like '%$source%' and dest_surl like '%$dest%' and TX_DURATION is not null";
+	$totalDurationPerSePair = "select avg(TX_DURATION) from t_file where source_surl like '%$source%' and dest_surl like '%$dest%' and TX_DURATION is not null and (FINISH_TIME > (CURRENT_TIMESTAMP - interval '12' hour))";
 	$stmt6 = $conn->prepare($totalDurationPerSePair);
 	$stmt6->execute();
 	$avgDurPerSePair = $stmt6->fetchColumn();
