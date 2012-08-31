@@ -137,7 +137,7 @@ $stmt = $conn->query($strSQL);
 
 ?>
 
-<a href="fts3queue.php">Queue</a>
+<a href="fts3queue.php">Queue</a> - <a href="fts3stats.php">Statistics</a>
 
 <table width="100%" border="1">
 <tr>

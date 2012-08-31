@@ -23,9 +23,13 @@ void SignalLogger::log_stack(int sig){
     	int nSize = backtrace(array, stack_size);
     	char ** symbols = backtrace_symbols(array, nSize);
     	for (int i = 0; i < nSize; ++i){
-		stackTrace+=std::string(symbols[i]) + '\n';
+		if(symbols && symbols[i]){
+			stackTrace+=std::string(symbols[i]) + '\n';
+		}
     	}
-    	free(symbols);	
+	if(symbols){
+    		free(symbols);	
+	}
 	kill(getpid(), SIGINT);
 
     }
