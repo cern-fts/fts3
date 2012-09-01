@@ -232,7 +232,7 @@ int main(int argc, char **argv) {
     hostname[1023] = '\0';
     gethostname(hostname, 1023);
 
-    for (int i(1); i < argc; ++i) {
+    for (register unsigned int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
         if (temp.compare("-G") == 0)
             reuseFile = std::string(argv[i + 1]);
@@ -328,9 +328,9 @@ int main(int argc, char **argv) {
 
     unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
     std::string strArray[4];
-    for (unsigned int i = 0; i < reuseOrNot; i++) {
+    for ( register unsigned int ii = 0; ii < reuseOrNot; ii++) {
         if (reuseFile.length() > 0) {
-            std::string mid_str(urlsFile[i]);
+            std::string mid_str(urlsFile[ii]);
             typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
             tokenizer tokens(mid_str, boost::char_separator<char> (" "));
             std::copy(tokens.begin(), tokens.end(), strArray);

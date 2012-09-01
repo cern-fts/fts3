@@ -103,7 +103,7 @@ protected:
     void executeTransfer_a() {
     try{
     while(1){ /*need to receive more than one messages at a time*/    
-     for(int i = 0; i < 50; i++){
+     for(register unsigned int i = 0; i < 50; i++){
     	struct message msg;
 	qm->receive(&msg);
       std::string job = std::string(msg.job_id).substr (0,36);    

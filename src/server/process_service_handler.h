@@ -119,7 +119,7 @@ protected:
     SiteName siteResolver;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
-        std::vector<int>::iterator iter;
+        std::vector<int>::const_iterator iter;
         for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter) {
             int pid = *iter;
             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing process: " << pid << commit;
@@ -145,7 +145,7 @@ protected:
     }
 
     void createJobFile(std::string job_id, std::vector<std::string>& files) {
-        std::vector<std::string>::iterator iter;
+        std::vector<std::string>::const_iterator iter;
         std::string filename = "/var/lib/fts3/" + job_id;
         std::ofstream fout;
         fout.open(filename.c_str(), ios::out);
@@ -159,9 +159,9 @@ protected:
         const std::string cmd = "fts3_url_copy";
         std::string params = std::string("");
         ExecuteProcess *pr = NULL;
-        std::vector<TransferJobs*>::iterator iter2;
+        std::vector<TransferJobs*>::const_iterator iter2;
         std::vector<TransferFiles*> files;
-        std::vector<TransferFiles*>::iterator fileiter;
+        std::vector<TransferFiles*>::const_iterator fileiter;
         std::string sourceSiteName("");
         std::string destSiteName("");
         std::string source_hostname("");
@@ -511,6 +511,7 @@ protected:
     void executeTransfer_a() {
         std::vector<int> requestIDs;
         std::vector<TransferJobs*> jobs2;
+	jobs2.reserve(25);
 	static bool drainMode = false;
         while (1) {
 	
