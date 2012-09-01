@@ -2380,7 +2380,7 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
 	        conn->destroyResultset(s, r);
         	conn->destroyStatement(s, tag);	
 	}
-        conn->rollback();
+        //conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return cred;
@@ -2520,7 +2520,7 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
 	        conn->destroyResultset(s, r);
 	        conn->destroyStatement(s, tag);
 	}
-        conn->rollback();
+        //conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return cred;
