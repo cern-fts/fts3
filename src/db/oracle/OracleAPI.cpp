@@ -3122,6 +3122,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
     bool valid = true;
     const std::string tag = "isCredentialExpired";
     std::string query = "SELECT termination_time from t_credential where dlg_id=:1 and dn=:2";
+    double dif;
 
     ThreadTraits::LOCK lock(_mutex);
     oracle::occi::Statement* s = NULL;
@@ -3139,11 +3140,13 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
         if (r->next()) {
             time_t lifetime = std::time(NULL);
             time_t term_time = conv->toTimeT(r->getTimestamp(1));
-            if (term_time < lifetime)
-                valid = false;
+	    dif = difftime (term_time,lifetime);
+    	    //std::cerr << dif << std::endl;
+    	    if (dif < 3600)
+		valid = false;
 
-        }
-        conn->destroyResultset(s, r);
+	}
+	conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
         return valid;
     } catch (oracle::occi::SQLException const &e) {
