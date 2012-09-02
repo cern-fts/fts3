@@ -445,7 +445,7 @@ void OracleAPI::updateJObStatus(std::string jobId, const std::string status) {
 void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
     std::string jobAppender("");
     TransferFiles* tr_files = NULL;
-    std::vector<TransferJobs*>::iterator iter;
+    std::vector<TransferJobs*>::const_iterator iter;
     std::string selecttag = "getByJobId";
     std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
             " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.checksum, t_job.CHECKSUM_METHOD, t_job.SOURCE_SPACE_TOKEN,"
@@ -565,7 +565,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id
-        std::vector<src_dest_checksum_tupple>::iterator iter;
+        std::vector<src_dest_checksum_tupple>::const_iterator iter;
         s_file_statement = conn->createStatement(file_statement, tag_file_statement);
 
         for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
@@ -603,6 +603,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     JobStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    ThreadTraits::LOCK lock(_mutex);
     try {
         s = conn->createStatement(query, tag);
         s->setString(1, requestID);
@@ -734,7 +735,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
     std::string sel = "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, J.vo_name,(SELECT count(*) from t_file where t_file.job_id = J.job_id), priority, cancel_job FROM t_job J ";
     //gain the benefit from the statement pooling
     std::sort(inGivenStates.begin(), inGivenStates.end());
-    std::vector<std::string>::iterator foundCancel;
+    std::vector<std::string>::const_iterator foundCancel;
 
     if (inGivenStates.size() > 0) {
         foundCancel = std::find_if(inGivenStates.begin(), inGivenStates.end(), bind2nd(std::equal_to<std::string > (), std::string("Canceling")));
@@ -845,6 +846,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
     FileTransferStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    ThreadTraits::LOCK lock(_mutex);
     try {
         s = conn->createStatement(query, tag);
         s->setString(1, requestID);
@@ -1003,7 +1005,7 @@ std::set<std::string> OracleAPI::getAllMatchingSeGroupNames(std::string name) {
 
 void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se) {
     Se* seData = NULL;
-    std::vector<Se*>::iterator iter;
+    std::vector<Se*>::const_iterator iter;
     const std::string tag = "getAllSeInfoNoCritiria";
     std::string query_stmt = "SELECT "
             " t_se.ENDPOINT, "
@@ -1059,7 +1061,7 @@ void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se) {
 
 void OracleAPI::getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) {
     SeConfig* seCon = NULL;
-    std::vector<SeConfig*>::iterator iter;
+    std::vector<SeConfig*>::const_iterator iter;
     const std::string tag = "getAllSeConfigNoCritiria";
     std::string query_stmt = "SELECT "
             " T_SE_VO_SHARE.SE_NAME, "
@@ -1659,7 +1661,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
     std::string cancelF = "update t_file set file_state=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE JOB_ID=:5 AND file_state not in('FINISHEDDIRTY','FINISHED','FAILED')";
     const std::string cancelJTag = "cancelJTag";
     const std::string cancelFTag = "cancelFTag";
-    std::vector<std::string>::iterator iter;
+    std::vector<std::string>::const_iterator iter;
     time_t timed = time(NULL);
     ThreadTraits::LOCK lock(_mutex);	
     try {
@@ -2640,7 +2642,7 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
 
 void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
     TransferJobs* tr_jobs = NULL;
-    std::vector<TransferJobs*>::iterator iter;
+    std::vector<TransferJobs*>::const_iterator iter;
     const std::string tag = "getSubmittedJobsReuse";
 
     const std::string query_stmt = "SELECT /* FIRST_ROWS(25) */ "
@@ -3119,7 +3121,7 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
 
 bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::string & dn) {
 
-    bool valid = true;
+    bool valid = false;
     const std::string tag = "isCredentialExpired";
     std::string query = "SELECT termination_time from t_credential where dlg_id=:1 and dn=:2";
     double dif;
@@ -3141,9 +3143,9 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
             time_t lifetime = std::time(NULL);
             time_t term_time = conv->toTimeT(r->getTimestamp(1));
 	    dif = difftime (term_time,lifetime);
-    	    //std::cerr << dif << std::endl;
-    	    if (dif < 3600)
-		valid = false;
+    	    std::cerr << dif << std::endl;
+    	    if (dif > 0)
+		valid = true;
 
 	}
 	conn->destroyResultset(s, r);

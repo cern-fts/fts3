@@ -170,6 +170,7 @@ protected:
         std::string proxy_file("");
         bool debug = false;
         OptimizerSample* opt_config = NULL;
+	files.reserve(300);
 
         if (reuse == false) {
             if (jobs2.size() > 0) {

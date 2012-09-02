@@ -101,7 +101,7 @@ void CredService::get(
     // Check if the database contains a valid proxy for this dlg id and DN
     if(false == DBSingleton::instance().getDBObjectInstance()->isCredentialExpired(id, userDn) ){
         filename = fname;
-	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << "and DN " << userDn << " is expired in DB, need renewal!" << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Proxy for dlg id "<< id << "and DN " << userDn << " has expired in DB, needs renewal!" << commit;
         return;
     }
         
