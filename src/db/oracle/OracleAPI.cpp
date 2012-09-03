@@ -2997,8 +2997,12 @@ void OracleAPI::updateOptimizer(std::string file_id, double filesize, int timeIn
 	        conn->destroyResultset(s3, r3);
         	conn->destroyStatement(s3, tag3);
 	
-	    if(count < 400)
+	    if(count < 400){
+		if (timeInSecs <= DEFAULT_TIMEOUT){
+			timeout = DEFAULT_TIMEOUT;
+		}
             	addOptimizer(now, throughput, source_hostname, destin_hostname, 1, nostreams, timeout, buffersize, active);
+            }
         }
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
