@@ -3032,7 +3032,7 @@ void OracleAPI::addOptimizer(time_t when, double throughput, const std::string &
             " t_job.source_se=:6 and t_job.dest_se=:7),:8,:9,:10) ";
 
     oracle::occi::Statement* s = NULL;
-    ThreadTraits::LOCK lock(_mutex);
+    //ThreadTraits::LOCK lock(_mutex);
     try {
         if (false == conn->checkConn())
             return;
