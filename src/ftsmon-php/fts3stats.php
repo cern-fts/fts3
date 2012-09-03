@@ -80,20 +80,41 @@ while($objResult4 = $stmt4->fetch(PDO::FETCH_BOTH))
 	$avgDurPerSePairxx .= $source." -> ".$dest." : ".round($avgDurPerSePair,2)." secs</br>";	
 }
 
-$reasonFailures = "select distinct reason from t_file";
+$reasonFailures = "select distinct reason from t_file where reason is not null order by reason asc";
 $stmt7 = $conn ->query($reasonFailures);
 $reason = "";
 while($objResult7 = $stmt7->fetch(PDO::FETCH_BOTH))
 {
-	$reason .= $objResult7["REASON"]."</br></br>";
+	$testE = $objResult7["REASON"];
+	$countReason = "select count(*) from t_file where reason='$testE' ";
+	$stmt33 = $conn->prepare($countReason);
+	$stmt33 ->execute();
+	$countR = $stmt33->fetchColumn();	
+	$reason .=$countR." : ".$objResult7["REASON"]."</br></br>";
 }
 
 
+
+#success rate
+$success = "select count(*) from t_file where file_state='FINISHED' ";
+$stmt13 = $conn->prepare($success);
+$stmt13 ->execute();
+$succ = $stmt13->fetchColumn();
+
+#failure rate
+$failed = "select count(*) from t_file where file_state!='FINISHED' ";
+$stmt14 = $conn->prepare($failed);
+$stmt14 ->execute();
+$fail = $stmt14->fetchColumn();
+
+$ratioSuccessFailure = round(($fail / $succ)*100,1);
+
 ?>
 
+<tr><td>SUCCESS RATE</td><td><?php echo $ratioSuccessFailure;?>%</td></tr>
 <tr><td>TOTAL ACTIVE</td><td><?php echo $result;?></td></tr>
 <tr><td>TOTAL QUEUED</td><td><?php echo $queued;?></td></tr>
-<tr><td>ACTIVE PER VO</td><td><?php echo $line;;?></td></tr>
+<tr><td>ACTIVE PER VO</td><td><?php echo $line;?></td></tr>
 <tr><td>AVG THROUGHPUT PER SE PAIR</td><td><?php echo $avgThr;?></td></tr>
 <tr><td>AVG TX DURATION PER SE PAIR</td><td><?php echo $avgDurPerSePairxx;?></td></tr>
 <tr valign="top"><td valign="top">DISTINCT FAILURES</td><td valign="top"><?php echo $reason;?></td></tr>
