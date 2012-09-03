@@ -144,7 +144,7 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
 /// Web service operation 'getFileStatus' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int _limit, struct impltns__getFileStatusResponse &_param_9) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
@@ -199,7 +199,7 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
 /// Web service operation 'getFileStatus2' (returns error code or SOAP_OK)
 int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, int _limit, struct impltns__getFileStatus2Response &_param_10) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
@@ -254,19 +254,19 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 /// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
 int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct impltns__getTransferJobStatusResponse &_param_11) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus' request" << commit;
 
 	try {
 		AuthorizationManager::getInstance().authorize(soap);
 		vector<JobStatus*> fileStatuses;
 		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
-		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
+//		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
 		if(!fileStatuses.empty()){
 			_param_11._getTransferJobStatusReturn = JobStatusHandler::getInstance().copyJobStatus(
 					soap, *fileStatuses.begin()
 				);
-			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
+//			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
 			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
@@ -293,7 +293,7 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 		AuthorizationManager::getInstance().authorize(soap);
 		vector<JobStatus*> fileStatuses;
 		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
-		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
+//		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
 		if (!fileStatuses.empty()) {
 
@@ -324,7 +324,7 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 					fileStatuses
 				);
 
-			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
+//			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
 			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
@@ -352,7 +352,7 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 		AuthorizationManager::getInstance().authorize(soap);
 		vector<JobStatus*> fileStatuses;
 		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
-		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
+//		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
 
 		if(!fileStatuses.empty()) {
 
@@ -387,7 +387,7 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 					fileStatuses
 				);
 
-			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
+//			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
 			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
@@ -412,28 +412,28 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 
 /// Web service operation 'getVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getVersion(soap *soap, struct impltns__getVersionResponse &_param_21) {
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getVersion' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getVersion' request" << commit;
 	_param_21.getVersionReturn = "3.7.6-1";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getSchemaVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getSchemaVersion(soap *soap, struct impltns__getSchemaVersionResponse &_param_22) {
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getSchemaVersion' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getSchemaVersion' request" << commit;
 	_param_22.getSchemaVersionReturn = "3.5.0";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getInterfaceVersion' (returns error code or SOAP_OK)
 int fts3::impltns__getInterfaceVersion(soap *soap, struct impltns__getInterfaceVersionResponse &_param_23) {
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getInterfaceVersion' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getInterfaceVersion' request" << commit;
 	_param_23.getInterfaceVersionReturn = "3.7.0";
 	return SOAP_OK;
 }
 
 /// Web service operation 'getServiceMetadata' (returns error code or SOAP_OK)
 int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__getServiceMetadataResponse &_param_24) {
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getServiceMetadata' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getServiceMetadata' request" << commit;
 	_param_24._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
 	return SOAP_OK;
 }
@@ -448,17 +448,23 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 		GSoapDelegationHandler handler (soap);
 		string dn = handler.getClientDn();
 
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "is canceling a transfer job" << commit;
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "is canceling a transfer job ";
 
 		if (_requestIDs) {
+
 			vector<string> &jobs = _requestIDs->item;
 			std::vector<std::string>::iterator jobsIter;
 			if (!jobs.empty()) {
-				 std::string jobId("");
-				 for (jobsIter = jobs.begin(); jobsIter != jobs.end(); ++jobsIter)
-					jobId += *jobsIter;
 
-				FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that will be canceled:" << jobId << commit;
+				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "(";
+
+				std::string jobId("");
+				for (jobsIter = jobs.begin(); jobsIter != jobs.end(); ++jobsIter)
+					jobId += *jobsIter + ";";
+
+				FTS3_COMMON_LOGGER_NEWLOG (INFO) << jobId << ")" << commit;
+
+//				FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Jobs that will be canceled:" << jobId << commit;
 				DBSingleton::instance().getDBObjectInstance()->cancelJob(jobs);
 			}
 		}
@@ -494,7 +500,7 @@ int fts3::impltns__removeVOManager(soap *soap, string _VOName, string _principal
 /// Web service operation 'listVOManagers' (returns error code or SOAP_OK)
 int fts3::impltns__listVOManagers(soap *soap, string _VOName, struct impltns__listVOManagersResponse &_param_18) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listVOManagers' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listVOManagers' request" << commit;
 
 	_param_18._listVOManagersReturn = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(soap, -1);
 	_param_18._listVOManagersReturn->item.push_back("default username");
@@ -505,7 +511,7 @@ int fts3::impltns__listVOManagers(soap *soap, string _VOName, struct impltns__li
 /// Web service operation 'getRoles' (returns error code or SOAP_OK)
 int fts3::impltns__getRoles(soap *soap, struct impltns__getRolesResponse &_param_19) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRoles' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRoles' request" << commit;
 
 	_param_19.getRolesReturn = soap_new_tns3__Roles(soap, -1);
 
@@ -529,7 +535,7 @@ int fts3::impltns__getRoles(soap *soap, struct impltns__getRolesResponse &_param
 /// Web service operation 'getRolesOf' (returns error code or SOAP_OK)
 int fts3::impltns__getRolesOf(soap *soap, string _otherDN, struct impltns__getRolesOfResponse &_param_20) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRolesOf' request" << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getRolesOf' request" << commit;
 
 	_param_20._getRolesOfReturn = soap_new_tns3__Roles(soap, -1);
 
