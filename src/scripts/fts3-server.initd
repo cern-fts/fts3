@@ -54,13 +54,6 @@ start() {
 }
 
 stop() {
-    pgrep fts3_url_copy 1> /dev/null
-    retval=$?
-    if [ $retval -eq 0 ] ; then
-    		retval=1
-        	echo "Found active transfers, drain FTS3 endpoint first!"
-		return $retval
-    fi
     echo -n $"Stopping $prog: "
     # stop it here, often "killproc $prog"
     rm -f "$lockfile" && success || failure 
