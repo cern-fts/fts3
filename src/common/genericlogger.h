@@ -141,7 +141,7 @@ public:
     /// Commits (writes) the actual log line.
 	void _commit()
     {
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    //FTS3_COMMON_MONITOR_START_CRITICAL
         if ( _isLogOn &&
              ! _logLine.str().empty())
         {
@@ -149,7 +149,7 @@ public:
         }
 
         _logLine.str("");
-    FTS3_COMMON_MONITOR_END_CRITICAL
+    //FTS3_COMMON_MONITOR_END_CRITICAL
     }
 
     /* ---------------------------------------------------------------------- */
@@ -167,7 +167,7 @@ public:
     )
     {
 	    commit(*this);
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    //FTS3_COMMON_MONITOR_START_CRITICAL
 	    _actLogLevel = LOGLEVEL;
         _logLine << logLevelStringRepresentation(_actLogLevel) << timestamp() << _separator();
         bool isDebug = (Traits::ERR == _actLogLevel);
@@ -176,7 +176,7 @@ public:
         {
 	        _logLine << aFile << _separator() << aFunc << _separator() << std::dec << aLineNo << _separator();
 	    }
-    FTS3_COMMON_MONITOR_END_CRITICAL
+    //FTS3_COMMON_MONITOR_END_CRITICAL
 
         return *this;
     }
@@ -200,12 +200,12 @@ public:
     template <typename T>
     GenericLogger& operator << (const T& aSrc)
     {
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    //FTS3_COMMON_MONITOR_START_CRITICAL
 	    if (_isLogOn)
         {
 		    _logLine << aSrc;
         }
-    FTS3_COMMON_MONITOR_END_CRITICAL
+    //FTS3_COMMON_MONITOR_END_CRITICAL
 
         return *this;
     }

@@ -3143,7 +3143,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
             time_t lifetime = std::time(NULL);
             time_t term_time = conv->toTimeT(r->getTimestamp(1));
 	    dif = difftime (term_time,lifetime);
-    	    std::cerr << dif << std::endl;
+    	    //std::cerr << dif << std::endl;
     	    if (dif > 0)
 		valid = true;
 
