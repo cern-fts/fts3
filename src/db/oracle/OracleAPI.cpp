@@ -133,7 +133,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
             " AND rownum <=25  ORDER BY t_job.priority DESC"
-            " , SYS_EXTRACT_UTC(t_job.submit_time) ";
+            " , SYS_EXTRACT_UTC(t_job.submit_time)";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -2674,7 +2674,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
             " AND t_job.job_state ='SUBMITTED' "
             " AND ROWNUM <=25 "
             " ORDER BY t_job.priority DESC"
-            " , SYS_EXTRACT_UTC(t_job.submit_time) ";
+            " , SYS_EXTRACT_UTC(t_job.submit_time)";
 
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;

@@ -107,15 +107,15 @@ protected:
     	struct message msg;
 	qm->receive(&msg);
       std::string job = std::string(msg.job_id).substr (0,36);    
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Transfer status: " << " : Job id  :" << job  << 
-					  "\n\t\t\t\t\t           " << job << ": File id :" << msg.file_id  <<
-					  "\n\t\t\t\t\t           " << job << ": State   :" <<  msg.transfer_status  <<
-					  "\n\t\t\t\t\t           " << job << ": Message :" <<  msg.transfer_message <<
-					  "\n\t\t\t\t\t           " << job << ": PID     :" <<  msg.process_id  <<
-					  "\n\t\t\t\t\t           " << job << ": Duration:" <<  msg.timeInSecs  <<
-					  "\n\t\t\t\t\t           " << job << ": Size    :" <<  msg.filesize  <<
-					  "\n\t\t\t\t\t           " << job << ": Source  :" <<  msg.source_se  <<
-					  "\n\t\t\t\t\t           " << job << ": Dest    :" <<  msg.dest_se  << commit;                  
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) << " Transfer status: " << " : Job id  :" << job  << 
+					  " File id :" << msg.file_id  <<
+					  " State   :" <<  msg.transfer_status  <<
+					  " Message :" <<  msg.transfer_message <<
+					  " PID     :" <<  msg.process_id  <<
+					  " Duration:" <<  msg.timeInSecs  <<
+					  " Size    :" <<  msg.filesize  <<
+					  " Source  :" <<  msg.source_se  <<
+					  " Dest    :" <<  msg.dest_se  << commit;                  
 
 
       if( std::string(msg.transfer_status).compare("FINISHED") == 0  && enableOptimization.compare("true") == 0){
