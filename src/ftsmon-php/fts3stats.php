@@ -67,7 +67,7 @@ while($objResult4 = $stmt4->fetch(PDO::FETCH_BOTH))
 {
 	$source = $objResult4["SOURCE_SE"];
 	$dest = $objResult4["DEST_SE"];	
-	$totalActivePerSePair = "select avg(throughput) from t_optimize where source_se='$source' and dest_se='$dest' and throughput is not null and and (when > (CURRENT_TIMESTAMP - interval '12' hour)) ";
+	$totalActivePerSePair = "select avg(throughput) from t_optimize where source_se='$source' and dest_se='$dest' and throughput is not null and (when > (CURRENT_TIMESTAMP - interval '12' hour)) ";
 	$stmt5 = $conn->prepare($totalActivePerSePair);
 	$stmt5->execute();
 	$actPerSePair = $stmt5->fetchColumn();
@@ -107,7 +107,7 @@ $stmt14 = $conn->prepare($failed);
 $stmt14 ->execute();
 $fail = $stmt14->fetchColumn();
 
-$ratioSuccessFailure = round(($fail / $succ)*100,1);
+$ratioSuccessFailure = round(($succ/($succ + $fail)) * (100/1),1);
 
 ?>
 
