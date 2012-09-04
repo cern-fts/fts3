@@ -2787,8 +2787,10 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     const std::string tag2 = "fetchOptimizationConfig2YYYXXX";
     const std::string tag3 = "fetchOptimizationConfig2ZZZZ";
     const std::string tag4 = "111fetchOptimizationConfig2ZZZZ";
+    const std::string tagMid = "midRangeTimeout";
     int foundNoThrouput = 0;
     int foundNoRecords = 0;
+    int timeoutRecords = 0;
 
     std::string query_stmt_throuput = " select /* FIRST_ROWS(1) */ nostreams, timeout, buffer "
             " from "
@@ -2810,6 +2812,13 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
             " throughput is NULL and source_se = :1 and dest_se=:2 and file_id=0 ";
 
     std::string query_stmt_throuput3 = " select count(*) from t_optimize where source_se = :1 and dest_se=:2";
+    
+    std::string midRangeTimeout = " select count(*) from t_file,t_job where "
+    				  " t_job.job_id=t_file.job_id and t_file.file_state='FAILED' "
+				  " and t_file.reason like '%gass operation timeout%' and t_job.source_se=:1 "
+				  " and t_job.dest_se=:2 and rownum<=3 "
+				  " and (t_file.finish_time > (CURRENT_TIMESTAMP - interval '30' minute)) "
+				  " order by  SYS_EXTRACT_UTC(t_file.finish_time) desc";    
 
 	oracle::occi::Statement* s3 = NULL;
 	oracle::occi::ResultSet* r3 = NULL;
@@ -2817,10 +2826,24 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 	oracle::occi::ResultSet* r1 = NULL;
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;
+	oracle::occi::Statement* sMid = NULL;
+	oracle::occi::ResultSet* rMid = NULL;	
 	
     try {
         if (false == conn->checkConn())
             return;
+	    
+	/*check the last 3 records between src/dest which failed with timeout*/    
+        sMid = conn->createStatement(midRangeTimeout, tagMid);
+        sMid->setString(1, source_hostname);
+        sMid->setString(2, destin_hostname);
+        rMid = conn->createResultset(sMid);
+        if (rMid->next()) {
+            timeoutRecords = rMid->getInt(1);
+        }
+        conn->destroyResultset(sMid, rMid);
+        conn->destroyStatement(sMid, tagMid);	    
+	    
 
         s3 = conn->createStatement(query_stmt_throuput3, tag3);
         s3->setString(1, source_hostname);
@@ -2857,10 +2880,17 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 ops->bufsize = r->getInt(3);
                 ops->file_id = 1;
             } else {
-                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                ops->timeout = DEFAULT_TIMEOUT;
-                ops->bufsize = DEFAULT_BUFFSIZE;
-                ops->file_id = 0;
+	        if(timeoutRecords == 0){
+                	ops->streamsperfile = DEFAULT_NOSTREAMS;
+                	ops->timeout = DEFAULT_TIMEOUT;
+                	ops->bufsize = DEFAULT_BUFFSIZE;
+                	ops->file_id = 0;
+		}else{
+                	ops->streamsperfile = DEFAULT_NOSTREAMS;
+                	ops->timeout = MID_TIMEOUT;
+                	ops->bufsize = DEFAULT_BUFFSIZE;
+                	ops->file_id = 0;		
+		}
             }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag);
@@ -2876,19 +2906,33 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 ops->bufsize = r->getInt(3);
                 ops->file_id = 1; //sampled, not being picked again              
             } else {
-                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                ops->timeout = DEFAULT_TIMEOUT;
-                ops->bufsize = DEFAULT_BUFFSIZE;
-                ops->file_id = 0;
+	        if(timeoutRecords == 0){
+                	ops->streamsperfile = DEFAULT_NOSTREAMS;
+                	ops->timeout = DEFAULT_TIMEOUT;
+                	ops->bufsize = DEFAULT_BUFFSIZE;
+                	ops->file_id = 0;
+		}else{
+                	ops->streamsperfile = DEFAULT_NOSTREAMS;
+                	ops->timeout = MID_TIMEOUT;
+                	ops->bufsize = DEFAULT_BUFFSIZE;
+                	ops->file_id = 0;		
+		}
             }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag2);
 
         } else {
-            ops->streamsperfile = DEFAULT_NOSTREAMS;
-            ops->timeout = DEFAULT_TIMEOUT;
-            ops->bufsize = DEFAULT_BUFFSIZE;
-            ops->file_id = 0;
+ 	        if(timeoutRecords == 0){
+                	ops->streamsperfile = DEFAULT_NOSTREAMS;
+                	ops->timeout = DEFAULT_TIMEOUT;
+                	ops->bufsize = DEFAULT_BUFFSIZE;
+                	ops->file_id = 0;
+		}else{
+                	ops->streamsperfile = DEFAULT_NOSTREAMS;
+                	ops->timeout = MID_TIMEOUT;
+                	ops->bufsize = DEFAULT_BUFFSIZE;
+                	ops->file_id = 0;		
+		}
         }
 
     } catch (oracle::occi::SQLException const &e) {
@@ -2904,7 +2948,11 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 		if(s && r){
                 	conn->destroyResultset(s, r);
                 	conn->destroyStatement(s, tag2);				
-		}		
+		}	
+		if(sMid && rMid){
+                	conn->destroyResultset(sMid, rMid);
+                	conn->destroyStatement(sMid, tagMid);				
+		}				
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -3032,7 +3080,6 @@ void OracleAPI::addOptimizer(time_t when, double throughput, const std::string &
             " t_job.source_se=:6 and t_job.dest_se=:7),:8,:9,:10) ";
 
     oracle::occi::Statement* s = NULL;
-    //ThreadTraits::LOCK lock(_mutex);
     try {
         if (false == conn->checkConn())
             return;
@@ -3054,7 +3101,9 @@ void OracleAPI::addOptimizer(time_t when, double throughput, const std::string &
 
     } catch (oracle::occi::SQLException const &e) {
         if(conn){
-	        conn->destroyStatement(s, tag);
+		if(s){
+	        	conn->destroyStatement(s, tag);
+		}
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -3157,8 +3206,10 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
         return valid;
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
-	        conn->destroyResultset(s, r);
-	        conn->destroyStatement(s, tag);
+		if(s && r){
+	        	conn->destroyResultset(s, r);
+	        	conn->destroyStatement(s, tag);
+		}
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -3234,7 +3285,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                         allowed = false;
                     }
                 } else { //no records yet in t_optimize
-                    if (act < 25) {
+                    if (act < 5) {
                         allowed = true;
                     } else {
                         allowed = false;

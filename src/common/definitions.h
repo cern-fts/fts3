@@ -28,6 +28,7 @@ struct message{
  
  
 #define DEFAULT_TIMEOUT 3600
+#define MID_TIMEOUT 5000
 const int timeouts[] = {4000, 5000, 6000,  9000, 11000,  13000, 14000};
 const size_t timeoutslen = (sizeof (timeouts) / sizeof *(timeouts));
 
