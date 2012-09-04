@@ -205,7 +205,7 @@ if( $objResult["FILE_STATE"] == "CANCELED"){
 ?>
 </table>
 <?php
-oci_close($objConnect);
+$conn = null;
 ?>
 </body>
 </html>

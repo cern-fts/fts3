@@ -155,6 +155,7 @@ while($objResult2 = $stmt2->fetch(PDO::FETCH_BOTH)){
 ?>
 </table>
 <?php
+$conn = null;
 ?>
 </body>
 </html>

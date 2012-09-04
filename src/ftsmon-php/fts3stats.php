@@ -80,13 +80,13 @@ while($objResult4 = $stmt4->fetch(PDO::FETCH_BOTH))
 	$avgDurPerSePairxx .= $source." -> ".$dest." : ".round($avgDurPerSePair,2)." secs</br>";	
 }
 
-$reasonFailures = "select distinct reason from t_file where reason is not null order by reason asc";
+$reasonFailures = "select distinct reason from t_file where reason is not null and (FINISH_TIME > (CURRENT_TIMESTAMP - interval '12' hour)) order by reason asc";
 $stmt7 = $conn ->query($reasonFailures);
 $reason = "";
 while($objResult7 = $stmt7->fetch(PDO::FETCH_BOTH))
 {
 	$testE = $objResult7["REASON"];
-	$countReason = "select count(*) from t_file where reason='$testE' ";
+	$countReason = "select count(*) from t_file where reason='$testE' and (FINISH_TIME > (CURRENT_TIMESTAMP - interval '12' hour)) ";
 	$stmt33 = $conn->prepare($countReason);
 	$stmt33 ->execute();
 	$countR = $stmt33->fetchColumn();	
@@ -108,7 +108,7 @@ $stmt14 ->execute();
 $fail = $stmt14->fetchColumn();
 
 $ratioSuccessFailure = round(($succ/($succ + $fail)) * (100/1),1);
-
+$conn = null;
 ?>
 
 <tr><td>SUCCESS RATE</td><td><?php echo $ratioSuccessFailure;?>%</td></tr>

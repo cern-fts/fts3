@@ -63,6 +63,7 @@ echo "<td>";
 
 }
         echo "</table>";
+$conn = null;	
 ?>
 
 

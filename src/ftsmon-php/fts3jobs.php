@@ -239,6 +239,7 @@ if( $objResult["JOB_STATE"] == "CANCELED"){
 ?>
 </table>
 <?php
+$conn = null;
 ?>
 </body>
 </html>
