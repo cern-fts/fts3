@@ -51,6 +51,10 @@ GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) {
 	int nbfqans = 0;
 	char **arr = get_client_roles(ctx, &nbfqans);
 
+	if (nbfqans == 0) {
+		throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate (probably the CRL has expired)!");
+	}
+
 	for (int i = 0; i < nbfqans; i++) {
 		attrs.push_back(arr[i]);
 	}
