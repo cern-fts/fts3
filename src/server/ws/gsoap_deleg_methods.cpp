@@ -36,8 +36,8 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getProxyReq' request" << commit;
 
-	GSoapDelegationHandler handler(soap);
 	try {
+		GSoapDelegationHandler handler(soap);
 		AuthorizationManager::getInstance().authorize(soap);
 		_param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
@@ -55,8 +55,8 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getNewProxyReq' request" << commit;
 
-	GSoapDelegationHandler handler(soap);
 	try {
+		GSoapDelegationHandler handler(soap);
 		AuthorizationManager::getInstance().authorize(soap);
 		_param_5.getNewProxyReqReturn = handler.getNewProxyReq();
 
@@ -74,8 +74,8 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__renewProxyReq' request" << commit;
 
-	GSoapDelegationHandler handler(soap);
 	try {
+		GSoapDelegationHandler handler(soap);
 		AuthorizationManager::getInstance().authorize(soap);
 		_param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
 
@@ -93,8 +93,8 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__putProxy' request" << commit;
 
-	GSoapDelegationHandler handler(soap);
 	try {
+		GSoapDelegationHandler handler(soap);
 		handler.putProxy(_delegationID, _proxy);
 
 	} catch (Err& ex) {
@@ -111,8 +111,8 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getTerminationTime' request" << commit;
 
-	GSoapDelegationHandler handler(soap);
 	try {
+		GSoapDelegationHandler handler(soap);
 		AuthorizationManager::getInstance().authorize(soap);
 		_param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
 
@@ -130,8 +130,8 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__destroy' request" << commit;
 
-	GSoapDelegationHandler handler(soap);
 	try {
+		GSoapDelegationHandler handler(soap);
 		AuthorizationManager::getInstance().authorize(soap);
 		handler.destroy(_delegationID);
 
