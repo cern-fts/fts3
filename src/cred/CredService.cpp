@@ -83,7 +83,7 @@ void CredService::get(
     // Get the filename to be for the given DN
     std::string fname = getFileName(userDn,id);
     //m_log_debug("Get the filename to be for the given DN: " << fname);
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the filename for the given DN: " << fname << commit;
+    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the filename for the given DN: " << fname << commit;
     // Post-Condition Check: filename length should be max (FILENAME_MAX - 7)
     if(fname.length() > (FILENAME_MAX - 7)){
         //m_log_error("Invalid credential file name generated: length exceeded");
@@ -94,7 +94,7 @@ void CredService::get(
     // Check if the Proxy Certificate is already there and it's valid
     if(true == isValidProxy(fname)){
         filename = fname;
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is already on file " << filename << commit;
+	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is already on file " << filename << commit;
         return;
     }
     
@@ -162,7 +162,7 @@ bool CredService::isValidProxy(const std::string& filename){
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate should be renewed" << commit;    	
         return false;
     }
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is still valid" << commit;    
+	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is still valid" << commit;    
     
     return true;
 }

@@ -19,6 +19,9 @@ limitations under the License. */
 
 #include "common_dev.h"
 #include "monitorobject.h"
+#include <iostream>
+#include <stdio.h>
+
 
 FTS3_COMMON_NAMESPACE_START
 
@@ -58,6 +61,9 @@ class GenericLogger : public LoggerBase
 public:
     /// The logger tratis type
     typedef Traits type_traits;
+    bool g_isDaemonMode;
+    std::string g_logFilePath;
+
 
     /* ---------------------------------------------------------------------- */
 
@@ -67,7 +73,8 @@ public:
         _logLine (Traits::initialLogLine()),
 	    _actLogLevel (static_cast<int>(Traits::INFO))
     {
-        Traits::openLog();
+        //Traits::openLog();		
+	//freopen ("/var/log/fts3/fts3server.log","a",stderr);
     }
     
     std::string timestamp() {
@@ -109,7 +116,8 @@ public:
     /// Destructor
     virtual ~GenericLogger ()
     {
-        Traits::closeLog();
+        //Traits::closeLog();
+        //fclose (stderr);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -119,7 +127,7 @@ public:
     {
     FTS3_COMMON_MONITOR_START_CRITICAL
 	    _isLogOn = true;
-        Traits::openLog();
+        //Traits::openLog();
     FTS3_COMMON_MONITOR_END_CRITICAL
 	    return *this;
     }
@@ -131,7 +139,7 @@ public:
     {
     FTS3_COMMON_MONITOR_START_CRITICAL
 	    _isLogOn = false;
-        Traits::closeLog();
+        //Traits::closeLog();
     FTS3_COMMON_MONITOR_END_CRITICAL
 	    return *this;
     }
@@ -141,15 +149,18 @@ public:
     /// Commits (writes) the actual log line.
 	void _commit()
     {
-    //FTS3_COMMON_MONITOR_START_CRITICAL
+    FTS3_COMMON_MONITOR_START_CRITICAL
         if ( _isLogOn &&
              ! _logLine.str().empty())
         {
-            Traits::sysLog(_actLogLevel, (const char*) _logLine.str().c_str());
+	   fprintf(stderr, "%s\n",_logLine.str().c_str());
+	   fflush(stderr);
+	   fprintf(stdout, "%s\n",_logLine.str().c_str());
+	   fflush(stdout);
         }
 
         _logLine.str("");
-    //FTS3_COMMON_MONITOR_END_CRITICAL
+    FTS3_COMMON_MONITOR_END_CRITICAL
     }
 
     /* ---------------------------------------------------------------------- */
@@ -167,7 +178,7 @@ public:
     )
     {
 	    commit(*this);
-    //FTS3_COMMON_MONITOR_START_CRITICAL
+    FTS3_COMMON_MONITOR_START_CRITICAL
 	    _actLogLevel = LOGLEVEL;
         _logLine << logLevelStringRepresentation(_actLogLevel) << timestamp() << _separator();
         bool isDebug = (Traits::ERR == _actLogLevel);
@@ -176,7 +187,7 @@ public:
         {
 	        _logLine << aFile << _separator() << aFunc << _separator() << std::dec << aLineNo << _separator();
 	    }
-    //FTS3_COMMON_MONITOR_END_CRITICAL
+    FTS3_COMMON_MONITOR_END_CRITICAL
 
         return *this;
     }
@@ -200,12 +211,12 @@ public:
     template <typename T>
     GenericLogger& operator << (const T& aSrc)
     {
-    //FTS3_COMMON_MONITOR_START_CRITICAL
+    FTS3_COMMON_MONITOR_START_CRITICAL
 	    if (_isLogOn)
         {
 		    _logLine << aSrc;
         }
-    //FTS3_COMMON_MONITOR_END_CRITICAL
+    FTS3_COMMON_MONITOR_END_CRITICAL
 
         return *this;
     }

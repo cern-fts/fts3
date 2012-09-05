@@ -57,7 +57,7 @@ UserProxyEnv::UserProxyEnv(const std::string& file_name):
         }
         setenv(PROXY_ENV_VAR,file_name.c_str(),1);
         m_isSet = true;
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Environment Variable set to " << file_name << commit;
+	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Environment Variable set to " << file_name << commit;
     } else {
     	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Delegated credentials not found" << commit;
     }
@@ -82,6 +82,6 @@ UserProxyEnv::~UserProxyEnv(){
         if(false == m_cert.empty()){
             setenv(CERT_ENV_VAR,m_cert.c_str(),1);
         }
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Environment Restored" << commit;
+	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Environment Restored" << commit;
     }
 }

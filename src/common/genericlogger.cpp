@@ -24,6 +24,7 @@ limitations under the License. */
     #include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
+
 FTS3_COMMON_NAMESPACE_START
 
 /* ========================================================================== */

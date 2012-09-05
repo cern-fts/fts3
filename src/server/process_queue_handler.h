@@ -101,21 +101,19 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-    try{
+
     while(1){ /*need to receive more than one messages at a time*/    
+    try{
      for(register unsigned int i = 0; i < 50; i++){
     	struct message msg;
 	qm->receive(&msg);
       std::string job = std::string(msg.job_id).substr (0,36);    
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) << " Transfer status: " << " : Job id  :" << job  << 
-					  " File id :" << msg.file_id  <<
-					  " State   :" <<  msg.transfer_status  <<
-					  " Message :" <<  msg.transfer_message <<
-					  " PID     :" <<  msg.process_id  <<
-					  " Duration:" <<  msg.timeInSecs  <<
-					  " Size    :" <<  msg.filesize  <<
-					  " Source  :" <<  msg.source_se  <<
-					  " Dest    :" <<  msg.dest_se  << commit;                  
+      FTS3_COMMON_LOGGER_NEWLOG (INFO) <<  "Job id:" << job 
+	<<  "\nFile id: " << msg.file_id
+	<<  "\nState: " <<  msg.transfer_status
+	<<  "\nMessage: " <<  msg.transfer_message
+	<<  "\nSource: " <<  msg.source_se
+        <<  "\nDest: " <<  msg.dest_se  << commit;                  
 
 
       if( std::string(msg.transfer_status).compare("FINISHED") == 0  && enableOptimization.compare("true") == 0){
@@ -128,11 +126,11 @@ protected:
       DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
 
       }
-      usleep(100000);
-      }
       }
       catch(...){
       	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Message queue raised an exception"  << commit;                    
+      }
+      usleep(100000);
       }
     }
 

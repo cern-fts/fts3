@@ -1,4 +1,3 @@
-
 /var/log/fts3/msg.log {
     daily
     missingok

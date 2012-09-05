@@ -1,10 +1,7 @@
-
 /var/log/fts3/fts3server.log {
-    rotate 15
+    daily
+    missingok
     compress
     delaycompress
-    sharedscripts
-    postrotate
-        /etc/init.d/rsyslog restart 2> /dev/null || true
-    endscript
+    rotate 15
 }

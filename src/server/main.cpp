@@ -17,6 +17,7 @@ limitations under the License. */
 
 #include "server_dev.h"
 
+#include <cstdio>
 #include <signal.h>
 #include <unistd.h>
 #include <iostream>
@@ -33,6 +34,7 @@ using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
+bool isDaemon = false;
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -52,46 +54,6 @@ void _handle_sigint(int)
 }
 
 /* -------------------------------------------------------------------------- */
-void fts3_initialize_logfile(){
-	std::ifstream indata; 
-	std::ofstream outputfile;
-	string line("");
-        std::vector<std::string> pathV;
-        std::vector<std::string>::iterator iter;
-	char *token = NULL;
-		
-	char*  path = "/etc/rsyslog.d/fts3syslog.conf";
-	if (fexists(path) == 0){
-			indata.open(path); // opens the file
-   			if(!indata) { // file couldn't be opened
-      				std::cerr << "Error: file " << path <<" <<could not be opened" << endl;
-				return;
-			   }
-			   if ( indata.good() ){
-      				getline (indata,line);
-    			   }
-    			    indata.close();
-			    if(line.length() > 0){
-			        char *copy = (char *) malloc(strlen(line.c_str()) + 1);
-				strcpy(copy, line.c_str());
-			    	token = strtok(copy, " ");
-				while ( (token = strtok(0, " ")) != NULL) {
-            				pathV.push_back(std::string(token));
-        			}
-				free(copy);
-        			copy = NULL;
-				if(pathV.size() == 3){
-					std::string f = pathV[2];
-					if(f.length() > 0){
-						if (fexists(f.c_str()) != 0){
-							 outputfile.open(f.c_str());
-							 outputfile.close();
-						}
-					}
-				}
-			    }
-	}
-}
 
 void fts3_initialize_db_backend()
 {
@@ -153,16 +115,21 @@ int main (int argc, char** argv)
     char *hostcert = "/etc/grid-security/hostcert.pem";
 
     try 
-    {    
+    {   
         REGISTER_SIGNAL(SIGABRT);
         REGISTER_SIGNAL(SIGSEGV);
         REGISTER_SIGNAL(SIGTERM);
         REGISTER_SIGNAL(SIGBUS);
 	REGISTER_SIGNAL(SIGFPE);
+	REGISTER_SIGNAL(SIGILL);
 			
-    	fts3_initialize_logfile();
-	
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+	std::string logDir = theServerConfig().get<std::string>("TransferLogDirectory");
+	if(logDir.length() > 0){
+		logDir +="/fts3server.log";
+		freopen (logDir.c_str(),"a",stderr);
+	}
+
 	if(false == checkUrlCopy()){
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts3_url_copy process is set in the PATH env variable" << commit;
 		exit(1);
@@ -190,10 +157,10 @@ int main (int argc, char** argv)
             FTS3_COMMON_EXCEPTION_THROW(Err_System());
         }
 
-        bool isDaemon = ! FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
+        isDaemon = ! FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
 
         if (isDaemon)
-        {            
+        {   
             daemonize();
         }
         

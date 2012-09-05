@@ -34,8 +34,5 @@ install(FILES         fts3config
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )
 
 install(FILES         fts-msg-monitoring.conf
-        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )
-	
-install(FILES         fts3syslog.conf
-        DESTINATION ${SYSCONF_INSTALL_DIR}/rsyslog.d )	
+        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )	
 

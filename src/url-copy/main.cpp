@@ -210,11 +210,15 @@ int main(int argc, char **argv) {
     privid = geteuid();
     char user[ ] = "fts3";
     pw_uid = name_to_uid(user);
-
-
+    setuid(pw_uid);
+    seteuid(pw_uid);
+    
+    
     REGISTER_SIGNAL(SIGABRT);
     REGISTER_SIGNAL(SIGSEGV);
     REGISTER_SIGNAL(SIGTERM);
+    REGISTER_SIGNAL(SIGILL);
+    REGISTER_SIGNAL(SIGFPE);
 
     std::string bytes_to_string("");
     //transfer_completed tr_completed;
@@ -305,7 +309,7 @@ int main(int argc, char **argv) {
     }
 
 
-    seteuid(pw_uid);
+    //seteuid(pw_uid);
 
     if (proxy.length() > 0) {
         // Set Proxy Env    
@@ -314,7 +318,7 @@ int main(int argc, char **argv) {
 
     /**/
     handle = gfal_context_new(NULL);
-    seteuid(privid);
+    //seteuid(privid);
 
     std::vector<std::string> urlsFile;
     std::string line("");
@@ -434,15 +438,15 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
 
-        seteuid(pw_uid);
+        //seteuid(pw_uid);
 
 
         /*gfal2 debug logging*/
         if (debug == true) {	   
             gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN );
-	    seteuid(privid);
+	   // seteuid(privid);
             	freopen (fileManagement.getLogFileFullPath().c_str(),"w",stderr);
-            seteuid(pw_uid);
+            //seteuid(pw_uid);
             gfal_log_set_handler((GLogFunc) log_func, NULL);
         }
 
@@ -456,7 +460,7 @@ int main(int argc, char **argv) {
 
 
         if (gfal_stat((strArray[1]).c_str(), &statbufsrc) < 0) {
-            seteuid(privid);
+            //seteuid(privid);
             std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
             log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
             errorMessage = "Failed to get source file size: " + tempError;
@@ -465,7 +469,7 @@ int main(int argc, char **argv) {
             errorPhase = TRANSFER_PREPARATION;
             goto stop;
         } else {
-            seteuid(privid);
+            //seteuid(privid);
             if (statbufsrc.st_size == 0) {
                 errorMessage = "Source file size is 0";
                 log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
@@ -488,16 +492,16 @@ int main(int argc, char **argv) {
                 std::vector<std::string> token = split((strArray[3]).c_str());
                 std::string checkAlg = token[0];
                 std::string csk = token[1];
-                seteuid(pw_uid);
+                //seteuid(pw_uid);
                 gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), &tmp_err);
                 gfalt_set_checksum_check(params, TRUE, &tmp_err);
             } else {//use auto checksum
-                seteuid(pw_uid);
+                //seteuid(pw_uid);
                 gfalt_set_checksum_check(params, TRUE, &tmp_err);
             }
         }
 
-        seteuid(pw_uid);
+        //seteuid(pw_uid);
         //overwrite dest file if exists
         if (overwrite) {
             gfalt_set_replace_existing_file(params, TRUE, &tmp_err);
@@ -508,7 +512,7 @@ int main(int argc, char **argv) {
 	gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL); 
         gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
 
-        seteuid(privid);
+        //seteuid(privid);
         msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
         msg_ifce::getInstance()->set_timestamp_checksum_source_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
@@ -524,9 +528,9 @@ int main(int argc, char **argv) {
 	//calculate tr time in seconds
 	start = std::time(NULL);
 
-        seteuid(pw_uid);
+        //seteuid(pw_uid);
         if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
-            seteuid(privid);
+            //seteuid(privid);
             diff = std::difftime (std::time(NULL),start);	    
             //FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
             log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
@@ -537,7 +541,7 @@ int main(int argc, char **argv) {
             g_clear_error(&tmp_err);
             goto stop;
         } else {
-            seteuid(privid);
+            //seteuid(privid);
             diff = difftime (std::time(NULL),start);	    
             //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully in " << diff << "secs" << commit;
             log << fileManagement.timestamp() << "INFO Transfer completed successfully" << '\n';
@@ -553,9 +557,9 @@ int main(int argc, char **argv) {
 
 
         msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        seteuid(pw_uid);
+        //seteuid(pw_uid);
         if (gfal_stat((strArray[2]).c_str(), &statbufdest) < 0) {
-            seteuid(privid);
+            //seteuid(privid);
             memset(errorBuffer, 0, 2048);
             std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
             log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
@@ -565,7 +569,7 @@ int main(int argc, char **argv) {
             errorPhase = TRANSFER_FINALIZATION;
             goto stop;
         } else {
-            seteuid(privid);
+            //seteuid(privid);
             if (statbufdest.st_size == 0) {
                 errorMessage = "Destination file size is 0";
                 log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
@@ -596,7 +600,7 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
 stop:
-        seteuid(privid);
+        //seteuid(privid);
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
         msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
         msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
@@ -630,10 +634,10 @@ stop:
 
     }//end for reuse loop	
 
-    seteuid(pw_uid);
+    //seteuid(pw_uid);
     gfalt_params_handle_delete(params, NULL);
     gfal_context_free(handle);
-    seteuid(privid);
+    //seteuid(privid);
 
     if (cert)
         delete cert;
