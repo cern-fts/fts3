@@ -34,7 +34,6 @@ using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
-bool isDaemon = false;
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -157,7 +156,7 @@ int main (int argc, char** argv)
             FTS3_COMMON_EXCEPTION_THROW(Err_System());
         }
 
-        isDaemon = ! FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
+        bool isDaemon = ! FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
 
         if (isDaemon)
         {   

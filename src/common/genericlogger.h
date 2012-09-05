@@ -61,8 +61,6 @@ class GenericLogger : public LoggerBase
 public:
     /// The logger tratis type
     typedef Traits type_traits;
-    bool g_isDaemonMode;
-    std::string g_logFilePath;
 
 
     /* ---------------------------------------------------------------------- */
