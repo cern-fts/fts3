@@ -161,6 +161,7 @@ int main (int argc, char** argv)
         if (isDaemon)
         {   
             daemonize();
+            freopen (logDir.c_str(),"a",stderr);            
         }
         
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;

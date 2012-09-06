@@ -433,7 +433,7 @@ int main(int argc, char **argv) {
         log << fileManagement.timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
         log << fileManagement.timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
         log << fileManagement.timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
-        log << fileManagement.timestamp() << "INFO Proxy file:" << proxy << '\n'; //proxy
+        
 
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
