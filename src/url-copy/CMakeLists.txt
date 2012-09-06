@@ -40,7 +40,7 @@ set(fts3_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
 add_executable (fts3_url_copy ${fts3_url_copy_SOURCES})
 add_dependencies(fts3_url_copy fts3_common)
 SET(fts3_libs "-lfts3_config -lfts3_common")
-target_link_libraries(fts3_url_copy  -luuid  -lboost_thread-mt -lgfal_transfer -lgfal2 -lglib-2.0 -lfts3_msg_ifce ${fts3_libs})
+target_link_libraries(fts3_url_copy  -luuid  -lboost_thread-mt -lboost_system-mt -lgfal_transfer -lgfal2 -lglib-2.0 -lfts3_msg_ifce ${fts3_libs})
 
 
 install(TARGETS         fts3_url_copy 

@@ -110,8 +110,7 @@ void SignalLogger::handleSignal(int signum){
  * actual signal logging
  */
 void SignalLogger::logSignal(int signum){
-     //*logStream_  << "Received signal 111 " <<  signum << '\n'; 
-     //(*logStream_).flush();
+     
     SignalInfoMap::iterator it = m_map.find(signum);
     if (m_map.end() != it){
         SignalInfo * info = it->second;

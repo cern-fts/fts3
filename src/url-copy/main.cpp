@@ -33,6 +33,10 @@
 #include <cstdio>
 #include <ctime>
 #include "definitions.h"
+#include <boost/asio.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+
+
 /*
 PENDING
         cancel transfer gracefully
@@ -95,9 +99,9 @@ static     char hostname[1024] = {0};
 static     std::string proxy("");
 static     char errorBuffer[2048] = {0};
 static     bool debug = false;
-
+static volatile bool propagated = false;
 extern std::string stackTrace;
-
+boost::mutex guard;
 gfalt_params_t params;
 
 std::string srmVersion(const std::string & url){
@@ -138,7 +142,39 @@ static void call_perf(gfalt_transfer_status_t h, const char* src, const char* ds
     
 }
 
-void signalHandler(int signum) {
+
+void canceler()
+{
+	boost::mutex::scoped_lock lock(guard);
+        propagated = true;
+        logStream << fileManagement.timestamp() << "WARN Transfer canceled because it was not responding" << '\n';
+        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled because it was not responding");
+        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+        reporter.timeout = timeout;
+        reporter.nostreams = nbstreams;
+        reporter.buffersize = tcpbuffersize;
+        reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled because it was not responding", diff, source_size);
+        logStream.close();
+        fileManagement.archive();
+        if (reuseFile.length() > 0)
+            unlink(readFile.c_str());
+        sleep(1);
+        exit(1);
+}
+
+void taskTimer(int time)
+{
+    boost::this_thread::sleep(boost::posix_time::seconds(time));
+    canceler();
+}
+
+
+void signalHandler(int signum) {    
     if (stackTrace.length() > 0) {
         logStream << fileManagement.timestamp() << "ERROR Transfer process died" << '\n';
         logStream << fileManagement.timestamp() << "ERROR " << stackTrace << '\n';
@@ -159,6 +195,8 @@ void signalHandler(int signum) {
             unlink(readFile.c_str());
         exit(1);
     } else {
+	boost::mutex::scoped_lock lock(guard);
+        if(propagated == false){
         logStream << fileManagement.timestamp() << "WARN Interrupt signal received, transfer canceled" << '\n';
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
         msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
@@ -177,7 +215,8 @@ void signalHandler(int signum) {
             unlink(readFile.c_str());
         sleep(1);
         exit(signum);
-    }
+      }
+   }
 }
 
 /*courtesy of:
@@ -219,6 +258,8 @@ int main(int argc, char **argv) {
     REGISTER_SIGNAL(SIGTERM);
     REGISTER_SIGNAL(SIGILL);
     REGISTER_SIGNAL(SIGFPE);
+    // register signal SIGINT and signal handler  
+    signal(SIGINT, signalHandler);
 
     std::string bytes_to_string("");
     //transfer_completed tr_completed;
@@ -231,8 +272,6 @@ int main(int argc, char **argv) {
     long long transferred_bytes = 0;
     UserProxyEnv* cert = NULL;
 
-    // register signal SIGINT and signal handler  
-    signal(SIGINT, signalHandler);
     hostname[1023] = '\0';
     gethostname(hostname, 1023);
 
@@ -308,9 +347,6 @@ int main(int argc, char **argv) {
             proxy = std::string(argv[i + 1]);
     }
 
-
-    //seteuid(pw_uid);
-
     if (proxy.length() > 0) {
         // Set Proxy Env    
         cert = new UserProxyEnv(proxy);
@@ -330,7 +366,11 @@ int main(int argc, char **argv) {
         }
     }
 
+    //cancelation point 
     unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
+    int timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
+    boost::thread bt(taskTimer, timerTimeout);
+
     std::string strArray[4];
     for ( register unsigned int ii = 0; ii < reuseOrNot; ii++) {
         if (reuseFile.length() > 0) {
@@ -354,7 +394,9 @@ int main(int argc, char **argv) {
 
         fileManagement.getLogStream(logStream);
         logger log(logStream);
-	
+
+          
+    	
 	/*
 	if (bringOnline)
 		get the time out
