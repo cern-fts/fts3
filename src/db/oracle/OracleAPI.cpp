@@ -137,6 +137,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    ThreadTraits::LOCK lock(_mutex);
     try {
     
         if ( false == conn->checkConn() )
@@ -463,6 +464,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 
    
     oracle::occi::Statement* s = NULL;		
+    ThreadTraits::LOCK lock(_mutex);
     try {
         if ( false == conn->checkConn() )
 		return;
@@ -779,6 +781,8 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
    oracle::occi::Statement* s = NULL;
    oracle::occi::ResultSet* r = NULL;
+   ThreadTraits::LOCK lock(_mutex);
+   
     try {
         s = conn->createStatement(sel, "");
         if (restrictToClientDN.length() > 0) {
@@ -2213,6 +2217,7 @@ std::string OracleAPI::get_group_name(std::string se) {
     const std::string tag = "get_group_name";
     std::string group("");
     std::string query = "select SE_GROUP_NAME from t_se_group where SE_NAME=:1";
+    ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, se);
@@ -2561,6 +2566,7 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    ThreadTraits::LOCK lock(_mutex);
     try {
     
         if (false == conn->checkConn())
@@ -2678,6 +2684,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
 
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;
+        ThreadTraits::LOCK lock(_mutex);
     try {
         if (false == conn->checkConn())
             return;
@@ -2827,7 +2834,8 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;
 	oracle::occi::Statement* sMid = NULL;
-	oracle::occi::ResultSet* rMid = NULL;	
+	oracle::occi::ResultSet* rMid = NULL;
+        ThreadTraits::LOCK lock(_mutex);	
 	
     try {
         if (false == conn->checkConn())

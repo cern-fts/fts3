@@ -48,6 +48,7 @@ protected:
 
     soap* ctx;
     std::queue<soap*> recycle;
+    mutable ThreadTraits::MUTEX _mutex;
 };
 
 FTS3_SERVER_NAMESPACE_END

@@ -8,3 +8,4 @@ TransferLogDirectory=/var/log/fts3
 Infosys=lcg-bdii.cern.ch:2170
 Alias=
 Optimizer=false
+HttpKeepAlive=true

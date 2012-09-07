@@ -22,6 +22,7 @@ FTS3_COMMON_NAMESPACE_START
 
 Timeout& Timeout::actualize()
 {
+	ThreadTraits::LOCK lock(_mutex);
 	static const int MILLISECONDS_PER_SECOND = 1000;
 	static const int NANOSECONDS_PER_SECOND = 1000000000;
 	static const int NANOSECONDS_PER_MILLISECOND = 1000000;

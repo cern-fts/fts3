@@ -116,6 +116,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "Control auto-tunning activation"
         )		
         (
+            "HttpKeepAlive,k",
+            po::value<std::string>( &(_vars["HttpKeepAlive"]) )->default_value("true"),
+            "Control HTTP Keep alive in gsoap"
+        )	
+        (
             "TransferLogDirectory,l",
             po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
             "Directory where the individual transfer logs are written"

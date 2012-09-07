@@ -20,25 +20,51 @@
 #include "gsoap_acceptor.h"
 #include "gsoap_request_handler.h"
 #include "ws-ifce/gsoap/fts3.nsmap"
-
+#include "serverconfig.h"
+#include "server_dev.h"
 #include <cgsi_plugin.h>
 
+using namespace FTS3_COMMON_NAMESPACE;
+using namespace FTS3_CONFIG_NAMESPACE;
 FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
+	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true"?true:false;
+	if(keepAlive){
+	ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+        ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session
+   	ctx->accept_timeout = 600; // optional: let server time out after ten minutes of inactivity 
+	ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe	
+ 	ctx->recv_timeout = 120; // Timeout after 2 minutes stall on recv
+        ctx->send_timeout = 60; // Timeout after 1 minute stall on send 	
+	soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
+	soap_set_namespaces(ctx, fts3_namespaces);
+
+	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), port, 100);
+
+	    if (sock >= 0) {
+	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
+	    } else {
+	        FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
+	        exit(1);
+	    }
+	
+	}else{
+	
 	ctx = soap_new();
 	soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 	soap_set_namespaces(ctx, fts3_namespaces);
 
 	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), port, 100);
 
-    if (sock >= 0) {
-        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
-    } else {
-        FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
-        exit(1);
-    }
+	    if (sock >= 0) {
+	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
+	    } else {
+	        FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
+	        exit(1);
+	    }
+	}
 }
 
 GSoapAcceptor::~GSoapAcceptor() {
@@ -59,6 +85,7 @@ GSoapAcceptor::~GSoapAcceptor() {
 }
 
 boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
+    //ThreadTraits::LOCK lock(_mutex);
     SOAP_SOCKET sock = soap_accept(ctx);
     boost::shared_ptr<GSoapRequestHandler> handler;
 
@@ -77,25 +104,27 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
 
 soap* GSoapAcceptor::getSoapContext() {
 
-	FTS3_COMMON_MONITOR_START_CRITICAL
+	//FTS3_COMMON_MONITOR_START_CRITICAL
+        ThreadTraits::LOCK lock(_mutex);	
 	if (!recycle.empty()) {
 		soap* ctx = recycle.front();
 		recycle.pop();
 		ctx->socket = this->ctx->socket;
 		return ctx;
 	}
-	FTS3_COMMON_MONITOR_END_CRITICAL
+	//FTS3_COMMON_MONITOR_END_CRITICAL
 
 	return soap_copy(ctx);
 }
 
 void GSoapAcceptor::recycleSoapContext(soap* ctx) {
 
-	FTS3_COMMON_MONITOR_START_CRITICAL
+        ThreadTraits::LOCK lock(_mutex);
+	//FTS3_COMMON_MONITOR_START_CRITICAL
 	soap_destroy(ctx);
 	soap_end(ctx);
 	recycle.push(ctx);
-	FTS3_COMMON_MONITOR_END_CRITICAL
+	//FTS3_COMMON_MONITOR_END_CRITICAL
 }
 
 FTS3_SERVER_NAMESPACE_END
