@@ -3287,13 +3287,13 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 r2 = conn->createResultset(s2);
                 if (r2->next()) { //found records in t_optimize
                     actThr = r2->getInt(1); //throughput                   
-                    if (actThr > 1.0 || act<5) {
+                    if (actThr > 1.0 || act<15) {
                         allowed = true;
                     } else {
                         allowed = false;
                     }
                 } else { //no records yet in t_optimize
-                    if (act < 5) {
+                    if (act < 20) {
                         allowed = true;
                     } else {
                         allowed = false;
