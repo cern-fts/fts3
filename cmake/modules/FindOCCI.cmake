@@ -19,8 +19,8 @@ find_library(OCCI_LIBRARY
 	"~/usr/lib"
 	"/usr/local/lib"
 	"/usr/lib"
-	"/usr/lib64/oracle/11.2.0.3.0/client/lib64"
-	"/usr/lib/oracle/11.2/client/lib"
+	"/usr/lib64/oracle/*/client/lib64"
+	"/usr/lib/oracle/*/client/lib"
   PATH_SUFFIXES "oracle/*/client_1/lib"
 )
 
@@ -33,8 +33,8 @@ endif ("${OCCI_LIBRARY}" MATCHES "^(.+)lib[\\/]libocci\\.(.+)$")
 find_library(CLNTSH_LIBRARY  
     NAMES clntsh libclntsh 
     PATHS 
-        "/usr/lib64/oracle/11.2.0.3.0/client/lib64"
-        "/usr/lib/oracle/11.2/client/lib"
+        "/usr/lib64/oracle/*/client/lib64"
+        "/usr/lib/oracle/*/client/lib"
 )
 
 # locate header files
@@ -47,8 +47,8 @@ find_path(OCCI_INCLUDE_DIR
 	"/usr/local/include"
 	"/usr/local"
 	"/usr/include"
-	"/usr/include/oracle/11.2.0.3.0/client"
-	"/usr/include/oracle/11.2/client"
+	"/usr/include/oracle/*/client"
+	"/usr/include/oracle/*/client"
   PATH_SUFFIXES "oracle/*/client_1/include"
 )
 
