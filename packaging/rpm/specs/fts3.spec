@@ -27,6 +27,11 @@ BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
 Requires(pre):  shadow-utils
 
+%{?filter_setup:
+%filter_provides_in /usr/lib64/oracle/11.2.0.3.0/client/lib64/.*\.so$
+%filter_requires_in /usr/lib64/oracle/11.2.0.3.0/client/lib64/.*\.so$
+%filter_setup
+}
 
 %description
 The File Transfer Service V3
