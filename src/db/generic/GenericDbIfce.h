@@ -83,6 +83,7 @@ public:
     
     virtual void getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files) = 0;    
     
+
     virtual std::vector<std::string> getSiteGroupNames() = 0;
 
     virtual std::vector<std::string> getSiteGroupMembers(std::string GroupName) = 0;

@@ -1186,6 +1186,7 @@ void OracleAPI::getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAn
 
         oracle::occi::Statement* s = NULL;
         oracle::occi::ResultSet* r = NULL;
+	ThreadTraits::LOCK lock(_mutex);
 
     try {
         s = conn->createStatement(query_stmt.str(), tag);
@@ -2169,6 +2170,7 @@ void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtoco
 
 SeProtocolConfig* OracleAPI::getProtocol(std::string se1, std::string se2) {
 
+    ThreadTraits::LOCK lock(_mutex);
     bool is_dest_group = is_se_group_member(se2);
 
     if (is_dest_group) {

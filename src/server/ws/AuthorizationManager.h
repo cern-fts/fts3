@@ -25,7 +25,7 @@
 #ifndef AUTHORIZATIONMANAGER_H_
 #define AUTHORIZATIONMANAGER_H_
 
-#include "common/InstanceHolder.h"
+#include "common/ThreadSafeInstanceHolder.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <set>
@@ -35,9 +35,9 @@ namespace fts3 { namespace ws {
 using namespace fts3::common;
 using namespace std;
 
-class AuthorizationManager : public InstanceHolder<AuthorizationManager> {
+class AuthorizationManager : public ThreadSafeInstanceHolder<AuthorizationManager> {
 
-	friend class InstanceHolder<AuthorizationManager>;
+	friend class ThreadSafeInstanceHolder<AuthorizationManager>;
 
 public:
 	virtual ~AuthorizationManager();
