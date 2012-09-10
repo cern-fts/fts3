@@ -730,10 +730,10 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
     JobStatus* j = NULL;
     bool checkForCanceling = false;
     unsigned int cc = 1;
-    std::string jobStatuses;
+    std::string jobStatuses("");
 
     /*this statement cannot be prepared, it's generated dynamically*/
-    std::string tag = std::string("");
+    std::string tag = "listRequests";
     std::string sel = "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, J.vo_name,(SELECT count(*) from t_file where t_file.job_id = J.job_id), priority, cancel_job FROM t_job J ";
     //gain the benefit from the statement pooling
     std::sort(inGivenStates.begin(), inGivenStates.end());
@@ -743,7 +743,9 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         foundCancel = std::find_if(inGivenStates.begin(), inGivenStates.end(), bind2nd(std::equal_to<std::string > (), std::string("Canceling")));
         if (foundCancel == inGivenStates.end()) { //not found
             checkForCanceling = true;
+	    tag.append("1");
         }
+	    tag.append("2");	
     }
 
     if (inGivenStates.size() > 0) {
@@ -751,40 +753,50 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         for (unsigned int i = 1; i < inGivenStates.size(); i++) {
             jobStatuses += (",'" + inGivenStates[i] + "'");
         }
+	    tag.append("3");
     }
 
     if (restrictToClientDN.length() > 0) {
         sel.append(" LEFT OUTER JOIN T_SE_PAIR_ACL C ON J.SE_PAIR_NAME = C.SE_PAIR_NAME LEFT OUTER JOIN t_vo_acl V ON J.vo_name = V.vo_name ");
+        tag.append("4");	
     }
 
     if (inGivenStates.size() > 0) {
         sel.append(" WHERE J.job_state IN (" + jobStatuses + ") ");
+        tag.append("5");
     } else {
         sel.append(" WHERE J.job_state <> '0' ");
+        tag.append("6");	
     }
 
     if (restrictToClientDN.length() > 0) {
         sel.append(" AND (J.user_dn = :1 OR V.principal = :2 OR C.principal = :3) ");
+        tag.append("7");
     }
 
     if (VOname.length() > 0) {
         sel.append(" AND J.vo_name = :4");
+        tag.append("8");	
     }
 
     if (forDN.length() > 0) {
         sel.append(" AND J.user_dn = :5");
+        tag.append("9");
     }
 
     if (!checkForCanceling) {
         sel.append(" AND NVL(J.cancel_job,'X') <> 'Y'");
+        tag.append("10");	
     }
+
+    tag.append("11");
 
    oracle::occi::Statement* s = NULL;
    oracle::occi::ResultSet* r = NULL;
    ThreadTraits::LOCK lock(_mutex);
    
     try {
-        s = conn->createStatement(sel, "");
+        s = conn->createStatement(sel, tag);
         if (restrictToClientDN.length() > 0) {
             s->setString(cc++, restrictToClientDN);
             s->setString(cc++, restrictToClientDN);
@@ -827,19 +839,18 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         }
 
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, "");
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
 		if(s && r){
 	        	conn->destroyResultset(s, r);
-        		conn->destroyStatement(s, "");	
+        		conn->destroyStatement(s, tag);	
 		}
 	}
 		
     }
-
 }
 
 void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files) {
@@ -1102,81 +1113,96 @@ void OracleAPI::getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) {
     }
 }
 
-void OracleAPI::getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string
-SHARE_VALUE) {
+void OracleAPI::getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE,std::string SHARE_VALUE) {
+    unsigned int index = 1;
     SeAndConfig* seData = NULL;
     std::vector<SeAndConfig*>::iterator iter;
     std::string tag = "getAllSeAndConfigWithCritiria";
-    std::string query_stmt = " SELECT "
-            " T_SE_VO_SHARE.SE_NAME, "
-            " T_SE_VO_SHARE.SHARE_ID, "
-            " T_SE_VO_SHARE.SHARE_TYPE,"
-            " T_SE_VO_SHARE.SHARE_VALUE "
-            " FROM T_SE_VO_SHARE ";
+    std::stringstream query_stmt;
+        
+    query_stmt << " SELECT T_SE_VO_SHARE.SE_NAME, T_SE_VO_SHARE.SHARE_ID, T_SE_VO_SHARE.SHARE_TYPE, T_SE_VO_SHARE.SHARE_VALUE FROM T_SE_VO_SHARE ";
 
     bool first = true;
     if (SE_NAME.length() > 0) {
 
         if (first) {
             first = false;
-            query_stmt += " where ";
+            query_stmt << " where ";
+	    tag.append("1");
         } else {
-            query_stmt += " and ";
+            query_stmt << " and ";
+	    tag.append("2");	    
         }
 
-        query_stmt.append(" T_SE_VO_SHARE.SE_NAME like '");
-        query_stmt.append(SE_NAME);
-        query_stmt.append("'");
-        tag.append("1");
+        query_stmt << " T_SE_VO_SHARE.SE_NAME like :" << index;
+        //query_stmt.append(SE_NAME);
+        tag.append("3");
     }
     if (SHARE_ID.length() > 0) {
 
         if (first) {
             first = false;
-            query_stmt += " where ";
+            query_stmt << " where ";
+	    tag.append("4");	    
         } else {
-            query_stmt += " and ";
+            query_stmt << " and ";
+	    tag.append("5");	    
         }
 
-        query_stmt.append(" T_SE_VO_SHARE.SHARE_ID like '");
-        query_stmt.append(SHARE_ID);
-        query_stmt.append("'");
-        tag.append("2");
+        query_stmt << " T_SE_VO_SHARE.SHARE_ID like :" << ++index;
+        //query_stmt.append(SHARE_ID);
+        tag.append("6");
     }
     if (SHARE_TYPE.length() > 0) {
 
         if (first) {
             first = false;
-            query_stmt += " where ";
+            query_stmt << " where ";
+            tag.append("7");	    
         } else {
-            query_stmt += " and ";
+            query_stmt << " and ";
+            tag.append("8");	    
         }
 
-        query_stmt.append(" T_SE_VO_SHARE.SHARE_TYPE ='");
-        query_stmt.append(SHARE_TYPE);
-        query_stmt.append("'");
-        tag.append("3");
+        query_stmt << " T_SE_VO_SHARE.SHARE_TYPE =:" << ++index;
+        //query_stmt.append(SHARE_TYPE);
+        tag.append("9");
     }
     if (SHARE_VALUE.length() > 0) {
 
         if (first) {
             first = false;
-            query_stmt += " where ";
+            query_stmt << " where ";
+            tag.append("10");	    
         } else {
-            query_stmt += " and ";
+            query_stmt << " and ";
+            tag.append("11");	    
         }
 
-        query_stmt.append(" T_SE_VO_SHARE.SHARE_VALUE like '");
-        query_stmt.append(SHARE_VALUE);
-        query_stmt.append("'");
-        tag.append("4");
+        query_stmt << " T_SE_VO_SHARE.SHARE_VALUE like :" << ++index;
+        //query_stmt.append(SHARE_VALUE);
+        tag.append("12");
     }
 
         oracle::occi::Statement* s = NULL;
         oracle::occi::ResultSet* r = NULL;
 
     try {
-        s = conn->createStatement(query_stmt, "");
+        s = conn->createStatement(query_stmt.str(), tag);
+	
+	index = 1;
+	if(SE_NAME.length() > 0)
+		s->setString(index, "%"+SE_NAME+"%");
+	++index;
+	if(SHARE_ID.length() > 0)
+		s->setString(index, "%"+SHARE_ID+"%");		
+	++index;
+	if(SHARE_TYPE.length() > 0)
+		s->setString(index, SHARE_TYPE);				
+	++index;
+	if(SHARE_VALUE.length() > 0)
+		s->setString(index, "%"+SHARE_VALUE+"%");						
+		
         r = conn->createResultset(s);
         while (r->next()) {
             seData = new SeAndConfig();
@@ -1188,12 +1214,13 @@ SHARE_VALUE) {
             seAndConfig.push_back(seData);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, "");
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
     	if(conn){
+	  if(s && r)
 	        conn->destroyResultset(s, r);
-        	conn->destroyStatement(s, "");	
+        	conn->destroyStatement(s, tag);	
 	}
         conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
