@@ -1,6 +1,6 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        24%{?dist}
+Release:        25%{?dist}
 Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
