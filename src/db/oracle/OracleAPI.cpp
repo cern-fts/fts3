@@ -2680,7 +2680,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
     std::vector<TransferJobs*>::const_iterator iter;
     const std::string tag = "getSubmittedJobsReuse";
 
-    const std::string query_stmt = "SELECT /* FIRST_ROWS(25) */ "
+    const std::string query_stmt = "SELECT /* FIRST_ROWS(1) */ "
             " t_job.job_id, "
             " t_job.job_state, "
             " t_job.vo_name,  "
@@ -2707,7 +2707,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
             " AND t_job.CANCEL_JOB is NULL"
             " AND t_job.reuse_job='Y' "
             " AND t_job.job_state ='SUBMITTED' "
-            " AND ROWNUM <=25 "
+            " AND ROWNUM <=1 "
             " ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time)";
 
@@ -2719,7 +2719,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
             return;
 
         s = conn->createStatement(query_stmt, tag);
-        s->setPrefetchRowCount(25);
+        s->setPrefetchRowCount(1);
         r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -3267,9 +3267,13 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
 bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname) {
     const std::string tag1 = "isTrAllowed1";
     const std::string tag2 = "isTrAllowed2";
+    const std::string tag3 = "isTrAllowed3";
+    const std::string tag4 = "isTrAllowed4";        
     bool allowed = true;
     double actThr = 0;
     int act = 0;
+    int maxDest = 0;
+    int noFailedPerSePair = 0;
     std::string query_stmt1 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 ";
 
  			
@@ -3281,11 +3285,20 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 				  " )))  and  source_se=:5  and dest_se=:6 and t_optimize.when  is not null order by "
 				  " SYS_EXTRACT_UTC(when) desc";
 				
+    std::string query_stmt3 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.dest_se=:1 ";
+
+    std::string query_stmt4 = " select count(*) from  t_file, t_job where t_file.file_state='FAILED' "
+    				" and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
+				" and t_file.FINISH_TIME is not null order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc";
 				
 	oracle::occi::Statement* s1 = NULL;
 	oracle::occi::ResultSet* r1 = NULL;
 	oracle::occi::Statement* s2 = NULL;
 	oracle::occi::ResultSet* r2 = NULL;
+	oracle::occi::Statement* s3 = NULL;
+	oracle::occi::ResultSet* r3 = NULL;
+	oracle::occi::Statement* s4 = NULL;
+	oracle::occi::ResultSet* r4 = NULL;	
 	ThreadTraits::LOCK lock(_mutex);
 	
     try {
@@ -3293,6 +3306,27 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         if (false == conn->checkConn())
             return false;
     
+        s3 = conn->createStatement(query_stmt3, tag3);
+        s3->setString(1, destin_hostname);
+        s3->setPrefetchRowCount(1);
+        r3 = conn->createResultset(s3);
+        if (r3->next()) {
+            maxDest = r3->getInt(1);    
+        }
+        conn->destroyResultset(s3, r3);
+        conn->destroyStatement(s3, tag3);
+	
+        s4 = conn->createStatement(query_stmt4, tag4);
+        s4->setString(1, source_hostname);	
+        s4->setString(2, destin_hostname);
+        s4->setPrefetchRowCount(1);
+        r4 = conn->createResultset(s4);
+        if (r4->next()) {
+            noFailedPerSePair = r4->getInt(1);    
+        }
+        conn->destroyResultset(s4, r4);
+        conn->destroyStatement(s4, tag4);		
+	
         s1 = conn->createStatement(query_stmt1, tag1);
         s1->setString(1, source_hostname);
         s1->setString(2, destin_hostname);
@@ -3300,7 +3334,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         r1 = conn->createResultset(s1);
         if (r1->next()) {
             act = r1->getInt(1);
-            if (act == 0) { //no active, start transfering
+            if (act == 0 || maxDest<=25) { //no active, start transfering
                 conn->destroyResultset(s1, r1);
                 conn->destroyStatement(s1, tag1);
                 return allowed;
@@ -3316,13 +3350,13 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 r2 = conn->createResultset(s2);
                 if (r2->next()) { //found records in t_optimize
                     actThr = r2->getInt(1); //throughput                   
-                    if (actThr > 1.0 || act<15) {
+                    if ( actThr > 1.0 || act<=25 || maxDest<=25) {
                         allowed = true;
                     } else {
                         allowed = false;
                     }
                 } else { //no records yet in t_optimize
-                    if (act < 20) {
+                    if (act <= 25 || maxDest<=25) {
                         allowed = true;
                     } else {
                         allowed = false;
@@ -3351,6 +3385,14 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 conn->destroyResultset(s2, r2);
                 conn->destroyStatement(s2, tag2);		
 	      }
+	      if(s3 && r3){	
+                conn->destroyResultset(s3, r3);
+                conn->destroyStatement(s3, tag3);		
+	      }
+	      if(s4 && r4){	
+                conn->destroyResultset(s4, r4);
+                conn->destroyStatement(s4, tag4);		
+	      }	      	      
 	}
         return allowed;
     }
