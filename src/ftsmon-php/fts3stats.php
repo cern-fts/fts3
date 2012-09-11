@@ -102,7 +102,7 @@ $stmt13 ->execute();
 $succ = $stmt13->fetchColumn();
 
 #failure rate
-$failed = "select count(*) from t_file where file_state!='FINISHED' ";
+$failed = "select count(*) from t_file where file_state IN ('FAILED','CANCELED') ";
 $stmt14 = $conn->prepare($failed);
 $stmt14 ->execute();
 $fail = $stmt14->fetchColumn();
@@ -113,6 +113,8 @@ $conn = null;
 
 <tr><td>SUCCESS RATE</td><td><?php echo $ratioSuccessFailure;?>%</td></tr>
 <tr><td>TOTAL ACTIVE</td><td><?php echo $result;?></td></tr>
+<tr><td>TOTAL FINISHED</td><td><?php echo $succ;?></td></tr>
+<tr><td>TOTAL FAILED</td><td><?php echo $fail;?></td></tr>
 <tr><td>TOTAL QUEUED</td><td><?php echo $queued;?></td></tr>
 <tr><td>ACTIVE PER VO</td><td><?php echo $line;?></td></tr>
 <tr><td>AVG THROUGHPUT PER SE PAIR</td><td><?php echo $avgThr;?></td></tr>
