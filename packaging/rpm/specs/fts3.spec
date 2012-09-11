@@ -1,6 +1,6 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        26%{?dist}
+Release:        27%{?dist}
 Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
@@ -28,8 +28,8 @@ BuildRequires:  voms-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 %{?filter_setup:
-%filter_provides_in /usr/lib64/oracle/11.2.0.3.0/client/lib64/.*\.so$
-%filter_requires_in /usr/lib64/oracle/11.2.0.3.0/client/lib64/.*\.so$
+%filter_provides_in /usr/lib64/oracle/*/client/lib64/.*\.so$
+%filter_requires_in /usr/lib64/oracle/*/client/lib64/.*\.so$
 %filter_setup
 }
 
@@ -67,8 +67,6 @@ Group: System Environment/Daemons
 Requires: fts3-libs = %{version}-%{release}
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-srm
-AutoProv: yes
-AutoReq: no
 
 %package libs
 Summary: File Transfer Service version 3 libs
