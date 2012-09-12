@@ -39,6 +39,10 @@ using namespace fts3::ws;
 using namespace db;
 using namespace boost;
 
+void GSoapDelegationHandler::init() {
+	OpenSSL_add_all_digests();
+}
+
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) {
 
 	// get client DN
@@ -85,7 +89,7 @@ string GSoapDelegationHandler::makeDelegationId() {
 	unsigned int delegation_id_len;
 	char delegation_id[17];
 
-	OpenSSL_add_all_digests();
+//	OpenSSL_add_all_digests(); // TODO get rid of this ;) should go to main and be initialized only once
 
 	const EVP_MD *m = EVP_sha1();
 	if (m == NULL) return NULL;

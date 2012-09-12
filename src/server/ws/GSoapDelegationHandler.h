@@ -49,6 +49,9 @@ using namespace std;
  */
 class GSoapDelegationHandler {
 public:
+
+	static void init();
+
 	/**
 	 * Constructor
 	 *

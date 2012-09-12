@@ -25,6 +25,7 @@ limitations under the License. */
 #include "common/logger.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
+#include "ws/GSoapDelegationHandler.h"
 #include <fstream>
 #include "server.h"
 #include "daemonize.h"
@@ -139,6 +140,7 @@ int main (int argc, char** argv)
 		exit(1);	
 	}
 
+        fts3::ws::GSoapDelegationHandler::init();
 
         fts3_initialize_db_backend();
         struct sigaction action;
