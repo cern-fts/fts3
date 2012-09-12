@@ -103,15 +103,15 @@ public:
 	 *
 	 */
 	template <typename JS>
-	static void printJobStatus(JS* js){
+	static void printJobStatus(JS js){
 
-		cout << "Request ID:\t" << *js->jobID << endl;
-		cout << "Status: " << *js->jobStatus << endl;
-		cout << "Client DN: " << *js->clientDN << endl;
+		cout << "Request ID:\t" << js.jobId << endl;
+		cout << "Status: " << js.jobStatus << endl;
+		cout << "Client DN: " << js.clientDn << endl;
 
-		if (js->reason) {
+		if (!js.reason.empty()) {
 
-			cout << "Reason: " << *js->reason << endl;
+			cout << "Reason: " << js.reason << endl;
 
 		} else {
 
@@ -119,11 +119,11 @@ public:
 		}
 
 		char buff[20];
-		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js->submitTime));
+		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.submitTime));
 		cout << "Submit time: " << buff << endl;
-		cout << "Files: " << js->numFiles << endl;
-	    cout << "Priority: " << js->priority << endl;
-	    cout << "VOName: " << *js->voName << endl;
+		cout << "Files: " << js.numFiles << endl;
+	    cout << "Priority: " << js.priority << endl;
+	    cout << "VOName: " << js.voName << endl;
 	}
 
 	/*

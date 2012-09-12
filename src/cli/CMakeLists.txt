@@ -24,7 +24,8 @@ set(fts3_include_dir
     "${CMAKE_BINARY_DIR}/src/"
 )
 
-include_directories (${fts3_include_dir})
+FIND_PACKAGE(PythonLibs)
+include_directories (${fts3_include_dir} ${PYTHON_INCLUDE_PATH})
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
@@ -174,6 +175,16 @@ add_executable(fts3-debug-set
 target_link_libraries (fts3-debug-set fts3_cli_common)
 
 # ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+# python bindings
+add_library(fts3python SHARED python/PythonBindings.cpp python/PythonApi.cpp)
+target_link_libraries(fts3python fts3_cli_common python2.6 boost_python)
+#add_dependencies(fts3python fts3_cli_common)
+
+# ------------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------------
 # man pages

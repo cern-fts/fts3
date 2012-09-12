@@ -131,9 +131,8 @@ bool SubmitTransferCli::createJobElements() {
     	// Parse the file
     	int lineCount = 0;
     	string line;
-    	// define the seperator for tokenizing each line
+    	// define the seperator characters (space) for tokenizing each line
     	char_separator<char> sep(" ");
-    	int count;
     	// read and parse the lines one by one
     	do {
     		lineCount++;
@@ -142,43 +141,45 @@ bool SubmitTransferCli::createJobElements() {
     		// split the line into tokens
     		tokenizer< char_separator<char> > tokens(line, sep);
     		tokenizer< char_separator<char> >::iterator it;
-    		count = 0;
 
     		// we are expecting up to 3 elements in each line
     		// source, destination and optionally the checksum
     		JobElement e;
-    		// iterate over the tokens (we are interested in up to 3 tokens)
-    		for(it = tokens.begin(); it != tokens.end() && count < 3; it++) {
-    			string s = *it;
-    			boost::trim(s);
-    			if (!s.empty()) {
-    				// if the token is not empty after trimming,
-    				// it is the element we are interested in
-    				e[count] = s;
-    				count++;
-    			}
-    		}
 
-    		// if the line was empty continue
-    		if (count == 0) continue;
+    		// the first part should be the source
+    		it = tokens.begin();
+    		if (it != tokens.end())
+    			get<SOURCE>(e) = *it;
+    		else
+    			// if the line was empty continue
+    			continue;
 
-    		// only one element is still not enough to define a job
-    		if (count == 1) {
+    		// the second part should be the destination
+    		it++;
+    		if (it != tokens.end())
+    			get<DESTINATION>(e) = *it;
+    		else {
+    			// only one element is still not enough to define a job
     			cout << "submit: in line " << lineCount << ": Destination is missing." << endl;
     			continue;
     		}
 
+    		// the third part should be the checksum (but its optional)
+    		it++;
+    		if (it != tokens.end())
+    			get<CHECKSUM>(e) = *it;
+
     		// if the checksum algorithm has been given check if the
     		// format is correct (ALGORITHM:1234af)
-    		if (count == 3) {
-    			string::size_type colon = e[2].find(":");
-   				if (colon == string::npos || colon == 0 || colon == e[2].size() - 1) {
+    		if (get<CHECKSUM>(e)) {
+    			string::size_type colon = (*get<CHECKSUM>(e)).find(":");
+   				if (colon == string::npos || colon == 0 || colon == (*get<CHECKSUM>(e)).size() - 1) {
    					cout << "submit: in line " << lineCount << ": checksum format is not valid (ALGORITHM:1234af)." << endl;
    					continue;
    				}
     			checksum = true;
     		}
-        	tasks.push_back(e);
+        	elements.push_back(e);
 
     	} while (!ifs.eof());
 
@@ -188,81 +189,26 @@ bool SubmitTransferCli::createJobElements() {
 
     	// first, if the checksum algorithm has been given check if the
     	// format is correct (ALGORITHM:1234af)
-    	string checksum;
+    	optional<string> checksum;
     	if (vm.count("checksum")) {
-    		checksum = vm["checksum"].as<string>();
-			string::size_type colon = checksum.find(":");
-			if (colon == string::npos || colon == 0 || colon == checksum.size() - 1) {
-				cout << "Checksum format is not valid (ALGORITHM:1234af)." << endl;
-				return false;
-			}
+			checksum = vm["checksum"].as<string>();
 			this->checksum = true;
     	}
 
     	// then if the source and destination have been given create a Task
     	if (!getSource().empty() && !getDestination().empty()) {
-    		JobElement e = {getSource(), getDestination(), checksum};
-    		tasks.push_back(e);
+    		elements.push_back (
+    				JobElement (getSource(), getDestination(), checksum)
+    			);
     	}
-    }
-
-    // finally check if at least one Task has been specified
-    if (tasks.empty()) {
-    	cout << "No transfer job is specified." << endl;
-    	return false;
     }
 
     return true;
 }
 
-vector<tns3__TransferJobElement * > SubmitTransferCli::getJobElements() {
+vector<JobElement> SubmitTransferCli::getJobElements() {
 
-	vector<tns3__TransferJobElement * > jobElements;
-
-	tns3__TransferJobElement* element;
-	vector<JobElement>::iterator it;
-
-	// iterate over the internal vector containing Task (job elements)
-	for (it = tasks.begin(); it < tasks.end(); it++) {
-
-		// create the job element, and set the source and destination values
-		element = soap_new_tns3__TransferJobElement(*ctx, -1);
-		element->source = soap_new_std__string(*ctx, -1);
-		element->dest = soap_new_std__string(*ctx, -1);
-		*element->source = it->src;
-		*element->dest = it->dest;
-		// push the element into the result vector
-		jobElements.push_back(element);
-	}
-
-	return jobElements;
-}
-
-vector<tns3__TransferJobElement2 * > SubmitTransferCli::getJobElements2() {
-
-	vector<tns3__TransferJobElement2*> jobElements;
-
-	tns3__TransferJobElement2* element;
-	vector<JobElement>::iterator it;
-
-	// iterate over the internal vector containing Task (job elements)
-	for (it = tasks.begin(); it < tasks.end(); it++) {
-
-		// create the job element, and set the source, destination and checksum values
-		element = soap_new_tns3__TransferJobElement2(*ctx, -1);
-		element->source = soap_new_std__string(*ctx, -1);
-		element->dest = soap_new_std__string(*ctx, -1);
-		element->checksum = soap_new_std__string(*ctx, -1);
-
-		*element->source = it->src;
-		*element->dest = it->dest;
-		*element->checksum = it->checksum;
-
-		// push the element into the result vector
-		jobElements.push_back(element);
-	}
-
-	return jobElements;
+	return elements;
 }
 
 bool SubmitTransferCli::performChecks() {
@@ -353,69 +299,57 @@ string SubmitTransferCli::askForPassword() {
     return pass1;
 }
 
-tns3__TransferParams* SubmitTransferCli::getParams() {
+map<string, string> SubmitTransferCli::getParams() {
 
-	tns3__TransferParams *jobParams = soap_new_tns3__TransferParams(*ctx, -1);
+	map<string, string> parameters;
 
 	// check if the parameters were set using CLI, and if yes set them
 
 	if (vm.count("compare-checksum")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD);
-		jobParams->values.push_back("compare");
+		parameters[JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD] = "compare";
 	}
 
 	if (vm.count("overwrite")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG);
-		jobParams->values.push_back("Y");
+		parameters[JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG] = "Y";
 	}
 
 	if (vm.count("lan-connection")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_LAN_CONNECTION);
-		jobParams->values.push_back("Y");
+		parameters[JobParameterHandler::FTS3_PARAM_LAN_CONNECTION] = "Y";
 	}
 
 	if (vm.count("fail-nearline")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE);
-		jobParams->values.push_back("Y");
+		parameters[JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE] = "Y";
 	}
 
 	if (vm.count("gparam")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_GRIDFTP);
-		jobParams->values.push_back(vm["gparam"].as<string>());
+		parameters[JobParameterHandler::FTS3_PARAM_GRIDFTP] = vm["gparam"].as<string>();
 	}
 
 	if (vm.count("myproxysrv")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_MYPROXY);
-		jobParams->values.push_back(vm["myproxysrv"].as<string>());
+		parameters[JobParameterHandler::FTS3_PARAM_MYPROXY] = vm["myproxysrv"].as<string>();
 	}
 
 	if (vm.count("id")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_DELEGATIONID);
-		jobParams->values.push_back(vm["id"].as<string>());
+		parameters[JobParameterHandler::FTS3_PARAM_DELEGATIONID] = vm["id"].as<string>();
 	}
 
 	if (vm.count("dest-token")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_SPACETOKEN);
-		jobParams->values.push_back(vm["dest-token"].as<string>());
+		parameters[JobParameterHandler::FTS3_PARAM_SPACETOKEN] = vm["dest-token"].as<string>();
 	}
 
 	if (vm.count("source-token")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE);
-		jobParams->values.push_back(vm["source-token"].as<string>());
+		parameters[JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE] = vm["source-token"].as<string>();
 	}
 
 	if (vm.count("copy-pin-lifetime")) {
-		string value = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME);
-		jobParams->values.push_back(value);
+		parameters[JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME] = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
 	}
 
 	if (vm.count("reuse")) {
-		jobParams->keys.push_back(JobParameterHandler::FTS3_PARAM_REUSE);
-		jobParams->values.push_back("Y");
+		parameters[JobParameterHandler::FTS3_PARAM_REUSE] = "Y";
 	}
 
-	return jobParams;
+	return parameters;
 }
 
 string SubmitTransferCli::getPassword() {

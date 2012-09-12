@@ -24,14 +24,15 @@
 #ifndef GSOAPCONTEXADAPTER_H_
 #define GSOAPCONTEXADAPTER_H_
 
+#include "TransferTypes.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
-#include <string>
+#include <vector>
+#include <map>
 
 using namespace std;
 
 namespace fts3 { namespace cli {
-
 
 /**
  * The adapter class for the GSoap context
@@ -94,45 +95,45 @@ public:
 
 
 	/**
-	 * Remote call that will be transferSubmit3
+	 * Remote call that will be transferSubmit2 or transferSubmit3
 	 *
-	 * @param job the job to be executed
-	 * @param resp server response (job id)
-	 */
-	void transferSubmit3 (tns3__TransferJob2* job, impltns__transferSubmit3Response& resp);
-
-	/**
-	 * Remote call to transferSubmit2
+	 * @param elements - job elements to be executed
+	 * @param parameters - parameters for the job that is being submitted
+	 * @param checksum - flag indicating whether the checksum should be used
+	 * 	(if false transferSubmit2 is used, otherwise transferSubmit3 is used)
 	 *
-	 * @param job the job that will be executed
-	 * @param resp server response (job id)
+	 * @return the job ID
 	 */
-	void transferSubmit2 (tns3__TransferJob* job, impltns__transferSubmit2Response& resp);
+	string transferSubmit (vector<JobElement> elements, map<string, string> parameters, bool checksum);
 
 	/**
 	 * Remote call to transferSubmit
 	 *
-	 * @param job the job that will be executed
-	 * @param resp server response (job id)
+	 * @param elements - job elements to be executed
+	 * @param parameters - parameters for the job that is being submitted
+	 * @param password - user credential that is being used instead of certificate delegation
+	 *
+	 * @return the job ID
 	 */
-	void transferSubmit (tns3__TransferJob* job, impltns__transferSubmitResponse& resp);
+	string transferSubmit (vector<JobElement> elements, map<string, string> parameters, string password);
 
 	/**
 	 * Remote call to getTransferJobStatus
 	 *
 	 * @param jobId the job id
-	 * @param resp server response (status)
+	 *
+	 * @return an object holding the job status
 	 */
-	void getTransferJobStatus (string jobId, impltns__getTransferJobStatusResponse& resp);
+	JobStatus getTransferJobStatus (string jobId);
 
-	/**
+	/** TODO
 	 * Remote call to getRoles
 	 *
 	 * @param resp server response (roles)
 	 */
 	void getRoles (impltns__getRolesResponse& resp);
 
-	/**
+	/** TODO
 	 * Remote call to getRolesOf
 	 *
 	 * @param resp server response (roles)
@@ -142,10 +143,9 @@ public:
 	/**
 	 * Remote call to cancel
 	 *
-	 * @param rqst list of job ids
-	 * @param resp server response
+	 * @param jobIds list of job IDs
 	 */
-	void cancel(impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst, impltns__cancelResponse& resp);
+	void cancel(vector<string> jobIds);
 
 	/**
 	 * Remote call to listRequests2
@@ -155,7 +155,7 @@ public:
 	 * @param array statuses of interest
 	 * @param resp server response
 	 */
-	void listRequests2 (impltns__ArrayOf_USCOREsoapenc_USCOREstring* array, string dn, string vo, impltns__listRequests2Response& resp);
+	vector<JobStatus> listRequests2 (vector<string> statuses, string dn, string vo);
 
 	/**
 	 * Remote call to listRequests
@@ -163,9 +163,9 @@ public:
 	 * @param array statuses of interest
 	 * @param resp server response
 	 */
-	void listRequests (impltns__ArrayOf_USCOREsoapenc_USCOREstring* array, impltns__listRequestsResponse& resp);
+	vector<JobStatus> listRequests (vector<string> statuses);
 
-	/**
+	/** TODO
 	 * Remote call to listVOManagers
 	 *
 	 * @param vo vo name
@@ -177,17 +177,19 @@ public:
 	 * Remote call to getTransferJobSummary2
 	 *
 	 * @param jobId id of the job
-	 * @param resp server response
+	 *
+	 * @return an object containing job summary
 	 */
-	void getTransferJobSummary2 (string jobId, impltns__getTransferJobSummary2Response& resp);
+	JobSummary getTransferJobSummary2 (string jobId);
 
 	/**
 	 * Remote call to getTransferJobSummary
 	 *
 	 * @param jobId id of the job
-	 * @param resp server response
+	 *
+	 * @return an object containing job summary
 	 */
-	void getTransferJobSummary (string jobId, impltns__getTransferJobSummaryResponse& resp);
+	JobSummary getTransferJobSummary (string jobId);
 
 	/**
 	 * Remote call to getFileStatus

@@ -23,6 +23,8 @@
 
 #include "common/JobStatusHandler.h"
 
+#include "TransferTypes.h"
+
 #include <exception>
 #include <memory>
 
@@ -51,72 +53,43 @@ int main(int ac, char* av[]) {
 
 		string jobId;
 
-		// checksum requires different request
-		if (cli->useCheckSum()) {
-			tns3__TransferJob2 job;
-			// set job elements
-			job.transferJobElements = cli->getJobElements2();
-			// set transfer parameters
-			job.jobParams = cli->getParams();
+		if (cli->useDelegation()) {
 
-			// always use delegation with checksum TODO check whether it's right!
 			// delegate Proxy Certificate
-			ProxyCertificateDelegator handler(cli->getService(), cli->getDelegationId(), cli->getExpirationTime());
+			ProxyCertificateDelegator handler (
+					cli->getService(),
+					cli->getDelegationId(),
+					cli->getExpirationTime()
+				);
 			if (!handler.delegate()) return 0;
 
 			// submit the job
-			impltns__transferSubmit3Response resp;
-			ctx.transferSubmit3(&job, resp);
-
-			// retrieve the job ID
-			jobId = resp._transferSubmit3Return;
+			jobId = ctx.transferSubmit (
+					cli->getJobElements(),
+					cli->getParams(),
+					cli->useCheckSum()
+				);
 
 		} else {
-			tns3__TransferJob job;
-			// set job elements
-			job.transferJobElements = cli->getJobElements();
-			// set transfer parameters
-			job.jobParams = cli->getParams();
-
-			// check whether a proxy certificate should be used
-			if (cli->useDelegation()) {
-
-				// delegate Proxy Certificate
-				ProxyCertificateDelegator handler(cli->getService(), cli->getDelegationId(), cli->getExpirationTime());
-				if (!handler.delegate()) return 0;
-
-				// submit the job
-				impltns__transferSubmit2Response resp;
-				ctx.transferSubmit2(&job, resp);
-
-				// retrieve the job ID
-				jobId = resp._transferSubmit2Return;
-
-			} else {
-
-				// set the credential (Password)
-				job.credential = soap_new_std__string(ctx, -1);
-				*job.credential = cli->getPassword();
-
-				// submit the job
-				impltns__transferSubmitResponse resp;
-				ctx.transferSubmit(&job, resp);
-
-				// retrieve the job ID
-				jobId = resp._transferSubmitReturn;
-			}
+			// submit the job
+			jobId = ctx.transferSubmit (
+					cli->getJobElements(),
+					cli->getParams(),
+					cli->getPassword()
+				);
 		}
 
 		cout << "Submitted request ID: " << jobId << endl;
 
 		// check if the -b option has been used
 		if (cli->isBlocking()) {
-			impltns__getTransferJobStatusResponse resp;
+
+			fts3::cli::JobStatus status;
 			// wait until the transfer is ready
 			do {
 				sleep(2);
-				ctx.getTransferJobStatus(jobId, resp);
-			} while (!JobStatusHandler::getInstance().isTransferReady(*resp._getTransferJobStatusReturn->jobStatus));
+				status = ctx.getTransferJobStatus(jobId);
+			} while (!JobStatusHandler::getInstance().isTransferReady(status.jobStatus));
 		}
 
     } catch(std::exception& e) {

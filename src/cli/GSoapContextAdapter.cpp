@@ -22,6 +22,7 @@
  */
 
 #include "GSoapContextAdapter.h"
+
 #include "ws-ifce/gsoap/fts3.nsmap"
 
 #include <boost/tokenizer.hpp>
@@ -29,8 +30,7 @@
 
 #include <cgsi_plugin.h>
 
-using namespace boost;
-using namespace fts3::cli;
+namespace fts3 { namespace cli {
 
 GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new()) {
 
@@ -108,30 +108,180 @@ void GSoapContextAdapter::printInfo() {
 	cout << "# Client interface version: TODO" << endl;
 }
 
-void GSoapContextAdapter::transferSubmit3 (tns3__TransferJob2* job, impltns__transferSubmit3Response& resp) {
+string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters, bool checksum) {
 
-	if (soap_call_impltns__transferSubmit3(ctx, endpoint.c_str(), 0, job, resp))
-		handleSoapFault("Failed to submit transfer: transferSubmit3.");
+	if (elements.empty()) {
+    	throw string ("No transfer job has been specified.");
+	}
+
+	if (checksum) {
+		// with checksum
+		// the transfer job
+		tns3__TransferJob2 job;
+
+		tns3__TransferJobElement2* element;
+		vector<JobElement>::iterator e_it;
+
+		// iterate over the internal vector containing Task (job elements)
+		for (e_it = elements.begin(); e_it < elements.end(); e_it++) {
+
+			soap* s = ctx;
+			soap_new_tns3__TransferJobElement2(s, -1);
+
+			// create the job element, and set the source, destination and checksum values
+			element = soap_new_tns3__TransferJobElement2(ctx, -1);
+			element->source = soap_new_std__string(ctx, -1);
+			element->dest = soap_new_std__string(ctx, -1);
+			element->checksum = soap_new_std__string(ctx, -1);
+
+			*element->source = get<SOURCE>(*e_it);
+			*element->dest = get<DESTINATION>(*e_it);
+
+			optional<string> checksum = get<CHECKSUM>(*e_it);
+			if (checksum) {
+				string checksum_str = *checksum;
+				string::size_type colon = checksum_str.find(":");
+				if (colon == string::npos || colon == 0 || colon == checksum_str.size() - 1) {
+					throw string("Checksum format is not valid (ALGORITHM:1234af).");
+				}
+				*element->checksum = checksum_str;
+			} else {
+				throw string(
+						"The checksum for source: " + get<SOURCE>(*e_it) + " and destination: " + get<DESTINATION>(*e_it) + " has not been specified."
+					);
+			}
+
+			// push the element into the result vector
+			job.transferJobElements.push_back(element);
+		}
+
+		job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
+		map<string, string>::iterator p_it;
+
+		for (p_it = parameters.begin(); p_it != parameters.end(); p_it++) {
+			job.jobParams->keys.push_back(p_it->first);
+			job.jobParams->values.push_back(p_it->second);
+		}
+
+		impltns__transferSubmit3Response resp;
+		if (soap_call_impltns__transferSubmit3(ctx, endpoint.c_str(), 0, &job, resp))
+			handleSoapFault("Failed to submit transfer: transferSubmit3.");
+
+		return resp._transferSubmit3Return;
+
+	} else {
+		// without checksum
+		// the transfer job
+		tns3__TransferJob job;
+
+		tns3__TransferJobElement* element;
+		vector<JobElement>::iterator e_it;
+
+		// iterate over the internal vector containing Task (job elements)
+		for (e_it = elements.begin(); e_it < elements.end(); e_it++) {
+
+			// create the job element, and set the source, destination and checksum values
+			element = soap_new_tns3__TransferJobElement(ctx, -1);
+			element->source = soap_new_std__string(ctx, -1);
+			element->dest = soap_new_std__string(ctx, -1);
+
+			*element->source = get<SOURCE>(*e_it);
+			*element->dest = get<DESTINATION>(*e_it);
+
+			// push the element into the result vector
+			job.transferJobElements.push_back(element);
+		}
+
+		job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
+		map<string, string>::iterator p_it;
+
+		for (p_it = parameters.begin(); p_it != parameters.end(); p_it++) {
+			job.jobParams->keys.push_back(p_it->first);
+			job.jobParams->values.push_back(p_it->second);
+		}
+
+		impltns__transferSubmit2Response resp;
+		if (soap_call_impltns__transferSubmit2(ctx, endpoint.c_str(), 0, &job, resp))
+			handleSoapFault("Failed to submit transfer: transferSubmit2.");
+
+		return resp._transferSubmit2Return;
+	}
 }
 
-void GSoapContextAdapter::transferSubmit2 (tns3__TransferJob* job, impltns__transferSubmit2Response& resp) {
+string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters, string password) {
 
-	if (soap_call_impltns__transferSubmit2(ctx, endpoint.c_str(), 0, job, resp))
-		handleSoapFault("Failed to submit transfer: transferSubmit2.");
-}
+	if (elements.empty()) {
+    	throw string ("No transfer job has been specified.");
+	}
 
-void GSoapContextAdapter::transferSubmit (tns3__TransferJob* job, impltns__transferSubmitResponse& resp) {
-	if (soap_call_impltns__transferSubmit(ctx, endpoint.c_str(), 0, job, resp))
+	// the transfer job
+	tns3__TransferJob job;
+
+	// set the credential
+	job.credential = soap_new_std__string(ctx, -1);
+	*job.credential = password;
+
+	tns3__TransferJobElement* element;
+	vector<JobElement>::iterator it_e;
+
+	// iterate over the internal vector containing Task (job elements)
+	for (it_e = elements.begin(); it_e < elements.end(); it_e++) {
+
+		// create the job element, and set the source, destination and checksum values
+		element = soap_new_tns3__TransferJobElement(ctx, -1);
+		element->source = soap_new_std__string(ctx, -1);
+		element->dest = soap_new_std__string(ctx, -1);
+
+		*element->source = get<SOURCE>(*it_e);
+		*element->dest = get<DESTINATION>(*it_e);
+
+		// push the element into the result vector
+		job.transferJobElements.push_back(element);
+	}
+
+	job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
+	map<string, string>::iterator it_p;
+
+	for (it_p = parameters.begin(); it_p != parameters.end(); it_p++) {
+		job.jobParams->keys.push_back(it_p->first);
+		job.jobParams->values.push_back(it_p->second);
+	}
+
+	impltns__transferSubmitResponse resp;
+	if (soap_call_impltns__transferSubmit(ctx, endpoint.c_str(), 0, &job, resp))
 		handleSoapFault("Failed to submit transfer: transferSubmit.");
+
+	return resp._transferSubmitReturn;
 }
 
-void GSoapContextAdapter::getTransferJobStatus (string jobId, impltns__getTransferJobStatusResponse& resp) {
+JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId) {
+
+	impltns__getTransferJobStatusResponse resp;
 	if (soap_call_impltns__getTransferJobStatus(ctx, endpoint.c_str(), 0, jobId, resp))
 		handleSoapFault("Failed to get job status: getTransferJobStatus.");
+
+	if (!resp._getTransferJobStatusReturn)
+		throw string("The response from the server is empty!");
+
+	return JobStatus(
+			*resp._getTransferJobStatusReturn->jobID,
+			*resp._getTransferJobStatusReturn->jobStatus,
+			*resp._getTransferJobStatusReturn->clientDN,
+			*resp._getTransferJobStatusReturn->reason,
+			*resp._getTransferJobStatusReturn->voName,
+			resp._getTransferJobStatusReturn->submitTime,
+			resp._getTransferJobStatusReturn->numFiles,
+			resp._getTransferJobStatusReturn->priority
+		);
 }
 
-void GSoapContextAdapter::cancel(impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst, impltns__cancelResponse& resp) {
-	if (soap_call_impltns__cancel(ctx, endpoint.c_str(), 0, rqst, resp))
+void GSoapContextAdapter::cancel(vector<string> jobIds) {
+
+	impltns__ArrayOf_USCOREsoapenc_USCOREstring rqst;
+	rqst.item = jobIds;
+
+	impltns__cancelResponse resp;
+	if (soap_call_impltns__cancel(ctx, endpoint.c_str(), 0, &rqst, resp))
 		handleSoapFault("Failed to cancel jobs: cancel.");
 }
 
@@ -145,14 +295,72 @@ void GSoapContextAdapter::getRolesOf (string dn, impltns__getRolesOfResponse& re
 		handleSoapFault("Failed to get roles: getRolesOf.");
 }
 
-void GSoapContextAdapter::listRequests2 (impltns__ArrayOf_USCOREsoapenc_USCOREstring* array, string dn, string vo, impltns__listRequests2Response& resp) {
+vector<JobStatus> GSoapContextAdapter::listRequests2 (vector<string> statuses, string dn, string vo) {
+
+	impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
+	array->item = statuses;
+
+	impltns__listRequests2Response resp;
 	if (soap_call_impltns__listRequests2(ctx, endpoint.c_str(), 0, array, dn, vo, resp))
 		handleSoapFault("Failed to list requests: listRequests2.");
+
+	if (!resp._listRequests2Return)
+		throw string("The response from the server is empty!");
+
+	vector<JobStatus> ret;
+	vector<tns3__JobStatus*>::iterator it;
+
+	for (it = resp._listRequests2Return->item.begin(); it < resp._listRequests2Return->item.end(); it++) {
+		tns3__JobStatus* gstat = *it;
+
+		JobStatus status = JobStatus(
+				*gstat->jobID,
+				*gstat->jobStatus,
+				*gstat->clientDN,
+				*gstat->reason,
+				*gstat->voName,
+				gstat->submitTime,
+				gstat->numFiles,
+				gstat->priority
+			);
+		ret.push_back(status);
+	}
+
+	return ret;
 }
 
-void GSoapContextAdapter::listRequests (impltns__ArrayOf_USCOREsoapenc_USCOREstring* array, impltns__listRequestsResponse& resp) {
+vector<JobStatus> GSoapContextAdapter::listRequests (vector<string> statuses) {
+
+	impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
+	array->item = statuses;
+
+	impltns__listRequestsResponse resp;
 	if (soap_call_impltns__listRequests(ctx, endpoint.c_str(), 0, array, resp))
 		handleSoapFault("Failed to list requests: listRequests.");
+
+	if (!resp._listRequestsReturn)
+		throw string("The response from the server is empty!");
+
+	vector<JobStatus> ret;
+	vector<tns3__JobStatus*>::iterator it;
+
+	for (it = resp._listRequestsReturn->item.begin(); it < resp._listRequestsReturn->item.end(); it++) {
+		tns3__JobStatus* gstat = *it;
+
+		JobStatus status = JobStatus(
+				*gstat->jobID,
+				*gstat->jobStatus,
+				*gstat->clientDN,
+				*gstat->reason,
+				*gstat->voName,
+				gstat->submitTime,
+				gstat->numFiles,
+				gstat->priority
+			);
+		ret.push_back(status);
+	}
+
+	return ret;
 }
 
 void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersResponse& resp) {
@@ -160,14 +368,66 @@ void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersRespo
 		handleSoapFault("Failed to list VO managers: listVOManagers.");
 }
 
-void GSoapContextAdapter::getTransferJobSummary2 (string jobId, impltns__getTransferJobSummary2Response& resp) {
+JobSummary GSoapContextAdapter::getTransferJobSummary2 (string jobId) {
+
+	impltns__getTransferJobSummary2Response resp;
 	if (soap_call_impltns__getTransferJobSummary2(ctx, endpoint.c_str(), 0, jobId, resp))
 		handleSoapFault("Failed to get job status: getTransferJobSummary2.");
+
+	if (!resp._getTransferJobSummary2Return)
+		throw string("The response from the server is empty!");
+
+	JobStatus status = JobStatus(
+			*resp._getTransferJobSummary2Return->jobStatus->jobID,
+			*resp._getTransferJobSummary2Return->jobStatus->jobStatus,
+			*resp._getTransferJobSummary2Return->jobStatus->clientDN,
+			*resp._getTransferJobSummary2Return->jobStatus->reason,
+			*resp._getTransferJobSummary2Return->jobStatus->voName,
+			resp._getTransferJobSummary2Return->jobStatus->submitTime,
+			resp._getTransferJobSummary2Return->jobStatus->numFiles,
+			resp._getTransferJobSummary2Return->jobStatus->priority
+		);
+
+	return JobSummary (
+			status,
+			resp._getTransferJobSummary2Return->numActive,
+			resp._getTransferJobSummary2Return->numCanceled,
+			resp._getTransferJobSummary2Return->numFailed,
+			resp._getTransferJobSummary2Return->numFinished,
+			resp._getTransferJobSummary2Return->numSubmitted,
+			resp._getTransferJobSummary2Return->numReady
+		);
 }
 
-void GSoapContextAdapter::getTransferJobSummary (string jobId, impltns__getTransferJobSummaryResponse& resp) {
+JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId) {
+
+	impltns__getTransferJobSummaryResponse resp;
 	if (soap_call_impltns__getTransferJobSummary(ctx, endpoint.c_str(), 0, jobId, resp))
 		handleSoapFault("Failed to get job status: getTransferJobSummary.");
+
+	if (!resp._getTransferJobSummaryReturn)
+		throw string("The response from the server is empty!");
+
+	JobStatus status = JobStatus(
+			*resp._getTransferJobSummaryReturn->jobStatus->jobID,
+			*resp._getTransferJobSummaryReturn->jobStatus->jobStatus,
+			*resp._getTransferJobSummaryReturn->jobStatus->clientDN,
+			*resp._getTransferJobSummaryReturn->jobStatus->reason,
+			*resp._getTransferJobSummaryReturn->jobStatus->voName,
+			resp._getTransferJobSummaryReturn->jobStatus->submitTime,
+			resp._getTransferJobSummaryReturn->jobStatus->numFiles,
+			resp._getTransferJobSummaryReturn->jobStatus->priority
+		);
+
+	return JobSummary (
+			status,
+			resp._getTransferJobSummaryReturn->numActive,
+			resp._getTransferJobSummaryReturn->numCanceled,
+			resp._getTransferJobSummaryReturn->numFailed,
+			resp._getTransferJobSummaryReturn->numFinished,
+			resp._getTransferJobSummaryReturn->numSubmitted,
+			0 // we don't care that much about this one, hope to remove this version of getTransferJobSummary TODO
+		);
 }
 
 void GSoapContextAdapter::getFileStatus (string jobId, impltns__getFileStatusResponse& resp) {
@@ -276,3 +536,5 @@ int GSoapContextAdapter::isItVersion370() {
 	return major >= 3 && minor >= 7 && patch >= 0;
 }
 
+}
+}

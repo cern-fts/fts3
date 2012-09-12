@@ -93,7 +93,7 @@ public:
 	 *
 	 * @return  impl__ArrayOf_USCOREsoapenc_USCOREstring
 	 */
-	impltns__ArrayOf_USCOREsoapenc_USCOREstring* getStatusArray();
+	vector<string> getStatusArray();
 
 };
 

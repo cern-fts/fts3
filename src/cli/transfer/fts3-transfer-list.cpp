@@ -55,33 +55,27 @@ int main(int ac, char* av[]) {
 			return 0;
 		}
 
-		impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = cli->getStatusArray();
+		vector<string> array = cli->getStatusArray();
 
-		vector<tns3__JobStatus * > statuses;
+		vector<fts3::cli::JobStatus> statuses;
 
 		if (ctx.isUserVoRestrictListingSupported()) {
 
-			impltns__listRequests2Response resp;
-			ctx.listRequests2(array, cli->getUserDn(), cli->getVoName(), resp);
-
-			statuses = resp._listRequests2Return->item;
+			statuses = ctx.listRequests2(array, cli->getUserDn(), cli->getVoName());
 
 		} else {
 
-			impltns__listRequestsResponse resp;
-			ctx.listRequests(array, resp);
-
-			statuses = resp._listRequestsReturn->item;
+			statuses = ctx.listRequests(array);
 		}
 
-		vector<tns3__JobStatus * >::iterator it;
+		vector<fts3::cli::JobStatus>::iterator it;
 		for (it = statuses.begin(); it < statuses.end(); it++) {
 			if (cli->isVerbose()) {
 
 				JobStatusHandler::printJobStatus(*it);
 
 			} else {
-				cout << *(*it)->jobID << "\t" << *(*it)->jobStatus << endl;
+				cout << it->jobId << "\t" << it->jobStatus << endl;
 			}
 		}
 

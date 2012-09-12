@@ -18,6 +18,7 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "TransferTypes.h"
 #include "ui/TransferStatusCli.h"
 
 #include "common/JobStatusHandler.h"
@@ -60,50 +61,42 @@ int main(int ac, char* av[]) {
 					// if version higher than 3.3.0 use getTransferJobSummary2
 
 					// do the request
-					impltns__getTransferJobSummary2Response resp;
-					ctx.getTransferJobSummary2(jobId, resp);
+					JobSummary summary = ctx.getTransferJobSummary2(jobId);
 
 					// print the response
-					if (resp._getTransferJobSummary2Return) {
+					JobStatusHandler::printJobStatus(summary.status);
 
-						JobStatusHandler::printJobStatus(resp._getTransferJobSummary2Return->jobStatus);
+				    cout << "\tActive: " << summary.numActive << endl;
+				    cout << "\tReady: " << summary.numReady << endl;
+				    cout << "\tCanceled: " << summary.numCanceled << endl;
+				    cout << "\tFinished: " << summary.numFinished << endl;
+				    cout << "\tSubmitted: " << summary.numSubmitted << endl;
+				    cout << "\tFailed: " << summary.numFailed << endl;
 
-					    cout << "\tActive: " << resp._getTransferJobSummary2Return->numActive << endl;
-					    cout << "\tReady: " << resp._getTransferJobSummary2Return->numReady << endl;
-					    cout << "\tCanceled: " << resp._getTransferJobSummary2Return->numCanceled << endl;
-					    cout << "\tFinished: " << resp._getTransferJobSummary2Return->numFinished << endl;
-					    cout << "\tSubmitted: " << resp._getTransferJobSummary2Return->numSubmitted << endl;
-					    cout << "\tFailed: " << resp._getTransferJobSummary2Return->numFailed << endl;
-					}
 
 				} else {
 					// if version higher than 3.3.0 use getTransferJobSummary
 
 					// do the request
-					impltns__getTransferJobSummaryResponse resp;
-					ctx.getTransferJobSummary(jobId, resp);
+					JobSummary summary = ctx.getTransferJobSummary(jobId);
 
 					// print the response
-					if (resp._getTransferJobSummaryReturn) {
+					JobStatusHandler::printJobStatus(summary.status);
 
-						JobStatusHandler::printJobStatus(resp._getTransferJobSummaryReturn->jobStatus);
-
-					    cout << "\tActive: " << resp._getTransferJobSummaryReturn->numActive << endl;
-					    cout << "\tCanceled: " << resp._getTransferJobSummaryReturn->numCanceled << endl;
-					    cout << "\tFinished: " << resp._getTransferJobSummaryReturn->numFinished << endl;
-					    cout << "\tSubmitted: " << resp._getTransferJobSummaryReturn->numSubmitted << endl;
-					    cout << "\tFailed: " << resp._getTransferJobSummaryReturn->numFailed << endl;
-					}
+				    cout << "\tActive: " << summary.numActive << endl;
+				    cout << "\tCanceled: " << summary.numCanceled << endl;
+				    cout << "\tFinished: " << summary.numFinished << endl;
+				    cout << "\tSubmitted: " << summary.numSubmitted << endl;
+				    cout << "\tFailed: " << summary.numFailed << endl;
 				}
 			} else {
 
 				// do the request
-				impltns__getTransferJobStatusResponse resp;
-				ctx.getTransferJobStatus(jobId, resp);
+				fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
 
 		    	// print the response
-		    	if (resp._getTransferJobStatusReturn) {
-		    		cout << *resp._getTransferJobStatusReturn->jobStatus << endl;
+		    	if (!status.jobStatus.empty()) {
+		    		cout << status.jobStatus << endl;
 		    	}
 			}
 

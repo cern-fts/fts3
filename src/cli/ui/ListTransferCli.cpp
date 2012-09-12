@@ -75,20 +75,20 @@ bool ListTransferCli::checkIfFeaturesSupported() {
    return true;
 }
 
-impltns__ArrayOf_USCOREsoapenc_USCOREstring* ListTransferCli::getStatusArray() {
+vector<string> ListTransferCli::getStatusArray() {
 
-	impltns__ArrayOf_USCOREsoapenc_USCOREstring* array = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(*ctx, -1);
+	vector<string> array;
 
 	if (CliBase::vm.count("state")) {
-		array->item = CliBase::vm["state"].as<vector<string> >();
+		array = CliBase::vm["state"].as< vector<string> >();
 	}
 
-	if (array->item.empty()) {
-		array->item.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
-		array->item.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
+	if (array.empty()) {
+		array.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
+		array.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
 
 		if (ctx->isUserVoRestrictListingSupported()) {
-			array->item.push_back(JobStatusHandler::FTS3_STATUS_READY);
+			array.push_back(JobStatusHandler::FTS3_STATUS_READY);
 		}
 	}
 

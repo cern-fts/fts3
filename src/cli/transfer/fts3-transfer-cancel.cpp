@@ -50,17 +50,14 @@ int main(int ac, char* av[]) {
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();
 
-		impltns__ArrayOf_USCOREsoapenc_USCOREstring* rqst = soap_new_impltns__ArrayOf_USCOREsoapenc_USCOREstring(ctx, -1);
-		vector<string> &jobs = rqst->item;
-		jobs = cli->getJobIds();
+		vector<string> jobs = cli->getJobIds();
 
 		if (jobs.empty()) {
 			cout << "No request ID has been specified" << endl;
 			return 0;
 		}
 
-		impltns__cancelResponse resp;
-		ctx.cancel(rqst, resp);
+		ctx.cancel(jobs);
 
 		vector<string>::iterator it;
 

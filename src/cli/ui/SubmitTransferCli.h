@@ -26,7 +26,8 @@
 #define SUBMITTRANSFERCLI_H_
 
 #include "SrcDestCli.h"
-#include "ws-ifce/gsoap/gsoap_stubs.h"
+#include "TransferTypes.h"
+
 #include <vector>
 
 using namespace std;
@@ -58,33 +59,6 @@ namespace fts3 { namespace cli {
  * @see CliBase
  */
 class SubmitTransferCli : public SrcDestCli {
-
-	/**
-	 * Single job element.
-	 *
-	 * Since there are two different classed that represent the job element
-	 * (tns3__TransferJobElement, transfer__TransferJobElement2) this
-	 * structure is used to store job element data until it is known which
-	 * kind of job element should be used
-	 *
-	 */
-	struct JobElement {
-		string src; ///< source file
-		string dest; ///< destination file
-		string checksum; ///< the checksum
-
-		static const int size = 3; ///< size of the JobElement (3x string)
-
-		/**
-		 * Subscript operator.
-		 * Since we want to loop over the fields we cannot use boost::tuple.
-		 *
-		 * @return field corresponding to the given index, e.g. 0 - src.
-		 */
-		inline string& operator[] (const int index) {
-			return ((string*)this)[index];
-		}
-	};
 
 public:
 
@@ -180,44 +154,24 @@ public:
 	long getExpirationTime();
 
 	/**
-	 * Gets the 'tns3__TransferParams' object.
+	 * Gets a vector containing string-string pairs.
 	 *
 	 * The parameters are set accordingly to the options used with the command line tool.
-	 * The object is created using gSOAP memory-allocation utility, it will be garbage
-	 * collected! If there is a need to delete it manually gSOAP dedicated functions should
-	 * be used (in particular 'soap_unlink'!)
 	 *
-	 * @return tns3__TransferParams object containing name-value pairs
+	 * @return a vector with key-value parameters
 	 */
-	tns3__TransferParams* getParams();
+	map<string, string> getParams();
 
 	/**
-	 * Gets a vector containing 'tns3__TransferJobElement' objects.
+	 * Gets a vector containing job elements.
 	 *
 	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
-	 * Each of the vector elements is created using gsoap memory-allocation utility, and will
-	 * be garbage collected. If there is a need to delete it manually gsoap dedicated functions should
-	 * be used (in particular 'soap_unlink'!)
 	 *
-	 * @return vector of 'tns3__TransferJobElement' objects
+	 * @return vector of JobElements
 	 *
 	 * @see SubmitTransferCli::createJobElements()
 	 */
-	vector<tns3__TransferJobElement * > getJobElements();
-
-	/**
-	 * Gets a vector containing 'tns3__TransferJobElement2' objects.
-	 *
-	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
-	 * Each of the vector elements is created using gSOAP memory-allocation utility, and will
-	 * be garbage collected. If there is a need to delete it manually gsoap dedicated functions should
-	 * be used (in particular 'soap_unlink'!)
-	 *
-	 * @return vector of 'tns3__TransferJobElement2' objects
-	 *
-	 * @see SubmitTransferCli::createJobElements()
-	 */
-	vector<tns3__TransferJobElement2 * > getJobElements2();
+	vector<JobElement> getJobElements();
 
 	/**
 	 * Gets the value of delegation flag.
@@ -264,13 +218,6 @@ private:
 	string password;
 
 	/**
-	 * internal vector containing job elements
-	 *
-	 * @see SubmitTransferCli::createJobElements(), SubmitTransferCli::getJobElements(soap*) , SubmitTransferCli::getJobElements2(soap*)
-	 */
-	vector<JobElement> tasks;
-
-	/**
 	 * checksum flag, determines whether checksum is used
 	 */
 	bool checksum;
@@ -279,6 +226,11 @@ private:
 	 * delegate flag, determines whether the proxy certificate should be used
 	 */
 	bool delegate;
+
+	/**
+	 * transfer job elements (files)
+	 */
+	vector<JobElement> elements;
 
 };
 
