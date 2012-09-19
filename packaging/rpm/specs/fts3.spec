@@ -1,6 +1,6 @@
 Name:           fts3
 Version:        0.0.1 
-Release:        27%{?dist}
+Release:        28%{?dist}
 Summary:        File Transfer Service version 3
 
 Group:          System Environment/Daemons 
@@ -25,6 +25,7 @@ BuildRequires:  gridsite-devel%{?_isa}
 BuildRequires:  gfal2-devel%{?_isa}
 BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
+BuildRequires:  python-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 %{?filter_setup:
