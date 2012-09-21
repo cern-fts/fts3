@@ -104,7 +104,7 @@ protected:
 
     while(1){ /*need to receive more than one messages at a time*/    
     try{
-     for(register unsigned int i = 0; i < 50; i++){
+     //for(register unsigned int i = 0; i < 10; i++){
     	struct message msg;
 	qm->receive(&msg);
       std::string job = std::string(msg.job_id).substr (0,36);    
@@ -125,12 +125,16 @@ protected:
       DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(job, std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id, msg.filesize, msg.timeInSecs);
       DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
 
+     // }
       }
-      }
-      catch(...){
-      	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Message queue raised an exception"  << commit;                    
-      }
-      usleep(100000);
+     catch (interprocess_exception &ex) {
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+        }
+     catch (...) {
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown exception"));
+        }
+
+      //usleep(100000);
       }
     }
 

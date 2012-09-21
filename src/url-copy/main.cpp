@@ -364,6 +364,8 @@ int main(int argc, char **argv) {
         while (getline(infile, line, '\n')) {
             urlsFile.push_back(line);
         }
+       infile.close();
+       unlink(readFile.c_str());
     }
 
     //cancelation point 
@@ -651,7 +653,7 @@ stop:
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
 	    reporter.timeout = timeout;
 	    reporter.nostreams = nbstreams;
-	    reporter.buffersize = tcpbuffersize;			
+	    reporter.buffersize = tcpbuffersize;	    	
             reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
         } else {
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");

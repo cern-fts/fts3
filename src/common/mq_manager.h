@@ -20,9 +20,9 @@ limitations under the License. */
 #include <vector>
 #include <string>
 #include "definitions.h"
- 
+#include <boost/interprocess/ipc/message_queue.hpp> 
 
- 
+//using namespace boost::interprocess; 
 
 class QueueManager
   {
@@ -36,9 +36,11 @@ class QueueManager
  
     ~QueueManager();
  
-    void send(struct message* msg);
+    void send(struct message* msg) throw(boost::interprocess::interprocess_exception);
+
+    void t_send(struct message* msg) throw(boost::interprocess::interprocess_exception);
  
-    void receive(struct message* msg);
+    void receive(struct message* msg) throw(boost::interprocess::interprocess_exception);
 
   };
 

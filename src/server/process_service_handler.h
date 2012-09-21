@@ -81,7 +81,7 @@ protected:
 
     using TRAITS::ActiveObjectType::_enqueue;
     std::string enableOptimization;
-
+    
 public:
 
     /* ---------------------------------------------------------------------- */
@@ -504,6 +504,7 @@ protected:
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
                     delete *fileiter;
                 files.clear();
+                
             }
         }
     }

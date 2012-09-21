@@ -94,6 +94,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     	src_dest_checksum_tupple tupple;
     	tupple.source = src;
     	tupple.destination = dest;
+        
     	jobs.push_back(tupple);
     }
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
@@ -106,6 +107,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
 	GSoapDelegationHandler handler (soap);
 	delegationId = handler.makeDelegationId();
 	vo = handler.getClientVo();
+        dn = handler.getClientDn();
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
@@ -139,6 +141,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
     	tupple.source = src;
     	tupple.destination = dest;
     	tupple.checksum = *(*it)->checksum;
+        
     	jobs.push_back(tupple);
     }
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
@@ -163,7 +166,8 @@ JobSubmitter::~JobSubmitter() {
 }
 
 string JobSubmitter::submit() {
-
+    
+    
     DBSingleton::instance().getDBObjectInstance()->submitPhysical (
     		id,
     		jobs,

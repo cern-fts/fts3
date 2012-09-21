@@ -568,9 +568,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
 
         //now insert each src/dest pair for this job id
         std::vector<src_dest_checksum_tupple>::const_iterator iter;
-        s_file_statement = conn->createStatement(file_statement, tag_file_statement);
-
-        for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
+        s_file_statement = conn->createStatement(file_statement, tag_file_statement);		
+        
+	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
             s_file_statement->setString(1, jobId);
             s_file_statement->setString(2, initial_state);
             s_file_statement->setString(3, iter->source);
@@ -3233,7 +3233,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
             time_t lifetime = std::time(NULL);
             time_t term_time = conv->toTimeT(r->getTimestamp(1));
 	    dif = difftime (term_time,lifetime);
-    	    //std::cerr << dif << std::endl;
+    	   
     	    if (dif > 0)
 		valid = true;
 
@@ -3334,7 +3334,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         r1 = conn->createResultset(s1);
         if (r1->next()) {
             act = r1->getInt(1);
-            if (act == 0 || maxDest<=25) { //no active, start transfering
+            if (act == 0 || maxDest<=15) { //no active, start transfering
                 conn->destroyResultset(s1, r1);
                 conn->destroyStatement(s1, tag1);
                 return allowed;
@@ -3350,13 +3350,13 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 r2 = conn->createResultset(s2);
                 if (r2->next()) { //found records in t_optimize
                     actThr = r2->getInt(1); //throughput                   
-                    if ( actThr > 1.0 || act<=25 || maxDest<=25) {
+                    if ( actThr > 1.0 || act<=15 || maxDest<=15) {
                         allowed = true;
                     } else {
                         allowed = false;
                     }
                 } else { //no records yet in t_optimize
-                    if (act <= 25 || maxDest<=25) {
+                    if (act <= 15 || maxDest<=15) {
                         allowed = true;
                     } else {
                         allowed = false;
