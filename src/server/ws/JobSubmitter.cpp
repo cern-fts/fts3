@@ -122,6 +122,15 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
 	// do the common initialization
 	init(job->jobParams);
 
+        if (!job->transferJobElements.empty()) {
+                string* src = (*job->transferJobElements.begin())->source;
+                string* dest = (*job->transferJobElements.begin())->dest;
+
+                sourceSe = CfgBlocks::fileUrlToSeName(*src).get();
+                destinationSe = CfgBlocks::fileUrlToSeName(*dest).get();
+        }
+
+
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
     vector<tns3__TransferJobElement2 * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
@@ -189,6 +198,8 @@ string JobSubmitter::submit() {
             sourceSe,
             destinationSe
     	);
+
+   std::cout << sourceSe << "  " << destinationSe << std::endl;
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted successfully" << commit;
 	return id;
