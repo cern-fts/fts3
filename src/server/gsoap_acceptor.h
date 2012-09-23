@@ -48,6 +48,8 @@ protected:
 
     soap* ctx;
     std::queue<soap*> recycle;
+
+public:
     mutable ThreadTraits::MUTEX _mutex;
 };
 

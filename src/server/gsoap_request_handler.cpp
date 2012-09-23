@@ -32,6 +32,7 @@ GSoapRequestHandler::~GSoapRequestHandler() {
 
 void GSoapRequestHandler::handle() {
     //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
+    ThreadTraits::LOCK lock(acceptor._mutex);
     fts3_serve(ctx);
     //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
 }

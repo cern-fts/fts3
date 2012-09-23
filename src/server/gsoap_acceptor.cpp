@@ -85,13 +85,12 @@ GSoapAcceptor::~GSoapAcceptor() {
 }
 
 boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
-    //ThreadTraits::LOCK lock(_mutex);
+    
     SOAP_SOCKET sock = soap_accept(ctx);
     boost::shared_ptr<GSoapRequestHandler> handler;
 
     if (sock >= 0) {
-
-        //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "New connection, bound to socket " << sock << commit;
+       
         handler.reset (
         		new GSoapRequestHandler(*this)
         	);
@@ -104,7 +103,7 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
 
 soap* GSoapAcceptor::getSoapContext() {
 
-	//FTS3_COMMON_MONITOR_START_CRITICAL
+	
         ThreadTraits::LOCK lock(_mutex);	
 	if (!recycle.empty()) {
 		soap* ctx = recycle.front();
@@ -112,7 +111,7 @@ soap* GSoapAcceptor::getSoapContext() {
 		ctx->socket = this->ctx->socket;
 		return ctx;
 	}
-	//FTS3_COMMON_MONITOR_END_CRITICAL
+	
 
 	return soap_copy(ctx);
 }
@@ -120,11 +119,11 @@ soap* GSoapAcceptor::getSoapContext() {
 void GSoapAcceptor::recycleSoapContext(soap* ctx) {
 
         ThreadTraits::LOCK lock(_mutex);
-	//FTS3_COMMON_MONITOR_START_CRITICAL
+	
 	soap_destroy(ctx);
 	soap_end(ctx);
 	recycle.push(ctx);
-	//FTS3_COMMON_MONITOR_END_CRITICAL
+	
 }
 
 FTS3_SERVER_NAMESPACE_END
