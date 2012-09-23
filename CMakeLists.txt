@@ -35,7 +35,8 @@ link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -finstrument-functions -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wunsafe-loop-optimizations -Winit-self -Wmissing-braces -Wparentheses")
 
-
+ADD_DEFINITIONS(-DWITH_IPV6)
+ 
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
 include(DefineInstallationPaths REQUIRED)
