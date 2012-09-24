@@ -3256,14 +3256,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
     return valid;
 }
 
-/*
- 1:(Active transfers between source-dest)
- 2:(active tr when max throughput)
-        if( 1 < 2 ) 
-                start
-        else 
-                do not start
- */
+
 bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname) {
     const std::string tag1 = "isTrAllowed1";
     const std::string tag2 = "isTrAllowed2";
@@ -3286,10 +3279,10 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 				  " SYS_EXTRACT_UTC(when) desc";
 				
     std::string query_stmt3 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.dest_se=:1 ";
-
-    std::string query_stmt4 = " select count(*) from  t_file, t_job where t_file.file_state='FAILED' "
-    				" and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
-				" and t_file.FINISH_TIME is not null order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc";
+    	
+    std::string query_stmt4 = " select file_state  from (select file_state  from t_file, t_job where  "
+				" t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 and t_file.FINISH_TIME "
+				" is not null  order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) where rownum <4 ";
 				
 	oracle::occi::Statement* s1 = NULL;
 	oracle::occi::ResultSet* r1 = NULL;
@@ -3319,11 +3312,12 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         s4 = conn->createStatement(query_stmt4, tag4);
         s4->setString(1, source_hostname);	
         s4->setString(2, destin_hostname);
-        s4->setPrefetchRowCount(1);
+        s4->setPrefetchRowCount(3);
         r4 = conn->createResultset(s4);
-        if (r4->next()) {
-            noFailedPerSePair = r4->getInt(1);    
+        while (r4->next()) {
+            noFailedPerSePair += std::string(r4->getString(1)).compare("FAILED")==0?1:0;    
         }
+        
         conn->destroyResultset(s4, r4);
         conn->destroyStatement(s4, tag4);		
 	
@@ -3332,49 +3326,57 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         s1->setString(2, destin_hostname);
         s1->setPrefetchRowCount(1);
         r1 = conn->createResultset(s1);
-        if (r1->next()) {
+        if (r1->next()) { //active tr's
             act = r1->getInt(1);
-            if (act == 0 || maxDest<=15) { //no active, start transfering
-                conn->destroyResultset(s1, r1);
-                conn->destroyStatement(s1, tag1);
-                return allowed;
-            } else { //there are active transfers for this pair
-                s2 = conn->createStatement(query_stmt2, tag2);
-                s2->setString(1, source_hostname);
-                s2->setString(2, destin_hostname);
-                s2->setString(3, source_hostname);
-                s2->setString(4, destin_hostname);
-                s2->setString(5, source_hostname);
-                s2->setString(6, destin_hostname);		
-                s2->setPrefetchRowCount(1);
-                r2 = conn->createResultset(s2);
-                if (r2->next()) { //found records in t_optimize
-                    actThr = r2->getInt(1); //throughput                   
-                    if ( actThr > 1.0 || act<=15 || maxDest<=15) {
-                        allowed = true;
-                    } else {
-                        allowed = false;
-                    }
-                } else { //no records yet in t_optimize
-                    if (act <= 15 || maxDest<=15) {
-                        allowed = true;
-                    } else {
-                        allowed = false;
-                    }
-                }
-
-                conn->destroyResultset(s1, r1);
-                conn->destroyStatement(s1, tag1);
-                conn->destroyResultset(s2, r2);
-                conn->destroyStatement(s2, tag2);
-                return allowed;
-            }
-        }
+	}
+        
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1);
+                
+        s2 = conn->createStatement(query_stmt2, tag2);
+        s2->setString(1, source_hostname);
+        s2->setString(2, destin_hostname);
+        s2->setString(3, source_hostname);
+        s2->setString(4, destin_hostname);
+        s2->setString(5, source_hostname);
+        s2->setString(6, destin_hostname);		
+        s2->setPrefetchRowCount(1);
+        r2 = conn->createResultset(s2);
+        if (r2->next()) { //found records in t_optimize
+             actThr = r2->getInt(1); //throughput                   
+	}
+        
+	conn->destroyResultset(s2, r2);
+        conn->destroyStatement(s2, tag2);
+	
+        if (noFailedPerSePair == 0 ){ //no failures in the last 3 transfers
+                if(act==0 && maxDest <= 50)
+                        allowed = true;
+                else if(act > 0 && maxDest <= 50 && act <=15)
+                        allowed = true;
+                else if(actThr > 1.0 && maxDest <= 50)
+                        allowed = true;
+                else if(actThr < 1.0 && maxDest <= 50 && act <=5)
+                        allowed = true;
+                else if(actThr < 1.0 && maxDest <= 50 && act >5)
+                        allowed = false;
+                else
+                        allowed = true;
+	}
+        else{ //failures
+                if(actThr > 1.0 && maxDest <= 50 && act < 5)
+                        allowed = true;
+                else if(actThr < 1.0 && maxDest <= 50 && act < 3)
+                        allowed = true;
+                else if(actThr > 1.0 && maxDest <= 50 && act > 5)
+                        allowed = false;
+                else if(actThr < 1.0 && maxDest <= 50 && act > 3)
+                        allowed = false;
+                else
+                        allowed = true;	
+	}        
         return allowed;
     } catch (oracle::occi::SQLException const &e) {
-        conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
 	      if(s1 && r1){
@@ -3399,7 +3401,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
-/*INTERNAL_FILE_PARAMS*/
+
 void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize){
 
      const std::string tag4 = "setAllowed";
