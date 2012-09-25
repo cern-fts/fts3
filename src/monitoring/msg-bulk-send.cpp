@@ -58,49 +58,34 @@ using namespace std;
 
 
 /*
-The design of the daeomon changed.
-Now there is a parent process which checks/monitors the status of the child.
-If the child hangs or for any reason crashes, transparently is restarting it and restore all mesgs
+	There is a parent process which checks/monitors the status of the child.
+	If the child hangs or for any reason die, transparently it's restarting it and restoring all mesgs
 */
 
 void DoServer() {
 
     activemq::library::ActiveMQCPP::initializeLibrary();
+
     //initialize here to avoid race conditions  
     concurrent_queue::getInstance();
 
-    MsgPipe pipeMsg1(HALF_DUPLEX);
-    MsgPipe pipeMsg2(HALF_DUPLEX2);
-    MsgPipe pipeMsg3(HALF_DUPLEX3);
+    MsgPipe pipeMsg1(FTS3_MQ_NAME_MON);   
     MsgProducer producer;
 
-
-    // Start the producer thread.
+    // Start the pipe thread.
     Thread pipeThread(&pipeMsg1);
     pipeThread.start();
-
-    // Start the producer thread.
-    Thread pipeThread2(&pipeMsg2);
-    pipeThread2.start();
-
-    Thread pipeThread3(&pipeMsg3);
-    pipeThread3.start();
-
-
+   
     // Start the producer thread.
     Thread producerThread(&producer);
     producerThread.start();
 
 
     // Wait for the threads to complete.
-    pipeThread.join();
-    pipeThread2.join();
-    pipeThread3.join();
+    pipeThread.join(); 
     producerThread.join();
 
-    pipeMsg1.cleanup();
-    pipeMsg2.cleanup();
-    pipeMsg3.cleanup();
+    pipeMsg1.cleanup();  
     producer.cleanup();
 
     activemq::library::ActiveMQCPP::shutdownLibrary();
@@ -109,13 +94,9 @@ void DoServer() {
 
 int main() {
 
-    int d =  daemon(0,0);
-    if(d < 0)
-	std::cerr << "Can't set to daemon mode, will cont attached to tty" << std::endl;
-
-    //create a recover msgs thread using the last named pipe (barely used)
-    MsgRecoverPipe pipeRecover(HALF_DUPLEX3);
-    Thread pipeRecoverThread(&pipeRecover);
+int d =  daemon(0,0);
+if(d < 0)
+	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;  
 
     int result = fork();
 
@@ -131,26 +112,17 @@ int main() {
         int status = 0;
         waitpid(-1, &status, 0);
 
-        if (!WIFSTOPPED(status)) {	   
-            //Child died, start thread here, reading messages in the parent process
-            if (pipeRecoverThread.isAlive() == false)
-                pipeRecoverThread.start();
+        if (!WIFSTOPPED(status)) {	             
             result = fork();
             if (result == 0) {
                 DoServer();
-            }
-	    pipeRecoverThread.yield();
-            //re-sent lost messages back to the pipe
-            pipeRecover.sendRecoveredMessages();
-            //stop parent reading here, child is active
-            if (pipeRecoverThread.isAlive() == false)
-                pipeRecover.cleanup();
-
+            }	   
             if (result < 0) {
                 exit(1);
             }
         }
         sleep(10);
     }
+
     return 0;
 }

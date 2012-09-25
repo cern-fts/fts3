@@ -43,6 +43,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include "mq_manager.h"
+#include <boost/interprocess/ipc/message_queue.hpp>
+#include <boost/scoped_ptr.hpp>
+#include "common/logger.h"
+#include "common/error.h"
 
 using namespace activemq;
 using namespace activemq::core;
@@ -52,21 +57,18 @@ using namespace decaf::util;
 using namespace decaf::util::concurrent;
 using namespace cms;
 using namespace std;
+using namespace boost::interprocess;
+using namespace FTS3_COMMON_NAMESPACE;
+
 
 
 class MsgPipe : public Runnable {
-private:
-  int fd;
-  int ret_val;
-  int count;
-  int numread;
-  FILE *fpout;
-  int isready(int fd);
+private: 
+  QueueManager* qm;
 
 public:
-   MsgPipe(const char * pipeName);
+   MsgPipe(std::string qname);
    virtual ~MsgPipe();
-
    virtual void run();
    void cleanup();	     
 };

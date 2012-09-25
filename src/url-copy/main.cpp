@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include <ctype.h>
 #include <cstdlib>
 #include <unistd.h>
@@ -35,7 +36,7 @@
 #include "definitions.h"
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-
+#include <exception>
 
 /*
 PENDING
@@ -112,6 +113,20 @@ std::string srmVersion(const std::string & url){
 }
 
 
+/*replace space with _*/
+static std::string mapErrnoToString(int err){
+	if(err != 0){
+		char buf[256] = {0};
+		char const * str = strerror_r(err, buf, 256);
+		if(str){
+			std::string rep(str);
+			std::replace( rep.begin(), rep.end(), ' ', '_' );
+			return rep;
+		}
+	}
+	return "GENERAL ERROR";
+}
+
 static std::vector<std::string> split(const char *str, char c = ':') {
     std::vector<std::string> result;
 
@@ -175,6 +190,7 @@ void taskTimer(int time)
 
 
 void signalHandler(int signum) {    
+    logStream << fileManagement.timestamp() << "DEBUG Received signal " << signum << '\n';
     if (stackTrace.length() > 0) {
         logStream << fileManagement.timestamp() << "ERROR Transfer process died" << '\n';
         logStream << fileManagement.timestamp() << "ERROR " << stackTrace << '\n';
@@ -219,6 +235,47 @@ void signalHandler(int signum) {
    }
 }
 
+
+void myunexpected () {
+  	logStream << fileManagement.timestamp() << "ERROR unexpected handler called" << '\n';
+        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled by the user");
+        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+	reporter.timeout = timeout;
+	reporter.nostreams = nbstreams;
+	reporter.buffersize = tcpbuffersize;			
+        reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer unexpected handler called", diff, source_size);
+        logStream.close();
+        fileManagement.archive();
+        if (reuseFile.length() > 0)
+            unlink(readFile.c_str());
+        sleep(1);
+}
+
+void myterminate() {
+  	logStream << fileManagement.timestamp() << "ERROR terminate handler called" << '\n';
+        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled by the user");
+        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+	reporter.timeout = timeout;
+	reporter.nostreams = nbstreams;
+	reporter.buffersize = tcpbuffersize;			
+        reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer terminate handler called", diff, source_size);
+        logStream.close();
+        fileManagement.archive();
+        if (reuseFile.length() > 0)
+            unlink(readFile.c_str());
+        sleep(1);
+}
+
 /*courtesy of:
 "Setuid Demystified" by Hao Chen, David Wagner, and Drew Dean: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
  */
@@ -258,8 +315,14 @@ int main(int argc, char **argv) {
     REGISTER_SIGNAL(SIGTERM);
     REGISTER_SIGNAL(SIGILL);
     REGISTER_SIGNAL(SIGFPE);
+    REGISTER_SIGNAL(SIGBUS);
+    REGISTER_SIGNAL(SIGTRAP);
+    REGISTER_SIGNAL(SIGSYS);
     // register signal SIGINT and signal handler  
     signal(SIGINT, signalHandler);
+    
+    set_terminate (myterminate);
+    set_unexpected (myunexpected);
 
     std::string bytes_to_string("");
     //transfer_completed tr_completed;
@@ -509,7 +572,7 @@ int main(int argc, char **argv) {
             log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
             errorMessage = "Failed to get source file size: " + tempError;
             errorScope = SOURCE;
-            reasonClass = GENERAL_FAILURE;
+            reasonClass = mapErrnoToString(gfal_posix_code_error());
             errorPhase = TRANSFER_PREPARATION;
             goto stop;
         } else {
@@ -518,7 +581,7 @@ int main(int argc, char **argv) {
                 errorMessage = "Source file size is 0";
                 log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
                 errorScope = SOURCE;
-                reasonClass = GENERAL_FAILURE;
+                reasonClass = mapErrnoToString(gfal_posix_code_error());
                 errorPhase = TRANSFER_PREPARATION;
                 goto stop;
             }
@@ -576,11 +639,10 @@ int main(int argc, char **argv) {
         if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
             //seteuid(privid);
             diff = std::difftime (std::time(NULL),start);	    
-            //FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << commit;
             log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
             errorMessage = std::string(tmp_err->message);
             errorScope = TRANSFER;
-            reasonClass = GENERAL_FAILURE;
+            reasonClass = mapErrnoToString(tmp_err->code);
             errorPhase = TRANSFER;
             g_clear_error(&tmp_err);
             goto stop;
@@ -609,7 +671,7 @@ int main(int argc, char **argv) {
             log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
             errorMessage = "Failed to get dest file size: " + tempError;
             errorScope = DESTINATION;
-            reasonClass = GENERAL_FAILURE;
+            reasonClass = mapErrnoToString(gfal_posix_code_error());
             errorPhase = TRANSFER_FINALIZATION;
             goto stop;
         } else {
@@ -618,7 +680,7 @@ int main(int argc, char **argv) {
                 errorMessage = "Destination file size is 0";
                 log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
                 errorScope = DESTINATION;
-                reasonClass = GENERAL_FAILURE;
+                reasonClass = mapErrnoToString(gfal_posix_code_error());
                 errorPhase = TRANSFER_FINALIZATION;
                 goto stop;
             }
@@ -635,7 +697,7 @@ int main(int argc, char **argv) {
             log << fileManagement.timestamp() << "ERROR Source and destination size is different" << '\n';
             errorMessage = "Source and destination size is different";
             errorScope = DESTINATION;
-            reasonClass = GENERAL_FAILURE;
+            reasonClass = mapErrnoToString(gfal_posix_code_error());
             errorPhase = TRANSFER_FINALIZATION;
             goto stop;
         }
@@ -663,8 +725,6 @@ stop:
             reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
         }
 
-        //if (errorMessage.length() > 0)
-            //FTS3_COMMON_LOGGER_NEWLOG(ERR) << job_id << " " << errorMessage << commit;
 		   
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);

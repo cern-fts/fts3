@@ -70,8 +70,6 @@ using namespace std;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace FTS3_CONFIG_NAMESPACE;
 
-//recovery vector in case no data is retrieved
-static vector<std::string> recoveryVector(3, "");
 
 class MsgProducer :  public Runnable {
 private:

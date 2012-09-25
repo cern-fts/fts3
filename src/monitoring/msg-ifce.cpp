@@ -72,11 +72,11 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started) {
 
    if(false == getACTIVE())
   	return;
-
+    string text("");
     try {
 
          // Create a messages
-        string text = "ST {";
+        text = "ST {";
         text.append("\"$a$\":\"");
         text.append(tr_started->agent_fqdn);
         text += "\"";
@@ -141,11 +141,11 @@ void msg_ifce::SendTransferStartMessage(transfer_completed *tr_started) {
         text.append(tr_started->srm_space_token_dest);
         text.append("\"");
 
-        text.append("}"); 
-        text+=4; /*add EOT ctrl character, requested by gridview team*/	
+        text.append("}");        
 
 	send_message(text);		
     } catch (...) {
+        send_message(text);
         errorMessage = "Cannot send transfer started message with ID: " + tr_started->transfer_id ;
 	logger::writeLog(errorMessage);
     }
@@ -156,10 +156,11 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed) {
   if(false == getACTIVE())
   	return;  
     
+    string text("");
     try {
 
         // Create a messages
-        string text = string("CO {");
+        text = string("CO {");
         text.append("\"$a$\":\"");
         text.append(tr_completed->transfer_id);
         text.append("\"");
@@ -333,12 +334,11 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed) {
         text.append(tr_completed->channel_type);
         text.append("\"");			
 	
-        text.append("}");
-	
-	text+=4; /*add EOT ctrl character, requested by gridview team*/
+        text.append("}");		
 
 	send_message(text);
     } catch (...) {    
+         send_message(text);
          errorMessage = "Cannot send transfer completed message with ID: " + tr_completed->transfer_id ;
 	 logger::writeLog(errorMessage);    
   }

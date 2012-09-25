@@ -108,6 +108,13 @@ static bool checkUrlCopy(){
 	return false;
 }
 
+void myterminate(){
+	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "myterminate() was called" << commit;
+}
+
+void myunexpected(){
+	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "myunexpected() was called" << commit;
+}
 
 
 int main (int argc, char** argv)
@@ -116,18 +123,22 @@ int main (int argc, char** argv)
 
     try 
     {   
-        REGISTER_SIGNAL(SIGABRT);
-        REGISTER_SIGNAL(SIGSEGV);
-        REGISTER_SIGNAL(SIGTERM);
-        REGISTER_SIGNAL(SIGBUS);
-	REGISTER_SIGNAL(SIGFPE);
-	REGISTER_SIGNAL(SIGILL);
-			
+    	REGISTER_SIGNAL(SIGABRT);
+    	REGISTER_SIGNAL(SIGSEGV);
+    	REGISTER_SIGNAL(SIGTERM);
+    	REGISTER_SIGNAL(SIGILL);
+    	REGISTER_SIGNAL(SIGFPE);
+    	REGISTER_SIGNAL(SIGBUS);
+    	REGISTER_SIGNAL(SIGTRAP);
+    	REGISTER_SIGNAL(SIGSYS);
+				
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
 	std::string logDir = theServerConfig().get<std::string>("TransferLogDirectory");
 	if(logDir.length() > 0){
-		logDir +="/fts3server.log";
-		freopen (logDir.c_str(),"a",stderr);
+		 logDir +="/fts3server.log";
+		 int filedesc = open(logDir.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0777);
+		 close(filedesc);
+		 freopen (logDir.c_str(),"a",stderr);
 	}
 
 	if(false == checkUrlCopy()){
@@ -148,6 +159,9 @@ int main (int argc, char** argv)
         sigemptyset(&action.sa_mask);
         action.sa_flags = SA_RESTART;
         int res = sigaction(SIGINT, &action, NULL);
+	
+	set_terminate (myterminate);
+	set_unexpected (myunexpected);		
         
 	std::string infosys = theServerConfig().get<std::string>("Infosys");
 	if(infosys.length() > 0)

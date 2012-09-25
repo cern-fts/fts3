@@ -27,7 +27,7 @@ include_directories (.)
 
 set(fts3_msg_ifce_SOURCES msg-ifce.cpp utility_routines.cpp Logger.cpp)
 add_library(fts3_msg_ifce SHARED ${fts3_msg_ifce_SOURCES})
-target_link_libraries(fts3_msg_ifce -lrt)
+target_link_libraries(fts3_msg_ifce -lboost_thread-mt -lboost_system-mt -lrt)
 
 
 SET(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
@@ -44,7 +44,7 @@ include_directories (/usr/lib64/glib-2.0/include)
 set(fts3_msg_bulk_SOURCES utility_routines.cpp msg-bulk-send.cpp MsgRecoverPipe.cpp MsgPipe.cpp MsgProducer.cpp MsgFile.cpp concurrent_queue.cpp Logger.cpp)
 add_executable (fts3_msg_bulk ${fts3_msg_bulk_SOURCES})
 add_dependencies(fts3_msg_bulk fts3_common)
-target_link_libraries(fts3_msg_bulk ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES}  -lfts3_common -lfts3_config -lrt -lglib-2.0 -lboost_thread-mt -lrt)
+target_link_libraries(fts3_msg_bulk ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES}  -lfts3_common -lfts3_config -lrt -lglib-2.0 -lboost_thread-mt -lboost_system-mt -lrt)
 
 set(fts3_msg_cron_SOURCES msg-cron.cpp Logger.cpp utility_routines.cpp)
 add_executable (fts3_msg_cron ${fts3_msg_cron_SOURCES})
@@ -52,7 +52,7 @@ target_link_libraries(fts3_msg_cron  ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} $
 target_link_libraries(fts3_msg_cron ${OCCI_LIBRARY} )
 target_link_libraries(fts3_msg_cron ${CLNTSH_LIBRARY} )
 add_dependencies(fts3_msg_cron fts3_common)
-target_link_libraries(fts3_msg_cron -lpthread -lfts3_common -lfts3_config -lboost_thread-mt -lrt )
+target_link_libraries(fts3_msg_cron -lpthread -lfts3_common -lfts3_config -lboost_thread-mt -lboost_system-mt -lrt )
 
 
 install(TARGETS         fts3_msg_bulk 

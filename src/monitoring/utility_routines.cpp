@@ -48,7 +48,7 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <netinet/in.h>
-
+#include "mq_manager.h"
 #include "compress.h"
 
 
@@ -719,56 +719,16 @@ bool caseInsCompare(const string& s1, const string& s2) {
 
 bool send_message(std::string & text)
 {   
-       bool msgSent = true;       
-       int fd = 0;
-       int fd2 = 0;
-       int fd3 = 0;
-       
-       ssize_t writen;
+	bool msgSent = true;       
+	std::string path="/dev/shm/fts3mqmon";
+	QueueManager* qm = NULL;
 
-       //ignore SIGPIPE signal, will be handled by EPIPE errno
-       sigignore(SIGPIPE);
-       
-       //open first named pipe
-       if( (fd = open(HALF_DUPLEX, O_WRONLY  | O_NONBLOCK)) == -1 ) { 
-          msgSent = false;	  
-       }
-       
-            //open second named pipe
-       if( (fd2 = open(HALF_DUPLEX2, O_WRONLY  | O_NONBLOCK)) == -1 ) {
-          msgSent = false;
-       }
-
-            //open third named pipe
-       if( (fd3 = open(HALF_DUPLEX3, O_WRONLY  | O_NONBLOCK)) == -1 ) {
-          msgSent = false;
-       }
-
-     	writen = write(fd, text.c_str(), text.length());
-	
-   if(  ((ssize_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  { 
-	   errno = 0; //reset it 
-           writen =  write(fd2, text.c_str(), text.length());              
-           if(  ((ssize_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  {
-             errno = 0; //rest it again
-             writen =  write(fd3, text.c_str(), text.length());
-               if(  ((ssize_t)writen < text.length()) ||    (errno==EPIPE) || (errno==EAGAIN)  )  {
-                 msgSent = false;
-            }
-          }
+        if(0 == fexists(path.c_str())){
+		qm = new QueueManager(false, FTS3_MQ_NAME_MON);
+		qm->msg_t_send(text.c_str());
 	}
-
-      if( ((ssize_t)writen == text.length())){        
-         msgSent = true;
-	 }
- 
-       if(fd != -1)
-        close(fd);
-       if(fd2 != -1)
-        close(fd2);     
-       if(fd3 != -1)
-        close(fd3);
-
+	if(qm)	
+		delete qm;
   return msgSent;	
 }
 

@@ -151,6 +151,7 @@ void OracleConnection::destroyResultset(oracle::occi::Statement* s, oracle::occi
         	s->closeResultSet(r);
 	}
    }
+   r=NULL;
 }
 
 void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string tag) {
@@ -166,7 +167,8 @@ void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string 
         	conn->terminateStatement(s, tag);
 	}
    }
- }	
+ }
+ s=NULL;	
 }
 
 void OracleConnection::commit() {

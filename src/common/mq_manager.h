@@ -28,11 +28,13 @@ class QueueManager
   {
   private:
     bool drop_; // drop the message queue
+    bool init;
  
   public:  
     void remove();
 
     QueueManager(bool consumer);  
+    QueueManager(bool consumer, std::string qname);      
  
     ~QueueManager();
  
@@ -41,6 +43,12 @@ class QueueManager
     void t_send(struct message* msg) throw(boost::interprocess::interprocess_exception);
  
     void receive(struct message* msg) throw(boost::interprocess::interprocess_exception);
+    
+    void msg_send(const char* msg) throw(boost::interprocess::interprocess_exception);
+
+    void msg_t_send(const char* msg) throw(boost::interprocess::interprocess_exception);
+ 
+    void msg_receive(char* msg) throw(boost::interprocess::interprocess_exception);    
 
   };
 

@@ -74,9 +74,9 @@ std::string concurrent_queue::pop(int wait){
         }
 
 //push on the queue
-void concurrent_queue::push( std::string & val ){
+void concurrent_queue::push( std::string  val ){
                 pthread_mutex_lock(&lock);
-		if( the_queue.size() < QUEUE_MAX_SIZE)
+		if( the_queue.size() < MAX_NUM_MSGS_MON)
                 	the_queue.push(val);
                 pthread_mutex_unlock(&lock);
                 pthread_cond_signal(&cv);

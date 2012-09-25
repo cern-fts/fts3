@@ -23,8 +23,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define HALF_DUPLEX		"/var/spool/ftsmsg/ftsmsgpipe"
-#define HALF_DUPLEX2            "/var/spool/ftsmsg/ftsmsgpipe2"
-#define HALF_DUPLEX3            "/var/spool/ftsmsg/ftsmsgpipe3"
+#define FTS3_MQ_NAME_MON "fts3mqmon"
 
-#define QUEUE_MAX_SIZE 		50000
+#define MAX_NUM_MSGS_MON 20000
+

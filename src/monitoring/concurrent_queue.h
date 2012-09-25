@@ -22,7 +22,7 @@ public:
     void block();
     bool empty();
     unsigned int size();
-    void push( std::string & value );
+    void push( std::string value );
     std::string pop(const int wait = -1);
     concurrent_queue(){
                 blck = 1;
