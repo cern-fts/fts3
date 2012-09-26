@@ -198,10 +198,11 @@ public:
     
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize); 
     
+    virtual void terminateReuseProcess(const std::string & jobId);    
     
 private:
-	OracleConnection *conn;
+	OracleConnection *conn;	
 	OracleTypeConversions *conv;
 	bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
-	mutable ThreadTraits::MUTEX _mutex;
+	mutable ThreadTraits::MUTEX _mutex;	
 };

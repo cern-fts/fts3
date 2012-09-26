@@ -23,7 +23,7 @@ OracleAPI::~OracleAPI() {
 
 void OracleAPI::init(std::string username, std::string password, std::string connectString) {
     if (!conn)
-        conn = new OracleConnection(username, password, connectString);
+        conn = new OracleConnection(username, password, connectString);   	
     if (!conv)
         conv = new OracleTypeConversions();
 }
@@ -68,12 +68,16 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
             if (count > 0)
                 processGroup = false;
         }
-
-        conn->destroyResultset(s_se, rSe);
-        conn->destroyStatement(s_se, tagse);
-        conn->destroyResultset(s_group, rGroup);
-        conn->destroyStatement(s_group, taggroup);
-
+       if(conn){
+        if(s_se && rSe)
+        	conn->destroyResultset(s_se, rSe);
+	if(s_se)	
+        	conn->destroyStatement(s_se, tagse);
+	if(s_group && rGroup)
+        	conn->destroyResultset(s_group, rGroup);
+	if(s_group)	
+        	conn->destroyStatement(s_group, taggroup);
+        }
         if (processSe == false || processGroup == false)
             return false;
         else
@@ -171,12 +175,14 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs) {
             tr_jobs->CHECKSUM_METHOD = r->getString(21);
 
             //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-            bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-            if (process == true) {
-                jobs.push_back(tr_jobs);
-            } else {
-                delete tr_jobs;
-            }
+	    if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0){
+            	bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
+            	if (process == true) {
+                	jobs.push_back(tr_jobs);
+            	} else {
+                	delete tr_jobs;
+            	}
+	    }
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -3459,6 +3465,47 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
 	 }				
    }
 }
+
+
+void OracleAPI::terminateReuseProcess(const std::string & jobId){
+	const std::string tag = "terminateReuseProcess";
+	const std::string tag1 = "terminateReuseProcess11";	
+	std::string query = "select REUSE_JOB from t_job where job_id=:1 and REUSE_JOB is not null";
+	std::string update = "update t_file set file_state='FAILED' where job_id=:1 and file_state != 'FINISHED' ";
+	oracle::occi::Statement* s = NULL;
+	oracle::occi::Statement* s1 = NULL;
+	oracle::occi::ResultSet* r = NULL;
+	ThreadTraits::LOCK lock(_mutex);
+	
+    try {    
+        if (false == conn->checkConn())
+		return;
+     
+        s = conn->createStatement(query, tag);
+        s->setString(1, jobId);
+        s->setPrefetchRowCount(1);
+        r = conn->createResultset(s);
+        if (r->next()) {
+		        s1 = conn->createStatement(update, tag1);
+		        s1->setString(1, jobId);
+			s1->executeUpdate();           
+		        conn->destroyStatement(s1, tag1);			
+        }
+	conn->commit();
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+	      
+    } catch (oracle::occi::SQLException const &e) {
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	if(conn){
+	      if(s && r){
+                conn->destroyResultset(s, r);
+                conn->destroyStatement(s, tag);
+		}	         
+	}
+      }	
+}
+
 
 // the class factories
 

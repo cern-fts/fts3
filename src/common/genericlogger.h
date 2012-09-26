@@ -71,8 +71,7 @@ public:
         _logLine (Traits::initialLogLine()),
 	    _actLogLevel (static_cast<int>(Traits::INFO))
     {
-        //Traits::openLog();		
-	//freopen ("/var/log/fts3/fts3server.log","a",stderr);
+        
     }
     
     std::string timestamp() {
@@ -114,8 +113,7 @@ public:
     /// Destructor
     virtual ~GenericLogger ()
     {
-        //Traits::closeLog();
-        //fclose (stderr);
+
     }
 
     /* ---------------------------------------------------------------------- */

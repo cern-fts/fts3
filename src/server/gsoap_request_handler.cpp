@@ -27,14 +27,14 @@ GSoapRequestHandler::GSoapRequestHandler(GSoapAcceptor& acceptor): ctx(acceptor.
 }
 
 GSoapRequestHandler::~GSoapRequestHandler() {
-	acceptor.recycleSoapContext(ctx);
+	if(ctx)
+		acceptor.recycleSoapContext(ctx);
 }
 
 void GSoapRequestHandler::handle() {
-    //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request started... " << commit;
     ThreadTraits::LOCK lock(acceptor._mutex);
-    fts3_serve(ctx);
-    //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Serving request finished... " << commit;
+    if(ctx)
+    	fts3_serve(ctx);
 }
 
 FTS3_SERVER_NAMESPACE_END

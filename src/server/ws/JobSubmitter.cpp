@@ -80,6 +80,15 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 
 		sourceSe = CfgBlocks::fileUrlToSeName(*src).get();
 		destinationSe = CfgBlocks::fileUrlToSeName(*dest).get();
+		if(sourceSe.length()==0){
+			std::string errMsg = "Can't extract hostname from url " + *src;
+			throw Err_Custom(errMsg);
+		}
+		
+		if(destinationSe.length()==0){
+			std::string errMsg = "Can't extract hostname from url " + *dest;		
+			throw Err_Custom(errMsg);
+		}
 	}
 
 	// extract the job elements from tns3__TransferJob object and put them into a vector
@@ -199,9 +208,8 @@ string JobSubmitter::submit() {
             destinationSe
     	);
 
-   std::cout << sourceSe << "  " << destinationSe << std::endl;
 
-    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The job has been submitted successfully" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
 	return id;
 }
 

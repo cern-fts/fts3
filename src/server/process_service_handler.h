@@ -43,12 +43,14 @@ limitations under the License. */
 #include "definitions.h"
 #include "DrainMode.h"
 
+extern bool  stopThreads;
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
+
 
 uid_t name_to_uid(char const *name) {
     if (!name)
@@ -186,6 +188,7 @@ protected:
 
                     bool optimize = false;
                     if (enableOptimization.compare("true") == 0) {
+		    	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimization is on" << commit;
 		        optimize = true;
                         opt_config = new OptimizerSample();
 			DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
@@ -197,12 +200,15 @@ protected:
                         opt_config = NULL;
                     }
 
+  	    	    //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check scheduler for: " << source_hostname << " -> " << destin_hostname << commit;
                     FileTransferScheduler scheduler(temp);
                     if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
-		    
+		    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
 		    if(optimize){
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }
+		    
+		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
                     protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
                     proxy_file = get_proxy_cert(
                             temp->DN, // user_dn
@@ -515,7 +521,7 @@ protected:
         std::vector<TransferJobs*> jobs2;
 	jobs2.reserve(25);
 	static bool drainMode = false;
-        while (1) {
+        while (stopThreads == false) {
 	
 	    if(DrainMode::getInstance()){
                 if(!drainMode)

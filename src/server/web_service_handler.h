@@ -21,6 +21,8 @@ limitations under the License. */
 #include <boost/function.hpp>
 #include <string>
 
+extern bool  stopThreads;
+
 FTS3_SERVER_NAMESPACE_START
 
 using FTS3_COMMON_NAMESPACE::Pointer;
@@ -94,7 +96,7 @@ protected:
 	{
         typename TRAITS::Acceptor acceptor (port, ip);
 
-		while(1) 
+		while(stopThreads == false) 
         {
             typename Pointer<typename TRAITS::Handler>::Shared handler = acceptor.accept();
 

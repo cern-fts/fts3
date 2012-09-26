@@ -23,6 +23,9 @@
 #include "serverconfig.h"
 #include "server_dev.h"
 #include <cgsi_plugin.h>
+#include <signal.h>
+
+extern bool  stopThreads;
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace FTS3_CONFIG_NAMESPACE;
@@ -47,7 +50,8 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
 	    } else {
 	        FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
-	        exit(1);
+  	        fclose (stderr);   
+	        kill(getpid(), SIGINT);
 	    }
 	
 	}else{
@@ -62,7 +66,8 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
 	    } else {
 	        FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
-	        exit(1);
+	        fclose (stderr);   
+	        kill(getpid(), SIGINT);
 	    }
 	}
 }
@@ -78,10 +83,11 @@ GSoapAcceptor::~GSoapAcceptor() {
 		soap_done(tmp);
 		soap_free(tmp);
 	}
-
+      if(ctx){
 	soap_destroy(ctx);
 	soap_end(ctx);
 	soap_free(ctx);
+      }
 }
 
 boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
@@ -117,13 +123,14 @@ soap* GSoapAcceptor::getSoapContext() {
 }
 
 void GSoapAcceptor::recycleSoapContext(soap* ctx) {
-
+     if(stopThreads == false){
         ThreadTraits::LOCK lock(_mutex);
-	
-	soap_destroy(ctx);
-	soap_end(ctx);
-	recycle.push(ctx);
-	
+	if(ctx){
+		soap_destroy(ctx);
+		soap_end(ctx);
+		recycle.push(ctx);
+	}
+     }	
 }
 
 FTS3_SERVER_NAMESPACE_END

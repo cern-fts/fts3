@@ -18,6 +18,8 @@ limitations under the License. */
 
 #include "common/logger.h"
 
+extern bool  stopThreads;
+
 FTS3_SERVER_NAMESPACE_START
 
 namespace ThreadPool {
@@ -37,7 +39,7 @@ Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id)
 
 void Worker::_doWork() 
 {
-	while(1) {
+	while(stopThreads == false) {
 		_TIMEOUT().actualize();
 		ThreadPool::element_type task(ThreadPool::instance().pop(_TIMEOUT()));	
 

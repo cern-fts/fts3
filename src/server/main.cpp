@@ -35,6 +35,7 @@ using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
+bool stopThreads = false;
 
 /* -------------------------------------------------------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -48,8 +49,10 @@ static int fexists(const char *filename) {
 /// Handler of SIGCHLD
 void _handle_sigint(int)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit; 
+    stopThreads = true;
     theServer().stop();
+    sleep(3);
     exit(EXIT_SUCCESS);
 }
 

@@ -164,7 +164,8 @@ void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string 
    }
    else{
    	if(s){
-        	conn->terminateStatement(s, tag);
+		if(conn)
+        		conn->terminateStatement(s, tag);
 	}
    }
  }
