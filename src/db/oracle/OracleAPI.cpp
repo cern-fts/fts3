@@ -2464,6 +2464,7 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
+        s=NULL;
 
         s1 = conn->createStatement(query1, tag1);
         s1->setString(1, proxy);
@@ -2474,6 +2475,7 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
         s1->executeUpdate();
         conn->commit();
         conn->destroyStatement(s1, tag1);
+        s1=NULL;
 
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();    
