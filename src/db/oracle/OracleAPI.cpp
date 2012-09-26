@@ -3171,6 +3171,8 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
         }
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1);
+	r1=NULL;
+	s1=NULL;
 
 
         if (foundRecords == 0) {
@@ -3190,6 +3192,7 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
             }
             conn->commit();
             conn->destroyStatement(s, tag);
+	    s=NULL;
         }
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();    
