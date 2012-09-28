@@ -344,13 +344,15 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 	if (cache) {
 		key = cache->privateKey;
 		delete cache;
-	} else
+	} else{
+		if(cache)
+			cache;
 		throw Err_Custom("Failed to retrieve the cache element from DB!");
+	}
 
 	proxy = addKeyToProxyCertificate(proxy, key);
-
-        try{
 	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn);
+        try{
 	if (cred) {
 		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageElement(
 				delegationId,
@@ -360,6 +362,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 				time
 			);
 		delete cred;
+		cred=NULL;
 
 	} else {
 		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageElement(
@@ -372,11 +375,17 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 	}
 	 }
 	catch(Err& ex){
+		if(cred)
+			delete cred;
 		throw Err_Custom(ex.what());
 	}
 	catch(...){	
+                if(cred)
+                        delete cred;
 		throw Err_Custom("Failed to put proxy certificate");
-	}		 
+	}
+	if(cred)
+		delete cred;		 
 }
 
 string GSoapDelegationHandler::renewProxyReq(string delegationId) {
@@ -449,8 +458,11 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 		time = cred->termination_time;
 		delete cred;
 
-	} else
+	} else{
+		if(cred)
+			cred;
 		throw Err_Custom("Failed to retrieve termination time for DN " + dn);
+	}
 
 	return time;
 }
