@@ -3,6 +3,9 @@
 #include "error.h"
 #include <algorithm>
 #include "definitions.h"
+#include <string>
+#include <signal.h>
+#include <stdlib.h>
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -536,8 +539,10 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
     try {
-        if ( false == conn->checkConn() )
+        if ( false == conn->checkConn() ){
+		throw Err_Custom("Can't connect to the database");
 		return;
+	}
 		
         s_job_statement = conn->createStatement(job_statement, tag_job_statement);
         s_job_statement->setString(1, jobId); //job_id
@@ -587,7 +592,6 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         conn->destroyStatement(s_file_statement, tag_file_statement);
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
 	      if(s_job_statement){
 	        conn->destroyStatement(s_job_statement, tag_job_statement);
@@ -596,6 +600,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         	conn->destroyStatement(s_file_statement, tag_file_statement);	
 		}
 	}		
+        throw Err_Custom(e.what());
     }
 }
 
@@ -611,6 +616,12 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     oracle::occi::ResultSet* r = NULL;
     ThreadTraits::LOCK lock(_mutex);
     try {
+    
+        if ( false == conn->checkConn() ){
+		throw Err_Custom("Can't connect to the database");
+		return;
+	}    
+    
         s = conn->createStatement(query, tag);
         s->setString(1, requestID);
         s->setString(2, requestID);
@@ -631,14 +642,13 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
 		if(s && r){
 	        conn->destroyResultset(s, r);
         	conn->destroyStatement(s, tag);
 		}
 	}
-		
+        throw Err_Custom(e.what());		
     }
 }
 
@@ -800,6 +810,12 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
    ThreadTraits::LOCK lock(_mutex);
    
     try {
+    
+        if ( false == conn->checkConn() ){
+		throw Err_Custom("Can't connect to the database");
+		return;
+	}        
+    
         s = conn->createStatement(sel, tag);
         if (restrictToClientDN.length() > 0) {
             s->setString(cc++, restrictToClientDN);
@@ -846,14 +862,13 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
 		if(s && r){
 	        	conn->destroyResultset(s, r);
         		conn->destroyStatement(s, tag);	
 		}
 	}
-		
+        throw Err_Custom(e.what());		
     }
 }
 
@@ -867,6 +882,12 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
     oracle::occi::ResultSet* r = NULL;
     ThreadTraits::LOCK lock(_mutex);
     try {
+    
+        if ( false == conn->checkConn() ){
+		throw Err_Custom("Can't connect to the database");
+		return;
+	}       
+	    
         s = conn->createStatement(query, tag);
         s->setString(1, requestID);
         r = conn->createResultset(s);
@@ -884,13 +905,13 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	if(conn){
 		if(s && r){
 	        	conn->destroyResultset(s, r);
 	        	conn->destroyStatement(s, tag);
 		}
 	}
+        throw Err_Custom(e.what());	
     }
 
 }
@@ -2340,7 +2361,7 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
 		if(s1)
         		conn->destroyStatement(s1, tag1);	
 	}
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
 
     }
 }
@@ -2371,7 +2392,7 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
 		if(s)
 	        	conn->destroyStatement(s, tag);
 	}
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
 
     }
 }
@@ -2412,7 +2433,6 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
 		if(s)
         		conn->destroyStatement(s, tag);	
 	}
-        //conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return cred;
@@ -2437,7 +2457,7 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
         conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
 
     }
 }
@@ -2485,7 +2505,7 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
 		if(s1)
 	        	conn->destroyStatement(s1, tag1);
 	}
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
 
     }
 }
@@ -2517,7 +2537,7 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
 	        conn->destroyStatement(s, tag);	
 	      }
 	}
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
 
     }
 }
@@ -2556,7 +2576,6 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
 	        conn->destroyResultset(s, r);
 	        conn->destroyStatement(s, tag);
 	}
-        //conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return cred;
@@ -2582,7 +2601,7 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
         conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
         conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
 
     }
 }
@@ -3404,6 +3423,142 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     return allowed;
 }
 
+
+void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params){
+	const std::string tag = "setAllowedNoOptimize";
+	const std::string tag1 = "setAllowedNoOptimize1";	
+	std::string query_stmt = "update t_file set INTERNAL_FILE_PARAMS=:1 where file_id=:2 and job_id=:3";
+	std::string query_stmt1 = "update t_file set INTERNAL_FILE_PARAMS=:1 where job_id=:2";
+	oracle::occi::Statement* s = NULL;
+	oracle::occi::Statement* s1 = NULL;	
+	ThreadTraits::LOCK lock(_mutex); 
+	try {
+    
+        if (false == conn->checkConn())
+            return;	
+	    
+	      if(file_id==0){
+		s1 = conn->createStatement(query_stmt1, tag1);
+                s1->setString(1, params);
+                s1->setString(2, job_id);
+		s1->executeUpdate();
+                conn->commit();
+                conn->destroyStatement(s1, tag1);
+		s1=NULL;				    	      
+	      }else{
+		s = conn->createStatement(query_stmt, tag);
+                s->setString(1, params);
+                s->setInt(2, file_id);
+                s->setString(3, job_id);
+		s->executeUpdate();
+                conn->commit();
+                conn->destroyStatement(s, tag);
+		s=NULL;				    	      
+	      }	   
+	}
+   	catch (oracle::occi::SQLException const &e) {
+        	conn->rollback();
+        	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+		if(conn){		
+			if(s){		
+				conn->destroyStatement(s, tag);				
+			}
+			if(s1){
+				conn->destroyStatement(s1, tag1);				
+			}			
+		 }				
+   	}	
+}
+
+
+static int extractTimeout(std::string & str){
+size_t found;
+found=str.find("timeout:");
+if (found!=std::string::npos){
+    str = str.substr (int(found), str.length());
+    size_t found2;
+    found2=str.find(",buffersize:");
+    if (found2!=std::string::npos){
+	str = str.substr (0, int(found2));
+	str = str.substr (8, str.length());
+	return atoi(str.c_str());
+    }
+	
+    }    
+    return 0;
+}
+
+/* Extract timeout from string: nostreams:8,timeout:3600,buffersize:9437184 */
+/* REUSE CASE ???*/
+void OracleAPI::forceFailTransfers(){
+	std::string tag = "forceFailTransfers";	
+	std::string query = "select job_id, file_id, START_TIME ,PID, INTERNAL_FILE_PARAMS from t_file where file_state='ACTIVE' and pid is not null";
+	oracle::occi::Statement* s = NULL;
+	oracle::occi::ResultSet* r = NULL;
+	std::string job_id("");
+	int file_id = 0;
+	time_t start_time;
+	int pid = 0;
+	std::string internalParams("");
+	int timeout = 0;
+	const std::string transfer_status = "FAILED";
+	const std::string transfer_message = "Transfer has been forced-killed because it was stalled";
+	const std::string status = "FAILED";
+	double diff = 0;
+	bool found_r1 = false;
+	bool found_r2 = false;	
+	_mutex.lock();	
+ 	try {
+        if (false == conn->checkConn()){
+	    _mutex.unlock();
+            return;
+	}
+	    
+       	s = conn->createStatement(query, tag);
+        r = conn->createResultset(s);
+        while (r->next()) {
+		found_r1 = true;
+		job_id = r->getString(1);
+		file_id = r->getInt(2);
+		start_time = conv->toTimeT(r->getTimestamp(3));
+		pid = r->getInt(4);
+		internalParams = r->getString(5);
+		timeout = extractTimeout(internalParams);
+		time_t lifetime = std::time(NULL);            
+	        diff = difftime (lifetime, start_time);  	   
+		if(timeout!= 0 && diff > (timeout+1000)){
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing process " << pid << " because it was stalled" << commit;
+			kill(pid, SIGUSR1);
+			std::stringstream ss;
+   			ss << file_id;
+			found_r2 = true;
+			_mutex.unlock();
+			updateFileTransferStatus(job_id, ss.str(), transfer_status, transfer_message, pid, 0, 0);
+			updateJobTransferStatus(ss.str(), job_id, status);
+		}
+        }	
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+	s = NULL;
+	r = NULL;
+	
+	if(found_r1 && !found_r2)
+		_mutex.unlock();	
+	}
+   	catch (oracle::occi::SQLException const &e) {
+        	conn->rollback();
+        	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+		if(conn){
+			if(s && r){	
+				conn->destroyResultset(s, r);
+			}
+			if(s){		
+				conn->destroyStatement(s, tag);				
+			}
+	        }
+	 }
+ 	_mutex.unlock();
+}
 
 void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize){
 

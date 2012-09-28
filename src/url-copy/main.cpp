@@ -65,66 +65,65 @@ double diff = 0;
 std::time_t start;
 static uid_t privid;
 static uid_t pw_uid;
-static     std::string file_id("");
-static     std::string job_id(""); //a
-static     std::string source_url(""); //b
-static     std::string dest_url(""); //c
-static     bool overwrite = false; //d
-static     unsigned int nbstreams = DEFAULT_NOSTREAMS; //e
-static     unsigned int tcpbuffersize = DEFAULT_BUFFSIZE; //f
-static     unsigned int blocksize = 0; //g
-static     unsigned int timeout = DEFAULT_TIMEOUT; //h
-static     bool daemonize = true; //i
-static     std::string dest_token_desc(""); //j
-static     std::string source_token_desc(""); //k
-static     unsigned int markers_timeout = 180; //l
-static     unsigned int first_marker_timeout = 180; //m
-static     unsigned int srm_get_timeout = 180; //n
-static     unsigned int srm_put_timeout = 180; //o	
-static     unsigned int http_timeout = 180; //p
-static     bool dont_ping_source = false; //q
-static     bool dont_ping_dest = false; //r
-static     bool disable_dir_check = false; //s
-static     unsigned int copy_pin_lifetime = 0; //t
-static     bool lan_connection = false; //u
-static     bool fail_nearline = false; //v
-static     unsigned int timeout_per_mb = 0; //w
-static     unsigned int no_progress_timeout = 180; //x
-static     std::string algorithm(""); //y
-static     std::string checksum_value(""); //z
-static     bool compare_checksum = false; //A
-static     std::string vo("");
-static     std::string sourceSiteName("");
-static     std::string destSiteName("");
-static     char hostname[1024] = {0};
-static     std::string proxy("");
-static     char errorBuffer[2048] = {0};
-static     bool debug = false;
+static std::string file_id("");
+static std::string job_id(""); //a
+static std::string source_url(""); //b
+static std::string dest_url(""); //c
+static bool overwrite = false; //d
+static unsigned int nbstreams = DEFAULT_NOSTREAMS; //e
+static unsigned int tcpbuffersize = DEFAULT_BUFFSIZE; //f
+static unsigned int blocksize = 0; //g
+static unsigned int timeout = DEFAULT_TIMEOUT; //h
+static bool daemonize = true; //i
+static std::string dest_token_desc(""); //j
+static std::string source_token_desc(""); //k
+static unsigned int markers_timeout = 180; //l
+static unsigned int first_marker_timeout = 180; //m
+static unsigned int srm_get_timeout = 180; //n
+static unsigned int srm_put_timeout = 180; //o	
+static unsigned int http_timeout = 180; //p
+static bool dont_ping_source = false; //q
+static bool dont_ping_dest = false; //r
+static bool disable_dir_check = false; //s
+static unsigned int copy_pin_lifetime = 0; //t
+static bool lan_connection = false; //u
+static bool fail_nearline = false; //v
+static unsigned int timeout_per_mb = 0; //w
+static unsigned int no_progress_timeout = 180; //x
+static std::string algorithm(""); //y
+static std::string checksum_value(""); //z
+static bool compare_checksum = false; //A
+static std::string vo("");
+static std::string sourceSiteName("");
+static std::string destSiteName("");
+static char hostname[1024] = {0};
+static std::string proxy("");
+static char errorBuffer[2048] = {0};
+static bool debug = false;
 static volatile bool propagated = false;
 extern std::string stackTrace;
 boost::mutex guard;
 gfalt_params_t params;
 
-std::string srmVersion(const std::string & url){
-	if (url.compare(0, 6, "srm://") == 0)
-		return std::string("2.2.0");
-		
-	return std::string("");		
+std::string srmVersion(const std::string & url) {
+    if (url.compare(0, 6, "srm://") == 0)
+        return std::string("2.2.0");
+
+    return std::string("");
 }
 
-
 /*replace space with _*/
-static std::string mapErrnoToString(int err){
-	if(err != 0){
-		char buf[256] = {0};
-		char const * str = strerror_r(err, buf, 256);
-		if(str){
-			std::string rep(str);
-			std::replace( rep.begin(), rep.end(), ' ', '_' );
-			return rep;
-		}
-	}
-	return "GENERAL ERROR";
+static std::string mapErrnoToString(int err) {
+    if (err != 0) {
+        char buf[256] = {0};
+        char const * str = strerror_r(err, buf, 256);
+        if (str) {
+            std::string rep(str);
+            std::replace(rep.begin(), rep.end(), ' ', '_');
+            return rep;
+        }
+    }
+    return "GENERAL ERROR";
 }
 
 static std::vector<std::string> split(const char *str, char c = ':') {
@@ -147,20 +146,19 @@ static std::vector<std::string> split(const char *str, char c = ':') {
 
 static void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpointer user_data) {
 
-   if(h){	
-    size_t avg = gfalt_copy_get_average_baudrate(h, NULL) / 1024;
-    size_t inst = gfalt_copy_get_instant_baudrate(h, NULL) / 1024;
-    size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
-    time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
-    logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
-   }
-    
+    if (h) {
+        size_t avg = gfalt_copy_get_average_baudrate(h, NULL) / 1024;
+        size_t inst = gfalt_copy_get_instant_baudrate(h, NULL) / 1024;
+        size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
+        time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
+        logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
+    }
+
 }
 
-
-void canceler()
-{
-	boost::mutex::scoped_lock lock(guard);
+void canceler() {
+    //boost::mutex::scoped_lock lock(guard);
+    if (propagated == false) {
         propagated = true;
         logStream << fileManagement.timestamp() << "WARN Transfer canceled because it was not responding" << '\n';
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
@@ -180,18 +178,19 @@ void canceler()
             unlink(readFile.c_str());
         sleep(1);
         exit(1);
+    }
 }
 
-void taskTimer(int time)
-{
+void taskTimer(int time) {
     boost::this_thread::sleep(boost::posix_time::seconds(time));
     canceler();
 }
 
-
-void signalHandler(int signum) {    
+void signalHandler(int signum) {
     logStream << fileManagement.timestamp() << "DEBUG Received signal " << signum << '\n';
     if (stackTrace.length() > 0) {
+        //boost::mutex::scoped_lock lock(guard);
+        propagated = true;
         logStream << fileManagement.timestamp() << "ERROR Transfer process died" << '\n';
         logStream << fileManagement.timestamp() << "ERROR " << stackTrace << '\n';
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
@@ -201,79 +200,125 @@ void signalHandler(int signum) {
         msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-	reporter.timeout = timeout;
-	reporter.nostreams = nbstreams;
-	reporter.buffersize = tcpbuffersize;			
+        reporter.timeout = timeout;
+        reporter.nostreams = nbstreams;
+        reporter.buffersize = tcpbuffersize;
         reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer process died", diff, source_size);
         logStream.close();
         fileManagement.archive();
         if (reuseFile.length() > 0)
             unlink(readFile.c_str());
         exit(1);
+    } else if (signum == 15) {
+        //boost::mutex::scoped_lock lock(guard);
+        if (propagated == false) {
+            propagated = true;
+            logStream << fileManagement.timestamp() << "WARN Transfer canceled by the user" << '\n';
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled by the user");
+            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            reporter.timeout = timeout;
+            reporter.nostreams = nbstreams;
+            reporter.buffersize = tcpbuffersize;
+            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user", diff, source_size);
+            logStream.close();
+            fileManagement.archive();
+            if (reuseFile.length() > 0)
+                unlink(readFile.c_str());
+            sleep(1);
+            exit(1);
+        }
+    } else if (signum == 10) {
+        //boost::mutex::scoped_lock lock(guard);
+        if (propagated == false) {
+            propagated = true;
+            logStream << fileManagement.timestamp() << "WARN Transfer has been forced-canceled because it was stalled" << '\n';
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer has been forced-canceled because it was stalled");
+            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            reporter.timeout = timeout;
+            reporter.nostreams = nbstreams;
+            reporter.buffersize = tcpbuffersize;
+            reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer has been forced-killed because it was stalled", diff, source_size);
+            logStream.close();
+            fileManagement.archive();
+            if (reuseFile.length() > 0)
+                unlink(readFile.c_str());
+            sleep(1);
+            exit(1);
+        }
     } else {
-	boost::mutex::scoped_lock lock(guard);
-        if(propagated == false){
-        logStream << fileManagement.timestamp() << "WARN Interrupt signal received, transfer canceled" << '\n';
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled by the user");
-        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-	reporter.timeout = timeout;
-	reporter.nostreams = nbstreams;
-	reporter.buffersize = tcpbuffersize;			
-        reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user", diff, source_size);
-        logStream.close();
-        fileManagement.archive();
-        if (reuseFile.length() > 0)
-            unlink(readFile.c_str());
-        sleep(1);
-        exit(signum);
-      }
-   }
+        //boost::mutex::scoped_lock lock(guard);
+        if (propagated == false) {
+            propagated = true;
+            logStream << fileManagement.timestamp() << "WARN Transfer canceled" << '\n';
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled");
+            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            reporter.timeout = timeout;
+            reporter.nostreams = nbstreams;
+            reporter.buffersize = tcpbuffersize;
+            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled", diff, source_size);
+            logStream.close();
+            fileManagement.archive();
+            if (reuseFile.length() > 0)
+                unlink(readFile.c_str());
+            sleep(1);
+            exit(1);
+        }
+    }
 }
 
-
-void myunexpected () {
-  	logStream << fileManagement.timestamp() << "ERROR unexpected handler called" << '\n';
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled by the user");
-        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-	reporter.timeout = timeout;
-	reporter.nostreams = nbstreams;
-	reporter.buffersize = tcpbuffersize;			
-        reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer unexpected handler called", diff, source_size);
-        logStream.close();
-        fileManagement.archive();
-        if (reuseFile.length() > 0)
-            unlink(readFile.c_str());
-        sleep(1);
+void myunexpected() {
+    logStream << fileManagement.timestamp() << "ERROR unexpected handler called" << '\n';
+    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+    msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer unexpected handler called");
+    msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+    msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+    reporter.timeout = timeout;
+    reporter.nostreams = nbstreams;
+    reporter.buffersize = tcpbuffersize;
+    reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer unexpected handler called", diff, source_size);
+    logStream.close();
+    fileManagement.archive();
+    if (reuseFile.length() > 0)
+        unlink(readFile.c_str());
+    sleep(1);
 }
 
 void myterminate() {
-  	logStream << fileManagement.timestamp() << "ERROR terminate handler called" << '\n';
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled by the user");
-        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-	reporter.timeout = timeout;
-	reporter.nostreams = nbstreams;
-	reporter.buffersize = tcpbuffersize;			
-        reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer terminate handler called", diff, source_size);
-        logStream.close();
-        fileManagement.archive();
-        if (reuseFile.length() > 0)
-            unlink(readFile.c_str());
-        sleep(1);
+    logStream << fileManagement.timestamp() << "ERROR terminate handler called" << '\n';
+    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+    msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer terminate handler called");
+    msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
+    msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+    reporter.timeout = timeout;
+    reporter.nostreams = nbstreams;
+    reporter.buffersize = tcpbuffersize;
+    reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer terminate handler called", diff, source_size);
+    logStream.close();
+    fileManagement.archive();
+    if (reuseFile.length() > 0)
+        unlink(readFile.c_str());
+    sleep(1);
 }
 
 /*courtesy of:
@@ -295,9 +340,9 @@ uid_t name_to_uid(char const *name) {
 }
 
 static void log_func(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data) {
-  if(message){
-    logStream << fileManagement.timestamp() << "DEBUG " << message << '\n';
-  }
+    if (message) {
+        logStream << fileManagement.timestamp() << "DEBUG " << message << '\n';
+    }
 }
 
 int main(int argc, char **argv) {
@@ -308,8 +353,7 @@ int main(int argc, char **argv) {
     pw_uid = name_to_uid(user);
     setuid(pw_uid);
     seteuid(pw_uid);
-    
-    
+
     REGISTER_SIGNAL(SIGABRT);
     REGISTER_SIGNAL(SIGSEGV);
     REGISTER_SIGNAL(SIGTERM);
@@ -318,11 +362,14 @@ int main(int argc, char **argv) {
     REGISTER_SIGNAL(SIGBUS);
     REGISTER_SIGNAL(SIGTRAP);
     REGISTER_SIGNAL(SIGSYS);
-    // register signal SIGINT and signal handler  
+    REGISTER_SIGNAL(SIGUSR1);
+
+    // register signal SIGINT & SIGUSR1signal handler  
     signal(SIGINT, signalHandler);
-    
-    set_terminate (myterminate);
-    set_unexpected (myunexpected);
+    signal(SIGUSR1, signalHandler);
+
+    set_terminate(myterminate);
+    set_unexpected(myunexpected);
 
     std::string bytes_to_string("");
     //transfer_completed tr_completed;
@@ -427,17 +474,34 @@ int main(int argc, char **argv) {
         while (getline(infile, line, '\n')) {
             urlsFile.push_back(line);
         }
-       infile.close();
-       unlink(readFile.c_str());
-    }
+        infile.close();
+        unlink(readFile.c_str());
+    }    
 
     //cancelation point 
     unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
     int timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
     boost::thread bt(taskTimer, timerTimeout);
+    
+    if(reuseFile.length() > 0 && urlsFile.size()==0){            
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer contained no urls with session reuse enabled");
+            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
+            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+            reporter.timeout = timeout;
+            reporter.nostreams = nbstreams;
+            reporter.buffersize = tcpbuffersize;
+            reporter.constructMessage(job_id, file_id, "FAILED", "Transfer contained no urls with session reuse enabled", diff, source_size);
+            sleep(1);
+            exit(1);    
+    
+    }
 
     std::string strArray[4];
-    for ( register unsigned int ii = 0; ii < reuseOrNot; ii++) {
+    for (register unsigned int ii = 0; ii < reuseOrNot; ii++) {
         if (reuseFile.length() > 0) {
             std::string mid_str(urlsFile[ii]);
             typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -460,21 +524,21 @@ int main(int argc, char **argv) {
         fileManagement.getLogStream(logStream);
         logger log(logStream);
 
-          
-    	
-	/*
-	if (bringOnline)
-		get the time out
-		issue bringonline
-		wait for it to finish
-		then set the process to ACTIVE
-	*/
-	reporter.timeout = timeout;
-	reporter.nostreams = nbstreams;
-	reporter.buffersize = tcpbuffersize;
-	reporter.source_se = fileManagement.getSourceHostname();
-	reporter.dest_se = fileManagement.getDestHostname();
-		
+
+
+        /*
+        if (bringOnline)
+                get the time out
+                issue bringonline
+                wait for it to finish
+                then set the process to ACTIVE
+         */
+        reporter.timeout = timeout;
+        reporter.nostreams = nbstreams;
+        reporter.buffersize = tcpbuffersize;
+        reporter.source_se = fileManagement.getSourceHostname();
+        reporter.dest_se = fileManagement.getDestHostname();
+
         reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
 
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
@@ -540,20 +604,14 @@ int main(int argc, char **argv) {
         log << fileManagement.timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
         log << fileManagement.timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
         log << fileManagement.timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
-        
+
 
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-
-        //seteuid(pw_uid);
-
-
         /*gfal2 debug logging*/
-        if (debug == true) {	   
-            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN );
-	   // seteuid(privid);
-            	freopen (fileManagement.getLogFileFullPath().c_str(),"w",stderr);
-            //seteuid(pw_uid);
+        if (debug == true) {
+            gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
+            freopen(fileManagement.getLogFileFullPath().c_str(), "w", stderr);
             gfal_log_set_handler((GLogFunc) log_func, NULL);
         }
 
@@ -563,11 +621,10 @@ int main(int argc, char **argv) {
         if (dest_token_desc.length() > 0)
             gfalt_set_dst_spacetoken(params, dest_token_desc.c_str(), NULL);
 
-	gfalt_set_create_parent_dir(params, TRUE, &tmp_err);
+        gfalt_set_create_parent_dir(params, TRUE, &tmp_err);
 
 
         if (gfal_stat((strArray[1]).c_str(), &statbufsrc) < 0) {
-            //seteuid(privid);
             std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
             log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
             errorMessage = "Failed to get source file size: " + tempError;
@@ -599,16 +656,13 @@ int main(int argc, char **argv) {
                 std::vector<std::string> token = split((strArray[3]).c_str());
                 std::string checkAlg = token[0];
                 std::string csk = token[1];
-                //seteuid(pw_uid);
                 gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), &tmp_err);
                 gfalt_set_checksum_check(params, TRUE, &tmp_err);
             } else {//use auto checksum
-                //seteuid(pw_uid);
                 gfalt_set_checksum_check(params, TRUE, &tmp_err);
             }
         }
 
-        //seteuid(pw_uid);
         //overwrite dest file if exists
         if (overwrite) {
             gfalt_set_replace_existing_file(params, TRUE, &tmp_err);
@@ -616,66 +670,79 @@ int main(int argc, char **argv) {
 
         gfalt_set_timeout(params, timeout, NULL);
         gfalt_set_nbstreams(params, nbstreams, NULL);
-	gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL); 
+        gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
         gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
 
-        //seteuid(privid);
         msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
         msg_ifce::getInstance()->set_timestamp_checksum_source_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
-
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
-        log << fileManagement.timestamp() << "INFO Transfer Started" << '\n';
-        //FTS3_COMMON_LOGGER_NEWLOG(INFO) << " Transfer Started" << commit;
-
         msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-	//calculate tr time in seconds
-	start = std::time(NULL);
+        //calculate tr time in seconds
+        start = std::time(NULL);
 
-        //seteuid(pw_uid);
+        //check all params before passed to gfal2
+        if (!handle) {
+            log << fileManagement.timestamp() << "ERROR Failed to create gfal2 context" << '\n';
+        }
+        if ((strArray[1]).c_str() == NULL || (strArray[2]).c_str() == NULL) {
+            log << fileManagement.timestamp() << "ERROR Failed to get source or dest surl" << '\n';
+        }
+
+        log << fileManagement.timestamp() << "INFO Transfer Starting" << '\n';
+
+        g_clear_error(&tmp_err);
         if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
-            //seteuid(privid);
-            diff = std::difftime (std::time(NULL),start);	    
-            log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
-            errorMessage = std::string(tmp_err->message);
-            errorScope = TRANSFER;
-            reasonClass = mapErrnoToString(tmp_err->code);
-            errorPhase = TRANSFER;
-            g_clear_error(&tmp_err);
+            diff = std::difftime(std::time(NULL), start);
+            if (tmp_err->message) {
+                log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
+                errorMessage = std::string(tmp_err->message);
+                errorScope = TRANSFER;
+                reasonClass = mapErrnoToString(tmp_err->code);
+                errorPhase = TRANSFER;
+                g_clear_error(&tmp_err);
+            } else {
+                log << fileManagement.timestamp() << "ERROR Transfer failed - Error message: Unresolved error" << '\n';
+                errorMessage = std::string("Unresolved error");
+                errorScope = TRANSFER;
+                reasonClass = GENERAL_FAILURE;
+                errorPhase = TRANSFER;
+            }
             goto stop;
         } else {
-            //seteuid(privid);
-            diff = difftime (std::time(NULL),start);	    
-            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer completed successfully in " << diff << "secs" << commit;
+            diff = difftime(std::time(NULL), start);
             log << fileManagement.timestamp() << "INFO Transfer completed successfully" << '\n';
         }
 
+        transferred_bytes = source_size;
         bytes_to_string = to_string<long long>(transferred_bytes, std::dec);
         msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
-
-
         msg_ifce::getInstance()->set_timestamp_transfer_completed(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
         msg_ifce::getInstance()->set_time_spent_in_srm_finalization_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
 
         msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        //seteuid(pw_uid);
         if (gfal_stat((strArray[2]).c_str(), &statbufdest) < 0) {
-            //seteuid(privid);
             memset(errorBuffer, 0, 2048);
-            std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
-            log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
-            errorMessage = "Failed to get dest file size: " + tempError;
-            errorScope = DESTINATION;
-            reasonClass = mapErrnoToString(gfal_posix_code_error());
-            errorPhase = TRANSFER_FINALIZATION;
+            char *err = gfal_posix_strerror_r(errorBuffer, 2048);
+            if (err) {
+                std::string tempError = std::string(err);
+                log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
+                errorMessage = "Failed to get dest file size: " + tempError;
+                errorScope = DESTINATION;
+                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                errorPhase = TRANSFER_FINALIZATION;
+            } else {
+                std::string tempError = "Undetermined error";
+                log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
+                errorMessage = "Failed to get dest file size: " + tempError;
+                errorScope = DESTINATION;
+                reasonClass = mapErrnoToString(gfal_posix_code_error());
+                errorPhase = TRANSFER_FINALIZATION;
+            }
             goto stop;
         } else {
-            //seteuid(privid);
             if (statbufdest.st_size == 0) {
                 errorMessage = "Destination file size is 0";
                 log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
@@ -695,7 +762,7 @@ int main(int argc, char **argv) {
             log << fileManagement.timestamp() << "INFO Source and destination size match" << '\n';
         } else {
             log << fileManagement.timestamp() << "ERROR Source and destination size is different" << '\n';
-            errorMessage = "Source and destination size is different";
+            errorMessage = "Source and destination file size mismatch";
             errorScope = DESTINATION;
             reasonClass = mapErrnoToString(gfal_posix_code_error());
             errorPhase = TRANSFER_FINALIZATION;
@@ -706,48 +773,55 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
 stop:
-        //seteuid(privid);
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-        if (errorMessage.length() > 0) {
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-	    reporter.timeout = timeout;
-	    reporter.nostreams = nbstreams;
-	    reporter.buffersize = tcpbuffersize;	    	
-            reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
-        } else {
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
-	    reporter.timeout = timeout;
-	    reporter.nostreams = nbstreams;
-	    reporter.buffersize = tcpbuffersize;				    
-            reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
-        }
-
-		   
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-
-        logStream.close();
- 	if (debug == true){ 
-		fclose (stderr);    	
-	} 
-        fileManagement.archive();
+        //boost::mutex::scoped_lock lock(guard);
+        if (propagated == false) {
+            propagated == true;
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
+            if (errorMessage.length() > 0) {
+                msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
+                reporter.timeout = timeout;
+                reporter.nostreams = nbstreams;
+                reporter.buffersize = tcpbuffersize;
+                reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
+            } else {
+                msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
+                reporter.timeout = timeout;
+                reporter.nostreams = nbstreams;
+                reporter.buffersize = tcpbuffersize;
+                reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
+            }
 
 
-    }//end for reuse loop	
+            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
-    //seteuid(pw_uid);
-    gfalt_params_handle_delete(params, NULL);
-    gfal_context_free(handle);
-    //seteuid(privid);
+            logStream.close();
+            if (debug == true) {
+                fclose(stderr);
+            }
+            fileManagement.archive();
+	   }
 
-    if (cert)
-        delete cert;
+        }//end for reuse loop	
+	if(params){
+        	gfalt_params_handle_delete(params, NULL);
+		params=NULL;
+	}
+        if (handle){
+            gfal_context_free(handle);
+	    handle=NULL;
+	}
 
-    if (reuseFile.length() > 0)
-        unlink(readFile.c_str());
+        if (cert){
+            delete cert;
+	    cert=NULL;
+	}
+
+        if (reuseFile.length() > 0)
+            unlink(readFile.c_str());
 
     return EXIT_SUCCESS;
 }

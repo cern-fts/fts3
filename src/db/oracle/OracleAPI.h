@@ -198,7 +198,11 @@ public:
     
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize); 
     
-    virtual void terminateReuseProcess(const std::string & jobId);    
+    virtual void terminateReuseProcess(const std::string & jobId);
+    
+    virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params); 
+    
+    virtual void forceFailTransfers();       
     
 private:
 	OracleConnection *conn;	

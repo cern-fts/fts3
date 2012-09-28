@@ -48,13 +48,13 @@ $queued = $stmt11->fetchColumn();
 
 #active per VO
 $stmt2 = $conn->query($distinctVO);
+$line = "";
 while($objResult = $stmt2->fetch(PDO::FETCH_BOTH))
 {
 	$voName = $objResult["VO_NAME"];
 	$totalActivePerVo = "select count(*) from t_file,t_job where t_file.job_id = t_job.job_id and t_job.vo_name='$voName' and file_state='ACTIVE'";
 	$stmt3 = $conn->prepare($totalActivePerVo);
 	$stmt3 ->execute();
-	$line = "";
 	$actPerVo = $stmt3->fetchColumn();
 	$line .= $voName.": ".$actPerVo."</br>";	
 }

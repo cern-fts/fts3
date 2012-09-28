@@ -16,10 +16,13 @@ void SignalLogger::log_stack(int sig){
     if(sig ==15){ //SIGTERM  
 	raise(SIGINT);
     }
+    if(sig ==10){ //SIGUSR1  
+        raise(SIGUSR1);
+    }    
     else{   
         signal(sig, SIG_DFL);
     	const int stack_size = 25;
-    	void * array[stack_size];
+    	void * array[stack_size]={0};
     	int nSize = backtrace(array, stack_size);
     	char ** symbols = backtrace_symbols(array, nSize);
     	for (register int i = 0; i < nSize; ++i){
@@ -30,7 +33,7 @@ void SignalLogger::log_stack(int sig){
 	if(symbols){
     		free(symbols);	
 	}
-	kill(getpid(), SIGINT);
+	kill(getpid(), SIGINT); //SIGINT
     }
 }
 

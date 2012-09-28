@@ -283,6 +283,9 @@ int ExecuteProcess::execProcessShell() {
                 close(fd);
             }
         }
+	int maxfd=sysconf(_SC_OPEN_MAX);
+	for(register int fd=3; fd<maxfd; fd++)
+	    close(fd);
 
         char *token;
         const char *path = getenv("PATH");

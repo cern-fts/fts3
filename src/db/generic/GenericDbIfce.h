@@ -241,7 +241,11 @@ public:
     
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize) = 0;               
     
-    virtual void terminateReuseProcess(const std::string & jobId) = 0;    
+    virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) = 0;
+    
+    virtual void terminateReuseProcess(const std::string & jobId) = 0;
+    
+    virtual void forceFailTransfers() = 0;
 };
 
 
