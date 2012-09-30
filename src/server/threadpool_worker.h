@@ -19,7 +19,7 @@ limitations under the License. */
 
 #include "common/timeout.h"
 #include "common/traced.h"
-
+#include "threadtraits.h"
 /* ---------------------------------------------------------------------- */
 
 FTS3_SERVER_NAMESPACE_START
@@ -37,6 +37,8 @@ public:
 
 private:
 	void _doWork();
+	ThreadTraits::MUTEX _mutex;
+	
 	
 	static Timeout& _TIMEOUT() 
     {

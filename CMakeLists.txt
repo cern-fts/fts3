@@ -37,6 +37,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wextra -Wall -pedantic -Wno-long-long
 
 ADD_DEFINITIONS(-DWITH_IPV6)
 ADD_DEFINITIONS(-DPURIFY) 
+ADD_DEFINITIONS(-DOPENSSL_THREADS)
+#ADD_DEFINITIONS(-DCRYPTO_MDEBUG_ALL)
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
 include(DefineInstallationPaths REQUIRED)

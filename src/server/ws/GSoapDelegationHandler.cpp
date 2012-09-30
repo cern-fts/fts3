@@ -40,6 +40,7 @@ using namespace db;
 using namespace boost;
 
 void GSoapDelegationHandler::init() {
+	SSL_load_error_strings();
 	OpenSSL_add_all_digests();
 }
 

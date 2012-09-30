@@ -15,8 +15,8 @@ limitations under the License. */
 
 #include "threadpool_worker.h"
 #include "threadpool.h"
-
 #include "common/logger.h"
+#include "StaticSslLocking.h"
 
 extern bool  stopThreads;
 
@@ -30,29 +30,28 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id) 
 	: _tracer("ThreadPoolWorker", id)
-{
-	tg.create_thread(boost::bind(&Worker::_doWork, this));	
-	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Thread ID: " << boost::this_thread::get_id() << commit;
+{	
+	tg.create_thread(boost::bind(&Worker::_doWork, this));		
 }
 
 /* ---------------------------------------------------------------------- */
 
 void Worker::_doWork() 
 {
+	
 	while(stopThreads == false) {
 		_TIMEOUT().actualize();
 		ThreadPool::element_type task(ThreadPool::instance().pop(_TIMEOUT()));	
 
 		if (task.get() != NULL) 
         {
-			//FTS3_COMMON_LOGGER_NEWLOG(INFO) << _tracer.id() << " is working on " 
-                //<< task->id() << commit;
-		
+
             task->execute();
 			
-            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << _tracer.id() << " finished " << task->id() << commit;
-		}
 	}
+	}
+	
+
 }
 
 } // namespace ThreadPool

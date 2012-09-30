@@ -121,8 +121,9 @@ protected:
         typename Pointer<typename TRAITS::Handler>::Shared handler /**< Web service method handler object */
     )
     {
-        assert (handler.get());
-        handler->handle();
+        //assert (handler.get());
+        if(handler)
+        	handler->handle();
 	}
 
     /* ---------------------------------------------------------------------- */

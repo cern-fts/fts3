@@ -20,6 +20,8 @@ limitations under the License. */
 #include "common/logger.h"
 #include "web_service_handler.h"
 #include <string>
+#include "StaticSslLocking.h"
+#include <iostream>
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -38,18 +40,18 @@ public:
     void start()
     {
         unsigned int port = theServerConfig().get<unsigned int>("Port");
-	    const std::string& ip = theServerConfig().get<std::string>("IP");
-
-	    typename TRAITS::TransferWebServiceType handler_t;
+	const std::string& ip = theServerConfig().get<std::string>("IP");
+                	
+	typename TRAITS::TransferWebServiceType handler_t;
         handler_t.listen_p(port, ip);
-
+	
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();	
-	
+         
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();		
 	
-        TRAITS::ThreadPoolType::instance().wait();
+        TRAITS::ThreadPoolType::instance().wait();	
     }
 
     /* ---------------------------------------------------------------------- */

@@ -30,6 +30,8 @@ limitations under the License. */
 #include "server.h"
 #include "daemonize.h"
 #include "signal_logger.h"
+#include "StaticSslLocking.h"
+
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -50,7 +52,7 @@ static int fexists(const char *filename) {
 void _handle_sigint(int)
 {
     FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit; 
-    stopThreads = true;
+    stopThreads = true;    
     theServer().stop();
     sleep(3);
     exit(EXIT_SUCCESS);
@@ -134,6 +136,9 @@ int main (int argc, char** argv)
     	REGISTER_SIGNAL(SIGBUS);
     	REGISTER_SIGNAL(SIGTRAP);
     	REGISTER_SIGNAL(SIGSYS);
+
+        fts3::ws::GSoapDelegationHandler::init();
+        StaticSslLocking::init_locks();
 				
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
 	std::string logDir = theServerConfig().get<std::string>("TransferLogDirectory");
@@ -154,7 +159,7 @@ int main (int argc, char** argv)
 		exit(1);	
 	}
 
-        fts3::ws::GSoapDelegationHandler::init();
+   
 
         fts3_initialize_db_backend();
         struct sigaction action;
@@ -186,6 +191,7 @@ int main (int argc, char** argv)
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
 
         theServer().start();
+	StaticSslLocking::kill_locks();
     }
     catch(Err& e)
     {

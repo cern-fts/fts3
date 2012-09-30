@@ -24,6 +24,7 @@
 #include "server_dev.h"
 #include <cgsi_plugin.h>
 #include <signal.h>
+#include "StaticSslLocking.h"
 
 extern bool  stopThreads;
 
@@ -32,6 +33,8 @@ using namespace FTS3_CONFIG_NAMESPACE;
 FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
+	
+	//StaticSslLocking::init_locks();
 
 	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true"?true:false;
 	if(keepAlive){
@@ -70,6 +73,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	        kill(getpid(), SIGINT);
 	    }
 	}
+	//StaticSslLocking::kill_locks();
 }
 
 GSoapAcceptor::~GSoapAcceptor() {

@@ -42,6 +42,7 @@ limitations under the License. */
 #include "config/serverconfig.h"
 #include "definitions.h"
 #include "DrainMode.h"
+#include "StaticSslLocking.h"
 
 extern bool  stopThreads;
 
@@ -99,7 +100,7 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessServiceHandler", desc) {
-        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
+	enableOptimization = theServerConfig().get<std::string > ("Optimizer");
     }
 
     /* ---------------------------------------------------------------------- */
@@ -113,8 +114,9 @@ public:
     void executeTransfer_p
     (
             ) {
+	
         boost::function<void() > op = boost::bind(&ProcessServiceHandler::executeTransfer_a, this);
-        this->_enqueue(op);
+	this->_enqueue(op);
     }
 
 protected:
@@ -170,6 +172,7 @@ protected:
         bool debug = false;
         OptimizerSample* opt_config = NULL;
 
+
         if (reuse == false) {
             if (jobs2.size() > 0) {
                 /*get the file for each job*/
@@ -222,7 +225,7 @@ protected:
 			DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(temp->JOB_ID, temp->FILE_ID, internalParams.str());			
 		    }
 		    
-                    proxy_file = get_proxy_cert(
+                   proxy_file = get_proxy_cert(
                             temp->DN, // user_dn
                             temp->CRED_ID, // user_cred
                             temp->VO_NAME, // vo_name
@@ -231,8 +234,7 @@ protected:
                             "", // assoc_service_type
                             false,
                             "");
-
-
+		   	
                         sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
                         destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
 
@@ -432,7 +434,7 @@ protected:
 			}
 			DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(job_id, 0, internalParams.str());			
 		    }		    
-		
+
                 proxy_file = get_proxy_cert(
                         dn, // user_dn
                         cred_id, // user_cred
@@ -442,7 +444,6 @@ protected:
                         "", // assoc_service_type
                         false,
                         "");
-		
 
                     //set all to ready, special case for session reuse
                     for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
@@ -551,8 +552,9 @@ protected:
 	jobs2.reserve(25);
 	static bool drainMode = false;
 	static long double counter = 0;
+
         while (stopThreads == false) {
-	
+		    
 	    if(DrainMode::getInstance()){
                 if(!drainMode)
 	    		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
@@ -596,8 +598,7 @@ protected:
                 }
             }
         } /*end while*/
-
-    }
+   }
 
     /* ---------------------------------------------------------------------- */
     struct TestHelper {

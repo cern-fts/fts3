@@ -72,6 +72,8 @@ public:
     } catch (interprocess_exception &ex) {
         /*shared mem segment already exists, reuse it*/
 	try{
+		if(qm)
+			delete qm;
 		qm = new QueueManager(false);    
 	}
 	catch (interprocess_exception &ex) {
@@ -85,7 +87,8 @@ public:
 
     /** Destructor */
     virtual ~ProcessQueueHandler() {
-    	//qm->remove();
+    	if(qm)
+		delete qm;
     }
 
     /* ---------------------------------------------------------------------- */

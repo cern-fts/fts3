@@ -20,6 +20,7 @@ limitations under the License. */
 #include "threadpool.h"
 #include "common/traced.h"
 
+
 FTS3_SERVER_NAMESPACE_START
 
 /* -------------------------------------------------------------------------- */
@@ -41,6 +42,7 @@ class ProcessService : public ProcessServiceHandler <ProcessServiceTraits>
 {
 public:
     ProcessService(){}
+    
 };
 
 FTS3_SERVER_NAMESPACE_END
