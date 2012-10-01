@@ -462,9 +462,7 @@ int main(int argc, char **argv) {
         cert = new UserProxyEnv(proxy);
     }
 
-    /**/
     handle = gfal_context_new(NULL);
-    //seteuid(privid);
 
     std::vector<std::string> urlsFile;
     std::string line("");
@@ -607,6 +605,15 @@ int main(int argc, char **argv) {
 
 
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+	
+	/*set infosys to gfal2*/
+	if(handle){
+		
+		char *bdii = (char *) fileManagement.getBDII().c_str(); 
+		if(bdii)
+			gfal2_set_opt_string(handle, "bdii","LCG_GFAL_INFOSYS", bdii,&tmp_err);
+	}
+	
 
         /*gfal2 debug logging*/
         if (debug == true) {

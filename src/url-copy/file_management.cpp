@@ -26,7 +26,8 @@ static int fexists(const char *filename) {
 
 FileManagement::FileManagement() {
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
-    logFileName = theServerConfig().get<std::string>("TransferLogDirectory");  
+    logFileName = theServerConfig().get<std::string>("TransferLogDirectory");
+    bdii  = theServerConfig().get<std::string>("Infosys");
     if (logFileName.length() > 0)
         directoryExists(logFileName.c_str());
 

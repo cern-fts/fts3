@@ -55,6 +55,10 @@ public:
     	return dhost;
     }
 
+    inline std::string getBDII(){
+    	return bdii;
+    }
+
 private:
     std::string source_url;
     std::string dest_url;
@@ -68,4 +72,5 @@ private:
     std::string dateArch;
     std::string log;
     std::string fullPath;
+    std::string bdii;
 };
