@@ -44,20 +44,28 @@ void GSoapDelegationHandler::init() {
 	OpenSSL_add_all_digests();
 }
 
-GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) {
+GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
+		ctx(ctx), hostCert("/etc/grid-security/hostcert.pem") { // TODO check if other location is not used for hostcert.pem
 
 	// get client DN
 	char buff[200];
 	int len = 200;
 	if (get_client_dn(ctx, buff, len)) throw Err_Custom("'get_client_dn' failed!"); // if there's an error throw an exception
-	dn = buff;
+	clientDn = buff;
 
 	// retrieve VOMS attributes (fqnas)
 	int nbfqans = 0;
 	char **arr = get_client_roles(ctx, &nbfqans);
 
 	if (nbfqans == 0) {
-		throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate (probably the CRL has expired)!");
+
+		FILE *fp = fopen(hostCert.c_str(), "r");
+		X509 *cert = PEM_read_X509(fp, 0, 0, 0);
+		hostDn = cert->name;
+
+		// if the host certificate was used to submit the request we will not find any fqans
+		if (clientDn != hostDn)
+			throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate (probably the CRL has expired)!");
 	}
 
 	for (int i = 0; i < nbfqans; i++) {
@@ -70,7 +78,7 @@ GSoapDelegationHandler::~GSoapDelegationHandler() {
 }
 
 string GSoapDelegationHandler::getClientDn(){
-	return dn;
+	return clientDn;
 }
 
 string GSoapDelegationHandler::getClientVo() {
@@ -99,7 +107,7 @@ string GSoapDelegationHandler::makeDelegationId() {
 	EVP_DigestInit(&ctx, m);
 
 	// use DN
-	EVP_DigestUpdate(&ctx, dn.c_str(), dn.size());
+	EVP_DigestUpdate(&ctx, clientDn.c_str(), clientDn.size());
 
 	// use last voms attribute if available!
 	if (!attrs.empty()) {
@@ -142,7 +150,7 @@ string GSoapDelegationHandler::handleDelegationId(string delegationId) {
 
 string GSoapDelegationHandler::getProxyReq(string delegationId) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << clientDn << " gets proxy certificate request" << commit;
 
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
@@ -158,13 +166,13 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 
 	string req (reqtxt);
 
-	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn);
+	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
 
 	try{
 	if (cache) {
 		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
 				delegationId,
-				dn,
+				clientDn,
 				req,
 				keytxt,
 				fqansToString(attrs)
@@ -174,7 +182,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 	} else {
 		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
 				delegationId,
-				dn,
+				clientDn,
 				req,
 				keytxt,
 				fqansToString(attrs)
@@ -199,7 +207,7 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 
 delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets new proxy certificate request" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << clientDn << " gets new proxy certificate request" << commit;
 
 	string delegationId = makeDelegationId();
 	if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
@@ -215,12 +223,12 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 
 	string req (reqtxt);
 
-	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn);
+	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
 	try{
 	if (cache) {
 		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
 				delegationId,
-				dn,
+				clientDn,
 				req,
 				keytxt,
 				fqansToString(attrs)
@@ -230,7 +238,7 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 	} else {
 		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
 				delegationId,
-				dn,
+				clientDn,
 				req,
 				keytxt,
 				fqansToString(attrs)
@@ -333,7 +341,7 @@ string GSoapDelegationHandler::fqansToString(vector<string> attrs) {
 
 void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " puts proxy certificate" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << clientDn << " puts proxy certificate" << commit;
 
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
@@ -341,7 +349,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 	time_t time = readTerminationTime(proxy);
 
 	string key;
-	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn);
+	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
 	if (cache) {
 		key = cache->privateKey;
 		delete cache;
@@ -352,12 +360,12 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 	}
 
 	proxy = addKeyToProxyCertificate(proxy, key);
-	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn);
+	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, clientDn);
         try{
 	if (cred) {
 		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageElement(
 				delegationId,
-				dn,
+				clientDn,
 				proxy,
 				fqansToString(attrs),
 				time
@@ -368,7 +376,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 	} else {
 		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageElement(
 				delegationId,
-				dn,
+				clientDn,
 				proxy,
 				fqansToString(attrs),
 				time
@@ -391,7 +399,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 
 string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " renews proxy certificate" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << clientDn << " renews proxy certificate" << commit;
 
 	// it is different to gridsite implementation but it is done like that in delegation-java
 	// in GliteDelegation.java
@@ -409,11 +417,11 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 
 	string req (reqtxt);
 	try{
-	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn);
+	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
 	if (cache) {
 		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
 				delegationId,
-				dn,
+				clientDn,
 				req,
 				keytxt,
 				fqansToString(attrs)
@@ -423,7 +431,7 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 	} else {
 		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
 				delegationId,
-				dn,
+				clientDn,
 				req,
 				keytxt,
 				fqansToString(attrs)
@@ -449,12 +457,12 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 
 time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " gets proxy certificate termination time" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << clientDn << " gets proxy certificate termination time" << commit;
 
 	delegationId = makeDelegationId(); // should return always the same delegation ID for the same user
 
 	time_t time;
-	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, dn);
+	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, clientDn);
 	if (cred) {
 		time = cred->termination_time;
 		delete cred;
@@ -462,7 +470,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 	} else{
 		if(cred)
 			cred;
-		throw Err_Custom("Failed to retrieve termination time for DN " + dn);
+		throw Err_Custom("Failed to retrieve termination time for DN " + clientDn);
 	}
 
 	return time;
@@ -470,14 +478,14 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 
 void GSoapDelegationHandler::destroy(string delegationId) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " destroys proxy certificate" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << clientDn << " destroys proxy certificate" << commit;
 
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
 	try{
-	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, dn);
-	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageElement(delegationId, dn);
+	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, clientDn);
+	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageElement(delegationId, clientDn);
 	}
 	catch(Err& ex){
 		throw Err_Custom(ex.what());

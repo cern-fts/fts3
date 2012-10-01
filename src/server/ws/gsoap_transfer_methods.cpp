@@ -46,7 +46,7 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		JobSubmitter submitter (soap, _job, false);
 		_param_3._transferSubmitReturn = submitter.submit();
 
@@ -66,7 +66,7 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		JobSubmitter submitter (soap, _job, true);
 		_param_4._transferSubmit2Return = submitter.submit();
 
@@ -86,7 +86,7 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		JobSubmitter submitter (soap, _job);
 		_param_5._transferSubmit3Return = submitter.submit();
 

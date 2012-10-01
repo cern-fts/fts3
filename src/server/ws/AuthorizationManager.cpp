@@ -19,7 +19,7 @@
  * AuthorizationManager.cpp
  *
  *  Created on: Jul 18, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #include "AuthorizationManager.h"
@@ -54,9 +54,11 @@ AuthorizationManager::~AuthorizationManager() {
 
 }
 
-void AuthorizationManager::authorize(soap* soap) {
+void AuthorizationManager::authorize(soap* soap, bool submit) {
 
 	GSoapDelegationHandler handler (soap);
+	if(!submit && handler.isRoot()) return;
+
 	string vo = handler.getClientVo();
 	to_lower(vo);
 

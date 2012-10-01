@@ -41,7 +41,18 @@ class AuthorizationManager : public ThreadSafeInstanceHolder<AuthorizationManage
 
 public:
 	virtual ~AuthorizationManager();
-	void authorize(soap* soap);
+
+	/**
+	 * Authorize the operation requested by the user.
+	 *
+	 * A root user of the server hosting the fts3 service if automatically
+	 * authorized, an exception is the transfer-submit operation!
+	 *
+	 * @param soap - the soap context
+	 * @param submit - should be true if the submit operation is beeing authorized
+	 *
+	 */
+	void authorize(soap* soap, bool submit = false);
 
 private:
 	AuthorizationManager();

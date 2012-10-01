@@ -204,6 +204,7 @@ public:
 	 * @param proxy - the delegated proxy certificate
 	 */
 	void putProxy(string delegationId, string proxy);
+
 	/**
 	 *	The WebServer destroy request method.
 	 *
@@ -214,13 +215,29 @@ public:
 	 */
 	void destroy(string delegationId);
 
+	/**
+	 * Checks if the client was a root user of the server hosting fts3
+	 * 	(it is assumed that the client is the root user of the server
+	 * 	hosting fts3 if he uses the server certificate to authenticate
+	 * 	himself)
+	 *
+	 * @return true if the client is a root user, false otherwise
+	 */
+	bool isRoot() {
+		return clientDn == hostDn;
+	}
+
 private:
 	/// GSoap context
 	soap* ctx;
 	/// client DN
-	string dn;
+	string clientDn;
 	/// client VOMS attributes (FQAN)
 	vector<string> attrs;
+	/// default path to host certificate
+	const string hostCert;
+	/// host DN
+	string hostDn;
 };
 
 }
