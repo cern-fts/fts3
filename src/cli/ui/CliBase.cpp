@@ -91,7 +91,7 @@ void CliBase::parse(int ac, char* av[]) {
 			fstream  cfg ("/etc/fts3/fts3config");
 			if (cfg.is_open()) {
 
-				string ip = "https://";
+				string ip;
 				string port;
 				string line;
 
@@ -108,7 +108,8 @@ void CliBase::parse(int ac, char* av[]) {
 
 				} while(!cfg.eof());
 
-				endpoint = ip + ":" + port;
+				if (!ip.empty() && !port.empty())
+					endpoint = "https://" + ip + ":" + port;
 			}
 		} else if (!vm.count("help") && !vm.count("version")) {
 			// if the -s option has not been used try to discover the endpoint
