@@ -77,7 +77,7 @@ GSoapDelegationHandler::~GSoapDelegationHandler() {
 
 }
 
-string GSoapDelegationHandler::getClientDn(){
+string GSoapDelegationHandler::getClientDn() {
 	return clientDn;
 }
 
@@ -168,33 +168,32 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 
 	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
 
-	try{
-	if (cache) {
-		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
-				delegationId,
-				clientDn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
-		delete cache;
+	try {
+		if (cache) {
+			DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
+					delegationId,
+					clientDn,
+					req,
+					keytxt,
+					fqansToString(attrs)
+				);
+			delete cache;
 
-	} else {
-		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
-				delegationId,
-				clientDn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
-	}
-        }
-	catch(Err& ex){
+		} else {
+			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+					delegationId,
+					clientDn,
+					req,
+					keytxt,
+					fqansToString(attrs)
+				);
+		}
+    } catch(Err& ex) {
 		if (reqtxt) free (reqtxt); reqtxt=NULL;
 		if (keytxt) free (keytxt); keytxt=NULL;	
 		throw Err_Custom(ex.what());
-	}
-	catch(...){
+
+	} catch(...) {
 		if (reqtxt) free (reqtxt); reqtxt=NULL;
 		if (keytxt) free (keytxt); keytxt=NULL; 
 		throw Err_Custom("Problem while renewing proxy");		
@@ -224,32 +223,31 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 	string req (reqtxt);
 
 	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
-	try{
-	if (cache) {
-		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
-				delegationId,
-				clientDn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
-		delete cache;
+	try {
+		if (cache) {
+			DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
+					delegationId,
+					clientDn,
+					req,
+					keytxt,
+					fqansToString(attrs)
+				);
+			delete cache;
 
-	} else {
-		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
-				delegationId,
-				clientDn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
-	}
-	}catch(Err& ex){
+		} else {
+			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+					delegationId,
+					clientDn,
+					req,
+					keytxt,
+					fqansToString(attrs)
+				);
+		}
+	} catch(Err& ex) {
 		if (reqtxt) free (reqtxt);
 		if (keytxt) free (keytxt);
 		throw Err_Custom(ex.what());
-	}
-	catch(...){
+	} catch(...) {
 		if (reqtxt) free (reqtxt);
 		if (keytxt) free (keytxt);	
 		throw Err_Custom("Problem while renewing proxy");
@@ -284,6 +282,24 @@ string GSoapDelegationHandler::x509ToString(X509* cert) {
 
 string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key) {
 
+	BIO *bio = BIO_new(BIO_s_mem());
+	BIO_puts(bio, const_cast<char*>(key.c_str()));
+	EVP_PKEY* prvKey = PEM_read_bio_PrivateKey(bio, 0, 0, 0);
+	BIO_free(bio);
+
+	bio = BIO_new(BIO_s_mem());
+	BIO_puts(bio, const_cast<char*>(proxy.c_str()));
+	X509* cert = PEM_read_bio_X509(bio, 0, 0, 0);
+	BIO_free(bio);
+
+	bool mismatch = !X509_check_private_key(cert, prvKey);
+	X509_free(cert);
+	EVP_PKEY_free(prvKey);
+
+	if (mismatch) {
+		throw Err_Custom("Failed to add private key to the proxy certificate: key values mismatch!");
+	}
+
 	stringstream ss;
 	STACK_OF(X509) *certstack;
 
@@ -292,7 +308,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
 	}
 
 	// first cert
-	X509 *cert = sk_X509_value(certstack, 0);
+	cert = sk_X509_value(certstack, 0);
 	ss << x509ToString(cert);
 	X509_free(cert);
 
@@ -354,43 +370,40 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 		key = cache->privateKey;
 		delete cache;
 	} else{
-		if(cache)
-			cache;
 		throw Err_Custom("Failed to retrieve the cache element from DB!");
 	}
 
 	proxy = addKeyToProxyCertificate(proxy, key);
 	Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, clientDn);
-        try{
-	if (cred) {
-		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageElement(
-				delegationId,
-				clientDn,
-				proxy,
-				fqansToString(attrs),
-				time
-			);
-		delete cred;
-		cred=NULL;
+    try {
 
-	} else {
-		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageElement(
-				delegationId,
-				clientDn,
-				proxy,
-				fqansToString(attrs),
-				time
-			);
-	}
-	 }
-	catch(Err& ex){
+		if (cred) {
+			DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageElement(
+					delegationId,
+					clientDn,
+					proxy,
+					fqansToString(attrs),
+					time
+				);
+			delete cred;
+			cred=NULL;
+
+		} else {
+			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageElement(
+					delegationId,
+					clientDn,
+					proxy,
+					fqansToString(attrs),
+					time
+				);
+		}
+	} catch(Err& ex){
 		if(cred)
 			delete cred;
 		throw Err_Custom(ex.what());
-	}
-	catch(...){	
-                if(cred)
-                        delete cred;
+	} catch(...){
+		if(cred)
+			delete cred;
 		throw Err_Custom("Failed to put proxy certificate");
 	}
 	if(cred)
@@ -416,34 +429,32 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 	}
 
 	string req (reqtxt);
-	try{
-	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
-	if (cache) {
-		DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
-				delegationId,
-				clientDn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
-		delete cache;
+	try {
+		CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
+		if (cache) {
+			DBSingleton::instance().getDBObjectInstance()->updateGrDPStorageCacheElement(
+					delegationId,
+					clientDn,
+					req,
+					keytxt,
+					fqansToString(attrs)
+				);
+			delete cache;
 
-	} else {
-		DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
-				delegationId,
-				clientDn,
-				req,
-				keytxt,
-				fqansToString(attrs)
-			);
-	}
-	}
-	catch(Err& ex){
+		} else {
+			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageCacheElement(
+					delegationId,
+					clientDn,
+					req,
+					keytxt,
+					fqansToString(attrs)
+				);
+		}
+	} catch(Err& ex){
 		if (reqtxt) free (reqtxt);
 		if (keytxt) free (keytxt);	
 		throw Err_Custom(ex.what());
-	}
-	catch(...){	
+	} catch(...){
 		if (reqtxt) free (reqtxt);
 		if (keytxt) free (keytxt);	
 		throw Err_Custom("Failed to renew proxy certificate");
@@ -467,9 +478,7 @@ time_t GSoapDelegationHandler::getTerminationTime(string delegationId) {
 		time = cred->termination_time;
 		delete cred;
 
-	} else{
-		if(cred)
-			cred;
+	} else {
 		throw Err_Custom("Failed to retrieve termination time for DN " + clientDn);
 	}
 
@@ -483,14 +492,12 @@ void GSoapDelegationHandler::destroy(string delegationId) {
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
-	try{
-	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, clientDn);
-	DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageElement(delegationId, clientDn);
-	}
-	catch(Err& ex){
+	try {
+		DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageCacheElement(delegationId, clientDn);
+		DBSingleton::instance().getDBObjectInstance()->deleteGrDPStorageElement(delegationId, clientDn);
+	} catch(Err& ex){
 		throw Err_Custom(ex.what());
-	}
-	catch(...){	
+	} catch(...) {
 		throw Err_Custom("Failed to destroy proxy certificate");
 	}			
 }
