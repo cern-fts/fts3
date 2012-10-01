@@ -157,7 +157,7 @@ static void call_perf(gfalt_transfer_status_t h, const char* src, const char* ds
 }
 
 void canceler() {
-    //boost::mutex::scoped_lock lock(guard);
+    boost::mutex::scoped_lock lock(guard);
     if (propagated == false) {
         propagated = true;
         logStream << fileManagement.timestamp() << "WARN Transfer canceled because it was not responding" << '\n';
@@ -188,8 +188,8 @@ void taskTimer(int time) {
 
 void signalHandler(int signum) {
     logStream << fileManagement.timestamp() << "DEBUG Received signal " << signum << '\n';
+    boost::mutex::scoped_lock lock(guard);    
     if (stackTrace.length() > 0) {
-        //boost::mutex::scoped_lock lock(guard);
         propagated = true;
         logStream << fileManagement.timestamp() << "ERROR Transfer process died" << '\n';
         logStream << fileManagement.timestamp() << "ERROR " << stackTrace << '\n';
@@ -210,7 +210,6 @@ void signalHandler(int signum) {
             unlink(readFile.c_str());
         exit(1);
     } else if (signum == 15) {
-        //boost::mutex::scoped_lock lock(guard);
         if (propagated == false) {
             propagated = true;
             logStream << fileManagement.timestamp() << "WARN Transfer canceled by the user" << '\n';
@@ -233,7 +232,6 @@ void signalHandler(int signum) {
             exit(1);
         }
     } else if (signum == 10) {
-        //boost::mutex::scoped_lock lock(guard);
         if (propagated == false) {
             propagated = true;
             logStream << fileManagement.timestamp() << "WARN Transfer has been forced-canceled because it was stalled" << '\n';
@@ -256,7 +254,6 @@ void signalHandler(int signum) {
             exit(1);
         }
     } else {
-        //boost::mutex::scoped_lock lock(guard);
         if (propagated == false) {
             propagated = true;
             logStream << fileManagement.timestamp() << "WARN Transfer canceled" << '\n';
@@ -780,7 +777,6 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
 stop:
-        //boost::mutex::scoped_lock lock(guard);
         if (propagated == false) {
             propagated == true;
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
