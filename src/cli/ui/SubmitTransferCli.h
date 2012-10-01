@@ -198,6 +198,17 @@ public:
 	 */
 	bool isBlocking();
 
+protected:
+
+	/**
+	 * check if it's possible to use fts3 server config file to discover the endpoint
+	 *
+	 * @return false
+	 */
+	virtual bool useSrvConfig() {
+		return false;
+	}
+
 private:
 
 	/**

@@ -25,6 +25,7 @@
 #include "CliBase.h"
 
 #include <iostream>
+#include <fstream>
 
 //#include "ServiceDiscoveryIfce.h" // check "" or <>
 //#include <glite/data/glite-util.h>
@@ -85,9 +86,33 @@ void CliBase::parse(int ac, char* av[]) {
 			endpoint.erase();
 		}
 	} else {
-		// if the -s option has not been used try to discover the endpoint
-		// (but only if -h and -v option were not used)
-		if (!vm.count("help") && !vm.count("version")) {
+
+		if (useSrvConfig()) {
+			fstream  cfg ("/etc/fts3/fts3config");
+			if (cfg.is_open()) {
+
+				string ip = "https://";
+				string port;
+				string line;
+
+				do {
+					getline(cfg, line);
+					if (line.find("Port") != string::npos) {
+						// erase 'Port='
+						port = line.erase(0, 5);
+
+					} else if (line.find("IP") != string::npos) {
+						// erase 'IP='
+						ip += line.erase(0, 3);
+					}
+
+				} while(!cfg.eof());
+
+				endpoint = ip + ":" + port;
+			}
+		} else if (!vm.count("help") && !vm.count("version")) {
+			// if the -s option has not been used try to discover the endpoint
+			// (but only if -h and -v option were not used)
 			endpoint = discoverService();
 		}
 	}

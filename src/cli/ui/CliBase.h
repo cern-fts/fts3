@@ -155,6 +155,15 @@ public:
 protected:
 
 	/**
+	 * check if it's possible to use fts3 server config file to discover the endpoint
+	 *
+	 * @return true
+	 */
+	virtual bool useSrvConfig() {
+		return true;
+	}
+
+	/**
 	 * Discovers the FTS3 service (if the -s option has not been used).
 	 *
 	 * Uses ServiceDiscoveryIfce to find a FTS3 service.
