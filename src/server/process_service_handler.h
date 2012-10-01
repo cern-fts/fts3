@@ -567,7 +567,7 @@ protected:
             try {	    
 		/*force fail to stall transfers*/		
 		counter++;
-		if(counter == 1000000000){			
+		if(counter == 1000){			
 			DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();	    
 			counter=0;
 	        }

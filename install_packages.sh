@@ -3,69 +3,6 @@
 
 echo "Export required env valiables"
 export LCG_GFAL_INFOSYS=certtb-bdii-top.cern.ch:2170
-export GFAL_PLUGIN_LIST=libgfal_plugin_srm.so:libgfal_plugin_rfio.so:libgfal_plugin_lfc.so:libgfal_plugin_dcap.so:libgfal_plugin_dcap.so:libgfal_plugin_gridftp.so
-
-sudo updatedb
-export URLCOPY=`sudo locate fts3_url_copy | head -1 | sed 's/\/fts3_url_copy//'`
-export PATH=$PATH:$URLCOPY
-export LD_LIBRARY_PATH=`sudo locate libfts3_db_oracle.so | head -1 | sed 's/\/libfts3_db_oracle.so//'`
-
-echo "Prepare fts3 server config file"
-if [ ! -f "/etc/fts3config" ]; then
-sudo cat > /etc/fts3config <<EOF
-TransferPort=8080
-IP=0.0.0.0
-DbConnectString=
-DbType=oracle
-DbUserName=
-DbPassword=
-TransferLogDirectory=/var/log/fts3
-ConfigPort=8081
-EOF
-fi
-
-echo "Prepare fts3 monitoring using messaging config file"
-if [ ! -f "/etc/fts-msg-monitoring.conf" ]; then
-sudo cat > /etc/fts-msg-monitoring.conf <<EOF
-#broker uri / port number
-BROKER=gridmsg007.cern.ch:6163
-#start msg topic/queue name
-START=transfer.test.msg.star
-#complete msg topic/queue name
-COMPLETE=transfer.test.msg.complet
-#cron msg topic/queue name
-CRON=transfer.fts_monitoring_queue_statu
-#the periodic sent of monitoring message requires a single hostname 
-#of the machine that will send the messages
-FQDN=fts3src.cern.ch
-#use topic or queue, values: true/false
-TOPIC=true
-#time before a message is expired inside the broker
-#the value is in hours
-TTL=24
-#activate/deactivate message dispaching (true/false)
-#When the following is false, no message will be sent or logged
-ACTIVE=true
-#ERROR/WARNING LOGGING
-#enable logging of warning/error messages to a log file(e.g /var/tmp/msg.log)
-#By default is false
-ENABLELOG=true
-#if it is enabled, all the messages will be stored in json format
-#in the log file below
-ENABLEMSGLOG=true
-#directory that the log file will be stored (inluding tailing slash)
-LOGFILEDIR=/var/log/fts3/
-#name of log file
-LOGFILENAME=msg.log
-#username to connect to the broker
-USERNAME=ftspublisher
-#password to connect to the broker
-PASSWORD=
-#set to use username/password or not for the broker
-USE_BROKER_CREDENTIALS=true                                                             
-EOF
-fi
-
 
 echo "Setup vomses"
 #check if /etc/vomses exists and copy hardoced voms

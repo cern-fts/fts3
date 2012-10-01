@@ -124,7 +124,8 @@ void myunexpected(){
 
 int main (int argc, char** argv)
 {
-    char *hostcert = "/etc/grid-security/hostcert.pem";
+    const char *hostcert = "/etc/grid-security/hostcert.pem";
+    const char *configfile = "/etc/fts3/fts3config";
 
     try 
     {   
@@ -136,6 +137,12 @@ int main (int argc, char** argv)
     	REGISTER_SIGNAL(SIGBUS);
     	REGISTER_SIGNAL(SIGTRAP);
     	REGISTER_SIGNAL(SIGSYS);
+	
+        if (fexists(configfile) != 0){
+		std::cerr << "fts3 server config file doesn't exist"  << std::endl;
+		exit(1);	
+	}	
+	
 
         fts3::ws::GSoapDelegationHandler::init();
         StaticSslLocking::init_locks();

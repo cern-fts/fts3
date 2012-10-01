@@ -63,7 +63,6 @@ find_package(Boost)
 find_package(APR 1.2.7 REQUIRED)
 find_package(APRUtil 1.2.7 REQUIRED)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
-find_package(GEOIP)
 
 add_subdirectory(test)
 add_subdirectory(src)
