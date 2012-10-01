@@ -174,7 +174,15 @@ bool ProxyCertificateDelegator::delegate() {
                 renewDelegation
         	);
         if (err == -1) {
-            cout << "delegation: " << glite_delegation_get_error(dctx) << endl;
+        	string errMsg = glite_delegation_get_error(dctx);
+            cout << "delegation: " << errMsg << endl;
+
+            // TODO don't use string value to discover the error (???)
+            if (errMsg.find("key values mismatch") != string::npos) {
+            	cout << "Retrying!" << endl;
+            	return delegate();
+            }
+
             return false;
         }
         cout << "Credential has been successfully delegated to the service." << endl;
