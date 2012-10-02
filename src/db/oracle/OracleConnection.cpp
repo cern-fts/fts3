@@ -75,7 +75,9 @@ bool OracleConnection::isAlive(){
         conn->terminateStatement(stmt, tag);
         // Connection is still Alive
         result = true;
-    } catch(const oracle::occi::SQLException& e){     
+    } catch(const oracle::occi::SQLException& e){  
+        if(conn)
+        	this->conn->rollback();   
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         result = false;
     } 

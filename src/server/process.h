@@ -16,6 +16,7 @@ limitations under the License. */
 #pragma once
 
 #include <string>
+#include <map>
 using namespace std;
 
 
@@ -28,12 +29,20 @@ public:
     std::string generate_request_id(const std::string& prefix);
     int execProcess(int argc, char** argv);
     int execProcessLog(int argc, char** argv);
+    void setPid(const string& jobId, const string& fileId);
+    void setPidV(std::map<int,std::string>& pids);
     
     int execProcessShell();
     int execProcessShellLog(const char* shell);
+    inline int getPid(){
+    	return pid;
+    }
     
 private:
-        
+    map<int,string> _fileIds;
+    int pid;
+    string _jobId;
+    string _fileId;    
     string m_app;
     string m_arguments;
     int m_fdlog;

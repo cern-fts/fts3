@@ -460,7 +460,7 @@ int main(int argc, char **argv) {
     }
 
     handle = gfal_context_new(NULL);
-
+    
     std::vector<std::string> urlsFile;
     std::string line("");
     readFile = "/var/lib/fts3/" + job_id;
@@ -534,7 +534,7 @@ int main(int argc, char **argv) {
         reporter.source_se = fileManagement.getSourceHostname();
         reporter.dest_se = fileManagement.getDestHostname();
 
-        reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
+        reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);       
 
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
@@ -604,14 +604,13 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 	
 	/*set infosys to gfal2*/
-	if(handle){
-		
+	if(handle){		
 		char *bdii = (char *) fileManagement.getBDII().c_str(); 
 		if(bdii)
 			gfal2_set_opt_string(handle, "bdii","LCG_GFAL_INFOSYS", bdii,&tmp_err);
 	}
+		
 	
-
         /*gfal2 debug logging*/
         if (debug == true) {
             gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);

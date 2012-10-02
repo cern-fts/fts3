@@ -202,11 +202,15 @@ public:
     
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params); 
     
-    virtual void forceFailTransfers();       
+    virtual void forceFailTransfers();
+    
+    virtual void setPid(const std::string & jobId, const std::string & fileId, int pid); 
+    
+    virtual void setPidV(int pid, std::map<int,std::string>& pids);                   
     
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;
 	bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
-	mutable ThreadTraits::MUTEX _mutex;	
+	mutable ThreadTraits::MUTEX _mutex;
 };

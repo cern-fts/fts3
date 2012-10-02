@@ -246,7 +246,13 @@ public:
     virtual void terminateReuseProcess(const std::string & jobId) = 0;
     
     virtual void forceFailTransfers() = 0;
+    
+    virtual void setPid(const std::string & jobId, const std::string & fileId, int pid) = 0;
+    
+    virtual void setPidV(int pid, std::map<int,std::string>& pids) = 0;        
 };
+
+
 
 
 

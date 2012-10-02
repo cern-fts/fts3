@@ -201,6 +201,40 @@ if( $objResult["FILE_STATE"] == "CANCELED"){
 </tr>
 <?php
 }
+if( $objResult["FILE_STATE"] == "SUBMITTED"){
+?>
+<tr bgcolor="blue">
+<td><?php echo $objResult["JOB_ID"];?></td>
+<td><?php echo $objResult["SOURCE_SURL"];?></td>
+<td><?php echo $objResult["DEST_SURL"];?></td>
+<td><?php echo $objResult["FILE_STATE"];?></td>
+<td><?php echo $objResult["FILESIZE"];?> B</td>
+<td><?php echo $objResult["CHECKSUM"];?></td>
+<td><?php echo $objResult["REASON"];?></td>
+<td><?php echo $objResult["START_TIME"];?></td>
+<td><?php echo $objResult["FINISH_TIME"];?></td>
+<td> </td>
+<td><?php echo $objResult["INTERNAL_FILE_PARAMS"];?></td>
+</tr>
+<?php
+}
+if( $objResult["FILE_STATE"] == "READY"){
+?>
+<tr bgcolor="#C0C0C0">
+<td><?php echo $objResult["JOB_ID"];?></td>
+<td><?php echo $objResult["SOURCE_SURL"];?></td>
+<td><?php echo $objResult["DEST_SURL"];?></td>
+<td><?php echo $objResult["FILE_STATE"];?></td>
+<td><?php echo $objResult["FILESIZE"];?> B</td>
+<td><?php echo $objResult["CHECKSUM"];?></td>
+<td><?php echo $objResult["REASON"];?></td>
+<td><?php echo $objResult["START_TIME"];?></td>
+<td><?php echo $objResult["FINISH_TIME"];?></td>
+<td> </td>
+<td><?php echo $objResult["INTERNAL_FILE_PARAMS"];?></td>
+</tr>
+<?php
+}
 }
 ?>
 </table>

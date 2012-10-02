@@ -191,8 +191,7 @@ protected:
                     destin_hostname = extractHostname(temp->DEST_SURL);
 
                     bool optimize = false;
-                    if (enableOptimization.compare("true") == 0) {
-		    	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Optimization is on" << commit;
+                    if (enableOptimization.compare("true") == 0) {		    	
 		        optimize = true;
                         opt_config = new OptimizerSample();
 			DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
@@ -324,9 +323,10 @@ protected:
 
 
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
-                        pr = new ExecuteProcess(cmd, params, 0);
-                        if (pr) {
+                        pr = new ExecuteProcess(cmd, params, 0);			
+                        if (pr) {		
                             pr->executeProcessShell();
+			    DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, to_string(temp->FILE_ID), pr->getPid());
                             delete pr;
                         }
 
@@ -348,6 +348,7 @@ protected:
         } else { /*reuse session*/
             if (jobs2.size() > 0) {
                 std::vector<std::string> urls;
+		std::map<int,std::string> fileIds;
                 std::string job_id = std::string("");
                 std::string vo_name = std::string("");
                 std::string cred_id = std::string("");
@@ -391,7 +392,7 @@ protected:
                             checksum = temp->CHECKSUM;
                     }
                     url = file_id + " " + surl + " " + durl + " " + checksum;
-                    urls.push_back(url);
+                    urls.push_back(url);		    		    
                 }
 
                 sourceSiteName = siteResolver.getSiteName(surl);
@@ -447,8 +448,9 @@ protected:
 
                     //set all to ready, special case for session reuse
                     for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-                        TransferFiles* temp = (TransferFiles*) * fileiter;
+                        TransferFiles* temp = (TransferFiles*) *fileiter;
                         DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
+			fileIds.insert(std::make_pair<int, std::string>(temp->FILE_ID,temp->JOB_ID));
                     }
 
                     debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
@@ -521,9 +523,10 @@ protected:
 
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
-                    pr = new ExecuteProcess(cmd, params, 0);
-                    if (pr) {
+                    pr = new ExecuteProcess(cmd, params, 0);		    
+                    if (pr) {		        
                         pr->executeProcessShell();
+			DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);
                         delete pr;
                     }
 
@@ -540,6 +543,7 @@ protected:
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
                     delete *fileiter;
                 files.clear();
+		fileIds.clear();
                 
             }
         }
