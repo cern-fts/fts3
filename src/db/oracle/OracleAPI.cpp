@@ -219,23 +219,23 @@ void OracleAPI::getSeCreditsInUse(
     tag.append("1");
     if (!srcSeName.empty()) {
         query_stmt +=
-                //			"	AND t_file.source_surl like :1 "; // srcSeName + "/%
-                "	AND t_file.source_surl like '%://" + srcSeName + "%' ";
+                //"	AND t_file.source_surl like '%://" + srcSeName + "%' ";
+        		"	AND t_file.source_surl like :1 ";
         tag.append("2");
     }
 
     if (!destSeName.empty()) {
         query_stmt +=
-                //			"	AND t_file.dest_surl like :2 "; // destSeName + "/%
-                "	AND t_file.dest_surl like '%://" + destSeName + "%' ";
+                //"	AND t_file.dest_surl like '%://" + destSeName + "%' ";
+        		"	AND t_file.dest_surl like :2 ";
         tag.append("3");
     }
 
     if (srcSeName.empty() || destSeName.empty()) {
         if (!voName.empty()) {
             // vo share
-            //			query_stmt += "	AND t_job.vo_name = :3 "; // vo
-            query_stmt += "	AND t_job.vo_name = '" + voName + "' "; // vo
+             //query_stmt += "	AND t_job.vo_name = '" + voName + "' "; // vo
+        	query_stmt += "	AND t_job.vo_name = :3 "; // vo
             tag.append("4");
         } else {
 
@@ -247,8 +247,8 @@ void OracleAPI::getSeCreditsInUse(
                     "		SELECT * "
                     "		FROM t_se_vo_share "
                     "		WHERE "
-                    //			"			t_se_vo_share.se_name = :4 "
-                    "			t_se_vo_share.se_name = '" + seName + "' "
+                    //"			t_se_vo_share.se_name = '" + seName + "' "
+            		"			t_se_vo_share.se_name = :4 "
                     "			AND t_se_vo_share.share_type = 'se' "
                     "			AND t_se_vo_share.share_id = '%\"share_id\":\"' || t_job.vo_name || '\"%' "
                     "	) ";
@@ -262,7 +262,13 @@ void OracleAPI::getSeCreditsInUse(
         if ( false == conn->checkConn() )
 		return;
 		
-        s = conn->createStatement(query_stmt, "");
+        s = conn->createStatement(query_stmt, tag);
+        int i = 1;
+        if (!srcSeName.empty()) s->setString(i++, "%://" + srcSeName + "%");
+        if (!destSeName.empty()) s->setString(i++, "%://" + destSeName + "%");
+        if (!voName.empty()) s->setString(i++, voName);
+        if (voName.empty()) s->setString(i, srcSeName.empty() ? destSeName : srcSeName);
+
         r = conn->createResultset(s);
         if (r->next()) {
             creditsInUse = r->getInt(1);
@@ -1500,12 +1506,15 @@ REQUIRED: SE_NAME
 OPTIONAL: VO_NAME
  */
 void OracleAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) {
-    std::string query = "DELETE FROM T_SE_VO_SHARE WHERE SE_NAME like'" + SE_NAME + "'";
-    query.append(" AND SHARE_ID like '" + SHARE_ID + "'");
-    query.append(" AND SHARE_TYPE ='" + SHARE_TYPE + "'");
+    std::string query = "DELETE FROM T_SE_VO_SHARE WHERE SE_NAME like :1 ";//'" + SE_NAME + "'";
+    query.append(" AND SHARE_ID like :2 ");//'" + SHARE_ID + "'");
+    query.append(" AND SHARE_TYPE = :3");//'" + SHARE_TYPE + "'");
     ThreadTraits::LOCK lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, "");
+        s->setString(1, SE_NAME);
+        s->setString(2, SHARE_ID);
+        s->setString(3, SHARE_TYPE);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, "");
