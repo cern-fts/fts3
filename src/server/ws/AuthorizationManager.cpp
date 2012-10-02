@@ -45,6 +45,7 @@ AuthorizationManager::AuthorizationManager() : voNames(
 		("dteam")
 		("cms")
 		("atlas")
+		("testers.eu-emi.eu")
 		("lhcb").to_container(voNames)
 	) {
 	// initialization list does everything :)
