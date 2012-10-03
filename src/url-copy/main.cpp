@@ -101,6 +101,10 @@ static std::string proxy("");
 static char errorBuffer[2048] = {0};
 static bool debug = false;
 static volatile bool propagated = false;
+std::string nstream_to_string("");
+std::string tcpbuffer_to_string("");
+std::string block_to_string("");
+std::string timeout_to_string("");
 extern std::string stackTrace;
 boost::mutex guard;
 gfalt_params_t params;
@@ -144,7 +148,7 @@ static std::vector<std::string> split(const char *str, char c = ':') {
     return result;
 }
 
-static void call_perf(gfalt_transfer_status_t h, const char* src, const char* dst, gpointer user_data) {
+static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpointer) {
 
     if (h) {
         size_t avg = gfalt_copy_get_average_baudrate(h, NULL) / 1024;
@@ -336,7 +340,7 @@ uid_t name_to_uid(char const *name) {
     return pwbufp->pw_uid;
 }
 
-static void log_func(const gchar *log_domain, GLogLevelFlags log_level, const gchar *message, gpointer user_data) {
+static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpointer) {
     if (message) {
         logStream << fileManagement.timestamp() << "DEBUG " << message << '\n';
     }
@@ -515,30 +519,24 @@ int main(int argc, char **argv) {
         fileManagement.setJobId(job_id);
         g_file_id = strArray[0];
         g_job_id = job_id;
-
-        fileManagement.getLogStream(logStream);
-        logger log(logStream);
-
-
-
-        /*
+	
+       /*
         if (bringOnline)
                 get the time out
                 issue bringonline
                 wait for it to finish
                 then set the process to ACTIVE
          */
+      	
         reporter.timeout = timeout;
         reporter.nostreams = nbstreams;
         reporter.buffersize = tcpbuffersize;
         reporter.source_se = fileManagement.getSourceHostname();
         reporter.dest_se = fileManagement.getDestHostname();
-
-        reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);       
-
+        reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size); 
+	
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
-
         msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());
         msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement.getLogFileName());
         msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(strArray[1]));
@@ -551,23 +549,27 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_vo(&tr_completed, vo);
         msg_ifce::getInstance()->set_source_site_name(&tr_completed, sourceSiteName);
         msg_ifce::getInstance()->set_dest_site_name(&tr_completed, destSiteName);
-
-
-        std::string nstream_to_string = to_string<unsigned int>(nbstreams, std::dec);
+        nstream_to_string = to_string<unsigned int>(nbstreams, std::dec);
         msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-
-        std::string tcpbuffer_to_string = to_string<unsigned int>(tcpbuffersize, std::dec);
+        tcpbuffer_to_string = to_string<unsigned int>(tcpbuffersize, std::dec);
         msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, tcpbuffer_to_string.c_str());
-
-        std::string block_to_string = to_string<unsigned int>(blocksize, std::dec);
+        block_to_string = to_string<unsigned int>(blocksize, std::dec);
         msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
-
-        std::string timeout_to_string = to_string<unsigned int>(timeout, std::dec);
+        timeout_to_string = to_string<unsigned int>(timeout, std::dec);
         msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
-
         msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, dest_token_desc);
         msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);
-        msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+        msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);	
+	
+	
+        int checkError = fileManagement.getLogStream(logStream);
+	if(checkError != 0){
+		std::string message = mapErrnoToString(checkError);
+		errorMessage = "Failed to create transfer log file, error was: " + message; 
+		goto stop;				
+	}
+	{ //add curly brackets to delimit the scope of logger
+       	logger log(logStream);
 
         log << fileManagement.timestamp() << "INFO Transfer accepted" << '\n';
         log << fileManagement.timestamp() << "INFO Proxy:" << proxy << '\n';
@@ -609,12 +611,14 @@ int main(int argc, char **argv) {
 		if(bdii)
 			gfal2_set_opt_string(handle, "bdii","LCG_GFAL_INFOSYS", bdii,&tmp_err);
 	}
-		
-	
+			
         /*gfal2 debug logging*/
         if (debug == true) {
             gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
-            freopen(fileManagement.getLogFileFullPath().c_str(), "w", stderr);
+            FILE* reopenDebugFile = freopen(fileManagement.getLogFileFullPath().c_str(), "w", stderr);
+	    if(reopenDebugFile == NULL){
+	    	log << fileManagement.timestamp() << "WARN Failed to create debug file, errno:" << mapErrnoToString(errno) << '\n';
+	    }	    
             gfal_log_set_handler((GLogFunc) log_func, NULL);
         }
 
@@ -774,7 +778,7 @@ int main(int argc, char **argv) {
 
 
         msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
+	}//logStream
 stop:
         if (propagated == false) {
             propagated == true;
@@ -800,12 +804,14 @@ stop:
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
-            logStream.close();
+	    if(logStream.is_open()){
+            	logStream.close();
+	    }
             if (debug == true) {
                 fclose(stderr);
             }
             fileManagement.archive();
-	   }
+	   }	  
 
         }//end for reuse loop	
 	if(params){

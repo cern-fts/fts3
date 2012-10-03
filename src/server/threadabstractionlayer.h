@@ -3,7 +3,7 @@
 
 
 /** 
- *  * defines a set of common thread macros between windows and posix
+ *  * defines a set of common posix thread macros 
  *   */
 
 #include <pthread.h>

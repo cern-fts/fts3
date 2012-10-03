@@ -152,8 +152,17 @@ int main (int argc, char** argv)
 	if(logDir.length() > 0){
 		 logDir +="/fts3server.log";
 		 int filedesc = open(logDir.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0777);
-		 close(filedesc);
-		 freopen (logDir.c_str(),"a",stderr);
+		 if(filedesc != -1){
+		 	close(filedesc);
+		 	FILE* freopenLogFile = freopen (logDir.c_str(),"a",stderr);
+			if(freopenLogFile == NULL){
+		 		std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
+				exit(1);			
+			}
+		 }else{
+		 	std::cerr << "fts3 server failed to open log file, errno is:" << strerror(errno) << std::endl;
+			exit(1);
+		 }
 	}
 
 	if(false == checkUrlCopy()){

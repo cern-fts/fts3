@@ -11,34 +11,33 @@
 using namespace FTS3_COMMON_NAMESPACE;
 
 /// static locking mechanism for OpenSSL
-class StaticSslLocking
-{
 
-  public:
+class StaticSslLocking {
+public:
 
-	/// constructor
-	StaticSslLocking ( );
+    /// constructor
+    StaticSslLocking();
 
-	/// destructor
-	~StaticSslLocking ( );
+    /// destructor
+    ~StaticSslLocking();
 
-	/// static mutex array
-	static MUTEX_TYPE * poMutexes;
-	static ThreadTraits::MUTEX _mutex; 
-	
-	static void init_locks();
-	static void kill_locks();
+    /// static mutex array
+    static MUTEX_TYPE * poMutexes;
+    static ThreadTraits::MUTEX _mutex;
 
-  protected:
+    static void init_locks();
+    static void kill_locks();
 
-	/// callback for locking/unlocking a mutex in the array
-	static void SslStaticLockCallback ( int inMode, 
-										int inMutex,
-										const char * ipsFile,
-										int inLine );
+protected:
 
-	/// returns the id of the thread from which it is called
-	static unsigned long SslThreadIdCallback ( );
+    /// callback for locking/unlocking a mutex in the array
+    static void SslStaticLockCallback(int inMode,
+            int inMutex,
+            const char * ipsFile,
+            int inLine);
+
+    /// returns the id of the thread from which it is called
+    static unsigned long SslThreadIdCallback();
 
 
 

@@ -14,6 +14,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sys/dir.h>
+#include <errno.h>
 
 using namespace FTS3_CONFIG_NAMESPACE;
 using namespace std;
@@ -24,7 +25,7 @@ static int fexists(const char *filename) {
     return -1;
 }
 
-FileManagement::FileManagement() {
+FileManagement::FileManagement():base_scheme(NULL), base_host(NULL),base_path(NULL),base_port(0) {
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
     logFileName = theServerConfig().get<std::string>("TransferLogDirectory");
     bdii  = theServerConfig().get<std::string>("Infosys");
@@ -41,19 +42,42 @@ FileManagement::~FileManagement() {
     //archive();
 }
 
-void FileManagement::getLogStream(std::ofstream& logStream) {
+int FileManagement::getLogStream(std::ofstream& logStream) {
     fname = generateLogFileName(source_url, dest_url, file_id, job_id);
     log = logFileName + "/" + fname;
     fullPath = log + ".debug";
     logStream.open(log.c_str(), ios::app);
+    if (logStream.fail()){
+    	return errno;
+    }else{
+    	return 0;
+    }
 }
 
 void FileManagement::setSourceUrl(std::string& source_url) {
     this->source_url = source_url;
+    //source
+    parse_url(source_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
+    shost = std::string(base_host);
+        if (base_scheme)
+            free(base_scheme);
+        if (base_host)
+            free(base_host);
+        if (base_path)
+            free(base_path);    
 }
 
 void FileManagement::setDestUrl(std::string& dest_url) {
     this->dest_url = dest_url;
+    //dest
+    parse_url(dest_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
+    dhost = std::string(base_host);    
+        if (base_scheme)
+            free(base_scheme);
+        if (base_host)
+            free(base_host);
+        if (base_path)
+            free(base_path);    
 }
 
 void FileManagement::setFileId(std::string& file_id) {
@@ -128,35 +152,8 @@ std::string FileManagement::dateDir(){
     return ss.str();
 }
 
-std::string FileManagement::generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id) {
+std::string FileManagement::generateLogFileName(std::string, std::string, std::string & file_id, std::string & job_id) {
     std::string new_name = std::string("");
-    char *base_scheme = NULL;
-    char *base_host = NULL;
-    char *base_path = NULL;
-    int base_port = 0;
-
-    //add surl / durl
-    //source
-    parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    shost = std::string(base_host);
-        if (base_scheme)
-            free(base_scheme);
-        if (base_host)
-            free(base_host);
-        if (base_path)
-            free(base_path);
-
-    //dest
-    parse_url(durl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    dhost = std::string(base_host);
-    
-        if (base_scheme)
-            free(base_scheme);
-        if (base_host)
-            free(base_host);
-        if (base_path)
-            free(base_path);
-
     archiveFileName = shost + "__" + dhost;
 
     // add date

@@ -33,7 +33,7 @@ public:
     bool directoryExists(const char* pzPath);
     std::string timestamp();
     std::string dateDir();
-    void getLogStream(std::ofstream& logStream);
+    int getLogStream(std::ofstream& logStream);
     void setSourceUrl(std::string& source_url);
     void setDestUrl(std::string& dest_url);
     void setFileId(std::string& file_id);
@@ -73,4 +73,8 @@ private:
     std::string log;
     std::string fullPath;
     std::string bdii;
+    char *base_scheme;
+    char *base_host;
+    char *base_path;
+    int base_port;    
 };

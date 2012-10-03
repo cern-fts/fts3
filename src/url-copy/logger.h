@@ -21,9 +21,11 @@ logger::logger( std::ostream& os_) : os(os_) {}
 
 template<class T>
 logger& operator<<( logger& log, const T& output ) {
-    log.os << output;
-    log.os.flush(); 
-    return log;
+  if(log.os.good()){
+    	log.os << output;
+    	log.os.flush(); 
+  }
+ return log;
 }
 
 #endif
