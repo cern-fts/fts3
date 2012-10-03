@@ -2714,7 +2714,6 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
         	conn->destroyStatement(s, tag);	
 		}
 	}
-        //conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return debug;
@@ -2854,7 +2853,6 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) {
 	        conn->destroyStatement(s, tag);
 		}
 	}
-        //conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
     }
