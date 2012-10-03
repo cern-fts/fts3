@@ -341,8 +341,12 @@ uid_t name_to_uid(char const *name) {
 }
 
 static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpointer) {
+    static GStaticMutex log_mutex = G_STATIC_MUTEX_INIT;
+    
     if (message) {
+        g_static_mutex_lock(&log_mutex);
         logStream << fileManagement.timestamp() << "DEBUG " << message << '\n';
+        g_static_mutex_unlock(&log_mutex);
     }
 }
 
