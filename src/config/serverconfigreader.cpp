@@ -124,7 +124,12 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "TransferLogDirectory,l",
             po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
             "Directory where the individual transfer logs are written"
-        );
+        )
+		(
+			"AuthorizedVO,v",
+			po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
+			"List of authorized VOs"
+		);
 
     return config;
 }

@@ -19,7 +19,9 @@ limitations under the License. */
 
 #include "config_dev.h"
 #include <map>
+#include <vector>
 #include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
 
 FTS3_CONFIG_NAMESPACE_START
 
@@ -61,14 +63,10 @@ public:
     
     /** General getter of an option. It returns the option, converted to the 
      * desired type. Throws exception if the option is not found. */
-    template <class RET> RET get
+    template <typename RET> RET get
     (
         const std::string& aVariable /**< A config variable name. */
-    )
-    {
-    	const std::string& str = _get_str(aVariable);
-    	return boost::lexical_cast<RET>(str);
-    }
+    );
 
 protected:
 
@@ -123,6 +121,30 @@ inline ServerConfig& theServerConfig()
 {
     static ServerConfig e;
     return e;
+}
+
+template <typename RET>
+RET ServerConfig::get (const std::string& aVariable /**< A config variable name. */) {
+
+	const std::string& str = _get_str(aVariable);
+	return boost::lexical_cast<RET>(str);
+}
+
+template <>
+inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (const std::string& aVariable /**< A config variable name. */) {
+
+	const std::string& str = _get_str(aVariable);
+
+	boost::char_separator<char> sep(";");
+	boost::tokenizer< boost::char_separator<char> > tokens(str, sep);
+	boost::tokenizer< boost::char_separator<char> >::iterator it;
+
+	std::vector<std::string> ret;
+	for (it = tokens.begin(); it != tokens.end(); it++) {
+		ret.push_back(*it);
+	}
+
+	return ret;
 }
 
 FTS3_CONFIG_NAMESPACE_END

@@ -9,3 +9,4 @@ Infosys=lcg-bdii.cern.ch:2170
 Alias=
 Optimizer=false
 HttpKeepAlive=true
+AuthorizedVO=t2k.org;snoplus.snolab.ca;mice;na62.vo.gridpp.ac.uk;superbvo.org;cms;atlas;testers.eu-emi.eu;lhcb;dteam
