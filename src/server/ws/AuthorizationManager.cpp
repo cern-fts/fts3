@@ -59,7 +59,14 @@ void AuthorizationManager::authorize(soap* soap, bool submit) {
 	to_lower(vo);
 
 	if (!voNameSet.count(vo)) {
-		throw Err_Custom("Authorization failed, access was not granted.");
+
+		string msg = "Authorization failed, access was not granted. ";
+		msg += "(Please check if the fts3 configuration file contains the VO: '";
+		msg += vo;
+		msg += "' and if the right delimiter was used!)";
+
+
+		throw Err_Custom(msg);
 	}
 }
 
