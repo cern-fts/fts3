@@ -50,6 +50,7 @@ using namespace std;
 static FileManagement fileManagement;
 static Reporter reporter;
 static std::ofstream logStream;
+static boost::mutex  logMutex;
 static transfer_completed tr_completed;
 static std::string g_file_id("");
 static std::string g_job_id("");
@@ -155,6 +156,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
         size_t inst = gfalt_copy_get_instant_baudrate(h, NULL) / 1024;
         size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
         time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
+        boost::mutex::scoped_lock lock(logMutex);
         logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
     }
 
@@ -162,6 +164,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
 
 void canceler() {
     boost::mutex::scoped_lock lock(guard);
+    boost::mutex::scoped_lock logLock(logMutex);
     if (propagated == false) {
         propagated = true;
         logStream << fileManagement.timestamp() << "WARN Transfer canceled because it was not responding" << '\n';
@@ -327,26 +330,23 @@ void myterminate() {
  */
 uid_t name_to_uid(char const *name) {
     if (!name)
-        return -1;
+        return static_cast<uid_t>(-1);
     long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
     if (buflen == -1)
-        return -1;
+        return static_cast<uid_t>(-1);
     // requires c99
     char buf[buflen];
     struct passwd pwbuf, *pwbufp;
-    if (0 != getpwnam_r(name, &pwbuf, buf, buflen, &pwbufp)
+    if (0 != getpwnam_r(name, &pwbuf, buf, static_cast<size_t>(buflen), &pwbufp)
             || !pwbufp)
-        return -1;
+        return static_cast<uid_t>(-1);
     return pwbufp->pw_uid;
 }
 
 static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpointer) {
-    static GStaticMutex log_mutex = G_STATIC_MUTEX_INIT;
-    
     if (message) {
-        g_static_mutex_lock(&log_mutex);
+        boost::mutex::scoped_lock lock(logMutex);
         logStream << fileManagement.timestamp() << "DEBUG " << message << '\n';
-        g_static_mutex_unlock(&log_mutex);
     }
 }
 
@@ -390,7 +390,7 @@ int main(int argc, char **argv) {
     hostname[1023] = '\0';
     gethostname(hostname, 1023);
 
-    for (register unsigned int i(1); i < argc; ++i) {
+    for (register int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
         if (temp.compare("-G") == 0)
             reuseFile = std::string(argv[i + 1]);
@@ -409,15 +409,15 @@ int main(int argc, char **argv) {
         if (temp.compare("-A") == 0)
             compare_checksum = true;
         if (temp.compare("-w") == 0)
-            timeout_per_mb = std::atoi(argv[i + 1]);
+            timeout_per_mb = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-x") == 0)
-            no_progress_timeout = std::atoi(argv[i + 1]);
+            no_progress_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-u") == 0)
             lan_connection = true;
         if (temp.compare("-v") == 0)
             fail_nearline = true;
         if (temp.compare("-t") == 0)
-            copy_pin_lifetime = std::atoi(argv[i + 1]);
+            copy_pin_lifetime = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-q") == 0)
             dont_ping_source = true;
         if (temp.compare("-r") == 0)
@@ -433,13 +433,13 @@ int main(int argc, char **argv) {
         if (temp.compare("-d") == 0)
             overwrite = true;
         if (temp.compare("-e") == 0)
-            nbstreams = std::atoi(argv[i + 1]);
+            nbstreams = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-f") == 0)
-            tcpbuffersize = std::atoi(argv[i + 1]);
+            tcpbuffersize = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-g") == 0)
-            blocksize = std::atoi(argv[i + 1]);
+            blocksize = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-h") == 0)
-            timeout = std::atoi(argv[i + 1]);
+            timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-i") == 0)
             daemonize = true;
         if (temp.compare("-j") == 0)
@@ -447,15 +447,15 @@ int main(int argc, char **argv) {
         if (temp.compare("-k") == 0)
             source_token_desc = std::string(argv[i + 1]);
         if (temp.compare("-l") == 0)
-            markers_timeout = std::atoi(argv[i + 1]);
+            markers_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-m") == 0)
-            first_marker_timeout = std::atoi(argv[i + 1]);
+            first_marker_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-n") == 0)
-            srm_get_timeout = std::atoi(argv[i + 1]);
+            srm_get_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-o") == 0)
-            srm_put_timeout = std::atoi(argv[i + 1]);
+            srm_put_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-p") == 0)
-            http_timeout = std::atoi(argv[i + 1]);
+            http_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
         if (temp.compare("-B") == 0)
             file_id = std::string(argv[i + 1]);
         if (temp.compare("-proxy") == 0)
@@ -483,7 +483,7 @@ int main(int argc, char **argv) {
 
     //cancelation point 
     unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
-    int timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
+    unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
     boost::thread bt(taskTimer, timerTimeout);
     
     if(reuseFile.length() > 0 && urlsFile.size()==0){            
@@ -573,7 +573,7 @@ int main(int argc, char **argv) {
 		goto stop;				
 	}
 	{ //add curly brackets to delimit the scope of logger
-       	logger log(logStream);
+       	logger log(logStream, logMutex);
 
         log << fileManagement.timestamp() << "INFO Transfer accepted" << '\n';
         log << fileManagement.timestamp() << "INFO Proxy:" << proxy << '\n';
