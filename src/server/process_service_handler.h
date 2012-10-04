@@ -322,7 +322,7 @@ protected:
                         }
 
 
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: fts3_url_copy " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);			
                         if (pr) {		
                             pr->executeProcessShell();

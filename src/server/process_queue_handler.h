@@ -114,6 +114,7 @@ protected:
       std::string job = std::string(msg.job_id).substr (0,36);    
       FTS3_COMMON_LOGGER_NEWLOG (INFO) <<  "Job id:" << job 
 	<<  "\nFile id: " << msg.file_id
+	<<  "\nPid: " << msg.process_id
 	<<  "\nState: " <<  msg.transfer_status
 	<<  "\nMessage: " <<  msg.transfer_message
 	<<  "\nSource: " <<  msg.source_se

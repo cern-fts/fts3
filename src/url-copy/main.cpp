@@ -612,8 +612,10 @@ int main(int argc, char **argv) {
 	/*set infosys to gfal2*/
 	if(handle){		
 		char *bdii = (char *) fileManagement.getBDII().c_str(); 
-		if(bdii)
+		if(bdii){
+			log << fileManagement.timestamp() << "INFO BDII:" << bdii << '\n';
 			gfal2_set_opt_string(handle, "bdii","LCG_GFAL_INFOSYS", bdii,&tmp_err);
+		}
 	}
 			
         /*gfal2 debug logging*/

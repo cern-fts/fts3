@@ -3640,7 +3640,7 @@ void OracleAPI::forceFailTransfers(){
 		time_t lifetime = std::time(NULL);            
 	        diff = difftime (lifetime, start_time);  	   
 		if(timeout!= 0 && diff > (timeout+1000)){
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing process " << pid << " because it was stalled" << commit;
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;
 			std::stringstream ss;
    			ss << file_id;
 			found_r2 = true;
