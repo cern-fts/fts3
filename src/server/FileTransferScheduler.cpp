@@ -333,7 +333,7 @@ void FileTransferScheduler::initVosInQueue(vector<TransferFiles*> files) {
 }
 
 // SE only TODO
-int FileTransferScheduler::resolveSharedCredits(const string type, string name, Share share, IO io) {
+int FileTransferScheduler::resolveSharedCredits(const string type, string name, Share, IO io) {
 
 	// TODO assumption PAIR configuration don't support shared policy
 

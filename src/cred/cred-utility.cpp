@@ -134,12 +134,12 @@ std::string get_proxy_dn(const std::string& filename) /*throw (CredServiceExcept
  */
 std::string get_proxy_cert(const std::string& user_dn,
                            const std::string& user_cred,
-                           const std::string& vo_name,
-                           const std::string& cred_service_endpoint,
-                           const std::string& assoc_service,
-                           const std::string& assoc_service_type,
+                           const std::string& ,
+                           const std::string& ,
+                           const std::string& ,
+                           const std::string& ,
                            bool  disable_delegation,
-                           const std::string& cred_service_type) /*throw (LogicError, CredServiceException)*/ {
+                           const std::string& ) /*throw (LogicError, CredServiceException)*/ {
     std::string proxy_file;
 
     // Check if the job contains information for retrieving delegated credential 

@@ -34,7 +34,7 @@ using namespace std;
 convert a number to string, given the base
  */
 template <class T>
-std::string _to_string(T t, std::ios_base & (*f)(std::ios_base&)) {
+std::string _to_string(T t, std::ios_base & (*)(std::ios_base&)) {
     std::ostringstream oss;
     oss << fixed << t;
     return oss.str();

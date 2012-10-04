@@ -36,14 +36,17 @@ FileManagement::FileManagement():base_scheme(NULL), base_host(NULL),base_path(NU
     std::string dateArch = logFileName + "/" + dateDir();	
     directoryExists(dateArch.c_str());	
     logFileName = dateArch;
+    
 }
 
-FileManagement::~FileManagement() {
-    //archive();
+FileManagement::~FileManagement() {    
+}
+
+void FileManagement::generateLogFile(){
+	fname = generateLogFileName(source_url, dest_url, file_id, job_id);
 }
 
 int FileManagement::getLogStream(std::ofstream& logStream) {
-    fname = generateLogFileName(source_url, dest_url, file_id, job_id);
     log = logFileName + "/" + fname;
     fullPath = log + ".debug";
     logStream.open(log.c_str(), ios::app);

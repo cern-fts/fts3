@@ -2238,7 +2238,7 @@ void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtoco
     }
 }
 
-SeProtocolConfig* OracleAPI::getProtocol(std::string se1, std::string se2) {
+SeProtocolConfig* OracleAPI::getProtocol(std::string , std::string se2) {
 
     ThreadTraits::LOCK lock(_mutex);
     bool is_dest_group = is_se_group_member(se2);
@@ -3105,7 +3105,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     }
 }
 
-void OracleAPI::updateOptimizer(std::string file_id, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
     const std::string tag1 = "updateOptimizer1";
     const std::string tag2 = "updateOptimizer2";
     const std::string tag3 = "updateOptimizer3";
@@ -3217,7 +3217,7 @@ void OracleAPI::updateOptimizer(std::string file_id, double filesize, int timeIn
     }
 }
 
-void OracleAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers) {
+void OracleAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int) {
     const std::string tag = "addOptimizer";
     const std::string tag1 = "addOptimizer1";
     std::string query = "insert into "
@@ -3258,7 +3258,7 @@ void OracleAPI::addOptimizer(time_t when, double throughput, const std::string &
     }
 }
 
-void OracleAPI::initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id) {
+void OracleAPI::initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int) {
     const std::string tag = "initOptimizer";
     const std::string tag1 = "initOptimizer2";
     std::string query = "insert into t_optimize(source_se, dest_se,timeout,nostreams,buffer, file_id ) values(:1,:2,:3,:4,:5,0) ";

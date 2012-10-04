@@ -38,6 +38,7 @@ public:
     void setDestUrl(std::string& dest_url);
     void setFileId(std::string& file_id);
     void setJobId(std::string& job_id);
+    void generateLogFile();
     inline std::string getLogFileFullPath(){
 	return fullPath;
     }

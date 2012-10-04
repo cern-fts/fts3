@@ -249,9 +249,9 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
     
     struct delegation__getProxyReqResponse get_resp;
     struct delegation__renewProxyReqResponse renew_resp;
-    struct delegation__getTerminationTimeResponse term_resp;
+    //struct delegation__getTerminationTimeResponse term_resp;
     struct delegation__putProxyResponse put_resp;
-    time_t term_time;
+    //time_t term_time;
     int ret;
 
     if(!ctx)

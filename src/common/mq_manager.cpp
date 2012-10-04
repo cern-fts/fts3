@@ -22,7 +22,7 @@ QueueManager::QueueManager(bool consumer) : drop_(false), init(false) {
     }
 }
 
-QueueManager::QueueManager(bool consumer, std::string qname) : drop_(false), init(false) {
+QueueManager::QueueManager(bool consumer, std::string) : drop_(false), init(false) {
     const std::string path = "/dev/shm/fts3mqmon";
     try {
         //fts3_server
