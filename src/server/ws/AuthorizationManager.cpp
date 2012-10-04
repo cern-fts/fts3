@@ -31,23 +31,16 @@
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "config/serverconfig.h"
+
 using namespace fts3::ws;
+using namespace config;
 using namespace boost;
 using namespace boost::assign;
 
-AuthorizationManager::AuthorizationManager() : voNames(
-		list_of
-		("t2k.org")
-		("snoplus.snolab.ca")
-		("mice")
-		("na62.vo.gridpp.ac.uk")
-		("superbvo.org")
-		("dteam")
-		("cms")
-		("atlas")
-		("testers.eu-emi.eu")
-		("lhcb").to_container(voNames)
-	) {
+AuthorizationManager::AuthorizationManager() :
+		voNameList(theServerConfig().get< vector<string> >("AuthorizedVO")),
+		voNameSet(voNameList.begin(), voNameList.end()) {
 	// initialization list does everything :)
 }
 
@@ -57,13 +50,15 @@ AuthorizationManager::~AuthorizationManager() {
 
 void AuthorizationManager::authorize(soap* soap, bool submit) {
 
+	if (voNameList.empty()) return;
+
 	GSoapDelegationHandler handler (soap);
 	if(!submit && handler.isRoot()) return;
 
 	string vo = handler.getClientVo();
 	to_lower(vo);
 
-	if (!voNames.count(vo)) {
+	if (!voNameSet.count(vo)) {
 		throw Err_Custom("Authorization failed, access was not granted.");
 	}
 }

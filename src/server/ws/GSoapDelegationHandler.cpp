@@ -282,6 +282,10 @@ string GSoapDelegationHandler::x509ToString(X509* cert) {
 
 string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key) {
 
+	// first check if the key matches the certificate
+	// (it can happen in case of a run condition -
+	// two clients are delegating the proxy concurrently)
+
 	BIO *bio = BIO_new(BIO_s_mem());
 	BIO_puts(bio, const_cast<char*>(key.c_str()));
 	EVP_PKEY* prvKey = PEM_read_bio_PrivateKey(bio, 0, 0, 0);
@@ -296,6 +300,7 @@ string GSoapDelegationHandler::addKeyToProxyCertificate(string proxy, string key
 	X509_free(cert);
 	EVP_PKEY_free(prvKey);
 
+	// if the private key does not match throw an exception
 	if (mismatch) {
 		throw Err_Custom("Failed to add private key to the proxy certificate: key values mismatch!");
 	}
@@ -386,7 +391,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 					time
 				);
 			delete cred;
-			cred=NULL;
+			cred = 0;
 
 		} else {
 			DBSingleton::instance().getDBObjectInstance()->insertGrDPStorageElement(
@@ -406,8 +411,8 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 			delete cred;
 		throw Err_Custom("Failed to put proxy certificate");
 	}
-	if(cred)
-		delete cred;		 
+
+	if(cred) delete cred;		 
 }
 
 string GSoapDelegationHandler::renewProxyReq(string delegationId) {

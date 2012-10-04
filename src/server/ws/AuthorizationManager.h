@@ -29,6 +29,7 @@
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <set>
+#include <vector>
 
 namespace fts3 { namespace ws {
 
@@ -59,7 +60,8 @@ private:
 	AuthorizationManager(const AuthorizationManager&){};
 	AuthorizationManager& operator=(const AuthorizationManager&){return *this;};
 
-	const set<string> voNames;
+	const vector<string> voNameList;
+	const set<string> voNameSet;
 };
 
 }
