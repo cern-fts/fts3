@@ -55,16 +55,16 @@ using namespace FTS3_CONFIG_NAMESPACE;
 
 uid_t name_to_uid(char const *name) {
     if (!name)
-        return -1;
+        return static_cast<uid_t>(-1);
     long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
     if (buflen == -1)
-        return -1;
+        return static_cast<uid_t>(-1);
 
     char buf[buflen];
     struct passwd pwbuf, *pwbufp;
-    if (0 != getpwnam_r(name, &pwbuf, buf, buflen, &pwbufp)
+    if (0 != getpwnam_r(name, &pwbuf, buf, static_cast<size_t>(buflen), &pwbufp)
             || !pwbufp)
-        return -1;
+        return static_cast<uid_t>(-1);
     return pwbufp->pw_uid;
 }
 

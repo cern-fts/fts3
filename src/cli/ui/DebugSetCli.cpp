@@ -41,7 +41,7 @@ DebugSetCli::DebugSetCli() {
 	positional_options_description tmp;
 	tmp.add("debug", 1);
 	for (unsigned i = 0; i < p.max_total_count(); i++)
-		tmp.add(p.name_for_position(i).c_str(), i + 1);
+		tmp.add(p.name_for_position(i).c_str(), static_cast<int>(i + 1));
 
 	p = tmp;
 }

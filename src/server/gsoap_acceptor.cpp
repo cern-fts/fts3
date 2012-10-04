@@ -47,7 +47,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 	soap_set_namespaces(ctx, fts3_namespaces);
 
-	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), port, 100);
+	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 
 	    if (sock >= 0) {
 	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
@@ -63,7 +63,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 	soap_set_namespaces(ctx, fts3_namespaces);
 
-	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), port, 100);
+	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 
 	    if (sock >= 0) {
 	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;

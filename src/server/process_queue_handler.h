@@ -123,7 +123,12 @@ protected:
 
       if( std::string(msg.transfer_status).compare("FINISHED") == 0  && enableOptimization.compare("true") == 0){
         if( !(msg.nostreams == DEFAULT_NOSTREAMS && msg.buffersize == DEFAULT_BUFFSIZE && msg.timeout == DEFAULT_TIMEOUT)){
-    		DBSingleton::instance().getDBObjectInstance()->updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs, msg.nostreams, msg.timeout, msg.buffersize, std::string(msg.source_se), std::string(msg.dest_se) );      
+    		DBSingleton::instance().
+                getDBObjectInstance()->
+                updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs,
+                                            static_cast<int>(msg.nostreams), static_cast<int>(msg.timeout),
+                                            static_cast<int>(msg.buffersize), std::string(msg.source_se),
+                                            std::string(msg.dest_se) );      
 	}
 	}
 
@@ -134,8 +139,14 @@ protected:
 		DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr (0,36));          	
 	}
 
-      DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(job, std::string(msg.file_id),std::string(msg.transfer_status),std::string(msg.transfer_message), msg.process_id, msg.filesize, msg.timeInSecs);
-      DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
+      DBSingleton::instance().
+        getDBObjectInstance()->
+        updateFileTransferStatus(job, std::string(msg.file_id), std::string(msg.transfer_status),
+                                 std::string(msg.transfer_message), static_cast<int>(msg.process_id),
+                                 msg.filesize, msg.timeInSecs);
+      DBSingleton::instance().
+        getDBObjectInstance()->
+        updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
       }
      catch (interprocess_exception &ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));

@@ -76,7 +76,7 @@ unsigned long str_to_size(std::string str) /*throw (LogicError)*/{
                 std::string::size_type dot_pos = str.find('.');
 
                 // find the last element that is not a digit
-                std::string::iterator num_end = (dot_pos != std::string::npos)?num_end = str.begin() + dot_pos + 1: str.begin();
+                std::string::iterator num_end = (dot_pos != std::string::npos)? str.begin() + dot_pos + 1: str.begin();
                 for(; num_end != str.end(); ++num_end) {
                     if(0 == isdigit(*num_end)){
                         break;
@@ -139,7 +139,7 @@ unsigned long hash_string(const std::string& str) throw() {
     std::string::const_iterator it;
     for(it = str.begin();it != str.end(); ++it){
         c = *it;
-        hash = c + (hash << 6) + (hash << 16) - hash;
+        hash = static_cast<unsigned long>(c) + (hash << 6) + (hash << 16) - hash;
     }
     return hash;
 }

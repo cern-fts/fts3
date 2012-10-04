@@ -75,10 +75,10 @@ static void fixup_lfn_uri(glite_uri *uri)
 		len = p - path;
 	else
 		len = strlen(path);
-	uri->path = g_strndup(path, len);
+	uri->path = g_strndup(path, static_cast<gsize>(len));
 
 	/* Remove the "lfn=..." part from the query */
-	memmove(start, path + len, strlen(path) - len);
+	memmove(start, path + len, strlen(path) - static_cast<size_t>(len));
 	if (!*uri->query)
 	{
 		/* If nothing remains, set uri->query to NULL */
@@ -118,7 +118,7 @@ glite_uri *glite_uri_new(const char *uri_str)
 		if (p && p != uri_str)
 		{
 			/* <scheme>://<host><path> */
-			uri->endpoint = g_strndup(uri_str, p - uri_str);
+			uri->endpoint = g_strndup(uri_str, static_cast<gsize>(p - uri_str));
 			/* The '/' is part of <path> */
 			uri_str = p;
 		}
@@ -128,7 +128,7 @@ glite_uri *glite_uri_new(const char *uri_str)
 	 * <host> */
 	if (uri->scheme && uri->endpoint && (p = (char *) strchr(uri_str, '?')))
 	{
-		uri->path = g_strndup(uri_str, p - uri_str);
+		uri->path = g_strndup(uri_str, static_cast<gsize>(p - uri_str));
 		uri->query = g_strdup(p + 1);
 	}
 	else

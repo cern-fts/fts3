@@ -126,7 +126,7 @@ const SDService * select_service_by_version(const SDServiceList * list, const ch
 		{
                         // Create the Version List
 			fill_version(version,&req_version);
-			srv_versions = (version_t*)malloc(sizeof(version_t) * list->numServices);
+			srv_versions = (version_t*)calloc(sizeof(version_t), static_cast<size_t>(list->numServices));
 			for(i = 0; i < list->numServices; ++i)
 			{
 				fill_version(list->services[i]->version,&srv_versions[i]);
@@ -627,7 +627,7 @@ SDVOList *check_voms_proxy(void)
 	{
 		char **tmp, *p1, *p2, *act_cred;
 
-		act_cred = &creds[i * (credlen+1)];
+		act_cred = &creds[i * static_cast<int>(credlen+1)];
 
 		/* Search VO name
 		   act_cred is in form of '.../<voname>/...' */
@@ -639,7 +639,7 @@ SDVOList *check_voms_proxy(void)
 		if (*p2)
 			*p2 = '\0';
 		
-		tmp = (char**) realloc(volist->names, (volist->numNames + 1) *
+		tmp = (char**) realloc(volist->names, static_cast<size_t>(volist->numNames + 1) *
 			sizeof(*volist->names));
 		if (!tmp)
 		{

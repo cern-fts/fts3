@@ -40,7 +40,7 @@ static unsigned long id_function() {
 
 static int CRYPTO_thread_setup() {
     int i;
-    mutex_buf = (MUTEX_TYPE*) malloc(CRYPTO_num_locks() * sizeof (pthread_mutex_t));
+    mutex_buf = (MUTEX_TYPE*) malloc(static_cast<size_t>(CRYPTO_num_locks()) * sizeof (pthread_mutex_t));
     if (!mutex_buf)
         return -1;
     for (i = 0; i < CRYPTO_num_locks(); i++)

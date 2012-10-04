@@ -13,7 +13,7 @@ namespace StringHelper
 template <class T>
 void split( const string& s, char del,
             T& target,
-            int startPos=0, bool useEmpty=true  );
+            string::size_type startPos=0, bool useEmpty=true  );
 
 string stripWhiteSpace( const string& s );
 bool startwith_nocase( const string& s1, const string& s2 );
@@ -33,12 +33,12 @@ string replaceAll( string& in,
 template <class T>
 void split( const string& s, char del,
             T& target,
-            int startPos, bool useEmpty )
+            string::size_type startPos, bool useEmpty )
 {
     string line = s;
 
     string::size_type pos;
-    int offset = startPos;
+    string::size_type offset = startPos;
     while ( ( pos = line.find( del, offset ) ) != string::npos ) {
         offset = 0;
 

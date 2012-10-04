@@ -43,7 +43,7 @@ static int fexists(const char *filename) {
 }
 
 ExecuteProcess::ExecuteProcess(const string& app, const string& arguments, int fdlog)
-: m_app(app), m_arguments(arguments), _jobId(""), _fileId(""), m_fdlog(fdlog) {
+: _jobId(""), _fileId(""), m_app(app), m_arguments(arguments), m_fdlog(fdlog) {
 }
 
 int ExecuteProcess::executeProcess() {
@@ -145,7 +145,7 @@ int ExecuteProcess::execProcessLog(int argc, char** argv) {
                 readbuf[bytes] = 0;
                 fflush(stdout);
                 fflush(stderr);
-                write_size = write(m_fdlog, readbuf, bytes);
+                write_size = write(m_fdlog, readbuf, static_cast<size_t>(bytes));
             }
         }
 
@@ -234,7 +234,7 @@ int ExecuteProcess::execProcessShellLog(const char* SHELL) {
                 readbuf[bytes] = 0;
                 fflush(stdout);
                 fflush(stderr);
-                write_size = write(m_fdlog, readbuf, bytes);
+                write_size = write(m_fdlog, readbuf, static_cast<size_t>(bytes));
             }
         }
 

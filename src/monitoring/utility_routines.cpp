@@ -110,38 +110,38 @@ std::string get_hostname(std::string hostname) {
     size_t found_extra_slash = 0; //for gsiftp only
 
     if (hostname.compare(0, 9, "gsiftp://") == 0) {
-        std::string temp = hostname.substr(9, (int(found) - 9));
+        std::string temp = hostname.substr(9, found - 9);
         found = temp.find_first_of('/');
         if (found != string::npos) {
             found_extra_slash = temp.find_first_of('/');
             if (found_extra_slash != string::npos)
-                return temp.substr(0, int(found_extra_slash));
+                return temp.substr(0, found_extra_slash);
             found_colon = temp.find_first_of(':');
             if (found_colon != string::npos)
-                return temp.substr(0, int(found_colon));
+                return temp.substr(0, found_colon);
             else
-                return temp.substr(0, int(found));
+                return temp.substr(0, found);
         } else {
             found = temp.find_first_of(':');
             if (found != string::npos)
-                return temp.substr(0, int(found));
+                return temp.substr(0, found);
         }
     }
 
 
     if (hostname.compare(0, 6, "srm://") == 0) {
-        std::string temp = hostname.substr(6, (int(found) - 6));
+        std::string temp = hostname.substr(6, found - 6);
         found = temp.find_first_of('/');
         if (found != string::npos) {
             found_colon = temp.find_first_of(':');
             if (found_colon != string::npos)
-                return temp.substr(0, int(found_colon));
+                return temp.substr(0, found_colon);
             else
-                return temp.substr(0, int(found));
+                return temp.substr(0, found);
         } else {
             found = temp.find_first_of(':');
             if (found != string::npos)
-                return temp.substr(0, int(found));
+                return temp.substr(0, found);
         }
     }
     return "invalid hostname";

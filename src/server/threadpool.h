@@ -63,7 +63,7 @@ public:
 		static ThreadPool tp
         (
             std::numeric_limits<size_t>::max(), 
-            FTS3_CONFIG_NAMESPACE::theServerConfig().get<int> ("ThreadNum")
+            FTS3_CONFIG_NAMESPACE::theServerConfig().get<size_t> ("ThreadNum")
         );
 
 		return tp;

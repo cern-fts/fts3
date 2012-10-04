@@ -29,6 +29,7 @@ include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (${PROJECT_SOURCE_DIR}/src/cred/)
 include_directories (/usr/lib64/glib-2.0/include)
+include_directories (/usr/lib/glib-2.0/include)
 include_directories (/usr/include/glib-2.0)
 set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
 

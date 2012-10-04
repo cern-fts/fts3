@@ -265,7 +265,7 @@ void OracleAPI::getSeCreditsInUse(
 		return;
 		
         s = conn->createStatement(query_stmt, tag);
-        int i = 1;
+        unsigned i = 1;
         if (!srcSeName.empty()) s->setString(i++, "%://" + srcSeName + "%");
         if (!destSeName.empty()) s->setString(i++, "%://" + destSeName + "%");
         if (!voName.empty()) s->setString(i++, voName);
@@ -3588,11 +3588,11 @@ static int extractTimeout(std::string & str){
 size_t found;
 found=str.find("timeout:");
 if (found!=std::string::npos){
-    str = str.substr (int(found), str.length());
+    str = str.substr (found, str.length());
     size_t found2;
     found2=str.find(",buffersize:");
     if (found2!=std::string::npos){
-	str = str.substr (0, int(found2));
+	str = str.substr (0, found2);
 	str = str.substr (8, str.length());
 	return atoi(str.c_str());
     }

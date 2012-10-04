@@ -28,12 +28,12 @@ time_t OracleTypeConversions::toTimeT(const ::oracle::occi::Timestamp& timestamp
             timestamp.getTimeZoneOffset(tz_hour,tz_minute);
 
             struct tm tmp_tm;
-            tmp_tm.tm_sec   = second;
-            tmp_tm.tm_min   = minute - tz_minute;
-            tmp_tm.tm_hour  = hour - tz_hour;
-            tmp_tm.tm_mday  = day;
-            tmp_tm.tm_mon   = (month >= 1)   ?month - 1   :0;
-            tmp_tm.tm_year  = (year  >= 1900)?year  - 1900:0;
+            tmp_tm.tm_sec   = static_cast<int>(second);
+            tmp_tm.tm_min   = static_cast<int>(minute) - tz_minute;
+            tmp_tm.tm_hour  = static_cast<int>(hour) - tz_hour;
+            tmp_tm.tm_mday  = static_cast<int>(day);
+            tmp_tm.tm_mon   = (month >= 1)   ?static_cast<int>(month) - 1   :0;
+            tmp_tm.tm_year  = (year  >= 1900)?static_cast<int>(year)  - 1900:0;
             tmp_tm.tm_wday  = 0;
             tmp_tm.tm_yday  = 0;
             tmp_tm.tm_isdst = 0;
@@ -57,11 +57,11 @@ oracle::occi::Timestamp OracleTypeConversions::toTimestamp(time_t t, oracle::occ
         if(0 != tmp_tm){
             timestamp = oracle::occi::Timestamp(m_env,                  // Environment
                                    tmp_tm->tm_year + 1900, // Year
-                                   tmp_tm->tm_mon + 1,     // Month
-                                   tmp_tm->tm_mday,        // Day
-                                   tmp_tm->tm_hour,        // Hour
-                                   tmp_tm->tm_min,         // Minute
-                                   tmp_tm->tm_sec,         // Second
+                                   static_cast<unsigned>(tmp_tm->tm_mon + 1),     // Month
+                                   static_cast<unsigned>(tmp_tm->tm_mday),        // Day
+                                   static_cast<unsigned>(tmp_tm->tm_hour),        // Hour
+                                   static_cast<unsigned>(tmp_tm->tm_min),         // Minute
+                                   static_cast<unsigned>(tmp_tm->tm_sec),         // Second
                                    0,                      // Fraction of Seconds
                                    0,                      // tz hour
                                    0);                     // tz minute
@@ -128,7 +128,7 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
 
         // Open the Clob
         clob.open(oracle::occi::OCCI_LOB_READONLY);
-        int len = clob.length();
+        unsigned len = clob.length();
 	if(len == 0){
 		clob.close();
 		return;

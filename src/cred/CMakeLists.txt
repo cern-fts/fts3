@@ -9,6 +9,7 @@ include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/common/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/db/generic/)
 
 include_directories (/usr/lib64/globus/include)
+include_directories (/usr/lib/globus/include)
 include_directories (/usr/include/globus)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")

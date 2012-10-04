@@ -41,16 +41,16 @@ string stripWhiteSpace( const string& s )
     int pos = 0;
     string line = s;
     int len = (int) line.length();
-    while ( pos < len && isspace( line[pos] ) ) {
+    while ( pos < len && isspace( line[static_cast<size_t>(pos)] ) ) {
         ++pos;
     }
-    line.erase( 0, pos );
-    pos = line.length()-1;
-    while ( pos > -1 && isspace( line[pos] ) ) {
+    line.erase( 0, static_cast<size_t>(pos) );
+    pos = static_cast<int>(line.length()) - 1;
+    while ( pos > -1 && isspace( line[static_cast<size_t>(pos)] ) ) {
         --pos;
     }
     if ( pos != -1 ) {
-        line.erase( pos+1 );
+        line.erase( static_cast<size_t>(pos+1) );
     }
     return line;
 }
