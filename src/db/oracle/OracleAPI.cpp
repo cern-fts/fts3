@@ -3397,7 +3397,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     	
     std::string query_stmt4 = " select file_state  from (select file_state  from t_file, t_job where  "
 				" t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 and t_file.FINISH_TIME "
-				" is not null  order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) where rownum <4 ";
+				" is not null  order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) where rownum <10 ";
 				
 	oracle::occi::Statement* s1 = NULL;
 	oracle::occi::ResultSet* r1 = NULL;
@@ -3470,41 +3470,61 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         if (noFailedPerSePair == 0 ){ //no failures in the last 3 transfers
                 if(act==0 && maxDest <= 30){
                         allowed = true;
+			return allowed;
 		}
                 else if(act > 0 && maxDest <= 30 && act <=20){
                         allowed = true;
+			return allowed;
 		}
                 else if(actThr > 1 && maxDest <= 30 && act <=20){
                         allowed = true;
+			return allowed;
 		}
                 else if(actThr < 1 && maxDest > 30 && act <=20){
                         allowed = true;
+			return allowed;			
 		}
                 else if(actThr < 1 && maxDest > 30 && act >20){
                         allowed = false;
+			return allowed;			
 		}
                 else if(actThr < 1 && maxDest > 5  && act >5){
                         allowed = false;
+			return allowed;			
 		}					
                 else{
                         allowed = true;
+			return allowed;			
 		}
 	}
         else{ //failures
-                if(actThr > 1 && maxDest <= 20 && act < 7){
-                        allowed = true;
+		if(noFailedPerSePair > 4 && act>2 ){
+			allowed = false;
+			return allowed;			
 		}
-                else if(actThr < 1 && maxDest <= 20 && act < 5){
+		else if(noFailedPerSePair < 4 && act>5 ){
+			allowed = false;
+			return allowed;			
+		}		
+                else if(actThr > 1 && maxDest <= 20 && act < 6){
                         allowed = true;
+			return allowed;			
 		}
-                else if(actThr > 1 && maxDest > 10 && act > 5){
+                else if(actThr < 1 && maxDest <= 20 && act < 4){
+                        allowed = true;
+			return allowed;			
+		}
+                else if(actThr > 1 && maxDest > 10 && act > 4){
                         allowed = false;
+			return allowed;			
 		}
                 else if(actThr < 1 && maxDest > 10 && act > 5){
                         allowed = false;
+			return allowed;			
 		}
                 else{
-                        allowed = true;	
+                        allowed = true;
+			return allowed;				
 		}
 	}        
         return allowed;
