@@ -17,12 +17,12 @@ cmake_minimum_required(VERSION 2.6)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
-install(FILES         fts3-msg-bulk.initd
+install(FILES         fts-msg-bulk.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts3-msg-bulk )
 
-install(FILES         fts3-msg-cron.initd
+install(FILES         fts-msg-cron.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts3-msg-cron )
@@ -32,7 +32,7 @@ install(FILES         fts-server.initd
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts-server )
 
-install(FILES         fts3-msg-cron.logrotate
+install(FILES         fts-msg-cron.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
 	RENAME fts3-msg-cron )
 
@@ -40,6 +40,6 @@ install(FILES         fts-server.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
 	RENAME fts-server )
 
-install(FILES         fts3-msg-bulk.logrotate
+install(FILES         fts-msg-bulk.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
         RENAME fts3-msg-bulk )
