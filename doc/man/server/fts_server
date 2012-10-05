@@ -1,12 +1,12 @@
-.\" Manpage for fts3_server.
+.\" Manpage for fts_server.
 .\" Contact michal.simon@cern.ch to correct errors or typos.
-.TH man 1 "09 July 2012" "1.0" "fts3_server man page"
+.TH man 1 "09 July 2012" "1.0" "fts_server man page"
 .SH NAME
-fts3_server
+fts_server
 .SH SYNOPSIS
-fts3_server [options]
+fts_server [options]
 .SH DESCRIPTION
-fts3_server starts the FTS3 server. 
+fts_server starts the FTS3 server. 
 .SH OPTIONS
   -h [ --help ]         Print this help text and exit.
   -q [ --quite ]        Quiet operation.
