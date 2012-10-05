@@ -17,12 +17,12 @@ cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(fts3_include_dir 
+set(fts_include_dir 
     "${PROJECT_SOURCE_DIR}/src/"
     "${CMAKE_BINARY_DIR}/src/"
 )
 
-include_directories (${fts3_include_dir})
+include_directories (${fts_include_dir})
 include_directories (${PROJECT_SOURCE_DIR}/src/url-copy/)
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
@@ -31,14 +31,14 @@ include_directories (${PROJECT_SOURCE_DIR}/src/cred/)
 include_directories (/usr/lib64/glib-2.0/include)
 include_directories (/usr/lib/glib-2.0/include)
 include_directories (/usr/include/glib-2.0)
-set(fts3_libs "-lfts3_config -lfts3_common -lfts3_db_generic")
+set(fts_libs "-lfts_config -lfts_common -lfts_db_generic")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(fts3_libs "-lboost_unit_test_framework ${fts3_libs}")
+    set(fts_libs "-lboost_unit_test_framework ${fts_libs}")
 endif ()
 
 # Web service / gsoap part.
-set(fts3_server_gsoap_transfer_sources
+set(fts_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/RequestLister.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
@@ -50,23 +50,23 @@ set(fts3_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_deleg_methods.cpp"
 )
 
-add_library(fts3_server_gsoap_transfer SHARED ${fts3_server_gsoap_transfer_sources})
-set_target_properties(fts3_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
-target_link_libraries(fts3_server_gsoap_transfer "-lfts3_ws_ifce_server")
-add_dependencies(fts3_server_gsoap_transfer fts3_ws_ifce_server)
+add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})
+set_target_properties(fts_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
+target_link_libraries(fts_server_gsoap_transfer "-lfts_ws_ifce_server")
+add_dependencies(fts_server_gsoap_transfer fts_ws_ifce_server)
 
 # Find libuuid
 find_package(LibUuid REQUIRED)
 include_directories(${LIBUUID_INCLUDE_DIRS})
 
 # Server lib
-file(GLOB fts3_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*.cpp")
-list(REMOVE_ITEM fts3_server_lib_sources "main.cpp")
-add_library(fts3_server_lib SHARED ${fts3_server_lib_sources})
-add_dependencies(fts3_server_lib fts3_server_gsoap_transfer)
-target_link_libraries(fts3_server_lib 
-	${fts3_libs} 
-	-lfts3_server_gsoap_transfer 
+file(GLOB fts_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*.cpp")
+list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
+add_library(fts_server_lib SHARED ${fts_server_lib_sources})
+add_dependencies(fts_server_lib fts_server_gsoap_transfer)
+target_link_libraries(fts_server_lib 
+	${fts_libs} 
+	-lfts_server_gsoap_transfer 
 	${LIBUUID_LIBRARIES} 
 	-lboost_thread-mt 
 	-lboost_regex-mt 
@@ -79,8 +79,8 @@ target_link_libraries(fts3_server_lib
 
 # Server executable
 add_executable (fts_server main.cpp)
-add_dependencies(fts_server fts3_server_lib)
-target_link_libraries(fts_server ${fts3_libs} -lfts3_server_lib -lfts3_proxy -lfts3_config -lfts3_common -lfts3_db_generic -lfts3_server_gsoap_transfer -lgsoap++ -lfts3_ws_ifce_server)
+add_dependencies(fts_server fts_server_lib)
+target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_config -lfts_common -lfts_db_generic -lfts_server_gsoap_transfer -lgsoap++ -lfts_ws_ifce_server)
 
 # ------------------------------------------------------------------------
 # man pages
@@ -107,11 +107,11 @@ install(
 # ------------------------------------------------------------------------
 
 
-install(TARGETS         fts3_server_gsoap_transfer 
+install(TARGETS         fts_server_gsoap_transfer 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
-install(TARGETS         fts3_server_lib 
+install(TARGETS         fts_server_lib 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 

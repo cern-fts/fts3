@@ -38,8 +38,8 @@ include_directories (/usr/lib/glib-2.0/include)
 
 set(fts3_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
 add_executable (fts_url_copy ${fts3_url_copy_SOURCES})
-add_dependencies(fts_url_copy fts3_common)
-SET(fts3_libs "-lfts3_config -lfts3_common")
+add_dependencies(fts_url_copy fts_common)
+SET(fts3_libs "-lfts_config -lfts_common")
 target_link_libraries(fts_url_copy  -luuid  -lboost_thread-mt -lboost_system-mt -lgfal_transfer -lgfal2 -lglib-2.0 -lfts3_msg_ifce ${fts3_libs})
 
 
