@@ -221,6 +221,7 @@ endforeach()
 install(TARGETS
 	fts-transfer-submit
     fts-transfer-status
+    fts-transfer-cancel
     fts-transfer-list
     fts-transfer-listvomanagers
     fts-transfer-getroles
