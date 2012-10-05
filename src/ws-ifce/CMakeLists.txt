@@ -38,14 +38,14 @@ add_custom_command(
 )
 
 # Generate transfer & config interface
-set(fts3_transfer_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-transfer-0.0.0.wsdl")
-set(fts3_config_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-config-0.0.0.wsdl")
-set(fts3_delegation_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-delegation-0.0.0.wsdl")
+set(fts_transfer_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-transfer-0.0.0.wsdl")
+set(fts_config_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-config-0.0.0.wsdl")
+set(fts_delegation_wsdl "${PROJECT_SOURCE_DIR}/src/ws-ifce/fts3-delegation-0.0.0.wsdl")
 
 set(wsdl_files 
-	${fts3_transfer_wsdl} 
-	${fts3_config_wsdl} 
-	${fts3_delegation_wsdl}
+	${fts_transfer_wsdl} 
+	${fts_config_wsdl} 
+	${fts_delegation_wsdl}
 )
 
 set(gsoap_typemap "${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/typemap.dat")
@@ -67,7 +67,7 @@ set(delegation_source_files
 
 add_custom_command(
     OUTPUT ${gsoap_header_file}
-    DEPENDS ${gsoap_typemap} ${fts3_transfer_wsdl} 
+    DEPENDS ${gsoap_typemap} ${fts_transfer_wsdl} 
     COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_typemap} ${wsdl_files} -o ${gsoap_header_file}
 )
 
@@ -80,8 +80,8 @@ add_custom_command(
 # generate delegation stubs for client!
 add_custom_command(
     OUTPUT ${delegation_header_file}
-    DEPENDS ${gsoap_typemap} ${fts3_delegation_wsdl} 
-    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_typemap} ${fts3_delegation_wsdl} -o ${delegation_header_file}
+    DEPENDS ${gsoap_typemap} ${fts_delegation_wsdl} 
+    COMMAND ${GSOAP_WSDL2H} -e -y ${GSOAP_276_COMPAT_FLAGS} -t ${gsoap_typemap} ${fts_delegation_wsdl} -o ${delegation_header_file}
 )
 
 # generate delegation stubs for client!
@@ -91,33 +91,33 @@ add_custom_command(
     COMMAND ${GSOAP_SOAPCPP2} -C -n -w -x -p ${delegation_prefix} -d ${generated_files_dir} -I ${GSOAP_IMPORT_DIR} ${delegation_header_file} 
 )
 
-add_library(fts3_ws_ifce_server SHARED 
+add_library(fts_ws_ifce_server SHARED 
     ${gsoap_env_source_files}
     ${generated_files_dir}/${gsoap_prefix}C.cpp
     ${generated_files_dir}/${gsoap_prefix}Server.cpp
 )
-set_target_properties(fts3_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
-add_dependencies(fts3_ws_ifce_server fts3_common)
-target_link_libraries(fts3_ws_ifce_server -lgsoap++)
+set_target_properties(fts_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
+add_dependencies(fts_ws_ifce_server fts_common)
+target_link_libraries(fts_ws_ifce_server -lgsoap++)
 
 # Client side library 
-add_library(fts3_ws_ifce_client SHARED
+add_library(fts_ws_ifce_client SHARED
     ${gsoap_env_source_files}
     ${generated_files_dir}/${gsoap_prefix}C.cpp
     ${generated_files_dir}/${gsoap_prefix}Client.cpp
 )
 
 # Client side delegation library 
-add_library(fts3_delegation_api_cpp SHARED
+add_library(fts_delegation_api_cpp SHARED
 #    ${gsoap_env_source_files}
     ${generated_files_dir}/${delegation_prefix}C.cpp
     ${generated_files_dir}/${delegation_prefix}Client.cpp
 )
 
-set_target_properties(fts3_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
-target_link_libraries(fts3_ws_ifce_client -lgsoap++)
+set_target_properties(fts_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
+target_link_libraries(fts_ws_ifce_client -lgsoap++)
 
-install(TARGETS         fts3_ws_ifce_client fts3_ws_ifce_server fts3_delegation_api_cpp
+install(TARGETS         fts_ws_ifce_client fts_ws_ifce_server fts_delegation_api_cpp
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
