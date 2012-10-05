@@ -38,7 +38,7 @@ void exTranslator(string const& ex) {
 }
 
 
-BOOST_PYTHON_MODULE(libfts3python) {
+BOOST_PYTHON_MODULE(libftspython) {
 
 	register_exception_translator<string>(exTranslator);
 

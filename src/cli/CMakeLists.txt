@@ -19,13 +19,13 @@ cmake_minimum_required (VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(fts3_include_dir
+set(fts_include_dir
     "${PROJECT_SOURCE_DIR}/src/"
     "${CMAKE_BINARY_DIR}/src/"
 )
 
 FIND_PACKAGE(PythonLibs)
-include_directories (${fts3_include_dir} ${PYTHON_INCLUDE_PATH})
+include_directories (${fts_include_dir} ${PYTHON_INCLUDE_PATH})
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
@@ -42,29 +42,29 @@ endif(DOXYGEN_FOUND)
 # ------------------------------------------------------------------------
 # Set up libs
 
-set (fts3_cli_internal_libs
-    fts3_ws_ifce_client
-    fts3_common
+set (fts_cli_internal_libs
+    fts_ws_ifce_client
+    fts_common
 )
 
-set(fts3_cli_libs
-    ${fts3_cli_internal_libs}
+set(fts_cli_libs
+    ${fts_cli_internal_libs}
     gridsite
     cgsi_plugin_cpp
     boost_program_options-mt
     boost_thread-mt
     is_ifce
-    fts3_delegation_api_simple
+    fts_delegation_api_simple
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(fts3_cli_libs boost_unit_test_framework ${fts3_cli_libs})
+    set(fts_cli_libs boost_unit_test_framework ${fts_cli_libs})
 endif ()
 
 # ------------------------------------------------------------------------
 # Common CLI library
 
-set(fts3_cli_common_sources
+set(fts_cli_common_sources
 	ui/CliBase.cpp
 	ui/DebugSetCli.cpp
 	ui/DnCli.cpp
@@ -80,108 +80,108 @@ set(fts3_cli_common_sources
     ProxyCertificateDelegator.cpp
 )
 
-add_library(fts3_cli_common SHARED ${fts3_cli_common_sources})
-target_link_libraries(fts3_cli_common ${fts3_cli_libs})
-add_dependencies(fts3_cli_common ${fts3_cli_libs})
+add_library(fts_cli_common SHARED ${fts_cli_common_sources})
+target_link_libraries(fts_cli_common ${fts_cli_libs})
+add_dependencies(fts_cli_common ${fts_cli_libs})
 
 # ------------------------------------------------------------------------
-# fts3-transfer-submit
+# fts-transfer-submit
 add_executable(fts-transfer-submit
     transfer/fts3-transfer-submit.cpp
     ui/SubmitTransferCli.cpp
 )
-add_dependencies(fts-transfer-submit fts3_cli_common)
-target_link_libraries (fts-transfer-submit fts3_cli_common)
+add_dependencies(fts-transfer-submit fts_cli_common)
+target_link_libraries (fts-transfer-submit fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-transfer-status
+# fts-transfer-status
 
 add_executable(fts-transfer-status
     transfer/fts3-transfer-status.cpp
     ui/TransferStatusCli.cpp 
 )
-add_dependencies(fts-transfer-status fts3_cli_common)
-target_link_libraries (fts-transfer-status fts3_cli_common)
+add_dependencies(fts-transfer-status fts_cli_common)
+target_link_libraries (fts-transfer-status fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-transfer-list
+# fts-transfer-list
 
 add_executable(fts-transfer-list
     transfer/fts3-transfer-list.cpp
     ui/ListTransferCli.cpp 
 )
-add_dependencies(fts-transfer-list fts3_cli_common)
-target_link_libraries (fts-transfer-list fts3_cli_common)
+add_dependencies(fts-transfer-list fts_cli_common)
+target_link_libraries (fts-transfer-list fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-transfer-cancel
+# fts-transfer-cancel
 
 add_executable(fts-transfer-cancel
     transfer/fts3-transfer-cancel.cpp
 )
-add_dependencies(fts-transfer-cancel fts3_cli_common)
-target_link_libraries (fts-transfer-cancel fts3_cli_common)
+add_dependencies(fts-transfer-cancel fts_cli_common)
+target_link_libraries (fts-transfer-cancel fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-transfer-getroles
+# fts-transfer-getroles
 
 add_executable(fts-transfer-getroles 
     transfer/fts3-transfer-getroles.cpp
 )
-add_dependencies(fts-transfer-getroles fts3_cli_common)
-target_link_libraries (fts-transfer-getroles fts3_cli_common)
+add_dependencies(fts-transfer-getroles fts_cli_common)
+target_link_libraries (fts-transfer-getroles fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-transfer-listvomanagers
+# fts-transfer-listvomanagers
 add_executable(fts-transfer-listvomanagers
     transfer/fts3-transfer-listvomanagers.cpp
 )
-add_dependencies(fts-transfer-listvomanagers fts3_cli_common)
-target_link_libraries (fts-transfer-listvomanagers fts3_cli_common)
+add_dependencies(fts-transfer-listvomanagers fts_cli_common)
+target_link_libraries (fts-transfer-listvomanagers fts_cli_common)
 
 # ------------------------------------------------------------------------
 # FTS3 config transfer - common structures
 
 # ------------------------------------------------------------------------
-# fts3-config-set command
+# fts-config-set command
 
 add_executable(fts-config-set 
     config/fts3-config-set.cpp
 )
-target_link_libraries (fts-config-set fts3_cli_common)
+target_link_libraries (fts-config-set fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-config-del command
+# fts-config-del command
 
 add_executable(fts-config-del 
     config/fts3-config-del.cpp
 )
-target_link_libraries (fts-config-del fts3_cli_common)
+target_link_libraries (fts-config-del fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-config-get command
+# fts-config-get command
 
 add_executable(fts-config-get 
     config/fts3-config-get.cpp
 )
-target_link_libraries (fts-config-get fts3_cli_common)
+target_link_libraries (fts-config-get fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts3-debug-set command
+# fts-debug-set command
 
 add_executable(fts-debug-set 
     debug/fts3-debug-set.cpp
 )
-target_link_libraries (fts-debug-set fts3_cli_common)
+target_link_libraries (fts-debug-set fts_cli_common)
 
 # ------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------
 # python bindings
-add_library(fts3python SHARED python/PythonBindings.cpp python/PythonApi.cpp)
-target_link_libraries(fts3python fts3_cli_common python2.6 boost_python)
-#add_dependencies(fts3python fts3_cli_common)
+add_library(ftspython SHARED python/PythonBindings.cpp python/PythonApi.cpp)
+target_link_libraries(ftspython fts_cli_common python2.6 boost_python)
+#add_dependencies(ftspython fts_cli_common)
 
 # ------------------------------------------------------------------------
 
@@ -230,6 +230,6 @@ install(TARGETS
 	fts-debug-set
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
-install(TARGETS         fts3_cli_common 
+install(TARGETS         fts_cli_common 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
