@@ -3,8 +3,8 @@
 # APPNAME - <summary>
 #
 # chkconfig:    2345 80 20
-# description:  Enable a run of fts3 periodic cron job
-# processname:  fts3_msg_cron
+# description:  Enable a run of fts periodic cron job
+# processname:  fts_msg_cron
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts
 ### BEGIN INIT INFO

@@ -3,7 +3,7 @@
 # APPNAME - <summary>
 #
 # chkconfig:    2345 80 20
-# description:  Enable a run of fts3 messaging daemon
+# description:  Enable a run of fts messaging daemon
 # processname:  fts_msg_bulk
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts

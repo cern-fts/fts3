@@ -20,12 +20,12 @@ set (CMAKE_INCLUDE_CURRENT_DIR ON)
 install(FILES         fts-msg-bulk.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts3-msg-bulk )
+	RENAME fts-msg-bulk )
 
 install(FILES         fts-msg-cron.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts3-msg-cron )
+	RENAME fts-msg-cron )
 
 install(FILES         fts-server.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
@@ -34,7 +34,7 @@ install(FILES         fts-server.initd
 
 install(FILES         fts-msg-cron.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
-	RENAME fts3-msg-cron )
+	RENAME fts-msg-cron )
 
 install(FILES         fts-server.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
@@ -42,4 +42,4 @@ install(FILES         fts-server.logrotate
 
 install(FILES         fts-msg-bulk.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
-        RENAME fts3-msg-bulk )
+        RENAME fts-msg-bulk )

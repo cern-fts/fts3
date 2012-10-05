@@ -3,8 +3,8 @@
 # APPNAME - <summary>
 #
 # chkconfig:    2345 80 20
-# description:  Enable a run of fts3 server
-# processname:  fts3_server
+# description:  Enable a run of fts server
+# processname:  fts_server
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts
 ### BEGIN INIT INFO
@@ -22,7 +22,7 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-exec="/usr/sbin/fts3_server"
+exec="/usr/sbin/fts_server"
 prog=$(basename $exec)
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
@@ -35,13 +35,13 @@ start() {
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure   
-    fts3_server    
+    fts_server    
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
     return $retval
     else
-        pgrep fts3_server
+        pgrep fts_server
 	retval=$?
         if [ -f $lockfile ] && [ $retval -eq 1 ] ; then
 		restart		
