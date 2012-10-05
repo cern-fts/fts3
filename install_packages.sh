@@ -1,5 +1,5 @@
 
-#Add fts3_msg_cron and fts3_server and fts3_cli in the path
+#Add fts_msg_cron and fts_server and fts_cli in the path
 
 echo "Export required env valiables"
 export LCG_GFAL_INFOSYS=certtb-bdii-top.cern.ch:2170
