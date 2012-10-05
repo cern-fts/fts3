@@ -17,21 +17,28 @@ cmake_minimum_required(VERSION 2.6)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
+include_directories ("${PROJECT_SOURCE_DIR}/src/cli")
+include_directories ("${PROJECT_BINARY_DIR}/src")
+
 FILE(GLOB sources "*.cpp")
+FILE(GLOB cli_sources "${PROJECT_SOURCE_DIR}/src/cli/tests/*.cpp")
 
-SET(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
-include_directories (${fts3_include_dir})
+SET(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
+include_directories (${fts_include_dir})
 
-add_executable (fts3_unittest ${sources})
-
-SET(fts3_libs 
-    -lfts3_config 
-    -lfts3_common 
-    -lfts3_server_lib
-    -lfts3_cli_common
+add_executable (fts_unittest 
+	${sources} 
+	${cli_sources}
 )
 
-target_link_libraries(fts3_unittest -lboost_unit_test_framework ${fts3_libs})
+SET(fts_libs 
+    -lfts_config 
+    -lfts_common 
+    -lfts_server_lib
+    -lfts_cli_common
+)
 
-install(TARGETS         fts3_unittest 
+target_link_libraries(fts_unittest -lboost_unit_test_framework ${fts_libs})
+
+install(TARGETS         fts_unittest 
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )

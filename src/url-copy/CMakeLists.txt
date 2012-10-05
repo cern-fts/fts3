@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 2.6)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 
-SET(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
+SET(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 link_directories (/usr/lib64/gfal2-plugins)
 include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
@@ -30,17 +30,17 @@ include_directories (${PROJECT_BINARY_DIR}/src/common/)
 include_directories (${PROJECT_BINARY_DIR}/src/server/)
 include_directories (${PROJECT_BINARY_DIR}/src/monitoring/)
 
-include_directories (${fts3_include_dir})
+include_directories (${fts_include_dir})
 include_directories (/usr/include/gfal2)
 include_directories (/usr/include/glib-2.0)
 include_directories (/usr/lib64/glib-2.0/include)
 include_directories (/usr/lib/glib-2.0/include)
 
-set(fts3_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
-add_executable (fts_url_copy ${fts3_url_copy_SOURCES})
+set(fts_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
+add_executable (fts_url_copy ${fts_url_copy_SOURCES})
 add_dependencies(fts_url_copy fts_common)
-SET(fts3_libs "-lfts_config -lfts_common")
-target_link_libraries(fts_url_copy  -luuid  -lboost_thread-mt -lboost_system-mt -lgfal_transfer -lgfal2 -lglib-2.0 -lfts3_msg_ifce ${fts3_libs})
+SET(fts_libs "-lfts_config -lfts_common")
+target_link_libraries(fts_url_copy  -luuid  -lboost_thread-mt -lboost_system-mt -lgfal_transfer -lgfal2 -lglib-2.0 -lfts_msg_ifce ${fts_libs})
 
 
 install(TARGETS         fts_url_copy 

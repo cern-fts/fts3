@@ -11,7 +11,7 @@ struct msg_message {
 };
 
 QueueManager::QueueManager(bool consumer) : drop_(false), init(false) {
-    //fts3_server
+    //fts_server
     if (consumer == true) {
         //remove();
         mq_.reset(new message_queue(create_only, FTS3_MQ_NAME, MAX_NUM_MSGS, sizeof (message)));
@@ -25,7 +25,7 @@ QueueManager::QueueManager(bool consumer) : drop_(false), init(false) {
 QueueManager::QueueManager(bool consumer, std::string) : drop_(false), init(false) {
     const std::string path = "/dev/shm/fts3mqmon";
     try {
-        //fts3_server
+        //fts_server
         if (consumer == true) {
             //remove();
             mq_mon.reset(new message_queue(create_only, "fts3mqmon", MAX_NUM_MSGS, sizeof (msg_message)));
