@@ -95,13 +95,13 @@ find_package(GZip)
 
 # gzip the manpage
 add_custom_command(
-	TARGET fts3_server
+	TARGET fts_server
 	POST_BUILD
-	COMMAND ${GZIP} -c ${MAN_INPUT_DIR}/fts3_server > ${MAN_OUTPUT_DIR}/fts3_server.8.gz
+	COMMAND ${GZIP} -c ${MAN_INPUT_DIR}/fts_server > ${MAN_OUTPUT_DIR}/fts_server.8.gz
 )
 #install it
 install(
-	FILES ${MAN_OUTPUT_DIR}/fts3_server.8.gz
+	FILES ${MAN_OUTPUT_DIR}/fts_server.8.gz
 	DESTINATION ${MAN_INSTALL_DIR}
 )
 # ------------------------------------------------------------------------
@@ -115,5 +115,5 @@ install(TARGETS         fts3_server_lib
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
-install(TARGETS         fts3_server 
+install(TARGETS         fts_server 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
