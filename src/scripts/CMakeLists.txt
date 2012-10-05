@@ -27,18 +27,18 @@ install(FILES         fts3-msg-cron.initd
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts3-msg-cron )
 
-install(FILES         fts3-server.initd
+install(FILES         fts-server.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts3-server )
+	RENAME fts-server )
 
 install(FILES         fts3-msg-cron.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
 	RENAME fts3-msg-cron )
 
-install(FILES         fts3-server.logrotate
+install(FILES         fts-server.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
-	RENAME fts3-server )
+	RENAME fts-server )
 
 install(FILES         fts3-msg-bulk.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d

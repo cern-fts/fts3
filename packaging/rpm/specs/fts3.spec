@@ -116,27 +116,27 @@ getent passwd fts3 >/dev/null || \
 exit 0
 
 %post server
-/sbin/chkconfig --add fts3-server
-/sbin/chkconfig --add fts3-msg-bulk
-/sbin/chkconfig --add fts3-msg-cron
+/sbin/chkconfig --add fts-server
+/sbin/chkconfig --add fts-msg-bulk
+/sbin/chkconfig --add fts-msg-cron
 exit 0
 
 %preun server
 if [ $1 -eq 0 ] ; then
-    /sbin/service fts3-server stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts3-server
-    /sbin/service fts3-msg-bulk stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts3-msg-bulk
-    /sbin/service fts3-msg-cron stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts3-msg-cron
+    /sbin/service fts-server stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-server
+    /sbin/service fts-msg-bulk stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-msg-bulk
+    /sbin/service fts-msg-cron stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-msg-cron
 fi
 exit 0
 
 %postun server
 if [ "$1" -ge "1" ] ; then
-    /sbin/service fts3-server condrestart >/dev/null 2>&1 || :
-    /sbin/service fts3-msg-bulk condrestart >/dev/null 2>&1 || :
-    /sbin/service fts3-msg-cron condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-server condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
 fi
 exit 0
 
@@ -152,16 +152,16 @@ rm -rf $RPM_BUILD_ROOT
 %dir %{_sysconfdir}/fts3
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
-%{_sbindir}/fts3_msg_cron
-%{_sbindir}/fts3_msg_bulk
-%{_sbindir}/fts3_server
-%{_sbindir}/fts3_url_copy
-%{_initddir}/fts3-msg-bulk
-%{_initddir}/fts3-server
-%{_initddir}/fts3-msg-cron
-%{_sysconfdir}/logrotate.d/fts3-msg-cron
-%{_sysconfdir}/logrotate.d/fts3-msg-bulk
-%{_sysconfdir}/logrotate.d/fts3-server
+%{_sbindir}/fts_msg_cron
+%{_sbindir}/fts_msg_bulk
+%{_sbindir}/fts_server
+%{_sbindir}/fts_url_copy
+%{_initddir}/fts-msg-bulk
+%{_initddir}/fts-server
+%{_initddir}/fts-msg-cron
+%{_sysconfdir}/logrotate.d/fts-msg-cron
+%{_sysconfdir}/logrotate.d/fts-msg-bulk
+%{_sysconfdir}/logrotate.d/fts-server
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts3_server.8.gz
@@ -174,23 +174,25 @@ rm -rf $RPM_BUILD_ROOT
 
 %files client
 %defattr(-,root,root,-)
-%{_bindir}/fts3-config-set
-%{_bindir}/fts3-config-get
-%{_bindir}/fts3-config-del
-%{_bindir}/fts3-debug-set
-%{_bindir}/fts3-transfer-getroles
-%{_bindir}/fts3-transfer-list
-%{_bindir}/fts3-transfer-listvomanagers
-%{_bindir}/fts3-transfer-status
-%{_bindir}/fts3-transfer-submit
-%{_mandir}/man1/fts3-config-get.1*
-%{_mandir}/man1/fts3-config-set.1*
-%{_mandir}/man1/fts3-transfer-cancel.1*
-%{_mandir}/man1/fts3-transfer-getroles.1*
-%{_mandir}/man1/fts3-transfer-list.1*
-%{_mandir}/man1/fts3-transfer-listvomanagers.1*
-%{_mandir}/man1/fts3-transfer-status.1*
-%{_mandir}/man1/fts3-transfer-submit.1*
+%{_bindir}/fts-config-set
+%{_bindir}/fts-config-get
+%{_bindir}/fts-config-del
+%{_bindir}/fts-debug-set
+%{_bindir}/fts-transfer-getroles
+%{_bindir}/fts-transfer-list
+%{_bindir}/fts-transfer-listvomanagers
+%{_bindir}/fts-transfer-status
+%{_bindir}/fts-transfer-submit
+%{_bindir}/fts-transfer-cancel
+%{_mandir}/man1/fts-config-get.1*
+%{_mandir}/man1/fts-config-set.1*
+%{_mandir}/man1/fts-config-del.1*
+%{_mandir}/man1/fts-transfer-cancel.1*
+%{_mandir}/man1/fts-transfer-getroles.1*
+%{_mandir}/man1/fts-transfer-list.1*
+%{_mandir}/man1/fts-transfer-listvomanagers.1*
+%{_mandir}/man1/fts-transfer-status.1*
+%{_mandir}/man1/fts-transfer-submit.1*
 
 %files libs
 %defattr(-,root,root,-)

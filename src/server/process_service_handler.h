@@ -160,7 +160,7 @@ protected:
     }
     
     void executeUrlcopy(std::vector<TransferJobs*>& jobs2, bool reuse) {
-        const std::string cmd = "fts3_url_copy";
+        const std::string cmd = "fts_url_copy";
         std::string params = std::string("");
         ExecuteProcess *pr = NULL;
         std::string sourceSiteName("");
@@ -322,7 +322,7 @@ protected:
                         }
 
 
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: fts3_url_copy " << params << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: fts_url_copy " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);			
                         if (pr) {		
                             pr->executeProcessShell();

@@ -4,7 +4,7 @@
 #
 # chkconfig:    2345 80 20
 # description:  Enable a run of fts3 messaging daemon
-# processname:  fts3_msg_bulk
+# processname:  fts_msg_bulk
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts
 ### BEGIN INIT INFO
@@ -22,7 +22,7 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-exec="/usr/sbin/fts3_msg_bulk"
+exec="/usr/sbin/fts_msg_bulk"
 prog=$(basename $exec)
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
@@ -34,13 +34,13 @@ start() {
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure
-    fts3_msg_bulk    
+    fts_msg_bulk    
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
     return $retval
     else
-        pgrep fts3_msg_bulk
+        pgrep fts_msg_bulk
 	retval=$?
         if [ -f $lockfile ] && [ $retval -eq 1 ] ; then
 		restart		
@@ -56,7 +56,7 @@ stop() {
     echo -n $"Stopping $prog: "
     # stop it here, often "killproc $prog"
     rm -f "$lockfile" && success || failure 
-    pkill fts3_msg_bulk
+    pkill fts_msg_bulk
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile

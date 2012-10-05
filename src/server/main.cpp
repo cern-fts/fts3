@@ -100,7 +100,7 @@ static bool checkUrlCopy(){
         }
 
         for (iter = pathV.begin(); iter < pathV.end(); iter++) {
-            p = *iter + "/fts3_url_copy";
+            p = *iter + "/fts_url_copy";
             if (fexists(p.c_str()) == 0){
         	free(copy);
         	copy = NULL;
@@ -166,7 +166,7 @@ int main (int argc, char** argv)
 	}
 
 	if(false == checkUrlCopy()){
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts3_url_copy process is set in the PATH env variable" << commit;
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts_url_copy process is set in the PATH env variable" << commit;
 		exit(1);
 	}
 		

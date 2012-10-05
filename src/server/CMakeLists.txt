@@ -78,9 +78,9 @@ target_link_libraries(fts3_server_lib
 )
 
 # Server executable
-add_executable (fts3_server main.cpp)
-add_dependencies(fts3_server fts3_server_lib)
-target_link_libraries(fts3_server ${fts3_libs} -lfts3_server_lib -lfts3_proxy -lfts3_config -lfts3_common -lfts3_db_generic -lfts3_server_gsoap_transfer -lgsoap++ -lfts3_ws_ifce_server)
+add_executable (fts_server main.cpp)
+add_dependencies(fts_server fts3_server_lib)
+target_link_libraries(fts_server ${fts3_libs} -lfts3_server_lib -lfts3_proxy -lfts3_config -lfts3_common -lfts3_db_generic -lfts3_server_gsoap_transfer -lgsoap++ -lfts3_ws_ifce_server)
 
 # ------------------------------------------------------------------------
 # man pages
