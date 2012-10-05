@@ -54,12 +54,12 @@ PARAMETER_NOASK=$2
 FTS3_USERNAME=fts3
 
 CMD_PATH=$(dirname $0)
-source ${CMD_PATH}/fts3-dev-setup-common.sh 
+source ${CMD_PATH}/fts-dev-setup-common.sh 
 
 # ================================================================================
 # Check platform support
 
-fts3_dev_setup_check_platform
+fts_dev_setup_check_platform
 
 PLATFORM_TOOLS=${CMD_PATH}/${PLATFORM}_tools.sh 
 
@@ -78,11 +78,11 @@ source $PLATFORM_TOOLS
 
 # ================================================================================
 
-fts3_dev_setup_common_user
-fts3_dev_setup_common_home_dir $PARAMETER_USER
-fts3_dev_setup_common_grid_credentials
-fts3_dev_setup_common_ssh_keys
-fts3_dev_setup_common_personal_settings
-#fts3_dev_setup_install_tools
-fts3_dev_setup_common_finalize $FTS3_USERNAME
+fts_dev_setup_common_user
+fts_dev_setup_common_home_dir $PARAMETER_USER
+fts_dev_setup_common_grid_credentials
+fts_dev_setup_common_ssh_keys
+fts_dev_setup_common_personal_settings
+#fts_dev_setup_install_tools
+fts_dev_setup_common_finalize $FTS3_USERNAME
 

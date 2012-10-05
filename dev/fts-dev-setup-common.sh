@@ -15,7 +15,7 @@
 # Version info: $Id: Makefile.am,v 1.2 2009/10/08 15:32:39 molnarzs Exp $
 # Release: $Name:  $
 
-function fts3_dev_setup_common_user
+function fts_dev_setup_common_user
 {
     adduser $FTS3_USERNAME
 
@@ -32,13 +32,13 @@ function fts3_dev_setup_common_user
     echo
 
     HOME=/home/$FTS3_USERNAME
-    fts3_dev_setup_wait_for_key $PARAMETER_NOASK
+    fts_dev_setup_wait_for_key $PARAMETER_NOASK
     visudo
 }
 
 # ================================================================================
 
-function fts3_dev_setup_check_if_variable_defined
+function fts_dev_setup_check_if_variable_defined
 {
     local VAR_NAME=$1
     local VAR_DEFAULT=$2
@@ -60,7 +60,7 @@ function fts3_dev_setup_check_if_variable_defined
 
 # ================================================================================
 
-function fts3_dev_setup_wrong_platform_error
+function fts_dev_setup_wrong_platform_error
 {
     echo
     echo "PLATFORM environment variable must be set. It must be one of the supported"
@@ -72,19 +72,19 @@ function fts3_dev_setup_wrong_platform_error
 
 # ================================================================================
 
-function fts3_dev_setup_check_platform
+function fts_dev_setup_check_platform
 {
-    fts3_dev_setup_check_if_variable_defined PLATFORM "sl6_x86_64_gcc446EPEL" $PLATFORM
+    fts_dev_setup_check_if_variable_defined PLATFORM "sl6_x86_64_gcc446EPEL" $PLATFORM
 
     if [ ! $? -eq 0 ]; then
-        fts3_dev_setup_wrong_platform_error
+        fts_dev_setup_wrong_platform_error
         exit -1
     fi
 }
 
 # ================================================================================
 
-function fts3_dev_setup_wait_for_key
+function fts_dev_setup_wait_for_key
 {
     if [ ! -n "$PARAMETER_NOASK" ]; then
         echo "Press a key if ready to continue."
@@ -94,7 +94,7 @@ function fts3_dev_setup_wait_for_key
 
 # ================================================================================
 
-function fts3_dev_setup_common_home_dir
+function fts_dev_setup_common_home_dir
 {
     echo
     echo "Setting up $HOME dir..."
@@ -110,14 +110,14 @@ function fts3_dev_setup_common_home_dir
 
 # ================================================================================
 
-function fts3_dev_setup_common_grid_credentials
+function fts_dev_setup_common_grid_credentials
 {
     echo
     echo "I need your CERN AFS password to continue (principal: $PARAMETER_USER)."
     echo "I will copy your credentials."
     echo "Ensure that .glite and .globus are OK in your AFS root."
     echo
-    fts3_dev_setup_wait_for_key
+    fts_dev_setup_wait_for_key
     kinit $PARAMETER_USER@CERN:CH
 
     if [ ! $? -eq 0 ]; then
@@ -132,7 +132,7 @@ function fts3_dev_setup_common_grid_credentials
 
 # ================================================================================
 
-function fts3_dev_setup_common_ssh_keys
+function fts_dev_setup_common_ssh_keys
 {
     echo
     echo "SSH key operations. This step requires that you store your public SSH keys in your"
@@ -141,7 +141,7 @@ function fts3_dev_setup_common_ssh_keys
     echo " (<your afs root>/.ssh/id_rsa.pub)"
     echo
     
-    fts3_dev_setup_wait_for_key
+    fts_dev_setup_wait_for_key
     
     echo "Generating SSH keys. Using the default file ($HOME/.ssh/id_rsa.pub)!"
     echo
@@ -154,7 +154,7 @@ function fts3_dev_setup_common_ssh_keys
 
 # ================================================================================
 
-function fts3_dev_setup_common_personal_settings
+function fts_dev_setup_common_personal_settings
 {
     echo
     echo "Executing personal settings. You should put it to <your AFS root>/bin/setup_vnode.sh"
@@ -169,7 +169,7 @@ function fts3_dev_setup_common_personal_settings
 
 # ================================================================================
 
-function fts3_dev_setup_common_finalize
+function fts_dev_setup_common_finalize
 {
     local USER=$1
     
