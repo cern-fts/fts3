@@ -1,6 +1,6 @@
 @startuml img/cli_sequence_submit.png
 
-title CLI Sequence Diagram for fts3-transfer-submit
+title CLI Sequence Diagram for fts-transfer-submit
 
 actor User
 actor CommandlineTool

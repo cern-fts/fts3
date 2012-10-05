@@ -1,6 +1,6 @@
 @startuml img/cli_sequence_status.png
 
-title CLI Sequence Diagram for fts3-transfer-status
+title CLI Sequence Diagram for fts-transfer-status
 
 actor User
 actor CommandlineTool
