@@ -1,7 +1,7 @@
-Name:           fts3
+Name:           fts
 Version:        0.0.1 
-Release:        34%{?dist}
-Summary:        File Transfer Service version 3
+Release:        35%{?dist}
+Summary:        File Transfer Service V3
 
 Group:          System Environment/Daemons 
 License:        Apache Software License
@@ -65,7 +65,7 @@ Development files for File Transfer Service V3
 %package server
 Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
-Requires: fts3-libs = %{version}-%{release}
+Requires: fts-libs = %{version}-%{release}
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-srm
 
@@ -76,16 +76,16 @@ Group: System Environment/Libraries
 %package client
 Summary: File Transfer Service version 3 client
 Group: Applications/Internet
-Requires: fts3-libs = %{version}-%{release}
+Requires: fts-libs = %{version}-%{release}
 
 %description server
-FTS3 server is a service which accepts transfer jobs, quering their status, etc
+FTS server is a service which accepts transfer jobs, quering their status, etc
 
 %description libs
-FTS3 common libraries used across the client and server
+FTS common libraries used across the client and server
 
 %description client
-FTS3 client CLI tool for submitting transfers, check status, configure server, etc
+FTS client CLI tool for submitting transfers, check status, configure server, etc
 
 
 %prep
