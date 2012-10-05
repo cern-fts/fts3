@@ -1,5 +1,5 @@
 version=${shell grep '^Version:' ./specs/fts3.spec | awk '{print $$2}' }
-name=fts3
+name=fts
 rpmbuild=${shell pwd}/rpmbuild
 MOCKENV=epel-6-cernonly-x86_64
 MOCKARGS=--trace --verbose
