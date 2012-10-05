@@ -86,58 +86,58 @@ add_dependencies(fts3_cli_common ${fts3_cli_libs})
 
 # ------------------------------------------------------------------------
 # fts3-transfer-submit
-add_executable(fts3-transfer-submit
+add_executable(fts-transfer-submit
     transfer/fts3-transfer-submit.cpp
     ui/SubmitTransferCli.cpp
 )
-add_dependencies(fts3-transfer-submit fts3_cli_common)
-target_link_libraries (fts3-transfer-submit fts3_cli_common)
+add_dependencies(fts-transfer-submit fts3_cli_common)
+target_link_libraries (fts-transfer-submit fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-transfer-status
 
-add_executable(fts3-transfer-status
+add_executable(fts-transfer-status
     transfer/fts3-transfer-status.cpp
     ui/TransferStatusCli.cpp 
 )
-add_dependencies(fts3-transfer-status fts3_cli_common)
-target_link_libraries (fts3-transfer-status fts3_cli_common)
+add_dependencies(fts-transfer-status fts3_cli_common)
+target_link_libraries (fts-transfer-status fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-transfer-list
 
-add_executable(fts3-transfer-list
+add_executable(fts-transfer-list
     transfer/fts3-transfer-list.cpp
     ui/ListTransferCli.cpp 
 )
-add_dependencies(fts3-transfer-list fts3_cli_common)
-target_link_libraries (fts3-transfer-list fts3_cli_common)
+add_dependencies(fts-transfer-list fts3_cli_common)
+target_link_libraries (fts-transfer-list fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-transfer-cancel
 
-add_executable(fts3-transfer-cancel
+add_executable(fts-transfer-cancel
     transfer/fts3-transfer-cancel.cpp
 )
-add_dependencies(fts3-transfer-cancel fts3_cli_common)
-target_link_libraries (fts3-transfer-cancel fts3_cli_common)
+add_dependencies(fts-transfer-cancel fts3_cli_common)
+target_link_libraries (fts-transfer-cancel fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-transfer-getroles
 
-add_executable(fts3-transfer-getroles 
+add_executable(fts-transfer-getroles 
     transfer/fts3-transfer-getroles.cpp
 )
-add_dependencies(fts3-transfer-getroles fts3_cli_common)
-target_link_libraries (fts3-transfer-getroles fts3_cli_common)
+add_dependencies(fts-transfer-getroles fts3_cli_common)
+target_link_libraries (fts-transfer-getroles fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-transfer-listvomanagers
-add_executable(fts3-transfer-listvomanagers
+add_executable(fts-transfer-listvomanagers
     transfer/fts3-transfer-listvomanagers.cpp
 )
-add_dependencies(fts3-transfer-listvomanagers fts3_cli_common)
-target_link_libraries (fts3-transfer-listvomanagers fts3_cli_common)
+add_dependencies(fts-transfer-listvomanagers fts3_cli_common)
+target_link_libraries (fts-transfer-listvomanagers fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # FTS3 config transfer - common structures
@@ -145,34 +145,34 @@ target_link_libraries (fts3-transfer-listvomanagers fts3_cli_common)
 # ------------------------------------------------------------------------
 # fts3-config-set command
 
-add_executable(fts3-config-set 
+add_executable(fts-config-set 
     config/fts3-config-set.cpp
 )
-target_link_libraries (fts3-config-set fts3_cli_common)
+target_link_libraries (fts-config-set fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-config-del command
 
-add_executable(fts3-config-del 
+add_executable(fts-config-del 
     config/fts3-config-del.cpp
 )
-target_link_libraries (fts3-config-del fts3_cli_common)
+target_link_libraries (fts-config-del fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-config-get command
 
-add_executable(fts3-config-get 
+add_executable(fts-config-get 
     config/fts3-config-get.cpp
 )
-target_link_libraries (fts3-config-get fts3_cli_common)
+target_link_libraries (fts-config-get fts3_cli_common)
 
 # ------------------------------------------------------------------------
 # fts3-debug-set command
 
-add_executable(fts3-debug-set 
+add_executable(fts-debug-set 
     debug/fts3-debug-set.cpp
 )
-target_link_libraries (fts3-debug-set fts3_cli_common)
+target_link_libraries (fts-debug-set fts3_cli_common)
 
 # ------------------------------------------------------------------------
 
@@ -198,7 +198,7 @@ file(MAKE_DIRECTORY ${MAN_OUTPUT_DIR})
 find_package(GZip)
 
 # find all manpages filenames
-file(GLOB man_pages RELATIVE ${MAN_INPUT_DIR} ${MAN_INPUT_DIR}/fts3-*)
+file(GLOB man_pages RELATIVE ${MAN_INPUT_DIR} ${MAN_INPUT_DIR}/fts-*)
 
 # loop over all manpages
 foreach(man_page ${man_pages})
@@ -219,15 +219,15 @@ endforeach()
 
 
 install(TARGETS
-	fts3-transfer-submit
-    fts3-transfer-status
-    fts3-transfer-list
-    fts3-transfer-listvomanagers
-    fts3-transfer-getroles
-	fts3-config-get
-	fts3-config-set
-	fts3-config-del
-	fts3-debug-set
+	fts-transfer-submit
+    fts-transfer-status
+    fts-transfer-list
+    fts-transfer-listvomanagers
+    fts-transfer-getroles
+	fts-config-get
+	fts-config-set
+	fts-config-del
+	fts-debug-set
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
 install(TARGETS         fts3_cli_common 
