@@ -54,9 +54,9 @@ static boost::mutex  logMutex;
 static transfer_completed tr_completed;
 static std::string g_file_id("");
 static std::string g_job_id("");
-static std::string errorScope = "GENERAL_FAILURE";
-static std::string errorPhase = "ALLOCATION";
-static std::string reasonClass = "GENERAL_FAILURE";
+static std::string errorScope("");
+static std::string errorPhase("");
+static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
 static std::string reuseFile("");
@@ -157,28 +157,42 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
         size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
         time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
         boost::mutex::scoped_lock lock(logMutex);
-        logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
+       	logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
     }
 
 }
+
+std::string getDefaultScope(){
+	return errorScope.length()==0?AGENT:errorScope;
+}
+
+std::string getDefaultReasonClass(){
+	return reasonClass.length()==0?ALLOCATION:reasonClass;
+}
+
+std::string getDefaultErrorPhase(){
+	return errorPhase.length()==0?GENERAL_FAILURE:errorPhase;
+}
+
 
 void canceler() {
     boost::mutex::scoped_lock lock(guard);
     boost::mutex::scoped_lock logLock(logMutex);
     if (propagated == false) {
         propagated = true;
-        logStream << fileManagement.timestamp() << "WARN Transfer canceled because it was not responding" << '\n';
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled because it was not responding");
+	errorMessage = "WARN Transfer " +  g_job_id + " was canceled because it was not responding";
+       	logStream << fileManagement.timestamp() << errorMessage << '\n';
+        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+        msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
         msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
         reporter.timeout = timeout;
         reporter.nostreams = nbstreams;
         reporter.buffersize = tcpbuffersize;
-        reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled because it was not responding", diff, source_size);
+        reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
         logStream.close();
         fileManagement.archive();
         if (reuseFile.length() > 0)
@@ -198,19 +212,20 @@ void signalHandler(int signum) {
     boost::mutex::scoped_lock lock(guard);    
     if (stackTrace.length() > 0) {
         propagated = true;
-        logStream << fileManagement.timestamp() << "ERROR Transfer process died" << '\n';
+	errorMessage = "ERROR Transfer " + g_job_id + " process died";
+        logStream << fileManagement.timestamp() << errorMessage << '\n';
         logStream << fileManagement.timestamp() << "ERROR " << stackTrace << '\n';
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer process died");
+        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+        msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
         msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
         reporter.timeout = timeout;
         reporter.nostreams = nbstreams;
         reporter.buffersize = tcpbuffersize;
-        reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer process died", diff, source_size);
+        reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
         logStream.close();
         fileManagement.archive();
         if (reuseFile.length() > 0)
@@ -219,18 +234,19 @@ void signalHandler(int signum) {
     } else if (signum == 15) {
         if (propagated == false) {
             propagated = true;
-            logStream << fileManagement.timestamp() << "WARN Transfer canceled by the user" << '\n';
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled by the user");
+	    errorMessage = "WARN Transfer " + g_job_id + " canceled by the user";
+            logStream << fileManagement.timestamp() << errorMessage << '\n';
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
             reporter.timeout = timeout;
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled by the user", diff, source_size);
+            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
             logStream.close();
             fileManagement.archive();
             if (reuseFile.length() > 0)
@@ -241,18 +257,19 @@ void signalHandler(int signum) {
     } else if (signum == 10) {
         if (propagated == false) {
             propagated = true;
-            logStream << fileManagement.timestamp() << "WARN Transfer has been forced-canceled because it was stalled" << '\n';
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer has been forced-canceled because it was stalled");
+	    errorMessage = "WARN Transfer " + g_job_id + " has been forced-canceled because it was stalled";
+            logStream << fileManagement.timestamp() << errorMessage << '\n';
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
             reporter.timeout = timeout;
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer has been forced-killed because it was stalled", diff, source_size);
+            reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
             logStream.close();
             fileManagement.archive();
             if (reuseFile.length() > 0)
@@ -263,18 +280,19 @@ void signalHandler(int signum) {
     } else {
         if (propagated == false) {
             propagated = true;
-            logStream << fileManagement.timestamp() << "WARN Transfer canceled" << '\n';
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer canceled");
+	    errorMessage = "WARN Transfer " + g_job_id + " canceled";
+            logStream << fileManagement.timestamp() << errorMessage << '\n';
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
             reporter.timeout = timeout;
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", "Transfer canceled", diff, source_size);
+            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
             logStream.close();
             fileManagement.archive();
             if (reuseFile.length() > 0)
@@ -286,18 +304,19 @@ void signalHandler(int signum) {
 }
 
 void myunexpected() {
-    logStream << fileManagement.timestamp() << "ERROR unexpected handler called" << '\n';
-    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-    msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer unexpected handler called");
+    errorMessage = "ERROR unexpected handler called for " +  g_job_id;
+    logStream << fileManagement.timestamp() << errorMessage  << '\n';
+    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+    msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
     reporter.timeout = timeout;
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
-    reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer unexpected handler called", diff, source_size);
+    reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
     logStream.close();
     fileManagement.archive();
     if (reuseFile.length() > 0)
@@ -306,18 +325,19 @@ void myunexpected() {
 }
 
 void myterminate() {
-    logStream << fileManagement.timestamp() << "ERROR terminate handler called" << '\n';
-    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-    msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer terminate handler called");
+    errorMessage = "ERROR terminate handler called for " +  g_job_id;
+    logStream << fileManagement.timestamp() << errorMessage << '\n';
+    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+    msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
     reporter.timeout = timeout;
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
-    reporter.constructMessage(g_job_id, g_file_id, "FAILED", "Transfer terminate handler called", diff, source_size);
+    reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
     logStream.close();
     fileManagement.archive();
     if (reuseFile.length() > 0)
@@ -486,18 +506,19 @@ int main(int argc, char **argv) {
     unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
     boost::thread bt(taskTimer, timerTimeout);
     
-    if(reuseFile.length() > 0 && urlsFile.size()==0){            
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Transfer contained no urls with session reuse enabled");
+    if(reuseFile.length() > 0 && urlsFile.size()==0){         
+            errorMessage =  "Transfer " + g_job_id + " containes no urls with session reuse enabled"; 
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
             reporter.timeout = timeout;
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(job_id, file_id, "FAILED", "Transfer contained no urls with session reuse enabled", diff, source_size);
+            reporter.constructMessage(job_id, file_id, "FAILED", errorMessage, diff, source_size);
             sleep(1);
             exit(1);    
     
