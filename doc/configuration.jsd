@@ -51,18 +51,18 @@
 		"type" : "object",
 		"properties" :
 		{
-			"share_type" : 
+			"type" : 
 			{
 				"type" : "string",
 				"enum" : ["public", "vo", "pair"]
 				"description" : "The 'pair' should be only used if the type of the configuration is 'se'!"
 				"required" : true
 			},
-			"share_id" :
+			"id" :
 			{
 				"type" : "string"
-				"description" : "If the share_type is 'public' it should be null, if the share_type is 'vo' it should be a VO name, if the share_type is 'pair' it should be a SE name"
-				"required" : true				
+				"description" : "id should only be used if the type is 'vo' or 'pair'"
+		
 			},
 			"in" :
 			{
