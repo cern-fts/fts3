@@ -164,7 +164,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_sysconfdir}/logrotate.d/fts-server
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
-%{_mandir}/man8/fts3_server.8.gz
+%{_mandir}/man8/fts_server.8.gz
 %doc %{_docdir}/fts3/oracle-drop.sql
 %doc %{_docdir}/fts3/oracle-schema.sql
 %doc %{_docdir}/fts3/fts_purge_pack.sql
@@ -196,19 +196,19 @@ rm -rf $RPM_BUILD_ROOT
 
 %files libs
 %defattr(-,root,root,-)
-%{_libdir}/libfts3_common.so
-%{_libdir}/libfts3_config.so
-%{_libdir}/libfts3_db_generic.so
-%{_libdir}/libfts3_db_oracle.so
-%{_libdir}/libfts3_msg_ifce.so
-%{_libdir}/libfts3_proxy.so
-%{_libdir}/libfts3_server_gsoap_transfer.so
-%{_libdir}/libfts3_server_lib.so
-%{_libdir}/libfts3_cli_common.so
-%{_libdir}/libfts3_ws_ifce_client.so
-%{_libdir}/libfts3_ws_ifce_server.so
-%{_libdir}/libfts3_delegation_api_simple.so
-%{_libdir}/libfts3_delegation_api_cpp.so
+%{_libdir}/libfts_common.so
+%{_libdir}/libfts_config.so
+%{_libdir}/libfts_db_generic.so
+%{_libdir}/libfts_db_oracle.so
+%{_libdir}/libfts_msg_ifce.so
+%{_libdir}/libfts_proxy.so
+%{_libdir}/libfts_server_gsoap_transfer.so
+%{_libdir}/libfts_server_lib.so
+%{_libdir}/libfts_cli_common.so
+%{_libdir}/libfts_ws_ifce_client.so
+%{_libdir}/libfts_ws_ifce_server.so
+%{_libdir}/libfts_delegation_api_simple.so
+%{_libdir}/libfts_delegation_api_cpp.so
 %doc
 
 %changelog
