@@ -8,18 +8,18 @@ include_directories (.)
 
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts3_db_oracle_SOURCES OracleAPI.cpp OracleConnection.cpp OracleTypeConversions.cpp)
+set(fts_db_oracle_SOURCES OracleAPI.cpp OracleConnection.cpp OracleTypeConversions.cpp)
 
-add_library(fts3_db_oracle SHARED ${fts3_db_oracle_SOURCES})
-target_link_libraries(fts3_db_oracle ${OCCI_LIBRARY} )
-target_link_libraries(fts3_db_oracle ${CLNTSH_LIBRARY} )
-target_link_libraries(fts3_db_oracle -lpthread )
+add_library(fts_db_oracle SHARED ${fts_db_oracle_SOURCES})
+target_link_libraries(fts_db_oracle ${OCCI_LIBRARY} )
+target_link_libraries(fts_db_oracle ${CLNTSH_LIBRARY} )
+target_link_libraries(fts_db_oracle -lpthread )
 
 MESSAGE( STATUS "OCCI_INCLUDE_DIR: " ${OCCI_INCLUDE_DIR} )
 MESSAGE( STATUS "OCCI_LIBRARY: " ${OCCI_LIBRARY} )
 MESSAGE( STATUS "CLNTSH_LIBRARY: " ${CLNTSH_LIBRARY} )
 
-install(TARGETS         fts3_db_oracle 
+install(TARGETS         fts_db_oracle 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 

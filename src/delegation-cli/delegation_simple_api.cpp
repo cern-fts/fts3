@@ -301,7 +301,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
     if (NULL == certreq) 
     {
         /* there was no proxy, or not forcing -- the normal path */
-        ret = soap_call_delegation__getProxyReq(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), get_resp);
+        ret = soap_call_delegation__getProxyReq(ctx->soap, ctx->endpoint, NULL, sdelegationID, get_resp);
         if (SOAP_OK != ret)
         {
             _fault_to_error(ctx, __func__);
@@ -328,7 +328,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         return -1;
     }
 
-    if (SOAP_OK != soap_call_delegation__putProxy(ctx->soap, ctx->endpoint, NULL, std::string(sdelegationID), scerttxt, put_resp))
+    if (SOAP_OK != soap_call_delegation__putProxy(ctx->soap, ctx->endpoint, NULL, sdelegationID, scerttxt, put_resp))
     {
             _fault_to_error(ctx, __func__);
             return -1;

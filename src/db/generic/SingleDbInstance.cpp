@@ -29,7 +29,7 @@ DBSingleton::DBSingleton() {
     }
 
     //hardcoded for now
-    libraryFileName = "libfts3_db_oracle.so";
+    libraryFileName = "libfts_db_oracle.so";
 
     dlm = new DynamicLibraryManager(libraryFileName);
     if (dlm && dlm->isLibraryLoaded()) {

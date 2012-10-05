@@ -16,17 +16,17 @@
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts3_include_dir "${PROJECT_SOURCE_DIR}/src/")
-include_directories (${fts3_include_dir})
+set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
+include_directories (${fts_include_dir})
 
 
-file(GLOB fts3_config "*.cpp")
+file(GLOB fts_config "*.cpp")
 #add_definitions(-E)
-add_library(fts3_config SHARED ${fts3_config})
-#target_link_libraries(fts3_config ${Boost_LIBRARIES} )
-target_link_libraries(fts3_config -lboost_program_options-mt)
+add_library(fts_config SHARED ${fts_config})
+#target_link_libraries(fts_config ${Boost_LIBRARIES} )
+target_link_libraries(fts_config -lboost_program_options-mt)
 
-install(TARGETS         fts3_config 
+install(TARGETS         fts_config 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
