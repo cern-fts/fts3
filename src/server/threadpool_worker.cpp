@@ -45,7 +45,7 @@ void Worker::_doWork()
 
 		if (task.get() != NULL) 
         {
-
+	    if(stopThreads) break;
             task->execute();
 			
 	}

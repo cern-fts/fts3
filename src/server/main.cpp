@@ -51,10 +51,11 @@ static int fexists(const char *filename) {
 /// Handler of SIGCHLD
 void _handle_sigint(int)
 {
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit; 
+    if(stackTrace.length() > 0)
+    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit; 
     stopThreads = true;    
     theServer().stop();
-    sleep(3);
+    sleep(5);
     exit(EXIT_SUCCESS);
 }
 

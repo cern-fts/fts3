@@ -31,14 +31,19 @@ link_directories (${PROJECT_BINARY_DIR}/src/db/generic)
 link_directories (${PROJECT_BINARY_DIR}/src/cli)
 link_directories (${PROJECT_BINARY_DIR}/src/monitoring) 
 link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli) 
- 
+
+set(VERSION_MAJOR 0)
+set(VERSION_MINOR 0)
+set(VERSION_PATCH 1)
+set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+	 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}   -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -finstrument-functions -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wunsafe-loop-optimizations -Winit-self -Wmissing-braces -Wparentheses")
 
 ADD_DEFINITIONS(-DWITH_IPV6)
 ADD_DEFINITIONS(-DPURIFY) 
 ADD_DEFINITIONS(-DOPENSSL_THREADS)
-#ADD_DEFINITIONS(-DCRYPTO_MDEBUG_ALL)
+#ADD_DEFINITIONS(-DWITH_OPENSSL)
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
 include(DefineInstallationPaths REQUIRED)

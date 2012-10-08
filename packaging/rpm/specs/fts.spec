@@ -1,13 +1,12 @@
-Name:           fts
-Version:        0.0.1 
-Release:        35%{?dist}
-Summary:        File Transfer Service V3
-
-Group:          System Environment/Daemons 
-License:        Apache Software License
-URL:            https://svnweb.cern.ch/trac/fts3/wiki 
-Source0:        http://%{name}-%{version}.tar.gz
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Name: fts
+Version: 0.0.1 
+Release: 35%{?dist}
+Summary: File Transfer Service V3
+Group: System Environment/Daemons 
+License: ASL 2.0
+URL: https://svnweb.cern.ch/trac/fts3/wiki 
+Source0: http://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  cmake
 BuildRequires:  apr-devel%{?_isa}
@@ -79,13 +78,13 @@ Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
 
 %description server
-FTS server is a service which accepts transfer jobs, quering their status, etc
+FTS server is a service which accepts transfer jobs, querying their status, etc
 
 %description libs
 FTS common libraries used across the client and server
 
 %description client
-FTS client CLI tool for submitting transfers, check status, configure server, etc
+FTS client CLI tool for submitting transfers, etc
 
 
 %prep
@@ -114,6 +113,10 @@ getent passwd fts3 >/dev/null || \
     useradd -r -g fts3 -d /var/log/fts3 -s /sbin/nologin \
     -c "fts3 urlcopy user" fts3
 exit 0
+
+%post libs -p /sbin/ldconfig
+
+%postun libs -p /sbin/ldconfig
 
 %post server
 /sbin/chkconfig --add fts-server
@@ -156,9 +159,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/fts_msg_bulk
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
-%{_initddir}/fts-msg-bulk
-%{_initddir}/fts-server
-%{_initddir}/fts-msg-cron
+%attr(0755,root,root) %{_initddir}/fts-msg-bulk
+%attr(0755,root,root) %{_initddir}/fts-server
+%attr(0755,root,root) %{_initddir}/fts-msg-cron
 %{_sysconfdir}/logrotate.d/fts-msg-cron
 %{_sysconfdir}/logrotate.d/fts-msg-bulk
 %{_sysconfdir}/logrotate.d/fts-server
@@ -196,19 +199,19 @@ rm -rf $RPM_BUILD_ROOT
 
 %files libs
 %defattr(-,root,root,-)
-%{_libdir}/libfts_common.so
-%{_libdir}/libfts_config.so
-%{_libdir}/libfts_db_generic.so
-%{_libdir}/libfts_db_oracle.so
-%{_libdir}/libfts_msg_ifce.so
-%{_libdir}/libfts_proxy.so
-%{_libdir}/libfts_server_gsoap_transfer.so
-%{_libdir}/libfts_server_lib.so
-%{_libdir}/libfts_cli_common.so
-%{_libdir}/libfts_ws_ifce_client.so
-%{_libdir}/libfts_ws_ifce_server.so
-%{_libdir}/libfts_delegation_api_simple.so
-%{_libdir}/libfts_delegation_api_cpp.so
+%{_libdir}/libfts_common.so*
+%{_libdir}/libfts_config.so*
+%{_libdir}/libfts_db_generic.so*
+%{_libdir}/libfts_db_oracle.so*
+%{_libdir}/libfts_msg_ifce.so*
+%{_libdir}/libfts_proxy.so*
+%{_libdir}/libfts_server_gsoap_transfer.so*
+%{_libdir}/libfts_server_lib.so*
+%{_libdir}/libfts_cli_common.so*
+%{_libdir}/libfts_ws_ifce_client.so*
+%{_libdir}/libfts_ws_ifce_server.so*
+%{_libdir}/libfts_delegation_api_simple.so*
+%{_libdir}/libfts_delegation_api_cpp.so*
 %doc
 
 %changelog

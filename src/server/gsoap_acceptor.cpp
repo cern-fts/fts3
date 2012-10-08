@@ -39,10 +39,14 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true"?true:false;
 	if(keepAlive){
 	ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+	ctx->bind_flags |= SO_REUSEADDR;
+	ctx->accept_flags |= SO_LINGER;
+	ctx->connect_flags |= SO_LINGER;
+	ctx->linger_time = 2;
         ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session
-   	ctx->accept_timeout = 600; // optional: let server time out after ten minutes of inactivity 
+   	ctx->accept_timeout = 60; // optional: 60 secs timeout 
 	ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe	
- 	ctx->recv_timeout = 120; // Timeout after 2 minutes stall on recv
+ 	ctx->recv_timeout = 60; // Timeout after 1 minutes stall on recv
         ctx->send_timeout = 60; // Timeout after 1 minute stall on send 	
 	soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 	soap_set_namespaces(ctx, fts3_namespaces);
@@ -60,6 +64,10 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	}else{
 	
 	ctx = soap_new();
+	ctx->bind_flags |= SO_REUSEADDR;
+	ctx->accept_flags |= SO_LINGER;
+        ctx->connect_flags |= SO_LINGER;
+        ctx->linger_time = 4;
 	soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 	soap_set_namespaces(ctx, fts3_namespaces);
 

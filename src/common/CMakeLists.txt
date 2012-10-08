@@ -27,6 +27,14 @@ file(GLOB fts_common_sources "*.cpp")
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
 target_link_libraries(fts_common -lboost_regex-mt)
+set_target_properties(fts_common             PROPERTIES
+                                                LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/common
+                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                                                SOVERSION ${VERSION_MAJOR}
+                                                CLEAN_DIRECT_OUTPUT 1)
+
+
 
 if(FTS3_COMPILE_WITH_UNITTEST)
 	target_link_libraries(fts_common -lboost_unit_test_framework-mt )

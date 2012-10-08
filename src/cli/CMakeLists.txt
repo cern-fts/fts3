@@ -83,7 +83,14 @@ set(fts_cli_common_sources
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})
 target_link_libraries(fts_cli_common ${fts_cli_libs})
 add_dependencies(fts_cli_common ${fts_cli_libs})
+set_target_properties(fts_cli_common            PROPERTIES
+                                                LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/cli
+                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                                                SOVERSION ${VERSION_MAJOR}
+                                                CLEAN_DIRECT_OUTPUT 1)
 
+#set_target_properties(ftspython            PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/cli VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} SOVERSION ${VERSION_MAJOR} CLEAN_DIRECT_OUTPUT 1)
 # ------------------------------------------------------------------------
 # fts-transfer-submit
 add_executable(fts-transfer-submit

@@ -25,6 +25,13 @@ file(GLOB fts_config "*.cpp")
 add_library(fts_config SHARED ${fts_config})
 #target_link_libraries(fts_config ${Boost_LIBRARIES} )
 target_link_libraries(fts_config -lboost_program_options-mt)
+set_target_properties(fts_config                PROPERTIES
+                                                LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/config
+                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                                                SOVERSION ${VERSION_MAJOR}
+                                                CLEAN_DIRECT_OUTPUT 1)
+
 
 install(TARGETS         fts_config 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

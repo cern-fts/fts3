@@ -558,7 +558,9 @@ protected:
 	static long double counter = 0;
 
         while (stopThreads == false) {
-		    
+		
+        if ( stopThreads ) break;
+    
 	    if(DrainMode::getInstance()){
                 if(!drainMode)
 	    		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;

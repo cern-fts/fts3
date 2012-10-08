@@ -40,8 +40,14 @@ using namespace db;
 using namespace boost;
 
 void GSoapDelegationHandler::init() {
+	/*SSL_library_init();
 	SSL_load_error_strings();
-	OpenSSL_add_all_digests();
+	OpenSSL_add_all_digests();*/
+SSL_load_error_strings();                /* readable error messages */
+OpenSSL_add_all_algorithms();
+OpenSSL_add_all_digests();
+OpenSSL_add_all_ciphers();
+SSL_library_init();                      /* initialize library */
 }
 
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):

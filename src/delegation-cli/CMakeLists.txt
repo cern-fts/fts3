@@ -6,6 +6,7 @@ include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/common/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/gsoap)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
 include_directories (/usr/include/glib-2.0)
 include_directories (/usr/lib64/glib-2.0/include)
 include_directories (/usr/lib/glib-2.0/include)
@@ -20,10 +21,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_delegation_api_simple_SOURCES uri.cpp util.cpp cfg.cpp delegation_simple_api.cpp)
 
 add_library(fts_delegation_api_simple SHARED ${fts_delegation_api_simple_SOURCES})
+add_dependencies(fts_delegation_api_simple fts_delegation_api_cpp)
 target_link_libraries(fts_delegation_api_simple -lgridsite -lglib-2.0 -lgsoap++ -lcgsi_plugin_cpp )
 target_link_libraries(fts_delegation_api_simple -lfts_delegation_api_cpp )
-#target_link_libraries(fts_delegation_api_simple -lfts_common )
-#target_link_libraries(fts_delegation_api_simple -lfts_config )
+set_target_properties(fts_delegation_api_simple PROPERTIES
+LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/delegation-cli VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} SOVERSION ${VERSION_MAJOR} CLEAN_DIRECT_OUTPUT 1)
 
 install(TARGETS         fts_delegation_api_simple 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

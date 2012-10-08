@@ -54,6 +54,14 @@ add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources
 set_target_properties(fts_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
 target_link_libraries(fts_server_gsoap_transfer "-lfts_ws_ifce_server")
 add_dependencies(fts_server_gsoap_transfer fts_ws_ifce_server)
+set_target_properties(fts_server_gsoap_transfer PROPERTIES
+                                                LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/server
+                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                                                SOVERSION ${VERSION_MAJOR}
+                                                CLEAN_DIRECT_OUTPUT 1)
+
+
 
 # Find libuuid
 find_package(LibUuid REQUIRED)
@@ -76,6 +84,14 @@ target_link_libraries(fts_server_lib
 	-lgridsite
 	-lcgsi_plugin_voms_cpp
 )
+set_target_properties(fts_server_lib            PROPERTIES
+                                                LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/server
+                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                                                SOVERSION ${VERSION_MAJOR}
+                                                CLEAN_DIRECT_OUTPUT 1)
+
+
 
 # Server executable
 add_executable (fts_server main.cpp)

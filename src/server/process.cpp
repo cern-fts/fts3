@@ -323,8 +323,7 @@ int ExecuteProcess::execProcessShell() {
         if (-1 == r) {
             // Process Execution failed: exit the forked process
             // The status will detect if the request has not been
-            // assigned
-	    //freopen ("/var/log/fts3/fts3server.log","a",stderr);
+            // assigned	    
 	    int r2 = execvp(p.c_str(), argv);
 	    if (-1 == r2) {
             	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process Execution failed: exit the forked process" << commit;

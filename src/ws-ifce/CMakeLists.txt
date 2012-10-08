@@ -117,6 +117,23 @@ add_library(fts_delegation_api_cpp SHARED
 set_target_properties(fts_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
 target_link_libraries(fts_ws_ifce_client -lgsoap++)
 
+set_target_properties(fts_delegation_api_cpp PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/ws-ifce)
+set_target_properties(fts_delegation_api_cpp PROPERTIES VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
+set_target_properties(fts_delegation_api_cpp PROPERTIES SOVERSION ${VERSION_MAJOR})
+set_target_properties(fts_delegation_api_cpp PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+
+
+set_target_properties(fts_ws_ifce_server PROPERTIES 
+						LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/ws-ifce VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} SOVERSION ${VERSION_MAJOR} CLEAN_DIRECT_OUTPUT 1)
+
+
+set_target_properties(fts_ws_ifce_client PROPERTIES 
+						LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/ws-ifce VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} SOVERSION ${VERSION_MAJOR} CLEAN_DIRECT_OUTPUT 1)
+
+
+
 install(TARGETS         fts_ws_ifce_client fts_ws_ifce_server fts_delegation_api_cpp
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )

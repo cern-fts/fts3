@@ -21,8 +21,14 @@ set(fts_proxy_SOURCES cred-utility.cpp CredService.cpp DelegCred.cpp utility.cpp
 add_library(fts_proxy SHARED ${fts_proxy_SOURCES})
 target_link_libraries(fts_proxy -ldl)
 target_link_libraries(fts_proxy -lpthread)
-#target_link_libraries(fts_proxy -lfts_common )
-target_link_libraries(fts_proxy -lfts_config -lglobus_common -lglobus_gsi_credential)
+target_link_libraries(fts_proxy -lglobus_common -lglobus_gsi_credential)
+set_target_properties(fts_proxy		        PROPERTIES
+                                                LIBRARY_OUTPUT_DIRECTORY
+${PROJECT_BINARY_DIR}/src/cred
+                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+                                                SOVERSION ${VERSION_MAJOR}
+                                                CLEAN_DIRECT_OUTPUT 1)
+
 
 install(TARGETS         fts_proxy 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 

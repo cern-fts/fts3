@@ -108,6 +108,7 @@ protected:
     void executeTransfer_a() {
 
     while(stopThreads == false){ /*need to receive more than one messages at a time*/    
+       if(stopThreads) break;
     try{
     	struct message msg;
 	qm->receive(&msg);
@@ -154,6 +155,7 @@ protected:
      catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown exception"));
         }     
+               if(stopThreads) break;
       }
     }
 

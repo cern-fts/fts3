@@ -94,4 +94,3 @@ BOOST_FIXTURE_TEST_CASE (Common__LoggerTraits_SysLog, LoggerTraits_Syslog)
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_COMMON_NAMESPACE_END
-
