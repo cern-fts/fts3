@@ -50,7 +50,8 @@ AuthorizationManager::~AuthorizationManager() {
 
 void AuthorizationManager::authorize(soap* soap, bool submit) {
 
-	if (voNameList.empty()) return;
+	// if the VO authrization list was not specified or a wildcard was used ...
+	if (voNameList.empty() || voNameSet.count("*")) return;
 
 	GSoapDelegationHandler handler (soap);
 	if(!submit && handler.isRoot()) return;
