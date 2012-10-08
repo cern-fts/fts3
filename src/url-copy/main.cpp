@@ -733,7 +733,13 @@ int main(int argc, char **argv) {
             diff = std::difftime(std::time(NULL), start);
             if (tmp_err->message) {
                 log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
-                errorMessage = std::string(tmp_err->message);
+                if(tmp_err->code == 110){
+			errorMessage = std::string(tmp_err->message);
+			errorMessage += ", operation timeout";
+		}
+		else{
+			errorMessage = std::string(tmp_err->message);
+		}
                 errorScope = TRANSFER;
                 reasonClass = mapErrnoToString(tmp_err->code);
                 errorPhase = TRANSFER;

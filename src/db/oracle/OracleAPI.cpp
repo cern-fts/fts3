@@ -2949,7 +2949,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     
     std::string midRangeTimeout = " select count(*) from t_file,t_job where "
     				  " t_job.job_id=t_file.job_id and t_file.file_state='FAILED' "
-				  " and t_file.reason like '%gass operation timeout%' and t_job.source_se=:1 "
+				  " and t_file.reason like '%operation timeout%' and t_job.source_se=:1 "
 				  " and t_job.dest_se=:2 and rownum<=3 "
 				  " and (t_file.finish_time > (CURRENT_TIMESTAMP - interval '30' minute)) "
 				  " order by  SYS_EXTRACT_UTC(t_file.finish_time) desc";    
