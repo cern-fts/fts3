@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="mtom_stream_test"
+ targetNamespace="http://cern.ch/wsdl/services/fts3/log"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns:xop="http://www.w3.org/2004/08/xop/include"
+ xmlns:m="http://cern.ch/wsdl/services/fts3/log"
+ xmlns:SOAP="http://schemas.xmlsoap.org/wsdl/soap/"
+ xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+<types>
+
+ <schema targetNamespace="http://cern.ch/wsdl/services/fts3/log"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:xop="http://www.w3.org/2004/08/xop/include"
+  xmlns:m="http://cern.ch/wsdl/services/fts3/log"
+  xmlns="http://www.w3.org/2001/XMLSchema">
+
+  <import namespace="http://www.w3.org/2004/08/xop/include" schemaLocation="http://www.w3.org/2004/08/xop/include"/>
+
+  <!-- operation response element -->
+  
+   <complexType name="GetDataResponseType">
+    <sequence>
+     <element ref="m:data" minOccurs="1" maxOccurs="1"/><!-- m__GetDataResponse::x__data -->
+    </sequence>
+   </complexType>
+   <element name="GetDataResponse" type="m:GetDataResponseType"/>
+
+   <complexType name="Data">
+    <sequence>
+     <element ref="xop:Include" minOccurs="1" maxOccurs="1"/>
+    </sequence>
+   </complexType>
+   <element name="data" type="m:Data"/>
+
+ </schema>
+</types>
+
+<message name="GetData"/>
+
+<message name="GetDataResponse">
+  <part name="parameters" element="m:GetDataResponse"/> 
+</message>
+
+<portType name="LogRetriever">
+ <operation name="GetData">
+  <input message="m:GetData"/>
+  <output message="m:GetDataResponse"/>
+ </operation>
+</portType>
+
+<binding name="LogRetrieverSoapBinding" type="m:LogRetriever">
+ <SOAP:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+ <operation name="GetData">
+  <SOAP:operation/>
+  <input>
+   <SOAP:body namespace="http://cern.ch/wsdl/services/fts3/log" use="literal"/>
+  </input>
+  <output>
+   <SOAP:body namespace="http://cern.ch/wsdl/services/fts3/log" use="literal"/>
+  </output>
+ </operation>
+</binding>
+
+<service name="LogRetrieverService">
+ <port name="LogRetriever" binding="m:LogRetrieverSoapBinding">
+  <SOAP:address location="http://localhost:80"/>
+ </port>
+</service>
+
+</definitions>
