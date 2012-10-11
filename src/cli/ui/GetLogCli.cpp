@@ -15,36 +15,35 @@
  *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
- * GSoapContextAdapter.h
  *
- * PythonBindings.cpp
+ * GetLogCli.cpp
  *
- *  Created on: Sep 11, 2012
- *      Author: Michał Simon
+ *  Created on: Oct 4, 2012
+ *      Author: Michal Simon
  */
 
-#include "GSoapContextAdapter.h"
-#include "python/PythonApi.h"
+#include "GetLogCli.h"
 
-#include <boost/optional/optional.hpp>
-#include <boost/python.hpp>
+using namespace fts3::cli;
 
-using namespace boost;
-using namespace boost::python;
+GetLogCli::GetLogCli() {
 
-
-void exTranslator(string const& ex) {
-   PyErr_SetString(PyExc_UserWarning, ex.c_str());
-}
-
-
-BOOST_PYTHON_MODULE(libftspython) {
-
-	register_exception_translator<string>(exTranslator);
-
-	class_<fts3::cli::PythonApi>("FtsApi", init<str>())
-			.def("submit", &fts3::cli::PythonApi::submit)
-			.def("cancel", &fts3::cli::PythonApi::cancel)
-			.def("getStatus", &fts3::cli::PythonApi::getStatus)
+	// add commandline options specific for fts3-transfer-submit
+	specific.add_options()
+			("path,p", "Destination path for the log files.")
 			;
 }
+
+GetLogCli::~GetLogCli() {
+}
+
+string GetLogCli::getPath() {
+
+	// check whether jobid has been given as a parameter
+	if (vm.count("path")) {
+		return vm["path"].as<string>();
+	}
+
+	return string();
+}
+

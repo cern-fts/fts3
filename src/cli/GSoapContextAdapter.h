@@ -244,6 +244,11 @@ public:
 	 */
 	void doDrain(bool drain);
 
+	/**
+	 * TODO
+	 */
+	void getLog(string jobId);
+
 	///@{
 	/**
 	 * A group of methods that check if the FTS3 service supports various functionalities.

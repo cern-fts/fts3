@@ -32,7 +32,7 @@
 
 namespace fts3 { namespace cli {
 
-GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new()) {
+GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new1(SOAP_ENC_MTOM)) {
 
 }
 
@@ -462,6 +462,18 @@ void GSoapContextAdapter::doDrain(bool drain) {
 	if (soap_call_implcfg__doDrain(ctx, endpoint.c_str(), 0, drain, resp)) {
 		handleSoapFault("Failed to get configuration: debugSet.");
 	}
+}
+
+void GSoapContextAdapter::getLog(string jobId) {
+
+	//soap_call___impltns__getLog(struct soap *soap, const char *soap_endpoint, const char *soap_action, std::string jobId, impltns__GetDataResponseType *impltns__getLogResponse);
+	log__GetDataResponse resp;
+	soap_call_log__GetData(ctx, endpoint.c_str(), 0, resp);
+	log__Data* log = resp.parameters->data;
+
+	for (int i = 0; i < log->xop__Include.__size; i++)
+		cout << log->xop__Include.__ptr[i];
+	cout << endl;
 }
 
 void GSoapContextAdapter::handleSoapFault(string msg) {

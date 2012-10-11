@@ -16,33 +16,30 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * fts3-config-get.cpp
+ * fts3-log-get.cpp
  *
- *  Created on: Apr 3, 2012
- *      Author: Michał Simon
+ *  Created on: Oct 4, 2012
+ *      Author: Michal Simon
  */
 
-#include "GSoapContextAdapter.h"
-#include "ui/JobIdCli.h"
 
-#include <exception>
-#include <iostream>
-#include <vector>
-#include <string>
+
+#include "GSoapContextAdapter.h"
+#include "ui/GetLogCli.h"
 #include <memory>
 
 using namespace std;
 using namespace fts3::cli;
 
+
 /**
- * This is the entry point for the fts3-transfer-cancel command line tool.
+ * This is the entry point for the fts3-debug-set command line tool.
  */
 int main(int ac, char* av[]) {
-
 	try {
 		// create and initialize the command line utility
-		auto_ptr<JobIdCli> cli (
-				getCli<JobIdCli>(ac, av)
+		auto_ptr<GetLogCli> cli (
+				getCli<DebugSetCli>(ac, av)
 			);
 
 		// validate command line options, and return respective gsoap context
@@ -50,24 +47,12 @@ int main(int ac, char* av[]) {
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();
 
-		ctx.getLog("asdfg");
-
-		return 0;
-
-		vector<string> jobs = cli->getJobIds();
-
-		if (jobs.empty()) {
-			cout << "No request ID has been specified" << endl;
-			return 0;
-		}
-
-		ctx.cancel(jobs);
-
-		vector<string>::iterator it;
-
-	    for (it = jobs.begin(); it < jobs.end(); it++) {
-	        cout << "Canceled " << *it << endl;;
-	    }
+		// submit the job
+		ctx.debugSet(
+				cli->getSource(),
+				cli->getDestination(),
+				cli->getDebugMode()
+			);
 
     } catch(std::exception& e) {
         cerr << "error: " << e.what() << "\n";
@@ -80,5 +65,5 @@ int main(int ac, char* av[]) {
         return 1;
     }
 
-	return 0;
+    return 0;
 }
