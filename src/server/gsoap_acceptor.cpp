@@ -62,7 +62,13 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
 	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true"?true:false;
 	if(keepAlive){
-	ctx = soap_new2(SOAP_IO_KEEPALIVE | SOAP_ENC_MTOM, SOAP_IO_KEEPALIVE | SOAP_ENC_MTOM);
+	ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+
+	soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
+	soap_set_namespaces(ctx, fts3_namespaces);
+
+	soap_set_omode(ctx, SOAP_ENC_MTOM);
+	soap_set_imode(ctx, SOAP_ENC_MTOM);
 
 	ctx->fmimereadopen = mime_read_open;
     ctx->fmimereadclose = mime_read_close;
@@ -77,8 +83,6 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe	
  	ctx->recv_timeout = 60; // Timeout after 1 minutes stall on recv
     ctx->send_timeout = 60; // Timeout after 1 minute stall on send
-	soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
-	soap_set_namespaces(ctx, fts3_namespaces);
 
 	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 
@@ -92,17 +96,22 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	
 	}else{
 	
-	ctx = soap_new1(SOAP_ENC_MTOM | SOAP_ENC_ZLIB);
+	ctx = soap_new();
+
+	soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
+	soap_set_namespaces(ctx, fts3_namespaces);
+
+	soap_set_omode(ctx, SOAP_ENC_MTOM);
+	soap_set_imode(ctx, SOAP_ENC_MTOM);
+
 	ctx->fmimereadopen = mime_read_open;
     ctx->fmimereadclose = mime_read_close;
     ctx->fmimeread = mime_read;
 
 	ctx->bind_flags |= SO_REUSEADDR;
 	ctx->accept_flags |= SO_LINGER;
-        ctx->connect_flags |= SO_LINGER;
-        ctx->linger_time = 4;
-	soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
-	soap_set_namespaces(ctx, fts3_namespaces);
+    ctx->connect_flags |= SO_LINGER;
+    ctx->linger_time = 4;
 
 	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 
