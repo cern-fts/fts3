@@ -116,7 +116,7 @@ protected:
 
 /* ========================================================================== */
 
-/** Singleton access to teh server config. */
+/** Singleton access to the server config. */
 inline ServerConfig& theServerConfig()
 {
     static ServerConfig e;

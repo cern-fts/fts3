@@ -43,7 +43,7 @@ public:
 	std::string STATE;
 	std::string VERSION;
 	std::string HOST;
-    	std::string SE_TRANSFER_TYPE;
+	std::string SE_TRANSFER_TYPE;
 	std::string SE_TRANSFER_PROTOCOL;
 	std::string SE_CONTROL_PROTOCOL;
 	std::string GOCDB_ID;
