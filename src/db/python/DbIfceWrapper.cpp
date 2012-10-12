@@ -95,8 +95,9 @@ std::vector<JobStatus> DbIfceWrapper::getTransferJobStatus(std::string requestID
 
 std::vector<TransferJobs> DbIfceWrapper::getSubmittedJobs(void)
 {
+  const string vos("");
   std::vector<TransferJobs*> jobs;
-  fts3db->getSubmittedJobs(jobs);
+  fts3db->getSubmittedJobs(jobs,vos);
   
   std::vector<TransferJobs> copy;
   std::vector<TransferJobs*>::const_iterator i;

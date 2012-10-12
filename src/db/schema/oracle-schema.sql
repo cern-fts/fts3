@@ -856,19 +856,21 @@ CREATE INDEX job_job_state    ON t_job(job_state);
 CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
+CREATE INDEX job_job_A     ON t_job(source_se,dest_se);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_job_id     ON t_file(job_id);
 CREATE INDEX file_file_state_job_id ON t_file(file_state,job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
+CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 
 CREATE INDEX transfer_file_id           ON t_transfer(file_id);
 CREATE INDEX transfer_job_id            ON t_transfer(job_id);
 CREATE INDEX transfer_transfer_state    ON t_transfer(transfer_state);
 CREATE INDEX transfer_jobfinished_id    ON t_transfer(job_finished);
 
-CREATE INDEX optimize_source_se         ON t_optimize(source_se);
+CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
 CREATE INDEX optimize_nostreams         ON t_optimize(nostreams);
 CREATE INDEX optimize_timeout           ON t_optimize(timeout);

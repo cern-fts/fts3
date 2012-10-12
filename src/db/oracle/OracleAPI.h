@@ -62,7 +62,7 @@ public:
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
 
-    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs);
+    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
     
     virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files);
     
@@ -178,7 +178,7 @@ public:
     virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname);
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode); 
     
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs); 
+    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos); 
     
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action); 
     
@@ -206,11 +206,15 @@ public:
     
     virtual void setPid(const std::string & jobId, const std::string & fileId, int pid); 
     
-    virtual void setPidV(int pid, std::map<int,std::string>& pids);                   
+    virtual void setPidV(int pid, std::map<int,std::string>& pids);
+    
+    virtual void revertToSubmitted();
+    
+    virtual void revertToSubmittedTerminate();      
     
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;
 	bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
-	mutable ThreadTraits::MUTEX _mutex;
+	mutable ThreadTraits::MUTEX_R _mutex;
 };

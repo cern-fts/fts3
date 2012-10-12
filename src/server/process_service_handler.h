@@ -43,6 +43,7 @@ limitations under the License. */
 #include "definitions.h"
 #include "DrainMode.h"
 #include "StaticSslLocking.h"
+#include <boost/algorithm/string.hpp>  
 
 extern bool  stopThreads;
 
@@ -372,6 +373,17 @@ protected:
 		files.reserve(300);
         	std::vector<TransferFiles*>::const_iterator fileiter;			
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
+		if(files.size()==0){
+     			 /** cleanup resources */
+                	for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                    		delete *iter2;
+                	jobs2.clear();
+                	for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
+                    		delete *fileiter;
+                	files.clear();
+			fileIds.clear();		
+		return;
+		}
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
                     TransferFiles* temp = (TransferFiles*) * fileiter;
                     tempUrl = temp;
@@ -556,6 +568,22 @@ protected:
 	jobs2.reserve(25);
 	static bool drainMode = false;
 	static long double counter = 0;
+	static unsigned int countReverted = 0;
+	std::string allowedVOs("");
+	const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
+	if(voNameList.size()>0 && std::string(voNameList[0]).compare("*")!=0){
+		std::vector<std::string>::const_iterator iterVO;
+		allowedVOs+="(";
+		for (iterVO = voNameList.begin(); iterVO != voNameList.end(); ++iterVO) {
+			allowedVOs+="'";
+			allowedVOs+=(*iterVO);
+			allowedVOs+="',";			
+		}
+		allowedVOs = allowedVOs.substr(0, allowedVOs.size()-1);
+		allowedVOs+=")";
+		boost::algorithm::to_lower(allowedVOs);
+	}
+
 
         while (stopThreads == false) {
 		
@@ -577,8 +605,14 @@ protected:
 			DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();	    
 			counter=0;
 	        }
+		countReverted++;		
+		if(countReverted==1000){			
+			DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
+			countReverted=0;
+		}
+		
                 /*get jobs in submitted state*/
-                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2);
+                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
                 /*also get jobs which have been canceled by the client*/
                 DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
                 if (requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
@@ -590,7 +624,7 @@ protected:
 
                 /* --- session reuse section ---*/
                 /*get jobs in submitted state and session reuse on*/
-                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2);
+                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
                 if (jobs2.size() > 0)
                     executeUrlcopy(jobs2, true);
 

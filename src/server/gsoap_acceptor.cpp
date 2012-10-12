@@ -38,7 +38,7 @@ FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
-	//StaticSslLocking::init_locks();
+	const char *chiphers = "ALL:!ADH:!EXPORT:!LOW:!MEDIUM:!SSLv2:RC4+RSA:+HIGH";
 
 	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true"?true:false;
 	if(keepAlive){
@@ -103,7 +103,6 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 	        kill(getpid(), SIGINT);
 	    }
 	}
-	//StaticSslLocking::kill_locks();
 }
 
 GSoapAcceptor::~GSoapAcceptor() {
@@ -144,7 +143,7 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
 soap* GSoapAcceptor::getSoapContext() {
 
 	
-        ThreadTraits::LOCK lock(_mutex);	
+        ThreadTraits::LOCK_R lock(_mutex);	
 	if (!recycle.empty()) {
 		soap* ctx = recycle.front();
 		recycle.pop();
@@ -158,7 +157,7 @@ soap* GSoapAcceptor::getSoapContext() {
 
 void GSoapAcceptor::recycleSoapContext(soap* ctx) {
      if(stopThreads == false){
-        ThreadTraits::LOCK lock(_mutex);
+        ThreadTraits::LOCK_R lock(_mutex);
 	if(ctx){
 		soap_destroy(ctx);
 		soap_end(ctx);

@@ -53,6 +53,8 @@ FTS3_COMMON_NAMESPACE_START
 struct ThreadTraits {
 	typedef boost::mutex              MUTEX;
 	typedef boost::condition          CONDITION;
+	typedef boost::recursive_mutex	  MUTEX_R;
+	typedef boost::recursive_mutex::scoped_lock LOCK_R;
 	typedef boost::mutex::scoped_lock LOCK;
 	typedef boost::thread_group       THREAD_GROUP;
 	typedef boost::thread             THREAD;

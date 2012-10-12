@@ -28,11 +28,12 @@ FTS3_COMMON_NAMESPACE_START
 /* ========================================================================== */
 
 /** \brief Base of each Logger-s for FTS3 (common logic). */
-class LoggerBase : public MonitorObject
+class LoggerBase 
 {
 protected:
     /// Constructor.
 	LoggerBase();
+	mutable ThreadTraits::MUTEX_R _mutex;
 
     /* ---------------------------------------------------------------------- */
 
@@ -121,10 +122,9 @@ public:
     /// Switch logging on. Log messages will be displayed.
 	GenericLogger& setLogOn()
     {
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    ThreadTraits::LOCK_R lock(_mutex);
 	    _isLogOn = true;
         //Traits::openLog();
-    FTS3_COMMON_MONITOR_END_CRITICAL
 	    return *this;
     }
 
@@ -133,10 +133,9 @@ public:
     /// Switch log messages off. No log messages are displayed.
     GenericLogger& setLogOff()
     {
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    ThreadTraits::LOCK_R lock(_mutex);
 	    _isLogOn = false;
         //Traits::closeLog();
-    FTS3_COMMON_MONITOR_END_CRITICAL
 	    return *this;
     }
 
@@ -145,7 +144,7 @@ public:
     /// Commits (writes) the actual log line.
 	void _commit()
     {
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    ThreadTraits::LOCK_R lock(_mutex);
         if ( _isLogOn &&
              ! _logLine.str().empty())
         {
@@ -156,7 +155,6 @@ public:
         }
 
         _logLine.str("");
-    FTS3_COMMON_MONITOR_END_CRITICAL
     }
 
     /* ---------------------------------------------------------------------- */
@@ -174,7 +172,7 @@ public:
     )
     {
 	    commit(*this);
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    ThreadTraits::LOCK_R lock(_mutex);
 	    _actLogLevel = LOGLEVEL;
         _logLine << logLevelStringRepresentation(_actLogLevel) << timestamp() << _separator();
         bool isDebug = (Traits::ERR == _actLogLevel);
@@ -183,7 +181,6 @@ public:
         {
 	        _logLine << aFile << _separator() << aFunc << _separator() << std::dec << aLineNo << _separator();
 	    }
-    FTS3_COMMON_MONITOR_END_CRITICAL
 
         return *this;
     }
@@ -207,12 +204,12 @@ public:
     template <typename T>
     GenericLogger& operator << (const T& aSrc)
     {
-    FTS3_COMMON_MONITOR_START_CRITICAL
+    ThreadTraits::LOCK_R lock(_mutex);
 	    if (_isLogOn)
         {
 		    _logLine << aSrc;
         }
-    FTS3_COMMON_MONITOR_END_CRITICAL
+
 
         return *this;
     }

@@ -42,8 +42,8 @@ using namespace db;
 FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<TransferFiles*> otherFiles) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
 
-	this->file = file;
-
+	if(file){
+		this->file = file;
 	// prepare input for SE part
 	// TODO check if initialized
 	srcSeName = CfgBlocks::fileUrlToSeName(file->SOURCE_SURL).get();
@@ -58,6 +58,7 @@ FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<Transfe
 	destGroupName = db->get_group_name(destSeName);
 
 	initVosInQueue(otherFiles);
+       }	
 }
 
 FileTransferScheduler::~FileTransferScheduler() {

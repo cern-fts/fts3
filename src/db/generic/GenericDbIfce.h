@@ -94,7 +94,7 @@ public:
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
  
-    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs) = 0;
+    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
     
     virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) = 0;
  
@@ -220,7 +220,7 @@ public:
     virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname) = 0;
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode) = 0;
     
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs) = 0;    
+    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;    
     
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
     
@@ -250,6 +250,10 @@ public:
     virtual void setPid(const std::string & jobId, const std::string & fileId, int pid) = 0;
     
     virtual void setPidV(int pid, std::map<int,std::string>& pids) = 0;        
+    
+    virtual void revertToSubmitted() = 0;
+    
+    virtual void revertToSubmittedTerminate() = 0;
 };
 
 
