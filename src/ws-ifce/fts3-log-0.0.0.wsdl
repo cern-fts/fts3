@@ -38,10 +38,12 @@
  </schema>
 </types>
 
-<message name="GetData"/>
+<message name="GetData">
+  <part name="jobId" type="xsd:string"/>
+</message>
 
 <message name="GetDataResponse">
-  <part name="parameters" element="m:GetDataResponse"/> 
+  <part name="log" element="m:GetDataResponse"/> 
 </message>
 
 <portType name="LogRetriever">
