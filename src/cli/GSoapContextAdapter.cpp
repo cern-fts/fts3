@@ -468,8 +468,11 @@ void GSoapContextAdapter::getLog(string jobId) {
 
 	//soap_call___impltns__getLog(struct soap *soap, const char *soap_endpoint, const char *soap_action, std::string jobId, impltns__GetDataResponseType *impltns__getLogResponse);
 	log__GetDataResponse resp;
-	soap_call_log__GetData(ctx, endpoint.c_str(), 0, resp);
-	log__Data* log = resp.parameters->data;
+	if (soap_call_log__GetData(ctx, endpoint.c_str(), 0, jobId, resp)) {
+		handleSoapFault("Failed to get configuration: debugSet.");
+		return;
+	}
+	log__Data* log = resp.log->data;
 
 	for (int i = 0; i < log->xop__Include.__size; i++)
 		cout << log->xop__Include.__ptr[i];
