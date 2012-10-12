@@ -41,8 +41,6 @@ public:
 	static void* readOpen(soap* ctx, void* handle, const char* id, const char* type, const char* description);
 
 	static size_t read(soap* ctx, void* handle, char* buff, size_t len);
-
-	fstream file;
 };
 
 }

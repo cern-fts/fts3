@@ -29,16 +29,6 @@
 using namespace fts3::ws;
 using namespace fts3::common;
 
-LogFileStreamer::LogFileStreamer(char* logname):file(logname) {
-	if (!file) {
-		throw Err_Custom("The log file does not exist!");
-	}
-}
-
-LogFileStreamer::~LogFileStreamer() {
-	file.close();
-}
-
 void LogFileStreamer::readClose(soap* ctx, void* handle) {
 	fstream* file = (fstream*) handle;
 	if (file) {
