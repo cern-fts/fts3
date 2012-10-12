@@ -25,6 +25,7 @@
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include "StaticSslLocking.h"
+//#include "LogFileStreamer.h"
 
 #include <fstream>
 
@@ -32,29 +33,8 @@ extern bool  stopThreads;
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace FTS3_CONFIG_NAMESPACE;
+using namespace fts3::ws;
 FTS3_SERVER_NAMESPACE_START
-
-void *mime_read_open(struct soap *soap, void *handle, const char *id, const char *type, const char *description) {
-	std::cout << "mime_read_open" << std::endl;
-	return handle;
-}
-
-void mime_read_close(struct soap *soap, void *handle) {
-	std::cout << "mime_read_close" << std::endl;
-	std::fstream* file = (std::fstream*) handle;
-	file->close();
-}
-
-size_t mime_read(struct soap *soap, void *handle, char *buf, size_t len) {
-
-	std::cout << "mime_read" << std::endl;
-
-	std::fstream* file = (std::fstream*) handle;
-	int s = file->tellg();
-	file->read(buf, len);
-	int s1 = file->tellg();
-	return s1 - s;
-}
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
@@ -62,58 +42,58 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
 	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true"?true:false;
 	if(keepAlive){
-	ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
+		ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
 
-	soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
-	soap_set_namespaces(ctx, fts3_namespaces);
+//		ctx->fmimereadopen = LogFileStreamer::mime_read_open;
+//		ctx->fmimereadclose = LogFileStreamer::mime_read_close;
+//		ctx->fmimeread = LogFileStreamer::mime_read;
 
-	soap_set_omode(ctx, SOAP_ENC_MTOM);
-	soap_set_imode(ctx, SOAP_ENC_MTOM);
+		ctx->bind_flags |= SO_REUSEADDR;
+		ctx->accept_flags |= SO_LINGER;
+		ctx->connect_flags |= SO_LINGER;
+		ctx->linger_time = 2;
+		ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session
+		ctx->accept_timeout = 60; // optional: 60 secs timeout
+		ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe
+		ctx->recv_timeout = 60; // Timeout after 1 minutes stall on recv
+		ctx->send_timeout = 60; // Timeout after 1 minute stall on send
 
-	ctx->fmimereadopen = mime_read_open;
-    ctx->fmimereadclose = mime_read_close;
-    ctx->fmimeread = mime_read;
+		soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
+		soap_set_namespaces(ctx, fts3_namespaces);
 
-	ctx->bind_flags |= SO_REUSEADDR;
-	ctx->accept_flags |= SO_LINGER;
-	ctx->connect_flags |= SO_LINGER;
-	ctx->linger_time = 2;
-    ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session
-   	ctx->accept_timeout = 60; // optional: 60 secs timeout 
-	ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe	
- 	ctx->recv_timeout = 60; // Timeout after 1 minutes stall on recv
-    ctx->send_timeout = 60; // Timeout after 1 minute stall on send
+		soap_set_omode(ctx, SOAP_ENC_MTOM);
+		soap_set_imode(ctx, SOAP_ENC_MTOM);
 
-	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
-
-	    if (sock >= 0) {
-	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
-	    } else {
-	        FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
-  	        fclose (stderr);   
-	        kill(getpid(), SIGINT);
-	    }
+		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 	
+		if (sock >= 0) {
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
+		} else {
+			FTS3_COMMON_EXCEPTION_THROW (Err_System ("Unable to bound to socket."));
+			fclose (stderr);
+			kill(getpid(), SIGINT);
+		}
+
 	}else{
 	
 	ctx = soap_new();
 
-	soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
-	soap_set_namespaces(ctx, fts3_namespaces);
+//		ctx->fmimereadopen = LogFileStreamer::mime_read_open;
+//		ctx->fmimereadclose = LogFileStreamer::mime_read_close;
+//		ctx->fmimeread = LogFileStreamer::mime_read;
 
-	soap_set_omode(ctx, SOAP_ENC_MTOM);
-	soap_set_imode(ctx, SOAP_ENC_MTOM);
+		ctx->bind_flags |= SO_REUSEADDR;
+		ctx->accept_flags |= SO_LINGER;
+		ctx->connect_flags |= SO_LINGER;
+		ctx->linger_time = 4;
 
-	ctx->fmimereadopen = mime_read_open;
-    ctx->fmimereadclose = mime_read_close;
-    ctx->fmimeread = mime_read;
+		soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
+		soap_set_namespaces(ctx, fts3_namespaces);
 
-	ctx->bind_flags |= SO_REUSEADDR;
-	ctx->accept_flags |= SO_LINGER;
-    ctx->connect_flags |= SO_LINGER;
-    ctx->linger_time = 4;
+		soap_set_omode(ctx, SOAP_ENC_MTOM);
+		soap_set_imode(ctx, SOAP_ENC_MTOM);
 
-	SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
+		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 
 	    if (sock >= 0) {
 	        FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
