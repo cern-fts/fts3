@@ -48,6 +48,7 @@ set(fts_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_config_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_deleg_methods.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/LogFileStreamer.cpp"
 )
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})

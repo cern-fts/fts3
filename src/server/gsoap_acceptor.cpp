@@ -25,7 +25,7 @@
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include "StaticSslLocking.h"
-//#include "LogFileStreamer.h"
+#include "ws/LogFileStreamer.h"
 
 #include <fstream>
 
@@ -33,20 +33,16 @@ extern bool  stopThreads;
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace FTS3_CONFIG_NAMESPACE;
-//using namespace fts3::ws;
+using namespace fts3::ws;
 FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
 	const char *chiphers = "ALL:!ADH:!EXPORT:!LOW:!MEDIUM:!SSLv2:RC4+RSA:+HIGH";
 
-	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true"?true:false;
-	if(keepAlive){
+	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true" ? true : false;
+	if (keepAlive) {
 		ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
-
-//		ctx->fmimereadopen = LogFileStreamer::mime_read_open;
-//		ctx->fmimereadclose = LogFileStreamer::mime_read_close;
-//		ctx->fmimeread = LogFileStreamer::mime_read;
 
 		ctx->bind_flags |= SO_REUSEADDR;
 		ctx->accept_flags |= SO_LINGER;
@@ -60,9 +56,11 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
 		soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
+		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 
-		soap_set_omode(ctx, SOAP_ENC_MTOM);
-		soap_set_imode(ctx, SOAP_ENC_MTOM);
+		ctx->fmimereadopen = LogFileStreamer::readOpen;
+		ctx->fmimereadclose = LogFileStreamer::readClose;
+		ctx->fmimeread = LogFileStreamer::read;
 
 		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 	
@@ -74,13 +72,13 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 			kill(getpid(), SIGINT);
 		}
 
-	}else{
+	} else {
 	
-	ctx = soap_new();
+		ctx = soap_new();
 
-//		ctx->fmimereadopen = LogFileStreamer::mime_read_open;
-//		ctx->fmimereadclose = LogFileStreamer::mime_read_close;
-//		ctx->fmimeread = LogFileStreamer::mime_read;
+		ctx->fmimereadopen = LogFileStreamer::readOpen;
+		ctx->fmimereadclose = LogFileStreamer::readClose;
+		ctx->fmimeread = LogFileStreamer::read;
 
 		ctx->bind_flags |= SO_REUSEADDR;
 		ctx->accept_flags |= SO_LINGER;
@@ -89,9 +87,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
 		soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
-
-		soap_set_omode(ctx, SOAP_ENC_MTOM);
-		soap_set_imode(ctx, SOAP_ENC_MTOM);
+		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 
 		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 
