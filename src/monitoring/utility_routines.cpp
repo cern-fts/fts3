@@ -244,7 +244,7 @@ std::string filesStore(const char* filename, const char *path, char *env) {
 			}
 		  else{
 		  	logger::writeMsgNoConfig("/etc/fts3/fts-msg-monitoring.conf configuration file cannot be found");
-			exit(0);
+			
 	          }	
 		}
 		else{
