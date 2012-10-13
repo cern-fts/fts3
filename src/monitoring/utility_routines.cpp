@@ -735,28 +735,7 @@ bool send_message(std::string & text)
 
 bool getResolveAlias()
 {
-  struct hostent *he;
-  std::string fqdn =  getCRONFQDN(); //from config file
-  char hostname[512] = {0};
-  gethostname(hostname, 512);
-  std::string currenthost = hostname; //current hostname
-  std::string tempAlias;
-  
-  he = gethostbyname (hostname);
-  if (he){
-    std::string tempHostname = he->h_name;
-    if(true == caseInsCompare(tempHostname, fqdn)){
-    	return true;
-    }    
-     while (*he->h_aliases){
-	    tempAlias = *he->h_aliases++;
-	    if(true == caseInsCompare(tempAlias, fqdn)){
-    		return true;
-	    }
-    }    
-
-     }
-  return false;
+    return true;
 }  
 
 std::string getFTSEndpoint()
