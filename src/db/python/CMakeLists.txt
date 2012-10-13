@@ -14,12 +14,12 @@ include_directories (${Boost_INCLUDE_DIRS}
 link_directories(${Boost_LIBRARY_DIRS})
 
 
-add_library           (fts3db SHARED fts3db.cpp
+add_library           (ftsdb SHARED fts3db.cpp
                                      DbIfceWrapper.cpp
                                      Jobs.cpp
                                      Se.cpp)
-target_link_libraries (fts3db ${Boost_LIBRARIES} fts_db_generic fts_common fts_config)
-set_target_properties (fts3db PROPERTIES PREFIX "")
+target_link_libraries (ftsdb ${Boost_LIBRARIES} fts_db_generic fts_common fts_config)
+set_target_properties (ftsdb PROPERTIES PREFIX "")
 
-install (TARGETS fts3db
-         LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES})
+install (TARGETS ftsdb
+         LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}/fts)

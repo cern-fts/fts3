@@ -1,3 +1,14 @@
+--
+-- Holds the log files path and host
+--
+CREATE TABLE t_log (
+  path       VARCHAR2(255),
+  job_id     CHAR(36),
+  dn         VARCHAR2(255),
+  vo         VARCHAR2(255),
+  when       TIMESTAMP WITH TIME ZONE
+  CONSTRAINT t_log_pk PRIMARY KEY (path,job_id,dn,vo)
+);
 
 --
 -- Holds optimization parameters
@@ -877,9 +888,6 @@ CREATE INDEX optimize_timeout           ON t_optimize(timeout);
 CREATE INDEX optimize_buffer            ON t_optimize(buffer);
 
 
---------------------------------------------------------------------------------------
--- Indices suggested by M. Anjo in order to improve performances and reduce the DB load
---------------------------------------------------------------------------------------
 CREATE index idx_report_transfer ON t_transfer (transfer_state,reason_class,file_id,duration,bytes_written);
 CREATE index idx_report_job      ON t_job (vo_name,job_id);
 

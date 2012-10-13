@@ -1,3 +1,5 @@
+%{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+
 Name: fts
 Version: 0.0.1 
 Release: 36%{?dist}
@@ -199,6 +201,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %files libs
 %defattr(-,root,root,-)
+%{python_sitearch}/fts/*
+%{_bindir}/fts*
 %{_libdir}/libfts_common.so*
 %{_libdir}/libfts_config.so*
 %{_libdir}/libfts_db_generic.so*
