@@ -38,7 +38,7 @@ const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
 
 
 #define DEFAULT_BUFFSIZE 0
-const int buffsizes[] = {4194304, 5242880,  7340032, 8388608, 9437184,  11534336, 12582912,  14680064	};
+const int buffsizes[] = {4194304, 5242880,  7340032, 8388608, 9437184,  11534336, 12582912,  14680064, 67108864};
 const size_t buffsizeslen = (sizeof (buffsizes) / sizeof *(buffsizes));
 
 
