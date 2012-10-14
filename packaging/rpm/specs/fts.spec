@@ -39,25 +39,9 @@ Requires(pre):  shadow-utils
 The File Transfer Service V3
 
 %package devel
-Summary: File Transfer Service V3
+Summary: Development files for File Transfer Service V3
 Group: Applications/Internet
-Requires: %{name}%{?_isa} = %{version}-%{release}
-BuildRequires:  cmake
-BuildRequires:  apr-devel%{?_isa}
-BuildRequires:  apr-util-devel%{?_isa}
-BuildRequires:  activemq-cpp-devel%{?_isa}
-BuildRequires:  gsoap-devel%{?_isa}
-BuildRequires:  doxygen%{?_isa}
-BuildRequires:  libuuid-devel%{?_isa}
-BuildRequires:  boost-devel%{?_isa}
-BuildRequires:  globus-gsi-credential-devel%{?_isa}
-BuildRequires:  CGSI-gSOAP-devel%{?_isa}
-BuildRequires:  is-interface-devel%{?_isa}
-BuildRequires:  glib2-devel%{?_isa}
-BuildRequires:  gridsite-devel%{?_isa}
-BuildRequires:  gfal2-devel%{?_isa}
-BuildRequires:  oracle-instantclient-devel%{?_isa}
-BuildRequires:  voms-devel%{?_isa}
+Requires: fts-libs = %{version}-%{release}
 
 %description devel
 Development files for File Transfer Service V3
