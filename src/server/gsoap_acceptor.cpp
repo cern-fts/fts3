@@ -26,7 +26,7 @@
 #include <signal.h>
 #include "StaticSslLocking.h"
 #include "ws/LogFileStreamer.h"
-
+#include <sys/socket.h>
 #include <fstream>
 
 extern bool  stopThreads;
@@ -37,9 +37,7 @@ using namespace fts3::ws;
 FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
-
-	const char *chiphers = "ALL:!ADH:!EXPORT:!LOW:!MEDIUM:!SSLv2:RC4+RSA:+HIGH";
-
+	
 	bool keepAlive = theServerConfig().get<std::string>("HttpKeepAlive")=="true" ? true : false;
 	if (keepAlive) {
 		ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
@@ -48,8 +46,9 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		ctx->accept_flags |= SO_LINGER;
 		ctx->connect_flags |= SO_LINGER;
 		ctx->linger_time = 2;
-		ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session
-		ctx->accept_timeout = 60; // optional: 60 secs timeout
+		ctx->keep_alive = 1;
+		ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session		
+		ctx->accept_timeout = 120; // optional: 120 secs timeout
 		ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe
 		ctx->recv_timeout = 60; // Timeout after 1 minutes stall on recv
 		ctx->send_timeout = 60; // Timeout after 1 minute stall on send
@@ -63,6 +62,10 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		ctx->fmimeread = LogFileStreamer::read;
 
 		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
+		struct linger ling ;
+	        ling.l_onoff=1;
+    	        ling.l_linger=0;
+                setsockopt(sock, SOL_SOCKET, SO_LINGER, &ling, sizeof(ling));
 	
 		if (sock >= 0) {
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
@@ -107,15 +110,17 @@ GSoapAcceptor::~GSoapAcceptor() {
 	while (!recycle.empty()) {
 
 		tmp = recycle.front();
-		recycle.pop();
-
-		soap_done(tmp);
-		soap_free(tmp);
+		recycle.pop();	       
+		soap_clr_omode(tmp, SOAP_IO_KEEPALIVE);
+                soap_destroy(tmp);
+		soap_end(tmp);
+		soap_done(tmp);		
 	}
-      if(ctx){
+      if(ctx){	
+	soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
 	soap_destroy(ctx);
 	soap_end(ctx);
-	soap_free(ctx);
+	soap_done(ctx);
       }
 }
 
@@ -154,10 +159,10 @@ soap* GSoapAcceptor::getSoapContext() {
 void GSoapAcceptor::recycleSoapContext(soap* ctx) {
      if(stopThreads == false){
         ThreadTraits::LOCK_R lock(_mutex);
-	if(ctx){
+	if(ctx){		
 		soap_destroy(ctx);
 		soap_end(ctx);
-		recycle.push(ctx);
+		recycle.push(ctx);		
 	}
      }	
 }

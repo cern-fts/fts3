@@ -30,6 +30,8 @@
 #include <iostream>
 #include <fstream>
 #include "SingleDbInstance.h"
+#include <dirent.h>
+#include <sys/socket.h>
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace std;
@@ -41,6 +43,26 @@ static int fexists(const char *filename) {
     if (stat(filename, &buffer) == 0) return 0;
     return -1;
 }
+
+static void CloseFds(int start) {
+	   DIR *dir = opendir("/proc/self/fd");
+	   if (dir != 0) {
+	      struct dirent* e;
+	      int dfd = dirfd(dir);
+	      while ((e = readdir(dir)) != 0) {
+		 int fd = atoi(e->d_name);
+		 if (fd >= start && fd != dfd) {		   
+		    close(fd);
+		 }
+	      }
+	      closedir(dir);
+	   } else {
+	      int fd, maxfd = getdtablesize();
+	      for (fd = start; fd < maxfd; ++fd) {		 
+		 (void)close(fd);
+	      }
+	   }
+	}
 
 ExecuteProcess::ExecuteProcess(const string& app, const string& arguments, int fdlog)
 : _jobId(""), _fileId(""), m_app(app), m_arguments(arguments), m_fdlog(fdlog) {
@@ -295,9 +317,12 @@ int ExecuteProcess::execProcessShell() {
                 close(fd);
             }
         }
-	int maxfd=sysconf(_SC_OPEN_MAX);
-	for(register int fd=3; fd<maxfd; fd++)
+	/*int maxfd=sysconf(_SC_OPEN_MAX);
+	for(register int fd=3; fd<maxfd; fd++){	    
 	    close(fd);
+        }*/
+	CloseFds(3);
+        
 
         char *token;
         const char *path = getenv("PATH");

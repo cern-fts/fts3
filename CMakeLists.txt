@@ -47,6 +47,7 @@ ADD_DEFINITIONS(-DOPENSSL_THREADS)
 ADD_DEFINITIONS(-DWITH_OPENSSL)
 ADD_DEFINITIONS(-DNDEBUG)
 ADD_DEFINITIONS(-DSOCKET_CLOSE_ON_EXIT)
+
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module
 include(DefineInstallationPaths REQUIRED)

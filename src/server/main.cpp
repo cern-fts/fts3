@@ -56,9 +56,10 @@ void _handle_sigint(int)
     stopThreads = true;
     /*upon exiting, check if there are files in ready state and revert them to submitted
  	-If reuse, then file/job state must be reverted to submitted
-	-If not reuse, revert only files to submitted state
+	-If not reuse, revert only files to submitted state   
     DBSingleton::instance().getDBObjectInstance()->revertToSubmittedTerminate();  	
-   */            
+    */
+              
     theServer().stop();     
     sleep(3);
     exit(EXIT_SUCCESS);
