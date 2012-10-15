@@ -1,4 +1,5 @@
 #include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <config/serverconfig.h>
 #include <db/generic/JobStatus.h>
 #include <db/generic/TransferJobs.h>
@@ -22,6 +23,10 @@ BOOST_PYTHON_MODULE(ftsdb)
   // Config helper
   def("getConfig", getConfig);
   
+  // Vector of string needs to be exposed, so we can pass them as parameters
+  class_< std::vector<std::string> >("StringVector")
+      .def(vector_indexing_suite< std::vector<std::string> >());
+
   // Types
   export_job_types();
   export_se_types();

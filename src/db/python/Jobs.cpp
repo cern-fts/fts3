@@ -43,7 +43,7 @@ void export_job_types(void)
     .def_readonly("numFiles", &JobStatus::numFiles)
     .def_readonly("priority", &JobStatus::priority);
   
-  class_< std::vector<JobStatus> >("vector_JobStatus")
+  class_< std::vector<JobStatus> >("JobStatusVector")
     .def(vector_indexing_suite< std::vector<JobStatus> >());
     
   // Jobs and vector
@@ -86,7 +86,7 @@ void export_job_types(void)
     .def_readonly("FAIL_NEARLINE", &TransferJobs::FAIL_NEARLINE)
     .def_readonly("CHECKSUM_METHOD", &TransferJobs::CHECKSUM_METHOD);
   
-  class_< std::vector<TransferJobs> >("vector_TransferJobs")
+  class_< std::vector<TransferJobs> >("TransferJobsVector")
     .def(vector_indexing_suite< std::vector<TransferJobs> >());
   
   // File transfer status and vector
@@ -103,6 +103,6 @@ void export_job_types(void)
     .def_readonly("error_scope", &FileTransferStatus::error_scope)
     .def_readonly("error_phase", &FileTransferStatus::error_phase);
   
-  class_< std::vector<FileTransferStatus> >("vector_FileTransferStatus")
+  class_< std::vector<FileTransferStatus> >("FileTransferStatusVector")
     .def(vector_indexing_suite< std::vector<FileTransferStatus> >());
 }

@@ -45,7 +45,7 @@ void export_se_types(void)
     .def_readonly("SE_CONTROL_PROTOCOL", &Se::SE_CONTROL_PROTOCOL)
     .def_readonly("GOCDB_ID", &Se::GOCDB_ID);
   
-  class_< std::vector<Se> >("vector_Se")
+  class_< std::vector<Se> >("SeVector")
     .def(vector_indexing_suite< std::vector<Se> >());
   
   // Storage element configuration and vector
@@ -55,7 +55,7 @@ void export_se_types(void)
     .def_readonly("SHARE_ID", &SeConfig::SHARE_ID)
     .def_readonly("SHARE_VALUE", &SeConfig::SHARE_VALUE);
 
-  class_< std::vector<SeConfig> >("vector_SeConfig")
+  class_< std::vector<SeConfig> >("SeConfigVector")
     .def(vector_indexing_suite< std::vector<SeConfig> >());
   
   // Storage element and configuration (and vector)
