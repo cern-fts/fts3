@@ -17,7 +17,7 @@ std::string getConfig(const std::string& key)
 }
 
 // Entry point
-BOOST_PYTHON_MODULE(fts3db)
+BOOST_PYTHON_MODULE(ftsdb)
 {
   // Config helper
   def("getConfig", getConfig);
