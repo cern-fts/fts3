@@ -16,36 +16,34 @@
  *	See the License for the specific language governing permissions and
  *	limitations under the License.
  *
- * LogFileStreamer.cpp
+ * LogFileStreamer.h
  *
  *  Created on: Oct 12, 2012
  *      Author: Michał Simon
  */
 
-#include "LogFileStreamer.h"
-#include "common/error.h"
-#include <iostream>
+#ifndef LOGFILESTREAMER_H_
+#define LOGFILESTREAMER_H_
 
-using namespace fts3::ws;
-using namespace fts3::common;
+#include "ws-ifce/gsoap/gsoap_stubs.h"
+#include <string>
+#include <fstream>
 
-void LogFileStreamer::readClose(soap* ctx, void* handle) {
-	fstream* file = (fstream*) handle;
-	if (file) {
-		file->close();
-		delete file;
-	}
+namespace fts3 { namespace common {
+
+using namespace std;
+
+class LogFileStreamer {
+
+public:
+	static void readClose(soap* ctx, void* handle);
+
+	static void* readOpen(soap* ctx, void* handle, const char* id, const char* type, const char* description);
+
+	static size_t read(soap* ctx, void* handle, char* buff, size_t len);
+};
+
+}
 }
 
-void* LogFileStreamer::readOpen(soap* ctx, void* handle, const char* id, const char* type, const char* description) {
-	return handle;
-}
-
-size_t LogFileStreamer::read(soap* ctx, void* handle, char* buff, size_t len) {
-
-	fstream* file = (fstream*) handle;
-	if (file->eof()) return 0;
-
-	file->read(buff, len);
-	return file->gcount();
-}
+#endif /* LOGFILESTREAMER_H_ */

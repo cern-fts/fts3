@@ -25,7 +25,7 @@
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include "StaticSslLocking.h"
-#include "ws/LogFileStreamer.h"
+#include "common/LogFileStreamer.h"
 #include <sys/socket.h>
 #include <fstream>
 
@@ -33,7 +33,7 @@ extern bool  stopThreads;
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace FTS3_CONFIG_NAMESPACE;
-using namespace fts3::ws;
+using namespace fts3::common;
 FTS3_SERVER_NAMESPACE_START
 
 GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
