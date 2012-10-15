@@ -6,8 +6,8 @@ CREATE TABLE t_log (
   job_id     CHAR(36),
   dn         VARCHAR2(255),
   vo         VARCHAR2(255),
-  when       TIMESTAMP WITH TIME ZONE
-  CONSTRAINT t_log_pk PRIMARY KEY (path,job_id,dn,vo)
+  when       TIMESTAMP WITH TIME ZONE,
+  CONSTRAINT t_log_pk PRIMARY KEY (path, job_id, dn, vo)
 );
 
 --

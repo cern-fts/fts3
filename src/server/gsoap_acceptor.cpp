@@ -112,12 +112,14 @@ GSoapAcceptor::~GSoapAcceptor() {
 		tmp = recycle.front();
 		recycle.pop();	       
 		soap_clr_omode(tmp, SOAP_IO_KEEPALIVE);
+		shutdown(tmp->socket,2);
                 soap_destroy(tmp);
 		soap_end(tmp);
 		soap_done(tmp);		
 	}
       if(ctx){	
 	soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
+    	shutdown(ctx->master,2);	
 	soap_destroy(ctx);
 	soap_end(ctx);
 	soap_done(ctx);
