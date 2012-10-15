@@ -19,15 +19,6 @@
 
   <import namespace="http://www.w3.org/2004/08/xop/include" schemaLocation="http://www.w3.org/2004/08/xop/include"/>
 
-  <!-- operation response element -->
-  
-   <complexType name="GetDataResponseType">
-    <sequence>
-     <element ref="m:data" minOccurs="1" maxOccurs="1"/><!-- m__GetDataResponse::x__data -->
-    </sequence>
-   </complexType>
-   <element name="GetDataResponse" type="m:GetDataResponseType"/>
-
    <complexType name="Data">
     <sequence>
      <element ref="xop:Include" minOccurs="1" maxOccurs="1"/>
