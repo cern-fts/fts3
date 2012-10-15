@@ -472,7 +472,7 @@ void GSoapContextAdapter::getLog(string jobId) {
 		handleSoapFault("Failed to get configuration: debugSet.");
 		return;
 	}
-	log__Data* log = resp.log->data;
+	log__Data* log = resp.log;
 
 	for (int i = 0; i < log->xop__Include.__size; i++)
 		cout << log->xop__Include.__ptr[i];

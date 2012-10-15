@@ -43,7 +43,7 @@
 </message>
 
 <message name="GetDataResponse">
-  <part name="log" element="m:GetDataResponse"/> 
+  <part name="log" element="m:data"/> 
 </message>
 
 <portType name="LogRetriever">

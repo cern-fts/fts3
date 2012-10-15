@@ -607,8 +607,6 @@ int fts3::log__GetData(struct soap* soap, string jobId, struct log__GetDataRespo
 		return SOAP_FAULT;
 	}
 
-	_param_36.log = soap_new_log__GetDataResponseType(soap, -1);
-
 	log__Data* log = soap_new_log__Data(soap, -1);
 	// the stream will be closed and the memory will be freed by the readclose callback
 	log->xop__Include.__ptr = (unsigned char*) file;
@@ -617,7 +615,7 @@ int fts3::log__GetData(struct soap* soap, string jobId, struct log__GetDataRespo
 	log->xop__Include.type = "*/*"; // MIME type
 	log->xop__Include.options = 0; // no descriptive info added
 
-	_param_36.log->data = log;
+	_param_36.log = log;
 
 	return SOAP_OK;
 }
