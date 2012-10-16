@@ -41,7 +41,7 @@ private:
 		
         bool wait(const boost::xtime t) 
         {
-			ThreadTraits::LOCK lock(_mutex);
+			ThreadTraits::LOCK_R lock(_mutex);
 			bool ret = _stopped ? true : _cond.timed_wait(lock, t);
 			return ret;
 		};
@@ -50,7 +50,7 @@ private:
 		
         void finished() 
         {
-			ThreadTraits::LOCK lock(_mutex);
+			ThreadTraits::LOCK_R lock(_mutex);
 			_stopped = true;
 			_cond.notify_all();
 		}
@@ -63,7 +63,7 @@ private:
         
         /* -------------------------------------------------------------- */
 		
-        mutable ThreadTraits::MUTEX _mutex;
+        mutable ThreadTraits::MUTEX_R _mutex;
         
         /* -------------------------------------------------------------- */
 

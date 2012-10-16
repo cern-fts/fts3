@@ -96,8 +96,12 @@ protected:
 	{
         typename TRAITS::Acceptor acceptor (port, ip);
 
-		while(stopThreads == false) 
+		while(1) 
         {
+
+           if(stopThreads)
+		return;
+
             typename Pointer<typename TRAITS::Handler>::Shared handler = acceptor.accept();
 
             if (handler.get())

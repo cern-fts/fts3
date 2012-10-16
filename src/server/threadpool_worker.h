@@ -37,7 +37,6 @@ public:
 
 private:
 	void _doWork();
-	mutable ThreadTraits::MUTEX _mutex;
 	
 	
 	static Timeout& _TIMEOUT() 

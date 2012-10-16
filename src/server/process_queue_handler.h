@@ -107,8 +107,8 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
 
-    while(stopThreads == false){ /*need to receive more than one messages at a time*/    
-       if(stopThreads) break;
+    while(1){ /*need to receive more than one messages at a time*/    
+       if(stopThreads) return;
     try{
     	struct message msg;
 	qm->receive(&msg);

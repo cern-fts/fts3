@@ -39,7 +39,10 @@ Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id)
 void Worker::_doWork() 
 {
 	
-	while(stopThreads == false) {
+	while(1) {
+          if(stopThreads)
+                return;
+
 		_TIMEOUT().actualize();
 		ThreadPool::element_type task(ThreadPool::instance().pop(_TIMEOUT()));	
 

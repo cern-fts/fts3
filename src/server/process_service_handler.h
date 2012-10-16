@@ -183,6 +183,9 @@ protected:
         	std::vector<TransferFiles*>::const_iterator fileiter;		
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
+		if(stopThreads)
+			return;
+
                     int BufSize = 0;
                     int StreamsperFile = 0;
                     int Timeout = 0;
@@ -426,6 +429,8 @@ protected:
                     delete opt_config;
                     opt_config = NULL;
                 }
+		if(stopThreads)
+			return;
 
                 FileTransferScheduler scheduler(tempUrl);
                 if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
@@ -585,10 +590,8 @@ protected:
 	}
 
 
-        while (stopThreads == false) {
-		
-        if ( stopThreads ) break;
-    
+        while (1) {
+	                  
 	    if(DrainMode::getInstance()){
                 if(!drainMode)
 	    		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
@@ -628,7 +631,7 @@ protected:
                 if (jobs2.size() > 0)
                     executeUrlcopy(jobs2, true);
 
-                usleep(500000);
+                usleep(5000000);
             } catch (...) {
                 if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::iterator iter2;

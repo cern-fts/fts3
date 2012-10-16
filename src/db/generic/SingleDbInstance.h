@@ -64,11 +64,10 @@ public:
  **/ 
     static DBSingleton & instance() {
         if (i.get() == 0) {
-            FTS3_COMMON_MONITOR_START_STATIC_CRITICAL
+            ThreadTraits::LOCK lock(_mutex);
             if (i.get() == 0) {
                 i.reset(new DBSingleton);
-            }
-	    FTS3_COMMON_MONITOR_END_CRITICAL
+            }	    
         }
         return *i;
     }
@@ -86,7 +85,7 @@ private:
 
     DBSingleton(DBSingleton const&) {
     }; // copy constructor is private
-
+    static ThreadTraits::MUTEX _mutex;
     DBSingleton & operator=(DBSingleton const&);
     // assignment operator is private
     static boost::scoped_ptr<DBSingleton> i;

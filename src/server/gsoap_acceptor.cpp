@@ -75,10 +75,8 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 			kill(getpid(), SIGINT);
 		}
 
-	} else {
-	
+	} else {	
 		ctx = soap_new();
-
 		ctx->fmimereadopen = LogFileStreamer::readOpen;
 		ctx->fmimereadclose = LogFileStreamer::readClose;
 		ctx->fmimeread = LogFileStreamer::read;
@@ -105,24 +103,29 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 }
 
 GSoapAcceptor::~GSoapAcceptor() {
-
-	soap* tmp;
+	ThreadTraits::LOCK_R lock(_mutex);	
+	soap* tmp=NULL;
 	while (!recycle.empty()) {
-
 		tmp = recycle.front();
+                if(tmp){
 		recycle.pop();	       
 		soap_clr_omode(tmp, SOAP_IO_KEEPALIVE);
-		shutdown(tmp->socket,2);
-                soap_destroy(tmp);
+		shutdown(tmp->socket,2);               
+		shutdown(tmp->master,2);
+		soap_destroy(tmp);
 		soap_end(tmp);
-		soap_done(tmp);		
+		soap_done(tmp);
+		soap_free(tmp);		
+               }
 	}
       if(ctx){	
 	soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
-    	shutdown(ctx->master,2);	
+	shutdown(ctx->master,2);
+	shutdown(ctx->socket,2);
 	soap_destroy(ctx);
 	soap_end(ctx);
 	soap_done(ctx);
+	soap_free(ctx);	
       }
 }
 
@@ -143,9 +146,7 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
     return handler;
 }
 
-soap* GSoapAcceptor::getSoapContext() {
-
-	
+soap* GSoapAcceptor::getSoapContext() {	
         ThreadTraits::LOCK_R lock(_mutex);	
 	if (!recycle.empty()) {
 		soap* ctx = recycle.front();
@@ -158,15 +159,15 @@ soap* GSoapAcceptor::getSoapContext() {
 	return soap_copy(ctx);
 }
 
-void GSoapAcceptor::recycleSoapContext(soap* ctx) {
-     if(stopThreads == false){
+void GSoapAcceptor::recycleSoapContext(soap* ctx) {     
+        if(stopThreads)
+		return;
         ThreadTraits::LOCK_R lock(_mutex);
 	if(ctx){		
 		soap_destroy(ctx);
 		soap_end(ctx);
 		recycle.push(ctx);		
-	}
-     }	
+	}	
 }
 
 FTS3_SERVER_NAMESPACE_END
