@@ -288,8 +288,7 @@ void OracleAPI::getSeCreditsInUse(
                     "		SELECT * "
                     "		FROM t_se_vo_share "
                     "		WHERE "
-                    //"			t_se_vo_share.se_name = '" + seName + "' "
-            		"			t_se_vo_share.se_name = :4 "
+         	    "			t_se_vo_share.se_name = :4 "
                     "			AND t_se_vo_share.share_type = 'se' "
                     "			AND t_se_vo_share.share_id = '%\"share_id\":\"' || t_job.vo_name || '\"%' "
                     "	) ";
@@ -4040,6 +4039,12 @@ void OracleAPI::revertToSubmittedTerminate(){
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
+}
+
+
+bool OracleAPI::configExists(const std::string & src, const std::string & dest, const std::string & vo){
+	const std::string tag = "configExists";
+	return true;
 }
 
 

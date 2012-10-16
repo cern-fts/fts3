@@ -172,6 +172,7 @@ protected:
         std::string proxy_file("");
         bool debug = false;
         OptimizerSample* opt_config = NULL;
+	bool manualConfigExists = false;
 
 
         if (reuse == false) {
