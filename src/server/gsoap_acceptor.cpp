@@ -57,6 +57,10 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		soap_set_namespaces(ctx, fts3_namespaces);
 		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 
+		// must be set again, for an unknown reason soap_cgsi_init rests those parameters!
+		ctx->linger_time = 2;
+		ctx->accept_flags |= SO_LINGER;
+
 		ctx->fmimereadopen = LogFileStreamer::readOpen;
 		ctx->fmimereadclose = LogFileStreamer::readClose;
 		ctx->fmimeread = LogFileStreamer::read;
@@ -77,9 +81,6 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 
 	} else {	
 		ctx = soap_new();
-		ctx->fmimereadopen = LogFileStreamer::readOpen;
-		ctx->fmimereadclose = LogFileStreamer::readClose;
-		ctx->fmimeread = LogFileStreamer::read;
 
 		ctx->bind_flags |= SO_REUSEADDR;
 		ctx->accept_flags |= SO_LINGER;
@@ -89,6 +90,14 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
 		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+
+		// must be set again, for an unknown reason soap_cgsi_init rests those parameters!
+		ctx->accept_flags |= SO_LINGER;
+		ctx->linger_time = 4;
+
+		ctx->fmimereadopen = LogFileStreamer::readOpen;
+		ctx->fmimereadclose = LogFileStreamer::readClose;
+		ctx->fmimeread = LogFileStreamer::read;
 
 		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 
