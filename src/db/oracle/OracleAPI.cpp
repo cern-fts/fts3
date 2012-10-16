@@ -111,8 +111,15 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
 void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) {
     TransferJobs* tr_jobs = NULL;
     std::string tag = "getSubmittedJobs";
-
+    std::string tag1 = "bringdistinct";
     std::string query_stmt(""); 
+    std::multimap<std::string, std::string> sePairs;
+    std::string bring_distinct = " SELECT distinct t_job.source_se, t_job.dest_se  FROM t_job "
+    				 " WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
+				 " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
+				 " AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') and "
+				 " exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND "
+				 " t_file.file_state = 'SUBMITTED')";
     
     if(vos.length()==0){
     query_stmt = "SELECT /* FIRST_ROWS(25) */"
@@ -141,6 +148,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " WHERE "
             " t_job.job_finished is NULL"
             " AND t_job.CANCEL_JOB is NULL"
+	    " AND t_job.source_se=:1 and t_job.dest_se=:2 "
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
 	    " AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
@@ -174,6 +182,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " WHERE "
             " t_job.job_finished is NULL"
             " AND t_job.CANCEL_JOB is NULL"
+	    " AND t_job.source_se=:1 and t_job.dest_se=:2 "	    
 	    " AND t_job.VO_NAME IN " + vos +
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
@@ -184,14 +193,29 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;    
     ThreadTraits::LOCK_R lock(_mutex);
     try {
     
         if ( false == conn->checkConn() )
 		return;
 
+        s1 = conn->createStatement(bring_distinct, tag1);	
+	r1 = conn->createResultset(s1);
+        while (r1->next()) {		
+		sePairs.insert(std::make_pair<std::string, std::string>(r1->getString(1),r1->getString(2)));
+	}
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+	s1=NULL;
+	r1=NULL;
+
         s = conn->createStatement(query_stmt, tag);	
-        s->setPrefetchRowCount(25);
+	s->setPrefetchRowCount(500);
+       for ( std::multimap< std::string, std::string>::const_iterator iter = sePairs.begin(); iter != sePairs.end(); ++iter ){
+	s->setString(1,iter->first);	
+	s->setString(2,iter->second);		
 	r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -228,8 +252,9 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 	    }
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
+        }
+      conn->destroyStatement(s, tag);
+      s=NULL;
     } catch (oracle::occi::SQLException const &e) {
 		if(conn)
 			conn->rollback();
@@ -239,6 +264,10 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 	        conn->destroyResultset(s, r);
 	        conn->destroyStatement(s, tag);
 		}
+	      if(s1 && r1){
+	        conn->destroyResultset(s1, r1);
+	        conn->destroyStatement(s1, tag1);
+		}		
 	}
     }
 
