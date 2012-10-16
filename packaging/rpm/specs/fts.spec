@@ -38,13 +38,13 @@ Requires(pre):  shadow-utils
 %description
 The File Transfer Service V3
 
-%package devel
-Summary: Development files for File Transfer Service V3
-Group: Applications/Internet
-Requires: %{name}%{?_isa} = %{version}-%{release}
+#%package devel
+#Summary: Development files for File Transfer Service V3
+#Group: Applications/Internet
+#Requires: %{name}%{?_isa} = %{version}-%{release}
 
-%description devel
-Development files for File Transfer Service V3
+#%description devel
+#Development files for File Transfer Service V3
 
 
 %package server
@@ -104,9 +104,9 @@ exit 0
 
 %postun libs -p /sbin/ldconfig
 
-%post devel -p /sbin/ldconfig
+#%post devel -p /sbin/ldconfig
 
-%postun devel -p /sbin/ldconfig
+#%postun devel -p /sbin/ldconfig
 
 
 %post server
@@ -207,23 +207,23 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts_delegation_api_cpp.so.*
 %doc
 
-%files devel
-%defattr(-,root,root,-)
-%{python_sitearch}/fts/*
-%{_bindir}/fts*
-%{_libdir}/libfts_common.so
-%{_libdir}/libfts_config.so
-%{_libdir}/libfts_db_generic.so
-%{_libdir}/libfts_db_oracle.so
-%{_libdir}/libfts_msg_ifce.so
-%{_libdir}/libfts_proxy.so
-%{_libdir}/libfts_server_gsoap_transfer.so
-%{_libdir}/libfts_server_lib.so
-%{_libdir}/libfts_cli_common.so
-%{_libdir}/libfts_ws_ifce_client.so
-%{_libdir}/libfts_ws_ifce_server.so
-%{_libdir}/libfts_delegation_api_simple.so
-%{_libdir}/libfts_delegation_api_cpp.so
+#%files devel
+#%defattr(-,root,root,-)
+#%{python_sitearch}/fts/*
+#%{_bindir}/fts*
+#%{_libdir}/libfts_common.so
+#%{_libdir}/libfts_config.so
+#%{_libdir}/libfts_db_generic.so
+#%{_libdir}/libfts_db_oracle.so
+#%{_libdir}/libfts_msg_ifce.so
+#%{_libdir}/libfts_proxy.so
+#%{_libdir}/libfts_server_gsoap_transfer.so
+#%{_libdir}/libfts_server_lib.so
+#%{_libdir}/libfts_cli_common.so
+#%{_libdir}/libfts_ws_ifce_client.so
+#%{_libdir}/libfts_ws_ifce_server.so
+#%{_libdir}/libfts_delegation_api_simple.so
+#%{_libdir}/libfts_delegation_api_cpp.so
 
 
 
