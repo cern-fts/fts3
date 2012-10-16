@@ -4005,8 +4005,7 @@ void OracleAPI::revertToSubmitted(){
 	    job_id = r2->getString(3);
 	    reuseFlag = r2->getString(4);
             time_t current_time = std::time(NULL);
-            diff = difftime(current_time, start_time);
-	    std::cout << "-----> DIFF = " << diff << std::endl;
+            diff = difftime(current_time, start_time);	    
             if (diff > 15000) { /*~5h*/
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1);
