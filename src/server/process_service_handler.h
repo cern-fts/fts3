@@ -631,7 +631,7 @@ protected:
                 if (jobs2.size() > 0)
                     executeUrlcopy(jobs2, true);
 
-                usleep(5000000);
+                usleep(500000);
             } catch (...) {
                 if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::iterator iter2;
