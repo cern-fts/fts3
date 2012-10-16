@@ -37,6 +37,7 @@
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <exception>
+#include "StaticSslLocking.h"
 
 /*
 PENDING
@@ -372,6 +373,15 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 
 int main(int argc, char **argv) {
 
+    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
+    SSL_library_init(); // Initialize OpenSSL's SSL libraries
+    SSL_load_error_strings(); // Load SSL error strings
+    ERR_load_BIO_strings(); // Load BIO error strings
+    OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
+    OpenSSL_add_all_digests();
+    OpenSSL_add_all_ciphers();
+    StaticSslLocking::init_locks();
+
     //switch to non-priviledged user to avoid reading the hostcert
     privid = geteuid();
     char user[ ] = "fts3";
@@ -502,7 +512,7 @@ int main(int argc, char **argv) {
     }    
 
     //cancelation point 
-    unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
+    long unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
     unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
     boost::thread bt(taskTimer, timerTimeout);
     
@@ -758,7 +768,7 @@ int main(int argc, char **argv) {
         }
 
         transferred_bytes = source_size;
-        bytes_to_string = to_string<long long>(transferred_bytes, std::dec);
+        bytes_to_string = to_string<double>(transferred_bytes, std::dec);
         msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
         msg_ifce::getInstance()->set_timestamp_transfer_completed(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_time_spent_in_srm_finalization_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
@@ -866,5 +876,6 @@ stop:
         if (reuseFile.length() > 0)
             unlink(readFile.c_str());
 
+    StaticSslLocking::kill_locks();
     return EXIT_SUCCESS;
 }
