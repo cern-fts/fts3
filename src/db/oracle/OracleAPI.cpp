@@ -4044,7 +4044,7 @@ void OracleAPI::revertToSubmittedTerminate(){
 
 bool OracleAPI::configExists(const std::string & src, const std::string & dest, const std::string & vo){
 	const std::string tag = "configExists";
-	return true;
+	return false;
 }
 
 

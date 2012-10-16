@@ -172,10 +172,9 @@ protected:
         std::string proxy_file("");
         bool debug = false;
         OptimizerSample* opt_config = NULL;
-	bool manualConfigExists = false;
-
-
+	
         if (reuse == false) {
+   	    bool manualConfigExists = false;
             if (jobs2.size() > 0) {
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
@@ -194,9 +193,12 @@ protected:
                     TransferFiles* temp = (TransferFiles*) * fileiter;
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);
-
+		    
+		    /*check if manual config exist for this pair and vo*/
+		    manualConfigExists = DBSingleton::instance().getDBObjectInstance()->configExists(source_hostname, destin_hostname,temp->VO_NAME);		    
+		    
                     bool optimize = false;
-                    if (enableOptimization.compare("true") == 0) {		    	
+                    if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {		    	
 		        optimize = true;
                         opt_config = new OptimizerSample();
 			DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
@@ -209,9 +211,9 @@ protected:
                     }
   	    	    
                     FileTransferScheduler scheduler(temp);
-                    if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
+                    if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
 		    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
-		    if(optimize){
+		    if(optimize && manualConfigExists==false){
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }else{
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
@@ -288,7 +290,7 @@ protected:
                         if (std::string(temp->OVERWRITE).length() > 0) {
                             params.append(" -d ");
                         }
-                        if (optimize) {
+                        if (optimize && manualConfigExists==false) {
                             params.append(" -e ");
                             params.append(to_string(StreamsperFile));
                         } else {
@@ -298,7 +300,7 @@ protected:
                             }
                         }
 
-                        if (optimize) {
+                        if (optimize && manualConfigExists==false) {
                             params.append(" -f ");
                             params.append(to_string(BufSize));
                         } else {
@@ -308,7 +310,7 @@ protected:
                             }
                         }
 
-                        if (optimize) {
+                        if (optimize && manualConfigExists==false) {
                             params.append(" -h ");
                             params.append(to_string(Timeout));
                         } else {
@@ -352,6 +354,7 @@ protected:
             }
         } else { /*reuse session*/
             if (jobs2.size() > 0) {
+  	   	bool manualConfigExists = false;
                 std::vector<std::string> urls;
 		std::map<int,std::string> fileIds;
                 std::string job_id = std::string("");
@@ -416,10 +419,11 @@ protected:
 
                 createJobFile(job_id, urls);
 
-
+		manualConfigExists = DBSingleton::instance().getDBObjectInstance()->configExists(source_hostname, destin_hostname, vo_name);
+		
 		bool optimize = false;
                 /*Use Swei code for bufefr size because it uses RTT and counties and stuff*/
-                if (enableOptimization.compare("true") == 0) {
+                if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {
 		    optimize = true;
                     opt_config = new OptimizerSample();
    		    DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
@@ -434,9 +438,9 @@ protected:
 			return;
 
                 FileTransferScheduler scheduler(tempUrl);
-                if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
+                if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
  		    std::stringstream internalParams;
-		    if(optimize){
+		    if(optimize && manualConfigExists==false){
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }else{
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
@@ -503,7 +507,7 @@ protected:
                     if (std::string(overwrite).length() > 0) {
                         params.append(" -d ");
                     }
-                    if (optimize) {
+                    if (optimize && manualConfigExists==false) {
                         params.append(" -e ");
                         params.append(to_string(StreamsperFile));
                     } else {
@@ -512,7 +516,7 @@ protected:
                             params.append(to_string(protocol->NOSTREAMS));
                         }
                     }
-                    if (optimize) {
+                    if (optimize && manualConfigExists==false) {
                         params.append(" -f ");
                         params.append(to_string(BufSize));
                     } else {
@@ -521,7 +525,7 @@ protected:
                             params.append(to_string(protocol->TCP_BUFFER_SIZE));
                         }
                     }
-                    if (optimize) {
+                    if (optimize && manualConfigExists==false) {
                         params.append(" -h ");
                         params.append(to_string(Timeout));
                     } else {

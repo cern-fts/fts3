@@ -257,9 +257,9 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 	return DEFAULT_VALUE - creditsInUse;
 }
 
-bool FileTransferScheduler::schedule(bool optimize) {
+bool FileTransferScheduler::schedule(bool optimize, bool manualConfig) {
 
-	if(optimize == true) {
+	if(optimize == true && manualConfig==false) {
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);
 		// update file state to READY
 		if(allowed == true) {
