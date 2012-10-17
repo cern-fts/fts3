@@ -44,25 +44,6 @@ static int fexists(const char *filename) {
     return -1;
 }
 
-static void CloseFds(int start) {
-	   DIR *dir = opendir("/proc/self/fd");
-	   if (dir != 0) {
-	      struct dirent* e;
-	      int dfd = dirfd(dir);
-	      while ((e = readdir(dir)) != 0) {
-		 int fd = atoi(e->d_name);
-		 if (fd >= start && fd != dfd) {		   
-		    close(fd);
-		 }
-	      }
-	      closedir(dir);
-	   } else {
-	      int fd, maxfd = getdtablesize();
-	      for (fd = start; fd < maxfd; ++fd) {		 
-		 (void)close(fd);
-	      }
-	   }
-	}
 
 ExecuteProcess::ExecuteProcess(const string& app, const string& arguments, int fdlog)
 : _jobId(""), _fileId(""), m_app(app), m_arguments(arguments), m_fdlog(fdlog) {
