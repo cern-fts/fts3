@@ -4071,7 +4071,132 @@ void OracleAPI::revertToSubmittedTerminate(){
 
 
 bool OracleAPI::configExists(const std::string & src, const std::string & dest, const std::string & vo){
-	const std::string tag = "configExists";
+
+	const std::string cfg_tag = "cfgConfigExists";
+	std::string cfg_query =
+			"select count(*) as result "
+			"from T_SE_VO_SHARE "
+			"where ( "
+				"T_SE_VO_SHARE.SE_NAME = :1 " // source
+				"and T_SE_VO_SHARE.SHARE_TYPE = 'se' "
+				"and ( "
+					"T_SE_VO_SHARE.SHARE_ID = '\"type\":\"public\"' "
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"vo\",\"id\":\"' || :2 || '\"' " // vo
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"pair\",\"id\":\"' || :3 || '\"' " // destination
+				") "
+			") or ( "
+				"T_SE_VO_SHARE.SE_NAME = :4 " // destination
+				"and T_SE_VO_SHARE.SHARE_TYPE = 'se' "
+				"and ( "
+					"T_SE_VO_SHARE.SHARE_ID = '\"type\":\"public\"' "
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"vo\",\"id\":\"' || :5 || '\"' " // vo
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"pair\",\"id\":\"' || :6 || '\"' " // source
+				") "
+			") or ( "
+				"T_SE_VO_SHARE.SE_NAME = ( "
+					"select T_SE_GROUP.SE_GROUP_NAME "
+					"from T_SE_GROUP "
+					"where T_SE_GROUP.SE_NAME = :7 " // source
+				") "
+				"and T_SE_VO_SHARE.SHARE_TYPE = 'group' "
+				"and ( "
+					"T_SE_VO_SHARE.SHARE_ID = '\"type\":\"public\"' "
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"vo\",\"id\":\"' || :8 || '\"' " // vo
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"pair\",\"id\":\"' || ( "
+						"select T_SE_GROUP.SE_GROUP_NAME "
+						"from T_SE_GROUP "
+						"where T_SE_GROUP.SE_NAME = :9 " // destination
+					") || '\"' "
+				") "
+			") or ( "
+				"T_SE_VO_SHARE.SE_NAME = ( "
+					"select T_SE_GROUP.SE_GROUP_NAME "
+					"from T_SE_GROUP "
+					"where T_SE_GROUP.SE_NAME = :10 " // destination
+				") "
+				"and T_SE_VO_SHARE.SHARE_TYPE = 'group' "
+				"and ( "
+					"T_SE_VO_SHARE.SHARE_ID = '\"type\":\"public\"' "
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"vo\",\"id\":\"' || :11 || '\"' " // vo
+					"or T_SE_VO_SHARE.SHARE_ID = '\"type\":\"pair\",\"id\":\"' || ( "
+						"select T_SE_GROUP.SE_GROUP_NAME "
+						"from T_SE_GROUP "
+						"where T_SE_GROUP.SE_NAME = :12 " // source
+						") || '\"' "
+				") "
+			")"
+			;
+
+	const std::string protocol_tag = "protocolConfigExists";
+	std::string protocol_query =
+			"select count(*) "
+			"from T_SE_PROTOCOL "
+			"where "
+				"T_SE_PROTOCOL.SE_NAME = :1 or T_SE_PROTOCOL.SE_NAME = :2" // source or destination
+				"or T_SE_PROTOCOL.SE_GROUP_NAME = ( "
+					"select T_SE_GROUP.SE_GROUP_NAME "
+					"from T_SE_GROUP "
+					"where T_SE_GROUP.SE_NAME = :3 " // source
+				") or T_SE_PROTOCOL.SE_GROUP_NAME = ( "
+					"select T_SE_GROUP.SE_GROUP_NAME "
+					"from T_SE_GROUP "
+					"where T_SE_GROUP.SE_NAME = :4 " // destination
+				")"
+			;
+
+	oracle::occi::Statement* stmt = 0;
+
+    try {
+
+        if (!conn->checkConn())
+            return false;
+
+        // first check credit configuration
+		stmt = conn->createStatement(cfg_query, cfg_tag);
+		stmt->setString(1, src);
+		stmt->setString(2, vo);
+		stmt->setString(3, dest);
+		stmt->setString(4, dest);
+		stmt->setString(5, vo);
+		stmt->setString(6, src);
+		stmt->setString(7, src);
+		stmt->setString(8, vo);
+		stmt->setString(9, dest);
+		stmt->setString(10, dest);
+		stmt->setString(11, vo);
+		stmt->setString(12, src);
+
+		oracle::occi::ResultSet* rs = conn->createResultset(stmt);
+        if (rs->next()) {
+        	bool cfg = rs->getInt(1);
+        	if (cfg) return true;
+        }
+
+        conn->destroyResultset(stmt, rs);
+        conn->destroyStatement(stmt, cfg_tag);
+
+        // then check protocol configuration
+		stmt = conn->createStatement(protocol_query, protocol_tag);
+		stmt->setString(1, src);
+		stmt->setString(2, dest);
+		stmt->setString(3, src);
+		stmt->setString(4, dest);
+
+		rs = conn->createResultset(stmt);
+        if (rs->next()) {
+        	bool cfg = rs->getInt(1);
+        	if (cfg) return true;
+        }
+
+        conn->destroyResultset(stmt, rs);
+        conn->destroyStatement(stmt, protocol_tag);
+
+	} catch (oracle::occi::SQLException const &e) {
+		if (conn)
+			conn->rollback();
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	}
+
 	return false;
 }
 
