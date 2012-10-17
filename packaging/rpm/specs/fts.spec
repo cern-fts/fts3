@@ -161,10 +161,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_mandir}/man8/fts_server.8.gz
 %doc %{_docdir}/fts3/oracle-drop.sql
 %doc %{_docdir}/fts3/oracle-schema.sql
-%doc %{_docdir}/fts3/fts_purge_pack.sql
-%doc %{_docdir}/fts3/fts_purge_body_pack.sql
-%doc %{_docdir}/fts3/fts_history_pack.sql
-%doc %{_docdir}/fts3/fts_history_body_pack.sql
+
 
 %files client
 %defattr(-,root,root,-)
