@@ -21,6 +21,16 @@ install(FILES         fts-msg-bulk.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts-msg-bulk )
+	
+install(FILES         fts-records-cleaner.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily 
+	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+	RENAME fts-records-cleaner )	
+	
+install(FILES         fts-records-cleaner
+        DESTINATION ${BIN_INSTALL_DIR}
+	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
+
 
 install(FILES         fts-msg-cron.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
