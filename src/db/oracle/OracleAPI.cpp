@@ -4201,6 +4201,35 @@ bool OracleAPI::configExists(const std::string & src, const std::string & dest, 
 }
 
 
+void OracleAPI::backup(){     
+    std::string query1 = "insert into t_file_backup select * from t_file where JOB_FINISHED < TRUNC(SYSDATE) - 2";    	    
+    std::string query2 = "insert into t_job_backup select * from t_job where JOB_FINISHED < TRUNC(SYSDATE) - 2";    	        
+    std::string query3 = "DELETE FROM T_FILE WHERE EXISTS ( select t_file_backup.job_id from t_file_backup, t_file where t_file.job_id = t_file_backup.job_id)";    	    
+    std::string query4 = "DELETE FROM T_JOB WHERE EXISTS ( select t_job_backup.job_id from t_job_backup, t_job where t_job.job_id = t_job_backup.job_id)";    	            
+    oracle::occi::Statement* s = NULL;   
+
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query1,"");
+       	s->executeUpdate();
+       	conn->commit();
+	s->setSQL(query2);
+	conn->commit();
+	s->setSQL(query3);
+	conn->commit();
+	s->setSQL(query4);
+	conn->commit();				
+       	conn->destroyStatement(s,"");		
+
+    } catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
 // the class factories
 extern "C" GenericDbIfce* create() {
     return new OracleAPI;

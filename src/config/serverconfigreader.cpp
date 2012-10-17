@@ -116,6 +116,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "Control auto-tunning activation"
         )		
         (
+            "CleanRecordsHost,C",
+            po::value<std::string>( &(_vars["CleanRecordsHost"]) )->default_value("false"),
+            "Set to true when this host will be cleaning old records from the database"
+        )
+        (
             "HttpKeepAlive,k",
             po::value<std::string>( &(_vars["HttpKeepAlive"]) )->default_value("true"),
             "Control HTTP Keep alive in gsoap"

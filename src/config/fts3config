@@ -10,3 +10,4 @@ Alias=
 Optimizer=false
 HttpKeepAlive=true
 AuthorizedVO=*
+CleanRecordsHost=false

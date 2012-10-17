@@ -26,6 +26,7 @@ add_subdirectory(server)
 add_subdirectory(monitoring)
 add_subdirectory(url-copy)
 add_subdirectory(scripts)
+add_subdirectory(dbClear)
 
 
 

@@ -9,11 +9,16 @@ include_directories (${fts_include_dir})
 include_directories (.)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/cred/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/db/generic/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/server/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/common/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/)
-include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/db/generic)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/server/)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/db/generic/)
+include_directories (/usr/include/glib-2.0)
+include_directories (/usr/lib64/glib-2.0/include)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
@@ -22,18 +27,15 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 #set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_db_cleaner_SOURCES clean.cpp)
 
-add_library(fts_db_cleaner SHARED ${fts_db_cleaner_SOURCES})
+add_executable(fts_db_cleaner ${fts_db_cleaner_SOURCES})
 add_dependencies(fts_db_cleaner fts_config)
+add_dependencies(fts_db_cleaner fts_common)
+add_dependencies(fts_db_cleaner fts_db_generic)
 target_link_libraries(fts_db_cleaner -ldl)
 target_link_libraries(fts_db_cleaner -lpthread)
-#target_link_libraries(fts_db_cleaner -lfts_config)
-set_target_properties(fts_db_cleaner            PROPERTIES
-                                                LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/db/generic
-                                                VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
-                                                SOVERSION ${VERSION_MAJOR}
-                                                CLEAN_DIRECT_OUTPUT 1)
-
+target_link_libraries(fts_db_cleaner -lfts_db_generic)
+target_link_libraries(fts_db_cleaner -lfts_config)
+target_link_libraries(fts_db_cleaner -lfts_common)
 
 install(TARGETS         fts_db_cleaner 
-	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )

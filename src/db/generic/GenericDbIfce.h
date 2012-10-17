@@ -258,6 +258,8 @@ public:
     virtual void revertToSubmittedTerminate() = 0;
     
     virtual bool configExists(const std::string & src, const std::string & dest, const std::string & vo) = 0;
+    
+    virtual void backup() = 0;    
 };
 
 

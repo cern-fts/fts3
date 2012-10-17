@@ -212,7 +212,9 @@ public:
     
     virtual void revertToSubmittedTerminate();
     
-    virtual bool configExists(const std::string & src, const std::string & dest, const std::string & vo);    
+    virtual bool configExists(const std::string & src, const std::string & dest, const std::string & vo); 
+    
+    virtual void backup();           
     
 private:
 	OracleConnection *conn;	
