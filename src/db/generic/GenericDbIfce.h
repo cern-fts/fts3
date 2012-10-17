@@ -63,6 +63,8 @@ struct src_dest_checksum_tupple{
 class GenericDbIfce {
 public:
 
+    virtual ~GenericDbIfce() {};
+
 /**
  * Intialize database connection  by providing information from fts3config file
  **/
