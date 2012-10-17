@@ -97,8 +97,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 
     	string src = *(*it)->source, dest = *(*it)->dest;
     	// check weather the source and destination files are supported
-    	if (!checkProtocol(dest)) continue;
-    	if (!checkProtocol(src) && !checkIfLfn(src)) continue;
+    	if (!checkProtocol(dest)) throw Err_Custom("Destination protocol not supported (" + dest + ")");
+    	if (!checkProtocol(src) && !checkIfLfn(src)) throw Err_Custom("Source protocol not supported (" + src + ")");
 
     	src_dest_checksum_tupple tupple;
     	tupple.source = src;
@@ -217,7 +217,7 @@ bool JobSubmitter::checkProtocol(string file) {
 	string tmp (file);
 	transform(tmp.begin(), tmp.end(), tmp.begin(), ::tolower);
 
-	return tmp.find("srm") == 0 || tmp.find("gsiftp") == 0;
+	return tmp.find("srm://") == 0 || tmp.find("gsiftp://") == 0;
 }
 
 bool JobSubmitter::checkIfLfn(string file) {
