@@ -38,15 +38,9 @@ start() {
     echo
     [ $retval -eq 0 ] && touch $lockfile
     return $retval
-    else        
-	retval=$?
-        if [ -f $lockfile ] && [ $retval -eq 1 ] ; then
-		restart		
-	else
-        	echo "Already running"
-		return $retval
-	fi
-	
+    else
+	echo "Already running"
+	return $retval
     fi
 }
 
@@ -73,7 +67,11 @@ case "$1" in
         restart
         ;;
     status)
-        status $prog
+        if [ -f $lockfile ]; then
+		echo $"${prog} running"
+	else
+		echo $"${prog} is stopped"	
+	fi
         ;;
     try-restart|condrestart)
         if status $prog >/dev/null ; then
