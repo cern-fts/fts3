@@ -126,7 +126,8 @@ static std::string mapErrnoToString(int err) {
         if (str) {
             std::string rep(str);
             std::replace(rep.begin(), rep.end(), ' ', '_');
-            return rep;
+            return boost::to_upper_copy(rep);
+;
         }
     }
     return "GENERAL ERROR";

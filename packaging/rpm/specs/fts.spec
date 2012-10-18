@@ -150,12 +150,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_sbindir}/fts_msg_bulk
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
+%{_sbindir}/fts_db_cleaner
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %{_sysconfdir}/logrotate.d/fts-msg-cron
 %{_sysconfdir}/logrotate.d/fts-msg-bulk
 %{_sysconfdir}/logrotate.d/fts-server
+%{_sysconfdir}/cron.daily/fts-records-cleaner
+%{_bindir}/fts-records-cleaner
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz
