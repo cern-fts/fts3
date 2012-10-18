@@ -4145,6 +4145,7 @@ bool OracleAPI::configExists(const std::string & src, const std::string & dest, 
 			;
 
 	oracle::occi::Statement* stmt = 0;
+	ThreadTraits::LOCK_R lock(_mutex);
 
     try {
 

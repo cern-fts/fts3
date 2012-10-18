@@ -183,8 +183,10 @@ protected:
         	std::vector<TransferFiles*>::const_iterator fileiter;		
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-		if(stopThreads)
+		
+		if(stopThreads){		
 			return;
+		}
 
                     int BufSize = 0;
                     int StreamsperFile = 0;
@@ -392,6 +394,9 @@ protected:
 		return;
 		}
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
+		    if(stopThreads){
+			return;
+		    }
                     TransferFiles* temp = (TransferFiles*) * fileiter;
                     tempUrl = temp;
                     surl = temp->SOURCE_SURL;
@@ -434,8 +439,9 @@ protected:
                     delete opt_config;
                     opt_config = NULL;
                 }
-		if(stopThreads)
+		if(stopThreads){
 			return;
+		}
 
                 FileTransferScheduler scheduler(tempUrl);
                 if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
