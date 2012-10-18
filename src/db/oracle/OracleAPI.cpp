@@ -4202,7 +4202,8 @@ bool OracleAPI::configExists(const std::string & src, const std::string & dest, 
 
 
 void OracleAPI::backup(){     
-    std::string query1 = "insert into t_job_backup select * from t_job where job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') and job_finished < ( systimestamp - interval 7 DAY )";    	        
+    std::string query1 = "insert into t_job_backup select * from t_job where job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
+    			" and job_finished < (systimestamp - interval '7' DAY )";
     std::string query2 = "insert into t_file_backup select distinct(file_id) from t_file where job_id IN (select * from t_job_backup)";    	    
     std::string query3 = "delete from t_file where file_id in (select * from t_file_backup)";    	    
     std::string query4 = "delete from t_job where job_id in (select * from t_job_backup)";    	            

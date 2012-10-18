@@ -8,7 +8,9 @@
 #include "config/serverconfig.h"
 #include "server.h"
 #include "db/generic/SingleDbInstance.h"
-
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -43,6 +45,10 @@ static int fexists(const char *filename) {
 
 
 int main(int argc, char** argv){
+
+int d = daemon(0,0);
+if(d < 0)
+	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;  
 
 try 
     { 

@@ -3,7 +3,7 @@
 # APPNAME - <summary>
 #
 # chkconfig:    2345 80 20
-# description:  Backup and delete old records from the database
+# description:  Clean old records from the primary database tables (7 days old)
 # processname:  fts_db_cleaner
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts
@@ -30,22 +30,39 @@ prog=$(basename $exec)
 lockfile=/var/lock/subsys/$prog
 
 start() {
-        echo -n $"Enabling fts_db_cleaner job: "
-        rm -f "$lockfile" && success || failure
-        RETVAL=$?
-        echo "OK"	
+    echo -n $"Starting $prog: "
+    # if not running, start it up here, usually something like "daemon $exec"
+    if [ ! -f $lockfile ] ; then
+    touch "$lockfile" && success || failure        
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
+    else        
+	retval=$?
+        if [ -f $lockfile ] && [ $retval -eq 1 ] ; then
+		restart		
+	else
+        	echo "Already running"
+		return $retval
+	fi
+	
+    fi
 }
 
 stop() {
-        echo -n $"Disabling fts_db_cleaner job: "
-        touch "$lockfile" && success || failure
-        RETVAL=$?	
-        echo "OK"
+    echo -n $"Stopping $prog: "
+    # stop it here, often "killproc $prog"
+    rm -f "$lockfile" && success || failure     
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
 }
 
 restart() {
-        stop
-        start
+    stop
+    start
 }
 
 case "$1" in

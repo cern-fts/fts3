@@ -113,6 +113,7 @@ exit 0
 /sbin/chkconfig --add fts-server
 /sbin/chkconfig --add fts-msg-bulk
 /sbin/chkconfig --add fts-msg-cron
+/sbin/chkconfig --add fts-records-cleaner
 exit 0
 
 %preun server
@@ -123,6 +124,8 @@ if [ $1 -eq 0 ] ; then
     /sbin/chkconfig --del fts-msg-bulk
     /sbin/service fts-msg-cron stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-msg-cron
+    /sbin/service fts-records-cleaner stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-records-cleaner    
 fi
 exit 0
 
@@ -131,6 +134,7 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service fts-server condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :    
 fi
 exit 0
 
@@ -154,11 +158,11 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
+%attr(0755,root,root) %{_initddir}/fts-records-cleaner
 %{_sysconfdir}/logrotate.d/fts-msg-cron
 %{_sysconfdir}/logrotate.d/fts-msg-bulk
 %{_sysconfdir}/logrotate.d/fts-server
 %{_sysconfdir}/cron.daily/fts-records-cleaner
-%{_bindir}/fts-records-cleaner
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz
@@ -228,5 +232,5 @@ rm -rf $RPM_BUILD_ROOT
 
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-11
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-36
   - A bit like a fedora package
