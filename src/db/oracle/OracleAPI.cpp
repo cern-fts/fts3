@@ -4225,7 +4225,8 @@ void OracleAPI::backup(){
        	s3->executeUpdate();	
 	conn->commit();
         s4 = conn->createStatement(query4,"");	
-       	s4->executeUpdate();			
+       	s4->executeUpdate();
+	conn->commit();			
        	
 	conn->destroyStatement(s1,"");		
 	conn->destroyStatement(s2,"");		
