@@ -88,7 +88,16 @@ void fts3_initialize_db_backend()
    
 }
 
-
+void fts3_teardown_db_backend()
+{
+    try {
+        db::DBSingleton::tearDown();
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
+        exit(1);
+    }
+}
 
 
 
@@ -207,7 +216,9 @@ int main (int argc, char** argv)
 
         if (isDaemon)
         {   
+            fts3_teardown_db_backend();
             daemonize();
+            fts3_initialize_db_backend();
             freopen (logDir.c_str(),"a",stderr);            
         }
         

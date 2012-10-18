@@ -79,6 +79,16 @@ public:
         return dbBackend;
     }
 
+/**
+ * Force the destruction of the backend
+ * Needed to keep a consistent state on fork!
+ */
+    static void tearDown() {
+        if (i.get() != 0) {
+            i.reset(0);
+        }
+    }
+
 
 private:
     DBSingleton(); // Private so that it can  not be called
