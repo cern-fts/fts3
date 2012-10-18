@@ -4202,27 +4202,35 @@ bool OracleAPI::configExists(const std::string & src, const std::string & dest, 
 
 
 void OracleAPI::backup(){     
-    std::string query1 = "insert into t_job_backup select * from t_job where job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') "
-    			" and job_finished < (systimestamp - interval '7' DAY )";
-    std::string query2 = "insert into t_file_backup select distinct(file_id) from t_file where job_id IN (select * from t_job_backup)";    	    
-    std::string query3 = "delete from t_file where file_id in (select * from t_file_backup)";    	    
-    std::string query4 = "delete from t_job where job_id in (select * from t_job_backup)";    	            
-    oracle::occi::Statement* s = NULL;   
+    std::string query1 = "insert into t_job_backup select * from t_job where job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') and job_finished < (systimestamp - interval '7' DAY )";
+    std::string query2 = "insert into t_file_backup select * from t_file  where job_id IN (select job_id from t_job_backup)";    	    
+    std::string query3 = "delete from t_file where file_id in (select file_id from t_file_backup)";    	    
+    std::string query4 = "delete from t_job where job_id in (select job_id from t_job_backup)";    	            
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::Statement* s3 = NULL;
+    oracle::occi::Statement* s4 = NULL;   
 
     try {
         if (false == conn->checkConn())
             return;
 
-        s = conn->createStatement(query1,"");
-       	s->executeUpdate();
+        s1 = conn->createStatement(query1,"");
+       	s1->executeUpdate();
        	conn->commit();
-	s->setSQL(query2);
+        s2 = conn->createStatement(query2,"");	
+       	s2->executeUpdate();	
 	conn->commit();
-	s->setSQL(query3);
+        s3 = conn->createStatement(query3,"");	
+       	s3->executeUpdate();	
 	conn->commit();
-	s->setSQL(query4);
-	conn->commit();				
-       	conn->destroyStatement(s,"");		
+        s4 = conn->createStatement(query4,"");	
+       	s4->executeUpdate();			
+       	
+	conn->destroyStatement(s1,"");		
+	conn->destroyStatement(s2,"");		
+	conn->destroyStatement(s3,"");		
+	conn->destroyStatement(s4,"");					
 
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
