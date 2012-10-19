@@ -140,6 +140,7 @@ int main (int argc, char** argv)
 {
     const char *hostcert = "/etc/grid-security/hostcert.pem";
     const char *configfile = "/etc/fts3/fts3config";
+    int res=0;
 
     try 
     {   
@@ -185,11 +186,7 @@ int main (int argc, char** argv)
 		exit(1);	
 	}
 
-        struct sigaction action;
-        action.sa_handler = _handle_sigint;
-        sigemptyset(&action.sa_mask);
-        action.sa_flags = SA_RESTART;
-        int res = sigaction(SIGINT, &action, NULL);
+
 	
 	set_terminate (myterminate);
 	set_unexpected (myunexpected);		        
@@ -211,6 +208,11 @@ int main (int argc, char** argv)
         fts3::ws::GSoapDelegationHandler::init();
         StaticSslLocking::init_locks();
 	fts3_initialize_db_backend();
+        struct sigaction action;
+        action.sa_handler = _handle_sigint;
+        sigemptyset(&action.sa_mask);
+        action.sa_flags = SA_RESTART;
+        res = sigaction(SIGINT, &action, NULL);
 	
 	std::string infosys = theServerConfig().get<std::string>("Infosys");
 	if(infosys.length() > 0){
