@@ -75,6 +75,8 @@ GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
 		FILE *fp = fopen(hostCert.c_str(), "r");
 		X509 *cert = PEM_read_X509(fp, 0, 0, 0);
 		hostDn = cert->name;
+		X509_free(cert);
+		fclose(fp);
 
 		// if the host certificate was used to submit the request we will not find any fqans
 		if (clientDn != hostDn)
