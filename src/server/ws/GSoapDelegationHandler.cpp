@@ -54,7 +54,14 @@ void GSoapDelegationHandler::init() {
     ERR_load_BIO_strings(); // Load BIO error strings
     OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
     int minbits = 128;
-    EVP_CIPHER_do_all(cipherRemove, &minbits);    
+    EVP_CIPHER_do_all(cipherRemove, &minbits);
+
+    // check the server host certificate
+	FILE *fp = fopen(hostCert.c_str(), "r");
+	X509 *cert = PEM_read_X509(fp, 0, 0, 0);
+	hostDn = cert->name;
+	X509_free(cert);
+	fclose(fp);
 }
 
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
@@ -71,12 +78,6 @@ GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
 	char **arr = get_client_roles(ctx, &nbfqans);
 
 	if (nbfqans == 0) {
-
-		FILE *fp = fopen(hostCert.c_str(), "r");
-		X509 *cert = PEM_read_X509(fp, 0, 0, 0);
-		hostDn = cert->name;
-		X509_free(cert);
-		fclose(fp);
 
 		// if the host certificate was used to submit the request we will not find any fqans
 		if (clientDn != hostDn)
