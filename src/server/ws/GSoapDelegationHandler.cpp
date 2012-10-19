@@ -67,6 +67,9 @@ string GSoapDelegationHandler::initHostDn() {
     // check the server host certificate
 	FILE *fp = fopen(hostCert.c_str(), "r");
 	X509 *cert = PEM_read_X509(fp, 0, 0, 0);
+
+	if (!cert) return string();
+
 	dn = cert->name;
 	X509_free(cert);
 	fclose(fp);
@@ -88,7 +91,7 @@ GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) { // TODO ch
 
 	if (nbfqans == 0) {
 		// if the host certificate was used to submit the request we will not find any fqans
-		if (clientDn != hostDn)
+		if (hostDn.empty() || clientDn != hostDn)
 			throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate (probably the CRL has expired)!");
 	}
 

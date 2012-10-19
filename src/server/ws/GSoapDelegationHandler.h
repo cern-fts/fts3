@@ -224,6 +224,7 @@ public:
 	 * @return true if the client is a root user, false otherwise
 	 */
 	bool isRoot() {
+		if (hostDn.empty()) return false;
 		return clientDn == hostDn;
 	}
 
