@@ -1,13 +1,13 @@
 Port=8443
 IP=0.0.0.0
-DbConnectString=
 DbType=oracle
 DbUserName=
 DbPassword=
+DbConnectString=
+Alias=
 TransferLogDirectory=/var/log/fts3
 Infosys=lcg-bdii.cern.ch:2170
-Alias=
-Optimizer=false
+Optimizer=true
 HttpKeepAlive=true
 AuthorizedVO=*
 CleanRecordsHost=false
