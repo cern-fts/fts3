@@ -39,7 +39,7 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 	ThreadTraits::LOCK lock(_mutex);
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		_param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
 	} catch (Err& ex) {
@@ -59,7 +59,7 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		_param_5.getNewProxyReqReturn = handler.getNewProxyReq();
 
 	} catch (Err& ex) {
@@ -79,7 +79,7 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		_param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
 
 	} catch(Err& ex) {
@@ -98,6 +98,7 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
 	try {
 		GSoapDelegationHandler handler(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		handler.putProxy(_delegationID, _proxy);
 
 	} catch (Err& ex) {
@@ -135,7 +136,7 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap);
+		AuthorizationManager::getInstance().authorize(soap, true);
 		handler.destroy(_delegationID);
 
 	} catch(Err& ex) {

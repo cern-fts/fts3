@@ -50,11 +50,16 @@ AuthorizationManager::~AuthorizationManager() {
 
 void AuthorizationManager::authorize(soap* soap, bool submit) {
 
-	// if the VO authrization list was not specified or a wildcard was used ...
-	if (voNameList.empty() || voNameSet.count("*")) return;
-
 	GSoapDelegationHandler handler (soap);
-	if(!submit && handler.isRoot()) return;
+	if(handler.isRoot()) {
+		if (!submit) return;
+
+		string msg = "Authorization failed, a host certificate has been used to submit a transfer!";
+//		throw Err_Custom(msg);
+	}
+
+	// if the VO authorization list was not specified or a wildcard was used ...
+	if (voNameList.empty() || voNameSet.count("*")) return;
 
 	string vo = handler.getClientVo();
 	to_lower(vo);
