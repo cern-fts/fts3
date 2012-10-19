@@ -500,6 +500,11 @@ int main(int argc, char **argv) {
 
     handle = gfal_context_new(NULL);
     
+    //reuse session    
+    if (reuseFile.length() > 0){
+    	gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, &tmp_err);
+    }    
+    
     std::vector<std::string> urlsFile;
     std::string line("");
     readFile = "/var/lib/fts3/" + job_id;

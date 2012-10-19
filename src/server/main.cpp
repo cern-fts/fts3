@@ -47,6 +47,18 @@ static int fexists(const char *filename) {
     return -1;
 }
 
+void fts3_teardown_db_backend()
+{
+    try {
+        db::DBSingleton::tearDown();
+    }
+    catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
+        exit(1);
+    }
+}
+
+
 
 /// Handler of SIGCHLD
 void _handle_sigint(int)
@@ -60,7 +72,9 @@ void _handle_sigint(int)
     */                            
     stopThreads = true;      
     //theServer().stop();
-    sleep(5);
+    sleep(10);
+    fts3_teardown_db_backend();
+    StaticSslLocking::kill_locks();    
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
     exit(EXIT_SUCCESS);
 }
@@ -86,17 +100,6 @@ void fts3_initialize_db_backend()
     }
 
    
-}
-
-void fts3_teardown_db_backend()
-{
-    try {
-        db::DBSingleton::tearDown();
-    }
-    catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-        exit(1);
-    }
 }
 
 
@@ -157,11 +160,7 @@ int main (int argc, char** argv)
         if (fexists(configfile) != 0){
 		std::cerr << "fts3 server config file doesn't exist"  << std::endl;
 		exit(1);	
-	}	
-	
-
-        fts3::ws::GSoapDelegationHandler::init();
-        StaticSslLocking::init_locks();
+	}		
 				
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
 	std::string logDir = theServerConfig().get<std::string>("TransferLogDirectory");
@@ -191,9 +190,6 @@ int main (int argc, char** argv)
 		exit(1);	
 	}
 
-   
-
-        fts3_initialize_db_backend();
         struct sigaction action;
         action.sa_handler = _handle_sigint;
         sigemptyset(&action.sa_mask);
@@ -201,11 +197,7 @@ int main (int argc, char** argv)
         int res = sigaction(SIGINT, &action, NULL);
 	
 	set_terminate (myterminate);
-	set_unexpected (myunexpected);		
-        
-	std::string infosys = theServerConfig().get<std::string>("Infosys");
-	if(infosys.length() > 0)
-		setenv("LCG_GFAL_INFOSYS",infosys.c_str(),1);
+	set_unexpected (myunexpected);		        
             
         if (res == -1) 
         {
@@ -216,15 +208,24 @@ int main (int argc, char** argv)
 
         if (isDaemon)
         {   
-            fts3_teardown_db_backend();
-            daemonize();
-            fts3_initialize_db_backend();
+            daemonize();            
             freopen (logDir.c_str(),"a",stderr);            
         }
         
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Starting server..." << commit;
-
+        fts3::ws::GSoapDelegationHandler::init();
+        StaticSslLocking::init_locks();
+	fts3_initialize_db_backend();
+	
+	std::string infosys = theServerConfig().get<std::string>("Infosys");
+	if(infosys.length() > 0){
+		/*only bdii to be used, not the cache file*/
+		setenv("GLITE_SD_PLUGIN", "bdii", 1);	
+		setenv("LCG_GFAL_INFOSYS",infosys.c_str(),1);	
+	}
+		
         theServer().start();
+	fts3_teardown_db_backend();
 	StaticSslLocking::kill_locks();
     }
     catch(Err& e)

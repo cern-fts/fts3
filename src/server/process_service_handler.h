@@ -179,12 +179,19 @@ protected:
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
         	std::vector<TransferFiles*> files;
-		files.reserve(300);
+		files.reserve(3000);
         	std::vector<TransferFiles*>::const_iterator fileiter;		
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
 		
-		if(stopThreads){		
+		if(stopThreads){
+		               /** cleanup resources */
+                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                    delete *iter2;
+                jobs2.clear();
+                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
+                    delete *fileiter;
+                files.clear();		
 			return;
 		}
 
@@ -440,6 +447,14 @@ protected:
                     opt_config = NULL;
                 }
 		if(stopThreads){
+		 /** cleanup resources */
+                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                    delete *iter2;
+                jobs2.clear();
+                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
+                    delete *fileiter;
+                files.clear();
+		fileIds.clear();
 			return;
 		}
 
@@ -602,6 +617,16 @@ protected:
 
 
         while (1) {
+	
+	   	if(stopThreads){
+		if (!jobs2.empty()) {
+                    std::vector<TransferJobs*>::iterator iter2;
+                    for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                        delete *iter2;
+                    jobs2.clear();
+                }		
+			return;
+		}
 	                  
 	    if(DrainMode::getInstance()){
                 if(!drainMode)

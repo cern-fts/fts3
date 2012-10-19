@@ -43,34 +43,22 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		ctx = soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE);
 
 		ctx->bind_flags |= SO_REUSEADDR;
-		ctx->accept_flags |= SO_LINGER;
-		ctx->connect_flags |= SO_LINGER;
-		ctx->linger_time = 2;
-		ctx->keep_alive = 1;
 		ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session		
-		ctx->accept_timeout = 120; // optional: 120 secs timeout
+		ctx->accept_timeout = 0; 
 		ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe
-		ctx->recv_timeout = 60; // Timeout after 1 minutes stall on recv
-		ctx->send_timeout = 60; // Timeout after 1 minute stall on send
+		ctx->recv_timeout = 120; // Timeout after 1 minutes stall on recv
+		ctx->send_timeout = 120; // Timeout after 1 minute stall on send
 
 		soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
 		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 
-		// must be set again, for an unknown reason soap_cgsi_init rests those parameters!
-		ctx->linger_time = 2;
-		ctx->accept_flags |= SO_LINGER;
 
 		ctx->fmimereadopen = LogFileStreamer::readOpen;
 		ctx->fmimereadclose = LogFileStreamer::readClose;
 		ctx->fmimeread = LogFileStreamer::read;
 
 		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
-		struct linger ling ;
-	        ling.l_onoff=1;
-    	        ling.l_linger=0;
-                setsockopt(sock, SOL_SOCKET, SO_LINGER, &ling, sizeof(ling));
-	
 		if (sock >= 0) {
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Soap service " << sock << " IP:" << ip << " Port:" << port << commit;
 		} else {
@@ -83,17 +71,9 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		ctx = soap_new();
 
 		ctx->bind_flags |= SO_REUSEADDR;
-		ctx->accept_flags |= SO_LINGER;
-		ctx->connect_flags |= SO_LINGER;
-		ctx->linger_time = 4;
-
 		soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
 		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
-
-		// must be set again, for an unknown reason soap_cgsi_init rests those parameters!
-		ctx->accept_flags |= SO_LINGER;
-		ctx->linger_time = 4;
 
 		ctx->fmimereadopen = LogFileStreamer::readOpen;
 		ctx->fmimereadclose = LogFileStreamer::readClose;
@@ -169,8 +149,6 @@ soap* GSoapAcceptor::getSoapContext() {
 }
 
 void GSoapAcceptor::recycleSoapContext(soap* ctx) {     
-        if(stopThreads)
-		return;
         ThreadTraits::LOCK_R lock(_mutex);
 	if(ctx){		
 		soap_destroy(ctx);

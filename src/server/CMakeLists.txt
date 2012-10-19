@@ -79,7 +79,7 @@ target_link_libraries(fts_server_lib
 	-lboost_thread-mt 
 	-lboost_regex-mt 
 	-lis_ifce 
-	-lldap_r 
+	-lldap_r
 	-lglib-2.0 
 	-lgridsite
 	-lcgsi_plugin_voms_cpp

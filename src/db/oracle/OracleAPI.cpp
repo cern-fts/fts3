@@ -558,7 +558,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 		return;
 		
         s = conn->createStatement(select, selecttag);
-        s->setPrefetchRowCount(300);
+        s->setPrefetchRowCount(3000);
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
             TransferJobs* temp = (TransferJobs*) * iter;
             std::string job_id = std::string(temp->JOB_ID);
