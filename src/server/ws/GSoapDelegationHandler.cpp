@@ -39,6 +39,8 @@ using namespace fts3::ws;
 using namespace db;
 using namespace boost;
 
+const string GSoapDelegationHandler::hostDn = GSoapDelegationHandler::initHostDn();
+
 static void cipherRemove(const EVP_CIPHER *c, const char *from, const char *to, void *arg) {
 	if(c && (c->key_len * 8 < *(int *)arg)) {
 		OBJ_NAME_remove(OBJ_nid2sn(c->nid), OBJ_NAME_TYPE_CIPHER_METH);
@@ -55,17 +57,24 @@ void GSoapDelegationHandler::init() {
     OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
     int minbits = 128;
     EVP_CIPHER_do_all(cipherRemove, &minbits);
-
-    // check the server host certificate
-//	FILE *fp = fopen(hostCert.c_str(), "r");
-//	X509 *cert = PEM_read_X509(fp, 0, 0, 0);
-//	hostDn = cert->name;
-//	X509_free(cert);
-//	fclose(fp);
 }
 
-GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
-		ctx(ctx), hostCert("/etc/grid-security/hostcert.pem") { // TODO check if other location is not used for hostcert.pem
+string GSoapDelegationHandler::initHostDn() {
+
+	/// default path to host certificate
+	const string hostCert = "/etc/grid-security/hostcert.pem";
+	string dn;
+    // check the server host certificate
+	FILE *fp = fopen(hostCert.c_str(), "r");
+	X509 *cert = PEM_read_X509(fp, 0, 0, 0);
+	dn = cert->name;
+	X509_free(cert);
+	fclose(fp);
+
+	return dn;
+}
+
+GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) { // TODO check if other location is not used for hostcert.pem
 
 	// get client DN
 	char buff[200];

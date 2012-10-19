@@ -234,10 +234,10 @@ private:
 	string clientDn;
 	/// client VOMS attributes (FQAN)
 	vector<string> attrs;
-	/// default path to host certificate
-	const string hostCert;
 	/// host DN
-	string hostDn;
+	static const string hostDn;
+
+	static string initHostDn();
 };
 
 }
