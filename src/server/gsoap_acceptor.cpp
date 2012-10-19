@@ -149,6 +149,9 @@ soap* GSoapAcceptor::getSoapContext() {
 }
 
 void GSoapAcceptor::recycleSoapContext(soap* ctx) {     
+	if(stopThreads) 
+		return; 
+
         ThreadTraits::LOCK_R lock(_mutex);
 	if(ctx){		
 		soap_destroy(ctx);

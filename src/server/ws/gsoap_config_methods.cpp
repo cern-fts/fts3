@@ -153,7 +153,7 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 
 int fts3::implcfg__doDrain(soap* soap, bool drain, struct implcfg__doDrainResponse &_param_13) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turing " << (drain ? "on" : "off") << " the drain mode" << commit;
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Turning " << (drain ? "on" : "off") << " the drain mode" << commit;
 	DrainMode::getInstance() = drain;
 	return SOAP_OK;
 }

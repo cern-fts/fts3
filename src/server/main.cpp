@@ -64,12 +64,7 @@ void fts3_teardown_db_backend()
 void _handle_sigint(int)
 {
     if(stackTrace.length() > 0)
-    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit; 
-    /*upon exiting, check if there are files in ready state and revert them to submitted
- 	-If reuse, then file/job state must be reverted to submitted
-	-If not reuse, revert only files to submitted state   
-    DBSingleton::instance().getDBObjectInstance()->revertToSubmittedTerminate();  	
-    */                            
+    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;    
     stopThreads = true;      
     //theServer().stop();
     sleep(8);
