@@ -1,5 +1,10 @@
 #include "site_name.h"
 #include "parse_url.h"
+#include "logger.h"
+#include "error.h"
+
+
+using namespace FTS3_COMMON_NAMESPACE;
 
 SiteName::SiteName(){
 }
@@ -45,8 +50,10 @@ std::string  SiteName::getFromBDII(std::string& hostname){
 	std::string site("");
         char* sitename = NULL;
 	sitename = SD_getServiceSite(hostname.c_str(), &exception);
-	if (exception.status != SDStatus_SUCCESS)
+	if (exception.status != SDStatus_SUCCESS){
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) <<  "BDII error:" << exception.reason << commit;
             SD_freeException(&exception);
+	}
 	if(sitename){
 		site =  std::string(sitename);	    
 		free(sitename);

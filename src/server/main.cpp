@@ -72,7 +72,7 @@ void _handle_sigint(int)
     */                            
     stopThreads = true;      
     //theServer().stop();
-    sleep(10);
+    sleep(8);
     fts3_teardown_db_backend();
     StaticSslLocking::kill_locks();    
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
