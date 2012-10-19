@@ -53,9 +53,8 @@ void AuthorizationManager::authorize(soap* soap, bool submit) {
 	GSoapDelegationHandler handler (soap);
 	if(handler.isRoot()) {
 		if (!submit) return;
-
 		string msg = "Authorization failed, a host certificate has been used to submit a transfer!";
-//		throw Err_Custom(msg);
+		throw Err_Custom(msg);
 	}
 
 	// if the VO authorization list was not specified or a wildcard was used ...
