@@ -57,11 +57,11 @@ void GSoapDelegationHandler::init() {
     EVP_CIPHER_do_all(cipherRemove, &minbits);
 
     // check the server host certificate
-	FILE *fp = fopen(hostCert.c_str(), "r");
-	X509 *cert = PEM_read_X509(fp, 0, 0, 0);
-	hostDn = cert->name;
-	X509_free(cert);
-	fclose(fp);
+//	FILE *fp = fopen(hostCert.c_str(), "r");
+//	X509 *cert = PEM_read_X509(fp, 0, 0, 0);
+//	hostDn = cert->name;
+//	X509_free(cert);
+//	fclose(fp);
 }
 
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
