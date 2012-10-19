@@ -87,7 +87,6 @@ GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx): ctx(ctx) { // TODO ch
 	char **arr = get_client_roles(ctx, &nbfqans);
 
 	if (nbfqans == 0) {
-
 		// if the host certificate was used to submit the request we will not find any fqans
 		if (clientDn != hostDn)
 			throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate (probably the CRL has expired)!");
