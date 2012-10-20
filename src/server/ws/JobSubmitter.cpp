@@ -154,11 +154,11 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
     	if (!checkProtocol(src) && !checkIfLfn(src)) {
     		throw Err_Custom("Source protocol is not supported for file: " + src);
     	}
-
     	src_dest_checksum_tupple tupple;
     	tupple.source = src;
     	tupple.destination = dest;
-    	tupple.checksum = *(*it)->checksum;
+        if((*it)->checksum)
+    		tupple.checksum = *(*it)->checksum;
         
     	jobs.push_back(tupple);
     }
