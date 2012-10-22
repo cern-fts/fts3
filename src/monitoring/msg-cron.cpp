@@ -38,7 +38,6 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <occi.h>
 #include <string.h>
 #include <errno.h>
 #include <time.h>
@@ -50,8 +49,8 @@
 #include <sys/types.h>
 #include <iostream>
 #include <vector>
+#include <db/generic/SingleDbInstance.h>
 #include "utility_routines.h"
-#include "db_routines.h"
 #include "Logger.h"
 #include <memory>
 #include <exception>
@@ -76,16 +75,7 @@ private:
     vector <std::string> credentials;
     string sql;
     string sql2;
-    oracle::occi::Statement* stmt0;
-    oracle::occi::ResultSet* rs0;
-    oracle::occi::Statement* stmt;
-    oracle::occi::ResultSet* rs;
-    oracle::occi::Statement* stmt2;
-    oracle::occi::ResultSet* rs2;
-    oracle::occi::Statement* stmt3;
-    oracle::occi::ResultSet* rs3;
-    oracle::occi::Environment* env;
-    oracle::occi::Connection* conn;
+    MonitoringDbIfce* monitoringDb;
 
     Connection* connection;
     Session* session;
@@ -116,18 +106,6 @@ public:
         this->destination = NULL;
         this->producer = NULL;
 
-        // Create connection to DB
-        this->stmt0 = NULL;
-        this->rs0 = NULL;
-        this->stmt = NULL;
-        this->rs = NULL;
-        this->stmt2 = NULL;
-        this->rs2 = NULL;
-        this->stmt3 = NULL;
-        this->rs3 = NULL;
-        this->env = NULL;
-        this->conn = NULL;
-
         this->active = 0.0;
         this->max = 0.0;
         this->ratio = 0.0;
@@ -154,21 +132,16 @@ public:
                 exit(0);
             }
 
-         	std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
-    	 	std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
-    		std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
+            std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
+            std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
+            std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
 
             try {
-                this->env = oracle::occi::Environment::createEnvironment();
-                if (env)
-                    this->conn = env->createConnection(dbUserName, dbPassword, dbConnectString);
-                this->conn->setStmtCacheSize(100);
-            } catch (const oracle::occi::SQLException& exc) {
-                errorMessage = "Cannot connect to database server: " + exc.getMessage();
-                logger::writeLog(errorMessage, true);
-                exit(0);
+                this->monitoringDb = db::DBSingleton::instance().getMonitoringDBInstance();
+                this->monitoringDb->init(dbUserName, dbPassword, dbConnectString);
+            } catch (Err& exc) {
+                logger::writeLog(std::string("Cannot connect to the database server: ") + exc.what());
             }
-
 
             try {
                 this->broker = getBROKER();
@@ -220,90 +193,76 @@ public:
             text += _getTimestamp();
             text += "\",";
 
-            stmt0 = conn->createStatement("select distinct(vo_name) from T_JOB", "sta1");            
-            stmt2 = conn->createStatement("select  distinct SOURCE_SE,DEST_SE from t_job where vo_name=:x");
-	    stmt3 = conn->createStatement("Select Distinct Num1, Num2 From (Select Count(*) As Num1 From  T_Job Where Job_State='ACTIVE' And T_Job.Source_Se=:X  And	    T_Job.Dest_Se=:Y), (Select Count(*) As Num2  From T_Job where Job_state='READY' and t_job.SOURCE_SE=:z and t_job.DEST_SE=:e)", "sta3");
+            std::vector<std::string> distinctVOs;
+            monitoringDb->getVONames(distinctVOs);
+            for (size_t voIndex = 0; voIndex < distinctVOs.size(); ++voIndex) {
+                std::string& vo = distinctVOs[voIndex];
 
-            if (conn) {
-                rs0 = stmt0->executeQuery();
-                while (rs0->next()) {
-                    //vo stuff
-                    text += "\"vo\":{";
-                    // Create an array of the channels 
-                    text += "\"voname\":\"" + rs0->getString(1) + "\",\"links\":[";
-                    // Create a query to get channels names and types
+                //vo stuff
+                text += "\"vo\":{";
+                // Create an array of the channels
+                text += "\"voname\":\"" + vo + "\",\"links\":[";
 
-                    stmt2->setString(1, rs0->getString(1));
-                    rs2 = stmt2->executeQuery();                    
-                        //  for every pair source_ dest_ host collecting information
-                        while (rs2->next()) {
-                            ++links_found;
-                            text += "{\"source_host\":\"";
-                            text += rs2->getString(1);
-                            text += "\"";
-                            text += ",\"dest_host\":\"";
-                            text += rs2->getString(2);
-                            text += "\"";
+                // for every pair source_ dest_ host collect information
+                std::vector<SourceAndDestSE> pairs;
+                monitoringDb->getSourceAndDestSEForVO(vo, pairs);
+                for (size_t pairIndex = 0; pairIndex < pairs.size(); ++pairIndex) {
+                    SourceAndDestSE& pair = pairs[pairIndex];
 
-                            stmt3->setString(1, rs2->getString(1));
-                            stmt3->setString(2, rs2->getString(2));
-                            stmt3->setString(3, rs2->getString(1));
-                            stmt3->setString(4, rs2->getString(2));
-                            rs3 = stmt3->executeQuery();
+                    ++links_found;
+                    text += "{\"source_host\":\"";
+                    text += pair.sourceStorageElement;
+                    text += "\"";
+                    text += ",\"dest_host\":\"";
+                    text += pair.destinationStorageElement;
+                    text += "\"";
 
-                            while (rs3->next()) {
-                                active = rs3->getInt(1);                              
-                                text += ",\"active\":\"";
-                                text += rs3->getString(1);
-                                text += "\"";
-                                text += ",\"ratio\":\"";
-                                text += _to_string<double>(ratio, std::dec);
-                                text += "%\"";
-                                text += ",\"ready\":\"";
-                                text += rs3->getString(2);
-                                text += "\"";
-                            }
-                            stmt3->closeResultSet(rs3);
-                            text += "},";
-                        }
-                        stmt2->closeResultSet(rs2);
-                        if (links_found > 0)
-                            text.resize(text.size() - 1);
+                    unsigned active = monitoringDb->numberOfJobsInState(pair, "ACTIVE");
+                    unsigned ready  = monitoringDb->numberOfJobsInState(pair, "READY");
 
-                        text += "]},";
-
-                        links_found = 0;
-			text.resize(text.size() - 1);
-                    
+                    text += ",\"active\":\"";
+                    text += _to_string<unsigned>(active, std::dec);
+                    text += "\"";
+                    text += ",\"ratio\":\"";
+                    text += _to_string<double>(ratio, std::dec);
+                    text += "%\"";
+                    text += ",\"ready\":\"";
+                    text += _to_string<unsigned>(ready, std::dec);
+                    text += "\"";
                     text += "},";
-
                 }
-                stmt0->closeResultSet(rs0);
-                text.resize(text.size() - 1);
+                if (links_found > 0)
+                    text.resize(text.size() - 1);
 
-                text += "}";
-                text += 4; /*add EOT ctrl character*/
-			
+                text += "]},";
 
-                TextMessage* message = session->createTextMessage(text);
-                producer->send(message);
-
-                logger::writeLog("PE " + text);
-                delete message;
+                links_found = 0;
+                //text.resize(text.size() - 1);
             }
-        }
+
+            text.resize(text.size() - 1);
+            text += "}";
+            text += 4; /*add EOT ctrl character*/
+
+
+            TextMessage* message = session->createTextMessage(text);
+            producer->send(message);
+
+            logger::writeLog("PE " + text);
+            delete message;
+       }
        catch( const cms::CMSException& e) {
         std::string errorMessage = "Periodic msg producer cannot connect to broker " + broker + " : " + e.getMessage();
         logger::writeLog(errorMessage, true);
-     	}
-	catch (const oracle::occi::SQLException& exc) {
-            errorMessage = exc.getMessage();
-            logger::writeLog(errorMessage, true);
-        }
+       }
        catch (const std::exception& e) {
             errorMessage = "Unrecovereable error occured: " + std::string(e.what());
             logger::writeLog(errorMessage, true);
-        }
+       }
+       catch (...) {
+           logger::writeLog("Unexpected exception", true);
+
+       }
     }
 
 private:
@@ -346,35 +305,6 @@ private:
             e.printStackTrace();
         }
         connection = NULL;
-
-
-
-        //now terminate oracle
-
-        try {
-            if (conn) {
-                if (stmt0) {
-                    //stmt0->closeResultSet(rs0);
-                    conn->terminateStatement(stmt0);
-                }                
-                if (stmt2) {
-                    //stmt2->closeResultSet(rs2);
-                    conn->terminateStatement(stmt2);
-                }
-                if (stmt3) {
-                    //stmt3->closeResultSet(rs3);
-                    conn->terminateStatement(stmt3);
-                }
-                if (env) {
-                    env->terminateConnection(conn);
-                    oracle::occi::Environment::terminateEnvironment(env);
-                }
-            }
-
-        } catch (const oracle::occi::SQLException& exc) {
-            errorMessage = exc.getMessage();
-            logger::writeLog(errorMessage, true);
-        }
 
     }
 };
