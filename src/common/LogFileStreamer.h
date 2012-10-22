@@ -42,13 +42,13 @@ private:
 	public:
 
 		// constructors
-		OutputHandler(string logname, string dir = "/tmp/"): logname(logname), resp(0), isempty(false), dir(dir) {}
+		OutputHandler(string logname, string dir = "/tmp/"): logname(logname), /*resp(0),*/ isempty(false), dir(dir) {}
 //		OutputHandler(log__GetLogInternalResponse& resp, string dir = "/tmp/"): resp(&resp), isempty(false), dir(dir) {}
 		~OutputHandler() {};
 
 		// fields with lognames
 		string logname;
-		log__GetLogInternalResponse* resp;
+//		log__GetLogInternalResponse* resp;
 		bool isempty;
 		string dir;
 
@@ -56,11 +56,11 @@ private:
 		string getLogName () {
 
 			static vector<string> lognames;
-			if (lognames.empty() && resp) {
-				if (resp->logs) {
-					lognames = resp->logs->lognames;
-				}
-			}
+//			if (lognames.empty() && resp) {
+//				if (resp->logs) {
+//					lognames = resp->logs->lognames;
+//				}
+//			}
 
 			if (!lognames.empty()) {
 					logname = lognames.front();
