@@ -39,15 +39,15 @@ public:
     /** Start the service. */
     void start()
     {
+        typename TRAITS::ProcessServiceType processHandler;
+        processHandler.executeTransfer_p();    
+    
         unsigned int port = theServerConfig().get<unsigned int>("Port");
 	const std::string& ip = theServerConfig().get<std::string>("IP");
                 	
 	typename TRAITS::TransferWebServiceType handler_t;
         handler_t.listen_p(port, ip);
-	
-        typename TRAITS::ProcessServiceType processHandler;
-        processHandler.executeTransfer_p();	
-         
+		         
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();		
 	

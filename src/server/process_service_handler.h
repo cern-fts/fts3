@@ -46,6 +46,7 @@ limitations under the License. */
 #include <boost/algorithm/string.hpp>  
 
 extern bool  stopThreads;
+extern int terminateJobsGracefully;
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
@@ -267,7 +268,11 @@ protected:
                             char user[ ] = "fts3";
                             uid_t pw_uid;
                             pw_uid = name_to_uid(user);
-                            chown(proxy_file.c_str(), pw_uid, getgid());
+                            int checkChown = chown(proxy_file.c_str(), pw_uid, getgid());
+			    if(checkChown!=0){
+			    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << proxy_file << commit;
+			    }
+
                         }
 
                         if (std::string(temp->CHECKSUM).length() > 0) { //checksum
@@ -509,7 +514,10 @@ protected:
                         char user[ ] = "fts3";
                         uid_t pw_uid;
                         pw_uid = name_to_uid(user);
-                        chown(proxy_file.c_str(), pw_uid, getgid());
+                        int checkChown = chown(proxy_file.c_str(), pw_uid, getgid());
+ 			if(checkChown!=0){
+			    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << proxy_file << commit;
+			    }			
                     }
 
                     params.append(" -G ");
@@ -624,7 +632,8 @@ protected:
                     for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
                         delete *iter2;
                     jobs2.clear();
-                }		
+                }				
+			terminateJobsGracefully +=1;		       
 			return;
 		}
 	                  

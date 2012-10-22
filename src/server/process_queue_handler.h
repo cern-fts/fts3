@@ -32,6 +32,7 @@ limitations under the License. */
 #include <boost/scoped_ptr.hpp>
 
 extern bool  stopThreads;
+extern int terminateJobsGracefully;
  
 using namespace boost::interprocess;
 FTS3_SERVER_NAMESPACE_START
@@ -108,7 +109,9 @@ protected:
     void executeTransfer_a() {
 
     while(1){ /*need to receive more than one messages at a time*/    
-       if(stopThreads) return;
+       if(stopThreads){       
+       	return;
+       }
     try{
     	struct message msg;
 	qm->receive(&msg);
