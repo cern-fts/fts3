@@ -69,7 +69,7 @@ void OracleMonitoring::getSourceAndDestSEForVO(const std::string& vo,
     const std::string tag   = "getSourceAndDestSEForVO";
     const std::string query = "SELECT DISTINCT SOURCE_SE, DEST_SE\
                                FROM T_JOB\
-                               WHERE VO_NAME :vo AND SUBMIT_TIME > :notBefore";
+                               WHERE VO_NAME = :vo AND SUBMIT_TIME > :notBefore";
 
     checkConn(conn);
     ThreadTraits::LOCK_R lock(_mutex);
