@@ -27,6 +27,7 @@ BuildRequires:  gfal2-devel%{?_isa}
 BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
 BuildRequires:  python-devel%{?_isa}
+BuildRequires:  pugixml-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 %{?filter_setup:
