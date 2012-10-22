@@ -474,13 +474,13 @@ void GSoapContextAdapter::doDrain(bool drain) {
 
 void GSoapContextAdapter::getLog(string& logname, string jobId) {
 
-	ctx->user = LogFileStreamer::getOutputHandler(logname);
-
-	log__GetLogResponse resp;
-	if (soap_call_log__GetLog(ctx, endpoint.c_str(), 0, jobId, resp)) {
-		handleSoapFault("Operation getLog failed.");
-		return;
-	}
+//	ctx->user = LogFileStreamer::getOutputHandler(logname);
+//
+//	log__GetLogResponse resp;
+//	if (soap_call_log__GetLog(ctx, endpoint.c_str(), 0, jobId, resp)) {
+//		handleSoapFault("Operation getLog failed.");
+//		return;
+//	}
 //	log__Data* log = resp.log;
 //
 //	for (int i = 0; i < log->xop__Include.__size; i++)
