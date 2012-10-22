@@ -637,8 +637,8 @@ int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogRespons
 //	log->xop__Include.type = "*/*"; // MIME type
 //
 //	_param_36.log = log;
-//
-//	return SOAP_OK;
+
+	return SOAP_OK;
 }
 
 int fts3::log__GetLogInternal(struct soap* soap, string jobId, log__GetLogInternalResponse& resp) {
