@@ -601,9 +601,9 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 }
 
 
-//int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogResponse &_param_36) {
+int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogResponse &_param_36) {
 
-//	// TODO read the log sources from DB
+	// TODO read the log sources from DB
 //	vector<string> log_sources;
 //	log_sources.push_back("https://fts3-srv-node:8081");
 //
@@ -637,13 +637,13 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 //	log->xop__Include.type = "*/*"; // MIME type
 //
 //	_param_36.log = log;
-//
-//	return SOAP_OK;
-//}
 
-//int fts3::log__GetLogInternal(struct soap* soap, string jobId, log__GetLogInternalResponse& resp) {
+	return SOAP_OK;
+}
 
-//	// TODO read the paths from DB using jobId
+int fts3::log__GetLogInternal(struct soap* soap, string jobId, log__GetLogInternalResponse& resp) {
+
+	// TODO read the paths from DB using jobId
 //	vector<string> logs;
 //	logs.push_back("/home/simonm/test1.txt");
 //	logs.push_back("/home/simonm/test2.txt");
@@ -670,8 +670,8 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 //		resp.logs->logsdata.push_back(log);
 //		resp.logs->lognames.push_back(*it); // TODO remove the whole path, leave only file name
 //	}
-//
-//	return SOAP_OK;
-//}
+
+	return SOAP_OK;
+}
 
 
