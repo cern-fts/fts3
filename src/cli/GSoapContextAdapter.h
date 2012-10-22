@@ -247,7 +247,7 @@ public:
 	/**
 	 * TODO
 	 */
-	void getLog(string jobId);
+	void getLog(string& logname, string jobId);
 
 	///@{
 	/**
