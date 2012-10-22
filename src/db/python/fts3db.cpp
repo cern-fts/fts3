@@ -1,20 +1,27 @@
 #include <boost/python.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <common/error.h>
 #include <config/serverconfig.h>
-#include <db/generic/JobStatus.h>
-#include <db/generic/TransferJobs.h>
-#include "DbIfceWrapper.h"
+#include <object.h>
+#include <pyerrors.h>
+#include "MonitoringDbWrapper.h"
 
 using namespace boost::python;
 
-// Prototypes
-extern void export_job_types(void);
-extern void export_se_types(void);
+// Prototype
+void export_types(void);
 
 // Simple config wrap
 std::string getConfig(const std::string& key)
 {
   return fts3::config::theServerConfig().get<std::string>(key);
+}
+
+// Exception translation
+PyObject* errException;
+
+void errTranslator(const fts3::common::Err& e) {
+    object pythonExceptionInstance(e);
+    PyErr_SetObject(errException, pythonExceptionInstance.ptr());
 }
 
 // Entry point
@@ -23,32 +30,32 @@ BOOST_PYTHON_MODULE(ftsdb)
   // Config helper
   def("getConfig", getConfig);
   
-  // Vector of string needs to be exposed, so we can pass them as parameters
-  class_< std::vector<std::string> >("StringVector")
-      .def(vector_indexing_suite< std::vector<std::string> >());
+  // Exception
+  class_<fts3::common::Err> exceptionClass("FTSError", no_init);
+  exceptionClass.def("what", &fts3::common::Err::what);
 
-  // Types
-  export_job_types();
-  export_se_types();
+  errException = exceptionClass.ptr();
+  register_exception_translator<fts3::common::Err>(&errTranslator);
   
-  // Wrapper
-  class_<DbIfceWrapper, boost::noncopyable>("DbIfce", no_init)
-    .def("getInstance", &DbIfceWrapper::getInstance, return_value_policy<reference_existing_object>())
-    .staticmethod("getInstance")
-    .def("init", &DbIfceWrapper::init)
-    .def("getByJobId", &DbIfceWrapper::getByJobId)
-    .def("getTransferFileStatus", &DbIfceWrapper::getTransferFileStatus)
-    .def("getTransferJobStatus", &DbIfceWrapper::getTransferJobStatus)
-    .def("getSubmittedJobs", &DbIfceWrapper::getSubmittedJobs)
-    .def("getSiteGroupNames", &DbIfceWrapper::getSiteGroupNames)
-    .def("getSiteGroupMembers", &DbIfceWrapper::getSiteGroupMembers)
-    .def("listRequests", &DbIfceWrapper::listRequests)
-    .def("getSe", &DbIfceWrapper::getSe)
-    .def("getAllSeInfoNoCriteria", &DbIfceWrapper::getAllSeInfoNoCriteria)
-    .def("getAllMatchingSeNames", &DbIfceWrapper::getAllMatchingSeNames)
-    .def("getAllMatchingSeGroupNames", &DbIfceWrapper::getAllMatchingSeGroupNames)
-    .def("getAllShareConfigNoCriteria", &DbIfceWrapper::getAllShareConfigNoCriteria)
-    .def("getAllShareAndConfigWithCriteria", &DbIfceWrapper::getAllShareAndConfigWithCriteria)
-    .def("getSeCreditsInUse", &DbIfceWrapper::getSeCreditsInUse)
-    .def("getGroupCreditsInUse", &DbIfceWrapper::getGroupCreditsInUse);
+  // Types
+  export_types();
+
+  // Monitoring DB interface
+  class_<MonitoringDbWrapper, boost::noncopyable>("MonitoringDb", no_init)
+      .def("getInstance", &MonitoringDbWrapper::getInstance, return_value_policy<reference_existing_object>())
+      .staticmethod("getInstance")
+      .def("init", &MonitoringDbWrapper::init)
+      .def("setNotBefore", &MonitoringDbWrapper::setNotBefore)
+      .def("getVONames", &MonitoringDbWrapper::getVONames)
+      .def("getSourceAndDestSEForVO", &MonitoringDbWrapper::getSourceAndDestSEForVO)
+      .def("numberOfJobsWithState", &MonitoringDbWrapper::numberOfJobsInState)
+      .def("getConfigAudit", &MonitoringDbWrapper::getConfigAudit)
+      .def("getTransferFiles", &MonitoringDbWrapper::getTransferFiles)
+      .def("getJob", &MonitoringDbWrapper::getJob)
+      .def("filterJobs", &MonitoringDbWrapper::filterJobs)
+      .def("numberOfTransfersInState", &MonitoringDbWrapper::numberOfTransfersInState)
+      .def("getUniqueReasons", &MonitoringDbWrapper::getUniqueReasons)
+      .def("averageDurationPerSePair", &MonitoringDbWrapper::averageDurationPerSePair)
+      .def("averageThroughputPerSePair", &MonitoringDbWrapper::averageThroughputPerSePair)
+      .def("getJobVOAndSites", &MonitoringDbWrapper::getJobVOAndSites);
 }

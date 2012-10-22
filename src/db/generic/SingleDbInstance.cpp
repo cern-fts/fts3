@@ -18,7 +18,7 @@ ThreadTraits::MUTEX DBSingleton::_mutex;
 
 // Implementation
 
-DBSingleton::DBSingleton() {
+DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL) {
 
   try{
 
@@ -43,8 +43,18 @@ DBSingleton::DBSingleton() {
 
         *(void**)( &destroy_db ) = symbolDestroy;
 
+        DynamicLibraryManager::Symbol symbolInstatiateMonitoring = dlm->findSymbol("create_monitoring");
+
+        DynamicLibraryManager::Symbol symbolDestroyMonitoring = dlm->findSymbol("destroy_monitoring");
+
+        *(void**)( &create_monitoring_db ) =  symbolInstatiateMonitoring;
+
+        *(void**)( &destroy_monitoring_db ) = symbolDestroyMonitoring;
+
         // create an instance of the DB class
         dbBackend = create_db();
+
+        // create monitoring db on request
     } else{
     	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library, check if libfts_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64"));
 	throw Err_Custom("Failed to load database plugin library, check if libfts_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64");
@@ -60,6 +70,8 @@ DBSingleton::DBSingleton() {
 DBSingleton::~DBSingleton() {
     if (dbBackend)
         destroy_db(dbBackend);
+    if (monitoringDbBackend)
+        destroy_monitoring_db(monitoringDbBackend);
     if (dlm)
         delete dlm;
 }

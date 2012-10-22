@@ -15,9 +15,8 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 
 add_library           (ftsdb SHARED fts3db.cpp
-                                     DbIfceWrapper.cpp
-                                     Jobs.cpp
-                                     Se.cpp)
+                                    MonitoringDbWrapper.cpp
+                                    types.cpp)
 target_link_libraries (ftsdb ${Boost_LIBRARIES} fts_db_generic fts_common fts_config)
 set_target_properties (ftsdb PROPERTIES PREFIX "")
 

@@ -8,7 +8,7 @@ include_directories (.)
 
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_db_oracle_SOURCES OracleAPI.cpp OracleConnection.cpp OracleTypeConversions.cpp)
+set(fts_db_oracle_SOURCES OracleAPI.cpp OracleConnection.cpp OracleTypeConversions.cpp OracleMonitoring.cpp)
 
 add_library(fts_db_oracle SHARED ${fts_db_oracle_SOURCES})
 target_link_libraries(fts_db_oracle ${OCCI_LIBRARY} )

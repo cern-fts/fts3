@@ -48,6 +48,7 @@
 #include "common/monitorobject.h"
 #include "GenericDbIfce.h"
 #include "DynamicLibraryManager.h"
+#include "MonitoringDbIfce.h"
 
 using namespace std;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -79,6 +80,12 @@ public:
         return dbBackend;
     }
 
+    MonitoringDbIfce* getMonitoringDBInstance() {
+        if (monitoringDbBackend == NULL)
+            monitoringDbBackend = create_monitoring_db();
+        return monitoringDbBackend;
+    }
+
 /**
  * Force the destruction of the backend
  * Needed to keep a consistent state on fork!
@@ -106,9 +113,13 @@ private:
  * The types of the database class factories
  **/
     GenericDbIfce* dbBackend;
+    MonitoringDbIfce* monitoringDbBackend;
+
     GenericDbIfce* (*create_db)();
     void (*destroy_db)(void *);
     
+    MonitoringDbIfce* (*create_monitoring_db)();
+    void (*destroy_monitoring_db)(void*);
 };
 
 }

@@ -1,4 +1,5 @@
 #include "OracleAPI.h"
+#include "OracleMonitoring.h"
 #include <fstream>
 #include "error.h"
 #include <algorithm>
@@ -4247,6 +4248,15 @@ extern "C" GenericDbIfce* create() {
 }
 
 extern "C" void destroy(GenericDbIfce* p) {
+    if (p)
+        delete p;
+}
+
+extern "C" MonitoringDbIfce* create_monitoring() {
+    return new OracleMonitoring;
+}
+
+extern "C" void destroy_monitoring(MonitoringDbIfce* p) {
     if (p)
         delete p;
 }
