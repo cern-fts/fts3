@@ -43,7 +43,7 @@ private:
 
 		// constructors
 		OutputHandler(string logname, string dir = "/tmp/"): logname(logname), resp(0), isempty(false), dir(dir) {}
-		OutputHandler(log__GetLogInternalResponse& resp, string dir = "/tmp/"): resp(&resp), isempty(false), dir(dir) {}
+//		OutputHandler(log__GetLogInternalResponse& resp, string dir = "/tmp/"): resp(&resp), isempty(false), dir(dir) {}
 		~OutputHandler() {};
 
 		// fields with lognames
@@ -83,10 +83,10 @@ public:
     static void* getOutputHandler(string logname) {
 		return (void*) new OutputHandler(logname);
 	}
-
-	static void* getOutputHandler(log__GetLogInternalResponse& resp) {
-		return (void*) new OutputHandler(resp);
-	}
+//
+//	static void* getOutputHandler(log__GetLogInternalResponse& resp) {
+//		return (void*) new OutputHandler(resp);
+//	}
 
 	// read callbacks
 
