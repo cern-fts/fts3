@@ -214,7 +214,7 @@ void signalHandler(int signum) {
     boost::mutex::scoped_lock lock(guard);    
     if (stackTrace.length() > 0) {
         propagated = true;
-	errorMessage = "ERROR Transfer " + g_job_id + " process died";
+	errorMessage = "ERROR Transfer process died " +  g_job_id ;
         logStream << fileManagement.timestamp() << errorMessage << '\n';
         logStream << fileManagement.timestamp() << "ERROR " << stackTrace << '\n';
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
@@ -306,7 +306,7 @@ void signalHandler(int signum) {
 }
 
 void myunexpected() {
-    errorMessage = "ERROR unexpected handler called for " +  g_job_id;
+    errorMessage = "ERROR Transfer unexpected handler called " +  g_job_id;
     logStream << fileManagement.timestamp() << errorMessage  << '\n';
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -327,7 +327,7 @@ void myunexpected() {
 }
 
 void myterminate() {
-    errorMessage = "ERROR terminate handler called for " +  g_job_id;
+    errorMessage = "ERROR Transfer terminate handler called:" +  g_job_id;
     logStream << fileManagement.timestamp() << errorMessage << '\n';
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());

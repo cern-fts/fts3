@@ -3780,6 +3780,7 @@ void OracleAPI::forceFailTransfers() {
         if (found_r1 && !found_r2)
             _mutex.unlock();
     } catch (oracle::occi::SQLException const &e) {
+        _mutex.unlock();
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -3791,8 +3792,7 @@ void OracleAPI::forceFailTransfers() {
                 conn->destroyStatement(s, tag);
             }
         }
-    }
-    _mutex.unlock();
+    }    
 }
 
 void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize) {

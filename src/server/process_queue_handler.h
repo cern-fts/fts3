@@ -137,9 +137,9 @@ protected:
 	}
 
 	/*session reuse process died or terminated unexpected*/
-        if(std::string(msg.transfer_message).compare("Transfer terminate handler called")==0 ||
-	std::string(msg.transfer_message).compare("Transfer unexpected handler called")==0 ||
-	std::string(msg.transfer_message).compare("Transfer process died")==0 ){
+        if(std::string(msg.transfer_message).find("Transfer terminate handler called")!=string::npos ||
+	std::string(msg.transfer_message).find("Transfer terminate handler called")!=string::npos ||
+	std::string(msg.transfer_message).find("Transfer process died")!=string::npos ){
 		DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr (0,36));          	
 	}
 
