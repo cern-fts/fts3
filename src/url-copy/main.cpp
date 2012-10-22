@@ -51,7 +51,6 @@ using namespace std;
 static FileManagement fileManagement;
 static Reporter reporter;
 static std::ofstream logStream;
-static boost::mutex  logMutex;
 static transfer_completed tr_completed;
 static std::string g_file_id("");
 static std::string g_job_id("");
@@ -108,7 +107,7 @@ std::string tcpbuffer_to_string("");
 std::string block_to_string("");
 std::string timeout_to_string("");
 extern std::string stackTrace;
-boost::mutex guard;
+//boost::mutex guard;
 gfalt_params_t params;
 
 std::string srmVersion(const std::string & url) {
@@ -157,8 +156,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
         size_t avg = gfalt_copy_get_average_baudrate(h, NULL) / 1024;
         size_t inst = gfalt_copy_get_instant_baudrate(h, NULL) / 1024;
         size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
-        time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
-        boost::mutex::scoped_lock lock(logMutex);
+        time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);        
        	logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
     }
 
@@ -178,8 +176,7 @@ std::string getDefaultErrorPhase(){
 
 
 void canceler() {
-    boost::mutex::scoped_lock lock(guard);
-    boost::mutex::scoped_lock logLock(logMutex);
+    //boost::mutex::scoped_lock lock(guard);
     if (propagated == false) {
         propagated = true;
 	errorMessage = "WARN Transfer " +  g_job_id + " was canceled because it was not responding";
@@ -211,7 +208,7 @@ void taskTimer(int time) {
 
 void signalHandler(int signum) {
     logStream << fileManagement.timestamp() << "DEBUG Received signal " << signum << '\n';
-    boost::mutex::scoped_lock lock(guard);    
+   // boost::mutex::scoped_lock lock(guard);    
     if (stackTrace.length() > 0) {
         propagated = true;
 	errorMessage = "ERROR Transfer process died " +  g_job_id ;
@@ -367,7 +364,6 @@ uid_t name_to_uid(char const *name) {
 
 static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpointer) {
     if (message) {
-        boost::mutex::scoped_lock lock(logMutex);
         logStream << fileManagement.timestamp() << "DEBUG " << message << '\n';
     }
 }
@@ -612,7 +608,7 @@ int main(int argc, char **argv) {
 		goto stop;				
 	}
 	{ //add curly brackets to delimit the scope of logger
-       	logger log(logStream, logMutex);
+       	logger log(logStream);
 
         log << fileManagement.timestamp() << "INFO Transfer accepted" << '\n';
         log << fileManagement.timestamp() << "INFO Proxy:" << proxy << '\n';
