@@ -25,12 +25,16 @@
 
 #include "ws-ifce/gsoap/fts3.nsmap"
 
+#include "common/LogFileStreamer.h"
+
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <cgsi_plugin.h>
 
 namespace fts3 { namespace cli {
+
+using namespace fts3::common;
 
 GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new1(SOAP_ENC_MTOM)) {
 
@@ -52,6 +56,12 @@ void GSoapContextAdapter::init() {
     } else if (endpoint.find("httpg") == 0) {
     	err = soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK );
     }
+
+    soap_set_omode(ctx, SOAP_ENC_MTOM);
+
+	ctx->fmimewriteopen = LogFileStreamer::writeOpen;
+	ctx->fmimewriteclose = LogFileStreamer::writeClose;
+	ctx->fmimewrite = LogFileStreamer::write;
 
     if (err) {
     	handleSoapFault("Failed to initialize the GSI plugin.");
@@ -146,9 +156,7 @@ string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<str
 				}
 				*element->checksum = checksum_str;
 			} else {
-				throw string(
-						"The checksum for source: " + get<SOURCE>(*e_it) + " and destination: " + get<DESTINATION>(*e_it) + " has not been specified."
-					);
+				// the user may specify some files with checksum and some without so it's OK
 			}
 
 			// push the element into the result vector
@@ -447,36 +455,37 @@ void GSoapContextAdapter::getConfiguration (string vo, string name, implcfg__get
 
 void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcfg__delConfigurationResponse& resp) {
 	if (soap_call_implcfg__delConfiguration(ctx, endpoint.c_str(), 0, config, resp))
-		handleSoapFault("Failed to get configuration: getConfiguration.");
+		handleSoapFault("Failed to delete configuration: delConfiguration.");
 }
 
 void GSoapContextAdapter::debugSet(string source, string destination, bool debug) {
 	impltns__debugSetResponse resp;
 	if (soap_call_impltns__debugSet(ctx, endpoint.c_str(), 0, source, destination, debug, resp)) {
-		handleSoapFault("Failed to get configuration: debugSet.");
+		handleSoapFault("Operation debugSet failed.");
 	}
 }
 
 void GSoapContextAdapter::doDrain(bool drain) {
 	implcfg__doDrainResponse resp;
 	if (soap_call_implcfg__doDrain(ctx, endpoint.c_str(), 0, drain, resp)) {
-		handleSoapFault("Failed to get configuration: debugSet.");
+		handleSoapFault("Operation doDrain failed.");
 	}
 }
 
-void GSoapContextAdapter::getLog(string jobId) {
+void GSoapContextAdapter::getLog(string& logname, string jobId) {
 
-	//soap_call___impltns__getLog(struct soap *soap, const char *soap_endpoint, const char *soap_action, std::string jobId, impltns__GetDataResponseType *impltns__getLogResponse);
-	log__GetDataResponse resp;
-	if (soap_call_log__GetData(ctx, endpoint.c_str(), 0, jobId, resp)) {
-		handleSoapFault("Failed to get configuration: debugSet.");
+	ctx->user = LogFileStreamer::getOutputHandler(logname);
+
+	log__GetLogResponse resp;
+	if (soap_call_log__GetLog(ctx, endpoint.c_str(), 0, jobId, resp)) {
+		handleSoapFault("Operation getLog failed.");
 		return;
 	}
-	log__Data* log = resp.log;
-
-	for (int i = 0; i < log->xop__Include.__size; i++)
-		cout << log->xop__Include.__ptr[i];
-	cout << endl;
+//	log__Data* log = resp.log;
+//
+//	for (int i = 0; i < log->xop__Include.__size; i++)
+//		cout << log->xop__Include.__ptr[i];
+//	cout << endl;
 }
 
 void GSoapContextAdapter::handleSoapFault(string msg) {
