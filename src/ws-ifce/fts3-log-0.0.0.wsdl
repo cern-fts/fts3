@@ -19,34 +19,60 @@
 
   <import namespace="http://www.w3.org/2004/08/xop/include" schemaLocation="http://www.w3.org/2004/08/xop/include"/>
 
-   <complexType name="Data">
+   <complexType name="Log">
     <sequence>
      <element ref="xop:Include" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
-   <element name="data" type="m:Data"/>
+   
+   <element name="log" type="m:Log"/>
+
+   <complexType name="LogInternal">
+    <sequence>
+     <element name="logsdata" type="m:Log" minOccurs="1" maxOccurs="unbounded"/>
+     <element name="lognames" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+    </sequence>    
+   </complexType>
 
  </schema>
 </types>
 
-<message name="GetData">
+<message name="GetLog">
   <part name="jobId" type="xsd:string"/>
 </message>
 
-<message name="GetDataResponse">
-  <part name="log" element="m:data"/> 
+<message name="GetLogResponse">
+  <part name="log" element="m:log"/> 
 </message>
 
+<message name="GetLogInternal">
+  <part name="jobId" type="xsd:string"/>
+</message>
+
+<message name="GetLogInternalResponse">
+  <part name="logs" type="m:LogInternal"/> 
+</message>
+
+
 <portType name="LogRetriever">
- <operation name="GetData">
-  <input message="m:GetData"/>
-  <output message="m:GetDataResponse"/>
+ 
+ <operation name="GetLog">
+  <input message="m:GetLog"/>
+  <output message="m:GetLogResponse"/>
  </operation>
+ 
+  <operation name="GetLogInternal">
+  <input message="m:GetLogInternal"/>
+  <output message="m:GetLogInternalResponse"/>
+ </operation>
+ 
 </portType>
 
 <binding name="LogRetrieverSoapBinding" type="m:LogRetriever">
+ 
  <SOAP:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
- <operation name="GetData">
+ 
+ <operation name="GetLog">
   <SOAP:operation/>
   <input>
    <SOAP:body namespace="http://cern.ch/wsdl/services/fts3/log" use="literal"/>
@@ -55,6 +81,17 @@
    <SOAP:body namespace="http://cern.ch/wsdl/services/fts3/log" use="literal"/>
   </output>
  </operation>
+ 
+  <operation name="GetLogInternal">
+  <SOAP:operation/>
+  <input>
+   <SOAP:body namespace="http://cern.ch/wsdl/services/fts3/log" use="literal"/>
+  </input>
+  <output>
+   <SOAP:body namespace="http://cern.ch/wsdl/services/fts3/log" use="literal"/>
+  </output>
+ </operation>
+
 </binding>
 
 <service name="LogRetrieverService">
