@@ -27,7 +27,7 @@
 #include "ws/RequestLister.h"
 #include "ws/GSoapDelegationHandler.h"
 #include "ws/AuthorizationManager.h"
-#include "ws/InternalLogRetriever.h"
+//#include "ws/InternalLogRetriever.h"
 
 #include "common/JobStatusHandler.h"
 #include "common/logger.h"
