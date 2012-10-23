@@ -191,7 +191,7 @@ void canceler() {
         reporter.timeout = timeout;
         reporter.nostreams = nbstreams;
         reporter.buffersize = tcpbuffersize;
-        reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
+        reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
         logStream.close();
         fileManagement.archive();
         if (reuseFile.length() > 0)
@@ -811,7 +811,7 @@ int main(int argc, char **argv) {
             dest_size = statbufdest.st_size;
         }
         msg_ifce::getInstance()->set_timestamp_checksum_dest_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
+	
 
         //check source and dest file sizes
         if (source_size == dest_size) {
@@ -828,7 +828,7 @@ int main(int argc, char **argv) {
 
         msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 	}//logStream
-stop:
+stop:		
         if (propagated == false) {
             propagated == true;
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);

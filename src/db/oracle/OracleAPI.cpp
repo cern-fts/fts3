@@ -3608,10 +3608,10 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 return allowed;
             }
         } else { //failures
-            if (noFailedPerSePair > 4 && act > 2) {
+            if (noFailedPerSePair > 4 && act > 5) {
                 allowed = false;
                 return allowed;
-            } else if (noFailedPerSePair < 4 && act > 5) {
+            } else if (noFailedPerSePair < 4 && act > 8) {
                 allowed = false;
                 return allowed;
             }
@@ -3620,10 +3620,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 return allowed;
             } else if (actThr < 1 && maxDest <= 20 && act < 4) {
                 allowed = true;
-                return allowed;
-            } else if (actThr > 1 && maxDest > 10 && act > 4) {
-                allowed = false;
-                return allowed;
+                return allowed;            
             } else if (actThr < 1 && maxDest > 10 && act > 5) {
                 allowed = false;
                 return allowed;
@@ -3741,19 +3738,14 @@ void OracleAPI::forceFailTransfers() {
     const std::string transfer_message = "Transfer has been forced-killed because it was stalled";
     const std::string status = "FAILED";
     double diff = 0;
-    bool found_r1 = false;
-    bool found_r2 = false;
-    _mutex.lock();
     try {
         if (false == conn->checkConn()) {
-            _mutex.unlock();
             return;
         }
 
         s = conn->createStatement(query, tag);
         r = conn->createResultset(s);
         while (r->next()) {
-            found_r1 = true;
             job_id = r->getString(1);
             file_id = r->getInt(2);
             start_time = conv->toTimeT(r->getTimestamp(3));
@@ -3766,8 +3758,7 @@ void OracleAPI::forceFailTransfers() {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;
                 std::stringstream ss;
                 ss << file_id;
-                found_r2 = true;
-                _mutex.unlock();
+		kill(pid, SIGTERM);
                 updateFileTransferStatus(job_id, ss.str(), transfer_status, transfer_message, pid, 0, 0);
                 updateJobTransferStatus(ss.str(), job_id, status);
             }
@@ -3777,10 +3768,7 @@ void OracleAPI::forceFailTransfers() {
         s = NULL;
         r = NULL;
 
-        if (found_r1 && !found_r2)
-            _mutex.unlock();
     } catch (oracle::occi::SQLException const &e) {
-        _mutex.unlock();
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
