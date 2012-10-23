@@ -52,10 +52,16 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
 
-		//soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
-		//ctx->fmimereadopen = LogFileStreamer::readOpen;
-		//ctx->fmimereadclose = LogFileStreamer::readClose;
-		//ctx->fmimeread = LogFileStreamer::read;
+//		soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+//		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+//
+//		ctx->fmimereadopen = LogFileStreamer::readOpen;
+//		ctx->fmimereadclose = LogFileStreamer::readClose;
+//		ctx->fmimeread = LogFileStreamer::read;
+//
+//		ctx->fmimewriteopen = LogFileStreamer::writeOpen;
+//		ctx->fmimewriteclose = LogFileStreamer::writeClose;
+//		ctx->fmimewrite = LogFileStreamer::write;
 
 		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 		if (sock >= 0) {
@@ -73,10 +79,16 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		soap_cgsi_init(ctx,  CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
 
-		//soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
-		//ctx->fmimereadopen = LogFileStreamer::readOpen;
-		//ctx->fmimereadclose = LogFileStreamer::readClose;
-		//ctx->fmimeread = LogFileStreamer::read;
+//		soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+//		soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+//
+//		ctx->fmimereadopen = LogFileStreamer::readOpen;
+//		ctx->fmimereadclose = LogFileStreamer::readClose;
+//		ctx->fmimeread = LogFileStreamer::read;
+//
+//		ctx->fmimewriteopen = LogFileStreamer::writeOpen;
+//		ctx->fmimewriteclose = LogFileStreamer::writeClose;
+//		ctx->fmimewrite = LogFileStreamer::write;
 
 		SOAP_SOCKET sock = soap_bind(ctx, ip.c_str(), static_cast<int>(port), 100);
 

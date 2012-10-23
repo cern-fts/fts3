@@ -44,6 +44,7 @@ set(fts_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapDelegationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/ConfigurationHandler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/InternalLogRetriever.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/AuthorizationManager.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_config_methods.cpp"
@@ -52,8 +53,8 @@ set(fts_server_gsoap_transfer_sources
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})
 set_target_properties(fts_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
-target_link_libraries(fts_server_gsoap_transfer "-lfts_ws_ifce_server")
-add_dependencies(fts_server_gsoap_transfer fts_ws_ifce_server)
+target_link_libraries(fts_server_gsoap_transfer "-lfts_ws_ifce_server" "-lfts_ws_ifce_client")
+add_dependencies(fts_server_gsoap_transfer fts_ws_ifce_server fts_ws_ifce_client)
 set_target_properties(fts_server_gsoap_transfer PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/server
