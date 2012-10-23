@@ -36,7 +36,7 @@ namespace fts3 { namespace cli {
 
 using namespace fts3::common;
 
-GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new1(SOAP_ENC_MTOM)) {
+GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new()/*soap_new1(SOAP_ENC_MTOM)*/) {
 
 }
 
@@ -56,12 +56,12 @@ void GSoapContextAdapter::init() {
     } else if (endpoint.find("httpg") == 0) {
     	err = soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK );
     }
-
-    soap_set_omode(ctx, SOAP_ENC_MTOM);
-
-	ctx->fmimewriteopen = LogFileStreamer::writeOpen;
-	ctx->fmimewriteclose = LogFileStreamer::writeClose;
-	ctx->fmimewrite = LogFileStreamer::write;
+//
+//    soap_set_omode(ctx, SOAP_ENC_MTOM);
+//
+//	ctx->fmimewriteopen = LogFileStreamer::writeOpen;
+//	ctx->fmimewriteclose = LogFileStreamer::writeClose;
+//	ctx->fmimewrite = LogFileStreamer::write;
 
     if (err) {
     	handleSoapFault("Failed to initialize the GSI plugin.");
@@ -474,13 +474,13 @@ void GSoapContextAdapter::doDrain(bool drain) {
 
 void GSoapContextAdapter::getLog(string& logname, string jobId) {
 
-//	ctx->user = LogFileStreamer::getOutputHandler(logname);
-//
-//	log__GetLogResponse resp;
-//	if (soap_call_log__GetLog(ctx, endpoint.c_str(), 0, jobId, resp)) {
-//		handleSoapFault("Operation getLog failed.");
-//		return;
-//	}
+	ctx->user = LogFileStreamer::getOutputHandler(logname);
+
+	log__GetLogResponse resp;
+	if (soap_call_log__GetLog(ctx, endpoint.c_str(), 0, jobId, resp)) {
+		handleSoapFault("Operation getLog failed.");
+		return;
+	}
 //	log__Data* log = resp.log;
 //
 //	for (int i = 0; i < log->xop__Include.__size; i++)
