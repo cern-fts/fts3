@@ -23,6 +23,8 @@
  */
 
 #include "LogFileStreamer.h"
+#include "TarArchiver.h"
+
 #include "error.h"
 #include <iostream>
 #include <vector>
