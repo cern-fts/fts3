@@ -141,6 +141,7 @@ public:
                 this->monitoringDb->init(dbUserName, dbPassword, dbConnectString);
             } catch (Err& exc) {
                 logger::writeLog(std::string("Cannot connect to the database server: ") + exc.what());
+                exit(1);
             }
 
             try {

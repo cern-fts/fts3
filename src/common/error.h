@@ -121,6 +121,11 @@ public:
     {
         // EMPTY
     };
+
+    virtual const char* what()
+    {
+        return _userDesc.c_str();
+    };
 	
 private:
     

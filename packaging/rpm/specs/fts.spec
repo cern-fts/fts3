@@ -28,6 +28,7 @@ BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
 BuildRequires:  python-devel%{?_isa}
 BuildRequires:  pugixml-devel%{?_isa}
+BuildRequires:  soci-mysql-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 %{?filter_setup:
@@ -201,6 +202,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts_config.so*
 %{_libdir}/libfts_db_generic.so*
 %{_libdir}/libfts_db_oracle.so*
+%{_libdir}/libfts_db_mysql.so*
 %{_libdir}/libfts_msg_ifce.so*
 %{_libdir}/libfts_proxy.so*
 %{_libdir}/libfts_server_gsoap_transfer.so*

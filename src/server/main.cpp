@@ -84,9 +84,10 @@ void fts3_initialize_db_backend() {
 
     try {
         db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
-    } catch (Err_Custom& e) {
+    } catch (Err& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         exit(1);
-    }    catch (...) {
+    } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the database, check username/password/connstring" << commit;
         exit(1);
     }

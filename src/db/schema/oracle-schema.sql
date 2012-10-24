@@ -67,7 +67,7 @@ CREATE TABLE t_config_audit (
 
 
 --
--- Holds certificate request information
+-- Configures debug mode for a given pair
 --
 CREATE TABLE t_debug (
 --

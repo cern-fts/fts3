@@ -20,17 +20,11 @@ ThreadTraits::MUTEX DBSingleton::_mutex;
 
 DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL) {
 
-  try{
+    std::string dbType = theServerConfig().get<std::string>("DbType");
 
-  std::string dbType = theServerConfig().get<std::string>("DbType");
-    
-    if (dbType != "oracle")
-    {   
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(dbType + " backend is not supported."));
-    }
-
-    //hardcoded for now
-    libraryFileName = "libfts_db_oracle.so";
+    libraryFileName = "libfts_db_";
+    libraryFileName += dbType;
+    libraryFileName += ".so";
 
     dlm = new DynamicLibraryManager(libraryFileName);
     if (dlm && dlm->isLibraryLoaded()) {
@@ -56,15 +50,11 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL) {
 
         // create monitoring db on request
     } else{
-    	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library, check if libfts_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64"));
-	throw Err_Custom("Failed to load database plugin library, check if libfts_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64");
+        std::string msg = "Failed to load database plugin library, check if ";
+        msg += libraryFileName;
+        msg += "path is set in LD_LIBRARY_PATH or located under /usr/lib64";
+	throw Err_Custom(msg);
     }
-    
-    }catch(...) {
-        //FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Failed to load database plugin library, check if libfts_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64"));
-	throw Err_Custom("Failed to load database plugin library, check if libfts_db_oracle.so path is set in LD_LIBRARY_PATH or /usr/lib64");
-    }
-
 }
 
 DBSingleton::~DBSingleton() {
