@@ -3758,7 +3758,7 @@ void OracleAPI::forceFailTransfers() {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;
                 std::stringstream ss;
                 ss << file_id;
-		kill(pid, SIGTERM);
+		kill(pid, SIGUSR1);
                 updateFileTransferStatus(job_id, ss.str(), transfer_status, transfer_message, pid, 0, 0);
                 updateJobTransferStatus(ss.str(), job_id, status);
             }
