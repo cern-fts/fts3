@@ -23,11 +23,13 @@ set(fts_include_dir
 )
 
 include_directories (${fts_include_dir})
-include_directories (${PROJECT_SOURCE_DIR}/src/url-copy/)
-include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
-include_directories (${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (${PROJECT_SOURCE_DIR}/src/config/)
-include_directories (${PROJECT_SOURCE_DIR}/src/cred/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/url-copy/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/db/generic/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/cred/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/ws-ifce/)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
 include_directories (/usr/lib64/glib-2.0/include)
 include_directories (/usr/lib/glib-2.0/include)
 include_directories (/usr/include/glib-2.0)
@@ -53,8 +55,8 @@ set(fts_server_gsoap_transfer_sources
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})
 set_target_properties(fts_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
-target_link_libraries(fts_server_gsoap_transfer "-lfts_ws_ifce_server" "-lfts_ws_ifce_client")
 add_dependencies(fts_server_gsoap_transfer fts_ws_ifce_server fts_ws_ifce_client)
+target_link_libraries(fts_server_gsoap_transfer fts_ws_ifce_server fts_ws_ifce_client)
 set_target_properties(fts_server_gsoap_transfer PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/server
@@ -97,7 +99,7 @@ ${PROJECT_BINARY_DIR}/src/server
 # Server executable
 add_executable (fts_server main.cpp)
 add_dependencies(fts_server fts_server_lib)
-target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_config -lfts_common -lfts_db_generic -lfts_server_gsoap_transfer -lgsoap++ -lfts_ws_ifce_server)
+target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_config -lfts_common -lfts_db_generic -lfts_server_gsoap_transfer -lgsoap++ -lfts_ws_ifce_server -lfts_ws_ifce_client)
 
 # ------------------------------------------------------------------------
 # man pages
