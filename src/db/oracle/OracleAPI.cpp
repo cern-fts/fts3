@@ -1717,7 +1717,6 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     const std::string terminal4 = "FINISHEDDIRTY";
     bool finished = true;
     unsigned int updated = 0;
-    std::string state = status;
     int finishedDirty = 0;
     int numberOfFileInJob = 0;
     int numOfFilesInGivenState = 0;
