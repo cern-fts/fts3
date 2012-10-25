@@ -208,4 +208,6 @@ public:
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;
+
+    bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
 };

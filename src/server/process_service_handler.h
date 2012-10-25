@@ -646,35 +646,41 @@ protected:
 		drainMode=false;
 	    }
 	
-            try {	    
+            try {
+
+                try {
 		/*force fail to stall transfers*/		
 		counter++;
-		if(counter == 1000){			
-			DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();	    
-			counter=0;
-	        }
-		countReverted++;		
-		if(countReverted==1000){			
-			DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
-			countReverted=0;
-		}
-		
-                /*get jobs in submitted state*/
-                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
-                /*also get jobs which have been canceled by the client*/
-                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                if (requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
-                    killRunninfJob(requestIDs);
-                requestIDs.clear(); /*clean the list*/
+                    if(counter == 1000){
+                            DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();
+                            counter=0;
+                    }
+                    countReverted++;
+                    if(countReverted==1000){
+                            DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
+                            countReverted=0;
+                    }
 
-                if (jobs2.size() > 0)
-                    executeUrlcopy(jobs2, false);
+                    /*get jobs in submitted state*/
+                    DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
+                    /*also get jobs which have been canceled by the client*/
+                    DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                    if (requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
+                        killRunninfJob(requestIDs);
+                    requestIDs.clear(); /*clean the list*/
 
-                /* --- session reuse section ---*/
-                /*get jobs in submitted state and session reuse on*/
-                DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
-                if (jobs2.size() > 0)
-                    executeUrlcopy(jobs2, true);
+                    if (jobs2.size() > 0)
+                        executeUrlcopy(jobs2, false);
+
+                    /* --- session reuse section ---*/
+                    /*get jobs in submitted state and session reuse on*/
+                    DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
+                    if (jobs2.size() > 0)
+                        executeUrlcopy(jobs2, true);
+                } catch (Err& e) {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                    throw;
+                }
 
             } catch (...) {
                 if (!jobs2.empty()) {
