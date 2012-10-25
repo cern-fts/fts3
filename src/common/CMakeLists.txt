@@ -26,7 +26,7 @@ file(GLOB fts_common_sources "*.cpp")
 #add_definitions(-E)
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
-target_link_libraries(fts_common -lboost_regex-mt -lssl -lpugixml -lboost_iostreams)
+target_link_libraries(fts_common -lboost_regex-mt -lssl -lpugixml -lboost_iostreams -lldap_r)
 set_target_properties(fts_common             PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/common
