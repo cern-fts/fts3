@@ -136,13 +136,67 @@ namespace soci
             struct tm aux_tm;
             job.jobID      = v.get<std::string>("job_id");
             job.jobStatus  = v.get<std::string>("job_state");
-            job.fileStatus = v.get<std::string>("file_state");
             job.clientDN   = v.get<std::string>("user_dn");
             job.reason     = v.get<std::string>("reason");
             aux_tm         = v.get<struct tm>("submit_time");
             job.submitTime = mktime(&aux_tm);
             job.priority   = v.get<int>("priority");
             job.voName     = v.get<std::string>("vo_name");
+
+            try {
+                job.fileStatus = v.get<std::string>("file_state");
+            } catch (...) {
+                // Ignore failures, since not all methods ask for this (i.e. listRequests)
+            }
         }
+    };
+
+    template <>
+    struct type_conversion<FileTransferStatus> {
+        typedef values base_type;
+
+        static void from_base(values const& v, indicator, FileTransferStatus& transfer) {
+            struct tm aux_tm;
+            transfer.sourceSURL        = v.get<std::string>("source_surl");
+            transfer.destSURL          = v.get<std::string>("dest_surl");
+            transfer.transferFileState = v.get<std::string>("file_state");
+            transfer.reason            = v.get<std::string>("reason");
+            aux_tm = v.get<struct tm>("start_time");
+            transfer.start_time = mktime(&aux_tm);
+            aux_tm = v.get<struct tm>("finish_time");
+            transfer.finish_time = mktime(&aux_tm);
+        }
+    };
+
+    template <>
+    struct type_conversion<Se> {
+        typedef values base_type;
+
+        static void from_base(values const& v, indicator, Se& se) {
+            se.ENDPOINT = v.get<std::string>("endpoint");
+            se.SE_TYPE  = v.get<std::string>("se_type");
+            se.SITE     = v.get<std::string>("site");
+            se.NAME     = v.get<std::string>("name");
+            se.STATE    = v.get<std::string>("state");
+            se.VERSION  = v.get<std::string>("version");
+            se.HOST     = v.get<std::string>("host");
+            se.SE_TRANSFER_TYPE     = v.get<std::string>("se_transfer_type");
+            se.SE_TRANSFER_PROTOCOL = v.get<std::string>("se_transfer_protocol");
+            se.SE_CONTROL_PROTOCOL  = v.get<std::string>("se_control_protocol");
+            se.GOCDB_ID = v.get<std::string>("gocdb_id");
+        }
+    };
+
+    template <>
+    struct type_conversion<SeConfig> {
+        typedef values base_type;
+
+        static void from_base(values const& v, indicator, SeConfig& config) {
+            config.SE_NAME     = v.get<std::string>("se_name");
+            config.SHARE_ID    = v.get<std::string>("share_id");
+            config.SHARE_TYPE  = v.get<std::string>("share_type");
+            config.SHARE_VALUE = v.get<std::string>("share_value");
+        }
+
     };
 }

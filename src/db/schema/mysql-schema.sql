@@ -10,7 +10,7 @@ CREATE TABLE t_log (
   dn         VARCHAR(255),
   vo         VARCHAR(255),
 -- Note: 'when' is a reserved word in MySQL, so a different word has to be picked
-  timemark   TIMESTAMP,
+  datetime   TIMESTAMP,
   PRIMARY KEY (path, job_id, dn, vo)
 );
 
@@ -47,7 +47,7 @@ CREATE TABLE t_optimize (
    filesize             BIGINT DEFAULT NULL,
 --
 -- timestamp
-   timemark             TIMESTAMP,
+   datetime             TIMESTAMP,
    
   INDEX (source_se,dest_se),
   INDEX (dest_se),
@@ -85,12 +85,10 @@ CREATE TABLE t_debug (
    source_se    VARCHAR(255),
 --
 -- dest hostanme
-   dest_se      VARCHAR(255),
+   dest_se      VARCHAR(255) NULL DEFAULT NULL,
 --
 -- debug on/off
-   debug        VARCHAR(3) DEFAULT 'off',
-   
-   PRIMARY KEY (source_se, dest_se)
+   debug        VARCHAR(3) DEFAULT 'off'
 );
 
 

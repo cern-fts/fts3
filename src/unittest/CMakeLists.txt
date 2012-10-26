@@ -34,7 +34,6 @@ add_executable (fts_unittest
 SET(fts_libs 
     -lfts_config 
     -lfts_common 
-    -lfts_server_lib
     -lfts_cli_common
 )
 
