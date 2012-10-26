@@ -316,6 +316,10 @@ void myunexpected() {
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
     reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
+    if (stackTrace.length() > 0) {
+        propagated = true;
+	logStream << fileManagement.timestamp() << stackTrace  << '\n';
+    }    
     logStream.close();
     fileManagement.archive();
     if (reuseFile.length() > 0)
@@ -337,6 +341,10 @@ void myterminate() {
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
     reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
+    if (stackTrace.length() > 0) {
+        propagated = true;
+	logStream << fileManagement.timestamp() << stackTrace  << '\n';
+    }        
     logStream.close();
     fileManagement.archive();
     if (reuseFile.length() > 0)
