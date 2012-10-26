@@ -75,17 +75,17 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_File) {
 
 	BOOST_CHECK(cli->useCheckSum());
 
-	vector<tns3__TransferJobElement2*> elements = cli->getJobElements2();
+	vector<JobElement> elements = cli->getJobElements();
 
 	BOOST_CHECK(elements.size() == 2);
 
-	BOOST_CHECK(elements[0]->source->compare("source1") == 0);
-	BOOST_CHECK(elements[0]->dest->compare("destination1") == 0);
-	BOOST_CHECK(elements[0]->checksum->compare("Alg:check1") == 0);
+	BOOST_CHECK(elements[0].get<0>().compare("source1") == 0);
+	BOOST_CHECK(elements[0].get<1>().compare("destination1") == 0);
+	BOOST_CHECK(elements[0].get<2>().get().compare("Alg:check1") == 0);
 
-	BOOST_CHECK(elements[1]->source->compare("source2") == 0);
-	BOOST_CHECK(elements[1]->dest->compare("destination2") == 0);
-	BOOST_CHECK(elements[1]->checksum->empty());
+	BOOST_CHECK(elements[1].get<0>().compare("source2") == 0);
+	BOOST_CHECK(elements[1].get<1>().compare("destination2") == 0);
+	BOOST_CHECK(elements[1].get<2>().is_initialized() == false);
 
 	cli->unmute();
 }
@@ -149,11 +149,11 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_JobElements) {
 	BOOST_CHECK(cli->getDestination().compare("destination") == 0);
 	BOOST_CHECK(!cli->useCheckSum());
 
-	vector<tns3__TransferJobElement*> elements = cli->getJobElements();
+	vector<JobElement> elements = cli->getJobElements();
 
 	BOOST_CHECK(elements.size() == 1);
-	BOOST_CHECK(elements[0]->source->compare("source") == 0);
-	BOOST_CHECK(elements[0]->dest->compare("destination") == 0);
+	BOOST_CHECK(elements[0].get<0>().compare("source") == 0);
+	BOOST_CHECK(elements[0].get<1>().compare("destination") == 0);
 
 	cli->unmute();
 }
@@ -183,12 +183,12 @@ BOOST_AUTO_TEST_CASE (SubmitTransferCli_Test_JobElements2) {
 	BOOST_CHECK(cli->getDestination().compare("destination") == 0);
 	BOOST_CHECK(cli->useCheckSum());
 
-	vector<tns3__TransferJobElement2*> elements = cli->getJobElements2();
+	vector<JobElement> elements = cli->getJobElements();
 
 	BOOST_CHECK(elements.size() == 1);
-	BOOST_CHECK(elements[0]->source->compare("source") == 0);
-	BOOST_CHECK(elements[0]->dest->compare("destination") == 0);
-	BOOST_CHECK(elements[0]->checksum->compare("ALGORITHM:1234af") == 0);
+	BOOST_CHECK(elements[0].get<0>().compare("source") == 0);
+	BOOST_CHECK(elements[0].get<1>().compare("destination") == 0);
+	BOOST_CHECK(elements[0].get<2>().get().compare("ALGORITHM:1234af") == 0);
 
 	cli->unmute();
 }
@@ -221,20 +221,18 @@ BOOST_FIXTURE_TEST_CASE (SubmitTransferCli_Parameters_Test, SubmitTransferCli) {
 	cli->mute();
 	cli->validate(false);
 
-	tns3__TransferParams* params = cli->getParams();
+	map<string, string> params = cli->getParams();
 
-	JobParameterHandler handler;
-	handler(params->keys, params->values);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD).compare("compare") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG).compare("Y") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_LAN_CONNECTION).compare("Y") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE).compare("Y") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_GRIDFTP).compare("gparam") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_MYPROXY).compare("myproxysrv") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_DELEGATIONID).compare("id") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN).compare("dest-token") == 0);
-	BOOST_CHECK(handler.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE).compare("source-token") == 0);
-	BOOST_CHECK(handler.get<int>(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME) == 123);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD).compare("compare") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG).compare("Y") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_LAN_CONNECTION).compare("Y") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE).compare("Y") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_GRIDFTP).compare("gparam") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_MYPROXY).compare("myproxysrv") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_DELEGATIONID).compare("id") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_SPACETOKEN).compare("dest-token") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE).compare("source-token") == 0);
+	BOOST_CHECK(params.at(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME).compare("123"));
 
 	cli->unmute();
 }

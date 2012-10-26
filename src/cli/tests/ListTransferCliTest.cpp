@@ -95,8 +95,7 @@ BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test) {
 
 	cli->validate(false);
 
-	impltns__ArrayOf_USCOREsoapenc_USCOREstring* arr = cli->getStatusArray();
-	const vector<string>& statuses = arr->item;
+	const vector<string>& statuses = cli->getStatusArray();
 	BOOST_CHECK(statuses.size() == 6);
 	BOOST_CHECK(statuses[0] == "status1");
 	BOOST_CHECK(statuses[1] == "status2");
