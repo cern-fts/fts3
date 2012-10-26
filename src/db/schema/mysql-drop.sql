@@ -19,4 +19,5 @@ DROP TABLE t_vo_acl;
 DROP TABLE t_debug;
 DROP TABLE t_config_audit;
 DROP TABLE t_optimize;
-
+DROP TABLE t_file_backup;
+DROP TABLE t_job_backup;

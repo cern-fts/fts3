@@ -19,4 +19,5 @@ TRUNCATE t_vo_acl;
 TRUNCATE t_debug;
 TRUNCATE t_config_audit;
 TRUNCATE t_optimize;
-
+TRUNCATE t_file_backup;
+TRUNCATE t_job_backup;

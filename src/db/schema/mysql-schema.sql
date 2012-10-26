@@ -1,3 +1,6 @@
+-- InnoDB is able to enforce foreign key restrictions
+SET storage_engine = InnoDB;
+
 --
 -- Holds the log files path and host
 --
@@ -339,11 +342,12 @@ CREATE TABLE t_site_group (
 CREATE TABLE t_se_vo_share (
 --
 -- the name of the se_pair
+   share_rowid INTEGER AUTO_INCREMENT NOT NULL,
    se_name     VARCHAR(512) NOT NULL,                    
    share_id    VARCHAR(512) NOT NULL,                                                           
    share_value VARCHAR(512) NOT NULL,
    share_type  VARCHAR(512) NOT NULL,
-   PRIMARY KEY (share_id),
+   PRIMARY KEY (share_rowid),
    INDEX (se_name(256), share_id(256), share_type(256))   
 );
 
@@ -690,6 +694,93 @@ CREATE TABLE t_stage_req (
   INDEX (job_finished)
 );
 
+--
+-- Same schema as t_job
+--
+CREATE TABLE t_job_backup (
+  job_id               CHAR(36) NOT NULL,
+  job_state            VARCHAR(32) NOT NULL,
+  reuse_job            VARCHAR(3),
+  cancel_job           CHAR(1),
+  job_params           VARCHAR(255),
+  source               VARCHAR(255),
+  dest                 VARCHAR(255),
+  source_se            VARCHAR(255),
+  dest_se              VARCHAR(255),
+  user_dn              VARCHAR(1024) NOT NULL,
+  agent_dn             VARCHAR(1024),
+  user_cred            VARCHAR(255),
+  cred_id              VARCHAR(100),
+  voms_cred            LONGTEXT,
+  vo_name              VARCHAR(50),
+  reason               VARCHAR(2048),
+  submit_time          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  finish_time          TIMESTAMP NULL DEFAULT NULL,
+  priority             INTEGER DEFAULT 3,
+  submit_host          VARCHAR(255),
+  max_time_in_queue    INTEGER,
+  space_token          VARCHAR(255),
+  storage_class        VARCHAR(255),
+  myproxy_server       VARCHAR(255),
+  src_catalog          VARCHAR(1024),
+  src_catalog_type     VARCHAR(1024),
+  dest_catalog          VARCHAR(1024),
+  dest_catalog_type     VARCHAR(1024),
+  internal_job_params   VARCHAR(255),
+  overwrite_flag        CHAR(1) DEFAULT NULL,
+  job_finished          TIMESTAMP NULL DEFAULT NULL,
+  source_space_token       VARCHAR(255),
+  source_token_description VARCHAR(255), 
+  copy_pin_lifetime INTEGER DEFAULT NULL,
+  lan_connection  CHAR(1) DEFAULT NULL,
+  fail_nearline   CHAR(1) DEFAULT NULL,
+  checksum_method CHAR(1) DEFAULT NULL,
+  
+  PRIMARY KEY (job_id),
+  INDEX (job_state),
+  INDEX (vo_name),
+  INDEX (user_dn(1000)),
+  INDEX (job_finished),
+  INDEX (source_se,dest_se),
+  INDEX (vo_name, job_id)
+);
+
+--
+-- Same schema as t_file
+--
+CREATE TABLE t_file_backup (
+  file_id              INTEGER NOT NULL AUTO_INCREMENT,
+  job_id               CHAR(36) NOT NULL,
+  file_state           VARCHAR(32) NOT NULL,
+  logical_name         VARCHAR(1100),
+  source_surl          VARCHAR(1100),
+  dest_surl            VARCHAR(1100),
+  agent_dn             VARCHAR(1024),
+  error_scope          VARCHAR(32),
+  error_phase          VARCHAR(32),
+  reason_class         VARCHAR(32),
+  reason               VARCHAR(2048),
+  num_failures         INTEGER,
+  current_failures     INTEGER,
+  catalog_failures     INTEGER,
+  prestage_failures    INTEGER,
+  filesize             INTEGER,
+  checksum             VARCHAR(100),
+  finish_time          TIMESTAMP NULL DEFAULT NULL,
+  start_time           TIMESTAMP NULL DEFAULT NULL,
+  internal_file_params  VARCHAR(255),
+  job_finished          TIMESTAMP NULL DEFAULT NULL,
+  pid INTEGER,
+  tx_duration          INTEGER,
+  throughput           FLOAT,
+  
+  PRIMARY KEY (file_id),
+  FOREIGN KEY (job_id) REFERENCES t_job_backup(job_id),
+  INDEX (job_id),
+  INDEX (file_state,job_id),
+  INDEX (job_finished),
+  INDEX (job_id, finish_time)
+);
 
 -- 
 --
