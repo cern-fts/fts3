@@ -242,7 +242,10 @@ int main(int argc, char** argv) {
         }
         found = arguments.find("-n");
         if (found != string::npos) {
+	  {
             DoServer(argc, argv);
+          }
+           pthread_exit(0);
             return EXIT_SUCCESS;
         } else {
             d = daemon(0, 0);
