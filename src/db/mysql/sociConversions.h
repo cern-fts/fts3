@@ -4,6 +4,7 @@
 #pragma once
 
 #include <soci.h>
+#include <time.h>
 
 namespace soci
 {
@@ -17,7 +18,7 @@ namespace soci
             cred.delegationID     = v.get<std::string>("dlg_id");
             cred.proxy            = v.get<std::string>("proxy");
             termination_st        = v.get<struct tm>("termination_time");
-            cred.termination_time = mktime(&termination_st);
+            cred.termination_time = timegm(&termination_st);
             cred.vomsAttributes   = v.get<std::string>("voms_attrs", std::string());
         }
     };
@@ -109,9 +110,9 @@ namespace soci
             protoConfig.CONTACT   = v.get<std::string>("contact", "");
             protoConfig.HTTP_TO   = v.get<int>("http_to", 0);
             aux_tm = v.get<struct tm>("LAST_ACTIVE");
-            protoConfig.LAST_ACTIVE = mktime(&aux_tm);
+            protoConfig.LAST_ACTIVE = timegm(&aux_tm);
             aux_tm = v.get<struct tm>("LAST_MODIFICATION");
-            protoConfig.LAST_MODIFICATION = mktime(&aux_tm);
+            protoConfig.LAST_MODIFICATION = timegm(&aux_tm);
             protoConfig.MESSAGE = v.get<std::string>("message", "");
             protoConfig.NOFILES = v.get<int>("nofiles", 0);
             protoConfig.NOMINAL_THROUGHPUT = v.get<int>("nominal_throughput", 0);
@@ -139,7 +140,7 @@ namespace soci
             job.clientDN   = v.get<std::string>("user_dn");
             job.reason     = v.get<std::string>("reason");
             aux_tm         = v.get<struct tm>("submit_time");
-            job.submitTime = mktime(&aux_tm);
+            job.submitTime = timegm(&aux_tm);
             job.priority   = v.get<int>("priority");
             job.voName     = v.get<std::string>("vo_name");
 
@@ -162,9 +163,9 @@ namespace soci
             transfer.transferFileState = v.get<std::string>("file_state");
             transfer.reason            = v.get<std::string>("reason");
             aux_tm = v.get<struct tm>("start_time");
-            transfer.start_time = mktime(&aux_tm);
+            transfer.start_time = timegm(&aux_tm);
             aux_tm = v.get<struct tm>("finish_time");
-            transfer.finish_time = mktime(&aux_tm);
+            transfer.finish_time = timegm(&aux_tm);
         }
     };
 

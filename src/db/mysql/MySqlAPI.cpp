@@ -264,16 +264,11 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
         sql.begin();
         soci::statement stmt(sql);
 
-        time_t nowTimestamp = time(NULL);
-        struct tm now;
-        gmtime_r(&nowTimestamp, &now);
-
         stmt.exchange(soci::use(status, "state"));
-        stmt.exchange(soci::use(now, "now"));
         stmt.exchange(soci::use(file->FILE_ID, "fileId"));
         stmt.alloc();
         stmt.prepare("UPDATE t_file SET "
-                     "    file_state = :state, start_time = :now "
+                     "    file_state = :state, start_time = UTC_TIMESTAMP() "
                      "WHERE file_id = :fileId AND file_state = 'SUBMITTED'");
         stmt.define_and_bind();
         stmt.execute(true);
@@ -366,11 +361,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_ch
     const std::string currenthost = hostname;
     const std::string initialState = "SUBMITTED";
     const int priority = 3;
-    time_t nowTimestamp = time(NULL);
-    struct tm now;
     const std::string params;
-
-    gmtime_r(&nowTimestamp, &now);
 
     soci::session sql(connectionPool);
     sql.begin();
@@ -386,12 +377,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_ch
                "                   copy_pin_lifetime, lan_connection, fail_nearline, checksum_method, "
                "                   reuse_job, source_se, dest_se)                                     "
                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
-               "        :voName, :submitTime, :internalParams, :submitHost, :credId,                  "
+               "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,                  "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
                "        :copyPinLifetime, :lanConnection, :failNearline, :checksumMethod,             "
                "        :reuseJob, :sourceSE, :destSE)",
                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
-               soci::use(voName), soci::use(now), soci::use(params), soci::use(currenthost), soci::use(delegationID),
+               soci::use(voName), soci::use(params), soci::use(currenthost), soci::use(delegationID),
                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                soci::use(copyPinLifeTime), soci::use(lanConnection), soci::use(failNearLine), soci::use(checksumMethod),
                soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSE);
@@ -987,9 +978,6 @@ void MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, std::string file
 
     try {
         double throughput;
-        struct tm now;
-        time_t timestamp = time(NULL);
-        gmtime_r(&timestamp, &now);
 
         sql.begin();
 
@@ -1002,12 +990,10 @@ void MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, std::string file
         stmt.exchange(soci::use(transfer_message, "reason"));
 
         if (transfer_status == "FINISHED" || transfer_status == "FAILED" || transfer_status == "CANCELED") {
-            query << ", FINISH_TIME = :finishTime";
-            stmt.exchange(soci::use(now, "finishTime"));
+            query << ", FINISH_TIME = UTC_TIMESTAMP()";
         }
         if (transfer_status == "ACTIVE") {
-            query << ", START_TIME = :startTime";
-            stmt.exchange(soci::use(now, "startTime"));
+            query << ", START_TIME = UTC_TIMESTAMP()";
         }
 
         if (filesize > 0 && duration > 0 && transfer_status == "FINISHED") {
@@ -1065,10 +1051,6 @@ void MySqlAPI::updateJobTransferStatus(std::string /*file_id*/, std::string job_
         sql.begin();
 
         if (jobFinished) {
-            time_t timestamp = time(NULL);
-            struct tm now;
-            gmtime_r(&timestamp, &now);
-
             std::string state;
             std::string reason = "One or more files failed. Please have a look at the details for more information";
             if (numberOfFilesFinished > 0 && numberOfFilesFailed > 0) {
@@ -1088,14 +1070,14 @@ void MySqlAPI::updateJobTransferStatus(std::string /*file_id*/, std::string job_
 
             // Update job
             sql << "UPDATE t_job SET "
-                   "    job_state = :state, job_finished = :finishTime, finish_time = :finishTime, reason = :reason "
+                   "    job_state = :state, job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), reason = :reason "
                    "WHERE job_id = :jobId AND job_state = 'ACTIVE'",
-                   soci::use(state, "state"), soci::use(now, "finishTime"), soci::use(reason, "reason"),
+                   soci::use(state, "state"), soci::use(reason, "reason"),
                    soci::use(job_id, "jobId");
 
             // And file finish timestamp
-            sql << "UPDATE t_file SET job_finished = :finishTime WHERE job_id = :jobId",
-                    soci::use(now, "finishTime"), soci::use(job_id, "jobId");
+            sql << "UPDATE t_file SET job_finished = UTC_TIMESTAMP() WHERE job_id = :jobId",
+                    soci::use(job_id, "jobId");
         }
         // Job not finished yet
         else {
@@ -1121,23 +1103,20 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs) {
 
     try {
         const std::string reason = "Job canceled by the user";
-        time_t nowTimestamp = time(NULL);
-        struct tm now;
-        gmtime_r(&nowTimestamp, &now);
 
         sql.begin();
 
         for (std::vector<std::string>::const_iterator i = requestIDs.begin(); i != requestIDs.end(); ++i) {
             // Cancel job
-            sql << "UPDATE t_job SET job_state = 'CANCELED', job_finished = :now, finish_time = :now, "
+            sql << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                    "                 reason = :reason "
                    "WHERE job_id = :jobId AND job_state NOT IN ('FINISHEDDIRTY', 'FINISHED', 'FAILED')",
-                   soci::use(now, "now"), soci::use(reason, "reason"), soci::use(*i, "jobId");
+                   soci::use(reason, "reason"), soci::use(*i, "jobId");
             // Cancel files
-            sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = :now, finish_time = :now, "
+            sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                    "                  reason = :reason "
                    "WHERE job_id = :jobId AND file_state NOT IN ('FINISHEDDIRTY','FINISHED','FAILED')",
-                   soci::use(now, "now"), soci::use(reason, "reason"), soci::use(*i, "jobId");
+                   soci::use(reason, "reason"), soci::use(*i, "jobId");
         }
 
         sql.commit();
@@ -1887,14 +1866,10 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
     soci::session sql(connectionPool);
 
     try {
-        time_t timestamp = time(NULL);
-        struct tm now;
-        gmtime_r(&timestamp, &now);
-
         sql.begin();
         sql << "INSERT INTO t_config_audit (datetime, dn, config, action ) VALUES "
-               "                           (:now, :dn, :config, :action)",
-               soci::use(now), soci::use(dn), soci::use(config), soci::use(action);
+               "                           (UTC_TIMESTAMP(), :dn, :config, :action)",
+               soci::use(dn), soci::use(config), soci::use(action);
         sql.commit();
     }
     catch (std::exception& e) {
@@ -2027,9 +2002,6 @@ void MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int
     soci::session sql(connectionPool);
 
     try {
-        time_t timestamp = time(NULL);
-        struct tm now;
-        gmtime_r(&timestamp, &now);
         bool activeExists;
         int active;
         double throughput;
@@ -2069,11 +2041,11 @@ void MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int
             sql.begin();
             sql << "UPDATE t_optimize SET "
                    "    filesize = :filesize, throughput = :throughput, active = :active "
-                   "    datetime = :now, timeout = :timeout "
+                   "    datetime = UTC_TIMESTAMP(), timeout = :timeout "
                    "WHERE nostreams = :nstreams AND timeout = :timeout AND buffer = :buffer AND "
                    "      source_se = :source AND dest_se = :dest",
                     soci::use(filesize), soci::use(throughput), soci::use(active),
-                    soci::use(now), soci::use(newTimeout),
+                    soci::use(newTimeout),
                     soci::use(nostreams), soci::use(timeout), soci::use(buffersize),
                     soci::use(source_hostname), soci::use(destin_hostname);
             sql.commit();
