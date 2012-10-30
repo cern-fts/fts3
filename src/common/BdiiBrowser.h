@@ -29,10 +29,19 @@ public:
 
 private:
 
+	void connect();
+	void disconnect();
+	void reconnect();
+
+	bool isValid();
+
 	list< map<string, string> > browse(string query, long timeout = 60);
 
+
 	LDAP *ld;
+	const long timeout;
 	const string base;
+	const string url;
 	const char **attr;
 
 	static const string FIND_SE_STATUS(string se);
