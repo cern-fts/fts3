@@ -18,6 +18,7 @@
 #pragma once
 
 #include <common_dev.h>
+#include <soci.h>
 #include "MonitoringDbIfce.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -63,4 +64,7 @@ public:
     void getJobVOAndSites(const std::string& jobId, JobVOAndSites& voAndSites);
 
 private:
+    size_t                poolSize;
+    soci::connection_pool connectionPool;
+    struct tm             notBefore;
 };

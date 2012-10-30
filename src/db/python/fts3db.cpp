@@ -31,11 +31,11 @@ BOOST_PYTHON_MODULE(ftsdb)
   def("getConfig", getConfig);
   
   // Exception
-  class_<fts3::common::Err> exceptionClass("FTSError", no_init);
-  exceptionClass.def("what", &fts3::common::Err::what);
+  //class_<fts3::common::Err> exceptionClass("FTSError", no_init);
+  //exceptionClass.def("what", &fts3::common::Err::what);
 
-  errException = exceptionClass.ptr();
-  register_exception_translator<fts3::common::Err>(&errTranslator);
+  //errException = exceptionClass.ptr();
+  //register_exception_translator<fts3::common::Err>(&errTranslator);
   
   // Types
   export_types();

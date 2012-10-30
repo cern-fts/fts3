@@ -3,6 +3,14 @@
  */
 #pragma once
 
+#include <Cred.h>
+#include <CredCache.h>
+#include <FileTransferStatus.h>
+#include <JobStatus.h>
+#include <Se.h>
+#include <SeAndConfig.h>
+#include <SeProtocolConfig.h>
+#include <TransferJobs.h>
 #include <soci.h>
 #include <time.h>
 
@@ -41,6 +49,10 @@ namespace soci
         typedef values base_type;
 
         static void from_base(values const& v, indicator, TransferJobs& job) {
+            struct tm aux_tm;
+            struct tm defaultTime;
+            ::memset(&defaultTime, 0, sizeof(defaultTime));
+
             job.JOB_ID         = v.get<std::string>("job_id");
             job.JOB_STATE      = v.get<std::string>("job_state");
             job.VO_NAME        = v.get<std::string>("vo_name");
@@ -62,6 +74,10 @@ namespace soci
             job.SOURCE_TOKEN_DESCRIPTION = v.get<std::string>("source_token_description", "");
             job.COPY_PIN_LIFETIME  = v.get<int>("copy_pin_lifetime");
             job.CHECKSUM_METHOD    = v.get<std::string>("checksum_method");
+            aux_tm = v.get<struct tm>("submit_time");
+            job.SUBMIT_TIME = timegm(&aux_tm);
+            aux_tm = v.get<struct tm>("finish_time", defaultTime);
+            job.FINISH_TIME = timegm(&aux_tm);
         }
     };
 
@@ -82,6 +98,12 @@ namespace soci
             file.CHECKSUM_METHOD    = v.get<std::string>("checksum_method");
             file.SOURCE_SPACE_TOKEN = v.get<std::string>("source_space_token");
             file.DEST_SPACE_TOKEN   = v.get<std::string>("space_token");
+            file.REASON             = v.get<std::string>("reason");
+
+            int size = v.get<int>("filesize");
+            std::ostringstream str;
+            str << size;
+            file.FILESIZE = str.str();
         }
     };
 

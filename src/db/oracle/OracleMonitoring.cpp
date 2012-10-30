@@ -371,7 +371,7 @@ unsigned OracleMonitoring::averageDurationPerSePair(const SourceAndDestSE& pair)
     const std::string query = "SELECT AVG(TX_DURATION)\
                                FROM T_FILE\
                                WHERE TX_DURATION IS NOT NULL AND\
-                                     FINISH_TIME > :notBefore\
+                                     FINISH_TIME > :notBefore AND\
                                      SOURCE_SURL LIKE CONCAT('%', :source, '%') AND\
                                      DEST_SURL LIKE CONCAT('%', :dest, '%')";
 

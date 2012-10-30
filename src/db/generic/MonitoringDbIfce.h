@@ -52,7 +52,7 @@ struct ReasonOccurrences {
 struct SePairThroughput {
     struct SourceAndDestSE storageElements;
     double                 averageThroughput;
-    time_t                 duration;
+    long                   duration;
 };
 
 struct JobVOAndSites {

@@ -448,7 +448,7 @@ CREATE TABLE t_job (
   vo_name              VARCHAR(50),
 --
 -- The reason the job is in the current state
-  reason               VARCHAR(2048),
+  reason               VARCHAR(2048) DEFAULT NULL,
 --
 -- The time that the job was submitted
   submit_time          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -574,7 +574,7 @@ CREATE TABLE t_file (
   reason_class         VARCHAR(32),
 --
 -- The reason the file is in this state
-  reason               VARCHAR(2048),
+  reason               VARCHAR(2048) DEFAULT NULL,
 --
 -- Total number of failures (including transfer,catalog and prestaging errors)
   num_failures         INTEGER,
@@ -668,7 +668,7 @@ CREATE TABLE t_stage_req (
   reason_class         VARCHAR(32),
 --
 -- The reason the transfer is in this state
-  reason               VARCHAR(2048),
+  reason               VARCHAR(2048) DEFAULT NULL,
 --
 -- the nominal size of the file (bytes)
   filesize             BIGINT,
@@ -711,7 +711,7 @@ CREATE TABLE t_job_backup (
   cred_id              VARCHAR(100),
   voms_cred            LONGTEXT,
   vo_name              VARCHAR(50),
-  reason               VARCHAR(2048),
+  reason               VARCHAR(2048) DEFAULT NULL,
   submit_time          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   finish_time          TIMESTAMP NULL DEFAULT NULL,
   priority             INTEGER DEFAULT 3,
@@ -757,7 +757,7 @@ CREATE TABLE t_file_backup (
   error_scope          VARCHAR(32),
   error_phase          VARCHAR(32),
   reason_class         VARCHAR(32),
-  reason               VARCHAR(2048),
+  reason               VARCHAR(2048) DEFAULT NULL,
   num_failures         INTEGER,
   current_failures     INTEGER,
   catalog_failures     INTEGER,
