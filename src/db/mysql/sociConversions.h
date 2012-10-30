@@ -98,9 +98,9 @@ namespace soci
             file.CHECKSUM_METHOD    = v.get<std::string>("checksum_method");
             file.SOURCE_SPACE_TOKEN = v.get<std::string>("source_space_token");
             file.DEST_SPACE_TOKEN   = v.get<std::string>("space_token");
-            file.REASON             = v.get<std::string>("reason");
+            file.REASON             = v.get<std::string>("reason", "");
 
-            int size = v.get<int>("filesize");
+            int size = v.get<int>("filesize", 0);
             std::ostringstream str;
             str << size;
             file.FILESIZE = str.str();
