@@ -47,7 +47,7 @@ limitations under the License. */
 FTS3_COMMON_NAMESPACE_START
 
 /** General FTS3 error class. */
-class Err 
+class Err: public std::exception
 {
 public:
     enum ErrorType 
@@ -62,7 +62,7 @@ public:
     
     /* ---------------------------------------------------------------------- */
     
-    virtual const char* what();
+    virtual const char* what() const throw();
 
 protected:
     
@@ -88,7 +88,7 @@ template<bool IS_SYSTEM_ERROR, Err::ErrorType = Err::e_defaultReport>
 class Error : virtual public Err
 {
 private:
-    virtual const char* what() 
+    virtual const char* what() const throw()
     { 
         return Err::what(); 
     };
@@ -122,7 +122,7 @@ public:
         // EMPTY
     };
 
-    virtual const char* what()
+    virtual const char* what() const throw()
     {
         return _userDesc.c_str();
     };
@@ -159,6 +159,11 @@ public:
     
     /* ---------------------------------------------------------------------- */
     virtual std::string _description() const; 
+
+    virtual const char* what() const throw()
+    {
+        return _desc.c_str();
+    }
 private:
     
     /* ---------------------------------------------------------------------- */
