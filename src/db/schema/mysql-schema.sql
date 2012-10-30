@@ -53,7 +53,8 @@ CREATE TABLE t_optimize (
   INDEX (dest_se),
   INDEX (nostreams),
   INDEX (timeout),
-  INDEX (buffer)
+  INDEX (buffer),
+  INDEX (datetime)
 );
 
 
@@ -363,7 +364,8 @@ CREATE TABLE t_se_group_contains(
    se_name       VARCHAR(512) NOT NULL,
    state         VARCHAR(30),
    PRIMARY KEY (se_group_id, se_name),
-   FOREIGN KEY (se_group_id) REFERENCES t_se_group(se_group_id)
+   FOREIGN KEY (se_group_id) REFERENCES t_se_group(se_group_id),
+   INDEX (se_name)
 ); 
 --
 -- Store se_pair ACL
@@ -392,7 +394,8 @@ CREATE TABLE t_vo_acl (
   principal            VARCHAR(255) NOT NULL,
 --
 -- Set Primary Key
-  PRIMARY KEY (vo_name, principal)
+  PRIMARY KEY (vo_name, principal),
+  INDEX (vo_name)
 );
 
 --
@@ -530,9 +533,11 @@ CREATE TABLE t_job (
   INDEX (job_state),
   INDEX (vo_name),
   INDEX (user_dn(1000)),
+  INDEX (submit_time),
   INDEX (job_finished),
   INDEX (source_se,dest_se),
-  INDEX (vo_name, job_id)
+  INDEX (vo_name, job_id),
+  INDEX (job_priority)
 );
 
 
@@ -620,9 +625,10 @@ CREATE TABLE t_file (
   PRIMARY KEY (file_id),
   FOREIGN KEY (job_id) REFERENCES t_job(job_id),
   INDEX (job_id),
-  INDEX (file_state,job_id),
+  INDEX (file_state),
   INDEX (job_finished),
-  INDEX (job_id, finish_time)
+  INDEX (job_id, finish_time),
+  INDEX (finish_time)
 );
 
 
