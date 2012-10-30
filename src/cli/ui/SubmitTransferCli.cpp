@@ -217,10 +217,12 @@ bool SubmitTransferCli::performChecks() {
 	if (ctx->isDelegationSupported()) {
 		// if the user did not specify a password use delegation
 		if (!vm.count("password")) {
-	        cout << "Server supports delegation. Delegation will be used by default." << endl;
+			if (isVerbose())
+				cout << "Server supports delegation. Delegation will be used by default." << endl;
 	        delegate = true;
 		} else {
-	        cout << "Server supports delegation, however a MyProxy pass phrase was given: will use MyProxy legacy mode." << endl;
+			if (isVerbose())
+				cout << "Server supports delegation, however a MyProxy pass phrase was given: will use MyProxy legacy mode." << endl;
 	        delegate = false;
 		}
 	}
