@@ -153,11 +153,14 @@ protected:
         updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
       }
      catch (interprocess_exception &ex) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
-        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+     }
+     catch (Err& e) {
+         FTS3_COMMON_EXCEPTION_THROW(e);
+     }
      catch (...) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown exception"));
-        }     
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
+     }
                if(stopThreads) break;
       }
     }

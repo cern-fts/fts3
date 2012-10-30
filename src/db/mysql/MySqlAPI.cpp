@@ -2012,7 +2012,7 @@ void MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int
                "                  t_file.job_id = t_job.job_id AND "
                "                  t_job.source_se = :source AND t_job.dest_se = :dest) AND "
                "    nostreams = :nstreams AND timeout = :timeout AND buffer = :buffer AND "
-               "    source_se = :source AND dest_se :dest",
+               "    source_se = :source AND dest_se = :dest",
                soci::use(source_hostname, "source"), soci::use(destin_hostname, "dest"),
                soci::use(nostreams, "nstreams"), soci::use(timeout, "timeout"),
                soci::use(buffersize, "buffer"),
@@ -2082,7 +2082,7 @@ void MySqlAPI::addOptimizer(time_t when, double throughput, const std::string & 
         unsigned actives = 0;
 
         sql << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-               "    t_file.state = 'ACTIVE' AND t_job.job_id = t_file.job_id AND "
+               "    t_file.file_state = 'ACTIVE' AND t_job.job_id = t_file.job_id AND "
                "    t_job.source_se = :source AND t_job.dest_se = :dest",
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(actives);
@@ -2195,7 +2195,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(numberOfReadyOrActiveTransfersBetween);
 
-        sql << "SELECT AVG(throughput) FROM t_optimize "
+        sql << "SELECT COALESCE(AVG(throughput), 0) FROM t_optimize "
                "WHERE (active = :nActiveTransfersBetween OR "
                "       active = (SELECT MAX(active) FROM t_optimize WHERE active < :nActiveOrReady)) AND "
                 "     source_se = :sourceSe  AND "
