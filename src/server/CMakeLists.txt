@@ -45,6 +45,7 @@ set(fts_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/RequestLister.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapDelegationHandler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/DelegationoOrchestrator.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/ConfigurationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/InternalLogRetriever.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/AuthorizationManager.cpp"
