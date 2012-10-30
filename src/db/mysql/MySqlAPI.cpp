@@ -155,12 +155,12 @@ void MySqlAPI::getSeCreditsInUse(int &creditsInUse,
           << "    t_file.file_state = 'ACTIVE' ";
 
     if (!srcSeName.empty()) {
-        query << " AND t_file.source_surl like '%://' || :source || '%' ";
+        query << " AND t_file.source_surl LIKE CONCAT('%://', :source, '%') ";
         stmt.exchange(soci::use(srcSeName, "source"));
     }
 
     if (!destSeName.empty()) {
-        query << " AND t_file.dest_surl like '%://' || :dest || '%' ";
+        query << " AND t_file.dest_surl LIKE CONCAT('%://', :dest, '%') ";
         stmt.exchange(soci::use(destSeName, "dest"));
     }
 
@@ -174,7 +174,7 @@ void MySqlAPI::getSeCreditsInUse(int &creditsInUse,
 
             query << " AND NOT EXISTS ( SELECT NULL FROM t_se_vo_share WHERE "
                   << "                     t_se_vo_share.se_name = :seName AND "
-                  << "                     t_se_vo_share.share_id = '%\"share_id\":\"' || t_job.vo_name || '\"%' "
+                  << "                     t_se_vo_share.share_id = CONCAT('%\"share_id\":\"', t_job.vo_name, '\"%') "
                   << "                 )";
             stmt.exchange(soci::use(seName, "seName"));
         }
@@ -210,7 +210,7 @@ void MySqlAPI::getGroupCreditsInUse(int &creditsInUse,
                   "      t_file.file_state = 'ACTIVE' ";
 
         if (!srcGroupName.empty()) {
-            query << " AND t_file.source_surl LIKE '%://' || t_se.name || '%' "
+            query << " AND t_file.source_surl LIKE CONCAT('%://', t_se.name, '%') "
                      " AND t_se.name IN (SELECT se_name FROM t_se_group_contains, t_se_group "
                      "                   WHERE se_group_name = :srcGroupName AND"
                      "                         t_se_group_contains.se_group_id = t_se_group.se_group_id) ";
@@ -218,7 +218,7 @@ void MySqlAPI::getGroupCreditsInUse(int &creditsInUse,
         }
 
         if (!destGroupName.empty()) {
-            query << " AND t_file.dest_surl LIKE '%://' || t_se.name || '%' "
+            query << " AND t_file.dest_surl LIKE CONCAT('%://', t_se.name, '%') "
                      " AND t_se.name IN (SELECT se_name FROM t_se_group_contains, t_se_group "
                      "                   WHERE se_group_name = :destGroupName AND "
                      "                         t_se_group_contains.se_group_id = t_se_group.se_group_id) ";
@@ -237,7 +237,7 @@ void MySqlAPI::getGroupCreditsInUse(int &creditsInUse,
                          "          SELECT NULL FROM t_se_vo_share WHERE "
                          "              t_se_vo_share.se_name = :groupName AND "
                          "              t_se_vo_share.share_type = 'group' AND "
-                         "              t_se_vo_share.share_id = '%\"share_id\":\"' || t_job.vo_name || '\"%' "
+                         "              t_se_vo_share.share_id = CONCAT('%\"share_id\":\"', t_job.vo_name, '\"%') "
                          "   )";
                 stmt.exchange(soci::use(groupName, "groupName"));
             }
@@ -2521,8 +2521,8 @@ bool MySqlAPI::configExists(const std::string & src, const std::string & dest, c
         soci::statement stmt = (sql.prepare << "SELECT COUNT(*) FROM t_se_vo_share "
                                                "WHERE (se_name = :se1 AND share_type = :shareType AND "
                                                "       (share_id = '\"type\":\"public\"' OR "
-                                               "        share_id = '\"type\":\"vo\",\"id\":\"' || :vo || '\"' OR "
-                                               "        share_id = '\"type\":\"pair\",\"id\":\"' || :se2 || '\"'))",
+                                               "        share_id = CONCAT('\"type\":\"vo\",\"id\":\"', :vo, '\"') OR "
+                                               "        share_id = CONCAT('\"type\":\"pair\",\"id\":\"', :se2, '\"')))",
                                 soci::use(se1), soci::use(shareType), soci::use(vo), soci::use(se2), soci::into(count));
 
         shareType = "se";

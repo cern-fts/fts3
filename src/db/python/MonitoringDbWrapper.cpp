@@ -107,8 +107,11 @@ TransferJobs MonitoringDbWrapper::getJob(const std::string& jobId) {
 boost::python::list MonitoringDbWrapper::filterJobs(const boost::python::list& inVos,
                                                     const boost::python::list& inStates) {
     std::vector<TransferJobs> tjobs;
-    std::vector<std::string> vosStr(static_cast<size_t>(boost::python::len(inVos)));
-    std::vector<std::string> statesStr(static_cast<size_t>(boost::python::len(inStates)));
+    std::vector<std::string>  vosStr;
+    std::vector<std::string>  statesStr;
+
+    vosStr.reserve(static_cast<size_t>(boost::python::len(inVos)));
+    statesStr.reserve(static_cast<size_t>(boost::python::len(inStates)));
 
     for (ssize_t i = 0; i < boost::python::len(inVos); ++i)
         vosStr.push_back(boost::python::extract<std::string>(inVos[i]));
@@ -128,7 +131,8 @@ boost::python::list MonitoringDbWrapper::filterJobs(const boost::python::list& i
 
 unsigned MonitoringDbWrapper::numberOfTransfersInState(const std::string& vo,
                                                        const boost::python::list& states) {
-    std::vector<std::string> strStates(static_cast<size_t>(boost::python::len(states)));
+    std::vector<std::string> strStates;
+    strStates.reserve(static_cast<size_t>(boost::python::len(states)));
 
     for (ssize_t i = 0; i < boost::python::len(states); ++i)
         strStates.push_back(boost::python::extract<std::string>(states[i]));

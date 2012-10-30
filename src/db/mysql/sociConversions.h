@@ -50,8 +50,6 @@ namespace soci
 
         static void from_base(values const& v, indicator, TransferJobs& job) {
             struct tm aux_tm;
-            struct tm defaultTime;
-            ::memset(&defaultTime, 0, sizeof(defaultTime));
 
             job.JOB_ID         = v.get<std::string>("job_id");
             job.JOB_STATE      = v.get<std::string>("job_state");
@@ -76,8 +74,14 @@ namespace soci
             job.CHECKSUM_METHOD    = v.get<std::string>("checksum_method");
             aux_tm = v.get<struct tm>("submit_time");
             job.SUBMIT_TIME = timegm(&aux_tm);
-            aux_tm = v.get<struct tm>("finish_time", defaultTime);
-            job.FINISH_TIME = timegm(&aux_tm);
+
+            if (v.get_indicator("finish_time") == soci::i_ok) {
+                aux_tm = v.get<struct tm>("finish_time");
+                job.FINISH_TIME = timegm(&aux_tm);
+            }
+            else {
+                job.FINISH_TIME = -1;
+            }
         }
     };
 

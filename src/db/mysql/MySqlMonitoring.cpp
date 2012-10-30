@@ -219,7 +219,7 @@ unsigned MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
         soci::statement stmt(sql);
 
         query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-                 "    t_file.finish_time > :notBefore AND "
+                 "    t_job.submit_time > :notBefore AND "
                  "    t_file.job_id = t_job.job_id ";
         stmt.exchange(soci::use(notBefore));
 

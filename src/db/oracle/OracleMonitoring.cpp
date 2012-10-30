@@ -302,7 +302,7 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
 
     tag << "numberOfTransfersInState" << state.size() << vo.empty();
     query << "SELECT COUNT(*) FROM T_FILE, T_JOB "
-             "WHERE  T_FILE.FINISH_TIME > :notBefore AND "
+             "WHERE  T_JOB.SUBMIT_TIME > :notBefore AND "
              "T_FILE.JOB_ID = T_JOB.JOB_ID AND "
              "T_FILE.FILE_STATE IN (";
     for (i = 1; i < state.size(); ++i)
