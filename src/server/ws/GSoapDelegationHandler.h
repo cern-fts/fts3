@@ -25,6 +25,9 @@
 #ifndef GSOAPDELEGATIONHANDLER_H_
 #define GSOAPDELEGATIONHANDLER_H_
 
+
+#include "DelegationoOrchestrator.h"
+
 #include <string>
 #include <gridsite.h>
 
@@ -239,6 +242,8 @@ private:
 	static const string hostDn;
 
 	static string initHostDn();
+
+	DelegationoOrchestrator& orchestrator;
 };
 
 }
