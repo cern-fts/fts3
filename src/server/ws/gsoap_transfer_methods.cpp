@@ -630,7 +630,7 @@ int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogRespons
 		log__GetLogInternalResponse resp;
 		soap_call_log__GetLogInternal(&ctx, it->c_str(), 0, jobId, resp);
 
-
+		// add each of the log files to the tar archive
 		vector<string>::iterator n_it = resp.logs->lognames.begin();
 		vector<log__Log *>::iterator d_it = resp.logs->logsdata.begin();
 
@@ -656,6 +656,7 @@ int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogRespons
 
 	return SOAP_OK;
 
+// TODO send the log further to the client!
 //	if ((soap->omode & SOAP_IO) == SOAP_IO_STORE)
 //		soap->omode = (soap->omode & ~SOAP_IO) | SOAP_IO_BUFFER;
 
