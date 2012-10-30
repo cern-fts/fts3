@@ -61,7 +61,14 @@ int main(int ac, char* av[]) {
 					cli->getDelegationId(),
 					cli->getExpirationTime()
 				);
-			if (!handler.delegate()) return 0;
+
+			if (cli->isVerbose()) {
+				if (!handler.delegate()) return 0;
+			} else {
+				cli->mute();
+				if (!handler.delegate()) return 0;
+				cli->unmute();
+			}
 
 			// submit the job
 			jobId = ctx.transferSubmit (
@@ -79,7 +86,7 @@ int main(int ac, char* av[]) {
 				);
 		}
 
-		cout << "Submitted request ID: " << jobId << endl;
+		cout << jobId << endl;
 
 		// check if the -b option has been used
 		if (cli->isBlocking()) {
