@@ -537,7 +537,7 @@ CREATE TABLE t_job (
   INDEX (job_finished),
   INDEX (source_se,dest_se),
   INDEX (vo_name, job_id),
-  INDEX (job_priority)
+  INDEX (priority)
 );
 
 
