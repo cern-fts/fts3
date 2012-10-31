@@ -30,10 +30,9 @@ class DelegationoOrchestrator: public ThreadSafeInstanceHolder<DelegationoOrches
 public:
 	virtual ~DelegationoOrchestrator(){};
 
-	void put (string delegationId, string key);
+	bool orchestrate(string delegationId, string& key);
+	bool check (string delegationId);
 	void remove (string delegationId);
-
-	string get(string delegationId);
 
 private:
 	/**
