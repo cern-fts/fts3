@@ -165,7 +165,7 @@ namespace soci
             job.jobID      = v.get<std::string>("job_id");
             job.jobStatus  = v.get<std::string>("job_state");
             job.clientDN   = v.get<std::string>("user_dn");
-            job.reason     = v.get<std::string>("reason");
+            job.reason     = v.get<std::string>("reason", "");
             aux_tm         = v.get<struct tm>("submit_time");
             job.submitTime = timegm(&aux_tm);
             job.priority   = v.get<int>("priority");
