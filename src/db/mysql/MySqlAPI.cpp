@@ -2346,32 +2346,40 @@ void MySqlAPI::forceFailTransfers() {
 
 void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest,
                           int nostreams, int timeout, int buffersize) {
-    // NOTE: Using statements in this method throws a std::bad_alloc from time
-    //       to time, and leave the transfer in ready forever (??)
     soci::session sql(connectionPool);
 
     try {
-        sql.begin();
+        bool updated = false;
 
-        sql << "UPDATE t_optimize SET "
-               "    file_id = 1 "
-               "WHERE nostreams = :nStreams AND buffer = :bufferSize AND timeout = :timeout AND "
-               "      source_se = :source AND dest_se = :dest",
-               soci::use(nostreams), soci::use(buffersize), soci::use(timeout),
-               soci::use(source_se), soci::use(dest);
+        soci::statement updateOptimize = (sql.prepare << "UPDATE t_optimize SET "
+                                                         "    file_id = 1 "
+                                                         "WHERE nostreams = :nStreams AND buffer = :bufferSize AND timeout = :timeout AND "
+                                                         "      source_se = :source AND dest_se = :dest",
+                                                         soci::use(nostreams), soci::use(buffersize), soci::use(timeout),
+                                                         soci::use(source_se), soci::use(dest));
+        updateOptimize.execute(true);
+        updated = (updateOptimize.get_affected_rows() > 0);
 
-        std::stringstream params;
-        params << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
+        std::stringstream paramStream;
+        paramStream << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
+        std::string params = paramStream.str();
 
         if (file_id != -1) {
-            sql << "UPDATE t_file SET internal_file_params = :params WHERE file_id = :fileId AND job_id = :jobId",
-                    soci::use(params.str()), soci::use(file_id), soci::use(job_id);
+            soci::statement updateFile = (sql.prepare << "UPDATE t_file SET internal_file_params = :params "
+                                                         "WHERE file_id = :fileId AND job_id = :jobId",
+                                                         soci::use(params), soci::use(file_id), soci::use(job_id));
+            updateFile.execute(true);
+            updated |= (updateFile.get_affected_rows() > 0);
         } else {
-            sql << "UPDATE t_file SET internal_file_params = :params WHERE job_id = :jobId",
-                    soci::use(params.str()), soci::use(job_id);
+            soci::statement updateFile = (sql.prepare << "UPDATE t_file SET internal_file_params = :params "
+                                                         "WHERE job_id = :jobId",
+                                                         soci::use(params), soci::use(job_id));
+            updateFile.execute(true);
+            updated |= (updateFile.get_affected_rows() > 0);
         }
 
-        sql.commit();
+        if (updated)
+            sql.commit();
     }
     catch (std::exception& e) {
         sql.rollback();

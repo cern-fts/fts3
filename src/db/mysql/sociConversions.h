@@ -188,11 +188,16 @@ namespace soci
             transfer.sourceSURL        = v.get<std::string>("source_surl");
             transfer.destSURL          = v.get<std::string>("dest_surl");
             transfer.transferFileState = v.get<std::string>("file_state");
-            transfer.reason            = v.get<std::string>("reason");
+            transfer.reason            = v.get<std::string>("reason", "");
             aux_tm = v.get<struct tm>("start_time");
             transfer.start_time = timegm(&aux_tm);
-            aux_tm = v.get<struct tm>("finish_time");
-            transfer.finish_time = timegm(&aux_tm);
+            if (v.get_indicator("finish_time") == soci::i_ok) {
+                aux_tm = v.get<struct tm>("finish_time");
+                transfer.finish_time = timegm(&aux_tm);
+            }
+            else {
+                transfer.finish_time = -1;
+            }
         }
     };
 
