@@ -3236,12 +3236,11 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
 
     std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, when=:4, timeout=:5 "
             " WHERE nostreams = :6 and timeout=:7 and buffer=:8 and source_se=:9 and dest_se=:10 ";
+	    
     std::string query3 = "select count(*) from t_optimize where source_se=:1 and dest_se=:2";
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
     oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
     ThreadTraits::LOCK_R lock(_mutex);
     try {
 
@@ -3294,24 +3293,11 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
             if (s2->executeUpdate() != 0)
                 conn->commit();
             conn->destroyStatement(s2, tag2);
-        } else { //insert new
-            int count = 0;
-            s3 = conn->createStatement(query3, tag3);
-            s3->setString(1, source_hostname);
-            s3->setString(2, destin_hostname);
-            r3 = conn->createResultset(s3);
-            if (r3->next()) {
-                count = r3->getInt(1);
-            }
-            conn->destroyResultset(s3, r3);
-            conn->destroyStatement(s3, tag3);
-
-            if (count < 400) {
+        } else { //insert new            
                 if (timeInSecs <= DEFAULT_TIMEOUT) {
                     timeout = DEFAULT_TIMEOUT;
                 }
-                addOptimizer(now, throughput, source_hostname, destin_hostname, 1, nostreams, timeout, buffersize, active);
-            }
+                addOptimizer(std::time(NULL), throughput, source_hostname, destin_hostname, 1, nostreams, timeout, buffersize, active);
         }
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
@@ -3323,11 +3309,7 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
             }
             if (s2) {
                 conn->destroyStatement(s2, tag2);
-            }
-            if (s3 && r3) {
-                conn->destroyResultset(s3, r3);
-                conn->destroyStatement(s3, tag3);
-            }
+            }           
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
@@ -3335,7 +3317,6 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
 
 void OracleAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int) {
     const std::string tag = "addOptimizer";
-    const std::string tag1 = "addOptimizer1";
     std::string query = "insert into "
             " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, when) "
             " values(:1,:2,:3,:4,:5,(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and "

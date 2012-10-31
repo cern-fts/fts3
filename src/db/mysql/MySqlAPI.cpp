@@ -2051,17 +2051,10 @@ void MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int
             sql.commit();
         }
         else {
-            unsigned count = 0;
-            sql << "SELECT COUNT(*) FROM t_optimize "
-                   "WHERE source_se = :source AND dest_se = :dest",
-                   soci::use(source_hostname), soci::use(destin_hostname),
-                   soci::into(count);
-            if (count < 400) {
                 if (timeInSecs <= DEFAULT_TIMEOUT)
                     timeout = DEFAULT_TIMEOUT;
                 addOptimizer(time(NULL), throughput, source_hostname, destin_hostname,
                              1, nostreams, timeout, buffersize, active);
-            }
         }
     }
     catch (std::exception& e) {
