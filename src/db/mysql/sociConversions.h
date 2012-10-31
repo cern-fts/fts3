@@ -90,6 +90,7 @@ namespace soci
         typedef values base_type;
 
         static void from_base(values const& v, indicator, TransferFiles& file) {
+            file.FILE_STATE  = v.get<std::string>("file_state");
             file.SOURCE_SURL = v.get<std::string>("source_surl");
             file.DEST_SURL   = v.get<std::string>("dest_surl");
             file.JOB_ID      = v.get<std::string>("job_id");

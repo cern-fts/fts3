@@ -155,12 +155,12 @@ void MySqlAPI::getSeCreditsInUse(int &creditsInUse,
           << "    t_file.file_state = 'ACTIVE' ";
 
     if (!srcSeName.empty()) {
-        query << " AND t_file.source_surl LIKE CONCAT('%://', :source, '%') ";
+        query << " AND t_job.source_se = :source ";
         stmt.exchange(soci::use(srcSeName, "source"));
     }
 
     if (!destSeName.empty()) {
-        query << " AND t_file.dest_surl LIKE CONCAT('%://', :dest, '%') ";
+        query << " AND t_job.dest_se = :dest ";
         stmt.exchange(soci::use(destSeName, "dest"));
     }
 
@@ -210,7 +210,7 @@ void MySqlAPI::getGroupCreditsInUse(int &creditsInUse,
                   "      t_file.file_state = 'ACTIVE' ";
 
         if (!srcGroupName.empty()) {
-            query << " AND t_file.source_surl LIKE CONCAT('%://', t_se.name, '%') "
+            query << " AND t_job.source_se = t_se.name "
                      " AND t_se.name IN (SELECT se_name FROM t_se_group_contains, t_se_group "
                      "                   WHERE se_group_name = :srcGroupName AND"
                      "                         t_se_group_contains.se_group_id = t_se_group.se_group_id) ";
@@ -218,7 +218,7 @@ void MySqlAPI::getGroupCreditsInUse(int &creditsInUse,
         }
 
         if (!destGroupName.empty()) {
-            query << " AND t_file.dest_surl LIKE CONCAT('%://', t_se.name, '%') "
+            query << " AND t_job.dest_se = t_se.name "
                      " AND t_se.name IN (SELECT se_name FROM t_se_group_contains, t_se_group "
                      "                   WHERE se_group_name = :destGroupName AND "
                      "                         t_se_group_contains.se_group_id = t_se_group.se_group_id) ";
@@ -636,7 +636,7 @@ std::set<std::string> MySqlAPI::getAllMatchingSeNames(std::string name) {
     try {
         std::set<std::string> matches;
 
-        soci::rowset<std::string> rs = (sql.prepare << "SELECT t_se.name FROM t_se WHERE t_se.NAME like :name",
+        soci::rowset<std::string> rs = (sql.prepare << "SELECT t_se.name FROM t_se WHERE t_se.NAME LIKE :name",
                                         soci::use(name));
 
         for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -720,7 +720,7 @@ void MySqlAPI::getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAnd
 
         if (SE_NAME.length() > 0) {
             first = false;
-            query << " WHERE t_se_vo_share.se_name like :se";
+            query << " WHERE t_se_vo_share.se_name LIKE :se";
             stmt.exchange(soci::use(SE_NAME, "se"));
         }
 
@@ -730,7 +730,7 @@ void MySqlAPI::getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAnd
             else
                 query << " AND ";
             first = false;
-            query << "t_se_vo_share.share_id like :shareId";
+            query << "t_se_vo_share.share_id LIKE :shareId";
             stmt.exchange(soci::use(SHARE_ID, "shareId"));
         }
 
@@ -958,8 +958,8 @@ void MySqlAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::st
     try {
         sql.begin();
         sql << "DELETE FROM t_se_vo_share WHERE "
-               "    se_name like :seName AND "
-               "    share_id like :shareId AND "
+               "    se_name LIKE :seName AND "
+               "    share_id LIKE :shareId AND "
                "    share_type = :shareType",
                soci::use(SE_NAME), soci::use(SHARE_ID), soci::use(SHARE_TYPE);
         sql.commit();

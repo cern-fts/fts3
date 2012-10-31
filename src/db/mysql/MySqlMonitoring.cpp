@@ -42,7 +42,7 @@ void MySqlMonitoring::getVONames(std::vector<std::string>& vos) {
     try {
         soci::rowset<std::string> rs = (sql.prepare << "SELECT DISTINCT(vo_name) "
                                                        "FROM t_job "
-                                                       "WHERE submit_time > :notBefore",
+                                                       "WHERE (finish_time > :notBefore OR finish_time IS NULL)",
                                                        soci::use(notBefore));
         for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
             vos.push_back(*i);
@@ -62,7 +62,8 @@ void MySqlMonitoring::getSourceAndDestSEForVO(const std::string& vo,
     try {
         soci::rowset<SourceAndDestSE> rs = (sql.prepare << "SELECT DISTINCT source_se, dest_se "
                                                            "FROM t_job "
-                                                           "WHERE vo_name = :vo AND submit_time > :notBefore",
+                                                           "WHERE vo_name = :vo AND "
+                                                           "      (finish_time > :notBefore OR finish_time IS NULL)",
                                                            soci::use(vo), soci::use(notBefore));
         for (soci::rowset<SourceAndDestSE>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
             pairs.push_back(*i);
@@ -85,7 +86,7 @@ unsigned MySqlMonitoring::numberOfJobsInState(const SourceAndDestSE& pair,
                "WHERE job_state = :state AND "
                "      source_se = :source AND "
                "      dest_se   = :dest AND "
-               "      submit_time > :notBefore",
+               "      (finish_time > :notBefore OR finish_time IS NULL)",
                soci::use(state),
                soci::use(pair.sourceStorageElement), soci::use(pair.destinationStorageElement),
                soci::use(notBefore), soci::into(count);
@@ -165,7 +166,7 @@ void MySqlMonitoring::filterJobs(const std::vector<std::string>& inVos,
         std::ostringstream query;
         soci::statement stmt(sql);
 
-        query << "SELECT * FROM t_job WHERE submit_time > :notBefore ";
+        query << "SELECT * FROM t_job WHERE (finish_time > :notBefore OR finish_time IS NULL) ";
         stmt.exchange(soci::use(notBefore));
 
         if (!inVos.empty()) {
@@ -180,7 +181,7 @@ void MySqlMonitoring::filterJobs(const std::vector<std::string>& inVos,
 
         if (!inStates.empty()) {
             query << "AND job_state IN (";
-            for (i = 0; i < inStates.size(); ++i) {
+            for (i = 0; i < inStates.size() - 1; ++i) {
                 query << ":state" << i << ", ";
                 stmt.exchange(soci::use(inStates[i]));
             }
@@ -218,14 +219,18 @@ unsigned MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
         std::ostringstream query;
         soci::statement stmt(sql);
 
-        query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-                 "    t_job.submit_time > :notBefore AND "
-                 "    t_file.job_id = t_job.job_id ";
-        stmt.exchange(soci::use(notBefore));
-
         if (!vo.empty()) {
-            query << "AND t_job.vo_name = :vo ";
+            query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
+                     "    (t_file.finish_time > :notBefore OR t_file.finish_time IS NULL) AND "
+                     "    t_file.job_id = t_job.job_id AND "
+                     "    t_job.vo_name = :vo ";
+            stmt.exchange(soci::use(notBefore));
             stmt.exchange(soci::use(vo));
+        }
+        else {
+            query << "SELECT COUNT(*) FROM t_file WHERE "
+                     "    (t_file.finish_time > :notBefore OR t_file.finish_time IS NULL) ";
+            stmt.exchange(soci::use(notBefore));
         }
 
         if (!state.empty()) {
@@ -262,7 +267,7 @@ void MySqlMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons) 
                                                              "                  reason != '' AND "
                                                              "                  finish_time > :notBefore "
                                                              "GROUP BY reason "
-                                                             "ORDER BY reason ASC",
+                                                             "ORDER BY count DESC",
                                                              soci::use(notBefore));
         for (soci::rowset<ReasonOccurrences>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
             reasons.push_back(*i);
@@ -307,7 +312,7 @@ void MySqlMonitoring::averageThroughputPerSePair(std::vector<SePairThroughput>& 
                                                             "WHERE t_file.throughput IS NOT NULL AND "
                                                             "      t_file.file_state = 'FINISHED' AND "
                                                             "      t_file.job_id = t_job.job_id AND "
-                                                            "      t_job.submit_time > :notBefore "
+                                                            "      t_job.finish_time > :notBefore "
                                                             "GROUP BY t_job.source_se, t_job.dest_se",
                                                             soci::use(notBefore));
         for (soci::rowset<SePairThroughput>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
