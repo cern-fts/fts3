@@ -10,36 +10,19 @@
 namespace fts3 {
 namespace ws {
 
-
-DelegationoOrchestrator::~DelegationoOrchestrator() {
-
-	// notify all pending threads
-	map<string, shared_ptr<condition_variable> >::iterator it;
-	for (it = access.begin(); it != access.end(); it++) {
-		it->second->notify_all();
-	}
+void DelegationoOrchestrator::put (string delegationId, string key) {
+	mutex::scoped_lock lock(m);
+	pkeys[delegationId] = key;
 }
 
-bool DelegationoOrchestrator::wait(string delegationId, long timeout) {
+void DelegationoOrchestrator::remove (string delegationId) {
 	mutex::scoped_lock lock(m);
-	map<string, shared_ptr<condition_variable> >::iterator it = access.find(delegationId);
-	if (it == access.end()) {
-		access[delegationId] = shared_ptr<condition_variable>(new condition_variable());
-		return false;
-	}
-
-	shared_ptr<condition_variable> cond = it->second;
-	system_time t = get_system_time() + posix_time::milliseconds(timeout);
-	return cond->timed_wait(lock, t);
+	pkeys.erase(delegationId);
 }
 
-
-void DelegationoOrchestrator::notify(string delegationId) {
+string DelegationoOrchestrator::get(string delegationId) {
 	mutex::scoped_lock lock(m);
-
-	map<string, shared_ptr<condition_variable> >::iterator it = access.find(delegationId);
-	it->second->notify_all();
-	access.erase(delegationId);
+	return pkeys[delegationId];
 }
 
 } /* namespace ws */

@@ -28,10 +28,12 @@ class DelegationoOrchestrator: public ThreadSafeInstanceHolder<DelegationoOrches
 	friend class ThreadSafeInstanceHolder<DelegationoOrchestrator>;
 
 public:
-	virtual ~DelegationoOrchestrator();
+	virtual ~DelegationoOrchestrator(){};
 
-	bool wait(string delegationId, long timeout = 3000);
-	void notify(string delegationId);
+	void put (string delegationId, string key);
+	void remove (string delegationId);
+
+	string get(string delegationId);
 
 private:
 	/**
@@ -58,7 +60,7 @@ private:
 	/**
 	 * the map holding conditions corresponding to each delegation
 	 */
-	map<string, shared_ptr<condition_variable> > access;
+	map<string, string> pkeys;
 
 	mutex m;
 };
