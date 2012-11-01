@@ -1,11 +1,29 @@
 /*
+ *	Copyright notice:
+ *	Copyright � Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use this file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ *
  * BdiiBrowser.cpp
  *
  *  Created on: Oct 25, 2012
- *      Author: simonm
+ *      Author: Michał Simon
  */
 
 #include "BdiiBrowser.h"
+#include "error.h"
 
 #include <sstream>
 
@@ -64,8 +82,7 @@ void BdiiBrowser::connect(string infosys, string base, time_t sec) {
 	int ret = 0;
     ret = ldap_initialize(&ld, infosys.c_str());
     if (ret != LDAP_SUCCESS) {
-        // TODO ldap_err2string(ret)
-        return;
+    	throw Err_Custom(ldap_err2string(ret));
     }
 
     ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout);
@@ -76,8 +93,7 @@ void BdiiBrowser::connect(string infosys, string base, time_t sec) {
 
     ret = ldap_sasl_bind_s(ld, 0, LDAP_SASL_SIMPLE, &cred, 0, 0, 0);
     if (ret != LDAP_SUCCESS) {
-        // TODO ldap_err2string(ret))
-        return;
+    	throw Err_Custom(ldap_err2string(ret));
     }
 }
 
@@ -126,15 +142,13 @@ list< map<string, R> > BdiiBrowser::browse(string query, const char **attr) {
 	if (!isValid()) reconnect();
 
     int rc = 0;
-
     LDAPMessage *reply = 0;
 
     rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
 
 	if (rc != LDAP_SUCCESS) {
 		if (reply && rc > 0) ldap_msgfree(reply);
-		// TODO ldap_err2string(ret)
-		// if an exception will be thrown the 'rc == 0' check in for loop wont be needed
+		throw Err_Custom(ldap_err2string(rc));
 	}
 
 	list< map<string, R> > ret = parseBdiiResponse<R>(reply);
