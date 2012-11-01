@@ -594,7 +594,7 @@ CREATE TABLE t_file (
   prestage_failures    INTEGER,
 --
 -- the nominal size of the file (bytes)
-  filesize             INTEGER,
+  filesize             BIGINT,
 --
 -- the user-defined checksum of the file "checksum_type:checksum"
   checksum             VARCHAR(100),

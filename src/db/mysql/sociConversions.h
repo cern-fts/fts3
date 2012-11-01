@@ -105,7 +105,7 @@ namespace soci
             file.DEST_SPACE_TOKEN   = v.get<std::string>("space_token");
             file.REASON             = v.get<std::string>("reason", "");
 
-            int size = v.get<int>("filesize", 0);
+            long long size = v.get<long long>("filesize", 0);
             std::ostringstream str;
             str << size;
             file.FILESIZE = str.str();
