@@ -26,7 +26,6 @@
 #include "logger.h"
 
 #include <sstream>
-#include <iostream>
 
 namespace fts3 {
 namespace common {
@@ -81,7 +80,7 @@ void BdiiBrowser::connect(string infosys, string base, time_t sec) {
 	url = "ldap://" + infosys;
 
 	int ret = 0;
-    ret = ldap_initialize(&ld, infosys.c_str());
+    ret = ldap_initialize(&ld, url.c_str());
     if (ret != LDAP_SUCCESS) {
     	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
     	return;
@@ -98,8 +97,6 @@ void BdiiBrowser::connect(string infosys, string base, time_t sec) {
     	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
     	return;
     }
-
-    cout << "BDII connected!" << endl;
 }
 
 void BdiiBrowser::disconnect() {
@@ -112,34 +109,26 @@ void BdiiBrowser::disconnect() {
 
 void BdiiBrowser::waitIfBrowsing() {
 	mutex::scoped_lock lock(qm);
-	cout << querying << endl;
 	while (querying != 0) qv.wait(lock);
 	--querying;
-	cout << querying << endl;
 }
 
 void BdiiBrowser::notifyBrowsers() {
 	mutex::scoped_lock lock(qm);
-	cout << querying << endl;
 	++querying;
 	qv.notify_all();
-	cout << querying << endl;
 }
 
 void BdiiBrowser::waitIfReconnecting() {
 	mutex::scoped_lock lock(qm);
-	cout << querying << endl;
 	while (querying < 0) qv.wait(lock);
 	++querying;
-	cout << querying << endl;
 }
 
 void BdiiBrowser::notifyReconnector() {
 	mutex::scoped_lock lock(qm);
-	cout << querying << endl;
 	--querying;
 	qv.notify_one();
-	cout << querying << endl;
 }
 
 void BdiiBrowser::reconnect() {
