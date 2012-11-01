@@ -63,10 +63,10 @@ int main(int ac, char* av[]) {
 				);
 
 			if (cli->isVerbose()) {
-				if (!handler.delegate()) return 0;
+				handler.delegate();
 			} else {
 				cli->mute();
-				if (!handler.delegate()) return 0;
+				handler.delegate();
 				cli->unmute();
 			}
 
