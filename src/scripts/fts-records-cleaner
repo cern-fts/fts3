@@ -17,7 +17,7 @@
 lockfile=/var/lock/subsys/fts_db_cleaner
 
 
-if [ ! -f $lockfile ]; then
+if [ -f $lockfile ]; then
 	/usr/sbin/fts_db_cleaner > /dev/null 2>&1
 fi
 
