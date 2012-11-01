@@ -70,7 +70,7 @@ public:
 	 *
 	 * @return true if the operation was successful, false otherwise
 	 */
-	bool delegate();
+	void delegate();
 
 	/**
 	 * Checks the expiration date of the local proxy certificate

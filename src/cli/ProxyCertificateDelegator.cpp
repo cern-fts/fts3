@@ -33,6 +33,7 @@
 
 #include <iostream>
 
+
 ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, int userRequestedDelegationExpTime):
 		delegationId(delegationId),
 		endpoint(endpoint),
@@ -79,7 +80,7 @@ long ProxyCertificateDelegator::isCertValid(string filename) {
     return time;
 }
 
-bool ProxyCertificateDelegator::delegate() {
+void ProxyCertificateDelegator::delegate() {
 
 	// the default is to delegate, but not renew
     bool renewDelegation = false, needDelegation = true;
@@ -157,8 +158,7 @@ bool ProxyCertificateDelegator::delegate() {
             }
             if (requestProxyDelegationTime <= 0) {
                 // using a proxy with less than 1 minute to go
-                cout << "Your local proxy has less than 1 minute to run, Please renew it before submitting a job." << endl;
-                return false;
+            	throw string ("Your local proxy has less than 1 minute to run, Please renew it before submitting a job.");
             }
         } else {
             requestProxyDelegationTime = userRequestedDelegationExpTime;
@@ -177,16 +177,13 @@ bool ProxyCertificateDelegator::delegate() {
         	string errMsg = glite_delegation_get_error(dctx);
             cout << "delegation: " << errMsg << endl;
 
-            // TODO don't use string value to discover the error (???)
-            if (errMsg.find("key values mismatch") != string::npos) {
-            	cout << "Retrying!" << endl;
-            	return delegate();
-            }
-
-            return false;
+//            // TODO don't use string value to discover the error (???) do we need retry?
+//            if (errMsg.find("key values mismatch") != string::npos) {
+//            	cout << "Retrying!" << endl;
+//            	return delegate();
+//            }
+            throw string("delegation: " + errMsg);
         }
         cout << "Credential has been successfully delegated to the service." << endl;
     }
-
-    return true;
 }
