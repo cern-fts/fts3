@@ -26,6 +26,7 @@
 #include "logger.h"
 
 #include <sstream>
+#include <iostream>
 
 namespace fts3 {
 namespace common {
@@ -97,6 +98,8 @@ void BdiiBrowser::connect(string infosys, string base, time_t sec) {
     	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
     	return;
     }
+
+    cout << "BDII connected!" << endl;
 }
 
 void BdiiBrowser::disconnect() {
@@ -107,16 +110,56 @@ void BdiiBrowser::disconnect() {
     }
 }
 
+void BdiiBrowser::waitIfBrowsing() {
+	mutex::scoped_lock lock(qm);
+	cout << querying << endl;
+	while (querying != 0) qv.wait(lock);
+	--querying;
+	cout << querying << endl;
+}
+
+void BdiiBrowser::notifyBrowsers() {
+	mutex::scoped_lock lock(qm);
+	cout << querying << endl;
+	++querying;
+	qv.notify_all();
+	cout << querying << endl;
+}
+
+void BdiiBrowser::waitIfReconnecting() {
+	mutex::scoped_lock lock(qm);
+	cout << querying << endl;
+	while (querying < 0) qv.wait(lock);
+	++querying;
+	cout << querying << endl;
+}
+
+void BdiiBrowser::notifyReconnector() {
+	mutex::scoped_lock lock(qm);
+	cout << querying << endl;
+	--querying;
+	qv.notify_one();
+	cout << querying << endl;
+}
+
 void BdiiBrowser::reconnect() {
+
+	waitIfBrowsing();
 
 	disconnect();
 	connect(infosys, base, timeout.tv_sec);
+
+	notifyBrowsers();
 }
 
 bool BdiiBrowser::isValid() {
 
 	LDAPMessage *result = 0;
+
+	waitIfReconnecting();
 	int rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
+	notifyReconnector();
+
 	if (rc == LDAP_SUCCESS) {
 
 		if (result) ldap_msgfree(result);
@@ -135,6 +178,7 @@ bool BdiiBrowser::isValid() {
 	    return true;
 	}
 
+	notifyReconnector();
 	return false;
 }
 
@@ -146,7 +190,9 @@ list< map<string, R> > BdiiBrowser::browse(string query, const char **attr) {
     int rc = 0;
     LDAPMessage *reply = 0;
 
+    waitIfReconnecting();
     rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
+    notifyReconnector();
 
 	if (rc != LDAP_SUCCESS) {
 		if (reply && rc > 0) ldap_msgfree(reply);
