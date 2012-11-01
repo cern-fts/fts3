@@ -58,6 +58,10 @@ CliBase::~CliBase() {
 	if (ctx) {
 		delete ctx;
 	}
+
+	if (ismute) {
+		unmute();
+	}
 }
 
 void CliBase::parse(int ac, char* av[]) {
@@ -256,6 +260,8 @@ string CliBase::discoverService() {
 
 void CliBase::mute() {
 
+	ismute = true;
+
 	if (!cout_sbuf) {
 		cout_sbuf = cout.rdbuf(); // save original sbuf
 	}
@@ -267,6 +273,7 @@ void CliBase::mute() {
 }
 
 void CliBase::unmute() {
+	ismute = false;
 	cout.rdbuf(cout_sbuf); // restore the original stream buffer
 }
 

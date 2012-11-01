@@ -142,13 +142,11 @@ public:
 
 	/**
 	 * Mutes the cout stream
-	 * 	(used in unit tests)
 	 */
 	void mute();
 
 	/**
 	 * Unmutes the cout stream
-	 * 	(used in unit tests)
 	 */
 	void unmute();
 
@@ -245,6 +243,9 @@ private:
 	 * 	(devours things send to cout)
 	 */
 	ofstream fout;
+
+	/// contains the mute state
+	bool ismute;
 };
 
 /**
