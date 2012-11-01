@@ -65,15 +65,15 @@ int main(int ac, char* av[]) {
 		implcfg__setConfigurationResponse resp;
 		ctx.setConfiguration(config, resp);
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
     } catch(string& ex) {
     	cout << ex << endl;
     	return 1;
     } catch(Err& ex) {
     	cout << ex.what() << endl;
     	return 1;
+    } catch(std::exception& e) {
+        cerr << "error: " << e.what() << "\n";
+        return 1;
     } catch(...) {
         cerr << "Exception of unknown type!\n";
         return 1;
