@@ -23,7 +23,7 @@
  */
 
 #include "BdiiBrowser.h"
-#include "error.h"
+#include "logger.h"
 
 #include <sstream>
 
@@ -82,7 +82,8 @@ void BdiiBrowser::connect(string infosys, string base, time_t sec) {
 	int ret = 0;
     ret = ldap_initialize(&ld, infosys.c_str());
     if (ret != LDAP_SUCCESS) {
-    	throw Err_Custom(ldap_err2string(ret));
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
+    	return;
     }
 
     ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout);
@@ -93,7 +94,8 @@ void BdiiBrowser::connect(string infosys, string base, time_t sec) {
 
     ret = ldap_sasl_bind_s(ld, 0, LDAP_SASL_SIMPLE, &cred, 0, 0, 0);
     if (ret != LDAP_SUCCESS) {
-    	throw Err_Custom(ldap_err2string(ret));
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
+    	return;
     }
 }
 
@@ -148,7 +150,8 @@ list< map<string, R> > BdiiBrowser::browse(string query, const char **attr) {
 
 	if (rc != LDAP_SUCCESS) {
 		if (reply && rc > 0) ldap_msgfree(reply);
-		throw Err_Custom(ldap_err2string(rc));
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(rc) << commit;
+    	return list< map<string, R> > ();
 	}
 
 	list< map<string, R> > ret = parseBdiiResponse<R>(reply);
