@@ -26,7 +26,7 @@
 #define GSOAPDELEGATIONHANDLER_H_
 
 
-#include "DelegationoOrchestrator.h"
+#include "DelegationRequestCache.h"
 
 #include <string>
 #include <gridsite.h>
@@ -243,7 +243,7 @@ private:
 
 	static string initHostDn();
 
-	DelegationoOrchestrator& orchestrator;
+	DelegationRequestCache& rqstCache;
 };
 
 }

@@ -79,7 +79,7 @@ string GSoapDelegationHandler::initHostDn() {
 
 GSoapDelegationHandler::GSoapDelegationHandler(soap* ctx):
 		ctx(ctx),
-		orchestrator(DelegationoOrchestrator::getInstance()) { // TODO check if other location is not used for hostcert.pem
+		rqstCache(DelegationRequestCache::getInstance()) { // TODO check if other location is not used for hostcert.pem
 
 	// get client DN
 	char buff[200];
@@ -184,6 +184,13 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
+	// lock the cache
+	mutex::scoped_lock lock(rqstCache);
+
+	if (rqstCache.check(delegationId)) {
+		return rqstCache.get(delegationId);
+	}
+
 	char *reqtxt = 0, *keytxt = 0;
 	int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
 
@@ -194,7 +201,6 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 	}
 
 	string req (reqtxt);
-	if (orchestrator.orchestrate(delegationId, req)) return req;
 
 	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
 
@@ -231,6 +237,8 @@ string GSoapDelegationHandler::getProxyReq(string delegationId) {
 	if (reqtxt) free (reqtxt);
 	if (keytxt) free (keytxt);
 
+	rqstCache.put(delegationId, req);
+
 	return req;
 }
 
@@ -240,6 +248,20 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 
 	string delegationId = makeDelegationId();
 	if (delegationId.empty()) throw Err_Custom("'getDelegationId' failed!");
+
+	// lock the cache
+	mutex::scoped_lock lock(rqstCache);
+
+	if (rqstCache.check(delegationId)) {
+
+		delegation__NewProxyReq* ret = soap_new_delegation__NewProxyReq(ctx, -1);
+		ret->proxyRequest = soap_new_std__string(ctx, -1);
+		*ret->proxyRequest = rqstCache.get(delegationId);
+		ret->delegationID = soap_new_std__string(ctx, -1);
+		*ret->delegationID = delegationId;
+
+		return ret;
+	}
 
 	char *reqtxt = 0, *keytxt = 0;
 	int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
@@ -251,16 +273,6 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 	}
 
 	string req (reqtxt);
-	if (orchestrator.orchestrate(delegationId, req)) {
-
-		delegation__NewProxyReq* ret = soap_new_delegation__NewProxyReq(ctx, -1);
-		ret->proxyRequest = soap_new_std__string(ctx, -1);
-		*ret->proxyRequest = req;
-		ret->delegationID = soap_new_std__string(ctx, -1);
-		*ret->delegationID = delegationId;
-
-		return ret;
-	}
 
 	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
 	try {
@@ -300,6 +312,8 @@ delegation__NewProxyReq* GSoapDelegationHandler::getNewProxyReq() {
 
 	if (reqtxt) free (reqtxt);
 	if (keytxt) free (keytxt);
+
+	rqstCache.put(delegationId, req);
 
 	return ret;
 }
@@ -407,8 +421,11 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
+	// lock the cache
+	mutex::scoped_lock lock(rqstCache);
+
 	// check if the proxy was not delegated in mean while by someone else
-	if (orchestrator.check(delegationId)) {
+	if (!rqstCache.check(delegationId)) {
 		// get the termination time of current proxy
 		time_t t = 0;
 		Cred* cred = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageElement(delegationId, clientDn);
@@ -467,7 +484,7 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 		throw Err_Custom("Failed to put proxy certificate");
 	}
 
-	orchestrator.remove(delegationId);
+	rqstCache.remove(delegationId);
 
 	if(cred) delete cred;		 
 }
@@ -481,6 +498,13 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 	delegationId = handleDelegationId(delegationId);
 	if (delegationId.empty()) throw Err_Custom("'handleDelegationId' failed!");
 
+	// lock the cache
+	mutex::scoped_lock lock(rqstCache);
+
+	if (rqstCache.check(delegationId)) {
+		return rqstCache.get(delegationId);
+	}
+
 	char *reqtxt = 0, *keytxt = 0;
 	int err = GRSTx509CreateProxyRequest(&reqtxt, &keytxt, 0);
 
@@ -491,9 +515,6 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 	}
 
 	string req (reqtxt);
-	if (orchestrator.orchestrate(delegationId, req)) {
-		return req;
-	}
 
 	try {
 		CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, clientDn);
@@ -528,6 +549,8 @@ string GSoapDelegationHandler::renewProxyReq(string delegationId) {
 		
 	if (reqtxt) free (reqtxt);
 	if (keytxt) free (keytxt);
+
+	rqstCache.put(delegationId, req);
 
 	return req;
 }
