@@ -8,7 +8,11 @@
 #ifndef BDIIBROWSER_H_
 #define BDIIBROWSER_H_
 
+#include "common/ThreadSafeInstanceHolder.h"
+
 #include <ldap.h>
+
+#include <sys/types.h>
 
 #include <string>
 #include <list>
@@ -19,26 +23,31 @@ namespace common {
 
 using namespace std;
 
-class BdiiBrowser {
+class BdiiBrowser: public ThreadSafeInstanceHolder<BdiiBrowser> {
+
+	friend class ThreadSafeInstanceHolder<BdiiBrowser>;
 
 public:
-	BdiiBrowser(string url = "ldap://lcg-bdii.cern.ch:2170", long timeout = 60);
+
 	virtual ~BdiiBrowser();
+
+	void connect(string infosys, string base = GLUE1, time_t sec = 60);
+	void disconnect();
 
 	bool getSeStatus(string se);
 	string getSiteName (string se);
 
+	static const string GLUE1;
+	static const string GLUE2;
+
 private:
 
-	void connect();
-	void disconnect();
 	void reconnect();
-
 	bool isValid();
 
 	// if we want all available attributes we leave attr = 0
 	template<typename R>
-	list< map<string, R> > browse(string query, const char **attr = 0, long timeout = 60);
+	list< map<string, R> > browse(string query, const char **attr = 0);
 
 	template<typename R>
 	list< map<string, R> > parseBdiiResponse(LDAPMessage *reply);
@@ -54,9 +63,10 @@ private:
 	map<string, string> seToSite;
 
 	LDAP *ld;
-	const long timeout;
-	const string base;
-	const string url;
+	timeval timeout;
+	string base;
+	string infosys;
+	string url;
 
 	static const char* ATTR_OC;
 	static const char* ATTR_NAME;
@@ -72,6 +82,10 @@ private:
 
 	static const string FIND_SE_SITE(string se);
 	static const char* FIND_SE_SITE_ATTR[];
+
+	BdiiBrowser() {}
+	BdiiBrowser(BdiiBrowser const&);
+	BdiiBrowser& operator=(BdiiBrowser const&);
 };
 
 

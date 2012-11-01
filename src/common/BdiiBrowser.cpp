@@ -7,11 +7,13 @@
 
 #include "BdiiBrowser.h"
 
-#include <sys/types.h>
 #include <sstream>
 
 namespace fts3 {
 namespace common {
+
+const string BdiiBrowser::GLUE1 = "o=grid";
+const string BdiiBrowser::GLUE2 = "o=glue";
 
 const char* BdiiBrowser::ATTR_STATUS = "GlueSEStatus";
 const char* BdiiBrowser::ATTR_OC = "objectClass";
@@ -38,17 +40,10 @@ const string BdiiBrowser::FIND_SE_SITE(string se) {
 	ss << "(" << BdiiBrowser::ATTR_OC << "=" << CLASS_SERVICE << ")";
 	ss << "(|(" << ATTR_NAME << "=*" << se << "*)";
 	ss << "(" << ATTR_URI << "=*" << se << "*))";
-//	ss << "(|(" << ATTR_NAME << "=*)";
-//	ss << "(" << ATTR_URI << "=*))";
 	ss << ")";
 	return ss.str();
 }
 const char* BdiiBrowser::FIND_SE_SITE_ATTR[] = {BdiiBrowser::ATTR_LINK, BdiiBrowser::ATTR_HOSTINGORG, 0};
-
-BdiiBrowser::BdiiBrowser(string url, long timeout) : url(url), timeout(timeout), base("o=grid") {
-
-	connect();
-}
 
 
 BdiiBrowser::~BdiiBrowser() {
@@ -56,18 +51,23 @@ BdiiBrowser::~BdiiBrowser() {
     disconnect();
 }
 
-void BdiiBrowser::connect() {
-    int ret = 0;
-    timeval t;
+void BdiiBrowser::connect(string infosys, string base, time_t sec) {
 
-    ret = ldap_initialize(&ld, url.c_str());
+	this->infosys = infosys;
+	this->base = base;
+
+	timeout.tv_sec = sec;
+	timeout.tv_usec = 0;
+
+	url = "ldap://" + infosys;
+
+	int ret = 0;
+    ret = ldap_initialize(&ld, infosys.c_str());
     if (ret != LDAP_SUCCESS) {
         // TODO ldap_err2string(ret)
         return;
     }
 
-    t.tv_sec = timeout;
-    t.tv_usec = 0;
     ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout);
 
     berval cred;
@@ -92,13 +92,13 @@ void BdiiBrowser::disconnect() {
 void BdiiBrowser::reconnect() {
 
 	disconnect();
-	connect();
+	connect(infosys, base, timeout.tv_sec);
 }
 
 bool BdiiBrowser::isValid() {
 
 	LDAPMessage *result = 0;
-	int rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, 0, 0, &result);
+	int rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
 	if (rc == LDAP_SUCCESS) {
 
 		if (result) ldap_msgfree(result);
@@ -109,32 +109,30 @@ bool BdiiBrowser::isValid() {
 		if (result) ldap_msgfree(result);
 
 	} else {
-	    if (result) {
+		// we only free the memmory if rc > 0 because of a bug in thread-safe version of LDAP lib
+	    if (result && rc > 0) {
 	    	ldap_msgfree(result);
-	        return true;
 	    }
+
+	    return true;
 	}
 
 	return false;
 }
 
 template<typename R>
-list< map<string, R> > BdiiBrowser::browse(string query, const char **attr, long timeout) {
+list< map<string, R> > BdiiBrowser::browse(string query, const char **attr) {
 
 	if (!isValid()) reconnect();
 
-    timeval t;
     int rc = 0;
-
-    t.tv_sec = timeout;
-    t.tv_usec = 0;
 
     LDAPMessage *reply = 0;
 
-    rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &t, 0, &reply);
+    rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
 
 	if (rc != LDAP_SUCCESS) {
-		if (reply) ldap_msgfree(reply);
+		if (reply && rc > 0) ldap_msgfree(reply);
 		// TODO ldap_err2string(ret)
 		// if an exception will be thrown the 'rc == 0' check in for loop wont be needed
 	}
@@ -188,7 +186,7 @@ string BdiiBrowser::parseForeingKey(list<string> values, const char *attr) {
 	list<string>::iterator it;
 	for (it = values.begin(); it != values.end(); it++) {
 		size_t pos = it->find('=');
-		return it->substr(pos + 1);
+		if (it->substr(0, pos) == attr) return it->substr(pos + 1);
 	}
 
 	return string();
