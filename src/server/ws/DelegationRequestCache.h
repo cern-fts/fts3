@@ -11,7 +11,6 @@
 #include "common/ThreadSafeInstanceHolder.h"
 
 #include <boost/thread.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <map>
