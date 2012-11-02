@@ -2599,6 +2599,11 @@ void MySqlAPI::backup(){
     }
 }
 
+void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId){
+}
+
+void MySqlAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
+}
 
 
 // the class factories

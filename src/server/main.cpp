@@ -63,15 +63,17 @@ void fts3_teardown_db_backend() {
 
 
 void _handle_sigint(int) {
+    int doNotSleepForever = 10;
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     stopThreads = true;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    while(terminateJobsGracefully!=1)
+    while(terminateJobsGracefully!=1 && 0 != --doNotSleepForever){
     	sleep(1);
+    }
     fts3_teardown_db_backend();
     StaticSslLocking::kill_locks();
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;    
     exit(EXIT_SUCCESS);
 }
 

@@ -6,9 +6,19 @@
 
 using namespace std;
 
-Reporter::Reporter() : source_se(""), dest_se("") {
+Reporter::Reporter() :msg(NULL), qm(NULL), source_se(""), dest_se("") {
+  try{
     qm = new QueueManager(false);
     msg = new struct message;
+   }catch(...){
+        /*try again before let it fail*/
+	     try{
+		qm = new QueueManager(false);
+		msg = new struct message;
+	      }catch(...){
+	   	/*no way to recover if an exception is thrown here, better let it fail and log the error*/	      
+	      }
+   }
 }
 
 Reporter::~Reporter() {

@@ -26,6 +26,7 @@ static int fexists(const char *filename) {
 }
 
 FileManagement::FileManagement():base_scheme(NULL), base_host(NULL),base_path(NULL),base_port(0) {
+ try{
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
     logFileName = theServerConfig().get<std::string>("TransferLogDirectory");
     bdii  = theServerConfig().get<std::string>("Infosys");
@@ -36,7 +37,22 @@ FileManagement::FileManagement():base_scheme(NULL), base_host(NULL),base_path(NU
     std::string dateArch = logFileName + "/" + dateDir();	
     directoryExists(dateArch.c_str());	
     logFileName = dateArch;
-    
+   }catch(...){
+	/*try again before let it fail*/
+	try{
+	    FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
+	    logFileName = theServerConfig().get<std::string>("TransferLogDirectory");
+    	    bdii  = theServerConfig().get<std::string>("Infosys");
+    	    if (logFileName.length() > 0)
+            	directoryExists(logFileName.c_str());
+    	   //generate arc based on date
+    	   std::string dateArch = logFileName + "/" + dateDir();	
+    	   directoryExists(dateArch.c_str());	
+    	   logFileName = dateArch;
+	}catch(...){
+   		/*no way to recover if an exception is thrown here, better let it fail and log the error*/
+	}
+   }    
 }
 
 FileManagement::~FileManagement() {    

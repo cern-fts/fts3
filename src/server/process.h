@@ -37,7 +37,8 @@ public:
     inline int getPid(){
     	return pid;
     }
-    
+    int check_pid(int pid);
+       
 private:
     map<int,string> _fileIds;
     int pid;
@@ -45,6 +46,6 @@ private:
     string _fileId;    
     string m_app;
     string m_arguments;
-    int m_fdlog;
+    int m_fdlog;       
 };
 

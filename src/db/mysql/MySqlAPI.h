@@ -204,6 +204,10 @@ public:
     virtual bool configExists(const std::string & src, const std::string & dest, const std::string & vo);
 
     virtual void backup();
+    
+    virtual void forkFailedRevertState(const std::string & jobId, int fileId);
+    
+    virtual void forkFailedRevertStateV(std::map<int,std::string>& pids);    
 
 private:
     size_t                poolSize;

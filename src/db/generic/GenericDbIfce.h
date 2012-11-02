@@ -259,7 +259,11 @@ public:
     
     virtual bool configExists(const std::string & src, const std::string & dest, const std::string & vo) = 0;
     
-    virtual void backup() = 0;    
+    virtual void backup() = 0;
+    
+    virtual void forkFailedRevertState(const std::string & jobId, int fileId) = 0;
+    
+    virtual void forkFailedRevertStateV(std::map<int,std::string>& pids) = 0;    
 };
 
 

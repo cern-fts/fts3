@@ -4210,6 +4210,70 @@ void OracleAPI::backup(){
     }
 }
 
+
+void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId){
+    const std::string tag = "forkFailedRevertState";
+    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2";
+    oracle::occi::Statement* stmt = 0;
+    
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        stmt = conn->createStatement(query,tag);
+	stmt->setInt(1,fileId);
+	stmt->setString(2,jobId);
+       	stmt->executeUpdate();
+	if(stmt->executeUpdate()!=0){	
+       		conn->commit(); 
+	}
+	conn->destroyStatement(stmt,tag);					
+
+    } catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+
+void OracleAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
+    const std::string tag = "forkFailedRevertStateV";
+    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2";
+    oracle::occi::Statement* s = NULL;
+    std::map<int, std::string>::const_iterator iter;
+    unsigned int updated = 0;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        for (iter = pids.begin(); iter != pids.end(); ++iter) {
+            s->setInt(1, (*iter).first);
+            s->setString(2, (*iter).second);
+            updated += s->executeUpdate();
+        }
+        if (updated != 0)
+            conn->commit();
+        conn->destroyStatement(s, tag);
+        s = NULL;
+
+    } catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if (conn) {
+            if (s) {
+                conn->destroyStatement(s, tag);
+            }
+        }
+    }
+}
+
+
 // the class factories
 extern "C" GenericDbIfce* create() {
     return new OracleAPI;

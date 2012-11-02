@@ -343,14 +343,17 @@ protected:
                         }
 
 
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: fts_url_copy " << params << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);			
                         if (pr) {		
-                            pr->executeProcessShell();
-			    DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, to_string(temp->FILE_ID), pr->getPid());
-                            delete pr;
+			    /*check if fork failed , check if execvp failed, */			   
+                            if(-1 == pr->executeProcessShell()){
+			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
+			    }else{
+			    	DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, to_string(temp->FILE_ID), pr->getPid());
+			    }
+			    delete pr;
                         }
-
                         params.clear();
                     }
 
@@ -494,7 +497,7 @@ protected:
                         false,
                         "");
 
-                    //set all to ready, special case for session reuse
+                    /*set all to ready, special case for session reuse*/
                     for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
                         TransferFiles* temp = (TransferFiles*) *fileiter;
                         DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
@@ -575,12 +578,15 @@ protected:
 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
                     pr = new ExecuteProcess(cmd, params, 0);		    
-                    if (pr) {		        
-                        pr->executeProcessShell();
-			DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);
-                        delete pr;
+                    if (pr) {		
+		             /*check if fork failed , check if execvp failed, */			   
+                            if(-1 == pr->executeProcessShell()){
+			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
+			    }else{
+			    	DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);
+			    }
+			    delete pr;
                     }
-
                     params.clear();
                 }
 

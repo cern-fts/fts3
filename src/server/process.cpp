@@ -253,6 +253,12 @@ int ExecuteProcess::execProcessShell() {
     std::vector<std::string> pathV;
     std::vector<std::string>::iterator iter;
     std::string p;
+    int pipefds[2];
+    int count, err;
+    pid_t child;    
+    const char *path;
+    char *copy;
+    int maxfd;
 
     list<string> args;
     split(m_arguments, ' ', args, 0, false);
@@ -273,74 +279,112 @@ int ExecuteProcess::execProcessShell() {
     assert(i + 1 == argc);
     argv[i] = NULL;
     
-    // Fork a child process
-    pid_t pid_1 = fork();
+     if (pipe(pipefds)) { 
+        if(argv)
+		delete [] argv;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to create pipe between parent/child processes"  << commit;       
+        return -1;
+    }
+    if (fcntl(pipefds[1], F_SETFD, fcntl(pipefds[1], F_GETFD) | FD_CLOEXEC)) {
+        if(argv)
+		delete [] argv;    
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to set fd FD_CLOEXEC"  << commit;           
+        return -1;
+    }
 
     // Ignore SIGCLD: Don't wait for the child to complete
     signal(SIGCLD, SIG_IGN);
-
-    if (pid_1 == 0) {    	
+        
+ switch (child = fork()) {
+    case -1:
+        if(argv)
+		delete [] argv;         
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;   
+        return -1;
+    case 0:
         // Detach from parent		
         setsid();
         // Set working directory
-        int ret = chdir(_PATH_TMP);
-
-        if (ret == -1)
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << " chdir " << errno << commit;
-
-        // Close stdin and out
-        int fd;
-        if ((fd = ::open(_PATH_DEVNULL, O_RDWR, 0)) != -1) {
-            ::dup2(fd, STDIN_FILENO);
-            ::dup2(fd, STDOUT_FILENO);
-            ::dup2(fd, STDERR_FILENO);
-            if (fd > 2) {
-                close(fd);
-            }
+        chdir(_PATH_TMP);
+	maxfd=sysconf(_SC_OPEN_MAX);
+	register int fdAll;
+	for(fdAll=3; fdAll<maxfd; fdAll++){	     
+	    if(fdAll == pipefds[0])
+	    	continue;
+	    if(fdAll == pipefds[1])
+	        continue;
+	    close(fdAll);
         }
-	int maxfd=sysconf(_SC_OPEN_MAX);
-	for(register int fd=3; fd<maxfd; fd++){	    
-	    close(fd);
-        }
-
+	
+        close(pipefds[0]);
         char *token;
-        const char *path = getenv("PATH");
-        char *copy = (char *) malloc(strlen(path) + 1);     
+        path = getenv("PATH");
+        copy = (char *) malloc(strlen(path) + 1);     
         strcpy(copy, path);
         token = strtok(copy, ":");
-
         while ( (token = strtok(0, ":")) != NULL) {
             pathV.push_back(std::string(token));
         }
-
         for (iter = pathV.begin(); iter < pathV.end(); iter++) {
             p = *iter + "/" + std::string(argv[0]);
             if (fexists(p.c_str()) == 0)
                 break;
         }
-
-        free(copy);
-        copy = NULL;
+	if(copy){
+        	free(copy);
+        	copy = NULL;
+	}
         pathV.clear();
-	
-        int r = execvp(p.c_str(), argv);
-        if (-1 == r) {
-            // Process Execution failed: exit the forked process
-            // The status will detect if the request has not been
-            // assigned	    
-	    int r2 = execvp(p.c_str(), argv);
-	    if (-1 == r2) {
-            	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process Execution failed: exit the forked process" << commit;
-            	_exit(1);
-	    }
+        execvp(p.c_str(), argv);
+        write(pipefds[1], &errno, sizeof(int));
+        _exit(0);
+    default:
+        pid = (int) child;         
+	if(argv)
+        	delete [] argv;
+        close(pipefds[1]);
+        while ((count = read(pipefds[0], &err, sizeof(errno))) == -1)
+            if (errno != EAGAIN && errno != EINTR) break;
+        if (count) {            
+	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Child's execvp error: " << strerror(err)  << commit; 
+            return -1;
         }
-    }
-    
-    pid = (int) pid_1;
-
-    //nothing to do in the parent, already detached, no reason to wait
-    delete [] argv;
-    return 0;
+        close(pipefds[0]);        
+    }    
+    return err;
 }
 
+
+
+int ExecuteProcess::check_pid(int pid) {
+    int result = -1;
+    const char * PROC_DIR = "/proc";
+    
+    char pidstr[256];
+    sprintf(pidstr,"%d",pid);
+    std::string dir_name = (std::string)PROC_DIR + "/"+ pidstr;  
+    // Search the process in the /proc dir
+    DIR * dir = opendir(dir_name.c_str());
+    if(0 != dir){
+        closedir(dir);
+        // Try to open the cmdline file
+        std::string fname = (std::string)PROC_DIR + "/"+ pidstr + "/cmdline";   
+        std::ifstream cmdline_file(fname.c_str());
+        if(cmdline_file.is_open()){
+            //try to read a char
+            char c;
+            cmdline_file.read(&c,1);
+            if(cmdline_file.good()){
+                result = 0;
+            } else {
+                result = -1;				
+            }
+        } else {
+            result = -1;
+        }
+    } else {
+        result = -1;
+    }   
+   return result;
+}
 
