@@ -2599,11 +2599,53 @@ void MySqlAPI::backup(){
     }
 }
 
+
+
 void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId){
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+        sql << "UPDATE t_file SET file_state = 'SUBMITTED' "
+               "WHERE file_id = :fileId AND job_id = :jobId",
+               soci::use(fileId), soci::use(jobId);
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
+
+
 void MySqlAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
+    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2";
+    soci::session sql(connectionPool);
+
+    try {
+        int fileId;
+        std::string jobId;
+
+        sql.begin();
+        soci::statement stmt = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED'"
+                                               "WHERE file_id = :fileId AND job_id = :jobId",
+                                               soci::use(fileId), soci::use(jobId));
+
+        for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i) {
+            fileId = i->first;
+            jobId  = i->second;
+            stmt.execute(true);
+        }
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
+
 
 
 // the class factories
