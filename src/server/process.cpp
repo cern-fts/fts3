@@ -294,6 +294,7 @@ int ExecuteProcess::execProcessShell() {
 
     // Ignore SIGCLD: Don't wait for the child to complete
     signal(SIGCLD, SIG_IGN);
+    signal(SIGPIPE, SIG_IGN);
         
  switch (child = fork()) {
     case -1:
@@ -336,20 +337,30 @@ int ExecuteProcess::execProcessShell() {
 	}
         pathV.clear();
         execvp(p.c_str(), argv);
-        write(pipefds[1], &errno, sizeof(int));
-        _exit(0);
+        write(pipefds[1], &errno, sizeof(int));	
+        _exit(EXIT_FAILURE);
     default:
         pid = (int) child;         
 	if(argv)
         	delete [] argv;
-        close(pipefds[1]);
-        while ((count = read(pipefds[0], &err, sizeof(errno))) == -1)
+        close(pipefds[1]);	
+        while ((count = read(pipefds[0], &err, sizeof(errno))) == -1){
             if (errno != EAGAIN && errno != EINTR) break;
+	}
         if (count) {            
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Child's execvp error: " << strerror(err)  << commit; 
             return -1;
         }
-        close(pipefds[0]);        
+        close(pipefds[0]);
+	/*execvp doesn't return if a lib is missing during loading, check proc fts then*/
+	usleep(50000);
+	int checkProc =  check_pid(pid);
+	if(-1 == checkProc){
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking proc FS for pid error: " << pid << commit;
+		return -1;
+	}else{
+		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Pid is running: " << pid << commit;
+	} 
     }    
     return err;
 }
