@@ -16,15 +16,30 @@ MySqlMonitoring::~MySqlMonitoring()
 
 
 void MySqlMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString) {
+    std::ostringstream connParams;
+    std::string host, db;
+
+    // From connectString, get host and db
+    size_t slash = connectString.find('/');
+    if (slash != std::string::npos) {
+        connParams << "host='" << connectString.substr(0, slash) << "' "
+                   << "db='" << connectString.substr(slash + 1, std::string::npos) << "'";
+    }
+    else {
+        connParams << "db='" << connectString << "'";
+    }
+    connParams << " ";
+
+    // Build connection string
+    connParams << "user='" << username << "' "
+               << "pass='" << password << "'";
+
+    std::string connStr = connParams.str();
+
+    // Connect
     for (size_t i = 0; i < poolSize; ++i) {
-        std::ostringstream connParams;
-
-        connParams << connectString
-                   << " user='" << username << "'"
-                   << " pass='" << password << "'";
-
         soci::session& sql = connectionPool.at(i);
-        sql.open(soci::mysql, connParams.str());
+        sql.open(soci::mysql, connStr);
     }
 }
 
