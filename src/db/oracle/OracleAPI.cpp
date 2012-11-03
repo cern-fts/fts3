@@ -4224,7 +4224,6 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId){
         stmt = conn->createStatement(query,tag);
 	stmt->setInt(1,fileId);
 	stmt->setString(2,jobId);
-       	stmt->executeUpdate();
 	if(stmt->executeUpdate()!=0){	
        		conn->commit(); 
 	}
