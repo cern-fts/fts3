@@ -37,6 +37,8 @@ public:
                                  const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
 				 const std::string & sourceSE, const std::string & destSe);
 
+    virtual TransferJobs* getTransferJob(std::string jobId);
+
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
 
     virtual void getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files);
