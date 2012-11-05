@@ -753,7 +753,7 @@ CREATE TABLE t_job_backup (
 -- Same schema as t_file
 --
 CREATE TABLE t_file_backup (
-  file_id              INTEGER NOT NULL AUTO_INCREMENT,
+  file_id              INTEGER NOT NULL,
   job_id               CHAR(36) NOT NULL,
   file_state           VARCHAR(32) NOT NULL,
   logical_name         VARCHAR(1100),
@@ -768,7 +768,7 @@ CREATE TABLE t_file_backup (
   current_failures     INTEGER,
   catalog_failures     INTEGER,
   prestage_failures    INTEGER,
-  filesize             INTEGER,
+  filesize             BIGINT,
   checksum             VARCHAR(100),
   finish_time          TIMESTAMP NULL DEFAULT NULL,
   start_time           TIMESTAMP NULL DEFAULT NULL,
@@ -779,7 +779,6 @@ CREATE TABLE t_file_backup (
   throughput           FLOAT,
   
   PRIMARY KEY (file_id),
-  FOREIGN KEY (job_id) REFERENCES t_job_backup(job_id),
   INDEX (job_id),
   INDEX (file_state,job_id),
   INDEX (job_finished),
