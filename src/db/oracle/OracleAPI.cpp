@@ -113,27 +113,8 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId) {
 	std::string tag = "getTransferJob";
 	std::string stmt =
 			"SELECT "
-			" 	t_job.job_id, "
-			" 	t_job.job_state, "
 			" 	t_job.vo_name,  "
-			" 	t_job.priority,  "
-			" 	t_job.source, "
-			" 	t_job.dest,  "
-			" 	t_job.agent_dn, "
-			" 	t_job.submit_host, "
-			" 	t_job.source_se, "
-			" 	t_job.dest_se, "
-			" 	t_job.user_dn, "
-			" 	t_job.user_cred, "
-			" 	t_job.cred_id,  "
-			" 	t_job.space_token, "
-			" 	t_job.storage_class,  "
-			" 	t_job.job_params, "
-			" 	t_job.overwrite_flag, "
-			" 	t_job.source_space_token, "
-			" 	t_job.source_token_description,"
-			" 	t_job.copy_pin_lifetime, "
-			" 	t_job.checksum_method "
+			" 	t_job.user_dn "
 			" FROM t_job"
 			" WHERE t_job.job_id = :1"
 			;
@@ -143,6 +124,8 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId) {
     oracle::occi::ResultSet* r = 0;
 
     TransferJobs* job = 0;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
 
@@ -154,27 +137,8 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId) {
 
 		if (r->next()) {
 			job = new TransferJobs();
-			job->JOB_ID = r->getString(1);
-			job->JOB_STATE = r->getString(2);
-			job->VO_NAME = r->getString(3);
-			job->PRIORITY = r->getInt(4);
-			job->SOURCE = r->getString(5);
-			job->DEST = r->getString(6);
-			job->AGENT_DN = r->getString(7);
-			job->SUBMIT_HOST = r->getString(8);
-			job->SOURCE_SE = r->getString(9);
-			job->DEST_SE = r->getString(10);
-			job->USER_DN = r->getString(11);
-			job->USER_CRED = r->getString(12);
-			job->CRED_ID = r->getString(13);
-			job->SPACE_TOKEN = r->getString(14);
-			job->STORAGE_CLASS = r->getString(15);
-			job->INTERNAL_JOB_PARAMS = r->getString(16);
-			job->OVERWRITE_FLAG = r->getString(17);
-			job->SOURCE_SPACE_TOKEN = r->getString(18);
-			job->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
-			job->COPY_PIN_LIFETIME = r->getInt(20);
-			job->CHECKSUM_METHOD = r->getString(21);
+			job->VO_NAME = r->getString(1);
+			job->USER_DN = r->getString(2);
 		}
 
         conn->destroyResultset(s, r);
