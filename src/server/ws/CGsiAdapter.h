@@ -1,0 +1,91 @@
+/*
+ * CGsiAdapter.h
+ *
+ *  Created on: Nov 1, 2012
+ *      Author: simonm
+ */
+
+#ifndef CGSIADAPTER_H_
+#define CGSIADAPTER_H_
+
+#include "ws-ifce/gsoap/gsoap_stubs.h"
+
+#include <string>
+#include <vector>
+
+namespace fts3 {
+namespace ws {
+
+using namespace std;
+
+class CGsiAdapter {
+
+public:
+	CGsiAdapter(soap* ctx);
+	virtual ~CGsiAdapter();
+
+	/**
+	 * Gets the VO name of the client
+	 *
+	 * @return VO name
+	 */
+	string getClientVo();
+
+	/**
+	 * Gets the DN of the client
+	 *
+	 * @return client DN
+	 */
+	string getClientDn();
+
+	/**
+	 * Gets the voms attributes of the client
+	 *
+	 * @return vector with client's voms attributes
+	 */
+	vector<string> getClientAttributes();
+
+	/**
+	 * Gets the roles of the client
+	 *
+	 * @return vector with client's roles
+	 */
+	vector<string> getClientRoles();
+
+	/**
+	 * Checks if the client was a root user of the server hosting fts3
+	 * 	(it is assumed that the client is the root user of the server
+	 * 	hosting fts3 if he uses the server certificate to authenticate
+	 * 	himself)
+	 *
+	 * @return true if the client is a root user, false otherwise
+	 */
+	bool isRoot() {
+		if (hostDn.empty()) return false;
+		return dn == hostDn;
+	}
+
+private:
+	/// GSoap context
+	soap* ctx;
+
+
+	/// client VO
+	string vo;
+
+	/// client DN
+	string dn;
+
+	/// client roles
+	vector<string> attrs;
+
+	/// checks the host DN
+	static string initHostDn();
+
+	/// host dn
+	static const string hostDn;
+};
+
+} /* namespace ws */
+} /* namespace fts3 */
+#endif /* CGSIADAPTER_H_ */

@@ -30,6 +30,7 @@
 #include "common/error.h"
 #include "CfgBlocks.h"
 
+#include "CGsiAdapter.h"
 #include "GSoapDelegationHandler.h"
 
 #include <boost/lexical_cast.hpp>
@@ -42,10 +43,12 @@ using namespace fts3::ws;
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 
-	GSoapDelegationHandler handler (soap);
+	GSoapDelegationHandler handler(soap);
 	delegationId = handler.makeDelegationId();
-	vo = handler.getClientVo();
-	dn = handler.getClientDn();
+
+	CGsiAdapter cgsi(soap);
+	vo = cgsi.getClientVo();
+	dn = cgsi.getClientDn();
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
 
@@ -115,8 +118,10 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
 
 	GSoapDelegationHandler handler (soap);
 	delegationId = handler.makeDelegationId();
-	vo = handler.getClientVo();
-        dn = handler.getClientDn();
+
+	CGsiAdapter cgsi (soap);
+	vo = cgsi.getClientVo();
+        dn = cgsi.getClientDn();
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {

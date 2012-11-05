@@ -97,20 +97,6 @@ public:
 	bool checkDelegationId(string delegationId);
 
 	/**
-	 * Gets the VO name of the client
-	 *
-	 * @return VO name
-	 */
-	string getClientVo();
-
-	/**
-	 * Gets the DN of the clinet
-	 *
-	 * @return client DN
-	 */
-	string getClientDn();
-
-	/**
 	 * Converts a X509 struct to string
 	 *
 	 * @param cert - the X509 struct that has to be converted
@@ -218,30 +204,15 @@ public:
 	 */
 	void destroy(string delegationId);
 
-	/**
-	 * Checks if the client was a root user of the server hosting fts3
-	 * 	(it is assumed that the client is the root user of the server
-	 * 	hosting fts3 if he uses the server certificate to authenticate
-	 * 	himself)
-	 *
-	 * @return true if the client is a root user, false otherwise
-	 */
-	bool isRoot() {
-		if (hostDn.empty()) return false;
-		return clientDn == hostDn;
-	}
-
 private:
-	/// GSoap context
+	/// gSOAP context
 	soap* ctx;
+
 	/// client DN
-	string clientDn;
+	string dn;
+
 	/// client VOMS attributes (FQAN)
 	vector<string> attrs;
-	/// host DN
-	static const string hostDn;
-
-	static string initHostDn();
 
 	DelegationRequestCache& rqstCache;
 };

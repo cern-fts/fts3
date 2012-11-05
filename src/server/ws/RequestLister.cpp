@@ -9,7 +9,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "GSoapDelegationHandler.h"
+#include "CGsiAdapter.h"
 
 #include "common/error.h"
 #include "common/logger.h"
@@ -21,8 +21,8 @@ using namespace fts3::common;
 
 RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates): soap(soap) {
 
-	GSoapDelegationHandler handler (soap);
-	string dn = handler.getClientDn();
+	CGsiAdapter cgsi(soap);
+	string dn = cgsi.getClientDn();
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is listing transfer job requests" << commit;
 
 	checkGivenStates (inGivenStates);
@@ -32,8 +32,8 @@ RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCORE
 
 RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo): soap(soap) {
 
-	GSoapDelegationHandler handler (soap);
-	string user = handler.getClientDn();
+	CGsiAdapter cgsi(soap);
+	string user = cgsi.getClientDn();
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << user << " is listing transfer job requests" << commit;
 
 	checkGivenStates (inGivenStates);

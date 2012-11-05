@@ -30,17 +30,29 @@
 
 #include <set>
 #include <vector>
+#include <utility>
+
+#include <boost/tokenizer.hpp>
 
 namespace fts3 { namespace ws {
 
 using namespace fts3::common;
 using namespace std;
+using namespace boost;
 
 class AuthorizationManager : public ThreadSafeInstanceHolder<AuthorizationManager> {
 
 	friend class ThreadSafeInstanceHolder<AuthorizationManager>;
 
 public:
+
+	enum Level {
+		NONE, // access has not been granted
+		PRV,  // access granted only for private resources
+		VO,   // access granted only for VO's resources
+		ALL   // access granted
+	};
+
 	virtual ~AuthorizationManager();
 
 	/**
@@ -53,16 +65,41 @@ public:
 	 * @param submit - should be true if the submit operation is beeing authorized
 	 *
 	 */
-	void authorize(soap* soap, bool submit = false);
+	Level authorize(soap* soap, string operation);
+
+	static const string ALL_SCOPE;
+	static const string VO_SCOPE;
+	static const string PRS_SCOPE;
+
+	static const string PUBLIC_ACCESS;
+
+	static const string DELEG_OP;
+	static const string TRANSFER_OP;
+	static const string CONFIG_OP;
+
+	static const string WILD_CARD;
 
 private:
+
+	Level stringToScope(string s);
+
+	template<typename R> R get(string e);
+
+	Level check(string role, string operation);
+
 	AuthorizationManager();
 	AuthorizationManager(const AuthorizationManager&){};
 	AuthorizationManager& operator=(const AuthorizationManager&){return *this;};
 
-	const vector<string> voNameList;
-	const set<string> voNameSet;
+	const set<string> vos;
+	const map<string, map<string, Level> > access;
+
+	set<string> vostInit();
+	// enum is by default initialized to 0, so even if a role is not in the 'access' map NON will be returned
+	map<string, map<string, Level> > accessInit();
+
 };
+
 
 }
 }
