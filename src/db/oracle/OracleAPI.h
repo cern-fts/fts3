@@ -61,9 +61,11 @@ public:
     virtual void addGroupMember(std::string groupName, std::string siteName);
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
+    
+    virtual TransferJobs* getTransferJob(std::string jobId);
 
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
-    
+
     virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files);
     
 

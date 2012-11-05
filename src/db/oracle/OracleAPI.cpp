@@ -108,6 +108,95 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
     return true;
 }
 
+TransferJobs* OracleAPI::getTransferJob(std::string jobId) {
+
+	std::string tag = "getTransferJob";
+	std::string stmt =
+			"SELECT "
+			" 	t_job.job_id, "
+			" 	t_job.job_state, "
+			" 	t_job.vo_name,  "
+			" 	t_job.priority,  "
+			" 	t_job.source, "
+			" 	t_job.dest,  "
+			" 	t_job.agent_dn, "
+			" 	t_job.submit_host, "
+			" 	t_job.source_se, "
+			" 	t_job.dest_se, "
+			" 	t_job.user_dn, "
+			" 	t_job.user_cred, "
+			" 	t_job.cred_id,  "
+			" 	t_job.space_token, "
+			" 	t_job.storage_class,  "
+			" 	t_job.job_params, "
+			" 	t_job.overwrite_flag, "
+			" 	t_job.source_space_token, "
+			" 	t_job.source_token_description,"
+			" 	t_job.copy_pin_lifetime, "
+			" 	t_job.checksum_method "
+			" FROM t_job"
+			" WHERE t_job.job_id = :1"
+			;
+
+
+	oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    TransferJobs* job = 0;
+
+    try {
+
+        if (!conn->checkConn()) return job;
+
+		s = conn->createStatement(stmt, tag);
+		s->setString(1, jobId);
+		r = conn->createResultset(s);
+
+		if (r->next()) {
+			job = new TransferJobs();
+			job->JOB_ID = r->getString(1);
+			job->JOB_STATE = r->getString(2);
+			job->VO_NAME = r->getString(3);
+			job->PRIORITY = r->getInt(4);
+			job->SOURCE = r->getString(5);
+			job->DEST = r->getString(6);
+			job->AGENT_DN = r->getString(7);
+			job->SUBMIT_HOST = r->getString(8);
+			job->SOURCE_SE = r->getString(9);
+			job->DEST_SE = r->getString(10);
+			job->USER_DN = r->getString(11);
+			job->USER_CRED = r->getString(12);
+			job->CRED_ID = r->getString(13);
+			job->SPACE_TOKEN = r->getString(14);
+			job->STORAGE_CLASS = r->getString(15);
+			job->INTERNAL_JOB_PARAMS = r->getString(16);
+			job->OVERWRITE_FLAG = r->getString(17);
+			job->SOURCE_SPACE_TOKEN = r->getString(18);
+			job->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
+			job->COPY_PIN_LIFETIME = r->getInt(20);
+			job->CHECKSUM_METHOD = r->getString(21);
+		}
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+    	if(conn)
+			conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+		if(conn){
+			if(s && r)
+				conn->destroyResultset(s, r);
+				conn->destroyStatement(s, tag);
+		}
+
+    }
+
+	return job;
+}
 
 void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) {
     TransferJobs* tr_jobs = NULL;
