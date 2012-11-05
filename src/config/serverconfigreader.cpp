@@ -134,7 +134,13 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 			"AuthorizedVO,v",
 			po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
 			"List of authorized VOs"
-		);
+		)
+		(
+			"roles.*",
+			po::value<std::string>(),
+			"Authorization riths definition."
+		)
+		;
 
     return config;
 }
@@ -180,6 +186,7 @@ struct ReadCommandLineOptions_SystemTraits
     )
     {
         aReader.storeValuesAsStrings ();
+        aReader.storeRoles ();
     }
 };
 
@@ -218,6 +225,7 @@ struct ReadConfigFile_SystemTraits
     )
     {
         reader.storeValuesAsStrings();
+        reader.storeRoles ();
     }
 };
 
@@ -681,6 +689,16 @@ void ServerConfigReader::storeValuesAsStrings ()
 {
     storeAsString("Port");
     storeAsString("ThreadNum");
+}
+
+void ServerConfigReader::storeRoles ()
+{
+	po::variables_map::iterator it;
+	for (it = _vm.begin(); it != _vm.end(); it++) {
+		if (it->first.find("roles.") == 0) {
+			_vars[it->first] = it->second.as<std::string>();
+		}
+	}
 }
 
 /* ========================================================================== */

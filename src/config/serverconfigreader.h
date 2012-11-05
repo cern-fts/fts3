@@ -52,6 +52,11 @@ public:
      * them accordingly. */
     void storeValuesAsStrings();
 
+    /**
+     *
+     */
+    void storeRoles();
+
     /* ---------------------------------------------------------------------- */
 
     /** Store a processes option value in _vars as string.

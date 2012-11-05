@@ -21,7 +21,7 @@ limitations under the License. */
 #include <map>
 #include <vector>
 #include <boost/lexical_cast.hpp>
-#include <boost/tokenizer.hpp>
+#include <boost/regex.hpp>
 
 FTS3_CONFIG_NAMESPACE_START
 
@@ -131,17 +131,16 @@ RET ServerConfig::get (const std::string& aVariable /**< A config variable name.
 }
 
 template <>
-inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (const std::string& aVariable /**< A config variable name. */) {
+inline std::map<std::string, std::string> ServerConfig::get< std::map<std::string, std::string> > (const std::string& aVariable) {
 
-	const std::string& str = _get_str(aVariable);
+	std::map<std::string, std::string> ret;
+	boost::regex re(aVariable);
 
-	boost::char_separator<char> sep(";");
-	boost::tokenizer< boost::char_separator<char> > tokens(str, sep);
-	boost::tokenizer< boost::char_separator<char> >::iterator it;
-
-	std::vector<std::string> ret;
-	for (it = tokens.begin(); it != tokens.end(); it++) {
-		ret.push_back(*it);
+	_t_vars::iterator it;
+	for (it = _vars.begin(); it != _vars.end(); it++) {
+		if (boost::regex_match(it->first, re)) {
+			ret[it->first] = it->second;
+		}
 	}
 
 	return ret;
