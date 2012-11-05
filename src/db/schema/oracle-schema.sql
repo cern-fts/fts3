@@ -764,13 +764,17 @@ CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
 CREATE INDEX job_job_A     ON t_job(source_se,dest_se);
+CREATE INDEX job_priority     ON t_job(priority);
+CREATE INDEX job_submit_time     ON t_job(submit_time);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_job_id     ON t_file(job_id);
+CREATE INDEX file_file_id     ON t_file(file_id);
 CREATE INDEX file_file_state_job_id ON t_file(file_state,job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
+CREATE INDEX file_finish_time ON t_file(finish_time);
 
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);

@@ -22,6 +22,4 @@ drop table T_VO_ACL cascade constraints;
 drop table T_DEBUG cascade constraints;
 drop table T_CONFIG_AUDIT cascade constraints;
 drop table t_optimize cascade constraints;
-drop table T_FILE_backup cascade constraints;
-drop table T_JOB_backup cascade constraints;
 exit;
