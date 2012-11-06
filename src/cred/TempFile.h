@@ -101,9 +101,11 @@ public:
         // Check Procondition
         if(0 == fd){
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "null File Descriptor pointer" << commit;
+	    return std::string("");
         }
         if(true == prefix.empty()){
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "empty Prefix" << commit;
+	    return std::string("");
         }
         char tmp_proxy[FILENAME_MAX];
         if(false == dir.empty()){
@@ -116,6 +118,7 @@ public:
             std::string reason = (std::string)"Cannot create temporary file <" + 
                 tmp_proxy + ">.	Error is: " + strerror(errno);
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << reason << commit;
+	    return std::string("");
         }
         return tmp_proxy;
     }

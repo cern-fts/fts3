@@ -130,9 +130,9 @@ oracle::occi::ResultSet* OracleConnection::createResultset(oracle::occi::Stateme
 }
 
 oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std::string tag) {
-        
-    oracle::occi::Statement* s = NULL;
+            
     if(conn){
+    oracle::occi::Statement* s = NULL;
    // Check if the statement is already cached
     if(true == conn->isCached("",tag)){
     	s = conn->createStatement("", tag);

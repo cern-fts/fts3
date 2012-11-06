@@ -112,6 +112,11 @@ void CredService::get(
     std::string tmp_proxy_fname;
     try{
         tmp_proxy_fname = TempFile::generate("cred",TMP_DIRECTORY,h.get());
+	if(tmp_proxy_fname.length()==0){
+		filename = fname;
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot create file for proxy certificate" << commit;
+		return;
+	}
     } catch(const std::exception& exc){
         //m_log_error("Cannot create temporary file: " << exc.what());
        // throw CredServiceException("Cannot create file for proxy certificate");

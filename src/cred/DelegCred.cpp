@@ -76,6 +76,9 @@ void DelegCred::getNewCertificate(const std::string& userDn, const std::string& 
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "write the content of the certificate property into the file " << filename << commit;
         if(ofs.bad()){        
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed open file " << filename << " for writing" << commit;
+		if(cred)
+			delete cred;
+	    return;	    
         }
         // write the Content of the certificate
 	if(cred)
@@ -112,16 +115,14 @@ std::string DelegCred::getFileName(const std::string& userDn, const std::string&
 
     // Compute Max length
     unsigned long filename_max = static_cast<unsigned long>(pathconf(repository.c_str(), _PC_NAME_MAX));
-    unsigned long max_length = (filename_max - 7 - strlen(PROXY_NAME_PREFIX));
-    if(max_length <= 0){
-        //m_log_error("Failed to generate the proxy file name: prefix name (" << PROXY_NAME_PREFIX << ") too long for " << m_factory.repository());
-        //throw LogicError("Cannot generate proxy file name: prefix too long");
+    long max_length = (filename_max - 7 - strlen(PROXY_NAME_PREFIX));
+    if(max_length <= 0){        
 	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: prefix too long" << commit;
+	return std::string("");
     }
     if(h_str.length() > (std::string::size_type)max_length){
-        //m_log_error("Failed to generate the proxy file name: hash (" << h_str << ") too long for " << m_factory.repository());
-        //throw LogicError("Cannot generate proxy file name: has too long");
 	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot generate proxy file name: has too long" << commit;
+	return std::string("");
     }
     // Generate the filename using the has
     filename = repository + PROXY_NAME_PREFIX + h_str;

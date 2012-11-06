@@ -56,9 +56,6 @@ private:
     Destination* destination_transfer_completed;
     MessageProducer* producer_transfer_started;
     MessageProducer* producer_transfer_completed;
-    bool useTopic;
-    bool sessionTransacted;
-
 
     std::string brokerURI;
     std::string broker;

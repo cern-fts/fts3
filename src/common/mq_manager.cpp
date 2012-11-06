@@ -75,7 +75,7 @@ void QueueManager::sendUpdater(struct message_updater* msg) throw (boost::interp
     try {
         mq_updater->send(msg, sizeof (message_updater), 0);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 
@@ -85,7 +85,7 @@ void QueueManager::receiveUpdater(struct message_updater* msg) throw (boost::int
     try {
         mq_updater->receive(msg, sizeof (message_updater), recvd_size, priority);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 
@@ -93,7 +93,7 @@ void QueueManager::send(struct message* msg) throw (interprocess_exception) {
     try {
         mq_->send(msg, sizeof (message), 0);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 
@@ -103,7 +103,7 @@ void QueueManager::t_send(struct message* msg) throw (interprocess_exception) {
         boost::posix_time::ptime end = start + boost::posix_time::hours(1);
         mq_->timed_send(msg, sizeof (message), 0, end);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 
@@ -113,7 +113,7 @@ void QueueManager::receive(struct message* msg) throw (interprocess_exception) {
     try {
         mq_->receive(msg, sizeof (message), recvd_size, priority);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 
@@ -124,7 +124,7 @@ void QueueManager::msg_send(const char* msg) throw (interprocess_exception) {
 
         mq_mon->send(&m, sizeof (msg_message), 0);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 
@@ -136,7 +136,7 @@ void QueueManager::msg_t_send(const char* msg) throw (interprocess_exception) {
         boost::posix_time::ptime end = start + boost::posix_time::minutes(1);
         mq_mon->timed_send(&m, sizeof (msg_message), 0, end);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 
@@ -148,7 +148,7 @@ void QueueManager::msg_receive(char* msg) throw (interprocess_exception) {
         mq_mon->receive(&m, sizeof (msg_message), recvd_size, priority);
         strcpy(msg, m.json);
     } catch (interprocess_exception &ex) {
-        throw ex;
+        throw;
     }
 }
 

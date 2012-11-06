@@ -88,11 +88,11 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
                 processGroup = false;
         }
        if(conn){
-        if(s_se && rSe)
+        if(s_se!=NULL && rSe!=NULL)
         	conn->destroyResultset(s_se, rSe);
 	if(s_se)	
         	conn->destroyStatement(s_se, tagse);
-	if(s_group && rGroup)
+	if(s_group!=NULL && rGroup!=NULL)
         	conn->destroyResultset(s_group, rGroup);
 	if(s_group)	
         	conn->destroyStatement(s_group, taggroup);
@@ -601,7 +601,6 @@ void OracleAPI::updateJObStatus(std::string jobId, const std::string status) {
 }
 
 void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
-    std::string jobAppender("");
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::const_iterator iter;
     std::string selecttag = "getByJobId";
@@ -691,8 +690,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     oracle::occi::Statement* s_file_statement = NULL;
     try {
         if ( false == conn->checkConn() ){
-		throw Err_Custom("Can't connect to the database");
-		return;
+		throw Err_Custom("Can't connect to the database");		
 	}
 		
         s_job_statement = conn->createStatement(job_statement, tag_job_statement);
@@ -770,8 +768,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     try {
     
         if ( false == conn->checkConn() ){
-		throw Err_Custom("Can't connect to the database");
-		return;
+		throw Err_Custom("Can't connect to the database");		
 	}    
     
         s = conn->createStatement(query, tag);
@@ -973,8 +970,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
     try {
     
         if ( false == conn->checkConn() ){
-		throw Err_Custom("Can't connect to the database");
-		return;
+		throw Err_Custom("Can't connect to the database");		
 	}        
     
         s = conn->createStatement(sel, tag);
@@ -1047,8 +1043,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
     try {
     
         if ( false == conn->checkConn() ){
-		throw Err_Custom("Can't connect to the database");
-		return;
+		throw Err_Custom("Can't connect to the database");		
 	}       
 	    
         s = conn->createStatement(query, tag);
@@ -1944,12 +1939,13 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
         conn->destroyStatement(st2, cancelFTag);
         st2 = NULL;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn){
             conn->rollback();
         if (st1)
             conn->destroyStatement(st1, cancelJTag);
         if (st2)
             conn->destroyStatement(st2, cancelFTag);
+	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
     }
@@ -1986,7 +1982,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
         conn->destroyStatement(s1, tag1);
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn){
             conn->rollback();
         if (r)
             conn->destroyResultset(s, r);
@@ -1994,6 +1990,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
             conn->destroyStatement(s, tag);
         if (s1)
             conn->destroyStatement(s1, tag1);
+	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
     }

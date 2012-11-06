@@ -48,10 +48,7 @@ int main(int ac, char* av[]) {
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();
 
-		// get the source file, the destination file and the FTS3 service endpoint
-    	string source = cli->getSource(), destination = cli->getDestination();
-
-		string jobId;
+		string jobId("");
 
 		if (cli->useDelegation()) {
 

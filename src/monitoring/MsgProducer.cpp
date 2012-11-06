@@ -64,8 +64,6 @@ MsgProducer::MsgProducer() {
     destination_transfer_completed = NULL;
     producer_transfer_completed = NULL;
     producer_transfer_started = NULL;
-    this->useTopic = useTopic;
-    this->sessionTransacted = sessionTransacted;
     connectionIsOK = false;
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
     FTSEndpoint = FTS3_CONFIG_NAMESPACE::theServerConfig().get<std::string>("Alias");    
