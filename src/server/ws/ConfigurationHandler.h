@@ -200,6 +200,15 @@ public:
 	 */
 	shared_ptr<SeProtocolConfig> getProtocolConfig(string name, string pair = string());
 
+	/**
+	 * Gets the SE / SE group name
+	 *
+	 * @return se name
+	 */
+	string getName() {
+		return name;
+	}
+
 private:
 
 	/**

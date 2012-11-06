@@ -60,7 +60,7 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
 
 	try {
 		// since submitting requires sometimes delegation we need authorization on the delegation level
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		JobSubmitter submitter (soap, _job, false);
 		_param_3._transferSubmitReturn = submitter.submit();
 
@@ -80,7 +80,7 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		JobSubmitter submitter (soap, _job, true);
 		_param_4._transferSubmit2Return = submitter.submit();
 
@@ -100,7 +100,7 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		JobSubmitter submitter (soap, _job);
 		_param_5._transferSubmit3Return = submitter.submit();
 
@@ -120,7 +120,8 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		// todo the jobs should be listed accordingly to the authorization level
+		AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER);
 		RequestLister lister(soap, _inGivenStates);
 		_param_7._listRequestsReturn = lister.list();
 
@@ -140,7 +141,8 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests2' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		// todo the jobs should be listed accordingly to the authorization level
+		AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER);
 		RequestLister lister(soap, _inGivenStates);
 		_param_8._listRequests2Return = lister.list();
 
@@ -161,7 +163,7 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, _requestID);
 		vector<FileTransferStatus*> statuses;
 		vector<FileTransferStatus*>::iterator it;
 
@@ -216,7 +218,7 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getFileStatus2' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, _requestID);
 		vector<FileTransferStatus*> statuses;
 		vector<FileTransferStatus*>::iterator it;
 
@@ -271,7 +273,8 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getTransferJobStatus' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, _requestID);
+
 		vector<JobStatus*> fileStatuses;
 		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 //		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
@@ -304,7 +307,7 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct impltns__getTransferJobSummaryResponse &_param_12) {
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, _requestID);
 		vector<JobStatus*> fileStatuses;
 		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 //		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
@@ -363,7 +366,7 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct impltns__getTransferJobSummary2Response &_param_13) {
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, _requestID);
 		vector<JobStatus*> fileStatuses;
 		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 //		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
@@ -457,8 +460,6 @@ int fts3::impltns__getServiceMetadata(soap *soap, string _key, struct impltns__g
 int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_requestIDs, struct impltns__cancelResponse &_param_14) {
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
-
 		CGsiAdapter cgsi (soap);
 		string dn = cgsi.getClientDn();
 
@@ -473,8 +474,11 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "(";
 
 				std::string jobId("");
-				for (jobsIter = jobs.begin(); jobsIter != jobs.end(); ++jobsIter)
+				for (jobsIter = jobs.begin(); jobsIter != jobs.end(); ++jobsIter) {
+					// authorize the operation for each job ID
+					AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, *jobsIter);
 					jobId += *jobsIter + ";";
+				}
 
 				FTS3_COMMON_LOGGER_NEWLOG (INFO) << jobId << ")" << commit;
 
@@ -586,7 +590,7 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " and " << _destination << " pair" << commit;
 		}
 
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG); // TODO
 		DBSingleton::instance().getDBObjectInstance()->setDebugMode (
 				_source,
 				_destination,

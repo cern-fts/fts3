@@ -40,62 +40,190 @@ using namespace fts3::common;
 using namespace std;
 using namespace boost;
 
+/**
+ * AuthorizationManager facilitates the authorization of a fts operation
+ *
+ * AuthorizationManager implements the Singleton design pattern (ThreadSafeInstanceHolder).
+ *
+ * @see ThreadSafeInstanceHolder
+ */
 class AuthorizationManager : public ThreadSafeInstanceHolder<AuthorizationManager> {
 
+	/**
+	 * friend to the singleton holder
+	 */
 	friend class ThreadSafeInstanceHolder<AuthorizationManager>;
 
 public:
 
+	/**
+	 * Authorization level
+	 */
 	enum Level {
-		NONE, // access has not been granted
-		PRV,  // access granted only for private resources
-		VO,   // access granted only for VO's resources
-		ALL   // access granted
+		NONE, //< access has not been granted
+		PRV,  //< access granted only for private resources
+		VO,   //< access granted only for VO's resources
+		ALL   //< access granted
 	};
 
-	virtual ~AuthorizationManager();
+	/**
+	 * The operation types
+	 */
+	enum Operation {
+		DELEG, 	  //< delegation
+		TRANSFER, //< transfer
+		CONFIG 	  //< configuration
+	};
 
 	/**
-	 * Authorize the operation requested by the user.
-	 *
-	 * A root user of the server hosting the fts3 service if automatically
-	 * authorized, an exception is the transfer-submit operation!
-	 *
-	 * @param soap - the soap context
-	 * @param submit - should be true if the submit operation is beeing authorized
-	 *
+	 * Destructor
 	 */
-	Level authorize(soap* soap, string operation);
+	virtual ~AuthorizationManager();
 
-	static const string ALL_SCOPE;
-	static const string VO_SCOPE;
-	static const string PRS_SCOPE;
 
-	static const string PUBLIC_ACCESS;
-
-	static const string DELEG_OP;
-	static const string TRANSFER_OP;
-	static const string CONFIG_OP;
-
-	static const string WILD_CARD;
+	/**
+	 * Authorizes the given operation on a given resource
+	 *
+	 * @param ctx - the gSOAP context
+	 * @param op - the operation that is being authorize
+	 * @param rsc_id - the ID of the resource that is being the subject of the operation
+	 *
+	 * @return authorization level at which access has been granted
+	 */
+	Level authorize(soap* ctx, Operation op, string rsc_id = string());
 
 private:
 
-	Level stringToScope(string s);
+	/// authorization level 'all' corresponding to global access
+	static const string ALL_LVL;
+	/// authorization level 'vo' corresponding to access at VO level
+	static const string VO_LVL;
+	/// authorization level '' corresponding to private access (only resources the user is directly responsible of)
+	static const string PRV_LVL;
 
-	template<typename R> R get(string e);
+	/// public access string in fts3config file
+	static const string PUBLIC_ACCESS;
 
+	/// 'deleg' string corresponding to delegation operations
+	static const string DELEG_OP;
+	/// 'transfer' string corresponding to transfer operations
+	static const string TRANSFER_OP;
+	/// 'config' string corresponding to configuration operations
+	static const string CONFIG_OP;
+	/// operation wild-card ('*') - covers all above operations
+	static const string WILD_CARD_OP;
+
+	/// the prefix corresponding to the 'roles' section
+	static const string ROLES_SECTION_PREFIX;
+
+	/**
+	 * Returns the access level that has been granted for the given operation
+	 * If access at NONE level has been granted an exception is thrown
+	 *
+	 * A root user of the server hosting the fts3 service if automatically
+	 * authorized at 'ALL' level, an exception is the transfer-submit operation!
+	 *
+	 * @param ctx - the gSOAP context
+	 * @param op - operation type
+	 *
+	 * @return the access level that has been granted
+	 */
+	Level getGrantedLvl(soap* ctx, Operation op);
+
+	/**
+	 * Returns the access level that is required for a given operation on a given resource
+	 *
+	 * @param ctx - the gSOAP context
+	 * @param op - operation type
+	 * @rsc_id - the resource being the subject of the operation
+	 *
+	 * @return the access level required to execute operation 'op' on resource 'rsc_id'
+	 * 			If the rsc_id is not specified 'NONE' is returned!
+	 */
+	Level getRequiredLvl(soap* ctx, Operation op, string rsc_id = string());
+
+	/**
+	 * Converts string to access level
+	 *
+	 * @param s - the string to be converted
+	 *
+	 * @return the level corresponding to the string
+	 */
+	Level stringToLvl(string s);
+
+	/**
+	 * Converts access level to string
+	 *
+	 * @param lvl - the access level to be converted
+	 *
+	 * @return string corresponding to the given access level
+	 */
+	string lvlToString(Level lvl);
+
+	/**
+	 * Converts operation type to string
+	 *
+	 * @param op - the operation type to be converted
+	 *
+	 * @return string corresponding to the given operation type
+	 */
+	string operationToStr(Operation op);
+
+	/**
+	 * Method for extracting values from roles/authorization entries in the fts3config file
+	 *
+	 * @param R - return type,
+	 * 		the configuration entry may be parsed to 'Level', 'string' or 'vector<string>'
+	 * @param cfg - config entry
+	 *
+	 * @return parsed config entry
+	 */
+	template<typename R> R get(string cfg);
+
+	/**
+	 * Checks the access level for a given role and operation
+	 *
+	 * @param role - client's role
+	 * @param operation - the operation that is being authorized
+	 *
+	 * @return access level configured in the fts3config file
+	 */
 	Level check(string role, string operation);
 
+	/**
+	 * Private constructor
+	 *
+	 * Initializes the object from fts3config file
+	 */
 	AuthorizationManager();
-	AuthorizationManager(const AuthorizationManager&){};
-	AuthorizationManager& operator=(const AuthorizationManager&){return *this;};
 
+	/**
+	 * Coping constructor, should not be used;
+	 */
+	AuthorizationManager(const AuthorizationManager&);
+
+	/**
+	 * Assignment operator, should not be used.
+	 */
+	AuthorizationManager& operator=(const AuthorizationManager&);
+
+	/// a set containing authorized VOs
 	const set<string> vos;
+	/// a map mapping roles to operations, for each operation access level is defined
 	const map<string, map<string, Level> > access;
 
+	/**
+	 * Method used to initialize authorized VOs set
+	 *
+	 * @return authorized VOs set
+	 */
 	set<string> vostInit();
-	// enum is by default initialized to 0, so even if a role is not in the 'access' map NON will be returned
+
+	/**
+	 * Method used to initialized access map
+	 *
+	 * @return access map
+	 */
 	map<string, map<string, Level> > accessInit();
 
 };

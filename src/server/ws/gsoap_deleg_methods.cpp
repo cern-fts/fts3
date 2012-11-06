@@ -39,7 +39,7 @@ int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, 
 //	ThreadTraits::LOCK lock(_mutex);
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		_param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
 	} catch (Err& ex) {
@@ -59,7 +59,7 @@ int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNe
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		_param_5.getNewProxyReqReturn = handler.getNewProxyReq();
 
 	} catch (Err& ex) {
@@ -79,7 +79,7 @@ int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		_param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
 
 	} catch(Err& ex) {
@@ -98,7 +98,7 @@ int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		handler.putProxy(_delegationID, _proxy);
 
 	} catch (Err& ex) {
@@ -117,7 +117,7 @@ int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegat
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		_param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
 
 	} catch (Err& ex) {
@@ -136,7 +136,9 @@ int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, stru
 
 	try {
 		GSoapDelegationHandler handler(soap);
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG_OP);
+		// it is not possible to destroy a proxy certificated that was delegated by someone else anyway
+		// so we are not passing the resource ID (delegation ID)
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
 		handler.destroy(_delegationID);
 
 	} catch(Err& ex) {

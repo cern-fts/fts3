@@ -104,6 +104,7 @@ public:
 	 * @return a string containing the certificate
 	 */
 	string x509ToString(X509* cert);
+
 	/**
 	 * Adds the private (the one created in the getProxy step) to the proxy certificate.
 	 * The is added at the second place in the certificate after the proxy itself.
@@ -147,6 +148,7 @@ public:
 	 * 	@return string containing the public key
 	 */
 	string getProxyReq(string delegationId);
+
 	/**
 	 * The WebServer renewProxy request method.
 	 *
@@ -156,6 +158,7 @@ public:
 	 * @return string containing a new public key
 	 */
 	string renewProxyReq(string delegationId);
+
 	/**
 	 * The WebServer getTerminationTime request method.
 	 *
@@ -169,6 +172,7 @@ public:
 	 * @return expiration time of the respective proxy certificate
 	 */
 	time_t getTerminationTime(string delegationId);
+
 	/**
 	 * The WebServer getNewProxy request method.
 	 *
@@ -181,6 +185,7 @@ public:
 	 * 			the public key and the delegation ID
 	 */
 	delegation__NewProxyReq* getNewProxyReq();
+
 	/**
 	 * The WebServer putProxy request method.
 	 *

@@ -54,14 +54,14 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 	vector<string>::iterator it;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG_OP);
-
 		CGsiAdapter cgsi(soap);
 		string dn = cgsi.getClientDn();
 
 		ConfigurationHandler handler (dn);
 		for(it = cfgs.begin(); it < cfgs.end(); it++) {
 			handler.parse(*it);
+			// authorize each configuration operation separately for each se/se group
+			AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, handler.getName());
 			handler.add();
 		}
 	} catch(std::exception& ex) {
@@ -88,7 +88,8 @@ int fts3::implcfg__getConfiguration(soap* soap, std::string vo, std::string name
 
 	response.configuration = soap_new_config__Configuration(soap, -1);
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG_OP);
+		// todo return the configuration accordingly to the authorization level
+		AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG);
 
 		CGsiAdapter cgsi(soap);
 		string dn = cgsi.getClientDn();
@@ -122,14 +123,14 @@ int fts3::implcfg__delConfiguration(soap* soap, config__Configuration *_configur
 	vector<string>::iterator it;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG_OP);
-
 		CGsiAdapter cgsi(soap);
 		string dn = cgsi.getClientDn();
 
 		ConfigurationHandler handler (dn);
 		for(it = cfgs.begin(); it < cfgs.end(); it++) {
 			handler.parse(*it);
+			// authorize each configuration operation separately for each se/se group
+			AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, handler.getName());
 			handler.del();
 		}
 

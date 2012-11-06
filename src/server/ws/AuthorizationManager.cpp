@@ -27,19 +27,23 @@
 
 #include "common/error.h"
 #include "common/logger.h"
+
 #include "config/serverconfig.h"
+
+#include "db/generic/SingleDbInstance.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/scoped_ptr.hpp>
 
-#include "config/serverconfig.h"
 
 using namespace config;
+using namespace db;
 
 namespace fts3 { namespace ws {
 
-const string AuthorizationManager::ALL_SCOPE = "all";
-const string AuthorizationManager::VO_SCOPE = "vo";
-const string AuthorizationManager::PRS_SCOPE;
+const string AuthorizationManager::ALL_LVL = "all";
+const string AuthorizationManager::VO_LVL = "vo";
+const string AuthorizationManager::PRV_LVL;
 
 const string AuthorizationManager::PUBLIC_ACCESS = "roles.Public";
 
@@ -47,10 +51,12 @@ const string AuthorizationManager::DELEG_OP = "deleg";
 const string AuthorizationManager::TRANSFER_OP = "transfer";
 const string AuthorizationManager::CONFIG_OP = "config";
 
-const string AuthorizationManager::WILD_CARD = "*";
+const string AuthorizationManager::WILD_CARD_OP = "*";
+
+const string AuthorizationManager::ROLES_SECTION_PREFIX = "roles.";
 
 template<>
-vector<string> AuthorizationManager::get< vector<string> >(string cfg) {
+vector<string> AuthorizationManager::get< vector<string> >(string cfg) { // TODO same code is in serverconfig.h, Michail is using it!
 
 	char_separator<char> sep(";");
 	tokenizer< char_separator<char> > tokens(cfg, sep);
@@ -78,7 +84,7 @@ template<>
 AuthorizationManager::Level AuthorizationManager::get<AuthorizationManager::Level>(string cfg) {
 	size_t pos = cfg.find(':');
 	if (pos != string::npos) {
-		return stringToScope(cfg.substr(0, pos));
+		return stringToLvl(cfg.substr(0, pos));
 	} else {
 		return PRV;
 	}
@@ -87,9 +93,7 @@ AuthorizationManager::Level AuthorizationManager::get<AuthorizationManager::Leve
 set<string> AuthorizationManager::vostInit() {
 
 	// parse the authorized vo list
-	string volist = theServerConfig().get<string>("AuthorizedVO");
-	vector<string> voNameList = get< vector<string> >(volist);
-
+	vector<string> voNameList = theServerConfig().get< vector<string> >("AuthorizedVO");
 	return set <string> (voNameList.begin(), voNameList.end());
 }
 
@@ -108,7 +112,14 @@ map<string, map<string, AuthorizationManager::Level> > AuthorizationManager::acc
 			vector<string> r = get< vector<string> >(it->second);
 			vector<string>::iterator r_it;
 			for (r_it = r.begin(); r_it != r.end(); r_it++) {
-				rights[get<string>(*r_it)] = get<Level>(*r_it);
+				string op = get<string>(*r_it);
+				Level lvl = get<Level>(*r_it);
+				rights[op] = lvl;
+				if (op == TRANSFER_OP) {
+					// if someone has transfer rights, he automatically gets delegation rights
+					// how ever we need a distinction for the Root user who is not allowed to delegate
+					rights[DELEG_OP] = lvl;
+				}
 			}
 
 			ret[it->first] = rights;
@@ -126,11 +137,34 @@ AuthorizationManager::~AuthorizationManager() {
 
 }
 
-AuthorizationManager::Level AuthorizationManager::stringToScope(string s) {
-	if (s == ALL_SCOPE) return ALL;
-	if (s == VO_SCOPE) return VO;
+AuthorizationManager::Level AuthorizationManager::stringToLvl(string s) {
+
+	if (s == ALL_LVL) return ALL;
+	if (s == VO_LVL) return VO;
 	return PRV;
 }
+
+string AuthorizationManager::lvlToString(Level lvl) {
+
+	switch (lvl) {
+	case NONE: return "none";
+	case PRV: return "private";
+	case VO: return "vo";
+	case ALL: return "all";
+	default: return string();
+	}
+}
+
+string AuthorizationManager::operationToStr(Operation op) {
+
+	switch(op) {
+	case DELEG: return DELEG_OP;
+	case TRANSFER: return TRANSFER_OP;
+	case CONFIG: return CONFIG_OP;
+	default: return string();
+	}
+}
+
 
 AuthorizationManager::Level AuthorizationManager::check(string role, string operation) {
 
@@ -145,7 +179,7 @@ AuthorizationManager::Level AuthorizationManager::check(string role, string oper
 	Level ret = NONE;
 
 	// check is there is a wild card
-	l_it = a_it->second.find(WILD_CARD);
+	l_it = a_it->second.find(WILD_CARD_OP);
 	if (l_it != a_it->second.end()) {
 		ret = l_it->second;
 	}
@@ -160,18 +194,18 @@ AuthorizationManager::Level AuthorizationManager::check(string role, string oper
 	return ret;
 }
 
-AuthorizationManager::Level AuthorizationManager::authorize(soap* soap, string operation) {
+AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Operation op) {
 
-	CGsiAdapter cgsi(soap);
+	CGsiAdapter cgsi(ctx);
 
 	// root is authorized to do anything but delegations
 	if(cgsi.isRoot()) {
-		if (operation != DELEG_OP) return ALL;
+		if (op != DELEG) return ALL;
 		string msg = "Authorization failed, a host certificate has been used to submit a transfer!";
 		throw Err_Custom(msg);
 	}
 
-	// if the VO authorization list was not specified or a wildcard was used ...
+	// if the VO authorization list was specified and a wildcard was not used ...
 	if (!vos.empty() && !vos.count("*")) {
 
 		string vo = cgsi.getClientVo();
@@ -188,30 +222,82 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* soap, string o
 		}
 	}
 
+	// get operation string
+	string op_str = operationToStr(op);
+
 	// check if the access is public
-	Level lvl = check(PUBLIC_ACCESS, operation);
+	Level lvl = check(PUBLIC_ACCESS, op_str);
 
 	// check if the user has a role that is granting him the access
 	vector<string> roles = cgsi.getClientRoles();
 	if (!roles.empty()) {
 		vector<string>::iterator it;
 		for (it = roles.begin(); it != roles.end(); it++) {
-			Level tmp = check(*it, operation);
+			Level tmp = check(ROLES_SECTION_PREFIX + *it, op_str);
 			if (tmp > lvl) lvl = tmp;
 		}
 	}
 
-	return lvl;
+	return lvl; // TODO to be removed when clients will have proxy certs with Roles
 
 	// if access was not granted throw an exception
 	if (lvl != NONE) return lvl;
 	else {
 		string msg = "Authorization failed, access was not granted. ";
-		msg += "(The user has not rights to perform ";
-		msg += operation;
+		msg += "(The user has not the right Role to perform ";
+		msg += op_str;
 		msg += 	" operation)";
 		throw Err_Custom(msg);
 	}
+}
+
+AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Operation op, string rsc_id) {
+
+	CGsiAdapter cgsi(ctx);
+
+	// if the resource is not specified we don't need any access level
+	// this can happen for example in case of fts-transfer-list where
+	// the resources (transfer-jobs) are listed depending on the granted level
+	if (rsc_id.empty()) return NONE;
+
+	switch(op) {
+	case DELEG:
+		return PRV; // it is only possible to remove own proxy certificate so it's always 'PRV'
+	case TRANSFER: {
+
+		scoped_ptr<TransferJobs> job (
+				DBSingleton::instance().getDBObjectInstance()->getTransferJob(rsc_id)
+			);
+
+		if (!job.get()) return NONE; // the transfer-job does not exist
+		if (job->USER_DN == cgsi.getClientDn()) return PRV; // it is user's job
+		if (job->VO_NAME == cgsi.getClientVo()) return VO; // it is a job that has been created within user's VO
+		return ALL; // it needs global access
+	}
+	case CONFIG: return ALL; // so far only global admins will be able to configure TODO probably it is possible to get it from BDII
+							// maybe it will be possible to distinguish between ALL and VO, but probably never PRV will be returned
+	default: return ALL; // in case a a bug return the highest possible level
+	}
+}
+
+AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation op, string rsc_id) {
+
+	Level grantedLvl = getGrantedLvl(ctx, op);
+	Level requiredLvl = getRequiredLvl(ctx, op, rsc_id);
+
+	if (grantedLvl < requiredLvl) {
+
+		string msg = "The user has been granted access at '";
+		msg += lvlToString(grantedLvl);
+		msg += "' level, but the resource requires access at '";
+		msg += lvlToString(requiredLvl);
+		msg += "' level!";
+
+		throw Err_Custom(msg);
+	}
+
+	return grantedLvl;
+
 }
 
 }
