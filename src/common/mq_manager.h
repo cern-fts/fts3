@@ -34,7 +34,8 @@ class QueueManager
     void remove();
 
     QueueManager(bool consumer);  
-    QueueManager(bool consumer, std::string qname);      
+    QueueManager(bool consumer, std::string qname, bool);
+    QueueManager(bool active, bool consumer);      
  
     ~QueueManager();
  
@@ -48,7 +49,10 @@ class QueueManager
 
     void msg_t_send(const char* msg) throw(boost::interprocess::interprocess_exception);
  
-    void msg_receive(char* msg) throw(boost::interprocess::interprocess_exception);    
+    void msg_receive(char* msg) throw(boost::interprocess::interprocess_exception);
+    
+    void sendUpdater(struct message_updater* msg) throw(boost::interprocess::interprocess_exception); 
+    void receiveUpdater(struct message_updater* msg) throw(boost::interprocess::interprocess_exception);   
 
   };
 

@@ -39,6 +39,12 @@ public:
     /** Start the service. */
     void start()
     {
+        typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
+        processUpdaterDBHandler.executeTransfer_p();            
+    
+        typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
+        processUpdaterHandler.executeTransfer_p();        
+    
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();    
     

@@ -31,15 +31,14 @@ limitations under the License. */
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/scoped_ptr.hpp>
 
-extern bool  stopThreads;
+extern bool stopThreads;
 extern int terminateJobsGracefully;
- 
+
 using namespace boost::interprocess;
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
-
 
 template
 <
@@ -66,30 +65,29 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessQueueHandler", desc), qm(NULL) {
-    enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-    
-     try {
-        qm = new QueueManager(true);
-    } catch (interprocess_exception &ex) {
-        /*shared mem segment already exists, reuse it*/
-	try{
-		if(qm)
-			delete qm;
-		qm = new QueueManager(false);    
-	}
-	catch (interprocess_exception &ex) {
-		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
-	}
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "/dev/shm/fts3mq " << ex.what() << commit; 	
-    }    
+        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
+
+        try {
+            qm = new QueueManager(true);
+        } catch (interprocess_exception &ex) {
+            /*shared mem segment already exists, reuse it*/
+            try {
+                if (qm)
+                    delete qm;
+                qm = new QueueManager(false);
+            } catch (interprocess_exception &ex) {
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+            }
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "/dev/shm/fts3mq " << ex.what() << commit;
+        }
     }
 
     /* ---------------------------------------------------------------------- */
 
     /** Destructor */
     virtual ~ProcessQueueHandler() {
-    	if(qm)
-		delete qm;
+        if (qm)
+            delete qm;
     }
 
     /* ---------------------------------------------------------------------- */
@@ -108,61 +106,62 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
 
-    while(1){ /*need to receive more than one messages at a time*/    
-       if(stopThreads){       
-       	return;
-       }
-    try{
-    	struct message msg;
-	qm->receive(&msg);
-      std::string job = std::string(msg.job_id).substr (0,36);    
-      FTS3_COMMON_LOGGER_NEWLOG (INFO) <<  "Job id:" << job 
-	<<  "\nFile id: " << msg.file_id
-	<<  "\nPid: " << msg.process_id
-	<<  "\nState: " <<  msg.transfer_status
-	<<  "\nMessage: " <<  msg.transfer_message
-	<<  "\nSource: " <<  msg.source_se
-        <<  "\nDest: " <<  msg.dest_se  << commit;                  
+        while (1) { /*need to receive more than one messages at a time*/
+            if (stopThreads) {
+                return;
+            }
+            try {
+                struct message msg;
+                qm->receive(&msg);
+                std::string job = std::string(msg.job_id).substr(0, 36);
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << job
+                        << "\nFile id: " << msg.file_id
+                        << "\nPid: " << msg.process_id
+                        << "\nState: " << msg.transfer_status
+                        << "\nMessage: " << msg.transfer_message
+                        << "\nSource: " << msg.source_se
+                        << "\nDest: " << msg.dest_se << commit;
 
 
-      if( std::string(msg.transfer_status).compare("FINISHED") == 0  && enableOptimization.compare("true") == 0){
-        if( !(msg.nostreams == DEFAULT_NOSTREAMS && msg.buffersize == DEFAULT_BUFFSIZE && msg.timeout == DEFAULT_TIMEOUT)){
-    		DBSingleton::instance().
-                getDBObjectInstance()->
-                updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs,
-                                            static_cast<int>(msg.nostreams), static_cast<int>(msg.timeout),
-                                            static_cast<int>(msg.buffersize), std::string(msg.source_se),
-                                            std::string(msg.dest_se) );      
-	}
-	}
+                if (std::string(msg.transfer_status).compare("FINISHED") == 0 && enableOptimization.compare("true") == 0) {
+                    if (!(msg.nostreams == DEFAULT_NOSTREAMS && msg.buffersize == DEFAULT_BUFFSIZE && msg.timeout == DEFAULT_TIMEOUT)) {
+                        DBSingleton::instance().
+                                getDBObjectInstance()->
+                                updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs,
+                                static_cast<int> (msg.nostreams), static_cast<int> (msg.timeout),
+                                static_cast<int> (msg.buffersize), std::string(msg.source_se),
+                                std::string(msg.dest_se));
+                    }
+                }
 
-	/*session reuse process died or terminated unexpected*/
-        if(std::string(msg.transfer_message).find("Transfer terminate handler called")!=string::npos ||
-	std::string(msg.transfer_message).find("Transfer terminate handler called")!=string::npos ||
-	std::string(msg.transfer_message).find("Transfer process died")!=string::npos ){
-		DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr (0,36));          	
-	}
+                /*session reuse process died or terminated unexpected*/
+                if (std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
+                        std::string(msg.transfer_message).find("Transfer terminate handler called") != string::npos ||
+                        std::string(msg.transfer_message).find("Transfer process died") != string::npos) {
+                    DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36));
+                }
 
-      DBSingleton::instance().
-        getDBObjectInstance()->
-        updateFileTransferStatus(job, std::string(msg.file_id), std::string(msg.transfer_status),
-                                 std::string(msg.transfer_message), static_cast<int>(msg.process_id),
-                                 msg.filesize, msg.timeInSecs);
-      DBSingleton::instance().
-        getDBObjectInstance()->
-        updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));          
-      }
-     catch (interprocess_exception &ex) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
-     }
-     catch (Err& e) {
-         FTS3_COMMON_EXCEPTION_THROW(e);
-     }
-     catch (...) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
-     }
-               if(stopThreads) break;
-      }
+                DBSingleton::instance().
+                        getDBObjectInstance()->
+                        updateFileTransferStatus(job, std::string(msg.file_id), std::string(msg.transfer_status),
+                        std::string(msg.transfer_message), static_cast<int> (msg.process_id),
+                        msg.filesize, msg.timeInSecs);
+                DBSingleton::instance().
+                        getDBObjectInstance()->
+                        updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));
+
+                if (std::string(msg.transfer_status).compare("ACTIVE") != 0)
+                    ThreadSafeList::get_instance().removeFinishedTr(job, atoi(std::string(msg.file_id).c_str()));
+
+            } catch (interprocess_exception &ex) {
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+            } catch (Err& e) {
+                FTS3_COMMON_EXCEPTION_THROW(e);
+            } catch (...) {
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
+            }
+            if (stopThreads) break;
+        }
     }
 
     /* ---------------------------------------------------------------------- */

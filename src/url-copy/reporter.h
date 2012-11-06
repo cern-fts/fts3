@@ -28,6 +28,7 @@ public:
 	Reporter();
 	~Reporter();
 	void constructMessage(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message,  double timeInSecs,  double fileSize);
+        void constructMessageUpdater(std::string job_id, std::string file_id);
         unsigned int nostreams;
 	unsigned int timeout;
 	unsigned int buffersize;
@@ -38,5 +39,7 @@ public:
 private:
 	struct message* msg;
 	QueueManager* qm;
+	struct message_updater* msg_updater;
+	QueueManager* qm_updater;
 
 };

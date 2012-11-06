@@ -2664,6 +2664,10 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
 }
 
 
+void MySqlAPI::retryFromDead(std::map<int,std::string>& pids){
+	
+}
+
 
 // the class factories
 extern "C" GenericDbIfce* create() {

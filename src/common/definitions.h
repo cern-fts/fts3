@@ -1,3 +1,18 @@
+/* Copyright @ Members of the EMI Collaboration, 2010.
+See www.eu-emi.eu for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License"); 
+you may not use this file except in compliance with the License. 
+You may obtain a copy of the License at 
+
+    http://www.apache.org/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the License is distributed on an "AS IS" BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+See the License for the specific language governing permissions and 
+limitations under the License. */
+
 #pragma once
 
 
@@ -10,6 +25,8 @@
 #define DEST_SE_ 100
 
 #define FTS3_MQ_NAME "fts3mq"
+#define FTS3_MQ_NAME_UPDATER "fts3mqupdater"
+#define FTS3_MQ_NAME_MON "fts3mqmon"
 
 struct message{  
       char job_id[JOB_ID_LEN];
@@ -25,6 +42,15 @@ struct message{
       char source_se[SOURCE_SE_];
       char dest_se[DEST_SE_];      
 };
+
+
+struct message_updater{  
+      char job_id[JOB_ID_LEN];
+      int file_id;
+      pid_t process_id;
+      time_t timestamp;
+};
+
  
  
 #define DEFAULT_TIMEOUT 3600

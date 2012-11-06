@@ -34,6 +34,7 @@ limitations under the License. */
 #include <iomanip>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "queue_updater.h"
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -181,8 +182,6 @@ int DoServer(int argc, char** argv) {
             exit(1);
         }
 
-
-
         set_terminate(myterminate);
         set_unexpected(myunexpected);
 
@@ -208,6 +207,9 @@ int DoServer(int argc, char** argv) {
         sigemptyset(&action.sa_mask);
         action.sa_flags = SA_RESTART;
         res = sigaction(SIGINT, &action, NULL);
+	
+        //initialize queue updater here to avoid race conditions  
+        ThreadSafeList::get_instance();	
 
         std::string infosys = theServerConfig().get<std::string > ("Infosys");
         if (infosys.length() > 0) {

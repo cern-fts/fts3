@@ -1,3 +1,18 @@
+/* Copyright @ Members of the EMI Collaboration, 2010.
+See www.eu-emi.eu for details on the copyright holders.
+
+Licensed under the Apache License, Version 2.0 (the "License"); 
+you may not use this file except in compliance with the License. 
+You may obtain a copy of the License at 
+
+    http://www.apache.org/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, software 
+distributed under the License is distributed on an "AS IS" BASIS, 
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+See the License for the specific language governing permissions and 
+limitations under the License. */
+
 #include "OracleAPI.h"
 #include "OracleMonitoring.h"
 #include <fstream>
@@ -4266,7 +4281,7 @@ void OracleAPI::backup(){
 
 void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId){
     const std::string tag = "forkFailedRevertState";
-    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2";
+    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2 and file_state not in ('FINISHED','FAILED','CANCELED')";
     oracle::occi::Statement* stmt = 0;
     
     ThreadTraits::LOCK_R lock(_mutex);
@@ -4292,7 +4307,7 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId){
 
 void OracleAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
     const std::string tag = "forkFailedRevertStateV";
-    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2";
+    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2 and file_state not in ('FINISHED','FAILED','CANCELED')";
     oracle::occi::Statement* s = NULL;
     std::map<int, std::string>::const_iterator iter;
     unsigned int updated = 0;
@@ -4325,6 +4340,42 @@ void OracleAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
     }
 }
 
+
+void OracleAPI::retryFromDead(std::map<int,std::string>& pids){
+    const std::string tag = "retryFromDead";
+    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2 and file_state not in ('FINISHED','FAILED','CANCELED')";
+    oracle::occi::Statement* s = NULL;
+    std::map<int, std::string>::const_iterator iter;
+    unsigned int updated = 0;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        for (iter = pids.begin(); iter != pids.end(); ++iter) {
+            s->setInt(1, (*iter).first);
+            s->setString(2, (*iter).second);
+            updated += s->executeUpdate();
+        }
+        if (updated != 0)
+            conn->commit();
+        conn->destroyStatement(s, tag);
+        s = NULL;
+
+    } catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if (conn) {
+            if (s) {
+                conn->destroyStatement(s, tag);
+            }
+        }
+    }
+	
+}
 
 // the class factories
 extern "C" GenericDbIfce* create() {

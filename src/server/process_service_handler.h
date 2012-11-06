@@ -43,6 +43,7 @@ limitations under the License. */
 #include "definitions.h"
 #include "DrainMode.h"
 #include "StaticSslLocking.h"
+#include "queue_updater.h"
 #include <boost/algorithm/string.hpp>  
 
 extern bool  stopThreads;
@@ -346,11 +347,17 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);			
                         if (pr) {		
-			    /*check if fork failed , check if execvp failed, */			   
+			    /*check if fork/execvp failed, */			   
                             if(-1 == pr->executeProcessShell()){
 			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
 			    }else{
 			    	DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, to_string(temp->FILE_ID), pr->getPid());
+				struct message_updater msg;
+				strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
+        			msg.file_id = temp->FILE_ID;
+				msg.process_id = (int) pr->getPid();
+				msg.timestamp = std::time(NULL);
+				ThreadSafeList::get_instance().push_back(msg);
 			    }
 			    delete pr;
                         }
@@ -583,7 +590,16 @@ protected:
                             if(-1 == pr->executeProcessShell()){
 			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
 			    }else{
-			    	DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);
+			    	DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);				
+				std::map<int, std::string>::const_iterator iterFileIds;
+				for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds) {
+				        struct message_updater msg;
+					strcpy(msg.job_id, std::string(job_id).c_str());
+        				msg.file_id = iterFileIds->first;
+					msg.process_id = (int) pr->getPid();
+					msg.timestamp = std::time(NULL);
+					ThreadSafeList::get_instance().push_back(msg);
+				}				
 			    }
 			    delete pr;
                     }

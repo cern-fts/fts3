@@ -209,7 +209,9 @@ public:
     
     virtual void forkFailedRevertState(const std::string & jobId, int fileId);
     
-    virtual void forkFailedRevertStateV(std::map<int,std::string>& pids);    
+    virtual void forkFailedRevertStateV(std::map<int,std::string>& pids);
+    
+    virtual void retryFromDead(std::map<int,std::string>& pids);        
 
 private:
     size_t                poolSize;

@@ -265,7 +265,9 @@ public:
     
     virtual void forkFailedRevertState(const std::string & jobId, int fileId) = 0;
     
-    virtual void forkFailedRevertStateV(std::map<int,std::string>& pids) = 0;    
+    virtual void forkFailedRevertStateV(std::map<int,std::string>& pids) = 0; 
+    
+    virtual void retryFromDead(std::map<int,std::string>& pids) = 0;
 };
 
 

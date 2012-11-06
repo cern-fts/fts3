@@ -44,13 +44,13 @@ void handler(int sig) {
 
 MsgPipe::MsgPipe(std::string qname) {
      try {
-        qm = new QueueManager(true, qname);        
+        qm = new QueueManager(true, qname, true);        
     } catch (interprocess_exception &ex) {
         /*shared mem segment already exists, reuse it*/
 	if(qm)
 		delete qm;       
 	try{
-		qm = new QueueManager(false, qname);                 
+		qm = new QueueManager(false, qname, true);                 
 	}
 	catch (interprocess_exception &ex) {
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
@@ -58,7 +58,7 @@ MsgPipe::MsgPipe(std::string qname) {
     }catch(...){
         if(qm)
                 delete qm;
-	qm = new QueueManager(false, qname);
+	qm = new QueueManager(false, qname, true);
     }    
     
     //register sig handler to cleanup resources upon exiting
