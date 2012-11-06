@@ -89,9 +89,7 @@ bool MySqlAPI::getInOutOfSe(const std::string& sourceSe, const std::string& dest
     return nSE == 0 && nGroup == 0;
 }
 
-TransferJobs* MySqlAPI::getTransferJob(std::string jobId) {
-	return 0;
-}
+
 
 void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) {
     soci::session sql(connectionPool);
@@ -2663,6 +2661,10 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
     }
 }
 
+
+TransferJobs* MySqlAPI::getTransferJob(std::string jobId) {
+	return 0;
+}
 
 void MySqlAPI::retryFromDead(std::map<int,std::string>& pids){
 	
