@@ -41,6 +41,9 @@ RequestLister::~RequestLister() {
 
 impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationManager::Level lvl) {
 
+	// TODO to be removed when authorization is on
+	lvl = AuthorizationManager::ALL;
+
 	switch(lvl) {
 	case AuthorizationManager::PRV:
 		dn = cgsi.getClientDn();
