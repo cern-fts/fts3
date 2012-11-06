@@ -9,8 +9,6 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "CGsiAdapter.h"
-
 #include "common/error.h"
 #include "common/logger.h"
 #include "common/JobStatusHandler.h"
@@ -19,33 +17,42 @@ using namespace db;
 using namespace fts3::ws;
 using namespace fts3::common;
 
-RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates): soap(soap) {
+RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates):
+		soap(soap),
+		cgsi(soap) {
 
-	CGsiAdapter cgsi(soap);
-	string dn = cgsi.getClientDn();
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is listing transfer job requests" << commit;
-
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
 	checkGivenStates (inGivenStates);
-	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", "", "");
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
 }
 
-RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo): soap(soap) {
+RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo):
+		soap(soap),
+		cgsi(soap),
+		dn(dn),
+		vo(vo) {
 
-	CGsiAdapter cgsi(soap);
-	string user = cgsi.getClientDn();
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << user << " is listing transfer job requests" << commit;
-
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
 	checkGivenStates (inGivenStates);
-	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates->item, "", dn, vo);
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
 }
 
 RequestLister::~RequestLister() {
 
 }
 
-impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list() {
+impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationManager::Level lvl) {
+
+	switch(lvl) {
+	case AuthorizationManager::PRV:
+		dn = cgsi.getClientDn();
+		vo = cgsi.getClientVo();
+		break;
+	case AuthorizationManager::VO:
+		vo = cgsi.getClientVo();
+		break;
+	}
+
+	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo);
+	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
 
 	// create the object
 	impltns__ArrayOf_USCOREtns3_USCOREJobStatus* result;
@@ -76,4 +83,6 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
 			throw Err_Custom("Unknown job status: " + *it);
 		}
 	}
+
+	this->inGivenStates = inGivenStates->item;
 }

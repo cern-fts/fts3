@@ -28,6 +28,9 @@
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 #include "db/generic/JobStatus.h"
 
+#include "CGsiAdapter.h"
+#include "AuthorizationManager.h"
+
 #include <string>
 #include <vector>
 
@@ -74,7 +77,7 @@ public:
 	 *
 	 * @return impltns__ArrayOf_USCOREtns3_USCOREJobStatus object containing statuses of interest
 	 */
-	impltns__ArrayOf_USCOREtns3_USCOREJobStatus* list();
+	impltns__ArrayOf_USCOREtns3_USCOREJobStatus* list(AuthorizationManager::Level lvl);
 
 	/**
 	 * Destructor
@@ -102,6 +105,19 @@ private:
 
 	/// the soap object that is serving the given request
 	::soap* soap;
+
+	/// gSOAP cgsi context
+	CGsiAdapter cgsi;
+
+	/// DN used for listing jobs
+	string dn;
+
+	/// VO used for listing jobs
+	string vo;
+
+	/// the states of interest
+	vector<string> inGivenStates;
+
 };
 
 }
