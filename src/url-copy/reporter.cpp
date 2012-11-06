@@ -21,7 +21,7 @@ limitations under the License. */
 
 using namespace std;
 
-Reporter::Reporter() :source_se(""), dest_se("") ,msg_updater(NULL), msg(NULL), qm(NULL), qm_updater(NULL){
+Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), qm(NULL), msg_updater(NULL),qm_updater(NULL){
   try{
     qm = new QueueManager(false);
     msg = new struct message;

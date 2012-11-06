@@ -259,6 +259,8 @@ int ExecuteProcess::execProcessShell() {
     const char *path;
     char *copy;
     int maxfd;
+    ssize_t checkWriteSize;
+    int checkDir = 0;
 
     list<string> args;
     split(m_arguments, ' ', args, 0, false);
@@ -306,7 +308,10 @@ int ExecuteProcess::execProcessShell() {
         // Detach from parent		
         setsid();
         // Set working directory
-        chdir(_PATH_TMP);
+        checkDir = chdir(_PATH_TMP);
+	if(-1 == checkDir){
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chdir"  << commit;
+	}
 	maxfd=sysconf(_SC_OPEN_MAX);
 	register int fdAll;
 	for(fdAll=3; fdAll<maxfd; fdAll++){	     
@@ -337,7 +342,7 @@ int ExecuteProcess::execProcessShell() {
 	}
         pathV.clear();
         execvp(p.c_str(), argv);
-        write(pipefds[1], &errno, sizeof(int));	
+        checkWriteSize = write(pipefds[1], &errno, sizeof(int));	
         _exit(EXIT_FAILURE);
     default:
         pid = (int) child;         

@@ -18,7 +18,7 @@ using namespace std;
 class ZipCompressor {
 
 public:
-	ZipCompressor(istream& in, ostream& out): in(in), out(out) {}
+	ZipCompressor(istream& in, ostream& out): out(out),in(in) {}
 	virtual ~ZipCompressor(){}
 
 	void compress();
