@@ -293,7 +293,8 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
 		msg += lvlToString(requiredLvl);
 		msg += "' level!";
 
-		throw Err_Custom(msg);
+		// TODO to be uncommented when clients will have proxy certs with Roles
+//		throw Err_Custom(msg);
 	}
 
 	return grantedLvl;
