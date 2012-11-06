@@ -42,7 +42,7 @@ void ThreadSafeList::clear() {
 
 void ThreadSafeList::checkExpiredMsg(std::map<int, std::string>& pids) {
     ThreadTraits::LOCK_R lock(_mutex);
-    std::list<struct message_updater>::const_iterator iter;
+    std::list<struct message_updater>::iterator iter;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
         if (difftime(time(NULL), iter->timestamp) > 360) {
             pids.insert(std::make_pair<int, std::string > (iter->file_id, std::string(iter->job_id)));
@@ -66,7 +66,7 @@ void ThreadSafeList::updateMsg(struct message_updater *msg) {
 void ThreadSafeList::deleteMsg(std::map<int, std::string>& pids) {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator i = m_list.begin();
-    for (std::map< int, std::string>::const_iterator iter = pids.begin(); iter != pids.end(); ++iter) {
+    for (std::map< int, std::string>::iterator iter = pids.begin(); iter != pids.end(); ++iter) {
         i = m_list.begin();
         while (i != m_list.end()) {
             if (iter->first == i->file_id &&
