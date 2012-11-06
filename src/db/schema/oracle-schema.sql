@@ -770,7 +770,6 @@ CREATE INDEX job_submit_time     ON t_job(submit_time);
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_job_id     ON t_file(job_id);
-CREATE INDEX file_file_id     ON t_file(file_id);
 CREATE INDEX file_file_state_job_id ON t_file(file_state,job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);

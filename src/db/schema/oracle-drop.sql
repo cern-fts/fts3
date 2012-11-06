@@ -1,3 +1,12 @@
+drop trigger bad_se_id_auto_inc;
+drop sequence se_bad_id_seq;
+drop trigger se_id_info_auto_inc;
+drop sequence file_file_id_seq;
+drop trigger file_file_id_auto_inc;
+drop sequence file_file_id_seq;
+drop trigger se_row_id_auto_inc;
+drop sequence se_row_id_seq;
+
 DROP TABLE t_credential;
 DROP TABLE t_credential_cache;
 DROP TABLE t_credential_vers;
@@ -22,4 +31,6 @@ drop table T_VO_ACL cascade constraints;
 drop table T_DEBUG cascade constraints;
 drop table T_CONFIG_AUDIT cascade constraints;
 drop table t_optimize cascade constraints;
+drop table t_file_backup;
+drop table t_job_backup;
 exit;

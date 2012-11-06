@@ -59,7 +59,7 @@ CREATE TABLE t_optimize (
 
 
 --
--- Holds certificate request information
+-- Holds configuration audit information
 --
 CREATE TABLE t_config_audit (
 --

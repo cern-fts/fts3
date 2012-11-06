@@ -2663,11 +2663,54 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int,std::string>& pids){
 
 
 TransferJobs* MySqlAPI::getTransferJob(std::string jobId) {
-	return 0;
+    soci::session sql(connectionPool);
+
+    try {
+        TransferJobs* job = new TransferJobs();
+
+        sql << "SELECT t_job.vo_name, t_job.user_dn "
+               "FROM t_job WHERE t_job.job_id = ::jobId",
+               soci::use(jobId),
+               soci::into(job->VO_NAME), soci::into(job->USER_DN);
+
+        if (!sql.got_data()) {
+            delete job;
+            job = NULL;
+        }
+
+        return job;
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
 void MySqlAPI::retryFromDead(std::map<int,std::string>& pids){
-	
+    soci::session sql(connectionPool);
+
+    try {
+        int fileId;
+        std::string jobId;
+
+        sql.begin();
+
+        soci::statement stmt = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED' "
+                                               "WHERE file_id = :fileId AND"
+                                               "      job_id = :jobId AND "
+                                               "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
+                                               soci::use(fileId), soci::use(jobId));
+        for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i) {
+            fileId = i->first;
+            jobId  = i->second;
+            stmt.execute(true);
+        }
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
 
