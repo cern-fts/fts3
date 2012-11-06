@@ -53,6 +53,7 @@ set(fts_cli_libs
     cgsi_plugin_cpp
     boost_program_options-mt
     boost_thread-mt
+    boost_regex-mt
     is_ifce
     fts_delegation_api_simple
 )

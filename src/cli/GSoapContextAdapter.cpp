@@ -28,9 +28,12 @@
 #include "common/LogFileStreamer.h"
 
 #include <boost/tokenizer.hpp>
+#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <cgsi_plugin.h>
+
+#include <sstream>
 
 namespace fts3 { namespace cli {
 
@@ -489,8 +492,18 @@ void GSoapContextAdapter::getLog(string& logname, string jobId) {
 }
 
 void GSoapContextAdapter::handleSoapFault(string msg) {
+
 	cout << "gsoap fault: ";
-	soap_stream_fault(ctx, cout);
+
+	stringstream ss;
+	soap_stream_fault(ctx, ss);
+	cout << ss.str();
+
+	regex re (".+CGSI-gSOAP running on .+ reports Error reading token data header: Connection closed.+");
+	if (regex_match(ss.str(), re)) {
+		msg += " It might be the FTS server's CRL has expired!";
+	}
+
 	throw string(msg);
 }
 
