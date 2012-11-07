@@ -89,13 +89,15 @@ protected:
         if (_vm.count("help"))
         {
             DEPENDENCIES::stream() << desc << "\n";
-            DEPENDENCIES::exit(1);
+            return;
+            //DEPENDENCIES::exit(1);
         }
 
         if (_vm.count("version"))
         {
             DEPENDENCIES::stream() << FTS3_SERVER_VERSION << "\n";
-            DEPENDENCIES::exit(1);
+            return;
+            //DEPENDENCIES::exit(1);
         }
 
         bool isNoDaemon = _vm.count ("no-daemon");
@@ -125,12 +127,14 @@ protected:
         catch (std::exception& e)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Error in parsing config file: " << e.what() << commit;
-            DEPENDENCIES::exit(1);
+            throw;
+            //DEPENDENCIES::exit(1);
         }
         catch (...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown error when parsing config file." << commit;
-            DEPENDENCIES::exit(1);
+            throw;
+            //DEPENDENCIES::exit(1);
         }
 
         po::notify(_vm);

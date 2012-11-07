@@ -32,7 +32,7 @@ limitations under the License. */
 FTS3_CONFIG_NAMESPACE_START
 
 // Default config values
-#define FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT 8080
+#define FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT 8443
 #define FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT "localhost"
 #define FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT 10
 #define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT "/var/log/fts3"
@@ -166,10 +166,10 @@ po::options_description ServerConfigReader::_defineHiddenOptions()
 /** Read command line option - the real thing. */
 struct ReadCommandLineOptions_SystemTraits
 {
-    static void exit(const int aVal)
+    /*static void exit(const int aVal)
     {
         ::exit(aVal);
-    }
+    }*/
 
     /* ---------------------------------------------------------------------- */
 
@@ -195,10 +195,10 @@ struct ReadCommandLineOptions_SystemTraits
 /** Read config file - the real thing. */
 struct ReadConfigFile_SystemTraits
 {
-    static void exit(const int aVal)
+    /*static void exit(const int aVal)
     {
         ::exit(aVal);
-    }
+    }*/
 
     static boost::shared_ptr<std::istream> getStream (const std::string& aName)
     {
@@ -212,6 +212,7 @@ struct ReadConfigFile_SystemTraits
             std::stringstream msg;
             msg << "Error opening file " << aName;
             FTS3_COMMON_EXCEPTION_THROW ( FTS3_COMMON_NAMESPACE::Err_System (msg.str()) );
+            throw;
         }
 
         return in;

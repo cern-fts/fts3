@@ -1,8 +1,9 @@
+%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Name: fts
 Version: 0.0.1 
-Release: 48%{?dist}
+Release: 49%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons 
 License: ASL 2.0
@@ -32,21 +33,20 @@ BuildRequires:  soci-mysql-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 %{?filter_setup:
-%filter_provides_in /usr/lib64/oracle/*/client/lib64/.*\.so$
-%filter_requires_in /usr/lib64/oracle/*/client/lib64/.*\.so$
+%filter_provides_in /usr/lib64/oracle/*/client/lib64/
+%filter_requires_in /usr/lib64/oracle/*/client/lib64/
 %filter_setup
 }
 
 %description
 The File Transfer Service V3
 
-#%package devel
-#Summary: Development files for File Transfer Service V3
-#Group: Applications/Internet
-#Requires: %{name}%{?_isa} = %{version}-%{release}
+%package devel
+Summary: Development files for File Transfer Service V3
+Group: Applications/Internet
 
-#%description devel
-#Development files for File Transfer Service V3
+%description devel
+Development files for File Transfer Service V3
 
 
 %package server
@@ -65,6 +65,29 @@ Summary: File Transfer Service version 3 client
 Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
 
+%package oracle
+Summary: File Transfer Service version 3 oracle plugin
+Group: Applications/Internet
+Requires: fts-libs = %{version}-%{release}
+Requires:  oracle-instantclient-basic%{?_isa}
+
+%package mysql
+Summary: File Transfer Service version 3 oracle plugin
+Group: Applications/Internet
+Requires: fts-libs = %{version}-%{release}
+Requires:  soci-mysql%{?_isa}
+
+%package all
+Summary:			Meta package for FTS v3
+Group:				Applications/Internet
+Requires:			%{name}-server%{?_isa} = %{version}-%{release} 
+Requires:			%{name}-client%{?_isa} = %{version}-%{release} 
+Requires:			%{name}-libs%{?_isa} = %{version}-%{release}
+
+%description all
+Meta-package for complete installation of FTS3 clients, server and db plugins
+
+
 %description server
 FTS server is a service which accepts transfer jobs, querying their status, etc
 
@@ -73,6 +96,12 @@ FTS common libraries used across the client and server
 
 %description client
 FTS client CLI tool for submitting transfers, etc
+
+%description mysql
+FTS mysql plugin
+
+%description oracle
+FTS oracle plugin
 
 
 %prep
@@ -93,7 +122,7 @@ if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/log/fts3
 make install DESTDIR=$RPM_BUILD_ROOT
-
+mkdir -p %{buildroot}%{python_sitearch}/fts
 
 %pre server
 getent group fts3 >/dev/null || groupadd -r fts3
@@ -106,9 +135,9 @@ exit 0
 
 %postun libs -p /sbin/ldconfig
 
-#%post devel -p /sbin/ldconfig
+%post devel -p /sbin/ldconfig
 
-#%postun devel -p /sbin/ldconfig
+%postun devel -p /sbin/ldconfig
 
 
 %post server
@@ -161,15 +190,18 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
-%{_sysconfdir}/logrotate.d/fts-msg-cron
-%{_sysconfdir}/logrotate.d/fts-msg-bulk
-%{_sysconfdir}/logrotate.d/fts-server
-%{_sysconfdir}/cron.daily/fts-records-cleaner
+%config(noreplace) %{_sysconfdir}/logrotate.d/fts-msg-cron
+%config(noreplace) %{_sysconfdir}/logrotate.d/fts-msg-bulk
+%config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
+%attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz
 %doc %{_docdir}/fts3/oracle-drop.sql
 %doc %{_docdir}/fts3/oracle-schema.sql
+%doc %{_docdir}/fts3/mysql-schema.sql
+%doc %{_docdir}/fts3/mysql-drop.sql
+%doc %{_docdir}/fts3/mysql_truncate.sql
 
 
 %files client
@@ -198,42 +230,54 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %{python_sitearch}/fts/*
 %{_bindir}/fts*
-%{_libdir}/libfts_common.so*
-%{_libdir}/libfts_config.so*
-%{_libdir}/libfts_db_generic.so*
-%{_libdir}/libfts_db_oracle.so*
-%{_libdir}/libfts_db_mysql.so*
-%{_libdir}/libfts_msg_ifce.so*
-%{_libdir}/libfts_proxy.so*
-%{_libdir}/libfts_server_gsoap_transfer.so*
-%{_libdir}/libfts_server_lib.so*
-%{_libdir}/libfts_cli_common.so*
-%{_libdir}/libfts_ws_ifce_client.so*
-%{_libdir}/libfts_ws_ifce_server.so*
-%{_libdir}/libfts_delegation_api_simple.so*
-%{_libdir}/libfts_delegation_api_cpp.so*
-%doc
-
-#%files devel
-#%defattr(-,root,root,-)
-#%{python_sitearch}/fts/*
-#%{_bindir}/fts*
-#%{_libdir}/libfts_common.so
-#%{_libdir}/libfts_config.so
-#%{_libdir}/libfts_db_generic.so
-#%{_libdir}/libfts_db_oracle.so
-#%{_libdir}/libfts_msg_ifce.so
-#%{_libdir}/libfts_proxy.so
-#%{_libdir}/libfts_server_gsoap_transfer.so
-#%{_libdir}/libfts_server_lib.so
-#%{_libdir}/libfts_cli_common.so
-#%{_libdir}/libfts_ws_ifce_client.so
-#%{_libdir}/libfts_ws_ifce_server.so
-#%{_libdir}/libfts_delegation_api_simple.so
-#%{_libdir}/libfts_delegation_api_cpp.so
+%{python_sitearch}/fts/libftspython.so*
+%{python_sitearch}/fts/ftsdb.so*
+%{_libdir}/libfts_common.so.*
+%{_libdir}/libfts_config.so.*
+%{_libdir}/libfts_db_generic.so.*
+%{_libdir}/libfts_msg_ifce.so.*
+%{_libdir}/libfts_proxy.so.*
+%{_libdir}/libfts_server_gsoap_transfer.so.*
+%{_libdir}/libfts_server_lib.so.*
+%{_libdir}/libfts_cli_common.so.*
+%{_libdir}/libfts_ws_ifce_client.so.*
+%{_libdir}/libfts_ws_ifce_server.so.*
+%{_libdir}/libfts_delegation_api_simple.so.*
+%{_libdir}/libfts_delegation_api_cpp.so.*
 
 
+%files mysql
+%defattr(-,root,root,-)
+%{_libdir}/libfts_db_mysql.so.*
+
+%files oracle
+%defattr(-,root,root,-)
+%{_libdir}/libfts_db_oracle.so.*
+
+%files devel
+%defattr(-,root,root,-)
+%{python_sitearch}/fts/*
+%{_bindir}/fts*
+%{python_sitearch}/fts/libftspython.so
+%{python_sitearch}/fts/ftsdb.so
+%{_libdir}/libfts_common.so
+%{_libdir}/libfts_config.so
+%{_libdir}/libfts_db_generic.so
+%{_libdir}/libfts_db_oracle.so
+%{_libdir}/libfts_db_mysql.so
+%{_libdir}/libfts_msg_ifce.so
+%{_libdir}/libfts_proxy.so
+%{_libdir}/libfts_server_gsoap_transfer.so
+%{_libdir}/libfts_server_lib.so
+%{_libdir}/libfts_cli_common.so
+%{_libdir}/libfts_ws_ifce_client.so
+%{_libdir}/libfts_ws_ifce_server.so
+%{_libdir}/libfts_delegation_api_simple.so
+%{_libdir}/libfts_delegation_api_cpp.so
+
+%files all
+%defattr (-,root,root)
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-36
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-49
   - A bit like a fedora package

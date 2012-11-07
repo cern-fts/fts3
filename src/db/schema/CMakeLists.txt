@@ -25,3 +25,12 @@ install(FILES         oracle-drop.sql
 
 install(FILES         oracle-schema.sql
         DESTINATION ${DOC_INSTALL_DIR} )
+
+install(FILES         mysql-schema.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+
+install(FILES         mysql-drop.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+
+install(FILES         mysql_truncate.sql
+        DESTINATION ${DOC_INSTALL_DIR} )

@@ -24,8 +24,13 @@ set(fts_include_dir
     "${CMAKE_BINARY_DIR}/src/"
 )
 
-FIND_PACKAGE(PythonLibs)
+FIND_PACKAGE(PythonLibs REQUIRED)
 include_directories (${fts_include_dir} ${PYTHON_INCLUDE_PATH})
+
+find_package (Boost COMPONENTS python REQUIRED)
+execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)" 
+                 OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
+                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # add a target to generate API documentation with Doxygen
 find_package(Doxygen)
@@ -242,3 +247,6 @@ install(TARGETS
 install(TARGETS         fts_cli_common 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+	
+install (TARGETS ftspython
+         LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}/fts)	
