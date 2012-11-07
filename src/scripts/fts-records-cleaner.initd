@@ -27,7 +27,7 @@ prog=$(basename $exec)
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
-lockfile=/var/lock/subsys/$prog
+lockfile=/var/lock/subsys/fts-records-cleaner
 
 start() {
     echo -n $"Starting $prog: "
