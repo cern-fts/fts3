@@ -41,14 +41,6 @@ install(FILES         fts-server.initd
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts-server )
 
-install(FILES         fts-msg-cron.logrotate
-        DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
-	RENAME fts-msg-cron )
-
 install(FILES         fts-server.logrotate
         DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d 
 	RENAME fts-server )
-
-install(FILES         fts-msg-bulk.logrotate
-        DESTINATION ${SYSCONF_INSTALL_DIR}/logrotate.d
-        RENAME fts-msg-bulk )
