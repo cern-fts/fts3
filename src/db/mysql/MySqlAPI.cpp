@@ -1,6 +1,7 @@
 #include <error.h>
 #include <logger.h>
 #include <mysql/soci-mysql.h>
+#include <mysql/mysql.h>
 #include <signal.h>
 #include "MySqlAPI.h"
 #include "MySqlMonitoring.h"
@@ -63,9 +64,13 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
     std::string connStr = connParams.str();
 
     // Connect
+    static const my_bool reconnect = 1;
     for (size_t i = 0; i < poolSize; ++i) {
         soci::session& sql = connectionPool.at(i);
         sql.open(soci::mysql, connStr);
+
+        soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
+        mysql_options(be->conn_, MYSQL_OPT_RECONNECT, &reconnect);
     }
 }
 
