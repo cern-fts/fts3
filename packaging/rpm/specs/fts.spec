@@ -44,6 +44,7 @@ The File Transfer Service V3
 %package devel
 Summary: Development files for File Transfer Service V3
 Group: Applications/Internet
+Requires: fts-libs = %{version}-%{release}
 
 %description devel
 Development files for File Transfer Service V3
@@ -66,26 +67,26 @@ Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
 
 %package oracle
-Summary: File Transfer Service version 3 oracle plugin
+Summary: File Transfer Service version 3 oracle plug-ins
 Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
 Requires:  oracle-instantclient-basic%{?_isa}
 
 %package mysql
-Summary: File Transfer Service version 3 oracle plugin
+Summary: File Transfer Service version 3 oracle plug-ins
 Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
 Requires:  soci-mysql%{?_isa}
 
 %package all
-Summary:			Meta package for FTS v3
-Group:				Applications/Internet
-Requires:			%{name}-server%{?_isa} = %{version}-%{release} 
-Requires:			%{name}-client%{?_isa} = %{version}-%{release} 
-Requires:			%{name}-libs%{?_isa} = %{version}-%{release}
+Summary: Meta package for FTS v3
+Group: Applications/Internet
+Requires: %{name}-server%{?_isa} = %{version}-%{release} 
+Requires: %{name}-client%{?_isa} = %{version}-%{release} 
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description all
-Meta-package for complete installation of FTS3 clients, server and db plugins
+Meta-package for complete installation of FTS3 clients, server and db plug-ins
 
 
 %description server
@@ -98,10 +99,10 @@ FTS common libraries used across the client and server
 FTS client CLI tool for submitting transfers, etc
 
 %description mysql
-FTS mysql plugin
+FTS mysql plug-ins
 
 %description oracle
-FTS oracle plugin
+FTS oracle plug-ins
 
 
 %prep
@@ -139,6 +140,13 @@ exit 0
 
 %postun devel -p /sbin/ldconfig
 
+%post oracle -p /sbin/ldconfig
+
+%postun oracle -p /sbin/ldconfig
+
+%post mysql -p /sbin/ldconfig
+
+%postun mysql -p /sbin/ldconfig
 
 %post server
 /sbin/chkconfig --add fts-server
