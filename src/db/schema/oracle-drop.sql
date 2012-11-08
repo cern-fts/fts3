@@ -1,5 +1,3 @@
-drop trigger bad_se_id_auto_inc;
-drop sequence se_bad_id_seq;
 drop trigger se_id_info_auto_inc;
 drop sequence file_file_id_seq;
 drop trigger file_file_id_auto_inc;
@@ -10,11 +8,11 @@ drop sequence se_row_id_seq;
 DROP TABLE t_credential;
 DROP TABLE t_credential_cache;
 DROP TABLE t_credential_vers;
-DROP SEQUENCE se_bad_id_seq;
 DROP SEQUENCE se_id_info_seq;
 DROP SEQUENCE file_file_id_seq;
 DROP SEQUENCE se_row_id_seq;
 drop table T_BAD_SES cascade constraints;
+drop table T_BAD_DNS cascade constraints;
 drop table T_FILE cascade constraints;
 drop table T_JOB cascade constraints;
 drop table T_SCHEMA_VERS cascade constraints;

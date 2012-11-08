@@ -268,6 +268,18 @@ public:
     virtual void forkFailedRevertStateV(std::map<int,std::string>& pids) = 0; 
     
     virtual void retryFromDead(std::map<int,std::string>& pids) = 0;
+
+    virtual void blacklistSe(std::string se, std::string msg, std::string adm_dn) = 0;
+
+    virtual void blacklistDn(std::string dn, std::string msg, std::string adm_dn) = 0;
+
+    virtual void unblacklistSe(std::string se) = 0;
+
+    virtual void unblacklistDn(std::string dn) = 0;
+
+    virtual bool isSeBlacklisted(std::string se) = 0;
+
+    virtual bool isDnBlacklisted(std::string dn) = 0;
 };
 
 

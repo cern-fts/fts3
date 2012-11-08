@@ -4374,6 +4374,199 @@ void OracleAPI::retryFromDead(std::map<int,std::string>& pids){
 	
 }
 
+
+void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn) {
+
+    std::string query = "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn) VALUES (:1, :2, :3, :4)";
+    std::string tag = "blacklistSe";
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (false == conn->checkConn()) return;
+
+    	time_t timed = time(NULL);
+
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, se);
+        s->setString(2, msg);
+        s->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
+        s->setString(4, adm_dn);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        conn->commit();
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn)
+			conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    }
+}
+
+void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn) {
+
+    std::string query = "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) VALUES (:1, :2, :3, :4)";
+    std::string tag = "blacklistSe";
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (false == conn->checkConn()) return;
+
+    	time_t timed = time(NULL);
+
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, dn);
+        s->setString(2, msg);
+        s->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
+        s->setString(4, adm_dn);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        conn->commit();
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn)
+			conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    }
+}
+
+void OracleAPI::unblacklistSe(std::string se) {
+
+    std::string query = "DELETE FROM t_bad_ses WHERE se = :1";
+    std::string tag = "unblacklistSe";
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (false == conn->checkConn()) return;
+
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, se);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        conn->commit();
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn)
+			conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    }
+}
+
+void OracleAPI::unblacklistDn(std::string dn) {
+
+    std::string query = "DELETE FROM t_bad_dns WHERE dn = :1";
+    std::string tag = "unblacklistSe";
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (false == conn->checkConn()) return;
+
+        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s->setString(1, dn);
+        oracle::occi::ResultSet* r = conn->createResultset(s);
+        conn->commit();
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn)
+			conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    }
+}
+
+bool OracleAPI::isSeBlacklisted(std::string se) {
+
+	std::string tag = "isSeBlacklisted";
+	std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1";
+
+	oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+		s = conn->createStatement(stmt, tag);
+		s->setString(1, se);
+		r = conn->createResultset(s);
+
+		ret = r->next();
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+    	if(conn)
+			conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+		if(conn){
+			if(s && r)
+				conn->destroyResultset(s, r);
+				conn->destroyStatement(s, tag);
+		}
+    }
+
+	return ret;
+}
+
+bool OracleAPI::isDnBlacklisted(std::string dn) {
+
+	std::string tag = "isSeBlacklisted";
+	std::string stmt = "SELECT * FROM t_bad_dns WHERE dn = :1";
+
+	oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+		s = conn->createStatement(stmt, tag);
+		s->setString(1, dn);
+		r = conn->createResultset(s);
+
+		ret = r->next();
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+    	if(conn)
+			conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+		if(conn){
+			if(s && r)
+				conn->destroyResultset(s, r);
+				conn->destroyStatement(s, tag);
+		}
+    }
+
+	return ret;
+}
+
 // the class factories
 extern "C" GenericDbIfce* create() {
     return new OracleAPI;

@@ -224,6 +224,18 @@ public:
     
     virtual void retryFromDead(std::map<int,std::string>& pids);
     
+    virtual void blacklistSe(std::string se, std::string msg, std::string adm_dn);
+
+    virtual void blacklistDn(std::string dn, std::string msg, std::string adm_dn);
+
+    virtual void unblacklistSe(std::string se);
+
+    virtual void unblacklistDn(std::string dn);
+
+    virtual bool isSeBlacklisted(std::string se);
+
+    virtual bool isDnBlacklisted(std::string dn);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

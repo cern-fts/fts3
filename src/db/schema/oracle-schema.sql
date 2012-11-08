@@ -287,45 +287,6 @@ CREATE TABLE t_se_protocol (
 --   ,CONSTRAINT preparing_files_ratio_value CHECK (preparing_files_ratio >= 1) 
 );
 
-
---
--- blacklist of bad SEs that should not be transferred to
---
-CREATE TABLE t_bad_ses (
---
--- The internal id
-   se_id                INTEGER
-                        CONSTRAINT bad_ses_id_pk PRIMARY KEY   
---
--- The hostname of the bad SE   
-   ,se_hostname         VARCHAR2(256)
---
--- The reason this host was added 
-   ,message             VARCHAR2(2048) DEFAULT NULL
---
--- The time the host was added
-   ,addition_time       TIMESTAMP WITH TIME ZONE
---
--- The DN of the administrator who added it
-   ,admin_dn            VARCHAR2(1024)
-);
-
---
--- autoinc sequence on se_id
---
-CREATE SEQUENCE se_bad_id_seq;
-
-CREATE OR REPLACE TRIGGER bad_se_id_auto_inc
-BEFORE INSERT ON t_bad_ses
-FOR EACH ROW
-WHEN (new.se_id IS NULL)
-BEGIN
-  SELECT se_bad_id_seq.nextval
-  INTO   :new.se_id from dual;
-END;
-/
-
-
 --
 -- autoinc sequence on se_id_info
 --
@@ -340,6 +301,45 @@ BEGIN
   INTO   :new.se_id_info from dual;
 END;
 /
+
+--
+-- blacklist of bad SEs that should not be transferred to
+--
+CREATE TABLE t_bad_ses (
+--
+-- The hostname of the bad SE   
+   se         VARCHAR2(256)
+--
+-- The reason this host was added 
+   ,message             VARCHAR2(2048) DEFAULT NULL
+--
+-- The time the host was added
+   ,addition_time       TIMESTAMP WITH TIME ZONE
+--
+-- The DN of the administrator who added it
+   ,admin_dn            VARCHAR2(1024)
+   ,CONSTRAINT bad_se_pk PRIMARY KEY (se)
+);
+
+--
+-- blacklist of bad DNs that should not be transferred to
+--
+CREATE TABLE t_bad_dns (
+--
+-- The hostname of the bad SE   
+   dn         VARCHAR2(256)
+--
+-- The reason this host was added 
+   ,message             VARCHAR2(2048) DEFAULT NULL
+--
+-- The time the host was added
+   ,addition_time       TIMESTAMP WITH TIME ZONE
+--
+-- The DN of the administrator who added it
+   ,admin_dn            VARCHAR2(1024)
+   ,CONSTRAINT bad_dn_pk PRIMARY KEY (dn)
+);
+
 
 --
 -- Table for saving the site-group association. As convention, group names should be between "[""]"
@@ -748,10 +748,6 @@ CREATE TABLE t_stage_req (
 -- Index Section 
 --
 --
-
--- t_bad_ses indexes:
--- t_bad_ses(se_id) is primary key
-CREATE INDEX bad_se_hostname ON t_bad_ses(se_hostname);
 
 -- t_site_group indexes:
 -- t_site_group(group_name,site_name) is primary key
