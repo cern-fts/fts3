@@ -615,6 +615,49 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 }
 
 int fts3::impltns__blacklist(soap* soap, string _type, string _subject, bool _blk, impltns__blacklistResponse &_param_18) {
+
+	try {
+
+		CGsiAdapter cgsi(soap);
+		string dn = cgsi.getClientDn();
+
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG); // TODO
+
+		if (_type == "se") {
+
+			if (_blk) {
+
+				DBSingleton::instance().getDBObjectInstance()->blacklistSe(_subject, string(), dn);
+
+			} else {
+
+				DBSingleton::instance().getDBObjectInstance()->unblacklistSe(_subject);
+			}
+
+		} else if (_type == "dn") {
+
+			if (_blk) {
+
+				DBSingleton::instance().getDBObjectInstance()->blacklistDn(_subject, string(), dn);
+
+			} else {
+
+				DBSingleton::instance().getDBObjectInstance()->unblacklistDn(_subject);
+			}
+
+		} else {
+			throw Err_Custom("Wrong type (it should be either 'se' or 'dn')!");
+		}
+
+	} catch(Err& ex) {
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(soap, ex.what(), "TransferException");
+		return SOAP_FAULT;
+	} catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+	    return SOAP_FAULT;
+	}
+
 	return SOAP_OK;
 }
 
