@@ -38,14 +38,23 @@ using namespace boost::assign;
 
 const map< string, set <string> > CfgParser::initAllowed() {
 
-	set<string> root = list_of ("name") ("type") ("active") ("members") ("protocol") ("share");
-	set<string> protocol = list_of ("parameters") ("pair");
-	set<string> share = list_of ("type") ("id") ("in") ("out") ("policy");
+	set<string> root = list_of
+			("name")
+			("active")
+			("members")
+			("source")
+			("destination")
+			("vo")
+			("active_transfers")
+			("protocol")
+			;
+//	set<string> protocol = list_of ("parameters") ("pair");
+//	set<string> share = list_of ("type") ("id") ("in") ("out") ("policy");
 
 	return map_list_of
 			(string(), root)
-			("protocol", protocol)
-			("share", share)
+//			("protocol", protocol)
+//			("share", share)
 			;
 }
 
