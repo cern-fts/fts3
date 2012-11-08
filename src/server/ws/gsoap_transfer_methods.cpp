@@ -614,6 +614,10 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 	return SOAP_OK;
 }
 
+int fts3::impltns__blacklist(soap* soap, string _type, string _subject, bool _blk, impltns__blacklistResponse &_param_18) {
+	return SOAP_OK;
+}
+
 
 int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogResponse &_param_36) {
 
