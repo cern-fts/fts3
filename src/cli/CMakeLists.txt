@@ -82,6 +82,7 @@ set(fts_cli_common_sources
 	ui/SubmitTransferCli.cpp
 	ui/TransferStatusCli.cpp
 	ui/VoNameCli.cpp
+	ui/BlacklistCli.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
 )
@@ -180,12 +181,20 @@ add_executable(fts-config-get
 target_link_libraries (fts-config-get fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts-debug-set command
+# fts-set-debug command
 
-add_executable(fts-debug-set 
-    debug/fts3-debug-set.cpp
+add_executable(fts-set-debug 
+    set/fts3-set-debug.cpp
 )
-target_link_libraries (fts-debug-set fts_cli_common)
+target_link_libraries (fts-set-debug fts_cli_common)
+
+# ------------------------------------------------------------------------
+# fts-set-blacklist command
+
+add_executable(fts-set-blk 
+    set/fts3-set-blk.cpp
+)
+target_link_libraries (fts-set-blk fts_cli_common)
 
 # ------------------------------------------------------------------------
 
@@ -241,7 +250,8 @@ install(TARGETS
 	fts-config-get
 	fts-config-set
 	fts-config-del
-	fts-debug-set
+	fts-set-debug
+	fts-set-blk
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
 install(TARGETS         fts_cli_common 

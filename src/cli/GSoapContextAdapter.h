@@ -242,6 +242,11 @@ public:
 	/**
 	 * TODO
 	 */
+	void blacklist(string type, string subject, bool mode);
+
+	/**
+	 * TODO
+	 */
 	void doDrain(bool drain);
 
 	/**

@@ -468,6 +468,13 @@ void GSoapContextAdapter::debugSet(string source, string destination, bool debug
 	}
 }
 
+void GSoapContextAdapter::blacklist(string type, string subject, bool mode) {
+	impltns__blacklistResponse resp;
+	if (soap_call_impltns__blacklist(ctx, endpoint.c_str(), 0, type, subject, mode, resp)) {
+		handleSoapFault("Operation blacklist failed.");
+	}
+}
+
 void GSoapContextAdapter::doDrain(bool drain) {
 	implcfg__doDrainResponse resp;
 	if (soap_call_implcfg__doDrain(ctx, endpoint.c_str(), 0, drain, resp)) {
