@@ -191,10 +191,10 @@ target_link_libraries (fts-set-debug fts_cli_common)
 # ------------------------------------------------------------------------
 # fts-set-blacklist command
 
-add_executable(fts-set-blk 
+add_executable(fts-set-blacklist 
     set/fts3-set-blk.cpp
 )
-target_link_libraries (fts-set-blk fts_cli_common)
+target_link_libraries (fts-set-blacklist fts_cli_common)
 
 # ------------------------------------------------------------------------
 
@@ -251,7 +251,7 @@ install(TARGETS
 	fts-config-set
 	fts-config-del
 	fts-set-debug
-	fts-set-blk
+	fts-set-blacklist
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
 install(TARGETS         fts_cli_common 
