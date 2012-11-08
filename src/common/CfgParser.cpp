@@ -36,12 +36,26 @@ namespace fts3 { namespace common {
 
 using namespace boost::assign;
 
-const map< string, set <string> > CfgParser::initAllowed() {
+const map< string, set <string> > CfgParser::initAllowedCfg() {
 
 	set<string> root = list_of
 			("name")
 			("active")
 			("members")
+			;
+//	set<string> protocol = list_of ("parameters") ("pair");
+//	set<string> share = list_of ("type") ("id") ("in") ("out") ("policy");
+
+	return map_list_of
+			(string(), root)
+//			("protocol", protocol)
+//			("share", share)
+			;
+}
+
+const map< string, set <string> > CfgParser::initAllowedTransferCfg() {
+
+	set<string> root = list_of
 			("source")
 			("destination")
 			("vo")
@@ -58,7 +72,9 @@ const map< string, set <string> > CfgParser::initAllowed() {
 			;
 }
 
-const map<string, set<string> > CfgParser::allowed = CfgParser::initAllowed();
+const map<string, set<string> > CfgParser::allowed_cfg = CfgParser::initAllowedCfg();
+
+const map<string, set<string> > CfgParser::allowed_transfer_cfg = CfgParser::initAllowedTransferCfg();
 
 CfgParser::CfgParser(string configuration) {
 
@@ -94,14 +110,22 @@ CfgParser::CfgParser(string configuration) {
 		throw Err_Custom(msg);
 	}
 
-	validate(pt);
+	if (isTransferCfg()) {
+		validate(pt, allowed_transfer_cfg);
+	} else {
+		validate(pt, allowed_cfg);
+	}
 }
 
 CfgParser::~CfgParser() {
 
 }
 
-void CfgParser::validate(ptree pt, string path) throw (Err_Custom) {
+bool CfgParser::isTransferCfg() {
+	return !get<string>("name").is_initialized();
+}
+
+void CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path) throw (Err_Custom) {
 
 	// get the allowed names
 	set<string> names;
@@ -131,7 +155,7 @@ void CfgParser::validate(ptree pt, string path) throw (Err_Custom) {
 			}
 		} else {
 			// validate the child
-			validate(p.second, p.first);
+			validate(p.second, allowed, p.first);
 		}
 	}
 }

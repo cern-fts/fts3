@@ -91,15 +91,27 @@ private:
 	 *
 	 * @throw throws Err_Custom if the configuration format is wrong
 	 */
-	void validate(ptree pt, string path = string()) throw (Err_Custom);
+	void validate(ptree pt, map< string, set <string> > allowed, string path = string()) throw (Err_Custom);
 
 	/// The object that contains the parsed configuration
 	ptree pt;
 
-	/// allowed names
-	static const map< string, set <string> > allowed;
-	/// initializes allowed
-	static const map< string, set <string> > initAllowed();
+	/**
+	 *  checks whether it is a transfer configuration
+	 *
+	 *  @return true if its transfer configuration and false otherwise
+	 */
+	bool isTransferCfg();
+
+	/// allowed names for se config
+	static const map< string, set <string> > allowed_cfg;
+	/// allowed names for transfer config
+	static const map< string, set <string> > allowed_transfer_cfg;
+
+	/// initializes allowed JSON members for se config
+	static const map< string, set <string> > initAllowedCfg();
+	/// initializes allowed JSON members for transfer config
+	static const map< string, set <string> > initAllowedTransferCfg();
 };
 
 template <typename T>
