@@ -79,6 +79,8 @@ void SetCfgCli::parse(int ac, char* av[]) {
 
 		// parse the configuration, check if its valid JSON format, and valid configuration
 		CfgParser c(*it);
+
+		if (c.getCfgType() == CfgParser::NOT_A_CFG) throw(string("The specified configuration doesn't follow any of the valid formats!"));
 	}
 }
 
