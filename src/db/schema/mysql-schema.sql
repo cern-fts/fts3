@@ -294,23 +294,34 @@ CREATE TABLE t_se_protocol (
 --
 CREATE TABLE t_bad_ses (
 --
--- The internal id
-   se_id                INTEGER AUTO_INCREMENT,
---
 -- The hostname of the bad SE   
-   se_hostname         VARCHAR(256),
+   se             VARCHAR(256) PRIMARY KEY,
 --
 -- The reason this host was added 
-   message             VARCHAR(2048) DEFAULT NULL,
+   message        VARCHAR(2048) DEFAULT NULL,
 --
 -- The time the host was added
-   addition_time       TIMESTAMP,
+   addition_time  TIMESTAMP,
 --
 -- The DN of the administrator who added it
-   admin_dn            VARCHAR(1024),
-   
-   PRIMARY KEY(se_id),
-   INDEX (se_hostname)
+   admin_dn       VARCHAR(1024)
+);
+
+--
+-- blacklist DNs
+CREATE TABLE t_bad_dns (
+--
+-- The banned DN
+   dn             VARCHAR(256) PRIMARY KEY,
+--
+-- The reason this dn was added
+   message        VARCHAR(2048) DEFAULT NULL,
+--
+-- The time the dn was added
+   addition_time  TIMESTAMP,
+--
+-- The DN of the administrator who added it
+   admin_dn       VARCHAR(1024)
 );
 
 

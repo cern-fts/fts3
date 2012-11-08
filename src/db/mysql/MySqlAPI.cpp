@@ -2719,6 +2719,111 @@ void MySqlAPI::retryFromDead(std::map<int,std::string>& pids){
 }
 
 
+
+void MySqlAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn)
+{
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+        sql << "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn) "
+               "               VALUES (:se, :message, UTC_TIMESTAMP(), :admin)",
+               soci::use(se), soci::use(msg), soci::use(adm_dn);
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
+
+void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
+{
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+        sql << "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) "
+               "               VALUES (:dn, :message, UTC_TIMESTAMP(), :admin)",
+               soci::use(dn), soci::use(msg), soci::use(adm_dn);
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
+
+void MySqlAPI::unblacklistSe(std::string se)
+{
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+        sql << "DELETE FROM t_bad_ses WHERE se = :se",
+               soci::use(se);
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
+
+void MySqlAPI::unblacklistDn(std::string dn)
+{
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+        sql << "DELETE FROM t_bad_dns WHERE dn = :dn",
+               soci::use(dn);
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
+
+bool MySqlAPI::isSeBlacklisted(std::string se)
+{
+    soci::session sql(connectionPool);
+
+    try {
+        sql << "SELECT * FROM t_bad_ses WHERE se = :se", soci::use(se);
+        return sql.got_data();
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
+
+bool MySqlAPI::isDnBlacklisted(std::string dn)
+{
+    soci::session sql(connectionPool);
+
+    try {
+        sql << "SELECT * FROM t_bad_dns WHERE dn = :dn", soci::use(dn);
+        return sql.got_data();
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
+
 // the class factories
 extern "C" GenericDbIfce* create() {
     return new MySqlAPI;
