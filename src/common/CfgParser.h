@@ -57,6 +57,13 @@ class CfgParser {
 
 public:
 
+	enum CfgType {
+		NOT_A_CFG,
+		GROUP_MEMBERS_CFG,
+		SE_TRANSFER_CFG,
+		GROUP_TRANSFER_CFG
+	};
+
 	/**
 	 * Constructor.
 	 * Parses the given JSON configuration.
@@ -81,37 +88,42 @@ public:
 	template <typename T>
 	optional<T> get(string path);
 
+	CfgType getCfgType() {
+		return type;
+	}
+
 private:
+
+	CfgType type;
 
 	/**
 	 * Validates the ptree object. Checks if the configuration format is OK.
 	 *
 	 * @param pt - the ptree that has to be validated
+	 * @param allowed - a collection of fileds name in the cfg JASON
+	 * 					characteristic for a given type of configuration
 	 * @param path - the path in main ptree (by default root)
 	 *
-	 * @throw throws Err_Custom if the configuration format is wrong
+	 * @return true if it's a configuration of a given type, false otherwise
 	 */
-	void validate(ptree pt, map< string, set <string> > allowed, string path = string()) throw (Err_Custom);
+	bool validate(ptree pt, map< string, set <string> > allowed, string path = string());
 
 	/// The object that contains the parsed configuration
 	ptree pt;
 
-	/**
-	 *  checks whether it is a transfer configuration
-	 *
-	 *  @return true if its transfer configuration and false otherwise
-	 */
-	bool isTransferCfg();
-
-	/// allowed names for se config
-	static const map< string, set <string> > allowed_cfg;
-	/// allowed names for transfer config
-	static const map< string, set <string> > allowed_transfer_cfg;
+	/// allowed names for configuring a group
+	static const map< string, set <string> > GROUP_MEMBERS_ALLOWED;
+	/// allowed names for configuring se transfer parameters
+	static const map< string, set <string> > SE_TRANSFER_ALLOWED;
+	/// allowed names for configuring se transfer parameters
+	static const map< string, set <string> > GROUP_TRANSFER_ALLOWED;
 
 	/// initializes allowed JSON members for se config
-	static const map< string, set <string> > initAllowedCfg();
-	/// initializes allowed JSON members for transfer config
-	static const map< string, set <string> > initAllowedTransferCfg();
+	static const map< string, set <string> > initGroupMembers();
+	/// initializes allowed JSON members for se transfer config
+	static const map< string, set <string> > initSeTransfer();
+	/// initializes allowed JSON members for site transfer config
+	static const map< string, set <string> > initGroupTransfer();
 };
 
 template <typename T>

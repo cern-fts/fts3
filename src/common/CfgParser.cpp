@@ -36,11 +36,10 @@ namespace fts3 { namespace common {
 
 using namespace boost::assign;
 
-const map< string, set <string> > CfgParser::initAllowedCfg() {
+const map< string, set <string> > CfgParser::initGroupMembers() {
 
 	set<string> root = list_of
 			("name")
-			("active")
 			("members")
 			;
 //	set<string> protocol = list_of ("parameters") ("pair");
@@ -53,28 +52,37 @@ const map< string, set <string> > CfgParser::initAllowedCfg() {
 			;
 }
 
-const map< string, set <string> > CfgParser::initAllowedTransferCfg() {
+const map< string, set <string> > CfgParser::initSeTransfer() {
 
 	set<string> root = list_of
-			("source")
-			("destination")
-			("vo")
-			("active_transfers")
+			("source_se")
+			("destination_se")
+			("share")
 			("protocol")
 			;
-//	set<string> protocol = list_of ("parameters") ("pair");
-//	set<string> share = list_of ("type") ("id") ("in") ("out") ("policy");
 
 	return map_list_of
 			(string(), root)
-//			("protocol", protocol)
-//			("share", share)
 			;
 }
 
-const map<string, set<string> > CfgParser::allowed_cfg = CfgParser::initAllowedCfg();
+const map< string, set <string> > CfgParser::initGroupTransfer() {
 
-const map<string, set<string> > CfgParser::allowed_transfer_cfg = CfgParser::initAllowedTransferCfg();
+	set<string> root = list_of
+			("source_group")
+			("destination_group")
+			("share")
+			("protocol")
+			;
+
+	return map_list_of
+			(string(), root)
+			;
+}
+
+const map<string, set<string> > CfgParser::GROUP_MEMBERS_ALLOWED = CfgParser::initGroupMembers();
+const map<string, set<string> > CfgParser::SE_TRANSFER_ALLOWED = CfgParser::initSeTransfer();
+const map<string, set<string> > CfgParser::GROUP_TRANSFER_ALLOWED = CfgParser::initGroupTransfer();
 
 CfgParser::CfgParser(string configuration) {
 
@@ -110,22 +118,29 @@ CfgParser::CfgParser(string configuration) {
 		throw Err_Custom(msg);
 	}
 
-	if (isTransferCfg()) {
-		validate(pt, allowed_transfer_cfg);
-	} else {
-		validate(pt, allowed_cfg);
+	if (validate(pt, SE_TRANSFER_ALLOWED)) {
+		type = SE_TRANSFER_CFG;
+		return;
 	}
+
+	if (validate(pt, GROUP_TRANSFER_ALLOWED)) {
+		type = GROUP_TRANSFER_CFG;
+		return;
+	}
+
+	if (validate(pt, GROUP_MEMBERS_ALLOWED)) {
+		type = GROUP_MEMBERS_CFG;
+		return;
+	}
+
+	type = NOT_A_CFG;
 }
 
 CfgParser::~CfgParser() {
 
 }
 
-bool CfgParser::isTransferCfg() {
-	return !get<string>("name").is_initialized();
-}
-
-void CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path) throw (Err_Custom) {
+bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path) {
 
 	// get the allowed names
 	set<string> names;
@@ -145,19 +160,25 @@ void CfgParser::validate(ptree pt, map< string, set <string> > allowed, string p
 		if (!names.count(p.first)) {
 			string msg = "unexpected identifier: " + p.first;
 			if (!path.empty()) msg += " in " + path + " object";
-			throw Err_Custom(msg);
+//			throw Err_Custom(msg);
+			return false;
 		}
 
 		if (p.second.empty()) {
 			// check if it should be an object or a value
 			if(allowed.find(p.first) != allowed.end()) {
-				throw Err_Custom("A member object was expected in " + p.first);
+//				throw Err_Custom("A member object was expected in " + p.first);
+				return false;
 			}
 		} else {
 			// validate the child
-			validate(p.second, allowed, p.first);
+			if (!validate(p.second, allowed, p.first)) {
+				return false;
+			}
 		}
 	}
+
+	return true;
 }
 
 }
