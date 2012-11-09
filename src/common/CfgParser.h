@@ -60,8 +60,7 @@ public:
 	enum CfgType {
 		NOT_A_CFG,
 		GROUP_MEMBERS_CFG,
-		SE_TRANSFER_CFG,
-		GROUP_TRANSFER_CFG
+		TRANSFER_CFG
 	};
 
 	/**
@@ -114,16 +113,12 @@ private:
 	/// allowed names for configuring a group
 	static const map< string, set <string> > GROUP_MEMBERS_ALLOWED;
 	/// allowed names for configuring se transfer parameters
-	static const map< string, set <string> > SE_TRANSFER_ALLOWED;
-	/// allowed names for configuring se transfer parameters
-	static const map< string, set <string> > GROUP_TRANSFER_ALLOWED;
+	static const map< string, set <string> > TRANSFER_ALLOWED;
 
 	/// initializes allowed JSON members for se config
 	static const map< string, set <string> > initGroupMembers();
 	/// initializes allowed JSON members for se transfer config
-	static const map< string, set <string> > initSeTransfer();
-	/// initializes allowed JSON members for site transfer config
-	static const map< string, set <string> > initGroupTransfer();
+	static const map< string, set <string> > initTransfer();
 };
 
 template <typename T>

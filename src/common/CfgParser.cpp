@@ -52,25 +52,11 @@ const map< string, set <string> > CfgParser::initGroupMembers() {
 			;
 }
 
-const map< string, set <string> > CfgParser::initSeTransfer() {
+const map< string, set <string> > CfgParser::initTransfer() {
 
 	set<string> root = list_of
-			("source_se")
-			("destination_se")
-			("share")
-			("protocol")
-			;
-
-	return map_list_of
-			(string(), root)
-			;
-}
-
-const map< string, set <string> > CfgParser::initGroupTransfer() {
-
-	set<string> root = list_of
-			("source_group")
-			("destination_group")
+			("source")
+			("destination")
 			("share")
 			("protocol")
 			;
@@ -81,8 +67,7 @@ const map< string, set <string> > CfgParser::initGroupTransfer() {
 }
 
 const map<string, set<string> > CfgParser::GROUP_MEMBERS_ALLOWED = CfgParser::initGroupMembers();
-const map<string, set<string> > CfgParser::SE_TRANSFER_ALLOWED = CfgParser::initSeTransfer();
-const map<string, set<string> > CfgParser::GROUP_TRANSFER_ALLOWED = CfgParser::initGroupTransfer();
+const map<string, set<string> > CfgParser::TRANSFER_ALLOWED = CfgParser::initTransfer();
 
 CfgParser::CfgParser(string configuration) {
 
@@ -118,13 +103,8 @@ CfgParser::CfgParser(string configuration) {
 		throw Err_Custom(msg);
 	}
 
-	if (validate(pt, SE_TRANSFER_ALLOWED)) {
-		type = SE_TRANSFER_CFG;
-		return;
-	}
-
-	if (validate(pt, GROUP_TRANSFER_ALLOWED)) {
-		type = GROUP_TRANSFER_CFG;
+	if (validate(pt, TRANSFER_ALLOWED)) {
+		type = TRANSFER_CFG;
 		return;
 	}
 
