@@ -114,7 +114,6 @@ optional<bool> SetCfgCli::drain() {
 
 bool SetCfgCli::groupCfg() {
 
-	if (vm.count("group")) return true;
-	return type == CfgParser::GROUP_MEMBERS_CFG;
+	return vm.count("group");
 }
 
