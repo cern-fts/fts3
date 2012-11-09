@@ -39,6 +39,7 @@ SetCfgCli::SetCfgCli() {
 	// add commandline options specific for fts3-transfer-submit
 	specific.add_options()
 			("drain", value<string>(), "If set to 'on' drains the given endpoint.")
+			("group,g", "Indicates that the configuration is meant for a group.")
 			;
 
 	// add hidden options (not printed in help)
@@ -81,6 +82,7 @@ void SetCfgCli::parse(int ac, char* av[]) {
 		CfgParser c(*it);
 
 		if (c.getCfgType() == CfgParser::NOT_A_CFG) throw(string("The specified configuration doesn't follow any of the valid formats!"));
+
 	}
 }
 
@@ -113,4 +115,8 @@ optional<bool> SetCfgCli::drain() {
 	return optional<bool>();
 }
 
+bool SetCfgCli::groupCfg() {
+
+	return vm.count("group");
+}
 
