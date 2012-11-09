@@ -30,10 +30,13 @@
 #include <vector>
 #include <boost/optional.hpp>
 
+#include "common/CfgParser.h"
+
 
 namespace fts3 { namespace cli {
 
 using namespace boost;
+using namespace fts3::common;
 
 /**
  * SetCfgCli provides the user interface for configuring SEs
@@ -116,6 +119,8 @@ public:
 private:
 	/// JSON configurations specified by user
 	vector<string> cfgs;
+
+	CfgParser::CfgType type;
 };
 
 }

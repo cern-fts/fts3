@@ -24,13 +24,10 @@
 
 #include "SetCfgCli.h"
 
-#include "common/CfgParser.h"
-
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
 
 using namespace boost::algorithm;
-using namespace fts3::common;
 using namespace fts3::cli;
 
 
@@ -81,8 +78,8 @@ void SetCfgCli::parse(int ac, char* av[]) {
 		// parse the configuration, check if its valid JSON format, and valid configuration
 		CfgParser c(*it);
 
-		if (c.getCfgType() == CfgParser::NOT_A_CFG) throw(string("The specified configuration doesn't follow any of the valid formats!"));
-
+		type = c.getCfgType();
+		if (type == CfgParser::NOT_A_CFG) throw string("The specified configuration doesn't follow any of the valid formats!");
 	}
 }
 
@@ -117,6 +114,7 @@ optional<bool> SetCfgCli::drain() {
 
 bool SetCfgCli::groupCfg() {
 
-	return vm.count("group");
+	if (vm.count("group")) return true;
+	return type == CfgParser::GROUP_MEMBERS_CFG;
 }
 
