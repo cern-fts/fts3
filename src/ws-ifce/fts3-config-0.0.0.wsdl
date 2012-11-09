@@ -77,6 +77,7 @@
 
     <message name="SetConfigurationRequest">
         <part name="configuration" type="config:Configuration"/>
+        <part name="group" type="xsd:boolean"/>
     </message>
 
     <message name="SetConfigurationResponse" />
