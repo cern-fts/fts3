@@ -61,9 +61,10 @@ int main(int ac, char* av[]) {
 
 		config__Configuration *config = soap_new_config__Configuration(ctx, -1);
 		config->cfg = cli->getConfigurations();
+		bool gr = cli->groupCfg();
 
 		implcfg__setConfigurationResponse resp;
-		ctx.setConfiguration(config, resp);
+		ctx.setConfiguration(config, gr, resp);
 
     } catch(string& ex) {
     	cout << ex << endl;
