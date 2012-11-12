@@ -205,7 +205,7 @@ public:
 	 * @param config th configuration to be set
 	 * @param resp server response
 	 */
-	void setConfiguration (config__Configuration *config, bool gr, implcfg__setConfigurationResponse& resp);
+	void setConfiguration (config__Configuration *config, implcfg__setConfigurationResponse& resp);
 
 	/**
 	 * Remote call to getConfiguration

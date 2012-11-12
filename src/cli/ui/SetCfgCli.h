@@ -111,11 +111,6 @@ public:
 	 */
 	optional<bool> drain();
 
-	/**
-	 * @return true if the group switch was used otherwise false
-	 */
-	bool groupCfg();
-
 private:
 	/// JSON configurations specified by user
 	vector<string> cfgs;
