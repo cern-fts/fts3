@@ -55,10 +55,27 @@ const map< string, set <string> > CfgParser::initGroupMembers() {
 const map< string, set <string> > CfgParser::initTransfer() {
 
 	set<string> root = list_of
-			("source")
-			("destination")
-			("share")
+			("config_name")
+			("source_se")
+			("destination_se")
+			("source_group")
+			("destination_group")
+			("active_transfers")
+			("vo")
 			("protocol")
+			;
+
+	return map_list_of
+			(string(), root)
+			;
+}
+
+const map< string, set <string> > CfgParser::initSeTransfer() {
+
+	set<string> root = list_of
+			("config_name")
+			("se")
+			("active_transfers")
 			;
 
 	return map_list_of
@@ -68,6 +85,7 @@ const map< string, set <string> > CfgParser::initTransfer() {
 
 const map<string, set<string> > CfgParser::GROUP_MEMBERS_ALLOWED = CfgParser::initGroupMembers();
 const map<string, set<string> > CfgParser::TRANSFER_ALLOWED = CfgParser::initTransfer();
+const map<string, set<string> > CfgParser::SE_TRANSFER_ALLOWED = CfgParser::initSeTransfer();
 
 CfgParser::CfgParser(string configuration) {
 

@@ -114,11 +114,15 @@ private:
 	static const map< string, set <string> > GROUP_MEMBERS_ALLOWED;
 	/// allowed names for configuring se transfer parameters
 	static const map< string, set <string> > TRANSFER_ALLOWED;
+	/// allowed names for configuring se in a pair
+	static const map< string, set <string> > SE_TRANSFER_ALLOWED;
 
 	/// initializes allowed JSON members for se config
 	static const map< string, set <string> > initGroupMembers();
-	/// initializes allowed JSON members for se transfer config
+	/// initializes allowed JSON members for transfer config
 	static const map< string, set <string> > initTransfer();
+	/// initializes allowed JSON members for se transfer config
+	static const map< string, set <string> > initSeTransfer();
 };
 
 template <typename T>
