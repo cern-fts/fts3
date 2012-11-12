@@ -131,6 +131,11 @@ CfgParser::CfgParser(string configuration) {
 		return;
 	}
 
+	if (validate(pt, SE_TRANSFER_ALLOWED)) {
+		type = SE_TRANSFER_CFG;
+		return;
+	}
+
 	type = NOT_A_CFG;
 }
 

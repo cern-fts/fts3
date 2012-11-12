@@ -60,7 +60,8 @@ public:
 	enum CfgType {
 		NOT_A_CFG,
 		GROUP_MEMBERS_CFG,
-		TRANSFER_CFG
+		TRANSFER_CFG,
+		SE_TRANSFER_CFG
 	};
 
 	/**
