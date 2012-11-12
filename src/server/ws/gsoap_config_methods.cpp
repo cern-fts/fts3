@@ -46,7 +46,7 @@ using namespace boost::algorithm;
 using namespace fts3::ws;
 
 
-int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configuration, bool _group, struct implcfg__setConfigurationResponse &response) {
+int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configuration, struct implcfg__setConfigurationResponse &response) {
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'setConfiguration' request" << commit;
 

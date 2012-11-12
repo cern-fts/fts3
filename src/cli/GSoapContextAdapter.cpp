@@ -447,7 +447,7 @@ void GSoapContextAdapter::getFileStatus (string jobId, impltns__getFileStatusRes
 }
 
 void GSoapContextAdapter::setConfiguration (config__Configuration *config, implcfg__setConfigurationResponse& resp) {
-	if (soap_call_implcfg__setConfiguration(ctx, endpoint.c_str(), 0, config, true, resp))
+	if (soap_call_implcfg__setConfiguration(ctx, endpoint.c_str(), 0, config, resp))
 		handleSoapFault("Failed to set configuration: setConfiguration.");
 }
 
