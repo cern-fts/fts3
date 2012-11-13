@@ -298,18 +298,18 @@ END;
 CREATE TABLE t_group_members(
 	groupName VARCHAR2(255) NOT NULL
 	,member VARCHAR2(255) NOT NULL
-	,CONSTRAINT t_group_members PRIMARY KEY (groupName, member)	
+	,CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member)	
 ); 
 
 
 CREATE TABLE T_GROUP_CONFIG(
-	symbolicName VARCHAR2(255)
-	,groupName VARCHAR2(255) NOT NULL		
-	,member VARCHAR2(255)  NOT NULL		
+	groupName VARCHAR2(255) NOT NULL		
+	,member VARCHAR2(255)  NOT NULL	
+	,symbolicName VARCHAR2(255)	
 	,active INTEGER
 	,CONSTRAINT t_group_config_pk PRIMARY KEY (groupName, member)
-	,CONSTRAINT t_group_members_fk1 FOREIGN KEY (groupName) REFERENCES t_group_members (groupName)
-	,CONSTRAINT t_group_members_fk2 FOREIGN KEY (member) REFERENCES t_group_members (member)				
+	--,CONSTRAINT t_group_config_fk1 FOREIGN KEY (groupName) REFERENCES t_group_members (groupName)
+	--,CONSTRAINT t_group_config_fk2 FOREIGN KEY (member) REFERENCES t_group_members (member)				
 ); 
 
 
