@@ -1,7 +1,6 @@
 version=${shell grep '^Version:' ./specs/fts.spec | awk '{print $$2}' }
 versionEPEL=${shell grep '^Version:' ./specs/ftsEPEL.spec | awk '{print $$2}' }
 name=fts
-nameEPEL=ftsEPEL
 rpmbuild=${shell pwd}/rpmbuild
 MOCKENV=epel-6-cernonly-x86_64
 MOCKARGS=--trace --verbose
@@ -46,11 +45,11 @@ prepareEPEL: distEPEL
 	@mkdir -p  $(rpmbuild)/BUILD/
 	mv ${name}-${version}.tar.gz $(rpmbuild)/SOURCES 
 
-srpmEPEL: prepareEPEL ./specs/$(nameEPEL).spec
-	rpmbuild --nodeps -bs --define='_topdir ${rpmbuild}' ./specs/$(nameEPEL).spec
+srpmEPEL: prepareEPEL ./specsEPEL/$(name).spec
+	rpmbuild --nodeps -bs --define='_topdir ${rpmbuild}' ./specsEPEL/$(name).spec
 
 rpmEPEL: srpmEPEL
-	rpmbuild --nodeps -bb --define='_topdir ${rpmbuild}' ./specs/$(nameEPEL).spec
+	rpmbuild --nodeps -bb --define='_topdir ${rpmbuild}' ./specsEPEL/$(name).spec
 
 mockEPEL: srpmEPEL
 	/usr/bin/mock $(MOCKARGS) -r $(MOCKENV) --rebuild $(rpmbuild)/SRPMS/$(name)-$(version)-*.src.rpm
