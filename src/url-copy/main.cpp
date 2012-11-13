@@ -322,6 +322,7 @@ void signalHandler(int signum) {
     }
 }
 
+/*
 void myunexpected() {
     errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
     logStream << fileManagement.timestamp() << errorMessage << '\n';
@@ -371,6 +372,7 @@ void myterminate() {
         unlink(readFile.c_str());
     sleep(1);
 }
+*/
 
 /*courtesy of:
 "Setuid Demystified" by Hao Chen, David Wagner, and Drew Dean: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
@@ -428,8 +430,10 @@ int main(int argc, char **argv) {
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
 
+    /*
     set_terminate(myterminate);
     set_unexpected(myunexpected);
+    */
 
     std::string bytes_to_string("");
     //transfer_completed tr_completed;

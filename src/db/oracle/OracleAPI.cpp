@@ -2581,6 +2581,13 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
         s->setPrefetchRowCount(1);
         r = conn->createResultset(s);
         while (r->next()) {
+	    //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
+	    if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0){
+            	bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
+            	if (process == false)
+			continue; 
+	    }
+	
             tr_jobs = new TransferJobs();
             tr_jobs->JOB_ID = r->getString(1);
             tr_jobs->JOB_STATE = r->getString(2);
