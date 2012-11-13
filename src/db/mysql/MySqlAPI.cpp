@@ -2823,6 +2823,71 @@ bool MySqlAPI::isDnBlacklisted(std::string dn)
 }
 
 
+/*new functions*/
+bool MySqlAPI::isFileReadyState(int fileID){
+}
+bool MySqlAPI::isFileReadyStateV(std::map<int,std::string>& fileIds){
+}
+    
+    //t_group_members
+bool MySqlAPI::checkGroupExists(const std::string & groupName){
+}
+void MySqlAPI::getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers){
+}
+void MySqlAPI::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers){
+}
+void MySqlAPI::deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers){
+}
+    
+    //t_se_protocol
+SeProtocolConfig*  MySqlAPI::getProtocol(int protocolId){
+}
+int  MySqlAPI::getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo){
+}
+int MySqlAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
+}
+void MySqlAPI::deleteProtocol(int protocolId){
+}
+void MySqlAPI::updateProtocol(SeProtocolConfig* config, int protocolId){
+}         
+    
+    //t_group_config
+SeGroup* MySqlAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member){
+}
+void MySqlAPI::addGroupConfig(SeGroup* seGroup){
+}
+void MySqlAPI::deleteGroupConfig(SeGroup* seGroup){
+}
+void MySqlAPI::updateGroupConfig(SeGroup* seGroup){
+}
+    
+    //t_config
+SeConfig* MySqlAPI::getConfig(const std::string & source,const std::string & dest, const std::string & vo){
+}
+void MySqlAPI::addNewConfig(SeConfig* config){
+}
+void MySqlAPI::deleteConfig(SeConfig* config){
+}
+void MySqlAPI::updateConfig(SeConfig* config){
+}
+    
+    //general purpose
+std::string MySqlAPI::checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo){
+}
+bool MySqlAPI::isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo){
+}
+void MySqlAPI::allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo){
+}
+    
+void MySqlAPI::submitHost(const std::string & jobId){
+}
+void MySqlAPI::transferHost(int fileId){
+}
+void MySqlAPI::transferHostV(std::map<int,std::string>& fileIds){
+}
+   
+   
+
 
 // the class factories
 extern "C" GenericDbIfce* create() {

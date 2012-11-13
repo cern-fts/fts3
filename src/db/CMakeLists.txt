@@ -5,8 +5,10 @@ ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
 
 add_subdirectory(generic)
+if (EPELBUILD STREQUAL "OFF")
 add_subdirectory(oracle)
+endif ()
 add_subdirectory(mysql)
 add_subdirectory(python)
 add_subdirectory(schema)
-#add_subdirectory(tests)
+

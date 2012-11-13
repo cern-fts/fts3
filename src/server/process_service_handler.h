@@ -176,7 +176,7 @@ protected:
         OptimizerSample* opt_config = NULL;
 	
         if (reuse == false) {
-   	    bool manualConfigExists = false;
+   	    bool manualConfigExists = false;	    
             if (jobs2.size() > 0) {
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
@@ -185,7 +185,7 @@ protected:
         	std::vector<TransferFiles*>::const_iterator fileiter;		
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-		
+		bool ready = false;
 		if(stopThreads){
 		               /** cleanup resources */
                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
@@ -344,13 +344,17 @@ protected:
                         }
 
 
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
+                        
+			ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
+			if(ready){
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);			
                         if (pr) {		
 			    /*check if fork/execvp failed, */			   
-                            if(-1 == pr->executeProcessShell()){
+                            if(-1 == pr->executeProcessShell() ){
 			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
 			    }else{
+			        DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);
 			    	DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, to_string(temp->FILE_ID), pr->getPid());
 				struct message_updater msg;
 				strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
@@ -360,7 +364,8 @@ protected:
 				ThreadSafeList::get_instance().push_back(msg);
 			    }
 			    delete pr;
-                        }
+                         }
+			}
                         params.clear();
                     }
 
@@ -474,6 +479,7 @@ protected:
 		}
 
                 FileTransferScheduler scheduler(tempUrl);
+		bool ready = false;
                 if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
  		    std::stringstream internalParams;
 		    if(optimize && manualConfigExists==false){
@@ -583,13 +589,17 @@ protected:
                     }
 
 
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
+                    
+		    ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);
+		    if(ready){
+		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
                     pr = new ExecuteProcess(cmd, params, 0);		    
                     if (pr) {		
 		             /*check if fork failed , check if execvp failed, */			   
                             if(-1 == pr->executeProcessShell()){
 			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
 			    }else{
+			        DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);
 			    	DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);				
 				std::map<int, std::string>::const_iterator iterFileIds;
 				for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds) {
@@ -602,7 +612,8 @@ protected:
 				}				
 			    }
 			    delete pr;
-                    }
+                     }
+		    }
                     params.clear();
                 }
 

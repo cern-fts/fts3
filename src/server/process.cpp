@@ -358,7 +358,7 @@ int ExecuteProcess::execProcessShell() {
         }
         close(pipefds[0]);
 	/*execvp doesn't return if a lib is missing during loading, check proc fts then*/
-	usleep(50000);
+	usleep(100000);
 	int checkProc =  check_pid(pid);
 	if(-1 == checkProc){
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking proc FS for pid error: " << pid << commit;
@@ -393,12 +393,15 @@ int ExecuteProcess::check_pid(int pid) {
             if(cmdline_file.good()){
                 result = 0;
             } else {
+	        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking cmdline_file.good(): " << pid << " " << strerror(errno) << commit;
                 result = -1;				
             }
         } else {
+	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking cmdline_file.is_open() : " << pid << " " << strerror(errno) << commit;
             result = -1;
         }
     } else {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking 0 != dir: " << pid << " " << strerror(errno) << commit;
         result = -1;
     }   
    return result;

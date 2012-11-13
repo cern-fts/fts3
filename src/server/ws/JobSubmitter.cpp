@@ -212,6 +212,7 @@ string JobSubmitter::submit() {
             sourceSe,
             destinationSe
     	);
+    DBSingleton::instance().getDBObjectInstance()->submitHost(id);	
 
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;

@@ -225,10 +225,11 @@ namespace soci
         typedef values base_type;
 
         static void from_base(values const& v, indicator, SeConfig& config) {
-            config.SE_NAME     = v.get<std::string>("se_name");
-            config.SHARE_ID    = v.get<std::string>("share_id");
-            config.SHARE_TYPE  = v.get<std::string>("share_type");
-            config.SHARE_VALUE = v.get<std::string>("share_value");
+            config.source     = v.get<std::string>("source");
+            config.destination    = v.get<std::string>("dest");
+            config.vo  = v.get<std::string>("vo");
+            config.symbolicName = v.get<std::string>("symbolicName");
+            config.state = v.get<std::string>("state");	    
         }
 
     };

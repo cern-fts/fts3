@@ -31,11 +31,12 @@ class SeConfig {
 	
 public:
    SeConfig(){}
-   ~SeConfig(){}
-      			
- std::string SHARE_TYPE; 
- std::string SE_NAME; 
- std::string SHARE_ID; 
- std::string SHARE_VALUE; 
-
+   ~SeConfig(){}   			
+ std::string source; 
+ std::string destination; 
+ std::string vo;
+ int active; 
+ int protocolId;
+ std::string symbolicName;
+ std::string state;
 };

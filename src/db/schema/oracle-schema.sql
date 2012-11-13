@@ -178,19 +178,13 @@ CREATE TABLE t_se_acl (
 );
 
 
+
+
 --
 -- se, se pair and se groups in the system
 --
 CREATE TABLE t_se_protocol (
-   se_row_id		INTEGER
-			CONSTRAINT se_row_id_not_null NOT NULL
-		        CONSTRAINT se_row_id_pk PRIMARY KEY
---
--- Name of the se_pair
-   ,se_group_name     	VARCHAR2(512)
---          
--- Source site name
-   ,se_name        	VARCHAR2(512)	
+   se_protocol_row_id INTEGER	NOT NULL
 --
 -- Email contact of the se_pair responsbile
    ,contact         	VARCHAR2(255)
@@ -282,9 +276,7 @@ CREATE TABLE t_se_protocol (
   ,preparing_files_ratio NUMBER default NULL
 --
 --
---   ,CONSTRAINT tx_to_per_mb_value CHECK (tx_to_per_mb >= 0)
---   ,CONSTRAINT no_tx_activity_to_value CHECK (no_tx_activity_to >= 0)
---   ,CONSTRAINT preparing_files_ratio_value CHECK (preparing_files_ratio >= 1) 
+,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
 );
 
 --
@@ -301,6 +293,40 @@ BEGIN
   INTO   :new.se_id_info from dual;
 END;
 /
+
+
+CREATE TABLE t_group_members(
+	groupName VARCHAR2(255) NOT NULL
+	,member VARCHAR2(255) NOT NULL
+	,CONSTRAINT t_group_members PRIMARY KEY (groupName, member)	
+); 
+
+
+CREATE TABLE T_GROUP_CONFIG(
+	symbolicName VARCHAR2(255)
+	,groupName VARCHAR2(255) NOT NULL		
+	,member VARCHAR2(255)  NOT NULL		
+	,active INTEGER
+	,CONSTRAINT t_group_config_pk PRIMARY KEY (groupName, member)
+	,CONSTRAINT t_group_members_fk1 FOREIGN KEY (groupName) REFERENCES t_group_members (groupName)
+	,CONSTRAINT t_group_members_fk2 FOREIGN KEY (member) REFERENCES t_group_members (member)				
+); 
+
+
+--
+-- The se config table stores the VO share resources 
+--
+CREATE TABLE t_config ( 
+   symbolicName         VARCHAR2(255)  NOT NULL
+   ,source         VARCHAR2(255)  NOT NULL
+   ,dest         VARCHAR2(255)   NOT NULL
+   ,vo VARCHAR2(100) NOT NULL
+   ,active INTEGER NOT NULL
+   ,protocol_row_id INTEGER NOT NULL
+   ,state VARCHAR2(30)   
+   ,CONSTRAINT t_config_pk PRIMARY KEY (symbolicName, source, dest, vo)
+   ,CONSTRAINT t_config_fk FOREIGN KEY (protocol_row_id) REFERENCES t_se_protocol (se_protocol_row_id)
+);
 
 --
 -- blacklist of bad SEs that should not be transferred to
@@ -341,6 +367,29 @@ CREATE TABLE t_bad_dns (
 );
 
 
+CREATE TABLE t_se_group(
+	se_group_name varchar2(512) NOT NULL
+	,se_name varchar2(512) NOT NULL
+	,state VARCHAR2(30)
+	,CONSTRAINT t_se_group_pk PRIMARY KEY (se_group_name,se_name)	
+); 
+
+--
+-- autoinc sequence on t_se_protocol
+--
+CREATE SEQUENCE se_protocol_id_info_seq;
+
+CREATE OR REPLACE TRIGGER se_protocol_id_info_auto_inc
+BEFORE INSERT ON t_se_protocol
+FOR EACH ROW
+WHEN (new.se_protocol_row_id IS NULL)
+BEGIN
+  SELECT se_protocol_id_info_seq.nextval
+  INTO   :new.se_protocol_row_id from dual;
+END;
+/
+
+
 --
 -- Table for saving the site-group association. As convention, group names should be between "[""]"
 -- 
@@ -362,27 +411,8 @@ CREATE TABLE t_site_group (
 );
 
 
---
--- The se_pair VO share table stores the percentage of the se_pair resources 
--- available for a VO
---
-CREATE TABLE t_se_vo_share (
---
--- the name of the se_pair
-   se_name         VARCHAR2(512)  NOT NULL			
-   ,share_id         VARCHAR2(512)  NOT NULL			                    			
-   ,share_value         VARCHAR2(512)  NOT NULL
-   ,share_type VARCHAR2(512)  NOT NULL
-   ,CONSTRAINT se_pair_vo_share_pk PRIMARY KEY (se_name, share_id, share_type) 
-);
 
 
-CREATE TABLE t_se_group(
-	se_group_name varchar2(512) NOT NULL
-	,se_name varchar2(512) NOT NULL
-	,state VARCHAR2(30)
-	,CONSTRAINT t_se_group_pk PRIMARY KEY (se_group_name,se_name)	
-); 
 --
 -- Store se_pair ACL
 --
@@ -439,6 +469,9 @@ CREATE TABLE t_job (
 --
 -- Transport specific parameters
   ,job_params       	VARCHAR2(255)
+--
+-- Hostname which this job was received
+  ,submitHost       	VARCHAR2(255)
 --
 -- Source site name - the source cluster name
   ,source            VARCHAR2(255)
@@ -577,6 +610,12 @@ CREATE TABLE t_file (
 -- The Source Logical Name
   ,logical_name      	VARCHAR2(1100)
 --
+-- The Source Logical Name
+  ,symbolicName      	VARCHAR2(255)  
+--
+-- Hostname which this file was transfered
+  ,transferHost       	VARCHAR2(255)
+--
 -- The Source
   ,source_surl      	VARCHAR2(1100)
 --
@@ -654,23 +693,6 @@ BEGIN
   INTO   :new.file_id from dual;
 END;
 /
-
-
---
--- autoinc sequence on se_row_id
---
-CREATE SEQUENCE se_row_id_seq;
-
-CREATE OR REPLACE TRIGGER se_row_id_auto_inc
-BEFORE INSERT ON t_se_protocol
-FOR EACH ROW
-WHEN (new.se_row_id IS NULL)
-BEGIN
-  SELECT se_row_id_seq.nextval
-  INTO   :new.se_row_id from dual;
-END;
-/
-
 
 
 
@@ -809,6 +831,8 @@ CREATE TABLE t_file_backup (
    ,job_id		CHAR(36)
    ,file_state		VARCHAR2(32)
   ,logical_name      	VARCHAR2(1100)
+  ,symbolicName      	VARCHAR2(255)  
+  ,transferHost       	VARCHAR2(255)
   ,source_surl      	VARCHAR2(1100)
   ,dest_surl		VARCHAR2(1100)
   ,agent_dn		VARCHAR2(1024)
@@ -844,6 +868,7 @@ CREATE TABLE t_job_backup (
   ,user_dn          	VARCHAR2(1024)
   ,agent_dn         	VARCHAR2(1024)
   ,user_cred        	VARCHAR2(255)
+  ,submitHost       	VARCHAR2(255)  
   ,cred_id              VARCHAR2(100)
   ,voms_cred            BLOB
   ,vo_name              VARCHAR2(50)

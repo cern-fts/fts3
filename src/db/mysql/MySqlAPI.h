@@ -224,6 +224,46 @@ public:
     virtual bool isSeBlacklisted(std::string se);
 
     virtual bool isDnBlacklisted(std::string dn);
+    
+    
+    /*new functions*/
+    virtual bool isFileReadyState(int fileID);
+    virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds);
+    
+    //t_group_members
+    virtual  bool checkGroupExists(const std::string & groupName);
+    virtual void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers);
+    virtual void addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    
+    //t_se_protocol
+    virtual SeProtocolConfig*  getProtocol(int protocolId);
+    virtual int  getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo);
+    virtual int addProtocol(SeProtocolConfig* seProtocolConfig);    
+    virtual void deleteProtocol(int protocolId); 
+    virtual void updateProtocol(SeProtocolConfig* config, int protocolId);          
+    
+    //t_group_config
+    virtual SeGroup* getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member);
+    virtual void addGroupConfig(SeGroup* seGroup);    
+    virtual void deleteGroupConfig(SeGroup* seGroup);
+    virtual void updateGroupConfig(SeGroup* seGroup);             
+    
+    //t_config
+    virtual SeConfig* getConfig(const std::string & source,const std::string & dest, const std::string & vo);
+    virtual void addNewConfig(SeConfig* config);    
+    virtual void deleteConfig(SeConfig* config); 
+    virtual void updateConfig(SeConfig* config);           
+    
+    //general purpose
+    virtual std::string checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo);		    	          
+    virtual bool isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo); 
+    virtual void allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo);     
+    
+    virtual void submitHost(const std::string & jobId);     
+    virtual void transferHost(int fileId);         
+    virtual void transferHostV(std::map<int,std::string>& fileIds);            
+      
 
 private:
     size_t                poolSize;

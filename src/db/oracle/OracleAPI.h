@@ -84,11 +84,7 @@ public:
 
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se);
 
-    virtual void getSe(Se* &se, std::string seName);
-    
-    virtual void getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig);
-    
-    virtual void getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE);    
+    virtual void getSe(Se* &se, std::string seName);    
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
@@ -98,11 +94,6 @@ public:
 
     virtual void deleteSe(std::string NAME);
 
-    virtual void addSeConfig( std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE);
-
-    virtual void updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE);
-
-    virtual void deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE);
     
     virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);    
     
@@ -235,7 +226,46 @@ public:
     virtual bool isSeBlacklisted(std::string se);
 
     virtual bool isDnBlacklisted(std::string dn);
-
+    
+    /*section for the new config API*/
+    virtual bool isFileReadyState(int fileID);
+    virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds);
+    
+    //t_group_members
+    virtual  bool checkGroupExists(const std::string & groupName);
+    virtual void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers);
+    virtual void addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
+    
+    //t_se_protocol
+    virtual SeProtocolConfig*  getProtocol(int protocolId);
+    virtual int  getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo);
+    virtual int addProtocol(SeProtocolConfig* seProtocolConfig);    
+    virtual void deleteProtocol(int protocolId); 
+    virtual void updateProtocol(SeProtocolConfig* config, int protocolId);          
+    
+    //t_group_config
+    virtual SeGroup* getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member);
+    virtual void addGroupConfig(SeGroup* seGroup);    
+    virtual void deleteGroupConfig(SeGroup* seGroup);
+    virtual void updateGroupConfig(SeGroup* seGroup);             
+    
+    //t_config
+    virtual SeConfig* getConfig(const std::string & source,const std::string & dest, const std::string & vo);
+    virtual void addNewConfig(SeConfig* config);    
+    virtual void deleteConfig(SeConfig* config); 
+    virtual void updateConfig(SeConfig* config);           
+    
+    //general purpose
+    virtual std::string checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo);		    	          
+    virtual bool isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo); 
+    virtual void allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo);     
+    
+    virtual void submitHost(const std::string & jobId);     
+    virtual void transferHost(int fileId);         
+    virtual void transferHostV(std::map<int,std::string>& fileIds);            
+   
+   
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;
