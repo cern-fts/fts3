@@ -60,6 +60,8 @@ const map< string, set <string> > CfgParser::initTransfer() {
 			("destination_se")
 			("source_group")
 			("destination_group")
+			("source_any")
+			("destination_any")
 			("active_transfers")
 			("vo")
 			("protocol")
@@ -162,6 +164,13 @@ optional< tuple <string, bool> > CfgParser::getSource() {
 		return ret;
 	}
 
+	val = pt.get_optional<string>("source_any");
+	if (val) {
+		boost::get<0>(ret) = *val;
+		boost::get<1>(ret) = false;
+		return ret;
+	}
+
 	return optional< tuple<string, bool> >();
 }
 
@@ -180,6 +189,13 @@ optional< tuple <string, bool> > CfgParser::getDestination() {
 	if (val) {
 		boost::get<0>(ret) = *val;
 		boost::get<1>(ret) = true;
+		return ret;
+	}
+
+	val = pt.get_optional<string>("destination_any");
+	if (val) {
+		boost::get<0>(ret) = *val;
+		boost::get<1>(ret) = false;
 		return ret;
 	}
 
