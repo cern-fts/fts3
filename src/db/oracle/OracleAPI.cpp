@@ -4847,9 +4847,10 @@ bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & d
 	int currentActive = 0;
 	int activePair = 0;
 	int activeGroupMember = 0;
+	std::string state("");
 	std::string query1 = " select count(*) from t_file,t_job where t_file.file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_job.source_se=:1 and "
 			    " t_job.dest_se=:2 and t_job.vo=:3";
-	std::string query2 = "select active from t_config where symbolicName=:1 and vo=:2";	//active for pair		    
+	std::string query2 = "select active, state from t_config where symbolicName=:1 and vo=:2";	//active for pair		    
 	std::string query3 = "select T_GROUP_CONFIG.active from t_config,T_GROUP_CONFIG where T_GROUP_CONFIG.symbolicName=t_config.symbolicName and "
 			     " T_GROUP_CONFIG.symbolicName=:1 and t_config.vo=:2"; //active for member of a group			    	
 	oracle::occi::Statement* s1 = NULL;
@@ -4884,7 +4885,8 @@ bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & d
 	s2->setString(1, vo);
         r2 = conn->createResultset(s2);
         if(r2->next()) {
-		activePair = r2->getInt(1);			
+		activePair = r2->getInt(1);
+		state = r2->getString(2);
         }
         conn->destroyResultset(s2, r2);
         conn->destroyStatement(s2, tag2);	
@@ -5064,6 +5066,8 @@ void OracleAPI::transferHostV(std::map<int,std::string>& fileIds){
         }
     }
 }
+
+
 
 // the class factories
 extern "C" GenericDbIfce* create() {

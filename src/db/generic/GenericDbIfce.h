@@ -302,6 +302,7 @@ public:
     virtual bool isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo) = 0; 
     virtual void allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo) = 0;
     
+    
     virtual void submitHost(const std::string & jobId) = 0;     
     virtual void transferHost(int fileId) = 0;         
     

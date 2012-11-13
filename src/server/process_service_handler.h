@@ -176,7 +176,8 @@ protected:
         OptimizerSample* opt_config = NULL;
 	
         if (reuse == false) {
-   	    bool manualConfigExists = false;	    
+   	    bool manualConfigExists = false;
+	    std::string symbolicName("");	    
             if (jobs2.size() > 0) {
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
@@ -206,8 +207,12 @@ protected:
                     destin_hostname = extractHostname(temp->DEST_SURL);
 		    
 		    /*check if manual config exist for this pair and vo*/
-		    manualConfigExists = DBSingleton::instance().getDBObjectInstance()->configExists(source_hostname, destin_hostname,temp->VO_NAME);		    
-		    
+		    symbolicName = DBSingleton::instance().getDBObjectInstance()->checkConfigExists(source_hostname, destin_hostname,temp->VO_NAME);		    
+		    if(symbolicName.length() > 0){
+		    	manualConfigExists = true;
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
+		    }
+			
                     bool optimize = false;
                     if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {		    	
 		        optimize = true;
@@ -228,7 +233,8 @@ protected:
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }else{
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
-                        protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
+		        int protocolId = DBSingleton::instance().getDBObjectInstance()->getProtocolIdFromConfig(symbolicName,temp->VO_NAME);			
+		        protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(protocolId);
 			if(protocol){
 				if(protocol->NOSTREAMS > 0)
 					internalParams << "nostreams:" << protocol->NOSTREAMS;
@@ -384,6 +390,7 @@ protected:
         } else { /*reuse session*/
             if (jobs2.size() > 0) {
   	   	bool manualConfigExists = false;
+		std::string symbolicName("");
                 std::vector<std::string> urls;
 		std::map<int,std::string> fileIds;
                 std::string job_id = std::string("");
@@ -451,7 +458,12 @@ protected:
 
                 createJobFile(job_id, urls);
 
-		manualConfigExists = DBSingleton::instance().getDBObjectInstance()->configExists(source_hostname, destin_hostname, vo_name);
+		   /*check if manual config exist for this pair and vo*/
+		    symbolicName = DBSingleton::instance().getDBObjectInstance()->checkConfigExists(source_hostname, destin_hostname,vo_name);		    
+		    if(symbolicName.length() > 0){
+		    	manualConfigExists = true;
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
+		    }		
 		
 		bool optimize = false;
                 /*Use Swei code for bufefr size because it uses RTT and counties and stuff*/
@@ -485,8 +497,9 @@ protected:
 		    if(optimize && manualConfigExists==false){
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }else{
-		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
-                        protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(source_hostname, destin_hostname);
+		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
+		        int protocolId = DBSingleton::instance().getDBObjectInstance()->getProtocolIdFromConfig(symbolicName,vo_name);			
+		        protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(protocolId);
 			if(protocol){
 				if(protocol->NOSTREAMS > 0)
 					internalParams << "nostreams:" << protocol->NOSTREAMS;
