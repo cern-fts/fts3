@@ -810,6 +810,13 @@ CREATE INDEX stagereq_job_id            ON t_stage_req(job_id);
 CREATE INDEX stagereq_stage_state       ON t_stage_req(stage_state);
 CREATE INDEX stagereq_jobfinished_id    ON t_stage_req(job_finished);
 
+-- Config index
+CREATE INDEX t_group_members_1  ON t_group_members(groupName);
+CREATE INDEX t_group_members_2  ON t_group_members(member);
+CREATE INDEX t_group_config_1  ON t_group_config(symbolicName);
+CREATE INDEX t_config_1  ON t_config(symbolicName);
+CREATE INDEX t_config_2  ON t_config(source,dest,vo);
+
 -- 
 --
 -- Schema version
