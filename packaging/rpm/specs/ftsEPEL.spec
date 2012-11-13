@@ -25,18 +25,12 @@ BuildRequires:  is-interface-devel%{?_isa}
 BuildRequires:  glib2-devel%{?_isa}
 BuildRequires:  gridsite-devel%{?_isa}
 BuildRequires:  gfal2-devel%{?_isa}
-BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
 BuildRequires:  python-devel%{?_isa}
 BuildRequires:  pugixml-devel%{?_isa}
 BuildRequires:  soci-mysql-devel%{?_isa}
 Requires(pre):  shadow-utils
 
-%{?filter_setup:
-%filter_provides_in /usr/lib64/oracle/*/client/lib64/
-%filter_requires_in /usr/lib64/oracle/*/client/lib64/
-%filter_setup
-}
 
 %description
 The File Transfer Service V3
@@ -65,12 +59,6 @@ Group: System Environment/Libraries
 Summary: File Transfer Service version 3 client
 Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
-
-%package oracle
-Summary: File Transfer Service version 3 oracle plug-ins
-Group: Applications/Internet
-Requires: fts-libs = %{version}-%{release}
-Requires:  oracle-instantclient-basic%{?_isa}
 
 %package mysql
 Summary: File Transfer Service version 3 mysql plug-ins
@@ -101,9 +89,6 @@ FTS client CLI tool for submitting transfers, etc
 %description mysql
 FTS mysql plug-ins
 
-%description oracle
-FTS oracle plug-ins
-
 
 %prep
 %setup -qc
@@ -112,7 +97,7 @@ FTS oracle plug-ins
 %build
 mkdir build
 cd build
-%cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
+%cmake -DEPELBUILD=ON -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
 make %{?_smp_mflags}
 
 
@@ -139,10 +124,6 @@ exit 0
 %post devel -p /sbin/ldconfig
 
 %postun devel -p /sbin/ldconfig
-
-%post oracle -p /sbin/ldconfig
-
-%postun oracle -p /sbin/ldconfig
 
 %post mysql -p /sbin/ldconfig
 
@@ -203,8 +184,6 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz
-%doc %{_docdir}/fts3/oracle-drop.sql
-%doc %{_docdir}/fts3/oracle-schema.sql
 %doc %{_docdir}/fts3/mysql-schema.sql
 %doc %{_docdir}/fts3/mysql-drop.sql
 %doc %{_docdir}/fts3/mysql_truncate.sql
@@ -255,10 +234,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %{_libdir}/libfts_db_mysql.so.*
 
-%files oracle
-%defattr(-,root,root,-)
-%{_libdir}/libfts_db_oracle.so.*
-
 %files devel
 %defattr(-,root,root,-)
 %{_bindir}/fts*
@@ -267,7 +242,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts_common.so
 %{_libdir}/libfts_config.so
 %{_libdir}/libfts_db_generic.so
-%{_libdir}/libfts_db_oracle.so
 %{_libdir}/libfts_db_mysql.so
 %{_libdir}/libfts_msg_ifce.so
 %{_libdir}/libfts_proxy.so
