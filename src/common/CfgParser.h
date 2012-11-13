@@ -33,6 +33,7 @@
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
+#include "boost/tuple/tuple.hpp"
 
 namespace fts3 { namespace common {
 
@@ -91,6 +92,9 @@ public:
 	CfgType getCfgType() {
 		return type;
 	}
+
+	optional< tuple <string, bool> > getSource();
+	optional< tuple <string, bool> > getDestination();
 
 private:
 
