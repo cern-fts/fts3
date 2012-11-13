@@ -50,20 +50,14 @@ void OracleAPI::init(std::string username, std::string password, std::string con
 
 bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe) {
     const std::string tagse = "getInOutOfSese";
-    const std::string taggroup = "getInOutOfSegroup";
     std::string query_stmt_se = " SELECT count(*) from t_se where "
             " (t_se.name=:1 or t_se.name=:2) "
             " and t_se.state='false' ";
-    std::string query_stmt_group = " SELECT count(*) from t_se_group where "
-            " (t_se_group.se_name=:1 or t_se_group.se_name=:2) "
-            " and t_se_group.state='false' ";
-
-    bool processSe = true;
-    bool processGroup = true;
+    
+    bool processSe = true;    
     oracle::occi::Statement* s_se = NULL;
     oracle::occi::ResultSet* rSe = NULL;
-    oracle::occi::Statement* s_group = NULL;
-    oracle::occi::ResultSet* rGroup = NULL;
+    
     try {
         s_se = conn->createStatement(query_stmt_se, tagse);
         s_se->setString(1, sourceSe);
@@ -72,36 +66,12 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
         if (rSe->next()) {
             int count = rSe->getInt(1);
             if (count > 0) {
-                processSe = false;
-                conn->destroyResultset(s_se, rSe);
-                conn->destroyStatement(s_se, tagse);
-                return processSe;
+                processSe = false;               
             }
         }
 
-        s_group = conn->createStatement(query_stmt_group, taggroup);
-        s_group->setString(1, sourceSe);
-        s_group->setString(2, destSe);
-        rGroup = conn->createResultset(s_group);
-        if (rGroup->next()) {
-            int count = rGroup->getInt(1);
-            if (count > 0)
-                processGroup = false;
-        }
-       if(conn){
-        if(s_se!=NULL && rSe!=NULL)
-        	conn->destroyResultset(s_se, rSe);
-	if(s_se)	
-        	conn->destroyStatement(s_se, tagse);
-	if(s_group!=NULL && rGroup!=NULL)
-        	conn->destroyResultset(s_group, rGroup);
-	if(s_group)	
-        	conn->destroyStatement(s_group, taggroup);
-        }
-        if (processSe == false || processGroup == false)
-            return false;
-        else
-            return true;
+    conn->destroyResultset(s_se, rSe);
+    conn->destroyStatement(s_se, tagse);
 
     } catch (oracle::occi::SQLException const &e) {
 		if(conn)
@@ -112,16 +82,9 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
 	        conn->destroyResultset(s_se, rSe);
 	        conn->destroyStatement(s_se, tagse);
 		}
-	     if(s_group && rGroup){	
-        	conn->destroyResultset(s_group, rGroup);
-	        conn->destroyStatement(s_group, taggroup);
-		}
-
 	}
 	
-        return true;
     }
-    return true;
 }
 
 TransferJobs* OracleAPI::getTransferJob(std::string jobId) {

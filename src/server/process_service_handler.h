@@ -350,7 +350,7 @@ protected:
                         }
 
 
-                        
+			//for sanity reasons, check if it is still READY                        
 			ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
 			if(ready){
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
