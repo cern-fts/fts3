@@ -74,6 +74,7 @@ const map< string, set <string> > CfgParser::initSeTransfer() {
 
 	set<string> root = list_of
 			("config_name")
+			("group")
 			("se")
 			("active_transfers")
 			;
@@ -141,6 +142,48 @@ CfgParser::CfgParser(string configuration) {
 
 CfgParser::~CfgParser() {
 
+}
+
+optional< tuple <string, bool> > CfgParser::getSource() {
+
+	tuple<string, bool> ret;
+
+	optional<string> val = pt.get_optional<string>("source_se");
+	if (val) {
+		boost::get<0>(ret) = *val;
+		boost::get<1>(ret) = false;
+		return ret;
+	}
+
+	val = pt.get_optional<string>("source_group");
+	if (val) {
+		boost::get<0>(ret) = *val;
+		boost::get<1>(ret) = true;
+		return ret;
+	}
+
+	return optional< tuple<string, bool> >();
+}
+
+optional< tuple <string, bool> > CfgParser::getDestination() {
+
+	tuple<string, bool> ret;
+
+	optional<string> val = pt.get_optional<string>("destination_se");
+	if (val) {
+		boost::get<0>(ret) = *val;
+		boost::get<1>(ret) = false;
+		return ret;
+	}
+
+	val = pt.get_optional<string>("destination_group");
+	if (val) {
+		boost::get<0>(ret) = *val;
+		boost::get<1>(ret) = true;
+		return ret;
+	}
+
+	return optional< tuple<string, bool> >();
 }
 
 bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path) {
