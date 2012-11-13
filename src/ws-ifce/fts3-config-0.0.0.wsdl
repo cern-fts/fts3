@@ -90,6 +90,8 @@
     <message name="GetConfigurationRequest">
 		<part name="vo" type="xsd:string"/>
 		<part name="name" type="xsd:string"/>
+		<part name="source" type="xsd:string"/>
+		<part name="destination" type="xsd:string"/>
     </message>
 
     <message name="GetConfigurationResponse">

@@ -452,7 +452,7 @@ void GSoapContextAdapter::setConfiguration (config__Configuration *config, implc
 }
 
 void GSoapContextAdapter::getConfiguration (string vo, string name, implcfg__getConfigurationResponse& resp) {
-	if (soap_call_implcfg__getConfiguration(ctx, endpoint.c_str(), 0, vo, name, resp))
+	if (soap_call_implcfg__getConfiguration(ctx, endpoint.c_str(), 0, vo, name, string(), string(), resp))
 		handleSoapFault("Failed to get configuration: getConfiguration.");
 }
 

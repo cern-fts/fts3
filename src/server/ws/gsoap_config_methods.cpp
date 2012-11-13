@@ -82,7 +82,7 @@ int fts3::implcfg__setConfiguration(soap* soap, config__Configuration *_configur
 
 /* ---------------------------------------------------------------------- */
 
-int fts3::implcfg__getConfiguration(soap* soap, std::string vo, std::string name, struct implcfg__getConfigurationResponse & response) {
+int fts3::implcfg__getConfiguration(soap* soap, string vo, string name, string source, string destination, implcfg__getConfigurationResponse & response) {
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'getConfiguration' request" << commit;
 
