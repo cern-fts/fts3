@@ -2844,6 +2844,8 @@ SeProtocolConfig*  MySqlAPI::getProtocol(int protocolId){
 }
 int  MySqlAPI::getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo){
 }
+int MySqlAPI::getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo){
+}
 int MySqlAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
 }
 void MySqlAPI::deleteProtocol(int protocolId){

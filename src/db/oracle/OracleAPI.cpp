@@ -52,7 +52,7 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
     const std::string tagse = "getInOutOfSese";
     std::string query_stmt_se = " SELECT count(*) from t_se where "
             " (t_se.name=:1 or t_se.name=:2) "
-            " and t_se.state='false' ";
+            " and t_se.state='off' ";
     
     bool processSe = true;    
     oracle::occi::Statement* s_se = NULL;
@@ -72,6 +72,8 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
 
     conn->destroyResultset(s_se, rSe);
     conn->destroyStatement(s_se, tagse);
+    
+    return processSe;
 
     } catch (oracle::occi::SQLException const &e) {
 		if(conn)
@@ -85,6 +87,8 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
 	}
 	
     }
+    
+    return processSe;
 }
 
 TransferJobs* OracleAPI::getTransferJob(std::string jobId) {
@@ -4143,6 +4147,46 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
 }
     
     //t_se_protocol
+int OracleAPI::getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo){
+	std::string tag="getProtocolIdFromConfig111";
+	int protocolId = 0;	
+	std::string query="select protocol_row_id from t_config where symbolicName=:1 and vo=:2";
+		
+	oracle::occi::Statement* s = NULL;
+    	oracle::occi::ResultSet* r = NULL;
+		
+	ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return 0;	
+	
+	std::string symbolicName = checkConfigExists(source, dest, vo);
+	if(symbolicName.length()>0){
+	//now get protocol ID
+ 	s = conn->createStatement(query, tag);
+        s->setString(1, symbolicName);
+	s->setString(2, vo);
+        r = conn->createResultset(s);        
+        if (r->next()) {		
+		protocolId = r->getInt(1);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	}
+	
+	return protocolId;
+    }
+    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+    
+	return protocolId;    
+}
+    
     
 int OracleAPI::getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo){
 	std::string tag="getProtocolIdFromConfig";
