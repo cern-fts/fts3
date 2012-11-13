@@ -4514,6 +4514,49 @@ SeConfig* OracleAPI::getConfig(const std::string & source,const std::string & de
     return seConfig;
 }
 
+
+SeConfig* OracleAPI::getConfig(const std::string & symbolicName, const std::string & vo){
+	std::string tag="getConfig222";
+	std::string query = "select symbolicName,source,dest,vo,active,protocol_row_id,state from t_group where symbolicName=:1 and vo=:2";
+	oracle::occi::Statement* s = NULL;
+    	oracle::occi::ResultSet* r = NULL;
+	SeConfig* seConfig = NULL;
+	
+	ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return false;	
+	    
+ 	s = conn->createStatement(query, tag);
+        s->setString(1, symbolicName);
+	s->setString(2, vo);
+        r = conn->createResultset(s);
+        if(r->next()) {
+		seConfig = new SeConfig();
+		seConfig->symbolicName = r->getString(1);
+		seConfig->source = r->getString(2);
+		seConfig->destination = r->getString(3);
+		seConfig->vo = r->getInt(4);				
+		seConfig->active = r->getInt(5);
+		seConfig->protocolId = r->getInt(6);
+		seConfig->state = r->getString(7);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);	
+	return seConfig;
+    }
+    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+    
+    return seConfig;
+}  
+
+
 void OracleAPI::addNewConfig(SeConfig* seConfig){
 	std::string tag="addNewConfig111";
 	std::string query = "insert into t_config(symbolicName,source,dest,vo,active,protocol_row_id,state) values(1:,:2,:3,:4,:5,:6,:7)";

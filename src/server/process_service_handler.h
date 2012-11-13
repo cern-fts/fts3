@@ -178,7 +178,7 @@ protected:
         if (reuse == false) {
    	    bool manualConfigExists = false;
 	    std::string symbolicName("");	    
-            if (jobs2.size() > 0) {
+            if (!jobs2.empty()) {
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
         	std::vector<TransferFiles*> files;
@@ -388,7 +388,7 @@ protected:
                 files.clear();
             }
         } else { /*reuse session*/
-            if (jobs2.size() > 0) {
+            if (!jobs2.empty()) {
   	   	bool manualConfigExists = false;
 		std::string symbolicName("");
                 std::vector<std::string> urls;
@@ -416,16 +416,12 @@ protected:
 		files.reserve(300);
         	std::vector<TransferFiles*>::const_iterator fileiter;			
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
-		if(files.size()==0){
+		if(files.empty()){
      			 /** cleanup resources */
                 	for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
                     		delete *iter2;
                 	jobs2.clear();
-                	for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
-                    		delete *fileiter;
-                	files.clear();
-			fileIds.clear();		
-		return;
+			return;
 		}
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
 		    if(stopThreads){
@@ -466,7 +462,7 @@ protected:
 		    }		
 		
 		bool optimize = false;
-                /*Use Swei code for bufefr size because it uses RTT and counties and stuff*/
+               
                 if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {
 		    optimize = true;
                     opt_config = new OptimizerSample();
@@ -715,13 +711,13 @@ protected:
                         killRunninfJob(requestIDs);
                     requestIDs.clear(); /*clean the list*/
 
-                    if (jobs2.size() > 0)
+                    if (!jobs2..empty())
                         executeUrlcopy(jobs2, false);
 
                     /* --- session reuse section ---*/
                     /*get jobs in submitted state and session reuse on*/
                     DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
-                    if (jobs2.size() > 0)
+                    if (!jobs2.empty())
                         executeUrlcopy(jobs2, true);
                 } catch (Err& e) {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;

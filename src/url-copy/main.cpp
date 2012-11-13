@@ -549,11 +549,11 @@ int main(int argc, char **argv) {
     }
 
     //cancelation point 
-    long unsigned int reuseOrNot = (urlsFile.size() == 0) ? 1 : urlsFile.size();
+    long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
     unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
     boost::thread bt(taskTimer, timerTimeout);
 
-    if (reuseFile.length() > 0 && urlsFile.size() == 0) {
+    if (reuseFile.length() > 0 && urlsFile.empty()==true) {
         errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
         msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());

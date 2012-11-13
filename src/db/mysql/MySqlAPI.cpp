@@ -2866,6 +2866,8 @@ void MySqlAPI::updateGroupConfig(SeGroup* seGroup){
     //t_config
 SeConfig* MySqlAPI::getConfig(const std::string & source,const std::string & dest, const std::string & vo){
 }
+SeConfig* MySqlAPI::getConfig(const std::string & symbolicName, const std::string & vo){
+}
 void MySqlAPI::addNewConfig(SeConfig* config){
 }
 void MySqlAPI::deleteConfig(SeConfig* config){

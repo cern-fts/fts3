@@ -252,6 +252,7 @@ public:
     
     //t_config
     virtual SeConfig* getConfig(const std::string & source,const std::string & dest, const std::string & vo);
+    virtual SeConfig* getConfig(const std::string & symbolicName, const std::string & vo);    
     virtual void addNewConfig(SeConfig* config);    
     virtual void deleteConfig(SeConfig* config); 
     virtual void updateConfig(SeConfig* config);           
