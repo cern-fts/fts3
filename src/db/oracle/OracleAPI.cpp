@@ -4858,6 +4858,95 @@ void OracleAPI::deleteSymbolic(const std::string & symbolicName){
     }	
 }
 
+  //check the number of active is not > than in configuration pair
+bool OracleAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active){
+    std::string tag = "checkCreditsForMemberOfGroup";
+    std::string stmt = "select active from t_config where symbolicName=:1 and vo=:2";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;   
+    int activeV = 0;
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(stmt, tag);
+        s->setString(1, symbolicName);
+        s->setString(2, vo);	
+        r = conn->createResultset(s);
+
+	if(r->next()){
+        	activeV = r->getInt(1);
+		if(active < activeV)
+			ret = true;			
+	}
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+    
+    //there if a share in configure pair for this vo exist
+bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo){
+    std::string tag = "checkCreditsForMemberOfGroup";
+    std::string stmt = "select vo from t_config where symbolicName=:1 and vo=:2";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;   
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(stmt, tag);
+        s->setString(1, symbolicName);
+        s->setString(2, vo);	
+        r = conn->createResultset(s);
+
+	if(r->next()){        	
+		ret = true;			
+	}
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+    
 
 
 // the class factories

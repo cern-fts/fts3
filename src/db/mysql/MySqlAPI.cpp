@@ -2258,6 +2258,14 @@ void MySqlAPI::updateSymbolic(const std::string & symbolicName, const std::strin
 void MySqlAPI::deleteSymbolic(const std::string & symbolicName){
 }   
 
+  //check the number of active is not > than in configuration pair
+bool MySqlAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active){
+}
+    
+    //there if a share in configure pair for this vo exist
+bool MySqlAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo){
+}
+    
 
 // the class factories
 extern "C" GenericDbIfce* create() {

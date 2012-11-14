@@ -251,7 +251,14 @@ public:
     
     virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest);        
     
-    virtual void deleteSymbolic(const std::string & symbolicName);         
+    virtual void deleteSymbolic(const std::string & symbolicName);  
+    
+   //check the number of active is not > than in configuration pair
+    virtual bool checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active);
+    
+    //there if a share in configure pair for this vo exist
+    virtual bool checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo); 
+    
       
 
 private:
