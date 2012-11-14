@@ -37,7 +37,7 @@ namespace fts3 { namespace cli {
  *  	- source (positional)
  *  	- destination (positional)
  */
-class SrcDestCli : public CliBase {
+class SrcDestCli : virtual public CliBase {
 
 public:
 

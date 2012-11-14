@@ -29,7 +29,7 @@ using namespace fts3::cli;
 GetCfgCli::GetCfgCli(): VoNameCli(false) {
 
 	specific.add_options()
-					("name,n", value<string>(), "Restrict to specific SE or SE group.")
+					("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
 					;
 }
 

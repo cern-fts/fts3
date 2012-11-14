@@ -26,13 +26,14 @@
 #define GETCFGCLI_H_
 
 #include "VoNameCli.h"
+#include "SrcDestCli.h"
 
 namespace fts3 { namespace cli {
 
 /**
  *
  */
-class GetCfgCli: public VoNameCli {
+class GetCfgCli: public VoNameCli, public SrcDestCli {
 
 public:
 

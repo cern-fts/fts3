@@ -50,6 +50,11 @@ int main(int ac, char* av[]) {
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();
 
+		string out = "/home/simonm/out.txt";
+		ctx.getLog(out, "blabla");
+
+		return 0;
+
 		vector<string> jobs = cli->getJobIds();
 
 		if (jobs.empty()) {

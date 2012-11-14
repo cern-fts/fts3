@@ -214,7 +214,7 @@ public:
 	 * @param name - SE or SE group name that will be used to filter the response
 	 * @param resp - server response
 	 */
-	void getConfiguration (string vo, string name, implcfg__getConfigurationResponse& resp);
+	void getConfiguration (string src, string dest, string vo, string name, implcfg__getConfigurationResponse& resp);
 
 	/**
 	 * Remote call to delConfiguration
