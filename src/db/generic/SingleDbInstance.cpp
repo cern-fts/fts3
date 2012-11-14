@@ -49,8 +49,8 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL) {
         dbBackend = create_db();
 
         // create monitoring db on request
-    } else {
-	throw Err_Custom(dlm->getLastError());
+    } else{
+        throw Err_Custom(dlm->getLastError()); 
     }
 }
 

@@ -218,21 +218,10 @@ shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig() {
 	shared_ptr<SeProtocolConfig> ret(new SeProtocolConfig);
 	// we are relaying here on the fact that if a parameter is not in the map
 	// the default value will be returned which is 0
-	ret->BANDWIDTH = (*protocol)[ProtocolParameters::BANDWIDTH];
 	ret->NOSTREAMS = (*protocol)[ProtocolParameters::NOSTREAMS];
 	ret->TCP_BUFFER_SIZE = (*protocol)[ProtocolParameters::TCP_BUFFER_SIZE];
-	ret->NOMINAL_THROUGHPUT = (*protocol)[ProtocolParameters::NOMINAL_THROUGHPUT];
-	ret->BLOCKSIZE = (*protocol)[ProtocolParameters::BLOCKSIZE];
-	ret->HTTP_TO = (*protocol)[ProtocolParameters::HTTP_TO];
-	ret->URLCOPY_PUT_TO = (*protocol)[ProtocolParameters::URLCOPY_PUT_TO];
-	ret->URLCOPY_PUTDONE_TO = (*protocol)[ProtocolParameters::URLCOPY_PUTDONE_TO];
-	ret->URLCOPY_GET_TO = (*protocol)[ProtocolParameters::URLCOPY_GET_TO];
-	ret->URLCOPY_GETDONE_TO = (*protocol)[ProtocolParameters::URLCOPY_GET_DONETO];
 	ret->URLCOPY_TX_TO = (*protocol)[ProtocolParameters::URLCOPY_TX_TO];
-	ret->URLCOPY_TXMARKS_TO = (*protocol)[ProtocolParameters::URLCOPY_TXMARKS_TO];
-	ret->TX_TO_PER_MB = (*protocol)[ProtocolParameters::TX_TO_PER_MB];
 	ret->NO_TX_ACTIVITY_TO = (*protocol)[ProtocolParameters::NO_TX_ACTIVITY_TO];
-	ret->PREPARING_FILES_RATIO = (*protocol)[ProtocolParameters::PREPARING_FILES_RATIO];
 
 	return ret;
 }

@@ -129,30 +129,11 @@ namespace soci
         typedef values base_type;
 
         static void from_base(values const& v, indicator, SeProtocolConfig& protoConfig) {
-            struct tm aux_tm;
-
-            protoConfig.ADMIN_DN  = v.get<std::string>("admin_dn", "");
-            protoConfig.BANDWIDTH = v.get<int>("bandwith", 0);
-            protoConfig.BLOCKSIZE = v.get<int>("blocksize", 0);
-            protoConfig.CONTACT   = v.get<std::string>("contact", "");
-            protoConfig.HTTP_TO   = v.get<int>("http_to", 0);
-            aux_tm = v.get<struct tm>("LAST_ACTIVE");
-            protoConfig.LAST_ACTIVE = timegm(&aux_tm);
-            aux_tm = v.get<struct tm>("LAST_MODIFICATION");
-            protoConfig.LAST_MODIFICATION = timegm(&aux_tm);
-            protoConfig.MESSAGE = v.get<std::string>("message", "");
-            protoConfig.NOFILES = v.get<int>("nofiles", 0);
-            protoConfig.NOMINAL_THROUGHPUT = v.get<int>("nominal_throughput", 0);
+            protoConfig.TCP_BUFFER_SIZE = v.get<int>("tcp_buffer_size", 0);
             protoConfig.NOSTREAMS = v.get<int>("nostreams", 0);
-            protoConfig.NO_TX_ACTIVITY_TO = v.get<int>("no_tx_activity_to", 0);
-            protoConfig.PREPARING_FILES_RATIO = v.get<int>("preparing_files_ratio", 0);
-            protoConfig.SE_GROUP_NAME = v.get<std::string>("se_group_name", "");
-            protoConfig.SE_LIMIT = v.get<int>("se_limit", 0);
-            protoConfig.SE_NAME = v.get<std::string>("se_name", "");
-            protoConfig.SE_PAIR_STATE = v.get<std::string>("se_pair_state", "");
+            protoConfig.NO_TX_ACTIVITY_TO = v.get<int>("no_tx_activity_to", 0);           
             protoConfig.SE_ROW_ID = v.get<int>("se_row_id");
-            protoConfig.SRMCOPY_DIRECTION = v.get<std::string>("srmcopy_direction", "");
-            protoConfig.SRMCOPY_REFRESH_TO = v.get<int>("srmcopy_refresh_to", 0);
+            protoConfig.URLCOPY_TX_TO = v.get<int>("URLCOPY_TX_TO", 0);            
         }
     };
 

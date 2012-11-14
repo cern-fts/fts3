@@ -82,16 +82,11 @@ bool MySqlAPI::getInOutOfSe(const std::string& sourceSe, const std::string& dest
     unsigned nSE;
     sql << "SELECT COUNT(*) FROM t_se WHERE "
            "    (t_se.name = :source OR t_se.name = :dest) AND "
-           "    t_se.state='false'",
+           "    t_se.state='off'",
            soci::use(sourceSe), soci::use(destSe), soci::into(nSE);
 
-    unsigned nGroup;
-    sql << "SELECT COUNT(*) FROM t_se_group_contains WHERE "
-           "    (t_se_group_contains.se_name = :source OR t_se_group_contains.se_name = :dest) AND "
-           "     t_se_group_contains.state='false'",
-           soci::use(sourceSe), soci::use(destSe), soci::into(nGroup);
 
-    return nSE == 0 && nGroup == 0;
+    return nSE == 0;
 }
 
 
@@ -160,120 +155,6 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 }
 
 
-
-void MySqlAPI::getSeCreditsInUse(int &creditsInUse,
-                                 std::string srcSeName,
-                                 std::string destSeName,
-                                 std::string voName) {
-    std::ostringstream query;
-    std::string seName;
-    soci::session sql(connectionPool);
-    soci::statement stmt(sql);
-
-    query << "SELECT COUNT(*) FROM t_job, t_file WHERE "
-          << "    t_job.job_id = t_file.job_id AND "
-          << "    t_file.file_state = 'ACTIVE' ";
-
-    if (!srcSeName.empty()) {
-        query << " AND t_job.source_se = :source ";
-        stmt.exchange(soci::use(srcSeName, "source"));
-    }
-
-    if (!destSeName.empty()) {
-        query << " AND t_job.dest_se = :dest ";
-        stmt.exchange(soci::use(destSeName, "dest"));
-    }
-
-    if (srcSeName.empty() || destSeName.empty()) {
-        if (!voName.empty()) {
-            query << " AND t_job.vo_name = :vo ";
-            stmt.exchange(soci::use(voName, "vo"));
-        }
-        else {
-            seName = srcSeName.empty() ? destSeName : srcSeName;
-
-            query << " AND NOT EXISTS ( SELECT NULL FROM t_se_vo_share WHERE "
-                  << "                     t_se_vo_share.se_name = :seName AND "
-                  << "                     t_se_vo_share.share_id = CONCAT('%\"share_id\":\"', t_job.vo_name, '\"%') "
-                  << "                 )";
-            stmt.exchange(soci::use(seName, "seName"));
-        }
-    }
-
-    try {
-        stmt.exchange(soci::into(creditsInUse));
-        stmt.alloc();
-        stmt.prepare(query.str());
-        stmt.define_and_bind();
-        stmt.execute(true);
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-void MySqlAPI::getGroupCreditsInUse(int &creditsInUse,
-                                    std::string srcGroupName,
-                                    std::string destGroupName,
-                                    std::string voName) {
-    std::ostringstream query;
-
-    try {
-        soci::session sql(connectionPool);
-        soci::statement stmt(sql);
-        std::string groupName;
-
-        query << "SELECT COUNT(*) FROM t_job, t_file, t_se "
-                  "WHERE t_job.job_id = t_file.job_id AND "
-                  "      t_file.file_state = 'ACTIVE' ";
-
-        if (!srcGroupName.empty()) {
-            query << " AND t_job.source_se = t_se.name "
-                     " AND t_se.name IN (SELECT se_name FROM t_se_group_contains, t_se_group "
-                     "                   WHERE se_group_name = :srcGroupName AND"
-                     "                         t_se_group_contains.se_group_id = t_se_group.se_group_id) ";
-            stmt.exchange(soci::use(srcGroupName, "srcGroupName"));
-        }
-
-        if (!destGroupName.empty()) {
-            query << " AND t_job.dest_se = t_se.name "
-                     " AND t_se.name IN (SELECT se_name FROM t_se_group_contains, t_se_group "
-                     "                   WHERE se_group_name = :destGroupName AND "
-                     "                         t_se_group_contains.se_group_id = t_se_group.se_group_id) ";
-            stmt.exchange(soci::use(destGroupName, "destGroupName"));
-        }
-
-        if (srcGroupName.empty() || destGroupName.empty()) {
-            if (!voName.empty()) {
-                query << " AND t_job.vo_name = :voName ";;
-                stmt.exchange(soci::use(voName, "voName"));
-            }
-            else {
-                groupName = srcGroupName.empty() ? destGroupName : srcGroupName;
-                // voName not in those who have voshare for this SE
-                query << " AND NOT EXISTS ("
-                         "          SELECT NULL FROM t_se_vo_share WHERE "
-                         "              t_se_vo_share.se_name = :groupName AND "
-                         "              t_se_vo_share.share_type = 'group' AND "
-                         "              t_se_vo_share.share_id = CONCAT('%\"share_id\":\"', t_job.vo_name, '\"%') "
-                         "   )";
-                stmt.exchange(soci::use(groupName, "groupName"));
-            }
-        }
-
-        stmt.exchange(soci::into(creditsInUse));
-        stmt.alloc();
-        stmt.prepare(query.str());
-        stmt.define_and_bind();
-        stmt.execute(true);
-
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
 
 
 
@@ -671,27 +552,6 @@ std::set<std::string> MySqlAPI::getAllMatchingSeNames(std::string name) {
 
 
 
-std::set<std::string> MySqlAPI::getAllMatchingSeGroupNames(std::string name) {
-    soci::session sql(connectionPool);
-
-    try {
-        std::set<std::string> matches;
-
-        soci::rowset<std::string> rs = (sql.prepare << "SELECT t_se_group.se_group_name "
-                                                       "FROM t_se_group "
-                                                       "WHERE t_se_group.se_group_name LIKE :name",
-                                                       soci::use(name));
-
-        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                    matches.insert(*i);
-
-        return matches;
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-}
-
 
 
 void MySqlAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se) {
@@ -710,86 +570,8 @@ void MySqlAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se) {
 
 
 
-void MySqlAPI::getAllShareConfigNoCritiria(std::vector<SeConfig*>& seConfig) {
-    soci::session sql(connectionPool);
-
-    try {
-        soci::rowset<SeConfig> rs = (sql.prepare << "SELECT * FROM t_se_vo_share");
-        for (soci::rowset<SeConfig>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
-            seConfig.push_back(new SeConfig(*i));
-        }
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-}
 
 
-
-void MySqlAPI::getAllShareAndConfigWithCritiria(std::vector<SeAndConfig*>& seAndConfig, std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE,std::string SHARE_VALUE) {
-    soci::session sql(connectionPool);
-
-    try {
-        soci::statement stmt(sql);
-        std::ostringstream query;
-
-        query << "SELECT t_se_vo_share.se_name, t_se_vo_share.share_id, t_se_vo_share.share_type, t_se_vo_share.share_value ";
-        query << "FROM t_se_vo_share ";
-
-        bool first = true;
-
-        if (SE_NAME.length() > 0) {
-            first = false;
-            query << " WHERE t_se_vo_share.se_name LIKE :se";
-            stmt.exchange(soci::use(SE_NAME, "se"));
-        }
-
-        if (SHARE_ID.length() > 0) {
-            if (first)
-                query << " WHERE ";
-            else
-                query << " AND ";
-            first = false;
-            query << "t_se_vo_share.share_id LIKE :shareId";
-            stmt.exchange(soci::use(SHARE_ID, "shareId"));
-        }
-
-        if (SHARE_TYPE.length() > 0) {
-            if (first)
-                query << " WHERE ";
-            else
-                query << " AND ";
-            first = false;
-            query << "t_se_vo_share.share_type = :shareType";
-            stmt.exchange(soci::use(SHARE_TYPE, "shareType"));
-        }
-
-        if (SHARE_VALUE.length() > 0) {
-            if (first)
-                query << " WHERE ";
-            else
-                query << " AND ";
-            first = false;
-            query << " t_se_vo_share.share_value LIKE :shareValue";
-            stmt.exchange(soci::use(SHARE_VALUE, "shareValue"));
-        }
-
-        SeAndConfig seandconf;
-        stmt.exchange(soci::into(seandconf));
-        stmt.alloc();
-        stmt.prepare(query.str());
-        stmt.define_and_bind();
-
-        if (stmt.execute(true)) {
-            do {
-                seAndConfig.push_back(new SeAndConfig(seandconf));
-            } while (stmt.fetch());
-        }
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
 
 
 
@@ -900,53 +682,6 @@ void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string S
 }
 
 
-
-void MySqlAPI::addSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE) {
-    soci::session sql(connectionPool);
-    try {
-        sql.begin();
-
-        sql << "INSERT INTO t_se_vo_share (se_name, share_id, share_type, share_value) VALUES "
-               "                          (:seName, :shareId, :shareType, :shareValue)",
-               soci::use(SE_NAME), soci::use(SHARE_ID), soci::use(SHARE_TYPE), soci::use(SHARE_VALUE);
-
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-/*
-Update the config of an SE
-REQUIRED: SE_NAME / VO_NAME
-OPTIONAL; the rest
-set int to -1 so as NOT to be changed
- */
-void MySqlAPI::updateSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE, std::string SHARE_VALUE) {
-    // Do not bother if it is empty
-    if (SHARE_VALUE.empty())
-        return;
-
-    soci::session sql(connectionPool);
-    try {
-        sql.begin();
-        sql << "UPDATE t_se_vo_share SET share_value = :shareValue WHERE "
-               "    share_id = :shareId AND se_name = :seName AND share_type = :shareType",
-               soci::use(SHARE_VALUE), soci::use(SHARE_ID), soci::use(SE_NAME), soci::use(SHARE_TYPE);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
 /*
 Delete a SE
 REQUIRED: NAME
@@ -967,28 +702,6 @@ void MySqlAPI::deleteSe(std::string NAME) {
 
 
 
-/*
-Delete the config of an SE for a specific VO
-REQUIRED: SE_NAME
-OPTIONAL: VO_NAME
- */
-void MySqlAPI::deleteSeConfig(std::string SE_NAME, std::string SHARE_ID, std::string SHARE_TYPE) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-        sql << "DELETE FROM t_se_vo_share WHERE "
-               "    se_name LIKE :seName AND "
-               "    share_id LIKE :shareId AND "
-               "    share_type = :shareType",
-               soci::use(SE_NAME), soci::use(SHARE_ID), soci::use(SHARE_TYPE);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
 
 
 
@@ -1224,265 +937,8 @@ bool MySqlAPI::is_se_group_exist(std::string group) {
 
 
 
-/*check if a SE belongs to a group*/
-bool MySqlAPI::is_se_protocol_exist(std::string se) {
-    soci::session sql(connectionPool);
-
-    try {
-        unsigned count = 0;
-        sql << "SELECT count(se_name) FROM t_se_protocol WHERE se_name = :se AND se_group_name IS NULL",
-                soci::use(se, "se"), soci::into(count);
-
-        return count > 0;
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
 
 
-
-bool MySqlAPI::is_group_protocol_exist(std::string group) {
-    soci::session sql(connectionPool);
-
-    try {
-        unsigned count = 0;
-        sql << "SELECT se_group_name FROM t_se_protocol WHERE se_group_name = :group",
-                soci::use(group, "group"), soci::into(count);
-
-        return count > 0;
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-SeProtocolConfig* MySqlAPI::get_se_protocol_config(std::string se) {
-    soci::session sql(connectionPool);
-
-    try {
-        SeProtocolConfig protoConfig;
-        sql << "SELECT * FROM t_se_protocol WHERE se_name = :se AND se_group_name IS NULL",
-                soci::use(se, "se"), soci::into(protoConfig);
-        return new SeProtocolConfig(protoConfig);
-    }
-    catch (std::exception& e) {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-SeProtocolConfig* MySqlAPI::get_se_group_protocol_config(std::string se) {
-    soci::session sql(connectionPool);
-
-    try {
-        SeProtocolConfig protoConfig;
-        sql << "SELECT * FROM t_se_protocol WHERE se_name = :se",
-                soci::use(se, "se"), soci::into(protoConfig);
-        return new SeProtocolConfig(protoConfig);
-    }
-    catch (std::exception& e) {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-SeProtocolConfig* MySqlAPI::get_group_protocol_config(std::string group) {
-    soci::session sql(connectionPool);
-
-    try {
-        SeProtocolConfig protoConfig;
-        sql << "SELECT * FROM t_se_protocol WHERE se_group_name = :group",
-                soci::use(group, "group"), soci::into(protoConfig);
-        return new SeProtocolConfig(protoConfig);
-    }
-    catch (std::exception& e) {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-bool MySqlAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-        SeProtocolConfig protoConfig;
-        sql << "INSERT INTO t_se_protocol (se_name, nostreams, urlcopy_tx_to) VALUES "
-               "                          (:seName, :nostreams, :urlCopyTxTo)",
-                soci::use(seProtocolConfig->SE_NAME),
-                soci::use(seProtocolConfig->NOSTREAMS),
-                soci::use(seProtocolConfig->URLCOPY_TX_TO);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    return true;
-}
-
-
-
-bool MySqlAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-        SeProtocolConfig protoConfig;
-        sql << "INSERT INTO t_se_protocol (se_group_name, nostreams, urlcopy_tx_to) VALUES"
-               "                          (:seGroupName, :nostreams, :urlCopyTxTo)",
-                soci::use(seGroupProtocolConfig->SE_GROUP_NAME),
-                soci::use(seGroupProtocolConfig->NOSTREAMS),
-                soci::use(seGroupProtocolConfig->URLCOPY_TX_TO);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-    return true;
-}
-
-
-
-void MySqlAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-        sql << "DELETE FROM t_se_protocol WHERE se_name LIKE :seName AND se_group_name IS NULL",
-                soci::use(seProtocolConfig->SE_NAME);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-void MySqlAPI::delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-        sql << "DELETE FROM t_se_protocol WHERE se_group_name LIKE :seGroupName",
-                soci::use(seGroupProtocolConfig->SE_GROUP_NAME);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-void MySqlAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-
-        soci::statement stmt(sql);
-        std::ostringstream query;
-        unsigned index = 0;
-
-        query << "UPDATE t_se_protocol SET ";
-        if (seProtocolConfig->NOSTREAMS > 0) {
-            query << " nostreams = :nostreams ";
-            stmt.exchange(soci::use(seProtocolConfig->NOSTREAMS, "nostreams"));
-            ++index;
-        }
-
-        if (seProtocolConfig->URLCOPY_TX_TO > 0) {
-            if (index) query << ", ";
-            query << " urlcopy_tx_to = :urlCopyTxTo ";
-            stmt.exchange(soci::use(seProtocolConfig->URLCOPY_TX_TO, "urlCopyTxTo"));
-            ++index;
-        }
-
-        query << "WHERE se_name = :seName";
-        stmt.exchange(soci::use(seProtocolConfig->SE_NAME, "seName"));
-
-        stmt.alloc();
-        stmt.prepare(query.str());
-        stmt.define_and_bind();
-        stmt.execute(true);
-
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-void MySqlAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-
-        soci::statement stmt(sql);
-        std::ostringstream query;
-        unsigned index = 0;
-
-        query << "UPDATE t_se_protocol SET ";
-        if (seGroupProtocolConfig->NOSTREAMS > 0) {
-            query << " nostreams = :nostreams ";
-            stmt.exchange(soci::use(seGroupProtocolConfig->NOSTREAMS, "nostreams"));
-            ++index;
-        }
-
-        if (seGroupProtocolConfig->URLCOPY_TX_TO > 0) {
-            if (index) query << ", ";
-            query << " urlcopy_tx_to = :urlCopyTxTo ";
-            stmt.exchange(soci::use(seGroupProtocolConfig->URLCOPY_TX_TO, "urlCopyTxTo"));
-            ++index;
-        }
-
-        query << "WHERE se_group_name = :seGroupName";
-        stmt.exchange(soci::use(seGroupProtocolConfig->SE_GROUP_NAME, "seGroupName"));
-
-        stmt.alloc();
-        stmt.prepare(query.str());
-        stmt.define_and_bind();
-        stmt.execute(true);
-
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
-
-
-SeProtocolConfig* MySqlAPI::getProtocol(std::string, std::string se2) {
-    bool is_dest_group = is_se_group_member(se2);
-
-    if (is_dest_group) {
-        return get_se_group_protocol_config(se2);
-    } else {
-        bool is_se = is_se_protocol_exist(se2);
-        if (is_se) {
-            return get_se_protocol_config(se2);
-        }
-    }
-
-    return NULL;
-}
 
 
 
@@ -1897,32 +1353,6 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
-
-
-
-void MySqlAPI::setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-
-        if (se.length() > 0) {
-            sql << "UPDATE t_se SET state = :state WHERE name = :name",
-                    soci::use(state), soci::use(se);
-        }
-        else {
-            sql << "UPDATE t_se_group SET state = :state WHERE se_group_name = :name",
-                    soci::use(state), soci::use(group);
-        }
-
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
 
 
 /*custom optimization stuff*/
@@ -2524,77 +1954,6 @@ void MySqlAPI::revertToSubmittedTerminate(){
 
 
 
-bool MySqlAPI::configExists(const std::string & src, const std::string & dest, const std::string & vo) {
-    soci::session sql(connectionPool);
-
-    try {
-        unsigned count;
-        std::string srcGroup, destGroup;
-        std::string se1, se2, shareType;
-
-        // VO shares
-        soci::statement stmt = (sql.prepare << "SELECT COUNT(*) FROM t_se_vo_share "
-                                               "WHERE (se_name = :se1 AND share_type = :shareType AND "
-                                               "       (share_id = '\"type\":\"public\"' OR "
-                                               "        share_id = CONCAT('\"type\":\"vo\",\"id\":\"', :vo, '\"') OR "
-                                               "        share_id = CONCAT('\"type\":\"pair\",\"id\":\"', :se2, '\"')))",
-                                soci::use(se1), soci::use(shareType), soci::use(vo), soci::use(se2), soci::into(count));
-
-        shareType = "se";
-        {
-            count = 0;
-            se1 = src;
-            se2 = dest;
-            stmt.execute(true);
-            if (count) return true;
-
-            count = 0;
-            se1 = dest;
-            se2 = src;
-            stmt.execute(true);
-            if (count) return true;
-        }
-
-        shareType = "group";
-        {
-            // Get the groups names
-            sql << "SELECT se_group_name FROM t_se_group, t_se_group_contains "
-                   "WHERE t_se_group_contains.se_group_id = t_se_group.se_group_id AND "
-                   "      se_name = :seName", soci::use(src), soci::into(srcGroup);
-            sql << "SELECT se_group_name FROM t_se_group, t_se_group_contains "
-                   "WHERE t_se_group_contains.se_group_id = t_se_group.se_group_id AND "
-                   "      se_name = :seName", soci::use(dest), soci::into(destGroup);
-
-            if (!srcGroup.empty() && !destGroup.empty()) {
-                count = 0;
-                se1 = srcGroup;
-                se2 = destGroup;
-                stmt.execute(true);
-                if (count) return true;
-
-                count = 0;
-                se1 = destGroup;
-                se2 = srcGroup;
-                stmt.execute(true);
-                if (count) return true;
-            }
-        }
-
-        // No luck with the vo shares. Try with the protocol
-        sql << "SELECT COUNT(*) FROM t_se_protocol WHERE "
-               "    se_name = :source OR se_name = :dest OR "
-               "    se_group_name = :sourceGroup OR se_group_name = :destGroup",
-               soci::use(src), soci::use(dest), soci::use(srcGroup), soci::use(destGroup),
-               soci::into(count);
-        if (count) return true;
-
-        return false;
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-    }
-}
-
 
 
 void MySqlAPI::backup(){
@@ -2890,7 +2249,14 @@ void MySqlAPI::transferHost(int fileId){
 void MySqlAPI::transferHostV(std::map<int,std::string>& fileIds){
 }
 
-   
+std::string MySqlAPI::getSymbolicName(const std::string & src, const std::string & dest){
+}
+void MySqlAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
+}
+void MySqlAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
+}
+void MySqlAPI::deleteSymbolic(const std::string & symbolicName){
+}   
 
 
 // the class factories

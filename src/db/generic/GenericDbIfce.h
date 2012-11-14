@@ -86,7 +86,6 @@ public:
     
     virtual void getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files) = 0;    
     
-
     virtual std::vector<std::string> getSiteGroupNames() = 0;
 
     virtual std::vector<std::string> getSiteGroupMembers(std::string GroupName) = 0;
@@ -102,20 +101,14 @@ public:
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
     
     virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) = 0;
- 
-    
-
-    /*NEW API*/
+   
     virtual void getSe(Se* &se, std::string seName) = 0;
    
     virtual unsigned int updateFileStatus(TransferFiles* file, const std::string status) = 0;
 
     virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se) = 0;
     
-    virtual std::set<std::string> getAllMatchingSeNames(std::string name) = 0;
-
-    virtual std::set<std::string> getAllMatchingSeGroupNames(std::string name) = 0;
- 
+    virtual std::set<std::string> getAllMatchingSeNames(std::string name) = 0; 
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
@@ -124,8 +117,7 @@ public:
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
 
     virtual void deleteSe(std::string NAME) = 0;
-   
-    
+       
     virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration) = 0;    
     
     virtual void updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status) = 0;
@@ -136,8 +128,6 @@ public:
     
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;        
     
-    /*PROTOCOL CONFIG API*/
-    
     virtual std::vector<std::string> get_group_names() = 0;
 
     virtual std::vector<std::string> get_group_members(std::string name) = 0;
@@ -146,45 +136,10 @@ public:
     
     /*check if a SE is already member of a group*/
     virtual bool is_se_group_member(std::string se) = 0;
-
-    /*check if a SE already has protocol config*/
-    virtual bool is_se_protocol_exist(std::string se) = 0;
-    
-    /*check if a group already has protocol config*/
-    virtual bool is_group_protocol_exist(std::string group) = 0;    
     
     /*check if a group already exists*/
     virtual bool is_se_group_exist(std::string group) = 0;    
-    
-    /*get protocol configuration for a given SE*/
-    virtual SeProtocolConfig* get_se_protocol_config(std::string se) = 0;    
-    
-    /*get protocol configuration for a given SE which belongs to a group*/
-    virtual SeProtocolConfig* get_se_group_protocol_config(std::string se) = 0;
-
-    virtual SeProtocolConfig* get_group_protocol_config(std::string group) = 0;
-
-    /*add config for a SE*/
-    virtual bool add_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
-
-    /*add config for a group*/
-    virtual bool add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;
-    
-    /*delete config for a group*/
-    virtual void delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
-
-    /*delete config for a SE*/
-    virtual void delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
-
-    /*update config for a SE*/
-    virtual void update_se_protocol_config(SeProtocolConfig* seProtocolConfig) = 0;
-
-    /*update config for a group*/
-    virtual void update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) = 0;   
-
-    /*check if a group or a SE protocol must be fetched */
-    virtual SeProtocolConfig* getProtocol(std::string se1, std::string se2) = 0;
-
+      
     /*se group operations*/
     /*add a SE to a group*/
     virtual void add_se_to_group(std::string sd, std::string group) = 0;
@@ -195,30 +150,31 @@ public:
     /*delete a group*/
     virtual void delete_group(std::string group) = 0;	
  
- 
- 
     /*t_credential API*/
     virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    
     virtual void updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) = 0;
+    
     virtual CredCache* findGrDPStorageCacheElement(std::string delegationID, std::string dn) = 0;
+    
     virtual void deleteGrDPStorageCacheElement(std::string delegationID, std::string dn) = 0;
     
     virtual void insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    
     virtual void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) = 0;
+    
     virtual  Cred* findGrDPStorageElement(std::string delegationID, std::string dn) = 0;
+    
     virtual void deleteGrDPStorageElement(std::string delegationID, std::string dn) = 0;
-    
-    
+        
     virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname) = 0;
+    
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode) = 0;
     
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;    
     
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) = 0;
-    
-    virtual void setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state) = 0;
-    
-    
+        
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;
     
     virtual void updateOptimizer(std::string file_id , double filesize, int timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname) = 0;
@@ -255,7 +211,7 @@ public:
     
     virtual void retryFromDead(std::map<int,std::string>& pids) = 0;
     
-   virtual void blacklistSe(std::string se, std::string msg, std::string adm_dn) = 0;
+    virtual void blacklistSe(std::string se, std::string msg, std::string adm_dn) = 0;
 
     virtual void blacklistDn(std::string dn, std::string msg, std::string adm_dn) = 0;
 
@@ -267,49 +223,73 @@ public:
 
     virtual bool isDnBlacklisted(std::string dn) = 0;
     
-    
-    /*section for the new config API*/
     virtual bool isFileReadyState(int fileID) = 0;
+    
     virtual bool isFileReadyStateV(std::map<int,std::string>& fileIds) = 0;
     
     //t_group_members
     virtual  bool checkGroupExists(const std::string & groupName) = 0;
+    
     virtual void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
+    
     virtual void addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
+    
     virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
     
     //t_se_protocol
     virtual SeProtocolConfig*  getProtocol(int protocolId) = 0;
+    
     virtual int getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo) = 0;
+    
     virtual int getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo) = 0;   
+    
     virtual int addProtocol(SeProtocolConfig* seProtocolConfig) = 0;    
+    
     virtual void deleteProtocol(int protocolId) = 0;       
+    
     virtual void updateProtocol(SeProtocolConfig* config, int protocolId) = 0;           
     
     //t_group_config
     virtual SeGroup* getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member) = 0;
+    
     virtual void addGroupConfig(SeGroup* seGroup) = 0;    
+    
     virtual void deleteGroupConfig(SeGroup* seGroup) = 0;
+    
     virtual void updateGroupConfig(SeGroup* seGroup) = 0;            
     
     //t_config
     virtual SeConfig* getConfig(const std::string & source,const std::string & dest, const std::string & vo) = 0;
+    
     virtual SeConfig* getConfig(const std::string & symbolicName, const std::string & vo) = 0;    
+    
     virtual void addNewConfig(SeConfig* config) = 0;    
+    
     virtual void deleteConfig(SeConfig* config) = 0; 
+    
     virtual void updateConfig(SeConfig* config) = 0;              
     
     //general purpose
     virtual std::string checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo) = 0;		    	          
+    
     virtual bool isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo) = 0; 
+    
     virtual void allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo) = 0;
     
-    
     virtual void submitHost(const std::string & jobId) = 0;     
+    
     virtual void transferHost(int fileId) = 0;         
     
-    virtual void transferHostV(std::map<int,std::string>& fileIds) = 0;    
+    virtual void transferHostV(std::map<int,std::string>& fileIds) = 0;  
     
+    //t_config_symbolic
+    virtual std::string getSymbolicName(const std::string & src, const std::string & dest) = 0;
+    
+    virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) = 0;    
+    
+    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) = 0;        
+    
+    virtual void deleteSymbolic(const std::string & symbolicName) = 0;           
 };
 
 

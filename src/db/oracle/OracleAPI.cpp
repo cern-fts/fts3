@@ -963,44 +963,6 @@ std::set<std::string> OracleAPI::getAllMatchingSeNames(std::string name) {
     return result;
 }
 
-std::set<std::string> OracleAPI::getAllMatchingSeGroupNames(std::string name) {
-
-    std::set<std::string> result;
-    const std::string tag = "getAllMatchingSeGroupNames";
-    std::string query_stmt =
-            "SELECT DISTINCT"
-            " 	t_se_group.SE_GROUP_NAME  "
-            "FROM t_se_group "
-            "WHERE t_se_group.SE_GROUP_NAME like :1";
-
-	oracle::occi::Statement* s = NULL;
-	oracle::occi::ResultSet* r = NULL;
-	
-    try {
-        s = conn->createStatement(query_stmt, tag);
-        s->setString(1, name);
-        r = conn->createResultset(s);
-        while (r->next()) {
-            result.insert(
-                    r->getString(1)
-                    );
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
-    } catch (oracle::occi::SQLException const &e) {
-		if(conn)
-			conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-	if(conn){
-	        conn->destroyResultset(s, r);
-        	conn->destroyStatement(s, tag);	
-	}
-		
-    }
-
-    return result;
-}
 
 void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se) {
     Se* seData = NULL;
@@ -1547,8 +1509,6 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
 }
 
 
-/*Protocol config*/
-
 /*check if a SE belongs to a group*/
 bool OracleAPI::is_se_group_member(std::string se) {
     const std::string tag = "is_se_group_member";
@@ -1600,347 +1560,6 @@ bool OracleAPI::is_se_group_exist(std::string group) {
     return exists;
 }
 
-/*check if a SE belongs to a group*/
-bool OracleAPI::is_se_protocol_exist(std::string se) {
-    const std::string tag = "is_se_protocol_exist";
-    std::string query = "select SE_NAME from t_se_protocol where SE_NAME=:1 and se_group_name IS NULL ";
-    bool exists = false;
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, se);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-
-        if (r->next()) {
-            exists = true;
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-        return exists;
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        return exists;
-    }
-    return exists;
-}
-
-bool OracleAPI::is_group_protocol_exist(std::string group) {
-    const std::string tag = "is_group_protocol_exist";
-    std::string query = "select SE_GROUP_NAME from t_se_protocol where SE_GROUP_NAME=:1 ";
-    bool exists = false;
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, group);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-
-        if (r->next()) {
-            exists = true;
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-        return exists;
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        return exists;
-    }
-    return exists;
-
-}
-
-SeProtocolConfig* OracleAPI::get_se_protocol_config(std::string se) {
-    SeProtocolConfig* seProtocolConfig = NULL;
-    const std::string tag = "get_se_protocol_config";
-    std::string query = "select NOSTREAMS, URLCOPY_TX_TO, TCP_BUFFER_SIZE, SE_GROUP_NAME,SE_NAME,CONTACT,BANDWIDTH,NOFILES, "
-            "NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
-            "ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
-            "URLCOPY_GETDONE_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
-            "TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where SE_NAME=:1 and SE_GROUP_NAME IS NULL";
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, se);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        seProtocolConfig = new SeProtocolConfig();
-        if (r->next()) {
-            seProtocolConfig->NOSTREAMS = r->getInt(1);
-            seProtocolConfig->URLCOPY_TX_TO = r->getInt(2);
-            seProtocolConfig->TCP_BUFFER_SIZE = r->getInt(3);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-        return seProtocolConfig;
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        return seProtocolConfig;
-    }
-    return seProtocolConfig;
-}
-
-SeProtocolConfig* OracleAPI::get_se_group_protocol_config(std::string se) {
-    SeProtocolConfig* seProtocolConfig = NULL;
-    const std::string tag = "get_se_group_protocol_config";
-    std::string query = "select NOSTREAMS, URLCOPY_TX_TO, TCP_BUFFER_SIZE, SE_GROUP_NAME,SE_NAME,CONTACT,BANDWIDTH,NOFILES, "
-            " NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
-            "ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
-            "URLCOPY_GETDONE_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
-            "TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where"
-            " SE_GROUP_NAME=:1";
-
-    std::string group = get_group_name(se);
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, group);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-
-        seProtocolConfig = new SeProtocolConfig();
-        if (r->next()) {
-            seProtocolConfig->NOSTREAMS = r->getInt(1);
-            seProtocolConfig->URLCOPY_TX_TO = r->getInt(2);
-            seProtocolConfig->TCP_BUFFER_SIZE = r->getInt(3);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-        return seProtocolConfig;
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        return seProtocolConfig;
-    }
-    return seProtocolConfig;
-}
-
-SeProtocolConfig* OracleAPI::get_group_protocol_config(std::string group) {
-    SeProtocolConfig* seProtocolConfig = NULL;
-    const std::string tag = "get_se_group_protocol_config";
-    std::string query = "select NOSTREAMS, URLCOPY_TX_TO, SE_GROUP_NAME,SE_NAME,CONTACT,BANDWIDTH,NOFILES, "
-            "TCP_BUFFER_SIZE,NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
-            "ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
-            "URLCOPY_GETDONE_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
-            "TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where"
-            " SE_GROUP_NAME=:1";
-
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, group);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-
-        seProtocolConfig = new SeProtocolConfig();
-        if (r->next()) {
-            seProtocolConfig->NOSTREAMS = r->getInt(1);
-            seProtocolConfig->URLCOPY_TX_TO = r->getInt(2);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-    }
-    return seProtocolConfig;
-}
-
-bool OracleAPI::add_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
-    const std::string tag = "add_se_protocol_config";
-    std::string query = "insert into t_se_protocol(SE_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
-    ThreadTraits::LOCK_R lock(_mutex);
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, seProtocolConfig->SE_NAME);
-        s->setInt(2, seProtocolConfig->NOSTREAMS);
-        s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);
-        if (s->executeUpdate() != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-        return true;
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        return false;
-    }
-    return true;
-}
-
-bool OracleAPI::add_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) {
-    const std::string tag = "add_se_group_protocol_config";
-    std::string query = "insert into t_se_protocol(SE_GROUP_NAME,NOSTREAMS,URLCOPY_TX_TO) values(:1,:2,:3)";
-
-    ThreadTraits::LOCK_R lock(_mutex);
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);
-        s->setInt(2, seGroupProtocolConfig->NOSTREAMS);
-        s->setInt(3, seGroupProtocolConfig->URLCOPY_TX_TO);
-        if (s->executeUpdate() != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-        return true;
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        return false;
-    }
-
-    return true;
-}
-
-void OracleAPI::delete_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
-    const std::string tag = "delete_se_protocol_config";
-    std::string query = "delete from t_se_protocol where SE_NAME like :1 and SE_GROUP_NAME IS NULL ";
-
-    ThreadTraits::LOCK_R lock(_mutex);
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, seProtocolConfig->SE_NAME);
-        if (s->executeUpdate() != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-    }
-}
-
-void OracleAPI::delete_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) {
-    const std::string tag = "delete_se_group_protocol_config";
-    std::string query = "delete from t_se_protocol where SE_GROUP_NAME like :1";
-
-    ThreadTraits::LOCK_R lock(_mutex);
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, seGroupProtocolConfig->SE_GROUP_NAME);
-        if (s->executeUpdate() != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-    }
-}
-
-/*
-void OracleAPI::update_se_pair_protocol_config(SeProtocolConfig* sePairProtocolConfig){
-}
- */
-
-
-void OracleAPI::update_se_protocol_config(SeProtocolConfig* seProtocolConfig) {
-    unsigned int index = 1;
-    std::string tag = "update_se_group_protocol_config";
-    std::stringstream query;
-    query << "UPDATE t_se_protocol SET ";
-    if (seProtocolConfig->NOSTREAMS > 0) {
-        query << " NOSTREAMS = :" << index;
-        ++index;
-        tag += "1";
-    }
-    if (seProtocolConfig->URLCOPY_TX_TO > 0) {
-        if (index == 2) query << ",";
-        query << " URLCOPY_TX_TO = :" << index;
-        ++index;
-        tag += "2";
-    }
-    query << " WHERE SE_NAME = :" << index;
-
-    ThreadTraits::LOCK_R lock(_mutex);
-    try {
-        index = 1; //reset index
-        oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
-        if (seProtocolConfig->NOSTREAMS > 0) {
-            s->setInt(index, seProtocolConfig->NOSTREAMS);
-            ++index;
-        }
-        if (seProtocolConfig->URLCOPY_TX_TO > 0) {
-            s->setInt(index, seProtocolConfig->URLCOPY_TX_TO);
-            ++index;
-        }
-        s->setString(index, seProtocolConfig->SE_NAME);
-        if (s->executeUpdate() != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-    }
-}
-
-void OracleAPI::update_se_group_protocol_config(SeProtocolConfig* seGroupProtocolConfig) {
-    unsigned int index = 1;
-    std::string tag = "update_se_group_protocol_config";
-    std::stringstream query;
-    query << "UPDATE t_se_protocol SET ";
-    if (seGroupProtocolConfig->NOSTREAMS > 0) {
-        query << " NOSTREAMS = :" << index;
-        ++index;
-        tag += "1";
-    }
-    if (seGroupProtocolConfig->URLCOPY_TX_TO > 0) {
-        if (index == 2) query << ",";
-        query << " URLCOPY_TX_TO = :" << index;
-        ++index;
-        tag += "2";
-    }
-    query << " WHERE se_group_name = :" << index;
-
-    ThreadTraits::LOCK_R lock(_mutex);
-    try {
-        index = 1; //reset index
-        oracle::occi::Statement* s = conn->createStatement(query.str(), tag);
-        if (seGroupProtocolConfig->NOSTREAMS > 0) {
-            s->setInt(index, seGroupProtocolConfig->NOSTREAMS);
-            ++index;
-        }
-        if (seGroupProtocolConfig->URLCOPY_TX_TO > 0) {
-            s->setInt(index, seGroupProtocolConfig->URLCOPY_TX_TO);
-            ++index;
-        }
-        s->setString(index, seGroupProtocolConfig->SE_GROUP_NAME);
-        if (s->executeUpdate() != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-    }
-}
-
-SeProtocolConfig* OracleAPI::getProtocol(std::string, std::string se2) {
-
-    ThreadTraits::LOCK_R lock(_mutex);
-    bool is_dest_group = is_se_group_member(se2);
-
-    if (is_dest_group) {
-        return get_se_group_protocol_config(se2);
-    } else {
-        bool is_se = is_se_protocol_exist(se2);
-        if (is_se) {
-            return get_se_protocol_config(se2);
-        }
-    }
-
-    return NULL;
-}
 
 /*se group operations*/
 void OracleAPI::add_se_to_group(std::string se, std::string group) {
@@ -1985,7 +1604,7 @@ void OracleAPI::remove_se_from_group(std::string se, std::string group) {
 
 void OracleAPI::delete_group(std::string group) {
     const std::string tag = "delete_group";
-    std::string query = "delete from t_se_group where se_group_name like :1";
+    std::string query = "delete from t_group_members where groupName =:1";
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
@@ -2005,7 +1624,7 @@ void OracleAPI::delete_group(std::string group) {
 std::string OracleAPI::get_group_name(std::string se) {
     const std::string tag = "get_group_name";
     std::string group("");
-    std::string query = "select SE_GROUP_NAME from t_se_group where SE_NAME=:1";
+    std::string query = "select groupName from t_group_members where member=:1";
     ThreadTraits::LOCK_R lock(_mutex);
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
@@ -2031,7 +1650,7 @@ std::string OracleAPI::get_group_name(std::string se) {
 std::vector<std::string> OracleAPI::get_group_names() {
     const std::string tag = "get_group_names";
     std::vector<std::string> group;
-    std::string query = "select distinct SE_GROUP_NAME from t_se_group";
+    std::string query = "select distinct groupName from t_group_members";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         oracle::occi::ResultSet* r = conn->createResultset(s);
@@ -2052,7 +1671,7 @@ std::vector<std::string> OracleAPI::get_group_names() {
 std::vector<std::string> OracleAPI::get_group_members(std::string name) {
     const std::string tag = "get_group_members";
     std::vector<std::string> members;
-    std::string query = "select SE_NAME from t_se_group where SE_GROUP_NAME=:1";
+    std::string query = "select member from t_group_members where groupName=:1";
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
         s->setString(1, name);
@@ -2620,36 +2239,6 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
     }
 }
 
-void OracleAPI::setGroupOrSeState(const std::string & se, const std::string & group, const std::string & state) {
-    std::string tag = "setGroupOrSeState";
-    std::string query("");
-
-    if (se.length() > 0) {
-        query = "update t_se set state=:1 where name=:2";
-    } else {
-        query = "update t_se_group set state=:1 where se_group_name=:2";
-        tag += "1";
-    }
-    ThreadTraits::LOCK_R lock(_mutex);
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        if (se.length() > 0) {
-            s->setString(1, state);
-            s->setString(2, se);
-        } else {
-            s->setString(1, state);
-            s->setString(2, group);
-        }
-        if (s->executeUpdate() != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-    }
-}
 
 /*custom optimization stuff*/
 
@@ -4224,12 +3813,7 @@ int OracleAPI::getProtocolIdFromConfig(const std::string & symbolicName,const st
     
 SeProtocolConfig*  OracleAPI::getProtocol(int protocolId){
 	std::string tag="getProtocol22";
-	 std::string query = "select NOSTREAMS, URLCOPY_TX_TO, SE_GROUP_NAME,SE_NAME,CONTACT,BANDWIDTH,NOFILES, "
-            "TCP_BUFFER_SIZE,NOMINAL_THROUGHPUT,SE_PAIR_STATE,LAST_ACTIVE,MESSAGE,LAST_MODIFICATION,"
-            "ADMIN_DN,SE_LIMIT,BLOCKSIZE ,HTTP_TO ,TX_LOGLEVEL ,URLCOPY_PUT_TO,URLCOPY_PUTDONE_TO,URLCOPY_GET_TO,"
-            "URLCOPY_GETDONE_TO,URLCOPY_TXMARKS_TO,SRMCOPY_DIRECTION,SRMCOPY_TO,SRMCOPY_REFRESH_TO,"
-            "TARGET_DIR_CHECK ,URL_COPY_FIRST_TXMARK_TO,TX_TO_PER_MB ,NO_TX_ACTIVITY_TO,PREPARING_FILES_RATIO FROM t_se_protocol where"
-            " se_protocol_row_id=:1";
+	 std::string query = "select nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to from t_se_protocol where se_protocol_row_id=:1";
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
 	SeProtocolConfig* seProtocolConfig = NULL;
@@ -4246,7 +3830,7 @@ SeProtocolConfig*  OracleAPI::getProtocol(int protocolId){
         if (r->next()) {
    	    seProtocolConfig = new SeProtocolConfig();
             seProtocolConfig->NOSTREAMS = r->getInt(1);
-            seProtocolConfig->URLCOPY_TX_TO = r->getInt(2);
+            seProtocolConfig->URLCOPY_TX_TO = r->getInt(3);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
@@ -5122,6 +4706,124 @@ void OracleAPI::transferHostV(std::map<int,std::string>& fileIds){
             }
         }
     }
+}
+
+
+std::string OracleAPI::getSymbolicName(const std::string & src, const std::string & dest){
+    const std::string tag = "getSymbolicName";
+    std::string query = "select symbolicName from t_config_symbolic where source=:1 and dest=:2";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    std::string symbolic("");
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return false;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, src);			
+        s->setString(2, dest);		
+        r = conn->createResultset(s);
+        if(r->next()) {
+		symbolic = r->getString(1);
+        }
+
+	conn->destroyResultset(s, r);	
+        conn->destroyStatement(s, tag);
+        s = NULL;
+	return symbolic;
+    } catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if (conn) {
+            if (s) {
+                conn->destroyStatement(s, tag);
+            }
+        }
+    }
+    return symbolic;
+}
+
+void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
+	std::string tag="addSymbolic";
+	std::string query = "insert into t_config_symbolic(symbolicName, source, dest) values(:1,:2,:3)";
+	oracle::occi::Statement* s = NULL;	
+	
+	ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;	
+	    
+ 	s = conn->createStatement(query, tag);
+        s->setString(1, symbolicName);		
+        s->setString(2, src);			
+        s->setString(3, dest);				
+        s->executeUpdate();       
+        conn->commit();
+        conn->destroyStatement(s, tag);	
+    }
+    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
+	std::string tag="updateSymbolic";
+	std::string query = "update t_config_symbolic set source=:1, dest=:2 where symbolicName=:3";
+	oracle::occi::Statement* s = NULL;	
+	
+	ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;	
+	    
+ 	s = conn->createStatement(query, tag);
+        s->setString(1, src);		
+        s->setString(2, dest);			
+        s->setString(3, symbolicName);				
+        s->executeUpdate();       
+        conn->commit();
+        conn->destroyStatement(s, tag);	
+    }
+    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
+}
+
+void OracleAPI::deleteSymbolic(const std::string & symbolicName){	
+	std::string tag="deleteSymbolic";
+	std::string query = "delete from t_config_symbolic where symbolicName=:1";
+	oracle::occi::Statement* s = NULL;	
+	
+	ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;	
+	    
+ 	s = conn->createStatement(query, tag);
+        s->setString(1, symbolicName);		
+        s->executeUpdate();       
+        conn->commit();
+        conn->destroyStatement(s, tag);	
+    }
+    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }	
 }
 
 
