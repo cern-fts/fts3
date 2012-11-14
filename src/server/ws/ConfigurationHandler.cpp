@@ -143,20 +143,35 @@ void ConfigurationHandler::parse(string configuration) {
 		// get the configuration symbolic name
 		cfg_name = parser.get<string>("config_name");
 		if (!cfg_name)  throw Err_Custom("The symbolic name of the configuration has to be specified!");
-		to_lower(*cfg_name); // TODO check if cfg_name exists
+		to_lower(*cfg_name);
 		// get the group name
 		name = parser.get<string>("group");
 		if (!name) throw Err_Custom("The name of the group has to be specified!");
-		checkGroup(*name); // TODO check if the group is in config cfg_name
+		checkGroup(*name);
 		// get the group member name
-		member = parser.get<string>("se"); //TODO check if member belongs to group
+		member = parser.get<string>("se");
 		if (!member) throw Err_Custom("The 'se' has to be specified!");
 		checkSe(*member);
 		active_transfers = parser.get<int>("active_transfers");
 		if (!active_transfers) throw Err_Custom("The number of 'active_transfers' has to be specified!");
 		vo = parser.get<string>("vo");
 		if (!vo) throw Err_Custom("The 'vo' has to be specified!");
-		// TODO check if vo belongs do cfg_name
+
+		if (db->checkIfSymbolicNameExists(*cfg_name, *vo))
+			throw Err_Custom("The symbolic name does not exist for the given vo!");
+
+		if (db->checkGroupExists(*name))
+			throw Err_Custom("The given group does not exist!");
+
+		if (db->checkIfSeIsMemberOfGroup(*name, *vo, *member))
+			throw Err_Custom("The se is not a member of the given group!");
+
+		if (db->checkVOForMemberOfGroup(*cfg_name, *vo))
+			throw Err_Custom("The VO configuration does not exist for the given symbolic name!");
+
+		if (db->checkCreditsForMemberOfGroup(*cfg_name, *vo, *active_transfers))
+			throw Err_Custom("The number of active transfers that has been specified ex");
+
 		break;
 	default:
 		throw Err_Custom("Wrong configuration format!");
@@ -254,7 +269,7 @@ void ConfigurationHandler::addTransferConfiguration() {
 
 	bool update = true;
 	scoped_ptr<SeConfig> cfg (
-			db->getConfig(src, dest, *vo)
+			db->getConfig(src, dest, *vo).front()
 		);
 
 	if (!cfg.get()) {
@@ -442,11 +457,9 @@ vector<string> ConfigurationHandler::doGet(SeConfig* cfg) {
 vector<string> ConfigurationHandler::get(string src, string dest, string vo) {
 
 	to_lower(vo);
+	vector<SeConfig*> vec = db->getConfig(src, dest, vo);
 
-	scoped_ptr<SeConfig> cfg (
-			db->getConfig(src, dest, vo)
-		);
-	if (!cfg.get()) {
+	if (vec.empty()) {
 		throw Err_Custom(
 				"A configuration for source: " + src  + " and destination: " + dest +
 				(vo.empty() ? "" : " and for vo: " + vo)
@@ -454,7 +467,17 @@ vector<string> ConfigurationHandler::get(string src, string dest, string vo) {
 			);
 	}
 
-	return doGet(cfg.get());
+	vector<string> ret;
+	vector<SeConfig*>::iterator it;
+
+	for (it = vec.begin(); it != vec.end(); it++) {
+		scoped_ptr<SeConfig> cfg (*it);
+		vector<string> v = doGet(cfg.get());
+		ret.insert(ret.end(), v.begin(), v.end());
+	}
+
+
+	return ret;
 }
 
 vector<string> ConfigurationHandler::get(string cfg_name, string vo) {
@@ -462,21 +485,27 @@ vector<string> ConfigurationHandler::get(string cfg_name, string vo) {
 	to_lower(vo);
 	to_lower(cfg_name);
 
-	// TODO
+	to_lower(vo);
+	vector<SeConfig*> vec = db->getConfig(cfg_name, vo);
 
-	scoped_ptr<SeConfig> cfg (
-			db->getConfig(cfg_name, vo)
-		);
-	if (!cfg.get()) {
+	if (vec.empty()) {
 		throw Err_Custom(
-				"A configuration for symbolic name: "
-				+ cfg_name +
+				"A configuration for symboli name: " + cfg_name +
 				(vo.empty() ? "" : " and for vo: " + vo)
 				+ " does not exist!"
 			);
 	}
 
-	return doGet(cfg.get());
+	vector<string> ret;
+	vector<SeConfig*>::iterator it;
+
+	for (it = vec.begin(); it != vec.end(); it++) {
+		scoped_ptr<SeConfig> cfg (*it);
+		vector<string> v = doGet(cfg.get());
+		ret.insert(ret.end(), v.begin(), v.end());
+	}
+
+	return ret;
 }
 
 void ConfigurationHandler::del() {
@@ -496,7 +525,7 @@ void ConfigurationHandler::del() {
 	}
 	case CfgParser::TRANSFER_CFG: {
 		scoped_ptr<SeConfig> sc (
-				db->getConfig(source.get().get<0>(), destination.get().get<0>(), *vo)
+				db->getConfig(source.get().get<0>(), destination.get().get<0>(), *vo).front()
 			);
 		int id = sc->protocolId;
 		db->deleteConfig(sc.get());
