@@ -96,6 +96,9 @@ public:
 	optional< tuple <string, bool> > getSource();
 	optional< tuple <string, bool> > getDestination();
 
+	/// wild card used for stand alone configuration
+	static const string any;
+
 private:
 
 	CfgType type;
