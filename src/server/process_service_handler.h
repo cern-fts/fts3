@@ -711,7 +711,7 @@ protected:
                         killRunninfJob(requestIDs);
                     requestIDs.clear(); /*clean the list*/
 
-                    if (!jobs2..empty())
+                    if (!jobs2.empty())
                         executeUrlcopy(jobs2, false);
 
                     /* --- session reuse section ---*/
