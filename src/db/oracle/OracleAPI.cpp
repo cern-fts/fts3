@@ -3942,7 +3942,7 @@ void OracleAPI::updateProtocol(SeProtocolConfig* seProtocolConfig, int protocolI
     //t_group_config
 SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo){
 	const std::string tag="getGroupConfig";
-	std::string query = "select symbolicName,groupName,member,active from t_group_members where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
+	std::string query = "select symbolicName,groupName,member,active from t_group_config where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
 	SeGroup* seGroup = NULL;
