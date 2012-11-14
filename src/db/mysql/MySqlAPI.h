@@ -259,6 +259,7 @@ public:
     //there if a share in configure pair for this vo exist
     virtual bool checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo); 
     
+    virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo);
       
 
 private:

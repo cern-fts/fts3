@@ -295,7 +295,9 @@ public:
     virtual bool checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active) = 0;
     
     //there if a share in configure pair for this vo exist
-    virtual bool checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo) = 0;    
+    virtual bool checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo) = 0; 
+    
+    virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo) = 0;   
 };
 
 

@@ -4947,7 +4947,47 @@ bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const 
     return ret;
 }
     
+bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo){
+   std::string tag = "checkCreditsForMemberOfGroup";
+    std::string stmt = "select symbolicName from t_config where symbolicName=:1 and vo=:2";
 
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;   
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(stmt, tag);
+        s->setString(1, symbolicName);
+        s->setString(2, vo);	
+        r = conn->createResultset(s);
+
+	if(r->next()){        	
+		ret = true;			
+	}
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
 
 // the class factories
 extern "C" GenericDbIfce* create() {
