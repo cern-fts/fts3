@@ -259,9 +259,9 @@ public:
     virtual void updateGroupConfig(SeGroup* seGroup) = 0;            
     
     //t_config
-    virtual SeConfig* getConfig(const std::string & source,const std::string & dest, const std::string & vo) = 0;
+    virtual std::vector<SeConfig*> getConfig(const std::string & source,const std::string & dest, const std::string & vo) = 0;
     
-    virtual SeConfig* getConfig(const std::string & symbolicName, const std::string & vo) = 0;    
+    virtual std::vector<SeConfig*> getConfig(const std::string & symbolicName, const std::string & vo) = 0;    
     
     virtual void addNewConfig(SeConfig* config) = 0;    
     

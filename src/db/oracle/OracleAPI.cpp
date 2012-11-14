@@ -4068,28 +4068,41 @@ void OracleAPI::updateGroupConfig(SeGroup* seGroup){
         
     //t_config
     /*source or dest could be either catch-all/GROUP/SE */
-SeConfig* OracleAPI::getConfig(const std::string & source, const std::string & dest, const std::string & vo){
-	const std::string tag="getConfig111";
-	std::string query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
+std::vector<SeConfig*> OracleAPI::getConfig(const std::string & source, const std::string & dest, const std::string & vo){
+	std::string tag="getConfig111";
+	std::string query("");
+	
+	if(vo.length() > 0){
+			    query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
 	                    " t_config.protocol_row_id, t_config.state from t_group,t_config_symbolic "
 			    " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
-			    " t_config_symbolic.dest=:2 and t_config.vo=:3 ";
+			    " t_config_symbolic.dest=:2 and t_config.vo=:3 ";	
+	}else{
+			    query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
+	                    " t_config.protocol_row_id, t_config.state from t_group,t_config_symbolic "
+			    " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
+			    " t_config_symbolic.dest=:2";			    	
+			    tag+="222";
+	}
+				    			    
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
 	SeConfig* seConfig = NULL;
+	std::vector<SeConfig*> vectorSeConfig;
 	
 	ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return false;	
+            return vectorSeConfig;	
 	    
  	s = conn->createStatement(query, tag);
         s->setString(1, source);
 	s->setString(2, dest);
-	s->setString(3, vo);
+	if(vo.length() > 0)
+		s->setString(3, vo);
         r = conn->createResultset(s);
-        if(r->next()) {
+        while(r->next()) {
 		seConfig = new SeConfig();
 		seConfig->symbolicName = r->getString(1);
 		seConfig->source = r->getString(2);
@@ -4098,10 +4111,10 @@ SeConfig* OracleAPI::getConfig(const std::string & source, const std::string & d
 		seConfig->active = r->getInt(5);
 		seConfig->protocolId = r->getInt(6);
 		seConfig->state = r->getString(7);
+		vectorSeConfig.push_back(seConfig);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
-	return seConfig;
     }
     catch (oracle::occi::SQLException const &e) {
         if (conn)
@@ -4110,30 +4123,40 @@ SeConfig* OracleAPI::getConfig(const std::string & source, const std::string & d
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }	
     
-    return seConfig;
+    return vectorSeConfig;
 }
 
 
-SeConfig* OracleAPI::getConfig(const std::string & symbolicName, const std::string & vo){
-	const std::string tag="getConfig222";
-	std::string query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
+std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, const std::string & vo){
+	std::string tag="getConfig222";
+	std::string query(""); 
+	if(vo.length()>0){
+		query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
 	                    " t_config.protocol_row_id, t_config.state from t_group,t_config_symbolic "
 			    " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1 and t_config.vo=:2 ";
+	}else{
+		query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
+	                    " t_config.protocol_row_id, t_config.state from t_group,t_config_symbolic "
+			    " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1";
+			    tag+="222";	
+	}
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
 	SeConfig* seConfig = NULL;
+	std::vector<SeConfig*> vectorSeConfig;
 	
 	ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return false;	
+            return vectorSeConfig;	
 	    
  	s = conn->createStatement(query, tag);
         s->setString(1, symbolicName);
-	s->setString(2, vo);
+	if(vo.length() > 0)
+		s->setString(2, vo);
         r = conn->createResultset(s);
-        if(r->next()) {
+        while(r->next()) {
 		seConfig = new SeConfig();
 		seConfig->symbolicName = r->getString(1);
 		seConfig->source = r->getString(2);
@@ -4142,10 +4165,10 @@ SeConfig* OracleAPI::getConfig(const std::string & symbolicName, const std::stri
 		seConfig->active = r->getInt(5);
 		seConfig->protocolId = r->getInt(6);
 		seConfig->state = r->getString(7);
+		vectorSeConfig.push_back(seConfig);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
-	return seConfig;
     }
     catch (oracle::occi::SQLException const &e) {
         if (conn)
@@ -4154,7 +4177,7 @@ SeConfig* OracleAPI::getConfig(const std::string & symbolicName, const std::stri
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }	
     
-    return seConfig;
+    return vectorSeConfig;
 }  
 
 
