@@ -49,11 +49,8 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL) {
         dbBackend = create_db();
 
         // create monitoring db on request
-    } else{
-        std::string msg = "Failed to load database plugin library, check if ";
-        msg += libraryFileName;
-        msg += "path is set in LD_LIBRARY_PATH or located under /usr/lib64";
-	throw Err_Custom(msg);
+    } else {
+	throw Err_Custom(dlm->getLastError());
     }
 }
 

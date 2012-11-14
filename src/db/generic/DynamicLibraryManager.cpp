@@ -31,6 +31,11 @@ DynamicLibraryManager::findSymbol(const std::string &symbol) {
     return NULL; // keep compiler happy
 }
 
+std::string
+DynamicLibraryManager::getLastError(void) {
+    return ::dlerror();
+}
+
 void
 DynamicLibraryManager::loadLibrary(const std::string &libraryName) {
     try {

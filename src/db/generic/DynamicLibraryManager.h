@@ -53,6 +53,10 @@ public:
   inline bool isLibraryLoaded(){
   	return m_libraryHandle != NULL? true: false; 
   }
+
+  /// Return last error message
+  std::string getLastError(void);
+
 private:
 
   void loadLibrary( const std::string &libraryName );
