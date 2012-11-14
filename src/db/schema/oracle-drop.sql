@@ -29,4 +29,5 @@ drop table T_SE_PROTOCOL cascade constraints;
 drop table T_GROUP_MEMBERS cascade constraints;
 drop table T_GROUP_CONFIG cascade constraints;
 drop table T_CONFIG cascade constraints;
+drop table t_config_symbolic cascade constraints;
 exit;

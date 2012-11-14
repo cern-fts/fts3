@@ -177,21 +177,6 @@ CREATE TABLE t_se_acl (
   ,CONSTRAINT se_acl_pk PRIMARY KEY (name, vo)
 );
 
-
-
-
---
--- link stuff
---
-CREATE TABLE t_se_protocol (
-   se_protocol_row_id INTEGER	NOT NULL
-   ,nostreams       	INTEGER default NULL
-   ,tcp_buffer_size     INTEGER default NULL
-   ,urlcopy_tx_to      INTEGER default NULL  
-   ,no_tx_activity_to INTEGER default NULL
-   ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
-);
-
 --
 -- autoinc sequence on se_id_info
 --
@@ -214,27 +199,42 @@ CREATE TABLE t_group_members(
 	,CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member)	
 ); 
 
+CREATE TABLE t_se_protocol (
+   se_protocol_row_id INTEGER	NOT NULL
+   ,nostreams       	INTEGER default NOT NULL
+   ,tcp_buffer_size     INTEGER default NOT NULL
+   ,urlcopy_tx_to      INTEGER default NOT NULL  
+   ,no_tx_activity_to INTEGER default NOT NULL
+   ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
+);
 
 CREATE TABLE T_GROUP_CONFIG(
 	symbolicName VARCHAR2(255) NOT NULL
 	,groupName VARCHAR2(255) NOT NULL		
 	,member VARCHAR2(255)  NOT NULL			
-	,active INTEGER
-	,CONSTRAINT t_group_config_pk PRIMARY KEY (symbolicName, groupName, member)
+	,active INTEGER NOT NULL
+	,vo VARCHAR2(100) NOT NULL			
+	,CONSTRAINT t_group_config_pk PRIMARY KEY (symbolicName, groupName, member,vo)
 	,CONSTRAINT t_group_config_fk FOREIGN KEY (groupName,member) REFERENCES t_group_members (groupName,member)		
 );
 
 
 CREATE TABLE t_config ( 
-   symbolicName         VARCHAR2(255)  NOT NULL
-   ,source         VARCHAR2(255)  NOT NULL
-   ,dest         VARCHAR2(255)   NOT NULL
+   symbolicName VARCHAR2(255)  NOT NULL
    ,vo VARCHAR2(100) NOT NULL
    ,active INTEGER NOT NULL
    ,protocol_row_id INTEGER NOT NULL
-   ,state VARCHAR2(30)   
-   ,CONSTRAINT t_config_pk PRIMARY KEY (symbolicName, source, dest, vo)
-   ,CONSTRAINT t_config_fk FOREIGN KEY (protocol_row_id) REFERENCES t_se_protocol (se_protocol_row_id)
+   ,state VARCHAR2(30)  NOT NULL			
+   ,CONSTRAINT t_config_pk PRIMARY KEY (symbolicName, vo)
+   ,CONSTRAINT t_config_fk1 FOREIGN KEY (protocol_row_id) REFERENCES t_se_protocol (se_protocol_row_id)
+   ,CONSTRAINT t_config_fk2 FOREIGN KEY (symbolicName) REFERENCES t_config_symbolic (symbolicName)
+);
+
+CREATE TABLE t_config_symbolic ( 
+   symbolicName         VARCHAR2(255)  NOT NULL
+   ,source         VARCHAR2(255)  NOT NULL
+   ,dest         VARCHAR2(255)   NOT NULL
+   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)
 );
 
 --
