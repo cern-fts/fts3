@@ -95,7 +95,13 @@ int fts3::implcfg__getConfiguration(soap* soap, string vo, string name, string s
 		string dn = cgsi.getClientDn();
 
 		ConfigurationHandler handler (dn);
-		response.configuration->cfg = handler.get(vo, name);
+		if (!source.empty() && !destination.empty()) {
+			response.configuration->cfg = handler.get(source, destination, vo);
+		} else if (!name.empty()) {
+			response.configuration->cfg = handler.get(name, vo);
+		} else {
+			throw Err_Custom("Wrongly specified parameters, either both the source and destination have to be specified or the configuration name!");
+		}
 
 	} catch(std::exception& ex) {
 

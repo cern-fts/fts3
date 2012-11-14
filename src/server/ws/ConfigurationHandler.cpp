@@ -121,10 +121,10 @@ void ConfigurationHandler::parse(string configuration) {
 		if (!destination) throw Err_Custom("The destination has to be specified!");
 		// get active transfers
 		active_transfers = parser.get<int>("active_transfers");
+		if (!active_transfers) throw Err_Custom("The number of 'active transfers' has to be defined!");
 		// get vo
 		vo = parser.get<string>("vo");
-		if (!vo || !active_transfers)
-			throw Err_Custom("Both the 'active transfers' and the 'vo' have to be defined!");
+		if (!vo) throw Err_Custom("The 'vo' has to be defined!");
 		to_lower(*vo);
 		// get the protocol parameters
 		protocol = parser.get< map<string, int> >("protocol");
@@ -133,22 +133,30 @@ void ConfigurationHandler::parse(string configuration) {
 		// do standard checks
 		checkEntity(*source);
 		checkEntity((*destination));
+
+		state = parser.get<string>("state");
+		if (!state) throw Err_Custom("The configuration state has to be specified!");
+		if (*state != CfgParser::on && *state != CfgParser::off) throw Err_Custom("The configuration state has to be either 'on' or 'off'");
+
 		break;
 	case CfgParser::SE_TRANSFER_CFG:
 		// get the configuration symbolic name
 		cfg_name = parser.get<string>("config_name");
 		if (!cfg_name)  throw Err_Custom("The symbolic name of the configuration has to be specified!");
-		to_lower(*cfg_name);
+		to_lower(*cfg_name); // TODO check if cfg_name exists
 		// get the group name
 		name = parser.get<string>("group");
 		if (!name) throw Err_Custom("The name of the group has to be specified!");
-		checkGroup(*name);
+		checkGroup(*name); // TODO check if the group is in config cfg_name
 		// get the group member name
-		member = parser.get<string>("se");
+		member = parser.get<string>("se"); //TODO check if member belongs to group
 		if (!member) throw Err_Custom("The 'se' has to be specified!");
 		checkSe(*member);
 		active_transfers = parser.get<int>("active_transfers");
 		if (!active_transfers) throw Err_Custom("The number of 'active_transfers' has to be specified!");
+		vo = parser.get<string>("vo");
+		if (!vo) throw Err_Custom("The 'vo' has to be specified!");
+		// TODO check if vo belongs do cfg_name
 		break;
 	default:
 		throw Err_Custom("Wrong configuration format!");
@@ -160,6 +168,10 @@ ConfigurationHandler::~ConfigurationHandler() {
 }
 
 void ConfigurationHandler::checkSe(string name) {
+
+	// check if its an asterisk
+	if (name == CfgParser::any) return;
+
 	//check if SE exists
 	Se* ptr = 0;
 	db->getSe(ptr, name);
@@ -256,6 +268,7 @@ void ConfigurationHandler::addTransferConfiguration() {
 	cfg->source = src;
 	cfg->symbolicName = *cfg_name;
 	cfg->vo = *vo;
+	cfg->state = *state;
 
 	if (update)
 		// update
@@ -269,7 +282,7 @@ void ConfigurationHandler::addSeTransferConfiguration() {
 
 	bool update = true;
 	scoped_ptr<SeGroup> sg (
-			db->getGroupConfig(*cfg_name, *name, *member)
+			db->getGroupConfig(*cfg_name, *name, *member, *vo)
 		);
 
 	if (!sg.get()) {
@@ -280,6 +293,7 @@ void ConfigurationHandler::addSeTransferConfiguration() {
 	sg->active = *active_transfers;
 	sg->groupName = *name;
 	sg->member = *member;
+	sg->vo = *vo;
 	sg->symbolicName = *cfg_name;
 
 	if (update)
@@ -317,7 +331,8 @@ string ConfigurationHandler::buildPairCfg(SeConfig* cfg, SeProtocolConfig* prot)
 	ss << "\"" << "protocol" << "\":[";
 	ss << "{\"" << ProtocolParameters::NOSTREAMS << "\":" << prot->NOSTREAMS << "},";
 	ss << "{\"" << ProtocolParameters::URLCOPY_TX_TO << "\":" << prot->URLCOPY_TX_TO << "}";
-	ss << "]";
+	ss << "],";
+	ss << "\"" << "state" << "\":\"" << cfg->state << "\"";
 	ss << "}";
 
 	return ss.str();
@@ -352,13 +367,14 @@ string ConfigurationHandler::buildSeCfg(SeGroup* sg) {
 	ss << "\"" << "config_name" << "\":\"" << sg->symbolicName << "\",";
 	ss << "\"" << "group" << "\":\"" << sg->groupName << "\",";
 	ss << "\"" << "se" << "\":\"" << sg->member << "\",";
+	ss << "\"" << "vo" << "\":\"" << sg->vo << "\",";
 	ss << "\"" << "active_transfers" << "\":" << sg->active;
 	ss << "}";
 
 	return ss.str();
 }
 
-vector<string> ConfigurationHandler::getGroupCfg(string cfg_name, string name) {
+vector<string> ConfigurationHandler::getGroupCfg(string cfg_name, string name, string vo) {
 
 	vector<string> ret;
 
@@ -371,7 +387,7 @@ vector<string> ConfigurationHandler::getGroupCfg(string cfg_name, string name) {
 	vector<string>::iterator it;
 	for (it = members.begin(); it != members.end(); it++) {
 		scoped_ptr<SeGroup> sg (
-					db->getGroupConfig(cfg_name, name, *it)
+					db->getGroupConfig(cfg_name, name, *it, vo)
 				);
 		ret.push_back(
 				buildSeCfg(sg.get())
@@ -382,28 +398,71 @@ vector<string> ConfigurationHandler::getGroupCfg(string cfg_name, string name) {
 	return ret;
 }
 
-// TODO create CfgBuilder !!!
-vector<string> ConfigurationHandler::get(string cfg_name, string vo) {
+vector<string> ConfigurationHandler::doGet(SeConfig* cfg) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is getting configuration";
-	if (!vo.empty() || !cfg_name.empty()) {
+	if (!cfg->vo.empty() || !cfg->symbolicName.empty()) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (INFO) << " for";
 
-		if (!vo.empty()) {
+		if (!cfg->vo.empty()) {
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " VO: " << vo;
 		}
 
-		if (!cfg_name.empty()) {
+		if (!cfg->symbolicName.empty()) {
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "symbolic name: " << name;
 		}
 	}
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
 
+	vector<string> ret;
+
+	scoped_ptr<SeProtocolConfig> prot (
+			db->getProtocol(cfg->protocolId)
+		);
+
+	// create the pair configuration
+	ret.push_back(
+			buildPairCfg(cfg, prot.get())
+		);
+
+	if (db->checkGroupExists(cfg->source)) {
+		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->source, cfg->vo);
+		ret.insert(ret.end(), gr.begin(), gr.end());
+	}
+
+	if (db->checkGroupExists(cfg->destination)) {
+		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->destination, cfg->vo);
+		ret.insert(ret.end(), gr.begin(), gr.end());
+	}
+
+	return ret;
+}
+
+vector<string> ConfigurationHandler::get(string src, string dest, string vo) {
+
+	to_lower(vo);
+
+	scoped_ptr<SeConfig> cfg (
+			db->getConfig(src, dest, vo)
+		);
+	if (!cfg.get()) {
+		throw Err_Custom(
+				"A configuration for source: " + src  + " and destination: " + dest +
+				(vo.empty() ? "" : " and for vo: " + vo)
+				+ " does not exist!"
+			);
+	}
+
+	return doGet(cfg.get());
+}
+
+vector<string> ConfigurationHandler::get(string cfg_name, string vo) {
+
 	to_lower(vo);
 	to_lower(cfg_name);
 
-	vector<string> ret;
+	// TODO
 
 	scoped_ptr<SeConfig> cfg (
 			db->getConfig(cfg_name, vo)
@@ -417,26 +476,7 @@ vector<string> ConfigurationHandler::get(string cfg_name, string vo) {
 			);
 	}
 
-	scoped_ptr<SeProtocolConfig> prot (
-			db->getProtocol(cfg->protocolId)
-		);
-
-	// create the pair configuration
-	ret.push_back(
-			buildPairCfg(cfg.get(), prot.get())
-		);
-
-	if (db->checkGroupExists(cfg->source)) {
-		vector<string> gr = getGroupCfg(cfg_name, cfg->source);
-		ret.insert(ret.end(), gr.begin(), gr.end());
-	}
-
-	if (db->checkGroupExists(cfg->destination)) {
-		vector<string> gr = getGroupCfg(cfg_name, cfg->destination);
-		ret.insert(ret.end(), gr.begin(), gr.end());
-	}
-
-	return ret;
+	return doGet(cfg.get());
 }
 
 void ConfigurationHandler::del() {

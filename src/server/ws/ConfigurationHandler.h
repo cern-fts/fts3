@@ -147,6 +147,7 @@ public:
 	 */
 	vector<string> get(string cfg_name, string vo);
 
+	vector<string> get(string src, string dest, string vo);
 
 	/**
 	 * Deletes the configuration specified by the argument
@@ -183,7 +184,9 @@ private:
 
 	string buildSeCfg(SeGroup* sg);
 
-	vector<string> getGroupCfg(string cfg_name, string name);
+	vector<string> getGroupCfg(string cfg_name, string name, string vo);
+
+	vector<string> doGet(SeConfig* cfg);
 
 	/**
 	 * Converts boolean to string:
@@ -236,6 +239,8 @@ private:
 	optional<string> vo;
 	/// protocol parameters
 	optional< map<string, int> > protocol;
+	/// configuration state
+	optional<string> state;
 
 	/// type of the configuration that is being submitted
 	CfgParser::CfgType type;
