@@ -34,10 +34,12 @@
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/tuple/tuple.hpp>
 
 #include "common/error.h"
 #include "common/logger.h"
 #include "common/CfgBlocks.h"
+#include "common/CfgParser.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -116,16 +118,6 @@ public:
 	 */
 	void parse(string configuration);
 
-	/*
-	 * Checks if the SE exists, if not adds it to the DB
-	 *
-	 * @param name - SE name (possibly with wildmarks)
-	 *
-	 * @return a set with all SE names matching the SE name pattern
-	 */
-	set<string> handleSeName(string name);
-
-
 	/**
 	 * Adds a configuration to the DB.
 	 * 	First the 'parse' method has to be called
@@ -135,40 +127,14 @@ public:
 	void add();
 
 	/**
-	 * If a SE configuration is being handled 'add' calls 'addSeConfiguration'
-	 *
-	 * @see add
+	 * If transfer configuration has been submitted this method is used to add the configuration to DB
 	 */
-	void addSeConfiguration();
+	void addTransferConfiguration();
 
 	/**
-	 * If a SE group configuration is being handled 'add' calls 'addGroupConfiguration'
-	 *
-	 * @see add
+	 * Adds a sub-configuration for a pair configuration
 	 */
-	void addGroupConfiguration();
-
-	/**
-	 * Both 'addSeConfiguration' and 'addGroupConfiguration' are using this utility
-	 * in order to add the share configuration to the DB.
-	 *
-	 * @param matchingNames - all SE or SE group names that match the given pattern
-	 *
-	 * @see addSeConfiguration
-	 * @see addGroupConfiguration
-	 */
-	void addShareConfiguration(set<string> matchingNames);
-
-	/**
-	 * Both 'addSeConfiguration' and 'addGroupConfiguration' are using this utility
-	 * in order to add the active state configuration to the DB.
-	 *
-	 * @param matchingNames - all SE or SE group names that match the given pattern
-	 *
-	 * @see addSeConfiguration
-	 * @see addGroupConfiguration
-	 */
-	void addActiveStateConfiguration(set<string> matchingNames);
+	void addSeTransferConfiguration();
 
 	/**
 	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -179,7 +145,7 @@ public:
 	 *
 	 * @return vector containing single configuration entries in JSON format
 	 */
-	vector<string> get(string vo, string name);
+	vector<string> get(string cfg_name, string vo);
 
 
 	/**
@@ -198,7 +164,7 @@ public:
 	 *
 	 * @see parse
 	 */
-	shared_ptr<SeProtocolConfig> getProtocolConfig(string name, string pair = string());
+	shared_ptr<SeProtocolConfig> getProtocolConfig();
 
 	/**
 	 * Gets the SE / SE group name
@@ -206,10 +172,18 @@ public:
 	 * @return se name
 	 */
 	string getName() {
-		return name;
+		return *name; // TODO check were it's used!
 	}
 
 private:
+
+	string buildPairCfg(SeConfig* cfg, SeProtocolConfig* prot);
+
+	string buildGroupCfg(string name, vector<string> members);
+
+	string buildSeCfg(SeGroup* sg);
+
+	vector<string> getGroupCfg(string cfg_name, string name);
 
 	/**
 	 * Converts boolean to string:
@@ -222,46 +196,50 @@ private:
 	 */
 	string str(bool b);
 
+	/**
+	 * Checks if the SE exists if not adds it to the DB
+	 */
+	void checkSe(string name);
+
+	/**
+	 *
+	 */
+	void checkGroup(string name);
+
+	/**
+	 *
+	 */
+	void checkEntity(tuple<string, bool> ent);
+
+
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 
 	/// the whole cfg comand
 	string all;
+	/// configuration name
+	optional<string> cfg_name;
 	/// SE or SE group name
-	string name;
-	/// entity type: 'se' or 'group'
-	string type;
-	/// active state
-	bool active;
+	optional<string> name;
 	/// group members (list of SE names'
-	vector<string> members;
+	optional< vector<string> > members;
+	/// member name
+	optional<string> member;
 
-	/// share type: 'public', 'vo' or 'pair'
-	string share_type;
-	/// share id
-	string id;
-	/// inbound credits
-	int in;
-	/// outbound credits
-	int out;
-	/// policy (exclusive or shared)
-	string policy;
+	/// the source of the transfer config
+	optional< tuple<string, bool> > source;
+	/// the destination of the transfer config
+	optional< tuple<string, bool> > destination;
+	/// number of active transfers
+	optional<int> active_transfers;
+	/// vo
+	optional<string> vo;
+	/// protocol parameters
+	optional< map<string, int> > protocol;
 
-	/// true if active state has been defined, false otherwise
-	bool cfgActive;
-	/// true if group members have been defined, false otherwise
-	bool cfgMembers;
-	/// true if protocol parameters have been given, false otherwise
-	bool cfgProtocolParams;
-	/// true if protocol pair have been specified, false otherwise
-	bool cfgProtocolPair;
-	/// true if share configuration has been defined, false otherwise
-	bool cfgShare;
+	/// type of the configuration that is being submitted
+	CfgParser::CfgType type;
 
-	/// protocol pair configuration (empty if no pair was configured)
-	string protocol_pair;
-	/// all parameters that have been set (0 value indicates that the parameter has not been set)
-	map<string, int> parameters;
 	/// number of available protocol parameters
 	static const int PARAMETERS_NMB = 16;
 
