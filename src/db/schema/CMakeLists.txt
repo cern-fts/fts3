@@ -19,12 +19,13 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts_include_dir})
 
-
+if (EPELBUILD STREQUAL "OFF")
 install(FILES         oracle-drop.sql
         DESTINATION ${DOC_INSTALL_DIR} )
 
 install(FILES         oracle-schema.sql
         DESTINATION ${DOC_INSTALL_DIR} )
+endif ()
 
 install(FILES         mysql-schema.sql
         DESTINATION ${DOC_INSTALL_DIR} )
