@@ -215,7 +215,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/fts-config-set
 %{_bindir}/fts-config-get
 %{_bindir}/fts-config-del
-%{_bindir}/fts-debug-set
+%{_bindir}/fts-set-debug
 %{_bindir}/fts-transfer-getroles
 %{_bindir}/fts-transfer-list
 %{_bindir}/fts-transfer-listvomanagers
