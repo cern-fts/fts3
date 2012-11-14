@@ -70,13 +70,13 @@ optional< tuple<int, int, string> > FileTransferScheduler::getValue(string type,
 	vector<SeAndConfig*> seAndConfig;
 
 	// query the DB
-	db->getAllShareAndConfigWithCritiria(
-			seAndConfig,
-			name,
-			shareId,
-			type,
-			""
-		);
+//	db->getAllShareAndConfigWithCritiria(
+//			seAndConfig,
+//			name,
+//			shareId,
+//			type,
+//			""
+//		);
 
 	// the value to be returned
 	optional< tuple<int, int, string> > val;
@@ -135,21 +135,21 @@ int FileTransferScheduler::getCreditsInUse(IO io, Share share, const string type
 	// query for the credits in DB
 	if (type == CfgBlocks::SE_TYPE) {
 		// we are looking for SE credits
-		db->getSeCreditsInUse (
-				creditsInUse,
-				srcSeName,
-				destSeName,
-				voName
-			);
+//		db->getSeCreditsInUse (
+//				creditsInUse,
+//				srcSeName,
+//				destSeName,
+//				voName
+//			);
 
 	} else {
 		// we are looking for SE group credits
-		db->getGroupCreditsInUse (
-				creditsInUse,
-				srcGroupName,
-				destGroupName,
-				voName
-			);
+//		db->getGroupCreditsInUse (
+//				creditsInUse,
+//				srcGroupName,
+//				destGroupName,
+//				voName
+//			);
 	}
 
 	return creditsInUse;
@@ -340,17 +340,17 @@ int FileTransferScheduler::resolveSharedCredits(const string type, string name, 
 
 	vector<SeAndConfig*> seAndConfig;
 	// determine if there is public shared configuration for the SE
-	db->getAllShareAndConfigWithCritiria (
-			seAndConfig,
-			name,
-			CfgBlocks::publicShare(),
-			type,
-			CfgBlocks::shareValue(
-					CfgBlocks::SQL_WILDCARD,
-					CfgBlocks::SQL_WILDCARD,
-					CfgBlocks::SHARED_POLICY
-				)
-		);
+//	db->getAllShareAndConfigWithCritiria (
+//			seAndConfig,
+//			name,
+//			CfgBlocks::publicShare(),
+//			type,
+//			CfgBlocks::shareValue(
+//					CfgBlocks::SQL_WILDCARD,
+//					CfgBlocks::SQL_WILDCARD,
+//					CfgBlocks::SHARED_POLICY
+//				)
+//		);
 
 	bool hasPublicShared = !seAndConfig.empty();
 
@@ -365,13 +365,13 @@ int FileTransferScheduler::resolveSharedCredits(const string type, string name, 
 		// determined which VOs are using the public credits
 		set<string>::iterator v_it;
 		for (v_it = vosInQueue.begin(); v_it != vosInQueue.end(); v_it++) {
-			db->getAllShareAndConfigWithCritiria (
-					seAndConfig,
-					name,
-					CfgBlocks::voShare(*v_it),
-					type,
-					string()
-				);
+//			db->getAllShareAndConfigWithCritiria (
+//					seAndConfig,
+//					name,
+//					CfgBlocks::voShare(*v_it),
+//					type,
+//					string()
+//				);
 
 			if (seAndConfig.empty()) {
 				// there is no vo-share configuration so it has to use public-share
@@ -381,17 +381,17 @@ int FileTransferScheduler::resolveSharedCredits(const string type, string name, 
 	}
 
 	// select all values with for the given name and type and with shared policy
-	db->getAllShareAndConfigWithCritiria (
-			seAndConfig,
-			name,
-			string(),
-			type,
-			CfgBlocks::shareValue(
-					CfgBlocks::SQL_WILDCARD,
-					CfgBlocks::SQL_WILDCARD,
-					CfgBlocks::SHARED_POLICY
-				)
-		);
+//	db->getAllShareAndConfigWithCritiria (
+//			seAndConfig,
+//			name,
+//			string(),
+//			type,
+//			CfgBlocks::shareValue(
+//					CfgBlocks::SQL_WILDCARD,
+//					CfgBlocks::SQL_WILDCARD,
+//					CfgBlocks::SHARED_POLICY
+//				)
+//		);
 
 	// sum of all the shared inbound/outbound credits
 	int sumAll = 0;
