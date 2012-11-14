@@ -181,102 +181,15 @@ CREATE TABLE t_se_acl (
 
 
 --
--- se, se pair and se groups in the system
+-- link stuff
 --
 CREATE TABLE t_se_protocol (
    se_protocol_row_id INTEGER	NOT NULL
---
--- Email contact of the se_pair responsbile
-   ,contact         	VARCHAR2(255)
---
--- Maximum bandwidth, capacity, in Mbits/s
-   ,bandwidth       	NUMBER default NULL
---
--- The target number of concurrent streams on the network
    ,nostreams       	INTEGER default NULL
---
--- The target number of concurrent files on the network
-   ,nofiles             INTEGER default NULL
---
--- Default TCP Buffer Size for the transfer
    ,tcp_buffer_size     INTEGER default NULL
---
--- The target throughput for the system (Mbits/s)
-   ,nominal_throughput	NUMBER default NULL
---
--- The state of the se_pair ("Active", "Inactive", "Drain", "Stopped")
-   ,se_pair_state	VARCHAR2(30)
---
--- The time the se_pair was last active
-   ,last_active		TIMESTAMP WITH TIME ZONE
--- 
--- The Message concerning Last Modification 
-   ,message             VARCHAR2(1024)
---   
--- Last Modification time
-   ,last_modification   TIMESTAMP WITH TIME ZONE
---
--- The DN of the administrator who did last modification
-   ,admin_dn            VARCHAR2(1024)
---
--- per-SE limit on se_pair
-   ,se_limit         INTEGER DEFAULT NULL
---
-   ,blocksize         INTEGER  default NULL
--- HTTP timeout
---
-   ,http_to            INTEGER default NULL
--- Transfer log level. Allowed values are (DEBUG, INFO, WARN, ERROR)
---
-   ,tx_loglevel        VARCHAR2(12) default NULL
--- urlcopy put timeout
---
-   ,urlcopy_put_to     INTEGER default NULL
--- urlcopy putdone timeout
---
-   ,urlcopy_putdone_to INTEGER default NULL
--- urlcopy get timeout
---
-   ,urlcopy_get_to     INTEGER default NULL
--- urlcopy getdone timeout
---
-   ,urlcopy_getdone_to INTEGER default NULL
--- urlcopy transfer5 timeout
---
-   ,urlcopy_tx_to      INTEGER default NULL
--- urlcopy transfer markers timeout
---
-   ,urlcopy_txmarks_to INTEGER default NULL
--- srmcopy direction
---
-   ,srmcopy_direction  VARCHAR2(4) default NULL
--- srmcopy transfer timeout
---
-   ,srmcopy_to        INTEGER default NULL
--- srmcopy refresh timeout (timeout since last status update)
---
-   ,srmcopy_refresh_to INTEGER default NULL
---
--- check that target directory is accessible
---
-   ,target_dir_check CHAR(1) default NULL
---
--- The parameter to set after how many seconds to mark the first transfer activity
---
-   ,url_copy_first_txmark_to INTEGER default NULL
---
--- size-based transfer timeout, in seconds per MB
-  ,tx_to_per_mb NUMBER default NULL 
--- 
--- maximum interval with no activity detected during the transfer, in seconds
-  ,no_tx_activity_to INTEGER default NULL
---
--- maximum number of files in the preparation phase = nofiles * preparing_files_ratio
--- preparing_files_ratio default = 2. urlcopy se_pairs only.
-  ,preparing_files_ratio NUMBER default NULL
---
---
-,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
+   ,urlcopy_tx_to      INTEGER default NULL  
+   ,no_tx_activity_to INTEGER default NULL
+   ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
 );
 
 --
@@ -303,19 +216,15 @@ CREATE TABLE t_group_members(
 
 
 CREATE TABLE T_GROUP_CONFIG(
-	groupName VARCHAR2(255) NOT NULL		
-	,member VARCHAR2(255)  NOT NULL	
-	,symbolicName VARCHAR2(255)	
+	symbolicName VARCHAR2(255) NOT NULL
+	,groupName VARCHAR2(255) NOT NULL		
+	,member VARCHAR2(255)  NOT NULL			
 	,active INTEGER
-	,CONSTRAINT t_group_config_pk PRIMARY KEY (groupName, member)
-	--,CONSTRAINT t_group_config_fk1 FOREIGN KEY (groupName) REFERENCES t_group_members (groupName)
-	--,CONSTRAINT t_group_config_fk2 FOREIGN KEY (member) REFERENCES t_group_members (member)				
-); 
+	,CONSTRAINT t_group_config_pk PRIMARY KEY (symbolicName, groupName, member)
+	,CONSTRAINT t_group_config_fk FOREIGN KEY (groupName,member) REFERENCES t_group_members (groupName,member)		
+);
 
 
---
--- The se config table stores the VO share resources 
---
 CREATE TABLE t_config ( 
    symbolicName         VARCHAR2(255)  NOT NULL
    ,source         VARCHAR2(255)  NOT NULL
@@ -366,13 +275,6 @@ CREATE TABLE t_bad_dns (
    ,CONSTRAINT bad_dn_pk PRIMARY KEY (dn)
 );
 
-
-CREATE TABLE t_se_group(
-	se_group_name varchar2(512) NOT NULL
-	,se_name varchar2(512) NOT NULL
-	,state VARCHAR2(30)
-	,CONSTRAINT t_se_group_pk PRIMARY KEY (se_group_name,se_name)	
-); 
 
 --
 -- autoinc sequence on t_se_protocol
