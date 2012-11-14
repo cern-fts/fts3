@@ -1512,7 +1512,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
 /*check if a SE belongs to a group*/
 bool OracleAPI::is_se_group_member(std::string se) {
     const std::string tag = "is_se_group_member";
-    std::string query = "select SE_NAME from t_se_group where SE_NAME=:1 ";
+    std::string query = "select groupName from t_group_members where member=:1 ";
     bool exists = false;
     try {
         oracle::occi::Statement* s = conn->createStatement(query, tag);
@@ -1564,7 +1564,7 @@ bool OracleAPI::is_se_group_exist(std::string group) {
 /*se group operations*/
 void OracleAPI::add_se_to_group(std::string se, std::string group) {
     const std::string tag = "add_se_to_group";
-    std::string query = "insert into t_se_group(se_group_name, se_name) values(:1,:2)";
+    std::string query = "insert into t_group_members(groupName, member) values(:1,:2)";
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
@@ -1584,7 +1584,7 @@ void OracleAPI::add_se_to_group(std::string se, std::string group) {
 
 void OracleAPI::remove_se_from_group(std::string se, std::string group) {
     const std::string tag = "remove_se_from_group";
-    std::string query = "delete from t_se_group where se_name=:1 and se_group_name=:2";
+    std::string query = "delete from t_group_members where member=:1 and groupName=:2";
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
@@ -4532,8 +4532,9 @@ bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & d
 	oracle::occi::ResultSet* r2 = NULL;
 	oracle::occi::ResultSet* r3 = NULL;	
 	
-	//get the symbolicName for this set of endpoints
-	std::string config =  checkConfigExists(src, dest, vo);			
+	//get the symbolicName for this set of endpoints and vo
+	std::string config = checkConfigExists(src, dest, vo);
+				
 	ThreadTraits::LOCK_R lock(_mutex);
 
     try {
@@ -4682,9 +4683,9 @@ bool OracleAPI::isFileReadyStateV(std::map<int,std::string>& fileIds){
 			conn->destroyResultset(s, r);
 			isReady = true;
 			break;	    
-		}
-		conn->destroyResultset(s, r);
+		}		
             }
+	    conn->destroyResultset(s, r);
         }       
         conn->destroyStatement(s, tag);
         s = NULL;

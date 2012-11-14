@@ -83,7 +83,7 @@ void ConfigurationHandler::parse(string configuration) {
 		members = parser.get< vector<string> >("members");
 		if (!members) throw Err_Custom("The members of the group are required!");
 		// check if the group exists
-		if (db->is_se_group_exist(*name)) {
+		if (db->checkGroupExists(*name)) {
 			// if an old group exist under the same name replace it!
 			db->delete_group(*name);
 			deleteCount++;
@@ -174,7 +174,7 @@ void ConfigurationHandler::checkSe(string name) {
 void ConfigurationHandler::checkGroup(string name) {
 	// check if the group exists
 	// TODO if the group does not exist check BDII and import it if it's there
-	if (!db->is_se_group_exist(name)) {
+	if (!db->checkGroupExists(name)) {
 		throw Err_Custom(
 				"The group: " +  name + " does not exist!"
 			);

@@ -164,7 +164,6 @@ CREATE TABLE t_se (
   ,se_transfer_protocol VARCHAR2(30)
   ,se_control_protocol VARCHAR2(30)
   ,gocdb_id VARCHAR2(100)
---  ,CONSTRAINT constraint_name PRIMARY KEY (se_id_info, name, se_transfer_protocol)
   ,CONSTRAINT se_info_pk PRIMARY KEY (name)
 );
 
