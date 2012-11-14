@@ -93,6 +93,8 @@ const map<string, set<string> > CfgParser::TRANSFER_ALLOWED = CfgParser::initTra
 const map<string, set<string> > CfgParser::SE_TRANSFER_ALLOWED = CfgParser::initSeTransfer();
 
 const string CfgParser::any = "*";
+const string CfgParser::on = "on";
+const string CfgParser::off = "off";
 
 CfgParser::CfgParser(string configuration) {
 
