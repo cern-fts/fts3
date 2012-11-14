@@ -92,6 +92,8 @@ const map<string, set<string> > CfgParser::GROUP_MEMBERS_ALLOWED = CfgParser::in
 const map<string, set<string> > CfgParser::TRANSFER_ALLOWED = CfgParser::initTransfer();
 const map<string, set<string> > CfgParser::SE_TRANSFER_ALLOWED = CfgParser::initSeTransfer();
 
+const string CfgParser::any = "*";
+
 CfgParser::CfgParser(string configuration) {
 
 	// break into lines to give later better feedback to users
@@ -168,6 +170,9 @@ optional< tuple <string, bool> > CfgParser::getSource() {
 
 	val = pt.get_optional<string>("source_any");
 	if (val) {
+
+		if (*val != any) throw Err_Custom("The value of 'source_any' has to be '*'!");
+
 		boost::get<0>(ret) = *val;
 		boost::get<1>(ret) = false;
 		return ret;
@@ -196,6 +201,9 @@ optional< tuple <string, bool> > CfgParser::getDestination() {
 
 	val = pt.get_optional<string>("destination_any");
 	if (val) {
+
+		if (*val != any) throw Err_Custom("The value of 'destination_any' has to be '*'!");
+
 		boost::get<0>(ret) = *val;
 		boost::get<1>(ret) = false;
 		return ret;
