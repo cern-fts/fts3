@@ -65,6 +65,7 @@ const map< string, set <string> > CfgParser::initTransfer() {
 			("active_transfers")
 			("vo")
 			("protocol")
+			("state")
 			;
 
 	return map_list_of
@@ -78,6 +79,7 @@ const map< string, set <string> > CfgParser::initSeTransfer() {
 			("config_name")
 			("group")
 			("se")
+			("vo")
 			("active_transfers")
 			;
 
