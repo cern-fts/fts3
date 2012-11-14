@@ -3578,7 +3578,7 @@ bool OracleAPI::isDnBlacklisted(std::string dn) {
 
 /********* section for the new config API **********/
 bool OracleAPI::isFileReadyState(int fileID){
-	std::string tag="isFileReadyState";
+	const std::string tag="isFileReadyState";
 	bool ready = false;
 	std::string query = "select file_state from t_file where file_id=:1";
 	oracle::occi::Statement* s = NULL;
@@ -3613,7 +3613,7 @@ bool OracleAPI::isFileReadyState(int fileID){
 
 
 bool OracleAPI::checkGroupExists(const std::string & groupName){
-	std::string tag="checkGroupExists";
+	const std::string tag="checkGroupExists";
 	std::string query = "select groupName from t_group_members where groupName=:1";
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
@@ -3647,7 +3647,7 @@ bool OracleAPI::checkGroupExists(const std::string & groupName){
 
     //t_group_members
 void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers){
-	std::string tag="getGroupMembers";
+	const std::string tag="getGroupMembers";
 	std::string query = "select member from t_group_members where groupName=:1";
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
@@ -3830,7 +3830,9 @@ SeProtocolConfig*  OracleAPI::getProtocol(int protocolId){
         if (r->next()) {
    	    seProtocolConfig = new SeProtocolConfig();
             seProtocolConfig->NOSTREAMS = r->getInt(1);
+            seProtocolConfig->TCP_BUFFER_SIZE = r->getInt(2);
             seProtocolConfig->URLCOPY_TX_TO = r->getInt(3);
+            seProtocolConfig->NO_TX_ACTIVITY_TO = r->getInt(4);	    	    
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);	
@@ -3850,7 +3852,7 @@ int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
     const std::string tag = "addProtocol";
     const std::string tag1 = "addProtocolCurr";
     int protocolId = 0;
-    std::string query = "insert into t_se_protocol(NOSTREAMS,URLCOPY_TX_TO) values(:1,:2)";
+    std::string query = "insert into t_se_protocol(NOSTREAMS,tcp_buffer_size,URLCOPY_TX_TO,no_tx_activity_to) values(:1,:2,:3,:4)";
     std::string query1 = "SELECT se_protocol_id_info_seq.CURRVAL from dual";
     ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s = NULL;
@@ -3859,10 +3861,13 @@ int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
     try {
         s = conn->createStatement(query, tag);
         s->setInt(1, seProtocolConfig->NOSTREAMS);
-        s->setInt(2, seProtocolConfig->URLCOPY_TX_TO);
+        s->setInt(2, seProtocolConfig->TCP_BUFFER_SIZE);
+        s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);
+        s->setInt(4, seProtocolConfig->NO_TX_ACTIVITY_TO);	
         if (s->executeUpdate() != 0)
             conn->commit();
         conn->destroyStatement(s, tag);
+	
 	s1 = conn->createStatement(query1, tag1);
 	if (r1->next()) {
 		protocolId = r1->getInt(1);
@@ -3880,7 +3885,7 @@ int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
  	return protocolId;
 }
 void OracleAPI::deleteProtocol(int protocolId){
-	std::string tag="deleteMembersFromGroup";
+	const std::string tag="deleteMembersFromGroup";
 	std::string query = "delete from t_se_protocol where se_protocol_row_id=:1";
 	oracle::occi::Statement* s = NULL;	
 	
@@ -3905,9 +3910,9 @@ void OracleAPI::deleteProtocol(int protocolId){
 }
     
     
-void OracleAPI::updateProtocol(SeProtocolConfig* config, int protocolId){
+void OracleAPI::updateProtocol(SeProtocolConfig* seProtocolConfig, int protocolId){
 	std::string tag="updateProtocol";
-	std::string query = "update t_se_protocol set NOSTREAMS=:1, URLCOPY_TX_TO=:2 where se_protocol_row_id=:1";
+	std::string query = "update t_se_protocol set NOSTREAMS=:1,tcp_buffer_size=:2,URLCOPY_TX_TO=:3,no_tx_activity_to=:4 where se_protocol_row_id=:5";
 	oracle::occi::Statement* s = NULL;	
 	
 	ThreadTraits::LOCK_R lock(_mutex);
@@ -3917,9 +3922,11 @@ void OracleAPI::updateProtocol(SeProtocolConfig* config, int protocolId){
             return;	
 	    
  	s = conn->createStatement(query, tag);
-        s->setInt(1, config->NOSTREAMS);
-        s->setInt(2, config->URLCOPY_TX_TO);
-	s->setInt(3, protocolId);	
+        s->setInt(1, seProtocolConfig->NOSTREAMS);
+        s->setInt(2, seProtocolConfig->TCP_BUFFER_SIZE);
+        s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);
+        s->setInt(4, seProtocolConfig->NO_TX_ACTIVITY_TO);
+	s->setInt(5, protocolId);	
         s->executeUpdate();       
         conn->commit();
         conn->destroyStatement(s, tag);	
@@ -3933,9 +3940,9 @@ void OracleAPI::updateProtocol(SeProtocolConfig* config, int protocolId){
 }    
     
     //t_group_config
-SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member){
-	std::string tag="getGroupConfig";
-	std::string query = "select symbolicName,groupName,member,active from t_group_members where symbolicName=:1 and groupName=:2 and member=:3";
+SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo){
+	const std::string tag="getGroupConfig";
+	std::string query = "select symbolicName,groupName,member,active from t_group_members where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
 	SeGroup* seGroup = NULL;
@@ -3950,6 +3957,7 @@ SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::
         s->setString(1, symbolicName);
 	s->setString(2, groupName);
 	s->setString(3, member);
+	s->setString(4, vo);
         r = conn->createResultset(s);
         if(r->next()) {
 		seGroup = new SeGroup();
@@ -3972,8 +3980,8 @@ SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::
     return seGroup;
 }
 void OracleAPI::addGroupConfig(SeGroup* seGroup){
-	std::string tag="addGroupConfig";
-	std::string query = "insert into t_group_config(symbolicName,groupName,member,active) values(:1,:2,:3,:4)";
+	const std::string tag="addGroupConfig";
+	std::string query = "insert into t_group_config(symbolicName,groupName,member,active,vo) values(:1,:2,:3,:4,:5)";
 	oracle::occi::Statement* s = NULL;	
 	
 	ThreadTraits::LOCK_R lock(_mutex);
@@ -3986,7 +3994,8 @@ void OracleAPI::addGroupConfig(SeGroup* seGroup){
         s->setString(1, seGroup->symbolicName);	
         s->setString(2, seGroup->groupName);	
         s->setString(3, seGroup->member);			
-        s->setInt(4, seGroup->active);				
+        s->setInt(4, seGroup->active);
+	s->setString(5, seGroup->vo);				
         s->executeUpdate();       
         conn->commit();
         conn->destroyStatement(s, tag);	
@@ -4000,8 +4009,8 @@ void OracleAPI::addGroupConfig(SeGroup* seGroup){
 }
 
 void OracleAPI::deleteGroupConfig(SeGroup* seGroup){
-	std::string tag="deleteGroupConfig";
-	std::string query = "delete from T_GROUP_CONFIG where symbolicName=:1 and groupName=:2 and member=:3";
+	const std::string tag="deleteGroupConfig";
+	std::string query = "delete from T_GROUP_CONFIG where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
 	oracle::occi::Statement* s = NULL;	
 	
 	ThreadTraits::LOCK_R lock(_mutex);
@@ -4014,6 +4023,7 @@ void OracleAPI::deleteGroupConfig(SeGroup* seGroup){
         s->setString(1, seGroup->symbolicName);	
         s->setString(2, seGroup->groupName);	
         s->setString(3, seGroup->member);			
+        s->setString(4, seGroup->vo);				
         s->executeUpdate();       
         conn->commit();
         conn->destroyStatement(s, tag);	
@@ -4027,8 +4037,8 @@ void OracleAPI::deleteGroupConfig(SeGroup* seGroup){
 }
 
 void OracleAPI::updateGroupConfig(SeGroup* seGroup){
-	std::string tag="updateGroupConfig";
-	std::string query = "update T_GROUP_CONFIG set active=:1 where symbolicName=:2 and groupName=:3 and member=:4";
+	const std::string tag="updateGroupConfig";
+	std::string query = "update T_GROUP_CONFIG set active=:1 where symbolicName=:2 and groupName=:3 and member=:4 and vo=:5";
 	oracle::occi::Statement* s = NULL;	
 	
 	ThreadTraits::LOCK_R lock(_mutex);
@@ -4042,6 +4052,7 @@ void OracleAPI::updateGroupConfig(SeGroup* seGroup){
         s->setString(2, seGroup->symbolicName);	
         s->setString(3, seGroup->groupName);	
         s->setString(4, seGroup->member);			
+        s->setString(5, seGroup->vo);				
         s->executeUpdate();       
         conn->commit();
         conn->destroyStatement(s, tag);	
@@ -4056,9 +4067,13 @@ void OracleAPI::updateGroupConfig(SeGroup* seGroup){
     
         
     //t_config
-SeConfig* OracleAPI::getConfig(const std::string & source,const std::string & dest, const std::string & vo){
-	std::string tag="getConfig111";
-	std::string query = "select symbolicName,source,dest,vo,active,protocol_row_id,state from t_group where source=:1 and dest=:2 and vo=:3";
+    /*source or dest could be either catch-all/GROUP/SE */
+SeConfig* OracleAPI::getConfig(const std::string & source, const std::string & dest, const std::string & vo){
+	const std::string tag="getConfig111";
+	std::string query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
+	                    " t_config.protocol_row_id, t_config.state from t_group,t_config_symbolic "
+			    " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
+			    " t_config_symbolic.dest=:2 and t_config.vo=:3 ";
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
 	SeConfig* seConfig = NULL;
@@ -4100,8 +4115,10 @@ SeConfig* OracleAPI::getConfig(const std::string & source,const std::string & de
 
 
 SeConfig* OracleAPI::getConfig(const std::string & symbolicName, const std::string & vo){
-	std::string tag="getConfig222";
-	std::string query = "select symbolicName,source,dest,vo,active,protocol_row_id,state from t_group where symbolicName=:1 and vo=:2";
+	const std::string tag="getConfig222";
+	std::string query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
+	                    " t_config.protocol_row_id, t_config.state from t_group,t_config_symbolic "
+			    " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1 and t_config.vo=:2 ";
 	oracle::occi::Statement* s = NULL;
     	oracle::occi::ResultSet* r = NULL;
 	SeConfig* seConfig = NULL;
@@ -4143,8 +4160,11 @@ SeConfig* OracleAPI::getConfig(const std::string & symbolicName, const std::stri
 
 void OracleAPI::addNewConfig(SeConfig* seConfig){
 	std::string tag="addNewConfig111";
-	std::string query = "insert into t_config(symbolicName,source,dest,vo,active,protocol_row_id,state) values(1:,:2,:3,:4,:5,:6,:7)";
+	std::string query = "insert into t_config(symbolicName,vo,active,protocol_row_id,state) values(1:,:2,:3,:4,:5)";
 	oracle::occi::Statement* s = NULL;	
+	
+	//first we need to add the t_config_symbolic entries
+	addSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
 	
 	ThreadTraits::LOCK_R lock(_mutex);
 
@@ -4153,13 +4173,11 @@ void OracleAPI::addNewConfig(SeConfig* seConfig){
             return;	
 	    
  	s = conn->createStatement(query, tag);		
-        s->setString(1, seConfig->symbolicName);	
-        s->setString(2, seConfig->source);	
-        s->setString(3, seConfig->destination);			
-        s->setString(4, seConfig->vo);				
-        s->setInt(5, seConfig->active);	
-        s->setInt(6, seConfig->protocolId);			
-        s->setString(7, seConfig->state);			
+        s->setString(1, seConfig->symbolicName);			
+        s->setString(2, seConfig->vo);				
+        s->setInt(3, seConfig->active);	
+        s->setInt(4, seConfig->protocolId);			
+        s->setString(5, seConfig->state);			
         s->executeUpdate();       
         conn->commit();
         conn->destroyStatement(s, tag);	
@@ -4175,8 +4193,11 @@ void OracleAPI::addNewConfig(SeConfig* seConfig){
 
 void OracleAPI::deleteConfig(SeConfig* seConfig){
 	std::string tag="deleteConfig111";
-	std::string query = "delete from t_config where symbolicName=:1 and source=:2 and dest=:3 and vo=:4";
+	std::string query = "delete from t_config where symbolicName=:1 and vo=:2";
 	oracle::occi::Statement* s = NULL;	
+	
+	//first we need to delete the t_config_symbolic entries
+	deleteSymbolic(seConfig->symbolicName);
 	
 	ThreadTraits::LOCK_R lock(_mutex);
 
@@ -4186,9 +4207,7 @@ void OracleAPI::deleteConfig(SeConfig* seConfig){
 	    
  	s = conn->createStatement(query, tag);		
         s->setString(1, seConfig->symbolicName);	
-        s->setString(2, seConfig->source);	
-        s->setString(3, seConfig->destination);			
-        s->setString(4, seConfig->vo);				
+        s->setString(2, seConfig->vo);	
         s->executeUpdate();       
         conn->commit();
         conn->destroyStatement(s, tag);	
@@ -4203,8 +4222,10 @@ void OracleAPI::deleteConfig(SeConfig* seConfig){
 
 void OracleAPI::updateConfig(SeConfig* seConfig){
 	std::string tag="updateGroupConfig";
-	std::string query = "update t_config set active=:1, protocol_row_id=:2, state=:3 where symbolicName=:4 and source=:5 and dest=:6 and vo=:7";
-	oracle::occi::Statement* s = NULL;	
+	std::string query = "update t_config set active=:1, protocol_row_id=:2, state=:3 where symbolicName=:4 and vo=:5";
+	oracle::occi::Statement* s = NULL;
+	
+	updateSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
 	
 	ThreadTraits::LOCK_R lock(_mutex);
 
@@ -4217,9 +4238,7 @@ void OracleAPI::updateConfig(SeConfig* seConfig){
         s->setInt(2, seConfig->protocolId);	
         s->setString(3, seConfig->state);		
         s->setString(4, seConfig->symbolicName);	
-        s->setString(5, seConfig->source);	
-        s->setString(6, seConfig->destination);			
-        s->setString(7, seConfig->vo);				
+        s->setString(5, seConfig->vo);				
         s->executeUpdate();       
         conn->commit();
         conn->destroyStatement(s, tag);	
@@ -4259,21 +4278,24 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;
 	//SE1 -> SE2
-	std::string query1="select symbolicName from t_config where source=:1 and dest=:2 and vo=:3";
+	std::string query1=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//A   -> SE2
 	//check if source is member of group A
 	std::string query2=" select groupName from T_GROUP_CONFIG where member=:1";
 	//if previous query returns results it means it is part of group A
 	//check now if it is the group we are interested in
-	std::string query3="select symbolicName from t_config where source=:1 and dest=:2 and vo=:3";			   
+	std::string query3=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//SE1 -> B 
 	//check if dest is member of group B
 	std::string query4=" select groupName from T_GROUP_CONFIG where member=:1";
 	//if previous query returns results it means it is part of group B
 	//check now if it is the group we are interested in
-	std::string query5="select symbolicName from t_config where source=:1 and dest=:2 and vo=:3";			   
+	std::string query5=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//A   -> B
 	//check if source is member of group A
@@ -4282,24 +4304,29 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	std::string query7=" select groupName from T_GROUP_CONFIG where member=:1";	
 	//if both previous queries return result it means both are part of groups
 	//check now if it is the groups we are interested in
-	std::string query8="select symbolicName from t_config where source=:1 and dest=:2 and vo=:3";	
+	std::string query8=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//*   -> SE2
-	std::string query9="select symbolicName from t_config where source='*' and dest=:1 and vo=:2";
+	std::string query9=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//*   -> B
 	//check if dest is member of group B
 	std::string query10=" select groupName from T_GROUP_CONFIG where member=:1";
 	//use the previous returned group (is exists)
-	std::string query11=" select symbolicName from t_config where source='*' and dest=:1 and vo=:2";
+	std::string query11=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//SE1 -> *
-	std::string query12="select symbolicName from t_config where source=:1 and dest='*' and vo=:2";
+	std::string query12=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//A   -> *
 	//check if source is member of group A
 	std::string query13=" select groupName from T_GROUP_CONFIG where member=:1";
-	std::string query14="select symbolicName from t_config where source=:1 and dest='*' and vo=:2";
+	std::string query14=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
+			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	
 	ThreadTraits::LOCK_R lock(_mutex);
@@ -4479,21 +4506,25 @@ void OracleAPI::allocateToConfig(const std::string & jobId, const std::string & 
     }	
 }
 
-
+/*we need to check the number of active per link, as also the number of active per member of a group*/
 bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo){
-	std::string tag1="isTransferAllowed1";
-	std::string tag2="isTransferAllowed2";	
-	std::string tag3="isTransferAllowed3";	
+	const std::string tag1="isTransferAllowed1";
+	const std::string tag2="isTransferAllowed2";	
+	const std::string tag3="isTransferAllowed3";	
 	bool allowed = false;	
 	int currentActive = 0;
 	int activePair = 0;
 	int activeGroupMember = 0;
 	std::string state("");
+	
 	std::string query1 = " select count(*) from t_file,t_job where t_file.file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_job.source_se=:1 and "
 			    " t_job.dest_se=:2 and t_job.vo=:3";
-	std::string query2 = "select active, state from t_config where symbolicName=:1 and vo=:2";	//active for pair		    
+			    
+	std::string query2 = "select active, state from t_config where symbolicName=:1 and vo=:2"; //active for link		    
+	
 	std::string query3 = "select T_GROUP_CONFIG.active from t_config,T_GROUP_CONFIG where T_GROUP_CONFIG.symbolicName=t_config.symbolicName and "
 			     " T_GROUP_CONFIG.symbolicName=:1 and t_config.vo=:2"; //active for member of a group			    	
+	
 	oracle::occi::Statement* s1 = NULL;
 	oracle::occi::Statement* s2 = NULL;	
 	oracle::occi::Statement* s3 = NULL;	

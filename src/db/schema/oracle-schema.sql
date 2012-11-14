@@ -208,6 +208,13 @@ CREATE TABLE t_se_protocol (
    ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
 );
 
+CREATE TABLE t_config_symbolic ( 
+   symbolicName         VARCHAR2(255)  NOT NULL
+   ,source         VARCHAR2(255)  NOT NULL
+   ,dest         VARCHAR2(255)   NOT NULL
+   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)
+);
+
 CREATE TABLE T_GROUP_CONFIG(
 	symbolicName VARCHAR2(255) NOT NULL
 	,groupName VARCHAR2(255) NOT NULL		
@@ -215,14 +222,8 @@ CREATE TABLE T_GROUP_CONFIG(
 	,active INTEGER NOT NULL
 	,vo VARCHAR2(100) NOT NULL			
 	,CONSTRAINT t_group_config_pk PRIMARY KEY (symbolicName, groupName, member,vo)
-	,CONSTRAINT t_group_config_fk FOREIGN KEY (groupName,member) REFERENCES t_group_members (groupName,member)		
-);
-
-CREATE TABLE t_config_symbolic ( 
-   symbolicName         VARCHAR2(255)  NOT NULL
-   ,source         VARCHAR2(255)  NOT NULL
-   ,dest         VARCHAR2(255)   NOT NULL
-   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)
+	,CONSTRAINT t_group_config_fk FOREIGN KEY (groupName,member) REFERENCES t_group_members (groupName,member)
+	,CONSTRAINT t_group_config_fk2 FOREIGN KEY (symbolicName) REFERENCES t_config_symbolic (symbolicName)		
 );
 
 CREATE TABLE t_config ( 

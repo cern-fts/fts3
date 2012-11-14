@@ -223,7 +223,7 @@ public:
     virtual void updateProtocol(SeProtocolConfig* config, int protocolId);           
     
     //t_group_config
-    virtual SeGroup* getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member);
+    virtual SeGroup* getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo);
     
     virtual void addGroupConfig(SeGroup* seGroup);    
     

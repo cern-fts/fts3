@@ -36,4 +36,5 @@ public:
  std::string groupName; 
  std::string member; 
  int active; 
+ std::string vo;
 };

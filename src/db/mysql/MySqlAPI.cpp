@@ -2213,7 +2213,7 @@ void MySqlAPI::updateProtocol(SeProtocolConfig* config, int protocolId){
 }         
     
     //t_group_config
-SeGroup* MySqlAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member){
+SeGroup* MySqlAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo){
 }
 void MySqlAPI::addGroupConfig(SeGroup* seGroup){
 }
