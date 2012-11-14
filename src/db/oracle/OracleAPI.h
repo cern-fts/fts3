@@ -272,6 +272,8 @@ public:
     
     virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo);
     
+    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member);
+    
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

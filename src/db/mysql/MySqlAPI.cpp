@@ -2268,6 +2268,9 @@ bool MySqlAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const s
 
 bool MySqlAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo){
 }
+
+bool MySqlAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member){
+}
     
 
 // the class factories

@@ -4906,7 +4906,7 @@ bool OracleAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, c
     
     //there if a share in configure pair for this vo exist
 bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo){
-    std::string tag = "checkCreditsForMemberOfGroup";
+    std::string tag = "checkVOForMemberOfGroup";
     std::string stmt = "select vo from t_config where symbolicName=:1 and vo=:2";
 
     oracle::occi::Statement* s = 0;
@@ -4948,7 +4948,7 @@ bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const 
 }
     
 bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo){
-   std::string tag = "checkCreditsForMemberOfGroup";
+    std::string tag = "checkIfSymbolicNameExists";
     std::string stmt = "select symbolicName from t_config where symbolicName=:1 and vo=:2";
 
     oracle::occi::Statement* s = 0;
@@ -4963,6 +4963,49 @@ bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, cons
         s = conn->createStatement(stmt, tag);
         s->setString(1, symbolicName);
         s->setString(2, vo);	
+        r = conn->createResultset(s);
+
+	if(r->next()){        	
+		ret = true;			
+	}
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+
+
+bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member){
+    std::string tag = "checkIfSeIsMemberOfGroup";
+    std::string stmt = "select groupName from t_group_members where member=:1 and groupName=:2";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;   
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(stmt, tag);
+        s->setString(1, member);	
+        s->setString(2, groupName);		
         r = conn->createResultset(s);
 
 	if(r->next()){        	

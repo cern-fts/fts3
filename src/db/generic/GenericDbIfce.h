@@ -298,6 +298,8 @@ public:
     virtual bool checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo) = 0; 
     
     virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo) = 0;   
+    
+    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member) = 0;       
 };
 
 
