@@ -4187,7 +4187,7 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, co
 
 void OracleAPI::addNewConfig(SeConfig* seConfig){
 	std::string tag="addNewConfig111";
-	std::string query = "insert into t_config(symbolicName,vo,active,protocol_row_id,state) values(1:,:2,:3,:4,:5)";
+	std::string query = "insert into t_config(symbolicName,vo,active,protocol_row_id,state) values(:1,:2,:3,:4,:5)";
 	oracle::occi::Statement* s = NULL;	
 	
 	if (!checkIfSymbolicNameExistsForSrcDest(seConfig->symbolicName, seConfig->source, seConfig->destination)) {
