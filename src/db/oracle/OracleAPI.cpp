@@ -4460,7 +4460,7 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	conn->destroyResultset(s, r);
 	s->setSQL(query10);
 	s->setString(1, dest);
-	s->setString(2, std::string(*iter));
+//	s->setString(2, std::string(*iter));
 	r = conn->createResultset(s);
 	if(r->next()){
 		symbolicName = r->getString(1);
