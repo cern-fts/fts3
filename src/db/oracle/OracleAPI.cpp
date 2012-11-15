@@ -3872,6 +3872,7 @@ int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
         conn->destroyStatement(s, tag);
 	
 	s1 = conn->createStatement(query1, tag1);
+	r1 = conn->createResultset(s1);
 	if (r1->next()) {
 		protocolId = r1->getInt(1);
 	}
