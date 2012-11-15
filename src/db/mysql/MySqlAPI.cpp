@@ -1328,7 +1328,9 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
         soci::rowset<TransferJobs> rs = (sql.prepare << query);
         for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
             TransferJobs const& tjob = *i;
-            jobs.push_back(new TransferJobs(tjob));
+	    
+	    if (getInOutOfSe(tjob.SOURCE_SE, tjob.DEST_SE))
+                    jobs.push_back(new TransferJobs(tjob));
         }
     }
     catch (std::exception& e) {
@@ -2269,9 +2271,14 @@ bool MySqlAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const s
 bool MySqlAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo){
 }
 
-bool MySqlAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member){
+bool MySqlAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member){
 }
     
+bool MySqlAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest){
+}    
+
+bool MySqlAPI::checkIfSeIsMemberOfAnotherGroup( const std::string & member){
+}
 
 // the class factories
 extern "C" GenericDbIfce* create() {

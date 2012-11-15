@@ -261,7 +261,11 @@ public:
     
     virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo);
     
-    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member);    
+    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member); 
+    
+    virtual bool checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest);
+    
+    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member);
       
 
 private:

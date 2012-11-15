@@ -2167,13 +2167,6 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
         s->setPrefetchRowCount(1);
         r = conn->createResultset(s);
         while (r->next()) {
-	    //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-	    if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0){
-            	bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-            	if (process == false)
-			continue; 
-	    }
-	
             tr_jobs = new TransferJobs();
             tr_jobs->JOB_ID = r->getString(1);
             tr_jobs->JOB_STATE = r->getString(2);
@@ -2196,7 +2189,17 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
             tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
             tr_jobs->COPY_PIN_LIFETIME = r->getInt(20);
             tr_jobs->CHECKSUM_METHOD = r->getString(21);
-            jobs.push_back(tr_jobs);
+
+ 	//check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
+	    if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0){
+            	bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
+            	if (process == true) {
+                	jobs.push_back(tr_jobs);
+            	} else {
+                	delete tr_jobs;
+            	}
+	    }
+
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -4300,8 +4303,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	VO.push_back("public");
 	oracle::occi::Statement* s = NULL;
 	oracle::occi::ResultSet* r = NULL;
+	std::string state("");
+	
 	//SE1 -> SE2
-	std::string query1=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+	std::string query1=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//A   -> SE2
@@ -4309,7 +4314,7 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	std::string query2=" select groupName from T_GROUP_CONFIG where member=:1";
 	//if previous query returns results it means it is part of group A
 	//check now if it is the group we are interested in
-	std::string query3=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+	std::string query3=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//SE1 -> B 
@@ -4317,7 +4322,7 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	std::string query4=" select groupName from T_GROUP_CONFIG where member=:1";
 	//if previous query returns results it means it is part of group B
 	//check now if it is the group we are interested in
-	std::string query5=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+	std::string query5=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//A   -> B
@@ -4327,28 +4332,28 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	std::string query7=" select groupName from T_GROUP_CONFIG where member=:1";	
 	//if both previous queries return result it means both are part of groups
 	//check now if it is the groups we are interested in
-	std::string query8=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+	std::string query8=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//*   -> SE2
-	std::string query9=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
+	std::string query9=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//*   -> B
 	//check if dest is member of group B
 	std::string query10=" select groupName from T_GROUP_CONFIG where member=:1";
 	//use the previous returned group (is exists)
-	std::string query11=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
+	std::string query11=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//SE1 -> *
-	std::string query12=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
+	std::string query12=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//A   -> *
 	//check if source is member of group A
 	std::string query13=" select groupName from T_GROUP_CONFIG where member=:1";
-	std::string query14=" select symbolicName from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
+	std::string query14=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	
@@ -4366,8 +4371,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	r = conn->createResultset(s);
 	if(r->next()){
 		symbolicName = r->getString(1);
+		state = r->getString(2);
 		conn->destroyResultset(s, r);
-		break;
+		if(state.compare("on")==0)
+			break;
 	}
 	conn->destroyResultset(s, r);
 	s->setSQL(query2);
@@ -4383,8 +4390,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 		r = conn->createResultset(s);
 		if(r->next()){
 			symbolicName = r->getString(1);
+			state = r->getString(2);
 			conn->destroyResultset(s, r);
-			break;
+			if(state.compare("on")==0)
+				break;
 		}
 	}
 	conn->destroyResultset(s, r);
@@ -4401,8 +4410,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 		r = conn->createResultset(s);
 		if(r->next()){
 			symbolicName = r->getString(1);
+			state = r->getString(2);
 			conn->destroyResultset(s, r);
-			break;
+			if(state.compare("on")==0)
+				break;
 		}			
 	}
 	conn->destroyResultset(s, r);
@@ -4425,8 +4436,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 			r = conn->createResultset(s);
 			if(r->next()){
 				symbolicName = r->getString(1);
+				state = r->getString(2);
 				conn->destroyResultset(s, r);
-				break;
+				if(state.compare("on")==0)
+					break;
 			}
 		}
 		
@@ -4438,8 +4451,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	r = conn->createResultset(s);
 	if(r->next()){
 		symbolicName = r->getString(1);
+		state = r->getString(2);
 		conn->destroyResultset(s, r);
-		break;
+		if(state.compare("on")==0)
+			break;
 	}
 	conn->destroyResultset(s, r);
 	s->setSQL(query10);
@@ -4455,8 +4470,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 		r = conn->createResultset(s);
 		if(r->next()){
 			symbolicName = r->getString(1);
+			state = r->getString(2);
 			conn->destroyResultset(s, r);
-			break;
+			if(state.compare("on")==0)
+				break;
 		}
 	}
 	conn->destroyResultset(s, r);
@@ -4466,8 +4483,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	r = conn->createResultset(s);
 	if(r->next()){
 		symbolicName = r->getString(1);
+		state = r->getString(2);
 		conn->destroyResultset(s, r);
-		break;
+		if(state.compare("on")==0)
+			break;
 	}
 	conn->destroyResultset(s, r);
 	s->setSQL(query13);
@@ -4482,8 +4501,10 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 		r = conn->createResultset(s);
 		if(r->next()){
 			symbolicName = r->getString(1);
+			state = r->getString(2);
 			conn->destroyResultset(s, r);
-			break;
+			if(state.compare("on")==0)
+				break;
 		}
 	}
 	conn->destroyResultset(s, r);			
@@ -4538,12 +4559,11 @@ bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & d
 	int currentActive = 0;
 	int activePair = 0;
 	int activeGroupMember = 0;
-	std::string state("");
 	
 	std::string query1 = " select count(*) from t_file,t_job where t_file.file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_job.source_se=:1 and "
 			    " t_job.dest_se=:2 and t_job.vo=:3";
 			    
-	std::string query2 = "select active, state from t_config where symbolicName=:1 and vo=:2"; //active for link		    
+	std::string query2 = "select active from t_config where symbolicName=:1 and vo=:2"; //active for link		    
 	
 	std::string query3 = "select T_GROUP_CONFIG.active from t_config,T_GROUP_CONFIG where T_GROUP_CONFIG.symbolicName=t_config.symbolicName and "
 			     " T_GROUP_CONFIG.symbolicName=:1 and t_config.vo=:2"; //active for member of a group			    	
@@ -4582,7 +4602,6 @@ bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & d
         r2 = conn->createResultset(s2);
         if(r2->next()) {
 		activePair = r2->getInt(1);
-		state = r2->getString(2);
         }
         conn->destroyResultset(s2, r2);
         conn->destroyStatement(s2, tag2);	
@@ -5013,7 +5032,7 @@ bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, cons
 }
 
 
-bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member){
+bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member){
     std::string tag = "checkIfSeIsMemberOfGroup";
     std::string stmt = "select groupName from t_group_members where member=:1 and groupName=:2";
 
@@ -5054,6 +5073,133 @@ bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const st
 
     return ret;
 }
+
+/*    
+    true:  the symbolic name doesn't exists in general
+    true:  if symbolic is used in the same pair
+    false: if symbolic is already used in a diff pair
+    ALL ENTITIES WILL BE PROVIDED SE/GROUP
+*/
+bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest){
+    std::string tag1 = "checkIfSymbolicNameExistsForSrcDest";
+    std::string tag2 = "checkIfSymbolicNameExistsForSrcDest111";
+    std::string tag3 = "checkIfSymbolicNameExistsForSrcDest222";    
+    std::string stmt1 = "select count(*) from t_config_symbolic where symbolicName=:1";        
+    std::string stmt2 = "select symbolicName from t_config_symbolic where symbolicName=:1 and source=:2 and dest=:3";
+    std::string stmt3= "select symbolicName, src, dest from t_config_symbolic where symbolicName=:1";    
+
+    oracle::occi::Statement* s1 = 0;
+    oracle::occi::ResultSet* r1 = 0;   
+    oracle::occi::Statement* s2 = 0;
+    oracle::occi::ResultSet* r2 = 0;
+    oracle::occi::Statement* s3 = 0;
+    oracle::occi::ResultSet* r3 = 0;    
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s1 = conn->createStatement(stmt1, tag1);
+        s1->setString(1, symbolicName);	
+        r1 = conn->createResultset(s1);
+	if(r1->next()){        	
+		int count = r1->getInt(1);
+		if(count==0)
+			ret = true;
+	}
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+	if(ret)
+		return ret;
+		
+        s2 = conn->createStatement(stmt2, tag2);
+        s2->setString(1, symbolicName);	
+        s2->setString(2, src);	
+        s2->setString(3, dest);			
+        r2 = conn->createResultset(s2);
+	if(r2->next()){        	
+		ret = true;
+	}
+        conn->destroyResultset(s2, r2);
+        conn->destroyStatement(s2, tag2);
+	if(ret)
+		return ret;
+		
+        s3 = conn->createStatement(stmt3, tag3);
+        s3->setString(1, symbolicName);			
+        r3 = conn->createResultset(s3);
+	if(r3->next()){        	
+		std::string source = r3->getString(2);
+		std::string destination = r3->getString(3);		
+		if(source.compare(src)!=0 || destination.compare(dest)!=0)
+			ret = false;
+	}
+        conn->destroyResultset(s3, r3);
+        conn->destroyStatement(s3, tag3);
+	
+	return ret;       		
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));       
+    }
+
+    return ret;
+}
+      
+
+/*
+    we need to check if a member already belongs to another group 
+    true: it is member of another group
+    false: it is not member of another group
+*/
+bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member){
+    std::string tag = "checkIfSeIsMemberOfAnotherGroup";
+    std::string stmt = "select groupName from t_group_members where member=:1 ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;   
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(stmt, tag);
+        s->setString(1, member);			
+        r = conn->createResultset(s);
+
+	if(r->next()){        	
+		ret = true;			
+	}
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+} 
+      
+
 
 // the class factories
 extern "C" GenericDbIfce* create() {

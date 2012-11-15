@@ -272,7 +272,22 @@ public:
     
     virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo);
     
-    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & vo, const std::string & member);
+    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member);
+    
+    /*    
+    true:  the symbolic name doesn't exists
+    true:  if symbolic is used in the same pair
+    false: if symbolic is already used in a diff pair
+    */
+    virtual bool checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest); 
+    
+    /*we need to check if a member already belongs to another group 
+    true: is member of another group
+    false: is not a member of another group
+    */
+    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member); 
+          
+          
     
 private:
 	OracleConnection *conn;	
