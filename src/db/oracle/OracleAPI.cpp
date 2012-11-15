@@ -4366,6 +4366,7 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 
     s = conn->createStatement(query1, "");		    
     for (iter = VO.begin(); iter != VO.end(); ++iter){
+    	s->setSQL(query1);
     	s->setString(1, source);
     	s->setString(2, dest);	
     	s->setString(3, std::string(*iter));
