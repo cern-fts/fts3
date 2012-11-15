@@ -50,7 +50,11 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL) {
 
         // create monitoring db on request
     } else{
-        throw Err_Custom(dlm->getLastError()); 
+       if(dlm){
+        	throw Err_Custom(dlm->getLastError()); 
+       }else{
+       		throw Err_Custom("Can't load " + libraryFileName + " plugin" ); 
+       }
     }
 }
 
