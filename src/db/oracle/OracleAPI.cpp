@@ -4337,7 +4337,7 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//*   -> SE2
-	std::string query9=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
+	std::string query9=" select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//*   -> B
@@ -4348,7 +4348,7 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//SE1 -> *
-	std::string query12=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
+	std::string query12=" select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
 	
 	//A   -> *
