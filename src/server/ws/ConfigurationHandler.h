@@ -173,7 +173,7 @@ public:
 	 * @return se name
 	 */
 	string getName() {
-		return *name; // TODO check were it's used!
+		return "dummy"; // TODO it's used for authorization! should be the se name (?)
 	}
 
 private:

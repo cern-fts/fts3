@@ -263,8 +263,9 @@ void ConfigurationHandler::addTransferConfiguration() {
 	}
 
 	bool update = true;
+	vector<SeConfig*> v = db->getConfig(src, dest, *vo);
 	scoped_ptr<SeConfig> cfg (
-			db->getConfig(src, dest, *vo).front()
+			v.empty() ? 0 : v.front()
 		);
 
 	if (!cfg.get()) {
@@ -519,8 +520,10 @@ void ConfigurationHandler::del() {
 		break;
 	}
 	case CfgParser::TRANSFER_CFG: {
+
+		vector<SeConfig*> v = db->getConfig(source.get().get<0>(), destination.get().get<0>(), *vo);
 		scoped_ptr<SeConfig> sc (
-				db->getConfig(source.get().get<0>(), destination.get().get<0>(), *vo).front()
+				v.empty() ? 0 : v.front()
 			);
 		int id = sc->protocolId;
 		db->deleteConfig(sc.get());
