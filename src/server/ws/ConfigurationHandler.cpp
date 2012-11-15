@@ -82,23 +82,18 @@ void ConfigurationHandler::parse(string configuration) {
 		// get the member SEs
 		members = parser.get< vector<string> >("members");
 		if (!members) throw Err_Custom("The members of the group are required!");
-		// check if the group exists
-		if (db->checkGroupExists(*name)) {
-			// if an old group exist under the same name replace it!
-			db->delete_group(*name);
-			deleteCount++;
-		}
 		vector<string>::iterator it;
 		for (it = (*members).begin(); it != (*members).end(); it++) {
 			//check if SE exists
 			checkSe(*it);
+			// check if the se is already a member of the given group
+			if (db->checkIfSeIsMemberOfGroup(*name, *member)) continue;
 			// check if the SE is a member of a group
-			string gr = db->get_group_name(*it);
+			string gr; // TODO check if the se belongs to a group already
 			if (gr.empty()) {
 				// if not, add it to the group
 				db->addGroupMember(*name, *it);
 				insertCount++;
-
 			} else {
 				// if its a member of other group throw an exception
 				throw Err_Custom (
@@ -110,14 +105,14 @@ void ConfigurationHandler::parse(string configuration) {
 	}
 	case CfgParser::TRANSFER_CFG:
 		// configuration name
-		cfg_name = parser.get<string>("config_name");
+		cfg_name = parser.get<string>("config_name"); // TODO check if the symbolic name was not used for different pair
 		if (!cfg_name)  throw Err_Custom("The symbolic name of the configuration has to be specified!");
 		to_lower(*cfg_name);
 		// get the source se
 		source = parser.getSource();
 		if (!source) throw Err_Custom("The source has to be specified!");
 		// get the destination se
-		destination = parser.get<string>("destination");
+		destination = parser.getDestination();
 		if (!destination) throw Err_Custom("The destination has to be specified!");
 		// get active transfers
 		active_transfers = parser.get<int>("active_transfers");
@@ -163,7 +158,7 @@ void ConfigurationHandler::parse(string configuration) {
 		if (db->checkGroupExists(*name))
 			throw Err_Custom("The given group does not exist!");
 
-		if (db->checkIfSeIsMemberOfGroup(*name, *vo, *member))
+		if (db->checkIfSeIsMemberOfGroup(*name, *member))
 			throw Err_Custom("The se is not a member of the given group!");
 
 		if (db->checkVOForMemberOfGroup(*cfg_name, *vo))
