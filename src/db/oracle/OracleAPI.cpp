@@ -4307,7 +4307,7 @@ std::string OracleAPI::checkConfigExists(const std::string & source, const std::
 	std::string state("");
 	
 	//SE1 -> SE2
-	std::string query1=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+	std::string query1=" select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
 			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
 	
 	//A   -> SE2
