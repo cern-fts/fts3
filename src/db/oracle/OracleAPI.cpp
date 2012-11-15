@@ -4190,8 +4190,10 @@ void OracleAPI::addNewConfig(SeConfig* seConfig){
 	std::string query = "insert into t_config(symbolicName,vo,active,protocol_row_id,state) values(1:,:2,:3,:4,:5)";
 	oracle::occi::Statement* s = NULL;	
 	
-	//first we need to add the t_config_symbolic entries
-	addSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
+	if (!checkIfSymbolicNameExistsForSrcDest(seConfig->symbolicName, seConfig->source, seConfig->destination)) {
+		//first we need to add the t_config_symbolic entries
+		addSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
+	}
 	
 	ThreadTraits::LOCK_R lock(_mutex);
 
