@@ -60,9 +60,10 @@ public:
 
 	enum CfgType {
 		NOT_A_CFG,
-		GROUP_MEMBERS_CFG,
-		TRANSFER_CFG,
-		SE_TRANSFER_CFG
+		STANDALONE_SE_CFG,
+		STANDALONE_GR_CFG,
+		SE_PAIR_CFG,
+		GR_PAIR_CFG
 	};
 
 	/**
@@ -93,9 +94,6 @@ public:
 		return type;
 	}
 
-	optional< tuple <string, bool> > getSource();
-	optional< tuple <string, bool> > getDestination();
-
 	/// wild card used for stand alone configuration
 	static const string any;
 	/// on state
@@ -122,19 +120,25 @@ private:
 	/// The object that contains the parsed configuration
 	ptree pt;
 
-	/// allowed names for configuring a group
-	static const map< string, set <string> > GROUP_MEMBERS_ALLOWED;
-	/// allowed names for configuring se transfer parameters
-	static const map< string, set <string> > TRANSFER_ALLOWED;
-	/// allowed names for configuring se in a pair
-	static const map< string, set <string> > SE_TRANSFER_ALLOWED;
+	/// the tokens used in standalone SE configuration
+	static const map<string, set <string> > standaloneSeCfgTokens;
+	/// the tokens used in standalone SE groupconfiguration
+	static const map<string, set <string> > standaloneGrCfgTokens;
+	/// the tokens used in se pair configuration
+	static const map<string, set <string> > sePairCfgTokens;
+	/// the tokens used in se group pair configuration
+	static const map<string, set <string> > grPairCfgTokens;
+	/// all the allowed tokens
+	static const set<string> allTokens;
 
 	/// initializes allowed JSON members for se config
-	static const map< string, set <string> > initGroupMembers();
-	/// initializes allowed JSON members for transfer config
-	static const map< string, set <string> > initTransfer();
-	/// initializes allowed JSON members for se transfer config
-	static const map< string, set <string> > initSeTransfer();
+	static const map< string, set <string> > initStandaloneSeCfgTokens();
+	/// initializes allowed JSON members for se group config
+	static const map< string, set <string> > initStandaloneGrCfgTokens();
+	/// initializes allowed JSON members for se pair
+	static const map< string, set <string> > initSePairCfgTokens();
+	/// initializes allowed JSON members for se group pair
+	static const map< string, set <string> > initGrPairCfgTokens();
 };
 
 template <typename T>

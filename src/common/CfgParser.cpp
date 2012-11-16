@@ -36,36 +36,78 @@ namespace fts3 { namespace common {
 
 using namespace boost::assign;
 
-const map< string, set <string> > CfgParser::initGroupMembers() {
+const map<string, set <string> > CfgParser::standaloneSeCfgTokens = CfgParser::initStandaloneSeCfgTokens();
+const map<string, set <string> > CfgParser::standaloneGrCfgTokens = CfgParser::initStandaloneGrCfgTokens();
+const map<string, set <string> > CfgParser::sePairCfgTokens = CfgParser::initSePairCfgTokens();
+const map<string, set <string> > CfgParser::grPairCfgTokens = CfgParser::initGrPairCfgTokens();
+const set<string> CfgParser::allTokens =
+		list_of
+		("se")
+		("group")
+		("members")
+		("active")
+		("in")
+		("out")
+		("share")
+		("protocol")
+		("symbolic_name")
+		("source_se")
+		("destination_se")
+		("source_group")
+		("destination_group")
+		;
+
+const map< string, set <string> > CfgParser::initStandaloneSeCfgTokens() {
 
 	set<string> root = list_of
-			("name")
-			("members")
+			("se")
+			("active")
+			("in")
+			("out")
 			;
-//	set<string> protocol = list_of ("parameters") ("pair");
-//	set<string> share = list_of ("type") ("id") ("in") ("out") ("policy");
+
+	set<string> cfg = list_of
+			("share")
+			("protocol")
+			;
 
 	return map_list_of
 			(string(), root)
-//			("protocol", protocol)
-//			("share", share)
+			("in", cfg)
+			("out", cfg)
 			;
 }
 
-const map< string, set <string> > CfgParser::initTransfer() {
+const map< string, set <string> > CfgParser::initStandaloneGrCfgTokens() {
 
 	set<string> root = list_of
-			("config_name")
+			("group")
+			("members")
+			("active")
+			("in")
+			("out")
+			;
+
+	set<string> cfg = list_of
+			("share")
+			("protocol")
+			;
+
+	return map_list_of
+			(string(), root)
+			("in", cfg)
+			("out", cfg)
+			;
+}
+
+const map< string, set <string> > CfgParser::initSePairCfgTokens() {
+
+	set<string> root = list_of
+			("symbolic_name")
 			("source_se")
 			("destination_se")
-			("source_group")
-			("destination_group")
-			("source_any")
-			("destination_any")
-			("active_transfers")
-			("vo")
+			("share")
 			("protocol")
-			("state")
 			;
 
 	return map_list_of
@@ -73,28 +115,20 @@ const map< string, set <string> > CfgParser::initTransfer() {
 			;
 }
 
-const map< string, set <string> > CfgParser::initSeTransfer() {
+const map< string, set <string> > CfgParser::initGrPairCfgTokens() {
 
 	set<string> root = list_of
-			("config_name")
-			("group")
-			("se")
-			("vo")
-			("active_transfers")
+			("symbolic_name")
+			("source_group")
+			("destination_group")
+			("share")
+			("protocol")
 			;
 
 	return map_list_of
 			(string(), root)
 			;
 }
-
-const map<string, set<string> > CfgParser::GROUP_MEMBERS_ALLOWED = CfgParser::initGroupMembers();
-const map<string, set<string> > CfgParser::TRANSFER_ALLOWED = CfgParser::initTransfer();
-const map<string, set<string> > CfgParser::SE_TRANSFER_ALLOWED = CfgParser::initSeTransfer();
-
-const string CfgParser::any = "*";
-const string CfgParser::on = "on";
-const string CfgParser::off = "off";
 
 CfgParser::CfgParser(string configuration) {
 
@@ -130,18 +164,23 @@ CfgParser::CfgParser(string configuration) {
 		throw Err_Custom(msg);
 	}
 
-	if (validate(pt, TRANSFER_ALLOWED)) {
-		type = TRANSFER_CFG;
+	if (validate(pt, standaloneSeCfgTokens)) {
+		type = STANDALONE_SE_CFG;
 		return;
 	}
 
-	if (validate(pt, GROUP_MEMBERS_ALLOWED)) {
-		type = GROUP_MEMBERS_CFG;
+	if (validate(pt, standaloneGrCfgTokens)) {
+		type = STANDALONE_GR_CFG;
 		return;
 	}
 
-	if (validate(pt, SE_TRANSFER_ALLOWED)) {
-		type = SE_TRANSFER_CFG;
+	if (validate(pt, sePairCfgTokens)) {
+		type = SE_PAIR_CFG;
+		return;
+	}
+
+	if (validate(pt, grPairCfgTokens)) {
+		type = GR_PAIR_CFG;
 		return;
 	}
 
@@ -150,68 +189,6 @@ CfgParser::CfgParser(string configuration) {
 
 CfgParser::~CfgParser() {
 
-}
-
-optional< tuple <string, bool> > CfgParser::getSource() {
-
-	tuple<string, bool> ret;
-
-	optional<string> val = pt.get_optional<string>("source_se");
-	if (val) {
-		boost::get<0>(ret) = *val;
-		boost::get<1>(ret) = false;
-		return ret;
-	}
-
-	val = pt.get_optional<string>("source_group");
-	if (val) {
-		boost::get<0>(ret) = *val;
-		boost::get<1>(ret) = true;
-		return ret;
-	}
-
-	val = pt.get_optional<string>("source_any");
-	if (val) {
-
-		if (*val != any) throw Err_Custom("The value of 'source_any' has to be '*'!");
-
-		boost::get<0>(ret) = *val;
-		boost::get<1>(ret) = false;
-		return ret;
-	}
-
-	return optional< tuple<string, bool> >();
-}
-
-optional< tuple <string, bool> > CfgParser::getDestination() {
-
-	tuple<string, bool> ret;
-
-	optional<string> val = pt.get_optional<string>("destination_se");
-	if (val) {
-		boost::get<0>(ret) = *val;
-		boost::get<1>(ret) = false;
-		return ret;
-	}
-
-	val = pt.get_optional<string>("destination_group");
-	if (val) {
-		boost::get<0>(ret) = *val;
-		boost::get<1>(ret) = true;
-		return ret;
-	}
-
-	val = pt.get_optional<string>("destination_any");
-	if (val) {
-
-		if (*val != any) throw Err_Custom("The value of 'destination_any' has to be '*'!");
-
-		boost::get<0>(ret) = *val;
-		boost::get<1>(ret) = false;
-		return ret;
-	}
-
-	return optional< tuple<string, bool> >();
 }
 
 bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path) {
@@ -232,17 +209,18 @@ bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string p
 
 		// validate the name
 		if (!names.count(p.first)) {
-			string msg = "unexpected identifier: " + p.first;
-			if (!path.empty()) msg += " in " + path + " object";
-//			throw Err_Custom(msg);
+			if (allTokens.count(p.first)) {
+				string msg = "unexpected identifier: " + p.first;
+				if (!path.empty()) msg += " in " + path + " object";
+				throw Err_Custom(msg);
+			}
 			return false;
 		}
 
 		if (p.second.empty()) {
 			// check if it should be an object or a value
 			if(allowed.find(p.first) != allowed.end()) {
-//				throw Err_Custom("A member object was expected in " + p.first);
-				return false;
+				throw Err_Custom("A member object was expected in " + p.first);
 			}
 		} else {
 			// validate the child
