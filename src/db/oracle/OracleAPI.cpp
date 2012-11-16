@@ -4060,7 +4060,7 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, co
             seConfig->symbolicName = r->getString(1);
             seConfig->source = r->getString(2);
             seConfig->destination = r->getString(3);
-            seConfig->vo = r->getInt(4);
+            seConfig->vo = r->getString(4);
             seConfig->active = r->getInt(5);
             seConfig->protocolId = r->getInt(6);
             seConfig->state = r->getString(7);
