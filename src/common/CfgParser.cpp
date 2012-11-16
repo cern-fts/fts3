@@ -40,6 +40,7 @@ const map<string, set <string> > CfgParser::standaloneSeCfgTokens = CfgParser::i
 const map<string, set <string> > CfgParser::standaloneGrCfgTokens = CfgParser::initStandaloneGrCfgTokens();
 const map<string, set <string> > CfgParser::sePairCfgTokens = CfgParser::initSePairCfgTokens();
 const map<string, set <string> > CfgParser::grPairCfgTokens = CfgParser::initGrPairCfgTokens();
+
 const set<string> CfgParser::allTokens =
 		list_of
 		("se")

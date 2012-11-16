@@ -88,7 +88,7 @@ public:
 	 * @return an instance of optional which holds the value
 	 */
 	template <typename T>
-	optional<T> get(string path);
+	T get(string path);
 
 	CfgType getCfgType() {
 		return type;
@@ -142,7 +142,7 @@ private:
 };
 
 template <typename T>
-optional<T> CfgParser::get(string path) {
+T CfgParser::get(string path) {
 
 	T v;
 	try {
@@ -150,8 +150,7 @@ optional<T> CfgParser::get(string path) {
 		v = pt.get<T>(path);
 
 	} catch (ptree_bad_path& ex) {
-		// if it is bad path return uninitialized 'optional'
-		return optional<T>();
+		throw Err_Custom("The " + path + " has to be specified!");
 
 	} catch (ptree_bad_data& ex) {
 		// if the type of the value is wrong throw an exception
@@ -162,14 +161,14 @@ optional<T> CfgParser::get(string path) {
 }
 
 template <>
-inline optional< vector<string> > CfgParser::get< vector<string> >(string path) {
+inline vector<string> CfgParser::get< vector<string> >(string path) {
 
 	vector<string> ret;
 
 	optional<ptree&> value = pt.get_child_optional(path);
 	if (!value.is_initialized()) {
 		// the vector member was not specified in the configuration
-		return optional< vector<string> >();
+		throw Err_Custom("The " + path + " has to be specified!");
 	}
 	ptree& array = value.get();
 
@@ -203,12 +202,12 @@ inline optional< vector<string> > CfgParser::get< vector<string> >(string path) 
 }
 
 template <>
-inline optional< map <string, int> > CfgParser::get< map<string, int> >(string path) {
+inline map <string, int> CfgParser::get< map<string, int> >(string path) {
 
 	map<string, int> ret;
 
 	optional<ptree&> value = pt.get_child_optional(path);
-	if (!value.is_initialized()) return optional< map<string, int> >();
+	if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
 	ptree& array = value.get();
 
 	// check if the node has a value,
