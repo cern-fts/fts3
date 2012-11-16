@@ -5110,8 +5110,7 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
         r1 = conn->createResultset(s1);
 	if(r1->next()){        	
 		int count = r1->getInt(1);
-		if(count==0)
-			ret = false;
+		ret = count==0;
 	}
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1);
@@ -5125,7 +5124,10 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
         r2 = conn->createResultset(s2);
 	if(r2->next()){        	
 		ret = true;
+	} else {
+		ret = false
 	}
+
         conn->destroyResultset(s2, r2);
         conn->destroyStatement(s2, tag2);
 	if(ret)
@@ -5139,6 +5141,8 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
 		std::string destination = r3->getString(3);		
 		if(source.compare(src)!=0 || destination.compare(dest)!=0)
 			ret = false;
+		else
+			ret= true;
 	}
         conn->destroyResultset(s3, r3);
         conn->destroyStatement(s3, tag3);
