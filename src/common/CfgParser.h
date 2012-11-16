@@ -94,13 +94,6 @@ public:
 		return type;
 	}
 
-	/// wild card used for stand alone configuration
-	static const string any;
-	/// on state
-	static const string on;
-	/// off state
-	static const string off;
-
 private:
 
 	CfgType type;
