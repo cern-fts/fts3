@@ -3867,7 +3867,7 @@ SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::
             seGroup->groupName = r->getString(2);
             seGroup->member = r->getString(3);
             seGroup->active = r->getInt(4);
-            seGroup->vo = r->getInt(5);
+            seGroup->vo = r->getString(5);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
