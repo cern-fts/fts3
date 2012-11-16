@@ -210,7 +210,7 @@ bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string p
 
 		// validate the name
 		if (!names.count(p.first)) {
-			if (allTokens.count(p.first)) {
+			if (!allTokens.count(p.first)) {
 				string msg = "unexpected identifier: " + p.first;
 				if (!path.empty()) msg += " in " + path + " object";
 				throw Err_Custom(msg);
