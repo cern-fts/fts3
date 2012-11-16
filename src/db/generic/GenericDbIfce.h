@@ -315,8 +315,7 @@ public:
     virtual bool checkSourceGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;
 	
 	//check if dest is GROUP
-    virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;		    
-      
+    virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;	
 };
 
 

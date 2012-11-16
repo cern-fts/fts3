@@ -4941,8 +4941,14 @@ bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const 
 }
 
 bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo) {
-    std::string tag = "checkIfSymbolicNameExists";
-    std::string stmt = "select symbolicName from t_config where symbolicName=:1 and vo=:2";
+    std::string tag = "checkIfSymbolicNameExistssdff";
+    std::string stmt("");
+    
+    if(vo.length()>0){
+    	stmt = "select symbolicName from t_config where symbolicName=:1 and vo=:2";
+    }else{
+    	stmt = "select symbolicName from t_config where symbolicName=:1";    
+    }
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -4955,7 +4961,8 @@ bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, cons
 
         s = conn->createStatement(stmt, tag);
         s->setString(1, symbolicName);
-        s->setString(2, vo);
+	if(vo.length()>0)
+        	s->setString(2, vo);
         r = conn->createResultset(s);
 
         if (r->next()) {
