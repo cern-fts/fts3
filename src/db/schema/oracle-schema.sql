@@ -210,9 +210,10 @@ CREATE TABLE t_se_protocol (
 
 CREATE TABLE t_config_symbolic ( 
    symbolicName         VARCHAR2(255)  NOT NULL
-   ,source         VARCHAR2(255)  NOT NULL
+   ,source         VARCHAR2(255)   NOT NULL
    ,dest         VARCHAR2(255)   NOT NULL
-   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)  
+   ,active INTEGER NOT NULL
+   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)    
 );
 
 
