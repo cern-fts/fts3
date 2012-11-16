@@ -5090,7 +5090,7 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
     std::string tag3 = "checkIfSymbolicNameExistsForSrcDest222";    
     std::string stmt1 = "select count(*) from t_config_symbolic where symbolicName=:1";        
     std::string stmt2 = "select symbolicName from t_config_symbolic where symbolicName=:1 and source=:2 and dest=:3";
-    std::string stmt3= "select symbolicName, src, dest from t_config_symbolic where symbolicName=:1";    
+    std::string stmt3= "select symbolicName, source, dest from t_config_symbolic where symbolicName=:1";
 
     oracle::occi::Statement* s1 = 0;
     oracle::occi::ResultSet* r1 = 0;   
