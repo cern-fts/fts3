@@ -24,7 +24,19 @@ public:
 
 	string getName(string fqdn);
 
+	bool isActive(string fqdn);
+
+	bool isDisabled(string fqdn);
+
 private:
+
+	string get(string fqdn, string property);
+
+	static const string NAME_PROPERTY;
+	static const string ACTIVE_PROPERTY;
+	static const string DISABLE_PROPERTY;
+
+	static const string TRUE;
 
 	xml_document doc;
 

@@ -75,100 +75,36 @@ void ConfigurationHandler::parse(string configuration) {
 	type = parser.getCfgType();
 
 	switch(type) {
-	case CfgParser::GROUP_MEMBERS_CFG: {
-		// get the SE/SE group name
-		name = parser.get<string>("name");
-		if (!name) throw Err_Custom("The group name is required!");
-		// get the member SEs
-		members = parser.get< vector<string> >("members");
-		if (!members) throw Err_Custom("The members of the group are required!");
-		vector<string>::iterator it;
-		for (it = (*members).begin(); it != (*members).end(); it++) {
-			//check if SE exists
-			checkSe(*it);
-			// check if the se is already a member of the given group
-			if (db->checkIfSeIsMemberOfGroup(*name, *it)) continue;
-			// check if the SE is a member of another group
-			if (db->checkIfSeIsMemberOfAnotherGroup(*it)) {
-				// if its a member of other group throw an exception
-				throw Err_Custom (
-						"The SE: " + *it + " is already a member of another SE group!"
-					);
-			}
-		}
-		db->addMemberToGroup(*name, *members);
+	case CfgParser::STANDALONE_SE_CFG:
+		seCfg.se = parser.get<string>("se");
+		seCfg.active = parser.get<bool>("active");
+		seCfg.in_share = parser.get< map<string, int> >("in.share");
+		seCfg.in_protocol = parser.get< map<string, int> >("in.protocol");
+		seCfg.out_share = parser.get< map<string, int> >("out.share");
+		seCfg.out_protocol = parser.get< map<string, int> >("out.protocol");
 		break;
-	}
-	case CfgParser::TRANSFER_CFG:
-		// configuration name
-		cfg_name = parser.get<string>("config_name");
-		if (!cfg_name)  throw Err_Custom("The symbolic name of the configuration has to be specified!");
-		to_lower(*cfg_name);
-		// get the source se
-		source = parser.getSource();
-		if (!source) throw Err_Custom("The source has to be specified!");
-		// get the destination se
-		destination = parser.getDestination();
-		if (!destination) throw Err_Custom("The destination has to be specified!");
-		// get active transfers
-		active_transfers = parser.get<int>("active_transfers");
-		if (!active_transfers) throw Err_Custom("The number of 'active transfers' has to be defined!");
-		// get vo
-		vo = parser.get<string>("vo");
-		if (!vo) throw Err_Custom("The 'vo' has to be defined!");
-		to_lower(*vo);
-		// get the protocol parameters
-		protocol = parser.get< map<string, int> >("protocol");
-		// the configuration has to have at least protocol or share (both are also allowed)
-		if (!protocol) throw Err_Custom("The protocol parameters have to be specified!");
-		// do standard checks
-		checkEntity(*source);
-		checkEntity((*destination));
-
-		state = parser.get<string>("state");
-		if (!state) throw Err_Custom("The configuration state has to be specified!");
-		if (*state != CfgParser::on && *state != CfgParser::off) throw Err_Custom("The configuration state has to be either 'on' or 'off'");
-
-		if (db->checkIfSymbolicNameExists(*cfg_name, string())) {
-			if (!db->checkIfSymbolicNameExistsForSrcDest(*cfg_name, source.get().get<0>(), destination.get().get<0>())) {
-				throw Err_Custom("The given configuration name exists already for different source - destination pair!");
-			}
-		}
-
+	case CfgParser::STANDALONE_GR_CFG:
+		grCfg.group = parser.get<string>("group");
+		grCfg.members = parser.get< vector<string> >("members");
+		grCfg.active = parser.get<bool>("active");
+		grCfg.in_share = parser.get< map<string, int> >("in.share");
+		grCfg.in_protocol = parser.get< map<string, int> >("in.protocol");
+		grCfg.out_share = parser.get< map<string, int> >("out.share");
+		grCfg.out_protocol = parser.get< map<string, int> >("out.protocol");
 		break;
-	case CfgParser::SE_TRANSFER_CFG:
-		// get the configuration symbolic name
-		cfg_name = parser.get<string>("config_name");
-		if (!cfg_name)  throw Err_Custom("The symbolic name of the configuration has to be specified!");
-		to_lower(*cfg_name);
-		// get the group name
-		name = parser.get<string>("group");
-		if (!name) throw Err_Custom("The name of the group has to be specified!");
-		checkGroup(*name);
-		// get the group member name
-		member = parser.get<string>("se");
-		if (!member) throw Err_Custom("The 'se' has to be specified!");
-		checkSe(*member);
-		active_transfers = parser.get<int>("active_transfers");
-		if (!active_transfers) throw Err_Custom("The number of 'active_transfers' has to be specified!");
-		vo = parser.get<string>("vo");
-		if (!vo) throw Err_Custom("The 'vo' has to be specified!");
-
-		if (!db->checkIfSymbolicNameExists(*cfg_name, *vo))
-			throw Err_Custom("The symbolic name does not exist for the given vo!");
-
-		if (!db->checkGroupExists(*name))
-			throw Err_Custom("The given group does not exist!");
-
-		if (!db->checkIfSeIsMemberOfGroup(*name, *member))
-			throw Err_Custom("The se is not a member of the given group!");
-
-		if (!db->checkVOForMemberOfGroup(*cfg_name, *vo))
-			throw Err_Custom("The VO configuration does not exist for the given symbolic name!");
-
-		if (!db->checkCreditsForMemberOfGroup(*cfg_name, *vo, *active_transfers))
-			throw Err_Custom("The number of active transfers that has been specified ex");
-
+	case CfgParser::SE_PAIR_CFG:
+		pairCfg.symbolic_name = parser.get<string>("symbolic_name");
+		pairCfg.source = parser.get<string>("source");
+		pairCfg.destination = parser.get<string>("destination");
+		pairCfg.share = parser.get< map<string, int> >("share");
+		pairCfg.protocol = parser.get< map<string, int> >("protocol");
+		break;
+	case CfgParser::GR_PAIR_CFG:
+		pairCfg.symbolic_name = parser.get<string>("symbolic_name");
+		pairCfg.source = parser.get<string>("source");
+		pairCfg.destination = parser.get<string>("destination");
+		pairCfg.share = parser.get< map<string, int> >("share");
+		pairCfg.protocol = parser.get< map<string, int> >("protocol");
 		break;
 	default:
 		throw Err_Custom("Wrong configuration format!");
@@ -217,11 +153,15 @@ void ConfigurationHandler::checkEntity(tuple<string, bool> ent) {
 void ConfigurationHandler::add() {
 
 	switch (type) {
-	case CfgParser::TRANSFER_CFG:
-		addTransferConfiguration();
+	case CfgParser::STANDALONE_SE_CFG:
+		addStandaloneSeCfg();
 		break;
-	case CfgParser::SE_TRANSFER_CFG:
-		addSeTransferConfiguration();
+	case CfgParser::STANDALONE_GR_CFG:
+		addStandaloneGrCfg();
+		break;
+	case CfgParser::SE_PAIR_CFG:
+	case CfgParser::GR_PAIR_CFG:
+		addPairCfg();
 		break;
 	}
 
@@ -236,25 +176,83 @@ void ConfigurationHandler::add() {
 	}
 }
 
-shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig() {
+void ConfigurationHandler::addStandaloneSeCfg() {
 
-	shared_ptr<SeProtocolConfig> ret(new SeProtocolConfig);
-	// we are relaying here on the fact that if a parameter is not in the map
-	// the default value will be returned which is 0
-	ret->NOSTREAMS = (*protocol)[ProtocolParameters::NOSTREAMS];
-	ret->TCP_BUFFER_SIZE = (*protocol)[ProtocolParameters::TCP_BUFFER_SIZE];
-	ret->URLCOPY_TX_TO = (*protocol)[ProtocolParameters::URLCOPY_TX_TO];
-	ret->NO_TX_ACTIVITY_TO = (*protocol)[ProtocolParameters::NO_TX_ACTIVITY_TO];
+	// TODO active state in t_se
 
-	return ret;
+	map<string, int>::iterator it;
+	// create  '* -> se' record
+	for (it = seCfg.in_share.begin(); it != seCfg.in_share.end(); it++) {
+		addCfg(
+				"*-" + seCfg.se,
+				seCfg.active,
+				"*",
+				seCfg.se,
+				*it,
+				seCfg.in_protocol
+			);
+	}
+	// create 'se -> *' record
+	for (it = seCfg.out_share.begin(); it != seCfg.out_share.end(); it++) {
+		addCfg(
+				seCfg.se + "-*",
+				seCfg.active,
+				seCfg.se,
+				"*",
+				*it,
+				seCfg.out_protocol
+			);
+	}
 }
 
-void ConfigurationHandler::addTransferConfiguration() {
+void ConfigurationHandler::addStandaloneGrCfg() {
 
-	shared_ptr<SeProtocolConfig> pc = getProtocolConfig();
-	string src = source.get().get<0>();
-	string dest = destination.get().get<0>();
-	int id = db->getProtocolIdFromConfig(src, dest, *vo);
+	// TODO active state in t_se_group
+
+	map<string, int>::iterator it;
+	// create  '* -> group' record
+	for (it = grCfg.in_share.begin(); it != grCfg.in_share.end(); it++) {
+		addCfg(
+				"*-" + grCfg.group,
+				grCfg.active,
+				"*",
+				grCfg.group,
+				*it,
+				grCfg.in_protocol
+			);
+	}
+	// create 'group -> *' record
+	for (it = grCfg.out_share.begin(); it != grCfg.out_share.end(); it++) {
+		addCfg(
+				grCfg.group + "-*",
+				grCfg.active,
+				grCfg.group,
+				"*",
+				*it,
+				grCfg.out_protocol
+			);
+	}
+}
+
+void ConfigurationHandler::addPairCfg() {
+
+	map<string, int>::iterator it;
+	for (it = pairCfg.share.begin(); it != pairCfg.share.end(); it++) {
+		addCfg(
+				pairCfg.symbolic_name,
+				pairCfg.active,
+				pairCfg.source,
+				pairCfg.destination,
+				*it,
+				pairCfg.protocol
+			);
+	}
+}
+
+void ConfigurationHandler::addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol) {
+
+	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
+	int id = db->getProtocolIdFromConfig(source, destination, share.first);
 	if (id) {
 		// update
 		db->updateProtocol(pc.get(), id);
@@ -264,7 +262,7 @@ void ConfigurationHandler::addTransferConfiguration() {
 	}
 
 	bool update = true;
-	vector<SeConfig*> v = db->getConfig(src, dest, *vo);
+	vector<SeConfig*> v = db->getConfig(source, destination, share.first);
 	scoped_ptr<SeConfig> cfg (
 			v.empty() ? 0 : v.front()
 		);
@@ -274,13 +272,13 @@ void ConfigurationHandler::addTransferConfiguration() {
 		update = false;
 	}
 
-	cfg->active = *active_transfers;
-	cfg->destination = dest;
+	cfg->active = share.second;
+	cfg->destination = destination;
 	cfg->protocolId = id;
-	cfg->source = src;
-	cfg->symbolicName = *cfg_name;
-	cfg->vo = *vo;
-	cfg->state = *state;
+	cfg->source = source;
+	cfg->symbolicName = symbolic_name;
+	cfg->vo = share.first;
+	cfg->state = active ? "on" : "off";
 
 	if (update) {
 		// update
@@ -291,30 +289,17 @@ void ConfigurationHandler::addTransferConfiguration() {
 	}
 }
 
-void ConfigurationHandler::addSeTransferConfiguration() {
+shared_ptr<SeProtocolConfig> ConfigurationHandler::getProtocolConfig(map<string, int> protocol) {
 
-	bool update = true;
-	scoped_ptr<SeGroup> sg (
-			db->getGroupConfig(*cfg_name, *name, *member, *vo)
-		);
+	shared_ptr<SeProtocolConfig> ret(new SeProtocolConfig);
+	// we are relaying here on the fact that if a parameter is not in the map
+	// the default value will be returned which is 0
+	ret->NOSTREAMS = protocol[ProtocolParameters::NOSTREAMS];
+	ret->TCP_BUFFER_SIZE = protocol[ProtocolParameters::TCP_BUFFER_SIZE];
+	ret->URLCOPY_TX_TO = protocol[ProtocolParameters::URLCOPY_TX_TO];
+	ret->NO_TX_ACTIVITY_TO = protocol[ProtocolParameters::NO_TX_ACTIVITY_TO];
 
-	if (!sg.get()) {
-		sg.reset(new SeGroup);
-		update = false;
-	}
-
-	sg->active = *active_transfers;
-	sg->groupName = *name;
-	sg->member = *member;
-	sg->vo = *vo;
-	sg->symbolicName = *cfg_name;
-
-	if (update)
-		// update
-		db->updateGroupConfig(sg.get());
-	else
-		// insert
-		db->addGroupConfig(sg.get());
+	return ret;
 }
 
 string ConfigurationHandler::buildPairCfg(SeConfig* cfg, SeProtocolConfig* prot) {
@@ -391,89 +376,89 @@ vector<string> ConfigurationHandler::getGroupCfg(string cfg_name, string name, s
 
 	vector<string> ret;
 
-	vector<string> members;
-	db->getGroupMembers(name, members);
-	ret.push_back(
-			buildGroupCfg(name, members)
-		);
-
-	vector<string>::iterator it;
-	for (it = members.begin(); it != members.end(); it++) {
-		scoped_ptr<SeGroup> sg (
-					db->getGroupConfig(cfg_name, name, *it, vo)
-				);
-		if (sg.get())
-			ret.push_back(
-					buildSeCfg(sg.get())
-				);
-
-	}
+//	vector<string> members;
+//	db->getGroupMembers(name, members);
+//	ret.push_back(
+//			buildGroupCfg(name, members)
+//		);
+//
+//	vector<string>::iterator it;
+//	for (it = members.begin(); it != members.end(); it++) {
+//		scoped_ptr<SeGroup> sg (
+//					db->getGroupConfig(cfg_name, name, *it, vo)
+//				);
+//		if (sg.get())
+//			ret.push_back(
+//					buildSeCfg(sg.get())
+//				);
+//
+//	}
 
 	return ret;
 }
 
 vector<string> ConfigurationHandler::doGet(SeConfig* cfg) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is getting configuration";
-	if (!cfg->vo.empty() || !cfg->symbolicName.empty()) {
-
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << " for";
-
-		if (!cfg->vo.empty()) {
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " VO: " << vo;
-		}
-
-		if (!cfg->symbolicName.empty()) {
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "symbolic name: " << name;
-		}
-	}
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is getting configuration";
+//	if (!cfg->vo.empty() || !cfg->symbolicName.empty()) {
+//
+//		FTS3_COMMON_LOGGER_NEWLOG (INFO) << " for";
+//
+//		if (!cfg->vo.empty()) {
+//			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " VO: " << vo;
+//		}
+//
+//		if (!cfg->symbolicName.empty()) {
+//			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "symbolic name: " << name;
+//		}
+//	}
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
 
 	vector<string> ret;
-
-	scoped_ptr<SeProtocolConfig> prot (
-			db->getProtocol(cfg->protocolId)
-		);
-
-	// create the pair configuration
-	ret.push_back(
-			buildPairCfg(cfg, prot.get())
-		);
-
-	if (db->checkGroupExists(cfg->source)) {
-		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->source, cfg->vo);
-		ret.insert(ret.end(), gr.begin(), gr.end());
-	}
-
-	if (db->checkGroupExists(cfg->destination)) {
-		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->destination, cfg->vo);
-		ret.insert(ret.end(), gr.begin(), gr.end());
-	}
+//
+//	scoped_ptr<SeProtocolConfig> prot (
+//			db->getProtocol(cfg->protocolId)
+//		);
+//
+//	// create the pair configuration
+//	ret.push_back(
+//			buildPairCfg(cfg, prot.get())
+//		);
+//
+//	if (db->checkGroupExists(cfg->source)) {
+//		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->source, cfg->vo);
+//		ret.insert(ret.end(), gr.begin(), gr.end());
+//	}
+//
+//	if (db->checkGroupExists(cfg->destination)) {
+//		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->destination, cfg->vo);
+//		ret.insert(ret.end(), gr.begin(), gr.end());
+//	}
 
 	return ret;
 }
 
 vector<string> ConfigurationHandler::get(string src, string dest, string vo) {
 
-	to_lower(vo);
-	vector<SeConfig*> vec = db->getConfig(src, dest, vo);
-
-	if (vec.empty()) {
-		throw Err_Custom(
-				"A configuration for source: " + src  + " and destination: " + dest +
-				(vo.empty() ? "" : " and for vo: " + vo)
-				+ " does not exist!"
-			);
-	}
+//	to_lower(vo);
+//	vector<SeConfig*> vec = db->getConfig(src, dest, vo);
+//
+//	if (vec.empty()) {
+//		throw Err_Custom(
+//				"A configuration for source: " + src  + " and destination: " + dest +
+//				(vo.empty() ? "" : " and for vo: " + vo)
+//				+ " does not exist!"
+//			);
+//	}
 
 	vector<string> ret;
-	vector<SeConfig*>::iterator it;
-
-	for (it = vec.begin(); it != vec.end(); it++) {
-		scoped_ptr<SeConfig> cfg (*it);
-		vector<string> v = doGet(cfg.get());
-		ret.insert(ret.end(), v.begin(), v.end());
-	}
+//	vector<SeConfig*>::iterator it;
+//
+//	for (it = vec.begin(); it != vec.end(); it++) {
+//		scoped_ptr<SeConfig> cfg (*it);
+//		vector<string> v = doGet(cfg.get());
+//		ret.insert(ret.end(), v.begin(), v.end());
+//	}
 
 
 	return ret;
@@ -511,36 +496,36 @@ void ConfigurationHandler::del() {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is deleting configuration" << commit;
 
-	switch (type) {
-	case CfgParser::SE_TRANSFER_CFG: {
-		scoped_ptr<SeGroup> sg (new SeGroup);
-		sg->active = *active_transfers;
-		sg->groupName = *name;
-		sg->member = *member;
-		sg->symbolicName = *cfg_name;
-		db->deleteGroupConfig(sg.get());
-		deleteCount++;
-		break;
-	}
-	case CfgParser::TRANSFER_CFG: {
-
-		vector<SeConfig*> v = db->getConfig(source.get().get<0>(), destination.get().get<0>(), *vo);
-		scoped_ptr<SeConfig> sc (
-				v.empty() ? 0 : v.front()
-			);
-		int id = sc->protocolId;
-		db->deleteConfig(sc.get());
-		deleteCount++;
-		db->deleteProtocol(id);
-		deleteCount++;
-		break;
-	}
-	case CfgParser::GROUP_MEMBERS_CFG: {
-		db->deleteMembersFromGroup(*name, *members);
-		deleteCount++;
-		break;
-	}
-	}
+//	switch (type) {
+//	case CfgParser::SE_TRANSFER_CFG: {
+//		scoped_ptr<SeGroup> sg (new SeGroup);
+//		sg->active = *active_transfers;
+//		sg->groupName = *name;
+//		sg->member = *member;
+//		sg->symbolicName = *cfg_name;
+//		db->deleteGroupConfig(sg.get());
+//		deleteCount++;
+//		break;
+//	}
+//	case CfgParser::TRANSFER_CFG: {
+//
+//		vector<SeConfig*> v = db->getConfig(source.get().get<0>(), destination.get().get<0>(), *vo);
+//		scoped_ptr<SeConfig> sc (
+//				v.empty() ? 0 : v.front()
+//			);
+//		int id = sc->protocolId;
+//		db->deleteConfig(sc.get());
+//		deleteCount++;
+//		db->deleteProtocol(id);
+//		deleteCount++;
+//		break;
+//	}
+//	case CfgParser::GROUP_MEMBERS_CFG: {
+//		db->deleteMembersFromGroup(*name, *members);
+//		deleteCount++;
+//		break;
+//	}
+//	}
 
 	string action = "delete (x" + lexical_cast<string>(deleteCount) + ")";
 	db->auditConfiguration(dn, all, action);

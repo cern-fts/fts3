@@ -57,22 +57,49 @@ using namespace db;
  * Configuration WebServices' requests
  */
 class ConfigurationHandler {
+
+	/// TODO move to common/json, json() method that will return the configuration for the given object
+	struct StandaloneSeCfg {
+
+		string se;
+		bool active;
+
+		map<string, int> in_share;
+		map<string, int> in_protocol;
+
+		map<string, int> out_share;
+		map<string, int> out_protocol;
+	};
+
+	/// TODO move to common/json, json() method that will return the configuration for the given object
+	struct StandaloneGrCfg {
+
+		string group;
+		bool active;
+
+		vector<string> members;
+
+		map<string, int> in_share;
+		map<string, int> in_protocol;
+
+		map<string, int> out_share;
+		map<string, int> out_protocol;
+	};
+
+	/// TODO move to common/json, json() method that will return the configuration for the given object
+	struct PairCfg {
+
+		string symbolic_name;
+		bool active;
+
+		string source;
+		string destination;
+
+		map<string, int> share;
+		map<string, int> protocol;
+	};
+
 public:
-
-	/**
-	 * Functional object that replaces fts3 wildcard '*' with sql wild card '%'
-	 */
-	struct WildcardReplacer {
-
-		/**
-		 * Replaces fts wildcard ('*') with sql wildcard ('%') in a given string
-		 *
-		 * @param str - the string that is being processed
-		 */
-		void operator() (string& str) {
-			replace_all(str, CfgBlocks::FTS_WILDCARD, CfgBlocks::SQL_WILDCARD);
-		}
-	} replacer; //< WildcardReplacer object
 
 	/**
 	 * protocol parameters
@@ -127,14 +154,24 @@ public:
 	void add();
 
 	/**
-	 * If transfer configuration has been submitted this method is used to add the configuration to DB
+	 * Adds stand-alone SE configuration
 	 */
-	void addTransferConfiguration();
+	void addStandaloneSeCfg();
 
 	/**
-	 * Adds a sub-configuration for a pair configuration
+	 * Adds stand-alone SE group configuration
 	 */
-	void addSeTransferConfiguration();
+	void addStandaloneGrCfg();
+
+	/**
+	 * Adds pair configuration
+	 */
+	void addPairCfg();
+
+	/**
+	 * Adds a single configuration entry to the DB
+	 */
+	void addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol);
 
 	/**
 	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -165,7 +202,7 @@ public:
 	 *
 	 * @see parse
 	 */
-	shared_ptr<SeProtocolConfig> getProtocolConfig();
+	shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
 
 	/**
 	 * Gets the SE / SE group name
@@ -220,27 +257,13 @@ private:
 
 	/// the whole cfg comand
 	string all;
-	/// configuration name
-	optional<string> cfg_name;
-	/// SE or SE group name
-	optional<string> name;
-	/// group members (list of SE names'
-	optional< vector<string> > members;
-	/// member name
-	optional<string> member;
 
-	/// the source of the transfer config
-	optional< tuple<string, bool> > source;
-	/// the destination of the transfer config
-	optional< tuple<string, bool> > destination;
-	/// number of active transfers
-	optional<int> active_transfers;
-	/// vo
-	optional<string> vo;
-	/// protocol parameters
-	optional< map<string, int> > protocol;
-	/// configuration state
-	optional<string> state;
+	/// a standalone se cfg
+	StandaloneSeCfg seCfg;
+	///
+	StandaloneGrCfg grCfg;
+	///
+	PairCfg pairCfg;
 
 	/// type of the configuration that is being submitted
 	CfgParser::CfgType type;
