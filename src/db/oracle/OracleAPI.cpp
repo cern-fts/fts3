@@ -5111,11 +5111,11 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
 	if(r1->next()){        	
 		int count = r1->getInt(1);
 		if(count==0)
-			ret = true;
+			ret = false;
 	}
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1);
-	if(ret)
+	if(!ret)
 		return ret;
 		
         s2 = conn->createStatement(stmt2, tag2);
