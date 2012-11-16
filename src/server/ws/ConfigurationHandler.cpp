@@ -117,9 +117,6 @@ ConfigurationHandler::~ConfigurationHandler() {
 
 void ConfigurationHandler::checkSe(string name) {
 
-	// check if its an asterisk
-	if (name == CfgParser::any) return;
-
 	//check if SE exists
 	Se* ptr = 0;
 	db->getSe(ptr, name);
