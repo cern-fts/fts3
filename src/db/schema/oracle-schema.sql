@@ -152,10 +152,10 @@ CREATE INDEX credential_term_time ON t_credential(termination_time);
 CREATE TABLE t_se (
 -- The internal id
    se_id_info INTEGER
+  ,name VARCHAR2(255) not null
   ,endpoint VARCHAR2(1024)
   ,se_type VARCHAR2(30)
   ,site VARCHAR2(100)
-  ,name VARCHAR2(512) not null
   ,state VARCHAR2(30)
   ,version VARCHAR2(30)
 -- This field will contain the host parse for FTS and extracted from name 
@@ -195,15 +195,16 @@ END;
 CREATE TABLE t_group_members(
 	groupName VARCHAR2(255) NOT NULL
 	,member VARCHAR2(255) NOT NULL
-	,CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member)	
+	,CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member)
+	,CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)	
 ); 
 
 CREATE TABLE t_se_protocol (
    se_protocol_row_id INTEGER	NOT NULL
    ,nostreams       	INTEGER NOT NULL
-   ,tcp_buffer_size     INTEGER NOT NULL
+   ,tcp_buffer_size     INTEGER DEFAULT 0
    ,urlcopy_tx_to      INTEGER NOT NULL  
-   ,no_tx_activity_to INTEGER NOT NULL
+   ,no_tx_activity_to INTEGER DEFAULT 360
    ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
 );
 
@@ -211,7 +212,7 @@ CREATE TABLE t_config_symbolic (
    symbolicName         VARCHAR2(255)  NOT NULL
    ,source         VARCHAR2(255)  NOT NULL
    ,dest         VARCHAR2(255)   NOT NULL
-   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)
+   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)  
 );
 
 
@@ -706,7 +707,6 @@ CREATE INDEX stagereq_jobfinished_id    ON t_stage_req(job_finished);
 -- Config index
 CREATE INDEX t_group_members_1  ON t_group_members(groupName);
 CREATE INDEX t_group_members_2  ON t_group_members(member);
-CREATE INDEX t_group_config_1  ON t_group_config(symbolicName);
 CREATE INDEX t_config_1  ON t_config(symbolicName);
 
 -- 

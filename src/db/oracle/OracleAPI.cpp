@@ -5209,9 +5209,9 @@ bool OracleAPI::checkSourceGroup(const std::string & src, const std::string & de
 //check if dest is GROUP
 
 bool OracleAPI::checkDestinationGroup(const std::string & src, const std::string & dest, const std::string &, const std::string & config) {
-    std::string tag = "checkDestinationGroup";
-    std::string query = " select t_config_symbolic.symbolicName, T_GROUP_CONFIG.groupName, T_GROUP_CONFIG.member from T_GROUP_CONFIG, t_config_symbolic "
-            " where t_config_symbolic.symbolicName=T_GROUP_CONFIG.symbolicName and symbolicName.symbolicName=:1 and T_GROUP_CONFIG.member=:2 "
+    std::string tag = "checkDestinationGroup";    
+    std::string query = " select t_config_symbolic.symbolicName, t_group_members.groupName, t_group_members.member from t_group_members, t_config_symbolic "
+            " where t_config_symbolic.symbolicName=:1 and t_group_members.member=:2 and  t_group_members.groupName=t_config_symbolic.dest"
             " and t_config_symbolic.source=:3 ";
 
     oracle::occi::Statement* s = 0;
