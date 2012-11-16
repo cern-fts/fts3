@@ -11,3 +11,6 @@ Optimizer=true
 HttpKeepAlive=true
 AuthorizedVO=*
 CleanRecordsHost=false
+
+[roles]
+Public = all:*
