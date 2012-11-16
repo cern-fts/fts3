@@ -4947,7 +4947,8 @@ bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, cons
     if(vo.length()>0){
     	stmt = "select symbolicName from t_config where symbolicName=:1 and vo=:2";
     }else{
-    	stmt = "select symbolicName from t_config where symbolicName=:1";    
+    	stmt = "select symbolicName from t_config where symbolicName=:1";
+	tag+="ww";    
     }
 
     oracle::occi::Statement* s = 0;
