@@ -5125,7 +5125,7 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
 	if(r2->next()){        	
 		ret = true;
 	} else {
-		ret = false
+		ret = false;
 	}
 
         conn->destroyResultset(s2, r2);
