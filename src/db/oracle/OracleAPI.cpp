@@ -599,95 +599,6 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     }
 }
 
-std::vector<std::string> OracleAPI::getSiteGroupNames() {
-    std::string query = "SELECT distinct group_name FROM t_site_group";
-    std::string tag = "getSiteGroupNames";
-    std::vector<std::string> groups;
-
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        while (r->next()) {
-            std::string groupName = r->getString(1);
-            groups.push_back(groupName);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-    
-		if(conn)
-			conn->rollback();    
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
-    }
-    return groups;
-}
-
-std::vector<std::string> OracleAPI::getSiteGroupMembers(std::string GroupName) {
-    std::string query = "SELECT site_Name FROM t_site_group where group_Name = :1";
-    std::string tag = "getSiteGroupMembers";
-    std::vector<std::string> groups;
-
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, GroupName);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        while (r->next()) {
-            std::string groupName = r->getString(1);
-            groups.push_back(groupName);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-    } catch (oracle::occi::SQLException const &e) {
-		if(conn)
-			conn->rollback();    
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
-    }
-    return groups;
-}
-
-void OracleAPI::removeGroupMember(std::string groupName, std::string siteName) {
-    std::string query = "DELETE FROM t_site_group WHERE group_Name = :1 AND site_Name = :2";
-    std::string tag = "removeGroupMember";
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, groupName);
-        s->setString(2, siteName);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        conn->commit();
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
-    } catch (oracle::occi::SQLException const &e) {
-		if(conn)
-			conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
-    }
-}
-
-void OracleAPI::addGroupMember(std::string groupName, std::string siteName) {
-
-    std::string query = "INSERT INTO t_site_group (group_Name, site_Name) VALUES (:1,:2)";
-    std::string tag = "addGroupMember";
-    try {
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
-        s->setString(1, groupName);
-        s->setString(2, siteName);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
-        conn->commit();
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
-    } catch (oracle::occi::SQLException const &e) {
-		if(conn)
-			conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		
-    }
-}
-
 /*
  * Return a list of jobs based on the status requested
  * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
@@ -1508,7 +1419,6 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
     }
 }
 
-
 /*check if a SE belongs to a group*/
 bool OracleAPI::is_se_group_member(std::string se) {
     const std::string tag = "is_se_group_member";
@@ -1559,7 +1469,6 @@ bool OracleAPI::is_se_group_exist(std::string group) {
     }
     return exists;
 }
-
 
 /*se group operations*/
 void OracleAPI::add_se_to_group(std::string se, std::string group) {
@@ -2190,15 +2099,15 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
             tr_jobs->COPY_PIN_LIFETIME = r->getInt(20);
             tr_jobs->CHECKSUM_METHOD = r->getString(21);
 
- 	//check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-	    if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0){
-            	bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-            	if (process == true) {
-                	jobs.push_back(tr_jobs);
-            	} else {
-                	delete tr_jobs;
-            	}
-	    }
+            //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
+            if (std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
+                bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
+                if (process == true) {
+                    jobs.push_back(tr_jobs);
+                } else {
+                    delete tr_jobs;
+                }
+            }
 
         }
         conn->destroyResultset(s, r);
@@ -2241,7 +2150,6 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
 
     }
 }
-
 
 /*custom optimization stuff*/
 
@@ -3577,108 +3485,102 @@ bool OracleAPI::isDnBlacklisted(std::string dn) {
     return ret;
 }
 
-
-
 /********* section for the new config API **********/
-bool OracleAPI::isFileReadyState(int fileID){
-	const std::string tag="isFileReadyState";
-	bool ready = false;
-	std::string query = "select file_state from t_file where file_id=:1";
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+bool OracleAPI::isFileReadyState(int fileID) {
+    const std::string tag = "isFileReadyState";
+    bool ready = false;
+    std::string query = "select file_state from t_file where file_id=:1";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return false;	
-	    
- 	s = conn->createStatement(query, tag);
+            return false;
+
+        s = conn->createStatement(query, tag);
         s->setInt(1, fileID);
         r = conn->createResultset(s);
         if (r->next()) {
-		std::string state = r->getString(1);
-		if(state.compare("READY")==0)
-			ready = true;
+            std::string state = r->getString(1);
+            if (state.compare("READY") == 0)
+                ready = true;
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
-	return ready;
-    }
-    catch (oracle::occi::SQLException const &e) {
+        return ready;
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
     return ready;
 }
 
+bool OracleAPI::checkGroupExists(const std::string & groupName) {
+    const std::string tag = "checkGroupExists";
+    std::string query = "select groupName from t_group_members where groupName=:1";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    bool groupExist = false;
 
-bool OracleAPI::checkGroupExists(const std::string & groupName){
-	const std::string tag="checkGroupExists";
-	std::string query = "select groupName from t_group_members where groupName=:1";
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	bool groupExist = false;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return false;	
-	    
- 	s = conn->createStatement(query, tag);
+            return false;
+
+        s = conn->createStatement(query, tag);
         s->setString(1, groupName);
         r = conn->createResultset(s);
-        if(r->next()) {
-		groupExist = true;
+        if (r->next()) {
+            groupExist = true;
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-	return groupExist;
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+        return groupExist;
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    
+    }
+
     return groupExist;
 }
 
-    //t_group_members
-void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers){
-	const std::string tag="getGroupMembers";
-	std::string query = "select member from t_group_members where groupName=:1";
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+//t_group_members
+
+void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers) {
+    const std::string tag = "getGroupMembers";
+    std::string query = "select member from t_group_members where groupName=:1";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
+            return;
+
+        s = conn->createStatement(query, tag);
         s->setString(1, groupName);
         r = conn->createResultset(s);
-        while(r->next()) {
-		std::string member = r->getString(1);
-		groupMembers.push_back(member);
+        while (r->next()) {
+            std::string member = r->getString(1);
+            groupMembers.push_back(member);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
-
 
 
 void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers){
@@ -3691,167 +3593,164 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
+            return;
+
+        s = conn->createStatement(query, tag);
         for (iter = groupMembers.begin(); iter != groupMembers.end(); ++iter) {
             s->setString(1, std::string(*iter));
             s->setString(2, groupName);
             s->executeUpdate();
         }
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
-void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers){
-	std::string tag="deleteMembersFromGroup";
-	std::string query = "delete from t_group_members where groupName=:1 and member=:2";
-	oracle::occi::Statement* s = NULL;
-	std::vector<std::string>::const_iterator iter;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+
+void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers) {
+    std::string tag = "deleteMembersFromGroup";
+    std::string query = "delete from t_group_members where groupName=:1 and member=:2";
+    oracle::occi::Statement* s = NULL;
+    std::vector<std::string>::const_iterator iter;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
+            return;
+
+        s = conn->createStatement(query, tag);
         for (iter = groupMembers.begin(); iter != groupMembers.end(); ++iter) {
             s->setString(1, groupName);
             s->setString(2, std::string(*iter));
             s->executeUpdate();
         }
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
-    
-    //t_se_protocol
-int OracleAPI::getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo){
-	std::string tag="getProtocolIdFromConfig111";
-	int protocolId = 0;	
-	std::string query="select protocol_row_id from t_config where symbolicName=:1 and vo=:2";
-		
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-		
-	ThreadTraits::LOCK_R lock(_mutex);
+
+//t_se_protocol
+
+int OracleAPI::getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo) {
+    std::string tag = "getProtocolIdFromConfig111";
+    int protocolId = 0;
+    std::string query = "select protocol_row_id from t_config where symbolicName=:1 and vo=:2";
+
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return 0;	
-	
-	std::string symbolicName = checkConfigExists(source, dest, vo);
-	if(symbolicName.length()>0){
-	//now get protocol ID
- 	s = conn->createStatement(query, tag);
-        s->setString(1, symbolicName);
-	s->setString(2, vo);
-        r = conn->createResultset(s);        
-        if (r->next()) {		
-		protocolId = r->getInt(1);
+            return 0;
+
+        std::string symbolicName = checkConfigExists(source, dest, vo);
+        if (symbolicName.length() > 0) {
+            //now get protocol ID
+            s = conn->createStatement(query, tag);
+            s->setString(1, symbolicName);
+            s->setString(2, vo);
+            r = conn->createResultset(s);
+            if (r->next()) {
+                protocolId = r->getInt(1);
+            }
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
         }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-	}
-	
-	return protocolId;
-    }
-    catch (oracle::occi::SQLException const &e) {
+
+        return protocolId;
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    
-	return protocolId;    
+    }
+
+    return protocolId;
 }
-    
-    
-int OracleAPI::getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo){
-	std::string tag="getProtocolIdFromConfig";
-	std::string query = "select protocol_row_id FROM t_config where symbolicName=:1 and vo=:2";        
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	int protocolId = 0;	
-	ThreadTraits::LOCK_R lock(_mutex);
+
+int OracleAPI::getProtocolIdFromConfig(const std::string & symbolicName, const std::string & vo) {
+    std::string tag = "getProtocolIdFromConfig";
+    std::string query = "select protocol_row_id FROM t_config where symbolicName=:1 and vo=:2";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    int protocolId = 0;
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return NULL;	
-	    
- 	s = conn->createStatement(query, tag);
+            return NULL;
+
+        s = conn->createStatement(query, tag);
         s->setString(1, symbolicName);
-        s->setString(2, vo);	
-        r = conn->createResultset(s);        
+        s->setString(2, vo);
+        r = conn->createResultset(s);
         if (r->next()) {
-		protocolId = r->getInt(1);
+            protocolId = r->getInt(1);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-	
-	return protocolId;
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+
+        return protocolId;
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    
-	return protocolId;    
-}    
-    
-SeProtocolConfig*  OracleAPI::getProtocol(int protocolId){
-	std::string tag="getProtocol22";
-	 std::string query = "select nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to from t_se_protocol where se_protocol_row_id=:1";
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	SeProtocolConfig* seProtocolConfig = NULL;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+    }
+
+    return protocolId;
+}
+
+SeProtocolConfig* OracleAPI::getProtocol(int protocolId) {
+    std::string tag = "getProtocol22";
+    std::string query = "select nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to from t_se_protocol where se_protocol_row_id=:1";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    SeProtocolConfig* seProtocolConfig = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return NULL;	
-	    
- 	s = conn->createStatement(query, tag);
+            return NULL;
+
+        s = conn->createStatement(query, tag);
         s->setInt(1, protocolId);
-        r = conn->createResultset(s);        
+        r = conn->createResultset(s);
         if (r->next()) {
-   	    seProtocolConfig = new SeProtocolConfig();
+            seProtocolConfig = new SeProtocolConfig();
             seProtocolConfig->NOSTREAMS = r->getInt(1);
             seProtocolConfig->TCP_BUFFER_SIZE = r->getInt(2);
             seProtocolConfig->URLCOPY_TX_TO = r->getInt(3);
-            seProtocolConfig->NO_TX_ACTIVITY_TO = r->getInt(4);	    	    
+            seProtocolConfig->NO_TX_ACTIVITY_TO = r->getInt(4);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-	
-	return seProtocolConfig;
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+
+        return seProtocolConfig;
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    
-	return seProtocolConfig;    
+    }
+
+    return seProtocolConfig;
 }
-int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
+
+int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig) {
     const std::string tag = "addProtocol";
     const std::string tag1 = "addProtocolCurr";
     int protocolId = 0;
@@ -3866,845 +3765,895 @@ int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
         s->setInt(1, seProtocolConfig->NOSTREAMS);
         s->setInt(2, seProtocolConfig->TCP_BUFFER_SIZE);
         s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);
-        s->setInt(4, seProtocolConfig->NO_TX_ACTIVITY_TO);	
+        s->setInt(4, seProtocolConfig->NO_TX_ACTIVITY_TO);
         if (s->executeUpdate() != 0)
             conn->commit();
         conn->destroyStatement(s, tag);
-	
-	s1 = conn->createStatement(query1, tag1);
-	r1 = conn->createResultset(s1);
-	if (r1->next()) {
-		protocolId = r1->getInt(1);
-	}
+
+        s1 = conn->createStatement(query1, tag1);
+        r1 = conn->createResultset(s1);
+        if (r1->next()) {
+            protocolId = r1->getInt(1);
+        }
         conn->destroyResultset(s1, r1);
-        conn->destroyStatement(s1, tag1);		
-	return protocolId;
-			        
+        conn->destroyStatement(s1, tag1);
+        return protocolId;
+
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
-    
- 	return protocolId;
+
+    return protocolId;
 }
-void OracleAPI::deleteProtocol(int protocolId){
-	const std::string tag="deleteMembersFromGroup";
-	std::string query = "delete from t_se_protocol where se_protocol_row_id=:1";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+
+void OracleAPI::deleteProtocol(int protocolId) {
+    const std::string tag = "deleteMembersFromGroup";
+    std::string query = "delete from t_se_protocol where se_protocol_row_id=:1";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
+            return;
+
+        s = conn->createStatement(query, tag);
         s->setInt(1, protocolId);
-        s->executeUpdate();       
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
-    
-    
-void OracleAPI::updateProtocol(SeProtocolConfig* seProtocolConfig, int protocolId){
-	std::string tag="updateProtocol";
-	std::string query = "update t_se_protocol set NOSTREAMS=:1,tcp_buffer_size=:2,URLCOPY_TX_TO=:3,no_tx_activity_to=:4 where se_protocol_row_id=:5";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+
+void OracleAPI::updateProtocol(SeProtocolConfig* seProtocolConfig, int protocolId) {
+    std::string tag = "updateProtocol";
+    std::string query = "update t_se_protocol set NOSTREAMS=:1,tcp_buffer_size=:2,URLCOPY_TX_TO=:3,no_tx_activity_to=:4 where se_protocol_row_id=:5";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
+            return;
+
+        s = conn->createStatement(query, tag);
         s->setInt(1, seProtocolConfig->NOSTREAMS);
         s->setInt(2, seProtocolConfig->TCP_BUFFER_SIZE);
         s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);
         s->setInt(4, seProtocolConfig->NO_TX_ACTIVITY_TO);
-	s->setInt(5, protocolId);	
-        s->executeUpdate();       
+        s->setInt(5, protocolId);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-}    
-    
-    //t_group_config
-SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo){
-	const std::string tag="getGroupConfig";
-	std::string query = "select symbolicName,groupName,member,active from t_group_config where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	SeGroup* seGroup = NULL;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+    }
+}
+
+//t_group_config
+
+SeGroup* OracleAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo) {
+    const std::string tag = "getGroupConfig";
+    std::string query = "select symbolicName,groupName,member,active from t_group_config where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    SeGroup* seGroup = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return false;	
-	    
- 	s = conn->createStatement(query, tag);
+            return false;
+
+        s = conn->createStatement(query, tag);
         s->setString(1, symbolicName);
-	s->setString(2, groupName);
-	s->setString(3, member);
-	s->setString(4, vo);
+        s->setString(2, groupName);
+        s->setString(3, member);
+        s->setString(4, vo);
         r = conn->createResultset(s);
-        if(r->next()) {
-		seGroup = new SeGroup();
-		seGroup->symbolicName = r->getString(1);
-		seGroup->groupName = r->getString(2);
-		seGroup->member = r->getString(3);
-		seGroup->active = r->getInt(4);				
+        if (r->next()) {
+            seGroup = new SeGroup();
+            seGroup->symbolicName = r->getString(1);
+            seGroup->groupName = r->getString(2);
+            seGroup->member = r->getString(3);
+            seGroup->active = r->getInt(4);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-	return seGroup;
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+        return seGroup;
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    
+    }
+
     return seGroup;
 }
-void OracleAPI::addGroupConfig(SeGroup* seGroup){
-	const std::string tag="addGroupConfig";
-	std::string query = "insert into t_group_config(symbolicName,groupName,member,active,vo) values(:1,:2,:3,:4,:5)";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+
+void OracleAPI::addGroupConfig(SeGroup* seGroup) {
+    const std::string tag = "addGroupConfig";
+    std::string query = "insert into t_group_config(symbolicName,groupName,member,active,vo) values(:1,:2,:3,:4,:5)";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-        s->setString(1, seGroup->symbolicName);	
-        s->setString(2, seGroup->groupName);	
-        s->setString(3, seGroup->member);			
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, seGroup->symbolicName);
+        s->setString(2, seGroup->groupName);
+        s->setString(3, seGroup->member);
         s->setInt(4, seGroup->active);
-	s->setString(5, seGroup->vo);				
-        s->executeUpdate();       
+        s->setString(5, seGroup->vo);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
-void OracleAPI::deleteGroupConfig(SeGroup* seGroup){
-	const std::string tag="deleteGroupConfig";
-	std::string query = "delete from T_GROUP_CONFIG where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+void OracleAPI::deleteGroupConfig(SeGroup* seGroup) {
+    const std::string tag = "deleteGroupConfig";
+    std::string query = "delete from T_GROUP_CONFIG where symbolicName=:1 and groupName=:2 and member=:3 and vo=:4";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-        s->setString(1, seGroup->symbolicName);	
-        s->setString(2, seGroup->groupName);	
-        s->setString(3, seGroup->member);			
-        s->setString(4, seGroup->vo);				
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, seGroup->symbolicName);
+        s->setString(2, seGroup->groupName);
+        s->setString(3, seGroup->member);
+        s->setString(4, seGroup->vo);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
-void OracleAPI::updateGroupConfig(SeGroup* seGroup){
-	const std::string tag="updateGroupConfig";
-	std::string query = "update T_GROUP_CONFIG set active=:1 where symbolicName=:2 and groupName=:3 and member=:4 and vo=:5";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+void OracleAPI::updateGroupConfig(SeGroup* seGroup) {
+    const std::string tag = "updateGroupConfig";
+    std::string query = "update T_GROUP_CONFIG set active=:1 where symbolicName=:2 and groupName=:3 and member=:4 and vo=:5";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
+            return;
+
+        s = conn->createStatement(query, tag);
         s->setInt(1, seGroup->active);
-        s->setString(2, seGroup->symbolicName);	
-        s->setString(3, seGroup->groupName);	
-        s->setString(4, seGroup->member);			
-        s->setString(5, seGroup->vo);				
-        s->executeUpdate();       
+        s->setString(2, seGroup->symbolicName);
+        s->setString(3, seGroup->groupName);
+        s->setString(4, seGroup->member);
+        s->setString(5, seGroup->vo);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
-    
-        
-    //t_config
-    /*source or dest could be either catch-all/GROUP/SE */
-std::vector<SeConfig*> OracleAPI::getConfig(const std::string & source, const std::string & dest, const std::string & vo){
-	std::string tag="getConfig111";
-	std::string query("");
-	
-	if(vo.length() > 0){
-			    query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
-	                    " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
-			    " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
-			    " t_config_symbolic.dest=:2 and t_config.vo=:3 ";	
-	}else{
-			    query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
-	                    " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
-			    " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
-			    " t_config_symbolic.dest=:2";			    	
-			    tag+="222";
-	}
-				    			    
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	SeConfig* seConfig = NULL;
-	std::vector<SeConfig*> vectorSeConfig;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+
+
+//t_config
+
+/*source or dest could be either catch-all/GROUP/SE */
+std::vector<SeConfig*> OracleAPI::getConfig(const std::string & source, const std::string & dest, const std::string & vo) {
+    std::string tag = "getConfig111";
+    std::string query("");
+
+    if (vo.length() > 0) {
+        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
+                " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
+                " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
+                " t_config_symbolic.dest=:2 and t_config.vo=:3 ";
+    } else {
+        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
+                " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
+                " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
+                " t_config_symbolic.dest=:2";
+        tag += "222";
+    }
+
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    SeConfig* seConfig = NULL;
+    std::vector<SeConfig*> vectorSeConfig;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return vectorSeConfig;	
-	    
- 	s = conn->createStatement(query, tag);
+            return vectorSeConfig;
+
+        s = conn->createStatement(query, tag);
         s->setString(1, source);
-	s->setString(2, dest);
-	if(vo.length() > 0)
-		s->setString(3, vo);
+        s->setString(2, dest);
+        if (vo.length() > 0)
+            s->setString(3, vo);
         r = conn->createResultset(s);
-        while(r->next()) {
-		seConfig = new SeConfig();
-		seConfig->symbolicName = r->getString(1);
-		seConfig->source = r->getString(2);
-		seConfig->destination = r->getString(3);
-		seConfig->vo = r->getString(4);
-		seConfig->active = r->getInt(5);
-		seConfig->protocolId = r->getInt(6);
-		seConfig->state = r->getString(7);
-		vectorSeConfig.push_back(seConfig);
+        while (r->next()) {
+            seConfig = new SeConfig();
+            seConfig->symbolicName = r->getString(1);
+            seConfig->source = r->getString(2);
+            seConfig->destination = r->getString(3);
+            seConfig->vo = r->getString(4);
+            seConfig->active = r->getInt(5);
+            seConfig->protocolId = r->getInt(6);
+            seConfig->state = r->getString(7);
+            vectorSeConfig.push_back(seConfig);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    
+    }
+
     return vectorSeConfig;
 }
 
+std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, const std::string & vo) {
+    std::string tag = "getConfig222";
+    std::string query("");
+    if (vo.length() > 0) {
+        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
+                " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
+                " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1 and t_config.vo=:2 ";
+    } else {
+        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
+                " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
+                " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1";
+        tag += "222";
+    }
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    SeConfig* seConfig = NULL;
+    std::vector<SeConfig*> vectorSeConfig;
 
-std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, const std::string & vo){
-	std::string tag="getConfig222";
-	std::string query(""); 
-	if(vo.length()>0){
-		query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
-	                    " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
-			    " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1 and t_config.vo=:2 ";
-	}else{
-		query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, " 
-	                    " t_config.protocol_row_id, t_config.state from t_config,t_config_symbolic "
-			    " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1";
-			    tag+="222";	
-	}
-	oracle::occi::Statement* s = NULL;
-    	oracle::occi::ResultSet* r = NULL;
-	SeConfig* seConfig = NULL;
-	std::vector<SeConfig*> vectorSeConfig;
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return vectorSeConfig;	
-	    
- 	s = conn->createStatement(query, tag);
+            return vectorSeConfig;
+
+        s = conn->createStatement(query, tag);
         s->setString(1, symbolicName);
-	if(vo.length() > 0)
-		s->setString(2, vo);
+        if (vo.length() > 0)
+            s->setString(2, vo);
         r = conn->createResultset(s);
-        while(r->next()) {
-		seConfig = new SeConfig();
-		seConfig->symbolicName = r->getString(1);
-		seConfig->source = r->getString(2);
-		seConfig->destination = r->getString(3);
-		seConfig->vo = r->getInt(4);				
-		seConfig->active = r->getInt(5);
-		seConfig->protocolId = r->getInt(6);
-		seConfig->state = r->getString(7);
-		vectorSeConfig.push_back(seConfig);
+        while (r->next()) {
+            seConfig = new SeConfig();
+            seConfig->symbolicName = r->getString(1);
+            seConfig->source = r->getString(2);
+            seConfig->destination = r->getString(3);
+            seConfig->vo = r->getInt(4);
+            seConfig->active = r->getInt(5);
+            seConfig->protocolId = r->getInt(6);
+            seConfig->state = r->getString(7);
+            vectorSeConfig.push_back(seConfig);
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-    
+    }
+
     return vectorSeConfig;
-}  
+}
 
+void OracleAPI::addNewConfig(SeConfig* seConfig) {
+    std::string tag = "addNewConfig111";
+    std::string query = "insert into t_config(symbolicName,vo,active,protocol_row_id,state) values(:1,:2,:3,:4,:5)";
+    oracle::occi::Statement* s = NULL;
 
-void OracleAPI::addNewConfig(SeConfig* seConfig){
-	std::string tag="addNewConfig111";
-	std::string query = "insert into t_config(symbolicName,vo,active,protocol_row_id,state) values(:1,:2,:3,:4,:5)";
-	oracle::occi::Statement* s = NULL;	
-	
-	if (!checkIfSymbolicNameExistsForSrcDest(seConfig->symbolicName, seConfig->source, seConfig->destination)) {
-		//first we need to add the t_config_symbolic entries
-		addSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
-	}
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+    if (!checkIfSymbolicNameExistsForSrcDest(seConfig->symbolicName, seConfig->source, seConfig->destination)) {
+        //first we need to add the t_config_symbolic entries
+        addSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
+    }
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);		
-        s->setString(1, seConfig->symbolicName);			
-        s->setString(2, seConfig->vo);				
-        s->setInt(3, seConfig->active);	
-        s->setInt(4, seConfig->protocolId);			
-        s->setString(5, seConfig->state);			
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, seConfig->symbolicName);
+        s->setString(2, seConfig->vo);
+        s->setInt(3, seConfig->active);
+        s->setInt(4, seConfig->protocolId);
+        s->setString(5, seConfig->state);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
+void OracleAPI::deleteConfig(SeConfig* seConfig) {
+    std::string tag = "deleteConfig111";
+    std::string query = "delete from t_config where symbolicName=:1 and vo=:2";
+    oracle::occi::Statement* s = NULL;
 
-void OracleAPI::deleteConfig(SeConfig* seConfig){
-	std::string tag="deleteConfig111";
-	std::string query = "delete from t_config where symbolicName=:1 and vo=:2";
-	oracle::occi::Statement* s = NULL;	
-	
-	//first we need to delete the t_config_symbolic entries
-	deleteSymbolic(seConfig->symbolicName);
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+    //first we need to delete the t_config_symbolic entries
+    deleteSymbolic(seConfig->symbolicName);
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);		
-        s->setString(1, seConfig->symbolicName);	
-        s->setString(2, seConfig->vo);	
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, seConfig->symbolicName);
+        s->setString(2, seConfig->vo);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
-void OracleAPI::updateConfig(SeConfig* seConfig){
-	std::string tag="updateGroupConfig";
-	std::string query = "update t_config set active=:1, protocol_row_id=:2, state=:3 where symbolicName=:4 and vo=:5";
-	oracle::occi::Statement* s = NULL;
-	
-	updateSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+void OracleAPI::updateConfig(SeConfig* seConfig) {
+    std::string tag = "updateGroupConfig";
+    std::string query = "update t_config set active=:1, protocol_row_id=:2, state=:3 where symbolicName=:4 and vo=:5";
+    oracle::occi::Statement* s = NULL;
+
+    updateSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
+            return;
+
+        s = conn->createStatement(query, tag);
         s->setInt(1, seConfig->active);
-        s->setInt(2, seConfig->protocolId);	
-        s->setString(3, seConfig->state);		
-        s->setString(4, seConfig->symbolicName);	
-        s->setString(5, seConfig->vo);				
-        s->executeUpdate();       
+        s->setInt(2, seConfig->protocolId);
+        s->setString(3, seConfig->state);
+        s->setString(4, seConfig->symbolicName);
+        s->setString(5, seConfig->vo);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
-}    
-    
+    }
+}
+
 /*
 Assign the first found following this order
 SE1 -> SE2
 A   -> SE2
 SE1 -> B 
 A   -> B
-*   -> SE2
-*   -> B
+ *   -> SE2
+ *   -> B
 SE1 -> *
 A   -> *
 else
 auto-tuning
-*/    
-    
-    //general purpose
-std::string OracleAPI::checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo){
-	std::string tag="checkConfigExists";
-	std::string symbolicName("");
-	std::string groupName("");
-	std::string groupNameDest("");
-	std::vector<std::string>::const_iterator iter;
-	std::vector<std::string> VO;
-	VO.push_back(vo);
-	VO.push_back("public");
-	oracle::occi::Statement* s = NULL;
-	oracle::occi::ResultSet* r = NULL;
-	std::string state("");
-	
-	//SE1 -> SE2
-	std::string query1=" select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
-	
-	//A   -> SE2
-	//check if source is member of group A
-	std::string query2=" select groupName from T_GROUP_CONFIG where member=:1";
-	//if previous query returns results it means it is part of group A
-	//check now if it is the group we are interested in
-	std::string query3=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
-	
-	//SE1 -> B 
-	//check if dest is member of group B
-	std::string query4=" select groupName from T_GROUP_CONFIG where member=:1";
-	//if previous query returns results it means it is part of group B
-	//check now if it is the group we are interested in
-	std::string query5=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
-	
-	//A   -> B
-	//check if source is member of group A
-	std::string query6=" select groupName from T_GROUP_CONFIG where member=:1";
-	//check if dest is member of group B
-	std::string query7=" select groupName from T_GROUP_CONFIG where member=:1";	
-	//if both previous queries return result it means both are part of groups
-	//check now if it is the groups we are interested in
-	std::string query8=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
-	
-	//*   -> SE2
-	std::string query9=" select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
-	
-	//*   -> B
-	//check if dest is member of group B
-	std::string query10=" select groupName from T_GROUP_CONFIG where member=:1";
-	//use the previous returned group (is exists)
-	std::string query11=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
-	
-	//SE1 -> *
-	std::string query12=" select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
-	
-	//A   -> *
-	//check if source is member of group A
-	std::string query13=" select groupName from T_GROUP_CONFIG where member=:1";
-	std::string query14=" select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
-			   " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
-	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+ */
+
+//general purpose
+
+std::string OracleAPI::checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo) {
+    std::string tag = "checkConfigExists";
+    std::string symbolicName("");
+    std::string groupName("");
+    std::string groupNameDest("");
+    std::vector<std::string>::const_iterator iter;
+    std::vector<std::string> VO;
+    VO.push_back(vo);
+    VO.push_back("public");
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    std::string state("");
+
+    //SE1 -> SE2
+    std::string query1 = " select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
+
+    //A   -> SE2
+    //check if source is member of group A
+    std::string query2 = " select groupName from T_GROUP_CONFIG where member=:1";
+    //if previous query returns results it means it is part of group A
+    //check now if it is the group we are interested in
+    std::string query3 = " select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
+
+    //SE1 -> B 
+    //check if dest is member of group B
+    std::string query4 = " select groupName from T_GROUP_CONFIG where member=:1";
+    //if previous query returns results it means it is part of group B
+    //check now if it is the group we are interested in
+    std::string query5 = " select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
+
+    //A   -> B
+    //check if source is member of group A
+    std::string query6 = " select groupName from T_GROUP_CONFIG where member=:1";
+    //check if dest is member of group B
+    std::string query7 = " select groupName from T_GROUP_CONFIG where member=:1";
+    //if both previous queries return result it means both are part of groups
+    //check now if it is the groups we are interested in
+    std::string query8 = " select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest=:2 "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:3";
+
+    //*   -> SE2
+    std::string query9 = " select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
+
+    //*   -> B
+    //check if dest is member of group B
+    std::string query10 = " select groupName from T_GROUP_CONFIG where member=:1";
+    //use the previous returned group (is exists)
+    std::string query11 = " select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source='*' and t_config_symbolic.dest=:1 "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
+
+    //SE1 -> *
+    std::string query12 = " select t_config_symbolic.symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
+
+    //A   -> *
+    //check if source is member of group A
+    std::string query13 = " select groupName from T_GROUP_CONFIG where member=:1";
+    std::string query14 = " select symbolicName,state from t_config,t_config_symbolic where t_config_symbolic.source=:1 and t_config_symbolic.dest='*' "
+            " and t_config_symbolic.symbolicName=t_config.symbolicName and vo=:2";
+
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return std::string("");	
+            return std::string("");
 
-    s = conn->createStatement(query1, "");		    
-    for (iter = VO.begin(); iter != VO.end(); ++iter){
-    	s->setSQL(query1);
-    	s->setString(1, source);
-    	s->setString(2, dest);	
-    	s->setString(3, std::string(*iter));
-	r = conn->createResultset(s);
-	if(r->next()){
-		symbolicName = r->getString(1);
-		state = r->getString(2);
-		conn->destroyResultset(s, r);
-		if(state.compare("on")==0)
-			break;
-	}
-	conn->destroyResultset(s, r);
-	s->setSQL(query2);
-	s->setString(1, source);
-	r = conn->createResultset(s);
-	if(r->next()){
-		groupName = r->getString(1);
-		conn->destroyResultset(s, r);
-		s->setSQL(query3);
-		s->setString(1, groupName);
-    		s->setString(2, dest);	
-    		s->setString(3, std::string(*iter));
-		r = conn->createResultset(s);
-		if(r->next()){
-			symbolicName = r->getString(1);
-			state = r->getString(2);
-			conn->destroyResultset(s, r);
-			if(state.compare("on")==0)
-				break;
-		}
-	}
-	conn->destroyResultset(s, r);
-	s->setSQL(query4);
-	s->setString(1, dest);	
-	r = conn->createResultset(s);
-	if(r->next()){	
-		groupName = r->getString(1);
-		conn->destroyResultset(s, r);
-		s->setSQL(query5);
-		s->setString(1, source);
-    		s->setString(2, groupName);	
-    		s->setString(3, std::string(*iter));
-		r = conn->createResultset(s);
-		if(r->next()){
-			symbolicName = r->getString(1);
-			state = r->getString(2);
-			conn->destroyResultset(s, r);
-			if(state.compare("on")==0)
-				break;
-		}			
-	}
-	conn->destroyResultset(s, r);
-	s->setSQL(query6);
-	s->setString(1, source);
-	r = conn->createResultset(s);
-	if(r->next()){
-		groupName = r->getString(1);
-		conn->destroyResultset(s, r);
-		s->setSQL(query7);
-		s->setString(1, dest);
-		r = conn->createResultset(s);
-		if(r->next()){
-			groupNameDest = r->getString(1);
-			conn->destroyResultset(s, r);
-			s->setSQL(query8);
-			s->setString(1, groupName);
-			s->setString(2, groupNameDest);
-			s->setString(3, std::string(*iter));
-			r = conn->createResultset(s);
-			if(r->next()){
-				symbolicName = r->getString(1);
-				state = r->getString(2);
-				conn->destroyResultset(s, r);
-				if(state.compare("on")==0)
-					break;
-			}
-		}
-		
-	}
-	conn->destroyResultset(s, r);
-	s->setSQL(query9);
-	s->setString(1, dest);
-	s->setString(2, std::string(*iter));
-	r = conn->createResultset(s);
-	if(r->next()){
-		symbolicName = r->getString(1);
-		state = r->getString(2);
-		conn->destroyResultset(s, r);
-		if(state.compare("on")==0)
-			break;
-	}
-	conn->destroyResultset(s, r);
-	s->setSQL(query10);
-	s->setString(1, dest);
-//	s->setString(2, std::string(*iter));
-	r = conn->createResultset(s);
-	if(r->next()){
-		symbolicName = r->getString(1);
-		conn->destroyResultset(s, r);
-		s->setSQL(query11);
-		s->setString(1, dest);
-		s->setString(2, std::string(*iter));
-		r = conn->createResultset(s);
-		if(r->next()){
-			symbolicName = r->getString(1);
-			state = r->getString(2);
-			conn->destroyResultset(s, r);
-			if(state.compare("on")==0)
-				break;
-		}
-	}
-	conn->destroyResultset(s, r);
-	s->setSQL(query12);
-	s->setString(1, source);
-	s->setString(2, std::string(*iter));
-	r = conn->createResultset(s);
-	if(r->next()){
-		symbolicName = r->getString(1);
-		state = r->getString(2);
-		conn->destroyResultset(s, r);
-		if(state.compare("on")==0)
-			break;
-	}
-	conn->destroyResultset(s, r);
-	s->setSQL(query13);
-	s->setString(1, source);
-	r = conn->createResultset(s);
-	if(r->next()){
-		groupName = r->getString(1);
-		conn->destroyResultset(s, r);
-		s->setSQL(query14);
-		s->setString(1, groupName);
-		s->setString(2, std::string(*iter));
-		r = conn->createResultset(s);
-		if(r->next()){
-			symbolicName = r->getString(1);
-			state = r->getString(2);
-			conn->destroyResultset(s, r);
-			if(state.compare("on")==0)
-				break;
-		}
-	}
-	conn->destroyResultset(s, r);			
-    } 	    
-    conn->destroyStatement(s, "");
-    return symbolicName;	    
-    }catch (oracle::occi::SQLException const &e) {
+        s = conn->createStatement(query1, "");
+        for (iter = VO.begin(); iter != VO.end(); ++iter) {
+            s->setSQL(query1);
+            s->setString(1, source);
+            s->setString(2, dest);
+            s->setString(3, std::string(*iter));
+            r = conn->createResultset(s);
+            if (r->next()) {
+                symbolicName = r->getString(1);
+                state = r->getString(2);
+                conn->destroyResultset(s, r);
+                if (state.compare("on") == 0)
+                    break;
+            }
+            conn->destroyResultset(s, r);
+            s->setSQL(query2);
+            s->setString(1, source);
+            r = conn->createResultset(s);
+            if (r->next()) {
+                groupName = r->getString(1);
+                conn->destroyResultset(s, r);
+                s->setSQL(query3);
+                s->setString(1, groupName);
+                s->setString(2, dest);
+                s->setString(3, std::string(*iter));
+                r = conn->createResultset(s);
+                if (r->next()) {
+                    symbolicName = r->getString(1);
+                    state = r->getString(2);
+                    conn->destroyResultset(s, r);
+                    if (state.compare("on") == 0)
+                        break;
+                }
+            }
+            conn->destroyResultset(s, r);
+            s->setSQL(query4);
+            s->setString(1, dest);
+            r = conn->createResultset(s);
+            if (r->next()) {
+                groupName = r->getString(1);
+                conn->destroyResultset(s, r);
+                s->setSQL(query5);
+                s->setString(1, source);
+                s->setString(2, groupName);
+                s->setString(3, std::string(*iter));
+                r = conn->createResultset(s);
+                if (r->next()) {
+                    symbolicName = r->getString(1);
+                    state = r->getString(2);
+                    conn->destroyResultset(s, r);
+                    if (state.compare("on") == 0)
+                        break;
+                }
+            }
+            conn->destroyResultset(s, r);
+            s->setSQL(query6);
+            s->setString(1, source);
+            r = conn->createResultset(s);
+            if (r->next()) {
+                groupName = r->getString(1);
+                conn->destroyResultset(s, r);
+                s->setSQL(query7);
+                s->setString(1, dest);
+                r = conn->createResultset(s);
+                if (r->next()) {
+                    groupNameDest = r->getString(1);
+                    conn->destroyResultset(s, r);
+                    s->setSQL(query8);
+                    s->setString(1, groupName);
+                    s->setString(2, groupNameDest);
+                    s->setString(3, std::string(*iter));
+                    r = conn->createResultset(s);
+                    if (r->next()) {
+                        symbolicName = r->getString(1);
+                        state = r->getString(2);
+                        conn->destroyResultset(s, r);
+                        if (state.compare("on") == 0)
+                            break;
+                    }
+                }
+
+            }
+            conn->destroyResultset(s, r);
+            s->setSQL(query9);
+            s->setString(1, dest);
+            s->setString(2, std::string(*iter));
+            r = conn->createResultset(s);
+            if (r->next()) {
+                symbolicName = r->getString(1);
+                state = r->getString(2);
+                conn->destroyResultset(s, r);
+                if (state.compare("on") == 0)
+                    break;
+            }
+            conn->destroyResultset(s, r);
+            s->setSQL(query10);
+            s->setString(1, dest);
+            //	s->setString(2, std::string(*iter));
+            r = conn->createResultset(s);
+            if (r->next()) {
+                symbolicName = r->getString(1);
+                conn->destroyResultset(s, r);
+                s->setSQL(query11);
+                s->setString(1, dest);
+                s->setString(2, std::string(*iter));
+                r = conn->createResultset(s);
+                if (r->next()) {
+                    symbolicName = r->getString(1);
+                    state = r->getString(2);
+                    conn->destroyResultset(s, r);
+                    if (state.compare("on") == 0)
+                        break;
+                }
+            }
+            conn->destroyResultset(s, r);
+            s->setSQL(query12);
+            s->setString(1, source);
+            s->setString(2, std::string(*iter));
+            r = conn->createResultset(s);
+            if (r->next()) {
+                symbolicName = r->getString(1);
+                state = r->getString(2);
+                conn->destroyResultset(s, r);
+                if (state.compare("on") == 0)
+                    break;
+            }
+            conn->destroyResultset(s, r);
+            s->setSQL(query13);
+            s->setString(1, source);
+            r = conn->createResultset(s);
+            if (r->next()) {
+                groupName = r->getString(1);
+                conn->destroyResultset(s, r);
+                s->setSQL(query14);
+                s->setString(1, groupName);
+                s->setString(2, std::string(*iter));
+                r = conn->createResultset(s);
+                if (r->next()) {
+                    symbolicName = r->getString(1);
+                    state = r->getString(2);
+                    conn->destroyResultset(s, r);
+                    if (state.compare("on") == 0)
+                        break;
+                }
+            }
+            conn->destroyResultset(s, r);
+        }
+        conn->destroyStatement(s, "");
+        return symbolicName;
+    } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }		    	
-    return symbolicName;	    	
+    }
+    return symbolicName;
 }
 
-void OracleAPI::allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo){
-	std::string tag="allocateToConfig";
-	std::string query = "update t_file set symbolicName=:1 where job_id=:2 ";
-	oracle::occi::Statement* s = NULL;	
-	std::string config =  checkConfigExists(src, dest, vo);	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+void OracleAPI::allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo) {
+    std::string tag = "allocateToConfig";
+    std::string query = "update t_file set symbolicName=:1 where job_id=:2 ";
+    oracle::occi::Statement* s = NULL;
+    std::string config = checkConfigExists(src, dest, vo);
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-	if(config.length() > 0)
-        	s->setString(1, config);
-	else
-		s->setNull(1, oracle::occi::OCCISTRING);
-        s->setString(2, jobId);	
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        if (config.length() > 0)
+            s->setString(1, config);
+        else
+            s->setNull(1, oracle::occi::OCCISTRING);
+        s->setString(2, jobId);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
 /*we need to check the number of active per link, as also the number of active per member of a group*/
-bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo){
-	const std::string tag1="isTransferAllowed1";
-	const std::string tag2="isTransferAllowed2";	
-	const std::string tag3="isTransferAllowed3";	
-	bool allowed = false;	
-	int currentActive = 0;
-	int activePair = 0;
-	int activeGroupMember = 0;
-	
-	std::string query1 = " select count(*) from t_file,t_job where t_file.file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_job.source_se=:1 and "
-			    " t_job.dest_se=:2 and t_job.vo=:3";
-			    
-	std::string query2 = "select active from t_config where symbolicName=:1 and vo=:2"; //active for link		    
-	
-	std::string query3 = "select T_GROUP_CONFIG.active from t_config,T_GROUP_CONFIG where T_GROUP_CONFIG.symbolicName=t_config.symbolicName and "
-			     " T_GROUP_CONFIG.symbolicName=:1 and t_config.vo=:2"; //active for member of a group			    	
-	
-	oracle::occi::Statement* s1 = NULL;
-	oracle::occi::Statement* s2 = NULL;	
-	oracle::occi::Statement* s3 = NULL;	
-	oracle::occi::ResultSet* r1 = NULL;
-	oracle::occi::ResultSet* r2 = NULL;
-	oracle::occi::ResultSet* r3 = NULL;	
-	
-	//get the symbolicName for this set of endpoints and vo
-	std::string config = checkConfigExists(src, dest, vo);
-				
-	ThreadTraits::LOCK_R lock(_mutex);
+/*It's called only when there is a config for a given pair*/
+bool OracleAPI::isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo) {
+    const std::string tag1 = "isTransferAllowed1";
+    const std::string tag2 = "isTransferAllowed2";
+    const std::string tag3 = "isTransferAllowed3";
+    const std::string tag4 = "isTransferAllowed4";
+    bool allowed = false;
+    int currentActive = 0;
+    int activePair = 0;
+    int activeGroupMemberSource = 0;
+    int activeGroupMemberDestination = 0;
+
+    std::string query1 = " select count(*) from t_file,t_job where t_file.file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_job.source_se=:1 and "
+            " t_job.dest_se=:2 and t_job.vo=:3";
+
+    //active for link pair	(t_config)		    
+    std::string query2 = "select active from t_config where symbolicName=:1 and vo=:2";
+
+    //active for member of a group for SOURCE credits
+    std::string query3 = "select T_GROUP_CONFIG.active from t_config,T_GROUP_CONFIG where T_GROUP_CONFIG.symbolicName=t_config.symbolicName and "
+            " T_GROUP_CONFIG.symbolicName=:1 and t_config.vo=:2 and T_GROUP_CONFIG.member=:3";
+
+    //active for member of a group DESTINATION credits
+    std::string query4 = "select T_GROUP_CONFIG.active from t_config,T_GROUP_CONFIG where T_GROUP_CONFIG.symbolicName=t_config.symbolicName and "
+            " T_GROUP_CONFIG.symbolicName=:1 and t_config.vo=:2 and T_GROUP_CONFIG.member=:3";
+
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::Statement* s3 = NULL;
+    oracle::occi::Statement* s4 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;
+    oracle::occi::ResultSet* r2 = NULL;
+    oracle::occi::ResultSet* r3 = NULL;
+    oracle::occi::ResultSet* r4 = NULL;
+
+    //get the symbolicName for this set of endpoints and vo
+    std::string config = checkConfigExists(src, dest, vo);
+
+    /* This order is checked
+            SE1 -> SE2
+            A   -> SE2
+            SE1 -> B 
+            A   -> B
+     */
+
+    //check if it's it is SE pair, e.g.SE-SE, SE-*, *-SE
+    bool isSePair = checkSePair(src, dest, vo, config);
+
+    //check if both src and dest are GROUPS
+    bool isGroupToGroupPair = checkGroupToGroup(src, dest, vo, config);
+
+    //check if source is GROUP
+    bool isSourceGroup = checkSourceGroup(src, dest, vo, config);
+
+    //check if dest is GROUP
+    bool isDestinationGroup = checkDestinationGroup(src, dest, vo, config);
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
             return false;
-	    	
-	s1 = conn->createStatement(query1, tag1);
+
+        s1 = conn->createStatement(query1, tag1);
         s1->setString(1, src);
-	s1->setString(2, dest);
-	s1->setString(3, vo);
+        s1->setString(2, dest);
+        s1->setString(3, vo);
         r1 = conn->createResultset(s1);
-        if(r1->next()) {
-		currentActive = r1->getInt(1);			
+        if (r1->next()) {
+            currentActive = r1->getInt(1);
         }
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1);
-	
-	//now check the config for this pair
-	s2 = conn->createStatement(query2, tag2);
+
+        //now check the config for this pair
+        s2 = conn->createStatement(query2, tag2);
         s2->setString(1, config);
-	s2->setString(1, vo);
+        s2->setString(2, vo);
         r2 = conn->createResultset(s2);
-        if(r2->next()) {
-		activePair = r2->getInt(1);
+        if (r2->next()) {
+            activePair = r2->getInt(1);
         }
         conn->destroyResultset(s2, r2);
-        conn->destroyStatement(s2, tag2);	
-	
-	//now check if the SE is part of a group
-	s3 = conn->createStatement(query3, tag3);
+        conn->destroyStatement(s2, tag2);
+
+        //now check if the source SE is part of a group
+        s3 = conn->createStatement(query3, tag3);
         s3->setString(1, config);
-	s3->setString(1, vo);
+        s3->setString(2, vo);
+        s3->setString(3, src);
         r3 = conn->createResultset(s2);
-        if(r3->next()) {
-		activeGroupMember = r3->getInt(1);			
+        if (r3->next()) {
+            activeGroupMemberSource = r3->getInt(1);
         }
         conn->destroyResultset(s3, r3);
         conn->destroyStatement(s3, tag3);
+
+        //now check if the dest SE is part of a group
+        s4 = conn->createStatement(query4, tag4);
+        s4->setString(1, config);
+        s4->setString(2, vo);
+        s3->setString(3, dest);
+        r4 = conn->createResultset(s4);
+        if (r4->next()) {
+            activeGroupMemberDestination = r4->getInt(1);
+        }
+        conn->destroyResultset(s4, r4);
+        conn->destroyStatement(s4, tag4);
 	
-	//if 0 active means that should stop transfers	
-	if(activePair>0 && currentActive<=activePair ){
-		if(activeGroupMember>0 && currentActive<=activeGroupMember){
-			allowed=true;	
+	
+    /* This order is checked
+            SE1 -> SE2
+            A   -> SE2
+            SE1 -> B 
+            A   -> B
+     */
+
+    //check if it's it is SE pair, e.g.SE-SE, SE-*, *-SE
+    if(isSePair){
+    	if (activePair > 0 && currentActive <= activePair) {
+		allowed = true;
+	}	
+    }else if(isSourceGroup){
+    	if (activePair > 0 && currentActive <= activePair) {
+		if (activeGroupMemberSource > 0 && currentActive <= activeGroupMemberSource){
+			allowed = true;
 		}
-	}else if(activePair==0){
-		allowed=false;	
-	}
-	else if(activeGroupMember==0){
-		allowed=false;	
-	}else{
-		allowed=true;
-	}
-	
-	return allowed;    
-    }
-    catch (oracle::occi::SQLException const &e) {
+	}	        
+    }else if(isDestinationGroup){
+    	if (activePair > 0 && currentActive <= activePair) {
+		if (activeGroupMemberDestination > 0 && currentActive <= activeGroupMemberDestination){
+			allowed = true;
+		}
+	}	     
+    }else if(isGroupToGroupPair){
+    	if (activePair > 0 && currentActive <= activePair) {
+		if (activeGroupMemberDestination > 0 && 
+			activeGroupMemberSource > 0 && 
+			currentActive <= activeGroupMemberDestination && 
+			currentActive <=activeGroupMemberSource){
+			allowed = true;
+		}
+	}	         
+    }else{
+    	allowed = false;
+    }     
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
-   return allowed;    
+    return allowed;
 }
-    
-void OracleAPI::submitHost(const std::string & jobId){
-	char hostname[MAXHOSTNAMELEN];
-	gethostname(hostname, MAXHOSTNAMELEN);
-	std::string tag="submitHost";
-	std::string query = "update t_job set submitHost=:1 where job_id=:2";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+
+void OracleAPI::submitHost(const std::string & jobId) {
+    char hostname[MAXHOSTNAMELEN];
+    gethostname(hostname, MAXHOSTNAMELEN);
+    std::string tag = "submitHost";
+    std::string query = "update t_job set submitHost=:1 where job_id=:2";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-        s->setString(1, std::string(hostname));		
-        s->setString(2, jobId);			
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, std::string(hostname));
+        s->setString(2, jobId);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
+void OracleAPI::transferHost(int fileId) {
+    char hostname[MAXHOSTNAMELEN];
+    gethostname(hostname, MAXHOSTNAMELEN);
+    std::string tag = "transferHost";
+    std::string query = "update t_file set transferHost=:1 where file_id=:2";
+    oracle::occi::Statement* s = NULL;
 
-void OracleAPI::transferHost(int fileId){
-	char hostname[MAXHOSTNAMELEN];
-	gethostname(hostname, MAXHOSTNAMELEN);
-	std::string tag="transferHost";
-	std::string query = "update t_file set transferHost=:1 where file_id=:2";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-        s->setString(1, std::string(hostname));		
-        s->setInt(2, fileId);			
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, std::string(hostname));
+        s->setInt(2, fileId);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
 /*for session reuse check only*/
-bool OracleAPI::isFileReadyStateV(std::map<int,std::string>& fileIds){
+bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds) {
     const std::string tag = "transferHostV";
     std::string query = "select file_state from t_file where file_id=:1";
     oracle::occi::Statement* s = NULL;
@@ -4722,20 +4671,20 @@ bool OracleAPI::isFileReadyStateV(std::map<int,std::string>& fileIds){
         s = conn->createStatement(query, tag);
         for (iter = fileIds.begin(); iter != fileIds.end(); ++iter) {
             s->setInt(1, (*iter).first);
-	    r = conn->createResultset(s);
-            if(r->next()) {
-		ready = r->getString(1);
-		if(ready.compare("READY")==0){
-			conn->destroyResultset(s, r);
-			isReady = true;
-			break;	    
-		}		
+            r = conn->createResultset(s);
+            if (r->next()) {
+                ready = r->getString(1);
+                if (ready.compare("READY") == 0) {
+                    conn->destroyResultset(s, r);
+                    isReady = true;
+                    break;
+                }
             }
-	    conn->destroyResultset(s, r);
-        }       
+            conn->destroyResultset(s, r);
+        }
         conn->destroyStatement(s, tag);
         s = NULL;
-	return isReady;
+        return isReady;
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
@@ -4749,7 +4698,7 @@ bool OracleAPI::isFileReadyStateV(std::map<int,std::string>& fileIds){
     return isReady;
 }
 
-void OracleAPI::transferHostV(std::map<int,std::string>& fileIds){
+void OracleAPI::transferHostV(std::map<int, std::string>& fileIds) {
     char hostname[MAXHOSTNAMELEN];
     gethostname(hostname, MAXHOSTNAMELEN);
     const std::string tag = "transferHostV";
@@ -4786,8 +4735,7 @@ void OracleAPI::transferHostV(std::map<int,std::string>& fileIds){
     }
 }
 
-
-std::string OracleAPI::getSymbolicName(const std::string & src, const std::string & dest){
+std::string OracleAPI::getSymbolicName(const std::string & src, const std::string & dest) {
     const std::string tag = "getSymbolicName";
     std::string query = "select symbolicName from t_config_symbolic where source=:1 and dest=:2";
     oracle::occi::Statement* s = NULL;
@@ -4801,17 +4749,17 @@ std::string OracleAPI::getSymbolicName(const std::string & src, const std::strin
             return false;
 
         s = conn->createStatement(query, tag);
-        s->setString(1, src);			
-        s->setString(2, dest);		
+        s->setString(1, src);
+        s->setString(2, dest);
         r = conn->createResultset(s);
-        if(r->next()) {
-		symbolic = r->getString(1);
+        if (r->next()) {
+            symbolic = r->getString(1);
         }
 
-	conn->destroyResultset(s, r);	
+        conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
         s = NULL;
-	return symbolic;
+        return symbolic;
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
@@ -4825,92 +4773,90 @@ std::string OracleAPI::getSymbolicName(const std::string & src, const std::strin
     return symbolic;
 }
 
-void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
-	std::string tag="addSymbolic";
-	std::string query = "insert into t_config_symbolic(symbolicName, source, dest) values(:1,:2,:3)";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) {
+    std::string tag = "addSymbolic";
+    std::string query = "insert into t_config_symbolic(symbolicName, source, dest) values(:1,:2,:3)";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-        s->setString(1, symbolicName);		
-        s->setString(2, src);			
-        s->setString(3, dest);				
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, symbolicName);
+        s->setString(2, src);
+        s->setString(3, dest);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
-void OracleAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
-	std::string tag="updateSymbolic";
-	std::string query = "update t_config_symbolic set source=:1, dest=:2 where symbolicName=:3";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+void OracleAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) {
+    std::string tag = "updateSymbolic";
+    std::string query = "update t_config_symbolic set source=:1, dest=:2 where symbolicName=:3";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-        s->setString(1, src);		
-        s->setString(2, dest);			
-        s->setString(3, symbolicName);				
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, src);
+        s->setString(2, dest);
+        s->setString(3, symbolicName);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
-void OracleAPI::deleteSymbolic(const std::string & symbolicName){	
-	std::string tag="deleteSymbolic";
-	std::string query = "delete from t_config_symbolic where symbolicName=:1";
-	oracle::occi::Statement* s = NULL;	
-	
-	ThreadTraits::LOCK_R lock(_mutex);
+void OracleAPI::deleteSymbolic(const std::string & symbolicName) {
+    std::string tag = "deleteSymbolic";
+    std::string query = "delete from t_config_symbolic where symbolicName=:1";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return;	
-	    
- 	s = conn->createStatement(query, tag);
-        s->setString(1, symbolicName);		
-        s->executeUpdate();       
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, symbolicName);
+        s->executeUpdate();
         conn->commit();
-        conn->destroyStatement(s, tag);	
-    }
-    catch (oracle::occi::SQLException const &e) {
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }	
+    }
 }
 
-  //check the number of active is not > than in configuration pair
-bool OracleAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active){
+//check the number of active is not > than in configuration pair
+
+bool OracleAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active) {
     std::string tag = "checkCreditsForMemberOfGroup";
     std::string stmt = "select active from t_config where symbolicName=:1 and vo=:2";
 
     oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;   
+    oracle::occi::ResultSet* r = 0;
     int activeV = 0;
     bool ret = false;
 
@@ -4921,14 +4867,14 @@ bool OracleAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, c
 
         s = conn->createStatement(stmt, tag);
         s->setString(1, symbolicName);
-        s->setString(2, vo);	
+        s->setString(2, vo);
         r = conn->createResultset(s);
 
-	if(r->next()){
-        	activeV = r->getInt(1);
-		if(active < activeV)
-			ret = true;			
-	}
+        if (r->next()) {
+            activeV = r->getInt(1);
+            if (active < activeV)
+                ret = true;
+        }
 
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -4949,14 +4895,15 @@ bool OracleAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, c
 
     return ret;
 }
-    
-    //there if a share in configure pair for this vo exist
-bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo){
+
+//there if a share in configure pair for this vo exist
+
+bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo) {
     std::string tag = "checkVOForMemberOfGroup";
     std::string stmt = "select vo from t_config where symbolicName=:1 and vo=:2";
 
     oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;   
+    oracle::occi::ResultSet* r = 0;
     bool ret = false;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -4966,12 +4913,12 @@ bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const 
 
         s = conn->createStatement(stmt, tag);
         s->setString(1, symbolicName);
-        s->setString(2, vo);	
+        s->setString(2, vo);
         r = conn->createResultset(s);
 
-	if(r->next()){        	
-		ret = true;			
-	}
+        if (r->next()) {
+            ret = true;
+        }
 
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -4992,13 +4939,13 @@ bool OracleAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const 
 
     return ret;
 }
-    
-bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo){
+
+bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo) {
     std::string tag = "checkIfSymbolicNameExists";
     std::string stmt = "select symbolicName from t_config where symbolicName=:1 and vo=:2";
 
     oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;   
+    oracle::occi::ResultSet* r = 0;
     bool ret = false;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -5008,12 +4955,12 @@ bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, cons
 
         s = conn->createStatement(stmt, tag);
         s->setString(1, symbolicName);
-        s->setString(2, vo);	
+        s->setString(2, vo);
         r = conn->createResultset(s);
 
-	if(r->next()){        	
-		ret = true;			
-	}
+        if (r->next()) {
+            ret = true;
+        }
 
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -5035,13 +4982,12 @@ bool OracleAPI::checkIfSymbolicNameExists(const std::string & symbolicName, cons
     return ret;
 }
 
-
-bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member){
+bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member) {
     std::string tag = "checkIfSeIsMemberOfGroup";
     std::string stmt = "select groupName from t_group_members where member=:1 and groupName=:2";
 
     oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;   
+    oracle::occi::ResultSet* r = 0;
     bool ret = false;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -5050,13 +4996,13 @@ bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const st
         if (!conn->checkConn()) return ret;
 
         s = conn->createStatement(stmt, tag);
-        s->setString(1, member);	
-        s->setString(2, groupName);		
+        s->setString(1, member);
+        s->setString(2, groupName);
         r = conn->createResultset(s);
 
-	if(r->next()){        	
-		ret = true;			
-	}
+        if (r->next()) {
+            ret = true;
+        }
 
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -5083,21 +5029,21 @@ bool OracleAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const st
     true:  if symbolic is used in the same pair
     false: if symbolic is already used in a diff pair
     ALL ENTITIES WILL BE PROVIDED SE/GROUP
-*/
-bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest){
+ */
+bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest) {
     std::string tag1 = "checkIfSymbolicNameExistsForSrcDest";
     std::string tag2 = "checkIfSymbolicNameExistsForSrcDest111";
-    std::string tag3 = "checkIfSymbolicNameExistsForSrcDest222";    
-    std::string stmt1 = "select count(*) from t_config_symbolic where symbolicName=:1";        
+    std::string tag3 = "checkIfSymbolicNameExistsForSrcDest222";
+    std::string stmt1 = "select count(*) from t_config_symbolic where symbolicName=:1";
     std::string stmt2 = "select symbolicName from t_config_symbolic where symbolicName=:1 and source=:2 and dest=:3";
     std::string stmt3= "select symbolicName, source, dest from t_config_symbolic where symbolicName=:1";
 
     oracle::occi::Statement* s1 = 0;
-    oracle::occi::ResultSet* r1 = 0;   
+    oracle::occi::ResultSet* r1 = 0;
     oracle::occi::Statement* s2 = 0;
     oracle::occi::ResultSet* r2 = 0;
     oracle::occi::Statement* s3 = 0;
-    oracle::occi::ResultSet* r3 = 0;    
+    oracle::occi::ResultSet* r3 = 0;
     bool ret = false;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -5106,7 +5052,7 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
         if (!conn->checkConn()) return ret;
 
         s1 = conn->createStatement(stmt1, tag1);
-        s1->setString(1, symbolicName);	
+        s1->setString(1, symbolicName);
         r1 = conn->createResultset(s1);
 	if(r1->next()){        	
 		int count = r1->getInt(1);
@@ -5118,9 +5064,9 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
 		return ret;
 		
         s2 = conn->createStatement(stmt2, tag2);
-        s2->setString(1, symbolicName);	
-        s2->setString(2, src);	
-        s2->setString(3, dest);			
+        s2->setString(1, symbolicName);
+        s2->setString(2, src);
+        s2->setString(3, dest);
         r2 = conn->createResultset(s2);
 	if(r2->next()){        	
 		ret = true;
@@ -5130,11 +5076,11 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
 
         conn->destroyResultset(s2, r2);
         conn->destroyStatement(s2, tag2);
-	if(ret)
-		return ret;
-		
+        if (ret)
+            return ret;
+
         s3 = conn->createStatement(stmt3, tag3);
-        s3->setString(1, symbolicName);			
+        s3->setString(1, symbolicName);
         r3 = conn->createResultset(s3);
 	if(r3->next()){        	
 		std::string source = r3->getString(2);
@@ -5146,32 +5092,31 @@ bool OracleAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolic
 	}
         conn->destroyResultset(s3, r3);
         conn->destroyStatement(s3, tag3);
-	
-	return ret;       		
+
+        return ret;
 
     } catch (oracle::occi::SQLException const &e) {
 
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));       
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
 
     return ret;
 }
-      
 
 /*
     we need to check if a member already belongs to another group 
     true: it is member of another group
     false: it is not member of another group
-*/
-bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member){
+ */
+bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member) {
     std::string tag = "checkIfSeIsMemberOfAnotherGroup";
     std::string stmt = "select groupName from t_group_members where member=:1 ";
 
     oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;   
+    oracle::occi::ResultSet* r = 0;
     bool ret = false;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -5180,12 +5125,12 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member){
         if (!conn->checkConn()) return ret;
 
         s = conn->createStatement(stmt, tag);
-        s->setString(1, member);			
+        s->setString(1, member);
         r = conn->createResultset(s);
 
-	if(r->next()){        	
-		ret = true;			
-	}
+        if (r->next()) {
+            ret = true;
+        }
 
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -5205,11 +5150,228 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member){
     }
 
     return ret;
-} 
-      
+}
+
+bool OracleAPI::checkSePair(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) {
+    std::string tag = "checkSePair";
+    std::string query = "select source, dest from t_config_symbolic where symbolicName=:1 and (source=:2 || source='*') and (dest=:3 || dest='*')";
+    
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, config);
+        s->setString(2, src);
+        s->setString(3, dest);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+            ret = true;
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;    
+}
+
+//check if both src and dest are GROUPS
+
+bool OracleAPI::checkGroupToGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) {
+    std::string tag1 = "checkGroupToGroup";
+    std::string tag2 = "checkGroupToGroup";
+    std::string tag3 = "checkGroupToGroup";
+    //get source group
+    std::string query1 = "select symbolicName,groupName,member from T_GROUP_CONFIG where symbolicName=:1 and member=:2";
+    //get dest group	
+    std::string query2 = "select symbolicName,groupName,member from T_GROUP_CONFIG where symbolicName=:1 and member=:2";
+    //get group pair
+    std::string query3 = "select symbolicName from t_config_symbolic where source=:1 and dest=:2 and symbolicName=:3";
+
+    oracle::occi::Statement* s1 = 0;
+    oracle::occi::ResultSet* r1 = 0;
+    oracle::occi::Statement* s2 = 0;
+    oracle::occi::ResultSet* r2 = 0;
+    oracle::occi::Statement* s3 = 0;
+    oracle::occi::ResultSet* r3 = 0;
+    bool ret = false;
+    bool isSourceGroup = false;
+    bool isDestGroup = false;
+    std::string sourceGroup("");
+    std::string destGroup("");
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        //check if it's source group
+        s1 = conn->createStatement(query1, tag1);
+        s1->setString(1, config);
+        s1->setString(2, src);
+        r1 = conn->createResultset(s1);
+        if (r1->next()) {
+            isSourceGroup = true;
+            sourceGroup = r1->getString(2);
+        }
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+
+        //check if it's dest group	
+        s2 = conn->createStatement(query2, tag2);
+        s2->setString(1, config);
+        s2->setString(2, dest);
+        r2 = conn->createResultset(s2);
+        if (r2->next()) {
+            isDestGroup = true;
+            destGroup = r2->getString(2);
+        }
+        conn->destroyResultset(s2, r2);
+        conn->destroyStatement(s2, tag2);
+
+        //check if it's group pair
+        if (isSourceGroup == true and isDestGroup == true) {
+            //check if it's dest group	
+            s3 = conn->createStatement(query3, tag3);
+            s3->setString(1, sourceGroup);
+            s3->setString(2, destGroup);
+            s3->setString(2, config);
+            r3 = conn->createResultset(s3);
+            if (r2->next()) {
+                ret = true;
+            }
+            conn->destroyResultset(s3, r3);
+            conn->destroyStatement(s3, tag3);
+        } 
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));       
+    }
+
+    return ret;
+
+}
+
+//check if source is GROUP
+
+bool OracleAPI::checkSourceGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) {
+    std::string tag = "checkSourceGroup";
+    std::string query = " select t_config_symbolic.symbolicName, T_GROUP_CONFIG.groupName, T_GROUP_CONFIG.member from T_GROUP_CONFIG, t_config_symbolic "
+            " where t_config_symbolic.symbolicName=T_GROUP_CONFIG.symbolicName and symbolicName.symbolicName=:1 and T_GROUP_CONFIG.member=:2 "
+            " and t_config_symbolic.dest=:3 ";
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, config);
+        s->setString(2, src);
+        s->setString(3, dest);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+            ret = true;
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+
+}
+
+//check if dest is GROUP
+
+bool OracleAPI::checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) {
+    std::string tag = "checkDestinationGroup";
+    std::string query = " select t_config_symbolic.symbolicName, T_GROUP_CONFIG.groupName, T_GROUP_CONFIG.member from T_GROUP_CONFIG, t_config_symbolic "
+            " where t_config_symbolic.symbolicName=T_GROUP_CONFIG.symbolicName and symbolicName.symbolicName=:1 and T_GROUP_CONFIG.member=:2 "
+            " and t_config_symbolic.source=:3 ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, config);
+        s->setString(2, dest);
+        s->setString(3, src);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+            ret = true;
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
 
 
 // the class factories
+
 extern "C" GenericDbIfce* create() {
     return new OracleAPI;
 }

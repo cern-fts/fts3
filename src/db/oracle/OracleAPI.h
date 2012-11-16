@@ -57,15 +57,7 @@ public:
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
     
-    virtual void getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files);    
-    
-    virtual std::vector<std::string> getSiteGroupNames();
-
-    virtual std::vector<std::string> getSiteGroupMembers(std::string GroupName);
-
-    virtual void removeGroupMember(std::string groupName, std::string siteName);
-
-    virtual void addGroupMember(std::string groupName, std::string siteName);    
+    virtual void getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files);       
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
  
@@ -286,7 +278,18 @@ public:
     false: is not a member of another group
     */
     virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member); 
-          
+    
+    virtual bool checkSePair(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);
+    
+	//check if both src and dest are GROUPS
+    virtual bool checkGroupToGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);
+	
+	//check if source is GROUP
+    virtual bool checkSourceGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);
+	
+	//check if dest is GROUP
+    virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);		    
+                
           
     
 private:

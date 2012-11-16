@@ -341,72 +341,6 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus
 }
 
 
-
-std::vector<std::string> MySqlAPI::getSiteGroupNames() {
-    soci::session sql(connectionPool);
-
-    try {
-        std::vector<std::string> groups;
-        sql << "SELECT DISTINCT group_name FROM t_site_group", soci::into(groups);
-        return groups;
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-}
-
-
-
-std::vector<std::string> MySqlAPI::getSiteGroupMembers(std::string GroupName) {
-    soci::session sql(connectionPool);
-
-    try {
-        std::vector<std::string> members;
-        sql << "SELECT site_name FROM t_site_group where group_name = :group",
-                soci::use(GroupName), soci::into(members);
-        return members;
-    }
-    catch (std::exception& e) {
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-}
-
-
-
-void MySqlAPI::removeGroupMember(std::string groupName, std::string siteName) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-        sql << "DELETE FROM t_site_group WHERE group_name = :groupName AND site_Name = :site",
-                soci::use(groupName), soci::use(siteName);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-}
-
-
-
-void MySqlAPI::addGroupMember(std::string groupName, std::string siteName) {
-    soci::session sql(connectionPool);
-
-    try {
-        sql.begin();
-        sql << "INSERT INTO t_site_group (group_name, site_name) VALUES (:group, :site)",
-                soci::use(groupName), soci::use(siteName);
-        sql.commit();
-    }
-    catch (std::exception& e) {
-        sql.rollback();
-        throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
-    }
-}
-
-
-
 /*
  * Return a list of jobs based on the status requested
  * std::vector<JobStatus*> jobs: the caller will deallocate memory JobStatus instances and clear the vector
@@ -2278,6 +2212,24 @@ bool MySqlAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicN
 }    
 
 bool MySqlAPI::checkIfSeIsMemberOfAnotherGroup( const std::string & member){
+}
+
+
+
+
+bool MySqlAPI::checkSePair(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
+}
+
+//check if both src and dest are GROUPS
+bool MySqlAPI::checkGroupToGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
+}
+	
+//check if source is GROUP
+bool MySqlAPI::checkSourceGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
+}
+	
+//check if dest is GROUP
+bool MySqlAPI::checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
 }
 
 // the class factories

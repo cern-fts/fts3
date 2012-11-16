@@ -11,7 +11,7 @@ password_(password),  connectString_(connectString){
         env = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::THREADED_MUTEXED);
         if (env) {
             conn = env->createConnection(username, password, connectString);
-	    conn->setStmtCacheSize(150);	    
+	    conn->setStmtCacheSize(300);	    
         }
     } catch (oracle::occi::SQLException const &e) {
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
