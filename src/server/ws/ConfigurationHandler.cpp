@@ -154,19 +154,19 @@ void ConfigurationHandler::parse(string configuration) {
 		vo = parser.get<string>("vo");
 		if (!vo) throw Err_Custom("The 'vo' has to be specified!");
 
-		if (db->checkIfSymbolicNameExists(*cfg_name, *vo))
+		if (!db->checkIfSymbolicNameExists(*cfg_name, *vo))
 			throw Err_Custom("The symbolic name does not exist for the given vo!");
 
-		if (db->checkGroupExists(*name))
+		if (!db->checkGroupExists(*name))
 			throw Err_Custom("The given group does not exist!");
 
-		if (db->checkIfSeIsMemberOfGroup(*name, *member))
+		if (!db->checkIfSeIsMemberOfGroup(*name, *member))
 			throw Err_Custom("The se is not a member of the given group!");
 
-		if (db->checkVOForMemberOfGroup(*cfg_name, *vo))
+		if (!db->checkVOForMemberOfGroup(*cfg_name, *vo))
 			throw Err_Custom("The VO configuration does not exist for the given symbolic name!");
 
-		if (db->checkCreditsForMemberOfGroup(*cfg_name, *vo, *active_transfers))
+		if (!db->checkCreditsForMemberOfGroup(*cfg_name, *vo, *active_transfers))
 			throw Err_Custom("The number of active transfers that has been specified ex");
 
 		break;
