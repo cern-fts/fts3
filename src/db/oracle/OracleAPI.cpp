@@ -3683,7 +3683,7 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
 
 void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers){
 	std::string tag="addMemberToGroup";
-	std::string query = "insert into t_group_members(member) values(:1) where groupName=:2";
+	std::string query = "insert into t_group_members(member, groupName) values(:1, :2)";
 	oracle::occi::Statement* s = NULL;
 	std::vector<std::string>::const_iterator iter;
 	
