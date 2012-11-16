@@ -92,7 +92,7 @@ void ConfigurationHandler::parse(string configuration) {
 			if (db->checkIfSeIsMemberOfAnotherGroup(*it)) {
 				// if its a member of other group throw an exception
 				throw Err_Custom (
-						"The SE: " + *it + " is already a member of another SE group (" + gr + ")!"
+						"The SE: " + *it + " is already a member of another SE group!"
 					);
 			}
 		}
