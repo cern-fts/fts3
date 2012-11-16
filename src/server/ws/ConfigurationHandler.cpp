@@ -101,7 +101,7 @@ void ConfigurationHandler::parse(string configuration) {
 	}
 	case CfgParser::TRANSFER_CFG:
 		// configuration name
-		cfg_name = parser.get<string>("config_name"); // TODO check if the symbolic name was not used for different pair
+		cfg_name = parser.get<string>("config_name");
 		if (!cfg_name)  throw Err_Custom("The symbolic name of the configuration has to be specified!");
 		to_lower(*cfg_name);
 		// get the source se
@@ -128,6 +128,12 @@ void ConfigurationHandler::parse(string configuration) {
 		state = parser.get<string>("state");
 		if (!state) throw Err_Custom("The configuration state has to be specified!");
 		if (*state != CfgParser::on && *state != CfgParser::off) throw Err_Custom("The configuration state has to be either 'on' or 'off'");
+
+		if (db->checkIfSymbolicNameExists(*cfg_name, string())) {
+			if (!db->checkIfSymbolicNameExistsForSrcDest(*cfg_name, source.get().get<0>(), destination.get().get<0>())) {
+				throw Err_Custom("The given configuration name exists already for different source - destination pair!");
+			}
+		}
 
 		break;
 	case CfgParser::SE_TRANSFER_CFG:
@@ -191,7 +197,6 @@ void ConfigurationHandler::checkSe(string name) {
 
 void ConfigurationHandler::checkGroup(string name) {
 	// check if the group exists
-	// TODO if the group does not exist check BDII and import it if it's there
 	if (!db->checkGroupExists(name)) {
 		throw Err_Custom(
 				"The group: " +  name + " does not exist!"
@@ -277,12 +282,13 @@ void ConfigurationHandler::addTransferConfiguration() {
 	cfg->vo = *vo;
 	cfg->state = *state;
 
-	if (update)
+	if (update) {
 		// update
 		db->updateConfig(cfg.get());
-	else
+	} else {
 		// insert
 		db->addNewConfig(cfg.get());
+	}
 }
 
 void ConfigurationHandler::addSeTransferConfiguration() {
