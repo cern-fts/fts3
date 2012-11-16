@@ -402,9 +402,10 @@ vector<string> ConfigurationHandler::getGroupCfg(string cfg_name, string name, s
 		scoped_ptr<SeGroup> sg (
 					db->getGroupConfig(cfg_name, name, *it, vo)
 				);
-		ret.push_back(
-				buildSeCfg(sg.get())
-			);
+		if (sg.get())
+			ret.push_back(
+					buildSeCfg(sg.get())
+				);
 
 	}
 
