@@ -238,8 +238,6 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
 		}
 	}
 
-	return lvl; // TODO to be removed when clients will have proxy certs with Roles
-
 	// if access was not granted throw an exception
 	if (lvl != NONE) return lvl;
 	else {
@@ -294,7 +292,7 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
 		msg += "' level!";
 
 		// TODO to be uncommented when clients will have proxy certs with Roles
-//		throw Err_Custom(msg);
+		throw Err_Custom(msg);
 	}
 
 	return grantedLvl;
