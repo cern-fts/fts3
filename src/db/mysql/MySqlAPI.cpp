@@ -2148,16 +2148,6 @@ void MySqlAPI::deleteProtocol(int protocolId){
 void MySqlAPI::updateProtocol(SeProtocolConfig* config, int protocolId){
 }         
     
-    //t_group_config
-SeGroup* MySqlAPI::getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo){
-}
-void MySqlAPI::addGroupConfig(SeGroup* seGroup){
-}
-void MySqlAPI::deleteGroupConfig(SeGroup* seGroup){
-}
-void MySqlAPI::updateGroupConfig(SeGroup* seGroup){
-}
-    
     //t_config
 std::vector<SeConfig*>  MySqlAPI::getConfig(const std::string & source,const std::string & dest, const std::string & vo){
 }

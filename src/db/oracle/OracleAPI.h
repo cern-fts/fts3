@@ -213,15 +213,7 @@ public:
     virtual void deleteProtocol(int protocolId);       
     
     virtual void updateProtocol(SeProtocolConfig* config, int protocolId);           
-    
-    //t_group_config
-    virtual SeGroup* getGroupConfig(const std::string & symbolicName, const std::string & groupName, const std::string & member, const std::string & vo);
-    
-    virtual void addGroupConfig(SeGroup* seGroup);    
-    
-    virtual void deleteGroupConfig(SeGroup* seGroup);
-    
-    virtual void updateGroupConfig(SeGroup* seGroup);            
+   
     
     //t_config
     virtual std::vector<SeConfig*> getConfig(const std::string & source,const std::string & dest, const std::string & vo);

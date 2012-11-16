@@ -325,6 +325,10 @@ int ExecuteProcess::execProcessShell() {
         close(pipefds[0]);
         char *token;
         path = getenv("PATH");
+	if (path == NULL || path[0] == '\0') {
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to getenv PATH" << commit;
+	}
+	
         copy = (char *) malloc(strlen(path) + 1);     
         strcpy(copy, path);
         token = strtok(copy, ":");
