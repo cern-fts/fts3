@@ -87,20 +87,16 @@ void ConfigurationHandler::parse(string configuration) {
 			//check if SE exists
 			checkSe(*it);
 			// check if the se is already a member of the given group
-			if (db->checkIfSeIsMemberOfGroup(*name, *member)) continue;
-			// check if the SE is a member of a group
-			string gr; // TODO check if the se belongs to a group already
-			if (gr.empty()) {
-				// if not, add it to the group
-				db->addGroupMember(*name, *it);
-				insertCount++;
-			} else {
+			if (db->checkIfSeIsMemberOfGroup(*name, *it)) continue;
+			// check if the SE is a member of another group
+			if (db->checkIfSeIsMemberOfAnotherGroup(*it)) {
 				// if its a member of other group throw an exception
 				throw Err_Custom (
 						"The SE: " + *it + " is already a member of another SE group (" + gr + ")!"
 					);
 			}
 		}
+		db->addMemberToGroup(*name, *members);
 		break;
 	}
 	case CfgParser::TRANSFER_CFG:
