@@ -30,7 +30,7 @@
 #include <vector>
 #include <boost/optional.hpp>
 
-#include "common/json/CfgParser.h"
+#include "common/CfgParser.h"
 
 
 namespace fts3 { namespace cli {
