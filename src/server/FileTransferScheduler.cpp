@@ -42,23 +42,23 @@ using namespace db;
 FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<TransferFiles*> otherFiles) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
 
-	if(file){
-		this->file = file;
-	// prepare input for SE part
-	// TODO check if initialized
-	srcSeName = CfgBlocks::fileUrlToSeName(file->SOURCE_SURL).get();
-
-	// TODO check if initialized
-	destSeName = CfgBlocks::fileUrlToSeName(file->DEST_SURL).get();
-
-	voName = file->VO_NAME;
-
-	// prepare input for group part
-	srcGroupName = db->get_group_name(srcSeName);
-	destGroupName = db->get_group_name(destSeName);
-
-	initVosInQueue(otherFiles);
-       }	
+//	if(file){
+//		this->file = file;
+//	// prepare input for SE part
+//	// TODO check if initialized
+//	srcSeName = CfgBlocks::fileUrlToSeName(file->SOURCE_SURL).get();
+//
+//	// TODO check if initialized
+//	destSeName = CfgBlocks::fileUrlToSeName(file->DEST_SURL).get();
+//
+//	voName = file->VO_NAME;
+//
+//	// prepare input for group part
+//	srcGroupName = db->get_group_name(srcSeName);
+//	destGroupName = db->get_group_name(destSeName);
+//
+//	initVosInQueue(otherFiles);
+//       }
 }
 
 FileTransferScheduler::~FileTransferScheduler() {
@@ -85,12 +85,12 @@ optional< tuple<int, int, string> > FileTransferScheduler::getValue(string type,
 	if (!seAndConfig.empty()) {
 
 		// parse the string
-		val = CfgBlocks::getShareValue(
-				(*seAndConfig.begin())->SHARE_VALUE
-			);
+//		val = CfgBlocks::getShareValue(
+//				(*seAndConfig.begin())->SHARE_VALUE
+//			);
 
 		// free the memory
-		delete *seAndConfig.begin();
+//		delete *seAndConfig.begin();
 
 	}
 
@@ -101,56 +101,56 @@ int FileTransferScheduler::getCreditsInUse(IO io, Share share, const string type
 
 	int creditsInUse = 0;
 
-	string srcSeName, destSeName, srcGroupName, destGroupName, voName;
-
-	switch (share) {
-	// if we are interested in voshare set vo's name
-	case VO:
-		voName = this->voName;
-		break;
-	// if we are interested in pairshare set both src and dest
-	case PAIR:
-		srcSeName = this->srcSeName;
-		srcGroupName = this->srcGroupName;
-		destSeName = this->destSeName;
-		destGroupName = this->destGroupName;
-		break;
-	// otherwise (e.g. public share) do nothing
-	default: break;
-	}
-
-	switch (io) {
-	// if we are interested in outbound set the src
-	case CfgBlocks::OUTBOUND:
-		srcSeName = this->srcSeName;
-		srcGroupName = this->srcGroupName;
-		break;
-	// if we are interested in inbound set the dest
-	case CfgBlocks::INBOUND:
-		destSeName = this->destSeName;
-		destGroupName = this->destGroupName;
-		break;
-	}
-
-	// query for the credits in DB
-	if (type == CfgBlocks::SE_TYPE) {
-		// we are looking for SE credits
-//		db->getSeCreditsInUse (
-//				creditsInUse,
-//				srcSeName,
-//				destSeName,
-//				voName
-//			);
-
-	} else {
-		// we are looking for SE group credits
-//		db->getGroupCreditsInUse (
-//				creditsInUse,
-//				srcGroupName,
-//				destGroupName,
-//				voName
-//			);
-	}
+//	string srcSeName, destSeName, srcGroupName, destGroupName, voName;
+//
+//	switch (share) {
+//	// if we are interested in voshare set vo's name
+//	case VO:
+//		voName = this->voName;
+//		break;
+//	// if we are interested in pairshare set both src and dest
+//	case PAIR:
+//		srcSeName = this->srcSeName;
+//		srcGroupName = this->srcGroupName;
+//		destSeName = this->destSeName;
+//		destGroupName = this->destGroupName;
+//		break;
+//	// otherwise (e.g. public share) do nothing
+//	default: break;
+//	}
+//
+//	switch (io) {
+//	// if we are interested in outbound set the src
+//	case CfgBlocks::OUTBOUND:
+//		srcSeName = this->srcSeName;
+//		srcGroupName = this->srcGroupName;
+//		break;
+//	// if we are interested in inbound set the dest
+//	case CfgBlocks::INBOUND:
+//		destSeName = this->destSeName;
+//		destGroupName = this->destGroupName;
+//		break;
+//	}
+//
+//	// query for the credits in DB
+//	if (type == CfgBlocks::SE_TYPE) {
+//		// we are looking for SE credits
+////		db->getSeCreditsInUse (
+////				creditsInUse,
+////				srcSeName,
+////				destSeName,
+////				voName
+////			);
+//
+//	} else {
+//		// we are looking for SE group credits
+////		db->getGroupCreditsInUse (
+////				creditsInUse,
+////				srcGroupName,
+////				destGroupName,
+////				voName
+////			);
+//	}
 
 	return creditsInUse;
 }
@@ -163,41 +163,41 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 	stringstream log;
 
 	// if the SE does not belong to a SE group
-	if (name.empty() && type == CfgBlocks::GROUP_TYPE) {
+//	if (name.empty() && type == CfgBlocks::GROUP_TYPE) {
+//
+//		log << (io == INBOUND ? "Destination SE " : "Source SE ");
+//		log << "is not a member of a group therefore there are no group-related constraints";
+//		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+//
+//		return FREE_CREDITS;
+//	}
 
-		log << (io == INBOUND ? "Destination SE " : "Source SE ");
-		log << "is not a member of a group therefore there are no group-related constraints";
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
-
-		return FREE_CREDITS;
-	}
-
-	log << (type == CfgBlocks::SE_TYPE ? "SE: " : "SE group: ");
+//	log << (type == CfgBlocks::SE_TYPE ? "SE: " : "SE group: ");
 	log << name << " ";
 
 	optional< tuple<int, int, string> > val;
 
-	switch (share) {
-	// we are looking for VO share
-	case VO:
-		val = getValue(type, name, CfgBlocks::voShare(param));
-		break;
-	// we are looking for PAIR share
-	case PAIR:
-		val = getValue(type, name, CfgBlocks::pairShare(param));
-		// if there is no cfg there are no constraints
-		if (!val.is_initialized()) {
-
-			log << " has no pair-share configuration for ";
-			log << param << " therefore there are no pair-related constraints";
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
-
-			return FREE_CREDITS;
-		}
-		break;
-	// otherwise do nothing
-	default: break;
-	}
+//	switch (share) {
+//	// we are looking for VO share
+//	case VO:
+//		val = getValue(type, name, CfgBlocks::voShare(param));
+//		break;
+//	// we are looking for PAIR share
+//	case PAIR:
+//		val = getValue(type, name, CfgBlocks::pairShare(param));
+//		// if there is no cfg there are no constraints
+//		if (!val.is_initialized()) {
+//
+//			log << " has no pair-share configuration for ";
+//			log << param << " therefore there are no pair-related constraints";
+//			FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+//
+//			return FREE_CREDITS;
+//		}
+//		break;
+//	// otherwise do nothing
+//	default: break;
+//	}
 
 	// if a cfg has been found, look for the number of credits in use, and return the difference
 	if (val.is_initialized()) {
@@ -220,38 +220,38 @@ int FileTransferScheduler::getFreeCredits(IO io, Share share, const string type,
 	// look for the number of credits in use for public share (it will be the same for default)
 	int creditsInUse = getCreditsInUse(io, PUBLIC, type);
 
-	// look for public share
-	val = getValue(type, name, CfgBlocks::publicShare());
-
-	// if a cfg has been found, and return the difference
-	if (val.is_initialized()) {
-
-		int credits  = getCredits(val.get(), io);
-
-		log << ", using public-share configuration: ";
-		log << credits;
-		log << (io == INBOUND ? " inbound cerdits, " : " outbound credits, ");
-		log << "currently " << creditsInUse << " in use";
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
-
-		return credits - creditsInUse;
-	}
-
-	log << " and no public-share configuration";
-
-	if (type == CfgBlocks::GROUP_TYPE) {
-
-		log << ", therefore there are no group-related constraints";
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
-
-		return FREE_CREDITS;
-	}
-
-	log << ", using default configuration: ";
-	log << DEFAULT_VALUE;
-	log << (io == INBOUND ? " inbound cerdits, " : " outbound credits, ");
-	log << "currently " << creditsInUse << " in use";
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+//	// look for public share
+//	val = getValue(type, name, CfgBlocks::publicShare());
+//
+//	// if a cfg has been found, and return the difference
+//	if (val.is_initialized()) {
+//
+//		int credits  = getCredits(val.get(), io);
+//
+//		log << ", using public-share configuration: ";
+//		log << credits;
+//		log << (io == INBOUND ? " inbound cerdits, " : " outbound credits, ");
+//		log << "currently " << creditsInUse << " in use";
+//		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+//
+//		return credits - creditsInUse;
+//	}
+//
+//	log << " and no public-share configuration";
+//
+//	if (type == CfgBlocks::GROUP_TYPE) {
+//
+//		log << ", therefore there are no group-related constraints";
+//		FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
+//
+//		return FREE_CREDITS;
+//	}
+//
+//	log << ", using default configuration: ";
+//	log << DEFAULT_VALUE;
+//	log << (io == INBOUND ? " inbound cerdits, " : " outbound credits, ");
+//	log << "currently " << creditsInUse << " in use";
+//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << log.str() << commit;
 
 	// otherwise return the difference for the default value
 	return DEFAULT_VALUE - creditsInUse;
@@ -273,37 +273,37 @@ bool FileTransferScheduler::schedule(bool optimize, bool manualConfig) {
 		return false;
 	}
 
-	if (getFreeCredits(OUTBOUND, VO, CfgBlocks::SE_TYPE, srcSeName, voName) <= 0) {
-		return false;
-	}
-
-	if (getFreeCredits(INBOUND, VO, CfgBlocks::SE_TYPE, destSeName, voName) <= 0) {
-		return false;
-	}
-
-	if (getFreeCredits(OUTBOUND, PAIR, CfgBlocks::SE_TYPE, srcSeName, destSeName) <= 0) {
-		return false;
-	}
-
-	if (getFreeCredits(INBOUND, PAIR, CfgBlocks::SE_TYPE, destSeName, srcSeName) <= 0) {
-		return false;
-	}
-
-	if (getFreeCredits(OUTBOUND, VO, CfgBlocks::GROUP_TYPE, srcGroupName, voName) <= 0) {
-		return false;
-	}
-
-	if (getFreeCredits(INBOUND, VO, CfgBlocks::GROUP_TYPE, destGroupName, voName) <= 0) {
-		return false;
-	}
-
-	if (getFreeCredits(OUTBOUND, PAIR, CfgBlocks::GROUP_TYPE, srcGroupName, destGroupName) <= 0) {
-		return false;
-	}
-
-	if (getFreeCredits(INBOUND, PAIR, CfgBlocks::GROUP_TYPE, destGroupName, srcGroupName) <= 0) {
-		return false;
-	}
+//	if (getFreeCredits(OUTBOUND, VO, CfgBlocks::SE_TYPE, srcSeName, voName) <= 0) {
+//		return false;
+//	}
+//
+//	if (getFreeCredits(INBOUND, VO, CfgBlocks::SE_TYPE, destSeName, voName) <= 0) {
+//		return false;
+//	}
+//
+//	if (getFreeCredits(OUTBOUND, PAIR, CfgBlocks::SE_TYPE, srcSeName, destSeName) <= 0) {
+//		return false;
+//	}
+//
+//	if (getFreeCredits(INBOUND, PAIR, CfgBlocks::SE_TYPE, destSeName, srcSeName) <= 0) {
+//		return false;
+//	}
+//
+//	if (getFreeCredits(OUTBOUND, VO, CfgBlocks::GROUP_TYPE, srcGroupName, voName) <= 0) {
+//		return false;
+//	}
+//
+//	if (getFreeCredits(INBOUND, VO, CfgBlocks::GROUP_TYPE, destGroupName, voName) <= 0) {
+//		return false;
+//	}
+//
+//	if (getFreeCredits(OUTBOUND, PAIR, CfgBlocks::GROUP_TYPE, srcGroupName, destGroupName) <= 0) {
+//		return false;
+//	}
+//
+//	if (getFreeCredits(INBOUND, PAIR, CfgBlocks::GROUP_TYPE, destGroupName, srcGroupName) <= 0) {
+//		return false;
+//	}
 
 	// update file state to READY
 	unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
@@ -317,20 +317,20 @@ bool FileTransferScheduler::schedule(bool optimize, bool manualConfig) {
 void FileTransferScheduler::initVosInQueue(vector<TransferFiles*> files) {
 
 	vector<TransferFiles*>::iterator it;
-	for (it = files.begin(); it < files.begin(); it++) {
-
-		TransferFiles* tmp = *it;
-		string srcSeName = CfgBlocks::fileUrlToSeName(tmp->SOURCE_SURL).get();
-		string destSeName = CfgBlocks::fileUrlToSeName(tmp->DEST_SURL).get();
-
-		if (srcSeName == this->srcSeName) {
-			vosInQueueOut.insert(tmp->VO_NAME);
-		}
-
-		if (destSeName == this->destSeName) {
-			vosInQueueIn.insert(tmp->VO_NAME);
-		}
-	}
+//	for (it = files.begin(); it < files.begin(); it++) {
+//
+//		TransferFiles* tmp = *it;
+//		string srcSeName = CfgBlocks::fileUrlToSeName(tmp->SOURCE_SURL).get();
+//		string destSeName = CfgBlocks::fileUrlToSeName(tmp->DEST_SURL).get();
+//
+//		if (srcSeName == this->srcSeName) {
+//			vosInQueueOut.insert(tmp->VO_NAME);
+//		}
+//
+//		if (destSeName == this->destSeName) {
+//			vosInQueueIn.insert(tmp->VO_NAME);
+//		}
+//	}
 }
 
 // SE only TODO
@@ -403,49 +403,49 @@ int FileTransferScheduler::resolveSharedCredits(const string type, string name, 
 	vector<SeAndConfig*>::iterator it;
 	for (it = seAndConfig.begin(); it < seAndConfig.end(); it++) {
 
-		SeAndConfig* cfg = *it;
-
-		// share id (vo or public)
-		string share_id = cfg->SHARE_ID;
-		// parse the share_id string
-		optional< tuple<string, string> > id = CfgBlocks::getShareId(share_id);
+//		SeAndConfig* cfg = *it;
+//
+//		// share id (vo or public)
+//		string share_id = cfg->SHARE_ID;
+//		// parse the share_id string
+//		optional< tuple<string, string> > id = CfgBlocks::getShareId(share_id);
 
 		// vo or public
-		string type = get<CfgBlocks::TYPE>(id.get());
-		// vo name or empty if its public share
-		string vo = get<CfgBlocks::ID>(id.get());
+//		string type = get<CfgBlocks::TYPE>(id.get());
+//		// vo name or empty if its public share
+//		string vo = get<CfgBlocks::ID>(id.get());
+//
+//		// share value
+//		string share_value = cfg->SHARE_VALUE;
+//		// parse the share_value string
+//		optional< tuple<int, int, string> > val = CfgBlocks::getShareValue(share_value);
+//
+//		int value;
+//		switch (io) {
+//		case CfgBlocks::INBOUND:
+//			value = get<CfgBlocks::INBOUND>(val.get());
+//			break;
+//		case CfgBlocks::OUTBOUND:
+//			value = get<CfgBlocks::OUTBOUND>(val.get());
+//			break;
+//		}
 
-		// share value
-		string share_value = cfg->SHARE_VALUE;
-		// parse the share_value string
-		optional< tuple<int, int, string> > val = CfgBlocks::getShareValue(share_value);
-
-		int value;
-		switch (io) {
-		case CfgBlocks::INBOUND:
-			value = get<CfgBlocks::INBOUND>(val.get());
-			break;
-		case CfgBlocks::OUTBOUND:
-			value = get<CfgBlocks::OUTBOUND>(val.get());
-			break;
-		}
-
-		sumAll += value;
-
-		if (cfg->SE_NAME == name) {
-			credits = value;
-		}
-
-		if (vo.empty()) {
-			// it is public-share
-			if(!vosUsingPublic.empty()) {
-				// some VOs are using it
-				sumInQueue += value;
-			}
-		} else if (vosInQueue.find(vo) != vosInQueue.end()) {
-			// it is vo-share and the VO is not amongst VOs that have pending files
-			sumInQueue += value;
-		}
+//		sumAll += value;
+//
+//		if (cfg->SE_NAME == name) {
+//			credits = value;
+//		}
+//
+//		if (vo.empty()) {
+//			// it is public-share
+//			if(!vosUsingPublic.empty()) {
+//				// some VOs are using it
+//				sumInQueue += value;
+//			}
+//		} else if (vosInQueue.find(vo) != vosInQueue.end()) {
+//			// it is vo-share and the VO is not amongst VOs that have pending files
+//			sumInQueue += value;
+//		}
 	}
 
 	return credits / sumInQueue * (sumAll/*TODO - allSharedCreditsInUse*/);

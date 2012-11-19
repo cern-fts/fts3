@@ -33,10 +33,13 @@
 #include <map>
 #include <vector>
 
-using namespace std;
-using namespace fts3::common;
+#include <boost/regex.hpp>
 
 namespace fts3 { namespace ws {
+
+using namespace std;
+using namespace fts3::common;
+using namespace boost;
 
 /**
  * The JobSubmitter class takes care of submitting transfers
@@ -136,6 +139,14 @@ private:
 	 * @return true if its a logical file name
 	 */
 	bool checkIfLfn(string file);
+
+	///
+	static const regex fileUrlRegex;
+
+	/**
+	 *
+	 */
+	string fileUrlToSeName(string url);
 };
 
 }

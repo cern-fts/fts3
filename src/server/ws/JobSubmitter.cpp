@@ -28,18 +28,20 @@
 
 #include "common/logger.h"
 #include "common/error.h"
-#include "CfgBlocks.h"
 
 #include "CGsiAdapter.h"
 #include "GSoapDelegationHandler.h"
 
 #include <boost/lexical_cast.hpp>
+
 #include <algorithm>
 
 
-using namespace boost;
 using namespace db;
 using namespace fts3::ws;
+
+
+const regex JobSubmitter::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
 
@@ -81,8 +83,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 		string* src = (*job->transferJobElements.begin())->source;
 		string* dest = (*job->transferJobElements.begin())->dest;
 
-		sourceSe = CfgBlocks::fileUrlToSeName(*src).get();
-		destinationSe = CfgBlocks::fileUrlToSeName(*dest).get();
+		sourceSe = fileUrlToSeName(*src);
+		destinationSe = fileUrlToSeName(*dest);
 		if(sourceSe.length()==0){
 			std::string errMsg = "Can't extract hostname from url " + *src;
 			throw Err_Custom(errMsg);
@@ -140,8 +142,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
                 string* src = (*job->transferJobElements.begin())->source;
                 string* dest = (*job->transferJobElements.begin())->dest;
 
-                sourceSe = CfgBlocks::fileUrlToSeName(*src).get();
-                destinationSe = CfgBlocks::fileUrlToSeName(*dest).get();
+                sourceSe = fileUrlToSeName(*src);
+                destinationSe = fileUrlToSeName(*dest);
         }
 
 
@@ -229,3 +231,16 @@ bool JobSubmitter::checkProtocol(string file) {
 bool JobSubmitter::checkIfLfn(string file) {
 	return file.find("/") == 0 && file.find(";") == string::npos && file.find(":") == string::npos;
 }
+
+string JobSubmitter::fileUrlToSeName(string url) {
+
+	smatch what;
+	if (regex_match(url, what, fileUrlRegex, match_extra)) {
+
+		// indexes are shifted by 1 because at index 0 is the whole string
+		return string(what[1]);
+
+	} else
+		return string();
+}
+

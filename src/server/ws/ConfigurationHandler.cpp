@@ -447,7 +447,14 @@ vector<string> ConfigurationHandler::doGet(SeConfig* cfg) {
 	return ret;
 }
 
-vector<string> ConfigurationHandler::get(string src, string dest, string vo) {
+vector<string> ConfigurationHandler::getStandalone(string name) {
+
+	vector<string> ret;
+
+	return ret;
+}
+
+vector<string> ConfigurationHandler::getPair(string src, string dest) {
 
 //	to_lower(vo);
 //	vector<SeConfig*> vec = db->getConfig(src, dest, vo);
@@ -473,18 +480,15 @@ vector<string> ConfigurationHandler::get(string src, string dest, string vo) {
 	return ret;
 }
 
-vector<string> ConfigurationHandler::get(string cfg_name, string vo) {
+vector<string> ConfigurationHandler::getSymbolic(string cfg_name) {
 
-	to_lower(vo);
 	to_lower(cfg_name);
 
-	to_lower(vo);
-	vector<SeConfig*> vec = db->getConfig(cfg_name, vo);
+	vector<SeConfig*> vec = db->getConfig(cfg_name, string());
 
 	if (vec.empty()) {
 		throw Err_Custom(
-				"A configuration for symboli name: " + cfg_name +
-				(vo.empty() ? "" : " and for vo: " + vo)
+				"A configuration for symboli name: " + cfg_name
 				+ " does not exist!"
 			);
 	}

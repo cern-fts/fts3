@@ -1,6 +1,6 @@
 /*
  *	Copyright notice:
- *	Copyright © Members of the EMI Collaboration, 2010.
+ *	Copyright ï¿½ Members of the EMI Collaboration, 2010.
  *
  *	See www.eu-emi.eu for details on the copyright holders
  *
@@ -35,8 +35,6 @@
 #include <boost/optional.hpp>
 
 #include "db/generic/SingleDbInstance.h"
-
-#include "common/CfgBlocks.h"
 
 using namespace std;
 using namespace boost;
@@ -142,10 +140,7 @@ private:
 	 * @return the number of outbound/inbound credits
 	 */
 	int getCredits(tuple<int, int, string> val, IO io) {
-		switch (io) {
-		case INBOUND: return get<CfgBlocks::INBOUND>(val);
-		case OUTBOUND: return get<CfgBlocks::OUTBOUND>(val);
-		}
+		return 0;
 	}
 
 	/**

@@ -38,8 +38,7 @@
 
 #include "common/error.h"
 #include "common/logger.h"
-#include "common/CfgBlocks.h"
-#include "common/CfgParser.h"
+#include "common/json/CfgParser.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -182,9 +181,18 @@ public:
 	 *
 	 * @return vector containing single configuration entries in JSON format
 	 */
-	vector<string> get(string cfg_name, string vo);
 
-	vector<string> get(string src, string dest, string vo);
+	vector<string> getStandalone(string name);
+
+	/**
+	 *
+	 */
+	vector<string> getSymbolic(string cfg_name);
+
+	/**
+	 *
+	 */
+	vector<string> getPair(string src, string dest);
 
 	/**
 	 * Deletes the configuration specified by the argument
