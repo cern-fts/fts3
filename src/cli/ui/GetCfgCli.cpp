@@ -29,7 +29,7 @@ using namespace fts3::cli;
 GetCfgCli::GetCfgCli(): VoNameCli(false) {
 
 	specific.add_options()
-					("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
+					("symbolic name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
 					;
 }
 
@@ -37,7 +37,7 @@ GetCfgCli::~GetCfgCli() {
 }
 
 string GetCfgCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options]";
+	return "Usage: " + tool + " [options] [STANDALONE_CFG | SOURCE DESTINATION]";
 }
 
 string GetCfgCli::getName() {
@@ -47,5 +47,19 @@ string GetCfgCli::getName() {
 	}
 
 	return string();
+}
+
+optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {
+
+	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+
+	bool standalone = !getSource().empty();
+	bool pair = standalone && !getDestination().empty();
+
+	if ( (standalone || pair) && !getName().empty()) {
+		throw string("You may specify either a stand alone configuration, pair configuration or the symbolic name for querying!");
+	}
+
+	return *ctx;
 }
 
