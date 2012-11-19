@@ -38,7 +38,7 @@
 
 #include "common/error.h"
 #include "common/logger.h"
-#include "common/json/CfgParser.h"
+#include "common/CfgParser.h"
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -248,7 +248,6 @@ private:
 	 * Checks if the SE exists if not adds it to the DB
 	 */
 	void handleSe(string name, bool active = true);
-
 
 	/**
 	 *
