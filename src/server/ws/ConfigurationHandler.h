@@ -239,18 +239,18 @@ private:
 	/**
 	 * Checks if the SE exists if not adds it to the DB
 	 */
-	void checkSe(string name);
+	void handleSe(string name, bool active = true);
+
 
 	/**
 	 *
 	 */
-	void checkGroup(string name);
+	void handleGrMember(string gr, vector<string> members);
 
 	/**
 	 *
 	 */
-	void checkEntity(tuple<string, bool> ent);
-
+	void handleGroup(string name);
 
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;

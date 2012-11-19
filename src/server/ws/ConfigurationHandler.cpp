@@ -82,6 +82,9 @@ void ConfigurationHandler::parse(string configuration) {
 		seCfg.in_protocol = parser.get< map<string, int> >("in.protocol");
 		seCfg.out_share = parser.get< map<string, int> >("out.share");
 		seCfg.out_protocol = parser.get< map<string, int> >("out.protocol");
+
+		handleSe(seCfg.se, seCfg.active);
+
 		break;
 	case CfgParser::STANDALONE_GR_CFG:
 		grCfg.group = parser.get<string>("group");
@@ -91,20 +94,33 @@ void ConfigurationHandler::parse(string configuration) {
 		grCfg.in_protocol = parser.get< map<string, int> >("in.protocol");
 		grCfg.out_share = parser.get< map<string, int> >("out.share");
 		grCfg.out_protocol = parser.get< map<string, int> >("out.protocol");
+
+		handleGrMember(grCfg.group, grCfg.members);
+
 		break;
 	case CfgParser::SE_PAIR_CFG:
 		pairCfg.symbolic_name = parser.get<string>("symbolic_name");
-		pairCfg.source = parser.get<string>("source");
-		pairCfg.destination = parser.get<string>("destination");
+		pairCfg.source = parser.get<string>("source_se");
+		pairCfg.destination = parser.get<string>("destination_se");
 		pairCfg.share = parser.get< map<string, int> >("share");
 		pairCfg.protocol = parser.get< map<string, int> >("protocol");
+		pairCfg.active = parser.get<bool>("active");
+
+		handleSe(pairCfg.source);
+		handleSe(pairCfg.destination);
+
 		break;
 	case CfgParser::GR_PAIR_CFG:
 		pairCfg.symbolic_name = parser.get<string>("symbolic_name");
-		pairCfg.source = parser.get<string>("source");
-		pairCfg.destination = parser.get<string>("destination");
+		pairCfg.source = parser.get<string>("source_group");
+		pairCfg.destination = parser.get<string>("destination_group");
 		pairCfg.share = parser.get< map<string, int> >("share");
 		pairCfg.protocol = parser.get< map<string, int> >("protocol");
+		pairCfg.active = parser.get<bool>("active");
+
+		handleGroup(pairCfg.source);
+		handleGroup(pairCfg.destination);
+
 		break;
 	default:
 		throw Err_Custom("Wrong configuration format!");
@@ -115,20 +131,20 @@ ConfigurationHandler::~ConfigurationHandler() {
 
 }
 
-void ConfigurationHandler::checkSe(string name) {
+void ConfigurationHandler::handleSe(string name, bool active) {
 
 	//check if SE exists
 	Se* ptr = 0;
 	db->getSe(ptr, name);
 	if (!ptr) {
 		// if not add it to the DB
-		db->addSe(string(), string(), string(), name, string(), string(), string(), string(), string(), string(), string());
+		db->addSe(string(), string(), string(), name, active ? "on" : "off", string(), string(), string(), string(), string(), string());
 		insertCount++;
 	} else
 		delete ptr;
 }
 
-void ConfigurationHandler::checkGroup(string name) {
+void ConfigurationHandler::handleGroup(string name) {
 	// check if the group exists
 	if (!db->checkGroupExists(name)) {
 		throw Err_Custom(
@@ -137,14 +153,14 @@ void ConfigurationHandler::checkGroup(string name) {
 	}
 }
 
-void ConfigurationHandler::checkEntity(tuple<string, bool> ent) {
-	if (ent.get<1>()) {
-		// source is a group
-		checkGroup(ent.get<0>());
-	} else {
-		// source is a se
-		checkSe(ent.get<0>());
+void ConfigurationHandler::handleGrMember(string gr, vector<string> members) {
+
+	vector<string>::iterator it;
+	for (it = members.begin(); it != members.end(); it++) {
+		handleSe(*it);
 	}
+
+	db->addMemberToGroup(gr, members);
 }
 
 void ConfigurationHandler::add() {
@@ -175,8 +191,6 @@ void ConfigurationHandler::add() {
 
 void ConfigurationHandler::addStandaloneSeCfg() {
 
-	// TODO active state in t_se
-
 	map<string, int>::iterator it;
 	// create  '* -> se' record
 	for (it = seCfg.in_share.begin(); it != seCfg.in_share.end(); it++) {
@@ -203,8 +217,6 @@ void ConfigurationHandler::addStandaloneSeCfg() {
 }
 
 void ConfigurationHandler::addStandaloneGrCfg() {
-
-	// TODO active state in t_se_group
 
 	map<string, int>::iterator it;
 	// create  '* -> group' record
@@ -249,7 +261,7 @@ void ConfigurationHandler::addPairCfg() {
 void ConfigurationHandler::addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol) {
 
 	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
-	int id = db->getProtocolIdFromConfig(source, destination, share.first);
+	int id = db->getProtocolIdFromConfig(source, destination, share.first); // TODO remove protocol per vo!
 	if (id) {
 		// update
 		db->updateProtocol(pc.get(), id);
