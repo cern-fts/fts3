@@ -25,7 +25,7 @@
 #ifndef CONFIGURATIONPARSER_H_
 #define CONFIGURATIONPARSER_H_
 
-#include "error.h"
+#include "common/error.h"
 
 #include <set>
 #include <map>
