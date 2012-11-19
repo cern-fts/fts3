@@ -37,6 +37,20 @@
 
 using namespace db;
 
+const regex FileTransferScheduler::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+
+string FileTransferScheduler::fileUrlToSeName(string url) {
+
+	smatch what;
+	if (regex_match(url, what, fileUrlRegex, match_extra)) {
+
+		// indexes are shifted by 1 because at index 0 is the whole string
+		return string(what[1]);
+
+	} else
+		return string();
+}
+
 //const string FileTransferScheduler::seNameRegex = ".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+";
 
 FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<TransferFiles*> otherFiles) :
@@ -46,10 +60,10 @@ FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<Transfe
 //		this->file = file;
 //	// prepare input for SE part
 //	// TODO check if initialized
-//	srcSeName = CfgBlocks::fileUrlToSeName(file->SOURCE_SURL).get();
+	srcSeName = fileUrlToSeName(file->SOURCE_SURL);
 //
 //	// TODO check if initialized
-//	destSeName = CfgBlocks::fileUrlToSeName(file->DEST_SURL).get();
+	destSeName = fileUrlToSeName(file->DEST_SURL);
 //
 //	voName = file->VO_NAME;
 //

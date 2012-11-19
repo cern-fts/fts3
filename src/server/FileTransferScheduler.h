@@ -33,6 +33,7 @@
 
 #include "boost/tuple/tuple.hpp"
 #include <boost/optional.hpp>
+#include <boost/regex.hpp>
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -176,6 +177,14 @@ private:
 	set<string> vosInQueueIn;
 	/// maps a SE name to VO names who have pending outbound transfers in the queue
 	set<string> vosInQueueOut;
+
+	///
+	static const regex fileUrlRegex;
+
+	/**
+	 *
+	 */
+	string fileUrlToSeName(string url);
 };
 
 #endif /* FILETRANSFERSCHEDULER_H_ */
