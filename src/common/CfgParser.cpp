@@ -105,6 +105,7 @@ const map< string, set <string> > CfgParser::initSePairCfgTokens() {
 
 	set<string> root = list_of
 			("symbolic_name")
+			("active")
 			("source_se")
 			("destination_se")
 			("share")
@@ -120,6 +121,7 @@ const map< string, set <string> > CfgParser::initGrPairCfgTokens() {
 
 	set<string> root = list_of
 			("symbolic_name")
+			("active")
 			("source_group")
 			("destination_group")
 			("share")
