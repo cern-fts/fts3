@@ -4606,7 +4606,7 @@ void OracleAPI::updateSymbolic(const std::string & symbolicName, const std::stri
         s = conn->createStatement(query, tag);
         s->setString(1, src);
         s->setString(2, dest);
-        s->setString(4, state);
+        s->setString(3, state);
         s->setString(4, symbolicName);
         s->executeUpdate();
         conn->commit();
