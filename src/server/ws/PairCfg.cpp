@@ -39,15 +39,16 @@ void PairCfg::save() {
 
 	map<string, int>::iterator it;
 	for (it = share.begin(); it != share.end(); it++) {
-		addCfg(
+		addShareCfg(
 				symbolic_name,
 				active,
 				source,
 				destination,
-				*it,
-				protocol
+				*it
 			);
 	}
+
+	addProtocolCfg(symbolic_name, protocol);
 }
 
 } /* namespace ws */

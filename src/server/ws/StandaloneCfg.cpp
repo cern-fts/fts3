@@ -45,28 +45,31 @@ string StandaloneCfg::get() {
 void StandaloneCfg::save(string name) {
 
 	map<string, int>::iterator it;
-	// create  '* -> se' record
+	// create  '* -> se' records
 	for (it = in_share.begin(); it != in_share.end(); it++) {
-		addCfg(
+		addShareCfg(
 				"*-" + name,
 				active,
 				"*",
 				name,
-				*it,
-				in_protocol
+				*it
 			);
 	}
+	// create the coresponding protocol cfg
+	addProtocolCfg("*-" + name, in_protocol);
+
 	// create 'se -> *' record
 	for (it = out_share.begin(); it != out_share.end(); it++) {
-		addCfg(
+		addShareCfg(
 				name + "-*",
 				active,
 				name,
 				"*",
-				*it,
-				out_protocol
+				*it
 			);
 	}
+	// create the coresponding protocol cfg
+	addProtocolCfg(name + "-*", out_protocol);
 }
 
 } /* namespace common */

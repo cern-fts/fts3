@@ -146,6 +146,9 @@ private:
 
 	vector<string> doGet(SeConfig* cfg);
 
+	/// Pointer to the 'GenericDbIfce' singleton
+	GenericDbIfce* db;
+
 	/// the whole cfg comand
 	string all;
 

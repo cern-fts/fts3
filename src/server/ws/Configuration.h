@@ -68,11 +68,15 @@ protected:
 	static string get(vector<string> members);
 
 	shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
-	map<string, int> getProtocolMap(shared_ptr<SeProtocolConfig> protocol);
+
+	map<string, int> getProtocolMap(string symbolic_name);
+	map<string, int> getShareMap(string symbolic_name);
 
 	void addSe(string se, bool active = true);
 
-	void addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol);
+	void addShareCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share);
+
+	void addProtocolCfg(string symbolic_name, map<string, int> protocol);
 };
 
 } /* namespace cli */

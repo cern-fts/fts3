@@ -96,34 +96,7 @@ shared_ptr<SeProtocolConfig> Configuration::getProtocolConfig(map<string, int> p
 	return ret;
 }
 
-map<string, int> Configuration::getProtocolMap(shared_ptr<SeProtocolConfig> protocol) {
-
-	map<string, int> ret;
-
-	ret[Protocol::NOSTREAMS] = protocol->NOSTREAMS;
-	ret[Protocol::TCP_BUFFER_SIZE] = protocol->TCP_BUFFER_SIZE;
-	ret[Protocol::URLCOPY_TX_TO] = protocol->URLCOPY_TX_TO;
-	ret[Protocol::NO_TX_ACTIVITY_TO] = protocol->NO_TX_ACTIVITY_TO;
-
-	return ret;
-}
-
-void Configuration::addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol) {
-
-	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
-	pc->symbolicName = symbolic_name;
-
-	scoped_ptr<SeProtocolConfig> curr (
-			db->getProtocol(symbolic_name)
-		);
-
-	if (curr.get()) {
-		// update
-		db->updateProtocol(pc.get());
-	} else {
-		// insert
-		db->addProtocol(pc.get());
-	}
+void Configuration::addShareCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share) {
 
 	bool update = true;
 	vector<SeConfig*> v = db->getConfig(source, destination, share.first);
@@ -150,6 +123,64 @@ void Configuration::addCfg(string symbolic_name, bool active, string source, str
 		// insert
 		db->addNewConfig(cfg.get());
 	}
+}
+
+void Configuration::addProtocolCfg(string symbolic_name, map<string, int> protocol) {
+
+	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
+	pc->symbolicName = symbolic_name;
+
+	scoped_ptr<SeProtocolConfig> curr (
+			db->getProtocol(symbolic_name)
+		);
+
+	if (curr.get()) {
+		// update
+		db->updateProtocol(pc.get());
+	} else {
+		// insert
+		db->addProtocol(pc.get());
+	}
+}
+
+map<string, int> Configuration::getProtocolMap(string symbolic_name) {
+
+	shared_ptr<SeProtocolConfig> protocol (
+			db->getProtocol(symbolic_name)
+		);
+
+	map<string, int> ret;
+
+	ret[Protocol::NOSTREAMS] = protocol->NOSTREAMS;
+	ret[Protocol::TCP_BUFFER_SIZE] = protocol->TCP_BUFFER_SIZE;
+	ret[Protocol::URLCOPY_TX_TO] = protocol->URLCOPY_TX_TO;
+	ret[Protocol::NO_TX_ACTIVITY_TO] = protocol->NO_TX_ACTIVITY_TO;
+
+	return ret;
+}
+
+map<string, int> Configuration::getShareMap(string symbolic_name) {
+
+	vector<SeConfig*> vec = db->getConfig(symbolic_name, string());
+
+	// TODO
+//	if (vec.empty()) {
+//		throw Err_Custom(
+//				"A configuration for source: " + source
+//				+ " and destination: " + destination
+//				+ " does not exist!"
+//			);
+//	}
+
+	map<string, int> ret;
+
+	vector<SeConfig*>::iterator it;
+	for (it = vec.begin(); it != vec.end(); it++) {
+		scoped_ptr<SeConfig> cfg(*it);
+		ret[cfg->vo] = cfg->active;
+	}
+
+	return ret;
 }
 
 }

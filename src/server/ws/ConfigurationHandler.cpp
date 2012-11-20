@@ -45,6 +45,7 @@ ConfigurationHandler::ConfigurationHandler(string dn):
 		deleteCount(0),
 		debugCount(0),
 		dn(dn),
+		db (DBSingleton::instance().getDBObjectInstance()),
 		cfg(0){
 }
 
@@ -169,6 +170,12 @@ vector<string> ConfigurationHandler::doGet(SeConfig* cfg) {
 vector<string> ConfigurationHandler::get(string name) {
 
 	vector<string> ret;
+
+	if (db->checkGroupExists(name)) {
+		// standalone group
+	} else {
+		// standalone se
+	}
 
 	return ret;
 }

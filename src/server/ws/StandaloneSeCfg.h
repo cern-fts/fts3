@@ -22,6 +22,7 @@ class StandaloneSeCfg : public StandaloneCfg {
 
 public:
 
+//	StandaloneSeCfg(string name);
 	StandaloneSeCfg(CfgParser& parser);
 	virtual ~StandaloneSeCfg();
 
