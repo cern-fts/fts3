@@ -42,6 +42,8 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include "Configuration.h";
+
 namespace fts3 { namespace ws {
 
 using namespace boost;
@@ -58,7 +60,7 @@ using namespace db;
 class ConfigurationHandler {
 
 	/// TODO move to common/json, json() method that will return the configuration for the given object
-	struct StandaloneSeCfg {
+	struct StandaloneSeCfg1 {
 
 		string se;
 		bool active;
@@ -71,7 +73,7 @@ class ConfigurationHandler {
 	};
 
 	/// TODO move to common/json, json() method that will return the configuration for the given object
-	struct StandaloneGrCfg {
+	struct StandaloneGrCfg1 {
 
 		string group;
 		bool active;
@@ -86,7 +88,7 @@ class ConfigurationHandler {
 	};
 
 	/// TODO move to common/json, json() method that will return the configuration for the given object
-	struct PairCfg {
+	struct PairCfg1 {
 
 		string symbolic_name;
 		bool active;
@@ -99,28 +101,6 @@ class ConfigurationHandler {
 	};
 
 public:
-
-	/**
-	 * protocol parameters
-	 */
-	struct ProtocolParameters {
-		static const string BANDWIDTH;
-		static const string NOSTREAMS;
-		static const string TCP_BUFFER_SIZE;
-		static const string NOMINAL_THROUGHPUT;
-		static const string BLOCKSIZE;
-		static const string HTTP_TO;
-		static const string URLCOPY_PUT_TO;
-		static const string URLCOPY_PUTDONE_TO;
-		static const string URLCOPY_GET_TO;
-		static const string URLCOPY_GET_DONETO;
-		static const string URLCOPY_TX_TO;
-		static const string URLCOPY_TXMARKS_TO;
-		static const string URLCOPY_FIRST_TXMARK_TO;
-		static const string TX_TO_PER_MB;
-		static const string NO_TX_ACTIVITY_TO;
-		static const string PREPARING_FILES_RATIO;
-	};
 
 	/**
 	 * Constructor
@@ -151,26 +131,6 @@ public:
 	 * @see parse
 	 */
 	void add();
-
-	/**
-	 * Adds stand-alone SE configuration
-	 */
-	void addStandaloneSeCfg();
-
-	/**
-	 * Adds stand-alone SE group configuration
-	 */
-	void addStandaloneGrCfg();
-
-	/**
-	 * Adds pair configuration
-	 */
-	void addPairCfg();
-
-	/**
-	 * Adds a single configuration entry to the DB
-	 */
-	void addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol);
 
 	/**
 	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -223,12 +183,6 @@ public:
 
 private:
 
-	string buildPairCfg(SeConfig* cfg, SeProtocolConfig* prot);
-
-	string buildGroupCfg(string name, vector<string> members);
-
-	string buildSeCfg(SeGroup* sg);
-
 	vector<string> getGroupCfg(string cfg_name, string name, string vo);
 
 	vector<string> doGet(SeConfig* cfg);
@@ -244,21 +198,6 @@ private:
 	 */
 	string str(bool b);
 
-	/**
-	 * Checks if the SE exists if not adds it to the DB
-	 */
-	void handleSe(string name, bool active = true);
-
-	/**
-	 *
-	 */
-	void handleGrMember(string gr, vector<string> members);
-
-	/**
-	 *
-	 */
-	void handleGroup(string name);
-
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 
@@ -266,11 +205,11 @@ private:
 	string all;
 
 	/// a standalone se cfg
-	StandaloneSeCfg seCfg;
+	StandaloneSeCfg1 seCfg;
 	///
-	StandaloneGrCfg grCfg;
+	StandaloneGrCfg1 grCfg;
 	///
-	PairCfg pairCfg;
+	PairCfg1 pairCfg;
 
 	/// type of the configuration that is being submitted
 	CfgParser::CfgType type;
@@ -289,6 +228,8 @@ private:
 	int deleteCount;
 	/// number of debug cmd triggered by configuration command
 	int debugCount;
+
+	Configuration* cfg;
 };
 
 }

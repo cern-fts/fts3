@@ -14,18 +14,23 @@
 #include <vector>
 
 namespace fts3 {
-namespace common {
+namespace ws {
 
 using namespace std;
+using namespace fts3::common;
 
-struct StandaloneGrCfg : StandaloneCfg {
+class StandaloneGrCfg : public StandaloneCfg {
+
+public:
 
 	StandaloneGrCfg(CfgParser& parser);
 	virtual ~StandaloneGrCfg();
 
-	string json() {
-		return "";
-	}
+	virtual string get();
+	virtual void save();
+	virtual void del();
+
+private:
 
 	string group;
 	vector<string> members;

@@ -13,18 +13,23 @@
 #include <string>
 
 namespace fts3 {
-namespace common {
+namespace ws {
 
 using namespace std;
+using namespace fts3::common;
 
-struct StandaloneSeCfg : StandaloneCfg {
+class StandaloneSeCfg : public StandaloneCfg {
+
 public:
+
 	StandaloneSeCfg(CfgParser& parser);
 	virtual ~StandaloneSeCfg();
 
-	string json() {
-		return "";
-	}
+	virtual string get();
+	virtual void save();
+	virtual void del();
+
+private:
 
 	string se;
 };

@@ -46,12 +46,19 @@ set(fts_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapDelegationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/CGsiAdapter.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/ConfigurationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/InternalLogRetriever.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/AuthorizationManager.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_config_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_deleg_methods.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/ConfigurationHandler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/Configuration.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/StandaloneCfg.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/StandaloneSeCfg.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/StandaloneGrCfg.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/PairCfg.cpp"
+	"${PROJECT_SOURCE_DIR}/src/server/ws/SePairCfg.cpp"
+	"${PROJECT_SOURCE_DIR}/src/server/ws/GrPairCfg.cpp"
 )
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})

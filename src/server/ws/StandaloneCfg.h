@@ -14,18 +14,28 @@
 #include <map>
 
 namespace fts3 {
-namespace common {
+namespace ws {
 
 using namespace std;
+using namespace fts3::common;
 
-struct StandaloneCfg : Configuration {
+class StandaloneCfg : public Configuration {
+
+public:
 
 	StandaloneCfg(CfgParser& parser);
 
 	virtual ~StandaloneCfg();
 
-	virtual string json () = 0;
+	virtual string get();
+	virtual void save() = 0;
+	virtual void del() = 0;
 
+protected:
+
+	virtual void save(string name);
+
+private:
 	/// active state
 	bool active;
 
