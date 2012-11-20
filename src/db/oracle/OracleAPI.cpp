@@ -3818,11 +3818,11 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, co
     std::string query("");
     if (vo.length() > 0) {
         query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
-                " t_config.state from t_config,t_config_symbolic "
+                " t_config_symbolic.state from t_config,t_config_symbolic "
                 " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1 and t_config.vo=:2 ";
     } else {
         query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
-                " t_config.state from t_config,t_config_symbolic "
+                " t_config_symbolic.state from t_config,t_config_symbolic "
                 " where t_config.symbolicName=t_config_symbolic.symbolicName and t_config.symbolicName=:1";
         tag += "222";
     }
