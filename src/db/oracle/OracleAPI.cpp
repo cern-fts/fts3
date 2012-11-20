@@ -3798,7 +3798,7 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & source, const st
             seConfig->destination = r->getString(3);
             seConfig->vo = r->getString(4);
             seConfig->active = r->getInt(5);
-            seConfig->state = r->getString(7);
+            seConfig->state = r->getString(6);
             vectorSeConfig.push_back(seConfig);
         }
         conn->destroyResultset(s, r);
