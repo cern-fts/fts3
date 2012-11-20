@@ -236,5 +236,20 @@ bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string p
 	return true;
 }
 
+optional<string> CfgParser::get_opt(string path) {
+
+	optional<string> v;
+	try {
+
+		v = pt.get_optional<string>(path);
+
+	} catch (ptree_bad_data& ex) {
+		// if the type of the value is wrong throw an exception
+		throw Err_Custom("Wrong value type of " + path);
+	}
+
+	return v;
+}
+
 }
 }

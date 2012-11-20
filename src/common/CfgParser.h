@@ -33,7 +33,8 @@
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
-#include "boost/tuple/tuple.hpp"
+#include <boost/tuple/tuple.hpp>
+#include <boost/optional.hpp>
 
 namespace fts3 { namespace common {
 
@@ -80,16 +81,28 @@ public:
 	virtual ~CfgParser();
 
 	/**
-	 * Grants access to specific value in the JSON object
+	 * Gets the specific value from the JSON object
 	 *
-	 * @param path - pah that specifies the value, e.g. 'share.in'
+	 * @param path - path that specifies the value, e.g. 'share.in'
 	 * @param T - the expected type of the value (int, string, bool, vector and map are supported)
 	 *
-	 * @return an instance of optional which holds the value
+	 * @return the value
 	 */
 	template <typename T>
 	T get(string path);
 
+	/**
+	 * Gets the specific value for an optional object in JSON configuration
+	 *
+	 * @param path - path that specifies the value, e.g. 'share.in'
+	 *
+	 * @return an instance of optional which holds the value
+	 */
+	optional<string> get_opt(string path);
+
+	/**
+	 *
+	 */
 	CfgType getCfgType() {
 		return type;
 	}
