@@ -241,7 +241,7 @@ public:
     
     virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status);
     
-    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest);        
+    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status);
     
     virtual void deleteSymbolic(const std::string & symbolicName); 
     

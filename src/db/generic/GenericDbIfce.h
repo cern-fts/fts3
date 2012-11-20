@@ -266,7 +266,7 @@ public:
     
     virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) = 0;
     
-    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) = 0;        
+    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) = 0;
     
     virtual void deleteSymbolic(const std::string & symbolicName) = 0;
     

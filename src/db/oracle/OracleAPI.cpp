@@ -3925,10 +3925,10 @@ void OracleAPI::deleteConfig(SeConfig* seConfig) {
 
 void OracleAPI::updateConfig(SeConfig* seConfig) {
     std::string tag = "updateGroupConfig";
-    std::string query = "update t_config set active=:1, state=:2 where symbolicName=:3 and vo=:4";
+    std::string query = "update t_config set active=:1 where symbolicName=:2 and vo=:3";
     oracle::occi::Statement* s = NULL;
 
-    updateSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
+    updateSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination, seConfig->state);
 
     ThreadTraits::LOCK_R lock(_mutex);
 
@@ -3938,9 +3938,8 @@ void OracleAPI::updateConfig(SeConfig* seConfig) {
 
         s = conn->createStatement(query, tag);
         s->setInt(1, seConfig->active);
-        s->setString(2, seConfig->state);
-        s->setString(3, seConfig->symbolicName);
-        s->setString(4, seConfig->vo);
+        s->setString(2, seConfig->symbolicName);
+        s->setString(3, seConfig->vo);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
@@ -4566,7 +4565,7 @@ std::string OracleAPI::getSymbolicName(const std::string & src, const std::strin
     return symbolic;
 }
 
-void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) {
+void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & state) {
     std::string tag = "addSymbolic";
     std::string query = "insert into t_config_symbolic(symbolicName, source, dest, state) values(:1,:2,:3,:4)";
     oracle::occi::Statement* s = NULL;
@@ -4581,7 +4580,7 @@ void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string 
         s->setString(1, symbolicName);
         s->setString(2, src);
         s->setString(3, dest);
-        s->setString(4, status);
+        s->setString(4, state);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
@@ -4593,9 +4592,9 @@ void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string 
     }
 }
 
-void OracleAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) {
+void OracleAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & state) {
     std::string tag = "updateSymbolic";
-    std::string query = "update t_config_symbolic set source=:1, dest=:2 where symbolicName=:3";
+    std::string query = "update t_config_symbolic set source=:1, dest=:2, state=:3 where symbolicName=:4";
     oracle::occi::Statement* s = NULL;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -4607,7 +4606,8 @@ void OracleAPI::updateSymbolic(const std::string & symbolicName, const std::stri
         s = conn->createStatement(query, tag);
         s->setString(1, src);
         s->setString(2, dest);
-        s->setString(3, symbolicName);
+        s->setString(4, state);
+        s->setString(4, symbolicName);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
