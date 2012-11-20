@@ -59,47 +59,6 @@ using namespace db;
  */
 class ConfigurationHandler {
 
-	/// TODO move to common/json, json() method that will return the configuration for the given object
-	struct StandaloneSeCfg1 {
-
-		string se;
-		bool active;
-
-		map<string, int> in_share;
-		map<string, int> in_protocol;
-
-		map<string, int> out_share;
-		map<string, int> out_protocol;
-	};
-
-	/// TODO move to common/json, json() method that will return the configuration for the given object
-	struct StandaloneGrCfg1 {
-
-		string group;
-		bool active;
-
-		vector<string> members;
-
-		map<string, int> in_share;
-		map<string, int> in_protocol;
-
-		map<string, int> out_share;
-		map<string, int> out_protocol;
-	};
-
-	/// TODO move to common/json, json() method that will return the configuration for the given object
-	struct PairCfg1 {
-
-		string symbolic_name;
-		bool active;
-
-		string source;
-		string destination;
-
-		map<string, int> share;
-		map<string, int> protocol;
-	};
-
 public:
 
 	/**
@@ -142,17 +101,17 @@ public:
 	 * @return vector containing single configuration entries in JSON format
 	 */
 
-	vector<string> getStandalone(string name);
-
-	/**
-	 *
-	 */
-	vector<string> getSymbolic(string cfg_name);
+	vector<string> get(string name);
 
 	/**
 	 *
 	 */
 	vector<string> getPair(string src, string dest);
+
+	/**
+	 *
+	 */
+	vector<string> getPair(string symbolic);
 
 	/**
 	 * Deletes the configuration specified by the argument
@@ -178,7 +137,7 @@ public:
 	 * @return se name
 	 */
 	string getName() {
-		return "dummy"; // TODO it's used for authorization! should be the se name (?)
+		return "dummy"; // TODO it's used for authorization! should be the se name or symbolic name (?)
 	}
 
 private:
@@ -187,35 +146,11 @@ private:
 
 	vector<string> doGet(SeConfig* cfg);
 
-	/**
-	 * Converts boolean to string:
-	 * 	true 	-> 'true'
-	 * 	false 	-> 'false'
-	 *
-	 * 	@param b - boolean value
-	 *
-	 * 	@return if the parameter was true - 'true', otherwise 'false'
-	 */
-	string str(bool b);
-
-	/// Pointer to the 'GenericDbIfce' singleton
-	GenericDbIfce* db;
-
 	/// the whole cfg comand
 	string all;
 
-	/// a standalone se cfg
-	StandaloneSeCfg1 seCfg;
-	///
-	StandaloneGrCfg1 grCfg;
-	///
-	PairCfg1 pairCfg;
-
 	/// type of the configuration that is being submitted
 	CfgParser::CfgType type;
-
-	/// number of available protocol parameters
-	static const int PARAMETERS_NMB = 16;
 
 	/// user DN
 	string dn;

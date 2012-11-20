@@ -45,7 +45,6 @@ ConfigurationHandler::ConfigurationHandler(string dn):
 		deleteCount(0),
 		debugCount(0),
 		dn(dn),
-		db (DBSingleton::instance().getDBObjectInstance()),
 		cfg(0){
 }
 
@@ -89,15 +88,15 @@ void ConfigurationHandler::add() {
 
 	cfg->save();
 
-	if (insertCount) {
-		string action = "insert (x" + lexical_cast<string>(insertCount) + ")";
-		db->auditConfiguration(dn, all, action);
-	}
-
-	if (updateCount) {
-		string action = "update (x" + lexical_cast<string>(updateCount) + ")";
-		db->auditConfiguration(dn, all, action);
-	}
+//	if (insertCount) {
+//		string action = "insert (x" + lexical_cast<string>(insertCount) + ")";
+//		db->auditConfiguration(dn, all, action);
+//	}
+//
+//	if (updateCount) {
+//		string action = "update (x" + lexical_cast<string>(updateCount) + ")";
+//		db->auditConfiguration(dn, all, action);
+//	}
 }
 
 
@@ -167,7 +166,7 @@ vector<string> ConfigurationHandler::doGet(SeConfig* cfg) {
 	return ret;
 }
 
-vector<string> ConfigurationHandler::getStandalone(string name) {
+vector<string> ConfigurationHandler::get(string name) {
 
 	vector<string> ret;
 
@@ -200,27 +199,27 @@ vector<string> ConfigurationHandler::getPair(string src, string dest) {
 	return ret;
 }
 
-vector<string> ConfigurationHandler::getSymbolic(string cfg_name) {
+vector<string> ConfigurationHandler::getPair(string symbolic) {
 
-	to_lower(cfg_name);
-
-	vector<SeConfig*> vec = db->getConfig(cfg_name, string());
-
-	if (vec.empty()) {
-		throw Err_Custom(
-				"A configuration for symboli name: " + cfg_name
-				+ " does not exist!"
-			);
-	}
+//	to_lower(cfg_name);
+//
+//	vector<SeConfig*> vec = db->getConfig(cfg_name, string());
+//
+//	if (vec.empty()) {
+//		throw Err_Custom(
+//				"A configuration for symboli name: " + cfg_name
+//				+ " does not exist!"
+//			);
+//	}
 
 	vector<string> ret;
-	vector<SeConfig*>::iterator it;
-
-	for (it = vec.begin(); it != vec.end(); it++) {
-		scoped_ptr<SeConfig> cfg (*it);
-		vector<string> v = doGet(cfg.get());
-		ret.insert(ret.end(), v.begin(), v.end());
-	}
+//	vector<SeConfig*>::iterator it;
+//
+//	for (it = vec.begin(); it != vec.end(); it++) {
+//		scoped_ptr<SeConfig> cfg (*it);
+//		vector<string> v = doGet(cfg.get());
+//		ret.insert(ret.end(), v.begin(), v.end());
+//	}
 
 	return ret;
 }
@@ -263,12 +262,6 @@ void ConfigurationHandler::del() {
 //	}
 
 	string action = "delete (x" + lexical_cast<string>(deleteCount) + ")";
-	db->auditConfiguration(dn, all, action);
-}
-
-string ConfigurationHandler::str(bool b) {
-	stringstream ss;
-	ss << boolalpha << b;
-	return ss.str();
+//	db->auditConfiguration(dn, all, action);
 }
 

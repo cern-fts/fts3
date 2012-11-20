@@ -104,11 +104,11 @@ int fts3::implcfg__getConfiguration(soap* soap, string vo, string name, string s
 
 		ConfigurationHandler handler (dn);
 		if (standalone) {
-			response.configuration->cfg = handler.getStandalone(source);
+			response.configuration->cfg = handler.get(source);
 		} else if (pair) {
 			response.configuration->cfg = handler.getPair(source, destination);
 		} else if (symboli_name) {
-			response.configuration->cfg = handler.getSymbolic(name);
+			response.configuration->cfg = handler.getPair(name);
 		} else {
 			throw Err_Custom("Wrongly specified parameters, either both the source and destination have to be specified or the configuration name!");
 		}
