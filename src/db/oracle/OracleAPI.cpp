@@ -3641,81 +3641,9 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
 
 //t_se_protocol
 
-int OracleAPI::getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo) {
-    std::string tag = "getProtocolIdFromConfig111";
-    int protocolId = 0;
-    std::string query = "select protocol_row_id from t_config where symbolicName=:1 and vo=:2";
-
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-
-    ThreadTraits::LOCK_R lock(_mutex);
-
-    try {
-        if (false == conn->checkConn())
-            return 0;
-
-        std::string symbolicName = checkConfigExists(source, dest, vo);
-        if (symbolicName.length() > 0) {
-            //now get protocol ID
-            s = conn->createStatement(query, tag);
-            s->setString(1, symbolicName);
-            s->setString(2, vo);
-            r = conn->createResultset(s);
-            if (r->next()) {
-                protocolId = r->getInt(1);
-            }
-            conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
-        }
-
-        return protocolId;
-    }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }
-
-    return protocolId;
-}
-
-int OracleAPI::getProtocolIdFromConfig(const std::string & symbolicName, const std::string & vo) {
-    std::string tag = "getProtocolIdFromConfig";
-    std::string query = "select protocol_row_id FROM t_config where symbolicName=:1 and vo=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    int protocolId = 0;
-    ThreadTraits::LOCK_R lock(_mutex);
-
-    try {
-        if (false == conn->checkConn())
-            return NULL;
-
-        s = conn->createStatement(query, tag);
-        s->setString(1, symbolicName);
-        s->setString(2, vo);
-        r = conn->createResultset(s);
-        if (r->next()) {
-            protocolId = r->getInt(1);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
-        return protocolId;
-    }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }
-
-    return protocolId;
-}
-
-SeProtocolConfig* OracleAPI::getProtocol(int protocolId) {
+SeProtocolConfig* OracleAPI::getProtocol(std::string symbolicName) {
     std::string tag = "getProtocol22";
-    std::string query = "select nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to from t_se_protocol where se_protocol_row_id=:1";
+    std::string query = "select nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to from t_se_protocol where symbolicName=:1";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     SeProtocolConfig* seProtocolConfig = NULL;
@@ -3727,10 +3655,11 @@ SeProtocolConfig* OracleAPI::getProtocol(int protocolId) {
             return NULL;
 
         s = conn->createStatement(query, tag);
-        s->setInt(1, protocolId);
+        s->setString(1, symbolicName);
         r = conn->createResultset(s);
         if (r->next()) {
             seProtocolConfig = new SeProtocolConfig();
+            seProtocolConfig->symbolicName = symbolicName;
             seProtocolConfig->NOSTREAMS = r->getInt(1);
             seProtocolConfig->TCP_BUFFER_SIZE = r->getInt(2);
             seProtocolConfig->URLCOPY_TX_TO = r->getInt(3);
@@ -3885,7 +3814,6 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & source, const st
             seConfig->destination = r->getString(3);
             seConfig->vo = r->getString(4);
             seConfig->active = r->getInt(5);
-            seConfig->protocolId = r->getInt(6);
             seConfig->state = r->getString(7);
             vectorSeConfig.push_back(seConfig);
         }
@@ -3937,7 +3865,6 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, co
             seConfig->destination = r->getString(3);
             seConfig->vo = r->getString(4);
             seConfig->active = r->getInt(5);
-            seConfig->protocolId = r->getInt(6);
             seConfig->state = r->getString(7);
             vectorSeConfig.push_back(seConfig);
         }
@@ -3955,7 +3882,7 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, co
 
 void OracleAPI::addNewConfig(SeConfig* seConfig) {
     std::string tag = "addNewConfig111";
-    std::string query = "insert into t_config(symbolicName,vo,active,protocol_row_id,state) values(:1,:2,:3,:4,:5)";
+    std::string query = "insert into t_config(symbolicName,vo,active) values(:1,:2,:3,:4)";
     oracle::occi::Statement* s = NULL;
 
     if (!checkIfSymbolicNameExistsForSrcDest(seConfig->symbolicName, seConfig->source, seConfig->destination)) {
@@ -3973,8 +3900,7 @@ void OracleAPI::addNewConfig(SeConfig* seConfig) {
         s->setString(1, seConfig->symbolicName);
         s->setString(2, seConfig->vo);
         s->setInt(3, seConfig->active);
-        s->setInt(4, seConfig->protocolId);
-        s->setString(5, seConfig->state);
+        s->setString(4, seConfig->state);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
@@ -4016,7 +3942,7 @@ void OracleAPI::deleteConfig(SeConfig* seConfig) {
 
 void OracleAPI::updateConfig(SeConfig* seConfig) {
     std::string tag = "updateGroupConfig";
-    std::string query = "update t_config set active=:1, protocol_row_id=:2, state=:3 where symbolicName=:4 and vo=:5";
+    std::string query = "update t_config set active=:1, state=:2 where symbolicName=:3 and vo=:4";
     oracle::occi::Statement* s = NULL;
 
     updateSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
@@ -4029,10 +3955,9 @@ void OracleAPI::updateConfig(SeConfig* seConfig) {
 
         s = conn->createStatement(query, tag);
         s->setInt(1, seConfig->active);
-        s->setInt(2, seConfig->protocolId);
-        s->setString(3, seConfig->state);
-        s->setString(4, seConfig->symbolicName);
-        s->setString(5, seConfig->vo);
+        s->setString(2, seConfig->state);
+        s->setString(3, seConfig->symbolicName);
+        s->setString(4, seConfig->vo);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);

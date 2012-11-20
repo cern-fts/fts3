@@ -199,15 +199,6 @@ CREATE TABLE t_group_members(
 	,CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)	
 ); 
 
-CREATE TABLE t_se_protocol (
-   se_protocol_row_id INTEGER	NOT NULL
-   ,nostreams       	INTEGER NOT NULL
-   ,tcp_buffer_size     INTEGER DEFAULT 0
-   ,urlcopy_tx_to      INTEGER NOT NULL  
-   ,no_tx_activity_to INTEGER DEFAULT 360
-   ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (se_protocol_row_id)
-);
-
 CREATE TABLE t_config_symbolic ( 
    symbolicName         VARCHAR2(255)  NOT NULL
    ,source         VARCHAR2(255)   NOT NULL
@@ -216,19 +207,24 @@ CREATE TABLE t_config_symbolic (
    ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)    
 );
 
-
 CREATE TABLE t_config ( 
    symbolicName VARCHAR2(255)  NOT NULL
    ,vo VARCHAR2(100) NOT NULL
    ,active INTEGER NOT NULL
-   ,protocol_row_id INTEGER NOT NULL
    ,state VARCHAR2(30)  NOT NULL			
    ,CONSTRAINT t_config_pk PRIMARY KEY (symbolicName, vo)
-   ,CONSTRAINT t_config_fk1 FOREIGN KEY (protocol_row_id) REFERENCES t_se_protocol (se_protocol_row_id)
    ,CONSTRAINT t_config_fk2 FOREIGN KEY (symbolicName) REFERENCES t_config_symbolic (symbolicName)
 );
 
-
+CREATE TABLE t_se_protocol (
+	symbolicName         VARCHAR2(255)  NOT NULL
+   ,nostreams       	INTEGER NOT NULL
+   ,tcp_buffer_size     INTEGER DEFAULT 0
+   ,urlcopy_tx_to      INTEGER NOT NULL  
+   ,no_tx_activity_to INTEGER DEFAULT 360
+   ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (symbolicName)
+   ,CONSTRAINT t_se_protocol_fk FOREIGN KEY (symbolicName) REFERENCES t_config_symbolic (symbolicName)	
+);
 
 --
 -- blacklist of bad SEs that should not be transferred to
@@ -267,22 +263,6 @@ CREATE TABLE t_bad_dns (
    ,admin_dn            VARCHAR2(1024)
    ,CONSTRAINT bad_dn_pk PRIMARY KEY (dn)
 );
-
-
---
--- autoinc sequence on t_se_protocol
---
-CREATE SEQUENCE se_protocol_id_info_seq;
-
-CREATE OR REPLACE TRIGGER se_protocol_id_info_auto_inc
-BEFORE INSERT ON t_se_protocol
-FOR EACH ROW
-WHEN (new.se_protocol_row_id IS NULL)
-BEGIN
-  SELECT se_protocol_id_info_seq.nextval
-  INTO   :new.se_protocol_row_id from dual;
-END;
-/
 
 
 --

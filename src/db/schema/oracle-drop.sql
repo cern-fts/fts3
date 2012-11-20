@@ -1,8 +1,6 @@
 drop trigger se_id_info_auto_inc;
 drop sequence file_file_id_seq;
 drop trigger file_file_id_auto_inc;
-drop trigger se_protocol_id_info_auto_inc;
-drop sequence se_protocol_id_info_seq;
 drop sequence se_id_info_seq;
 
 DROP TABLE t_credential;

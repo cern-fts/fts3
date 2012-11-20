@@ -36,7 +36,6 @@ public:
  std::string destination; 
  std::string vo;
  int active; 
- int protocolId;
  std::string symbolicName;
  std::string state;
 };

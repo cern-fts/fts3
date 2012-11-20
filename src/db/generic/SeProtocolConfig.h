@@ -26,12 +26,12 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 
 class SeProtocolConfig {
 public:
 
     SeProtocolConfig() {
-        SE_ROW_ID = 0;
         NOSTREAMS = 0;
         TCP_BUFFER_SIZE = 0;
         URLCOPY_TX_TO = 0;
@@ -41,7 +41,7 @@ public:
     ~SeProtocolConfig() {
     }
 
-        int SE_ROW_ID;
+        std::string symbolicName;
         int NOSTREAMS;
         int TCP_BUFFER_SIZE;
         int URLCOPY_TX_TO;

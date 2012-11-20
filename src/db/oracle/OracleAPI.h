@@ -202,11 +202,7 @@ public:
     virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
     
     //t_se_protocol
-    virtual SeProtocolConfig*  getProtocol(int protocolId);
-    
-    virtual int getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo);
-    
-    virtual int getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo);   
+    virtual SeProtocolConfig*  getProtocol(std::string symbolicName);
     
     virtual int addProtocol(SeProtocolConfig* seProtocolConfig);    
     
