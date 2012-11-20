@@ -205,11 +205,11 @@ public:
     //t_se_protocol
     virtual SeProtocolConfig*  getProtocol(std::string symbolicName);
     
-    virtual int addProtocol(SeProtocolConfig* seProtocolConfig);    
+    virtual void addProtocol(SeProtocolConfig* seProtocolConfig);
     
-    virtual void deleteProtocol(int protocolId);       
+    virtual void deleteProtocol(std::string symbolicName);
     
-    virtual void updateProtocol(SeProtocolConfig* config, int protocolId);           
+    virtual void updateProtocol(SeProtocolConfig* config);
    
     
     //t_config

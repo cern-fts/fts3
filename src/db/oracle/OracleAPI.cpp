@@ -3677,16 +3677,13 @@ SeProtocolConfig* OracleAPI::getProtocol(std::string symbolicName) {
     return seProtocolConfig;
 }
 
-int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig) {
+void OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig) {
     const std::string tag = "addProtocol";
     const std::string tag1 = "addProtocolCurr";
     int protocolId = 0;
     std::string query = "insert into t_se_protocol(NOSTREAMS,tcp_buffer_size,URLCOPY_TX_TO,no_tx_activity_to) values(:1,:2,:3,:4)";
-    std::string query1 = "SELECT se_protocol_id_info_seq.CURRVAL from dual";
     ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
     try {
         s = conn->createStatement(query, tag);
         s->setInt(1, seProtocolConfig->NOSTREAMS);
@@ -3697,27 +3694,16 @@ int OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig) {
             conn->commit();
         conn->destroyStatement(s, tag);
 
-        s1 = conn->createStatement(query1, tag1);
-        r1 = conn->createResultset(s1);
-        if (r1->next()) {
-            protocolId = r1->getInt(1);
-        }
-        conn->destroyResultset(s1, r1);
-        conn->destroyStatement(s1, tag1);
-        return protocolId;
-
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
-
-    return protocolId;
 }
 
-void OracleAPI::deleteProtocol(int protocolId) {
+void OracleAPI::deleteProtocol(std::string symbolicName) {
     const std::string tag = "deleteMembersFromGroup";
-    std::string query = "delete from t_se_protocol where se_protocol_row_id=:1";
+    std::string query = "delete from t_se_protocol where symbolicName=:1";
     oracle::occi::Statement* s = NULL;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -3727,7 +3713,7 @@ void OracleAPI::deleteProtocol(int protocolId) {
             return;
 
         s = conn->createStatement(query, tag);
-        s->setInt(1, protocolId);
+        s->setString(1, symbolicName);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
@@ -3739,9 +3725,9 @@ void OracleAPI::deleteProtocol(int protocolId) {
     }
 }
 
-void OracleAPI::updateProtocol(SeProtocolConfig* seProtocolConfig, int protocolId) {
+void OracleAPI::updateProtocol(SeProtocolConfig* seProtocolConfig) {
     std::string tag = "updateProtocol";
-    std::string query = "update t_se_protocol set NOSTREAMS=:1,tcp_buffer_size=:2,URLCOPY_TX_TO=:3,no_tx_activity_to=:4 where se_protocol_row_id=:5";
+    std::string query = "update t_se_protocol set NOSTREAMS=:1,tcp_buffer_size=:2,URLCOPY_TX_TO=:3,no_tx_activity_to=:4 where symbolicName=:5";
     oracle::occi::Statement* s = NULL;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -3755,7 +3741,7 @@ void OracleAPI::updateProtocol(SeProtocolConfig* seProtocolConfig, int protocolI
         s->setInt(2, seProtocolConfig->TCP_BUFFER_SIZE);
         s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);
         s->setInt(4, seProtocolConfig->NO_TX_ACTIVITY_TO);
-        s->setInt(5, protocolId);
+        s->setString(5, seProtocolConfig->symbolicName);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);

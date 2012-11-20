@@ -231,11 +231,11 @@ public:
     //t_se_protocol
     virtual SeProtocolConfig*  getProtocol(std::string symbolicName) = 0;
     
-    virtual int addProtocol(SeProtocolConfig* seProtocolConfig) = 0;    
+    virtual void addProtocol(SeProtocolConfig* seProtocolConfig) = 0;
     
-    virtual void deleteProtocol(int protocolId) = 0;       
+    virtual void deleteProtocol(std::string symbolicName) = 0;
     
-    virtual void updateProtocol(SeProtocolConfig* config, int protocolId) = 0;                            
+    virtual void updateProtocol(SeProtocolConfig* config) = 0;
     
     //t_config
     virtual std::vector<SeConfig*> getConfig(const std::string & source,const std::string & dest, const std::string & vo) = 0;
