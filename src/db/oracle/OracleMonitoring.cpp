@@ -337,6 +337,58 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
 
 
 
+unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
+                                                    const SourceAndDestSE& pair,
+                                                    const std::vector<std::string>& state)
+{
+    std::ostringstream tag;
+    std::ostringstream query;
+    size_t i;
+
+    if (state.size() == 0)
+        return 0;
+
+    tag << "numberOfTransfersInStatePair" << state.size();
+    query << "SELECT COUNT(*) FROM T_FILE, T_JOB "
+             "WHERE  T_JOB.SUBMIT_TIME > :notBefore AND "
+             "T_FILE.JOB_ID = T_JOB.JOB_ID AND "
+             "T_FILE.FILE_STATE IN (";
+    for (i = 1; i < state.size(); ++i)
+        query << ":state" << i << ", ";
+    query << ":state" << i << ") ";
+
+    query << " AND T_JOB.SOURCE_SE = :src AND T_JOB.DEST_SE = :dest ";
+    if (!vo.empty())
+        query << "AND T_JOB.VO_NAME = :vo";
+
+    checkConn(conn);
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str());
+    s->setTimestamp(1, notBefore);
+
+    for (i = 0; i < state.size(); ++i)
+        s->setString(i + 2, state[i]);
+
+    s->setString(i + 2, pair.sourceStorageElement);
+    s->setString(i + 3, pair.destinationStorageElement);
+
+    if (!vo.empty())
+        s->setString(i + 4, vo);
+
+    oracle::occi::ResultSet* r = conn->createResultset(s);
+    unsigned count = 0;
+    if (r->next())
+        count = r->getNumber(1);
+
+    conn->destroyResultset(s, r);
+    conn->destroyStatement(s, tag.str());
+
+    return count;
+}
+
+
+
 void OracleMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons) {
     const std::string tag   = "getUniqueReasons";
     const std::string query = "SELECT COUNT(*), REASON\

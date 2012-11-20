@@ -41,6 +41,12 @@ BOOST_PYTHON_MODULE(ftsdb)
   export_types();
 
   // Monitoring DB interface
+  unsigned (MonitoringDbWrapper::*ntransfers)(const std::string&, const boost::python::list&);
+  unsigned (MonitoringDbWrapper::*ntransfersPair)(const std::string&, const SourceAndDestSE&, const boost::python::list&);
+
+  ntransfers = &MonitoringDbWrapper::numberOfTransfersInState;
+  ntransfersPair = &MonitoringDbWrapper::numberOfTransfersInState;
+
   class_<MonitoringDbWrapper, boost::noncopyable>("MonitoringDb", no_init)
       .def("getInstance", &MonitoringDbWrapper::getInstance, return_value_policy<reference_existing_object>())
       .staticmethod("getInstance")
@@ -53,7 +59,8 @@ BOOST_PYTHON_MODULE(ftsdb)
       .def("getTransferFiles", &MonitoringDbWrapper::getTransferFiles)
       .def("getJob", &MonitoringDbWrapper::getJob)
       .def("filterJobs", &MonitoringDbWrapper::filterJobs)
-      .def("numberOfTransfersInState", &MonitoringDbWrapper::numberOfTransfersInState)
+      .def("numberOfTransfersInState", ntransfers)
+      .def("numberOfTransfersInState", ntransfersPair)
       .def("getUniqueReasons", &MonitoringDbWrapper::getUniqueReasons)
       .def("averageDurationPerSePair", &MonitoringDbWrapper::averageDurationPerSePair)
       .def("averageThroughputPerSePair", &MonitoringDbWrapper::averageThroughputPerSePair)

@@ -55,6 +55,10 @@ public:
     unsigned numberOfTransfersInState(const std::string& vo,
                                       const std::vector<std::string>& state);
 
+    unsigned numberOfTransfersInState(const std::string& vo,
+                                      const SourceAndDestSE& pair,
+                                      const std::vector<std::string>& state);
+
     void getUniqueReasons(std::vector<ReasonOccurrences>& reasons);
 
     unsigned averageDurationPerSePair(const SourceAndDestSE& pair);

@@ -56,8 +56,8 @@ bool operator == (const JobVOAndSites& a, const JobVOAndSites& b) {
 
 void export_types(void) {
     class_<SourceAndDestSE>("SourceAndDestSE", init<>())
-        .def_readonly("sourceStorageElement", &SourceAndDestSE::sourceStorageElement)
-        .def_readonly("destinationStorageElement", &SourceAndDestSE::destinationStorageElement);
+        .def_readwrite("sourceStorageElement", &SourceAndDestSE::sourceStorageElement)
+        .def_readwrite("destinationStorageElement", &SourceAndDestSE::destinationStorageElement);
 
     class_<ConfigAudit>("ConfigAudit", init<>())
         .def_readonly("when", &ConfigAudit::when)

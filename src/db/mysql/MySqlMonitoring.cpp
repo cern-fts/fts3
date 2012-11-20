@@ -273,6 +273,56 @@ unsigned MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
 
 
 
+unsigned  MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
+                                                    const SourceAndDestSE& pair,
+                                                    const std::vector<std::string>& state)
+{
+    soci::session sql(connectionPool);
+
+    try {
+        unsigned count = 0;
+        std::ostringstream query;
+        soci::statement stmt(sql);
+
+        query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
+                 "    (t_file.finish_time > :notBefore OR t_file.finish_time IS NULL) AND "
+                 "    t_file.job_id = t_job.job_id AND "
+                 "    t_job.source_se = :src AND t_job.dest_se = :dest ";
+
+        stmt.exchange(soci::use(notBefore));
+        stmt.exchange(soci::use(pair.sourceStorageElement));
+        stmt.exchange(soci::use(pair.destinationStorageElement));
+
+        if (!vo.empty()) {
+            query << " AND t_job.vo_name = :vo ";
+            stmt.exchange(soci::use(vo));
+        }
+
+        if (!state.empty()) {
+            size_t i;
+            query << "AND t_file.file_state IN (";
+            for (i = 0; i < state.size() - 1; ++i) {
+                query << ":state" << i << ", ";
+                stmt.exchange(soci::use(state[i]));
+            }
+            query << ":state" << i << ")";
+            stmt.exchange(soci::use(state[i]));
+        }
+
+        stmt.exchange(soci::into(count));
+        stmt.alloc();
+        stmt.prepare(query.str());
+        stmt.define_and_bind();
+        stmt.execute(true);
+        return count;
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": " + e.what());
+    }
+}
+
+
+
 void MySqlMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons) {
     soci::session sql(connectionPool);
 

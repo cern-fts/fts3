@@ -96,6 +96,10 @@ public:
     virtual unsigned numberOfTransfersInState(const std::string& vo,
                                               const std::vector<std::string>& state) = 0;
 
+    virtual unsigned numberOfTransfersInState(const std::string& vo,
+                                              const SourceAndDestSE& pair,
+                                              const std::vector<std::string>& state) = 0;
+
     virtual void getUniqueReasons(std::vector<ReasonOccurrences>& reasons) = 0;
 
     virtual unsigned averageDurationPerSePair(const SourceAndDestSE& pair) = 0;

@@ -142,6 +142,20 @@ unsigned MonitoringDbWrapper::numberOfTransfersInState(const std::string& vo,
 
 
 
+unsigned MonitoringDbWrapper::numberOfTransfersInState(const std::string& vo,
+                                                       const SourceAndDestSE& pair,
+                                                       const boost::python::list& states) {
+    std::vector<std::string> strStates;
+    strStates.reserve(static_cast<size_t>(boost::python::len(states)));
+
+    for (ssize_t i = 0; i < boost::python::len(states); ++i)
+        strStates.push_back(boost::python::extract<std::string>(states[i]));
+
+    return db->numberOfTransfersInState(vo, pair, strStates);
+}
+
+
+
 boost::python::list MonitoringDbWrapper::getUniqueReasons(void) {
     std::vector<ReasonOccurrences> reasons;
     db->getUniqueReasons(reasons);

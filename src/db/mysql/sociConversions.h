@@ -9,6 +9,7 @@
 #include <JobStatus.h>
 #include <Se.h>
 #include <SeAndConfig.h>
+#include <SeGroup.h>
 #include <SeProtocolConfig.h>
 #include <TransferJobs.h>
 #include <soci.h>
@@ -55,6 +56,7 @@ namespace soci
             job.JOB_STATE      = v.get<std::string>("job_state");
             job.VO_NAME        = v.get<std::string>("vo_name");
             job.PRIORITY       = v.get<int>("priority");
+            job.SUBMIT_HOST    = v.get<std::string>("submit_host", "");
             job.SOURCE         = v.get<std::string>("source", "");
             job.DEST           = v.get<std::string>("dest", "");
             job.AGENT_DN       = v.get<std::string>("agent_dn", "");
@@ -213,5 +215,17 @@ namespace soci
             config.state = v.get<std::string>("state");	    
         }
 
+    };
+
+    template <>
+    struct type_conversion<SeGroup> {
+      typedef values base_type;
+
+      static void from_base(values const& v, indicator, SeGroup& grp) {
+          grp.active       = v.get<int>("active", -1);
+          grp.groupName    = v.get<std::string>("groupName");
+          grp.member       = v.get<std::string>("member");
+          grp.symbolicName = v.get<std::string>("symbolicName");
+      }
     };
 }

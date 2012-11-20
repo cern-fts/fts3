@@ -196,13 +196,14 @@ public:
 
             std::vector<std::string> distinctVOs;
             monitoringDb->getVONames(distinctVOs);
+
+            text += "\"vos\": [";
+
             for (size_t voIndex = 0; voIndex < distinctVOs.size(); ++voIndex) {
                 std::string& vo = distinctVOs[voIndex];
 
-                //vo stuff
-                text += "\"vo\":{";
                 // Create an array of the channels
-                text += "\"voname\":\"" + vo + "\",\"links\":[";
+                text += "{\"voname\":\"" + vo + "\",\"channels\":[";
 
                 // for every pair source_ dest_ host collect information
                 std::vector<SourceAndDestSE> pairs;
@@ -211,15 +212,28 @@ public:
                     SourceAndDestSE& pair = pairs[pairIndex];
 
                     ++links_found;
-                    text += "{\"source_host\":\"";
+                    text += "{";
+                    text += "\"channel_name\":\"";
+                    text += pair.sourceStorageElement + "__" + pair.destinationStorageElement;
+                    text += "\",";
+                    text += "\"channel_type\":\"\",";
+
+                    text += "\"links\": [{";
+
+                    text += "\"source_host\":\"";
                     text += pair.sourceStorageElement;
                     text += "\"";
                     text += ",\"dest_host\":\"";
                     text += pair.destinationStorageElement;
                     text += "\"";
 
-                    unsigned active = monitoringDb->numberOfJobsInState(pair, "ACTIVE");
-                    unsigned ready  = monitoringDb->numberOfJobsInState(pair, "READY");
+                    std::vector<std::string> states;
+                    states.push_back("ACTIVE");
+                    unsigned active = monitoringDb->numberOfTransfersInState(vo, pair, states);
+                    states.clear();
+                    states.push_back("SUBMITTED");
+                    states.push_back("READY");
+                    unsigned ready  = monitoringDb->numberOfTransfersInState(vo, pair, states);
 
                     text += ",\"active\":\"";
                     text += _to_string<unsigned>(active, std::dec);
@@ -230,7 +244,7 @@ public:
                     text += ",\"ready\":\"";
                     text += _to_string<unsigned>(ready, std::dec);
                     text += "\"";
-                    text += "},";
+                    text += "}]},";
                 }
                 if (links_found > 0)
                     text.resize(text.size() - 1);
@@ -242,7 +256,7 @@ public:
             }
 
             text.resize(text.size() - 1);
-            text += "}";
+            text += "]}";
             text += 4; /*add EOT ctrl character*/
 
 

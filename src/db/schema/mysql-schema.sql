@@ -189,13 +189,7 @@ CREATE TABLE t_se_acl (
 -- se, se pair and se groups in the system
 --
 CREATE TABLE t_se_protocol (
-   se_row_id           INTEGER NOT NULL AUTO_INCREMENT,
---
--- Name of the se_pair
-   se_group_name       VARCHAR(512),
---          
--- Source site name
-   se_name             VARCHAR(512),
+   se_protocol_row_id INTEGER AUTO_INCREMENT PRIMARY KEY,
 --
 -- Email contact of the se_pair responsbile
    contact             VARCHAR(255),
@@ -283,9 +277,36 @@ CREATE TABLE t_se_protocol (
 --
 -- maximum number of files in the preparation phase = nofiles * preparing_files_ratio
 -- preparing_files_ratio DEFAULT = 2. urlcopy se_pairs only.
-   preparing_files_ratio FLOAT DEFAULT NULL,
-   
-   PRIMARY KEY (se_row_id)
+   preparing_files_ratio FLOAT DEFAULT NULL
+);
+
+--
+-- Member and group configuration
+--
+CREATE TABLE t_group_members (
+    groupName VARCHAR(255) NOT NULL,
+    member    VARCHAR(255) NOT NULL,
+    PRIMARY KEY (groupName, member)
+);
+
+CREATE TABLE t_group_config (
+    groupName    VARCHAR(255) NOT NULL,
+    member       VARCHAR(255) NOT NULL,
+    symbolicName VARCHAR(255) NOT NULL,
+    active       INTEGER,
+    FOREIGN KEY (groupName, member) REFERENCES t_group_members (groupName, member)
+);
+
+CREATE TABLE t_config (
+    symbolicName VARCHAR(255) NOT NULL,
+    source       VARCHAR(255) NOT NULL,
+    dest         VARCHAR(255) NOT NULL,
+    vo           VARCHAR(100) NOT NULL,
+    active       INTEGER NOT NULL,
+    protocol_row_id INTEGER NOT NULL,
+    state        VARCHAR(30),
+    PRIMARY KEY (symbolicName, source, dest, vo),
+    FOREIGN KEY (protocol_row_id) REFERENCES t_se_protocol (se_protocol_row_id)
 );
 
 
@@ -324,6 +345,23 @@ CREATE TABLE t_bad_dns (
    admin_dn       VARCHAR(1024)
 );
 
+-- Max. index size is 1000, so we need to keep the group names
+-- in a separated table with a smaller primary key.
+CREATE TABLE t_se_group(
+   se_group_id   INTEGER NOT NULL AUTO_INCREMENT,
+   se_group_name VARCHAR(512) NOT NULL,
+   PRIMARY KEY (se_group_id),
+   KEY(se_group_name)
+);
+ 
+CREATE TABLE t_se_group_contains(
+   se_group_id   INTEGER NOT NULL,
+   se_name       VARCHAR(512) NOT NULL,
+   state         VARCHAR(30),
+   PRIMARY KEY (se_group_id, se_name),
+   FOREIGN KEY (se_group_id) REFERENCES t_se_group(se_group_id),
+   INDEX (se_name)
+); 
 
 --
 -- Table for saving the site-group association. As convention, group names should be between "[""]"
@@ -343,41 +381,7 @@ CREATE TABLE t_site_group (
   PRIMARY KEY (group_name, site_name),
   INDEX (site_name)
 );
-
-
---
--- The se_pair VO share table stores the percentage of the se_pair resources 
--- available for a VO
---
-CREATE TABLE t_se_vo_share (
---
--- the name of the se_pair
-   share_rowid INTEGER AUTO_INCREMENT NOT NULL,
-   se_name     VARCHAR(512) NOT NULL,                    
-   share_id    VARCHAR(512) NOT NULL,                                                           
-   share_value VARCHAR(512) NOT NULL,
-   share_type  VARCHAR(512) NOT NULL,
-   PRIMARY KEY (share_rowid),
-   INDEX (se_name(256), share_id(256), share_type(256))   
-);
-
--- Max. index size is 1000, so we need to keep the group names
--- in a separated table with a smaller primary key.
-CREATE TABLE t_se_group(
-   se_group_id   INTEGER NOT NULL AUTO_INCREMENT,
-   se_group_name VARCHAR(512) NOT NULL,
-   PRIMARY KEY (se_group_id),
-   KEY(se_group_name)
-);
-
-CREATE TABLE t_se_group_contains(
-   se_group_id   INTEGER NOT NULL,
-   se_name       VARCHAR(512) NOT NULL,
-   state         VARCHAR(30),
-   PRIMARY KEY (se_group_id, se_name),
-   FOREIGN KEY (se_group_id) REFERENCES t_se_group(se_group_id),
-   INDEX (se_name)
-); 
+ 
 --
 -- Store se_pair ACL
 --
@@ -428,6 +432,9 @@ CREATE TABLE t_job (
 --
 -- Transport specific parameters
   job_params           VARCHAR(255),
+--
+-- Hostname which received this job
+  submitHost           VARCHAR(255),
 --
 -- Source site name - the source cluster name
   source               VARCHAR(255),
@@ -570,6 +577,12 @@ CREATE TABLE t_file (
 -- The Source Logical Name
   logical_name         VARCHAR(1100),
 --
+-- Configuration to use
+  symbolicName         VARCHAR(255),
+--
+-- Host that is transfering the file
+  transferHost         VARCHAR(255),
+--
 -- The Source
   source_surl          VARCHAR(1100),
 --
@@ -635,6 +648,7 @@ CREATE TABLE t_file (
   
   PRIMARY KEY (file_id),
   FOREIGN KEY (job_id) REFERENCES t_job(job_id),
+  FOREIGN KEY (symbolicName) REFERENCES t_config (symbolicName),
   INDEX (job_id),
   INDEX (file_state),
   INDEX (job_finished),
@@ -725,6 +739,7 @@ CREATE TABLE t_job_backup (
   user_dn              VARCHAR(1024) NOT NULL,
   agent_dn             VARCHAR(1024),
   user_cred            VARCHAR(255),
+  submitHost           VARCHAR(255),
   cred_id              VARCHAR(100),
   voms_cred            LONGTEXT,
   vo_name              VARCHAR(50),
@@ -768,6 +783,8 @@ CREATE TABLE t_file_backup (
   job_id               CHAR(36) NOT NULL,
   file_state           VARCHAR(32) NOT NULL,
   logical_name         VARCHAR(1100),
+  symbolicName         VARCHAR(255),
+  transferHost         VARCHAR(255),
   source_surl          VARCHAR(1100),
   dest_surl            VARCHAR(1100),
   agent_dn             VARCHAR(1024),

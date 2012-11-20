@@ -34,6 +34,10 @@ public:
     unsigned numberOfTransfersInState(const std::string& vo,
                                       const boost::python::list& states);
 
+    unsigned numberOfTransfersInState(const std::string& vo,
+                                      const SourceAndDestSE& pair,
+                                      const boost::python::list& states);
+
     boost::python::list getUniqueReasons(void);
 
     unsigned averageDurationPerSePair(const SourceAndDestSE& pair);
