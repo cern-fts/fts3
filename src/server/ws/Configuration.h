@@ -68,6 +68,7 @@ protected:
 	static string get(vector<string> members);
 
 	shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
+	map<string, int> getProtocolMap(shared_ptr<SeProtocolConfig> protocol);
 
 	void addSe(string se, bool active = true);
 

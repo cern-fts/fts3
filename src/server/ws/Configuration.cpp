@@ -96,10 +96,22 @@ shared_ptr<SeProtocolConfig> Configuration::getProtocolConfig(map<string, int> p
 	return ret;
 }
 
+map<string, int> Configuration::getProtocolMap(shared_ptr<SeProtocolConfig> protocol) {
+
+	map<string, int> ret;
+
+	ret[Protocol::NOSTREAMS] = protocol->NOSTREAMS;
+	ret[Protocol::TCP_BUFFER_SIZE] = protocol->TCP_BUFFER_SIZE;
+	ret[Protocol::URLCOPY_TX_TO] = protocol->URLCOPY_TX_TO;
+	ret[Protocol::NO_TX_ACTIVITY_TO] = protocol->NO_TX_ACTIVITY_TO;
+
+	return ret;
+}
+
 void Configuration::addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol) {
 
 	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
-	int id = db->getProtocolIdFromConfig(source, destination, share.first); // TODO remove protocol per vo!
+	int id = db->getProtocol(symbolic_name); // TODO remove protocol per vo!
 	if (id) {
 		// update
 		db->updateProtocol(pc.get(), id);
@@ -121,7 +133,6 @@ void Configuration::addCfg(string symbolic_name, bool active, string source, str
 
 	cfg->active = share.second;
 	cfg->destination = destination;
-	cfg->protocolId = id;
 	cfg->source = source;
 	cfg->symbolicName = symbolic_name;
 	cfg->vo = share.first;
