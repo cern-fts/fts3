@@ -191,7 +191,7 @@ BEGIN
 END;
 /
 
-
+-- GROUP NAME and its members
 CREATE TABLE t_group_members(
 	groupName VARCHAR2(255) NOT NULL
 	,member VARCHAR2(255) NOT NULL
@@ -199,6 +199,7 @@ CREATE TABLE t_group_members(
 	,CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)	
 ); 
 
+-- SE HOSTNAME / GROUP NAME / *
 CREATE TABLE t_config_symbolic ( 
    symbolicName         VARCHAR2(255)  NOT NULL
    ,source         VARCHAR2(255)   NOT NULL

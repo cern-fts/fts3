@@ -2170,9 +2170,9 @@ void MySqlAPI::allocateToConfig(const std::string & jobId, const std::string & s
     
 void MySqlAPI::submitHost(const std::string & jobId){
 }
-void MySqlAPI::transferHost(int fileId){
+std::string MySqlAPI::transferHost(int fileId){
 }
-void MySqlAPI::transferHostV(std::map<int,std::string>& fileIds){
+std::string MySqlAPI::transferHostV(std::map<int,std::string>& fileIds){
 }
 
 std::string MySqlAPI::getSymbolicName(const std::string & src, const std::string & dest){
@@ -2204,9 +2204,6 @@ bool MySqlAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicN
 bool MySqlAPI::checkIfSeIsMemberOfAnotherGroup( const std::string & member){
 }
 
-
-
-
 bool MySqlAPI::checkSePair(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
 }
 
@@ -2220,6 +2217,9 @@ bool MySqlAPI::checkSourceGroup(const std::string & src, const std::string & des
 	
 //check if dest is GROUP
 bool MySqlAPI::checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
+}
+
+bool MySqlAPI::checkSeExist(const std::string & se){
 }
 
 // the class factories

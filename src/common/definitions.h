@@ -58,13 +58,13 @@ struct message_updater{
 const int timeouts[] = {4000, 5000, 6000,  9000, 11000,  13000, 14000};
 const size_t timeoutslen = (sizeof (timeouts) / sizeof *(timeouts));
 
-#define DEFAULT_NOSTREAMS 8
-const int nostreams[] = {4, 6, 8, 10, 12};
+#define DEFAULT_NOSTREAMS 4
+const int nostreams[] = {1, 2, 4, 6, 8, 10, 12};
 const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
 
 
 #define DEFAULT_BUFFSIZE 0
-const int buffsizes[] = {4194304, 5242880,  7340032, 8388608, 9437184,  11534336, 12582912,  14680064, 67108864};
+const int buffsizes[] = {1048576, 4194304, 5242880,  7340032, 8388608, 9437184,  11534336, 12582912,  14680064, 67108864};
 const size_t buffsizeslen = (sizeof (buffsizes) / sizeof *(buffsizes));
 
 

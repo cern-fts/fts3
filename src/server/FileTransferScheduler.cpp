@@ -56,8 +56,8 @@ string FileTransferScheduler::fileUrlToSeName(string url) {
 FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<TransferFiles*> otherFiles) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
 
-//	if(file){
-//		this->file = file;
+	if(file){
+		this->file = file;
 //	// prepare input for SE part
 //	// TODO check if initialized
 	srcSeName = fileUrlToSeName(file->SOURCE_SURL);
@@ -72,7 +72,7 @@ FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector<Transfe
 //	destGroupName = db->get_group_name(destSeName);
 //
 //	initVosInQueue(otherFiles);
-//       }
+       }
 }
 
 FileTransferScheduler::~FileTransferScheduler() {

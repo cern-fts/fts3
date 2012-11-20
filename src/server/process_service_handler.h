@@ -45,6 +45,7 @@ limitations under the License. */
 #include "StaticSslLocking.h"
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>  
+#include <sys/param.h>
 
 extern bool  stopThreads;
 extern int terminateJobsGracefully;
@@ -104,6 +105,9 @@ public:
             ) :
     TRAITS::ActiveObjectType("ProcessServiceHandler", desc) {
 	enableOptimization = theServerConfig().get<std::string > ("Optimizer");
+	char hostname[MAXHOSTNAMELEN];
+        gethostname(hostname, MAXHOSTNAMELEN);
+	ftsHostName = std::string(hostname);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -124,6 +128,7 @@ public:
 
 protected:
     SiteName siteResolver;
+    std::string ftsHostName;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
         std::vector<int>::const_iterator iter;
@@ -186,7 +191,6 @@ protected:
         	std::vector<TransferFiles*>::const_iterator fileiter;		
                 DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
                 for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-		bool ready = false;
 		if(stopThreads){
 		               /** cleanup resources */
                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
@@ -349,18 +353,17 @@ protected:
                             params.append(temp->DEST_SPACE_TOKEN);
                         }
 
-
-			//for sanity reasons, check if it is still READY                        
-			ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
-			if(ready){
+			std::string host = DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);	
+			bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);\
+			
+			if(host.compare(ftsHostName)==0 && ready==true){
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                         pr = new ExecuteProcess(cmd, params, 0);			
                         if (pr) {		
 			    /*check if fork/execvp failed, */			   
                             if(-1 == pr->executeProcessShell() ){
 			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
-			    }else{
-			        DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);
+			    }else{			        
 			    	DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, to_string(temp->FILE_ID), pr->getPid());
 				struct message_updater msg;
 				strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
@@ -488,7 +491,6 @@ protected:
 		}
 
                 FileTransferScheduler scheduler(tempUrl);
-		bool ready = false;
                 if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
  		    std::stringstream internalParams;
 		    if(optimize && manualConfigExists==false){
@@ -598,16 +600,17 @@ protected:
                         params.append(dest_space_token);
                     }
                     
-		    ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);
-		    if(ready){
+		    std::string host = DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);	
+		    bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);		
+			
+   		    if(host.compare(ftsHostName) && ready==true){		    		    		
 		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
                     pr = new ExecuteProcess(cmd, params, 0);		    
                     if (pr) {		
 		             /*check if fork failed , check if execvp failed, */			   
                             if(-1 == pr->executeProcessShell()){
 			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
-			    }else{
-			        DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);
+			    }else{			       
 			    	DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);				
 				std::map<int, std::string>::const_iterator iterFileIds;
 				for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds) {

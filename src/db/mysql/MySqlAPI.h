@@ -223,9 +223,9 @@ public:
     
     virtual void submitHost(const std::string & jobId);     
     
-    virtual void transferHost(int fileId);         
+    virtual std::string transferHost(int fileId);         
     
-    virtual void transferHostV(std::map<int,std::string>& fileIds);  
+    virtual std::string transferHostV(std::map<int,std::string>& fileIds);  
     
     //t_config_symbolic
     virtual std::string getSymbolicName(const std::string & src, const std::string & dest);
@@ -262,6 +262,7 @@ public:
 	//check if dest is GROUP
     virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);    
       
+    virtual bool checkSeExist(const std::string & se);
 
 private:
     size_t                poolSize;

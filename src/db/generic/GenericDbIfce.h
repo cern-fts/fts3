@@ -257,9 +257,9 @@ public:
     
     virtual void submitHost(const std::string & jobId) = 0;     
     
-    virtual void transferHost(int fileId) = 0;         
+    virtual std::string transferHost(int fileId) = 0;         
     
-    virtual void transferHostV(std::map<int,std::string>& fileIds) = 0;  
+    virtual std::string transferHostV(std::map<int,std::string>& fileIds) = 0;  
     
     //t_config_symbolic
     virtual std::string getSymbolicName(const std::string & src, const std::string & dest) = 0;
@@ -303,6 +303,8 @@ public:
 	
 	//check if dest is GROUP
     virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;	
+    
+    virtual bool checkSeExist(const std::string & se) = 0;
 };
 
 
