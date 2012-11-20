@@ -4527,18 +4527,19 @@ std::string OracleAPI::transferHostV(std::map<int, std::string>& fileIds) {
     return host;
 }
 
-std::string OracleAPI::getSymbolicName(const std::string & src, const std::string & dest) {
+std::pair<std::string, std::string> OracleAPI::getSymbolicName(const std::string & src, const std::string & dest) {
     const std::string tag = "getSymbolicName";
-    std::string query = "select symbolicName from t_config_symbolic where source=:1 and dest=:2";
+    std::string query = "select symbolicName, state from t_config_symbolic where source=:1 and dest=:2";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     std::string symbolic("");
+    std::string state;
 
     ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn())
-            return false;
+            return std::pair<std::string, std::string>();
 
         s = conn->createStatement(query, tag);
         s->setString(1, src);
@@ -4546,12 +4547,13 @@ std::string OracleAPI::getSymbolicName(const std::string & src, const std::strin
         r = conn->createResultset(s);
         if (r->next()) {
             symbolic = r->getString(1);
+            state = r->getString(2);
         }
 
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
         s = NULL;
-        return symbolic;
+
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
@@ -4562,7 +4564,8 @@ std::string OracleAPI::getSymbolicName(const std::string & src, const std::strin
             }
         }
     }
-    return symbolic;
+
+    return std::pair<std::string, std::string>(symbolic, state);
 }
 
 void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & state) {
