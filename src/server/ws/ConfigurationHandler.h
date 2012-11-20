@@ -35,6 +35,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "common/error.h"
 #include "common/logger.h"
@@ -142,10 +143,6 @@ public:
 
 private:
 
-	vector<string> getGroupCfg(string cfg_name, string name, string vo);
-
-	vector<string> doGet(SeConfig* cfg);
-
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 
@@ -167,7 +164,7 @@ private:
 	/// number of debug cmd triggered by configuration command
 	int debugCount;
 
-	Configuration* cfg;
+	scoped_ptr<Configuration> cfg;
 };
 
 }

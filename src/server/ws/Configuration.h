@@ -30,6 +30,7 @@ class Configuration {
 
 public:
 
+	Configuration() : db (DBSingleton::instance().getDBObjectInstance()) {};
 	Configuration(CfgParser& parser);
 	virtual ~Configuration() {};
 
@@ -75,7 +76,6 @@ protected:
 	void addSe(string se, bool active = true);
 
 	void addShareCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share);
-
 	void addProtocolCfg(string symbolic_name, map<string, int> protocol);
 };
 

@@ -25,6 +25,15 @@ StandaloneCfg::~StandaloneCfg() {
 
 }
 
+void StandaloneCfg::init(string name) {
+	// get SE in and out share
+	in_share = getShareMap("*-" + name);
+	out_share = getShareMap(name + "-*");
+	// get SE in and out protocol
+	in_protocol = getProtocolMap("*-" + name);
+	out_protocol = getProtocolMap(name + "-*");
+}
+
 string StandaloneCfg::get() {
 
 	stringstream ss;

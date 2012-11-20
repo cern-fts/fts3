@@ -23,6 +23,7 @@ class StandaloneCfg : public Configuration {
 
 public:
 
+	StandaloneCfg() {}
 	StandaloneCfg(CfgParser& parser);
 
 	virtual ~StandaloneCfg();
@@ -35,9 +36,12 @@ protected:
 
 	virtual void save(string name);
 
-private:
+	void init(string name);
+
 	/// active state
 	bool active;
+
+private:
 
 	/// inbound share
 	map<string, int> in_share;

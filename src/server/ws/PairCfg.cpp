@@ -9,8 +9,21 @@
 
 #include <sstream>
 
+#include <utility>
+
 namespace fts3 {
 namespace ws {
+
+PairCfg::PairCfg(string source, string destination) : source(source), destination(destination) {
+
+	pair<string, string> p = db->getSymbolicName(source, destination);
+
+	symbolic_name = p.first;
+	active = p.second == "on";
+
+	share = getShareMap(symbolic_name);
+	protocol = getProtocolMap(symbolic_name);
+}
 
 PairCfg::PairCfg(CfgParser& parser) : Configuration(parser) {
 

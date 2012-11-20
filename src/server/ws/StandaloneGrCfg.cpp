@@ -10,6 +10,20 @@
 namespace fts3 {
 namespace ws {
 
+StandaloneGrCfg::StandaloneGrCfg(string name) : group(name) {
+
+	if (db->checkGroupExists(name))
+		throw Err_Custom("The SE group: " + name + " does not exist!");
+
+	active = true; // TODO so far it is not possible to set the active state for a group to 'off' (false)
+
+	// init shares and protocols
+	init(name);
+
+	// get group members
+	db->getGroupMembers(name, members);
+}
+
 StandaloneGrCfg::StandaloneGrCfg(CfgParser& parser) : StandaloneCfg(parser) {
 	group = parser.get<string>("group");
 	members = parser.get< vector<string> >("members");

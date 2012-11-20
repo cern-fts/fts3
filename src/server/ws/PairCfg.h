@@ -26,6 +26,7 @@ class PairCfg : public Configuration {
 
 public:
 
+	PairCfg(string source, string destination);
 	PairCfg(CfgParser& parser);
 	virtual ~PairCfg();
 

@@ -23,6 +23,7 @@ class StandaloneGrCfg : public StandaloneCfg {
 
 public:
 
+	StandaloneGrCfg(string name);
 	StandaloneGrCfg(CfgParser& parser);
 	virtual ~StandaloneGrCfg();
 

@@ -51,7 +51,6 @@ ConfigurationHandler::ConfigurationHandler(string dn):
 
 ConfigurationHandler::~ConfigurationHandler() {
 
-	if (cfg) delete cfg;
 }
 
 void ConfigurationHandler::parse(string configuration) {
@@ -68,16 +67,24 @@ void ConfigurationHandler::parse(string configuration) {
 
 	switch(type) {
 	case CfgParser::STANDALONE_SE_CFG:
-		cfg = new StandaloneSeCfg(parser);
+		cfg.reset(
+				new StandaloneSeCfg(parser)
+			);
 		break;
 	case CfgParser::STANDALONE_GR_CFG:
-		cfg = new StandaloneGrCfg(parser);
+		cfg.reset(
+				new StandaloneGrCfg(parser)
+			);
 		break;
 	case CfgParser::SE_PAIR_CFG:
-		cfg = new SePairCfg(parser);
+		cfg.reset(
+				new SePairCfg(parser)
+			);
 		break;
 	case CfgParser::GR_PAIR_CFG:
-		cfg = new GrPairCfg(parser);
+		cfg.reset(
+				new GrPairCfg(parser)
+			);
 		break;
 	case CfgParser::NOT_A_CFG:
 	default:
@@ -88,83 +95,6 @@ void ConfigurationHandler::parse(string configuration) {
 void ConfigurationHandler::add() {
 
 	cfg->save();
-
-//	if (insertCount) {
-//		string action = "insert (x" + lexical_cast<string>(insertCount) + ")";
-//		db->auditConfiguration(dn, all, action);
-//	}
-//
-//	if (updateCount) {
-//		string action = "update (x" + lexical_cast<string>(updateCount) + ")";
-//		db->auditConfiguration(dn, all, action);
-//	}
-}
-
-
-vector<string> ConfigurationHandler::getGroupCfg(string cfg_name, string name, string vo) {
-
-	vector<string> ret;
-
-//	vector<string> members;
-//	db->getGroupMembers(name, members);
-//	ret.push_back(
-//			buildGroupCfg(name, members)
-//		);
-//
-//	vector<string>::iterator it;
-//	for (it = members.begin(); it != members.end(); it++) {
-//		scoped_ptr<SeGroup> sg (
-//					db->getGroupConfig(cfg_name, name, *it, vo)
-//				);
-//		if (sg.get())
-//			ret.push_back(
-//					buildSeCfg(sg.get())
-//				);
-//
-//	}
-
-	return ret;
-}
-
-vector<string> ConfigurationHandler::doGet(SeConfig* cfg) {
-
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is getting configuration";
-//	if (!cfg->vo.empty() || !cfg->symbolicName.empty()) {
-//
-//		FTS3_COMMON_LOGGER_NEWLOG (INFO) << " for";
-//
-//		if (!cfg->vo.empty()) {
-//			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " VO: " << vo;
-//		}
-//
-//		if (!cfg->symbolicName.empty()) {
-//			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "symbolic name: " << name;
-//		}
-//	}
-//	FTS3_COMMON_LOGGER_NEWLOG (INFO) << commit;
-
-	vector<string> ret;
-//
-//	scoped_ptr<SeProtocolConfig> prot (
-//			db->getProtocol(cfg->protocolId)
-//		);
-//
-//	// create the pair configuration
-//	ret.push_back(
-//			buildPairCfg(cfg, prot.get())
-//		);
-//
-//	if (db->checkGroupExists(cfg->source)) {
-//		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->source, cfg->vo);
-//		ret.insert(ret.end(), gr.begin(), gr.end());
-//	}
-//
-//	if (db->checkGroupExists(cfg->destination)) {
-//		vector<string> gr = getGroupCfg(cfg->symbolicName, cfg->destination, cfg->vo);
-//		ret.insert(ret.end(), gr.begin(), gr.end());
-//	}
-
-	return ret;
 }
 
 vector<string> ConfigurationHandler::get(string name) {
@@ -172,61 +102,52 @@ vector<string> ConfigurationHandler::get(string name) {
 	vector<string> ret;
 
 	if (db->checkGroupExists(name)) {
-		// standalone group
+		cfg.reset(
+				new StandaloneGrCfg(name)
+			);
+		type = CfgParser::STANDALONE_GR_CFG;
 	} else {
-		// standalone se
+		cfg.reset(
+				new StandaloneSeCfg(name)
+			);
+		type = CfgParser::STANDALONE_SE_CFG;
 	}
+
+	ret.push_back(cfg->get());
 
 	return ret;
 }
 
 vector<string> ConfigurationHandler::getPair(string src, string dest) {
 
-//	to_lower(vo);
-//	vector<SeConfig*> vec = db->getConfig(src, dest, vo);
-//
-//	if (vec.empty()) {
-//		throw Err_Custom(
-//				"A configuration for source: " + src  + " and destination: " + dest +
-//				(vo.empty() ? "" : " and for vo: " + vo)
-//				+ " does not exist!"
-//			);
-//	}
-
 	vector<string> ret;
-//	vector<SeConfig*>::iterator it;
-//
-//	for (it = vec.begin(); it != vec.end(); it++) {
-//		scoped_ptr<SeConfig> cfg (*it);
-//		vector<string> v = doGet(cfg.get());
-//		ret.insert(ret.end(), v.begin(), v.end());
-//	}
 
+	bool grPair = db->checkGroupExists(src) && db->checkGroupExists(dest);
+	bool sePair = !db->checkGroupExists(src) && !db->checkGroupExists(dest);
+
+	if (grPair) {
+		cfg.reset(
+				new GrPairCfg(src, dest)
+			);
+		type = CfgParser::STANDALONE_GR_CFG;
+	} else if (sePair) {
+		cfg.reset(
+				new SePairCfg(src, dest)
+			);
+		type = CfgParser::STANDALONE_SE_CFG;
+	} else
+		throw Err_Custom("The source and destination have to bem either two SEs or two SE groups!");
+
+	ret.push_back(cfg->get());
 
 	return ret;
 }
 
 vector<string> ConfigurationHandler::getPair(string symbolic) {
 
-//	to_lower(cfg_name);
-//
-//	vector<SeConfig*> vec = db->getConfig(cfg_name, string());
-//
-//	if (vec.empty()) {
-//		throw Err_Custom(
-//				"A configuration for symboli name: " + cfg_name
-//				+ " does not exist!"
-//			);
-//	}
-
 	vector<string> ret;
-//	vector<SeConfig*>::iterator it;
-//
-//	for (it = vec.begin(); it != vec.end(); it++) {
-//		scoped_ptr<SeConfig> cfg (*it);
-//		vector<string> v = doGet(cfg.get());
-//		ret.insert(ret.end(), v.begin(), v.end());
-//	}
+
+	// TODO ...
 
 	return ret;
 }

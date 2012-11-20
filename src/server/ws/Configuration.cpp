@@ -151,10 +151,14 @@ map<string, int> Configuration::getProtocolMap(string symbolic_name) {
 
 	map<string, int> ret;
 
-	ret[Protocol::NOSTREAMS] = protocol->NOSTREAMS;
-	ret[Protocol::TCP_BUFFER_SIZE] = protocol->TCP_BUFFER_SIZE;
-	ret[Protocol::URLCOPY_TX_TO] = protocol->URLCOPY_TX_TO;
-	ret[Protocol::NO_TX_ACTIVITY_TO] = protocol->NO_TX_ACTIVITY_TO;
+	if (protocol->NOSTREAMS)
+		ret[Protocol::NOSTREAMS] = protocol->NOSTREAMS;
+	if (protocol->TCP_BUFFER_SIZE)
+		ret[Protocol::TCP_BUFFER_SIZE] = protocol->TCP_BUFFER_SIZE;
+	if (protocol->URLCOPY_TX_TO)
+		ret[Protocol::URLCOPY_TX_TO] = protocol->URLCOPY_TX_TO;
+	if (protocol->NO_TX_ACTIVITY_TO)
+		ret[Protocol::NO_TX_ACTIVITY_TO] = protocol->NO_TX_ACTIVITY_TO;
 
 	return ret;
 }
