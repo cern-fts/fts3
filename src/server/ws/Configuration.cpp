@@ -111,13 +111,15 @@ map<string, int> Configuration::getProtocolMap(shared_ptr<SeProtocolConfig> prot
 void Configuration::addCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share, map<string, int> protocol) {
 
 	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
-	int id = db->getProtocol(symbolic_name); // TODO remove protocol per vo!
-	if (id) {
+	pc->symbolicName = symbolic_name;
+
+	scoped_ptr<SeProtocolConfig> curr = db->getProtocol(symbolic_name);
+	if (curr.get()) {
 		// update
-		db->updateProtocol(pc.get(), id);
+		db->updateProtocol(pc.get());
 	} else {
 		// insert
-		id = db->addProtocol(pc.get());
+		db->addProtocol(pc.get());
 	}
 
 	bool update = true;
