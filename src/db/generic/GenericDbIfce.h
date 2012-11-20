@@ -264,7 +264,7 @@ public:
     //t_config_symbolic
     virtual std::string getSymbolicName(const std::string & src, const std::string & dest) = 0;
     
-    virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) = 0;    
+    virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) = 0;
     
     virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) = 0;        
     

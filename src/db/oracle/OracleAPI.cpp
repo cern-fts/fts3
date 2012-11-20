@@ -3866,12 +3866,12 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & symbolicName, co
 
 void OracleAPI::addNewConfig(SeConfig* seConfig) {
     std::string tag = "addNewConfig111";
-    std::string query = "insert into t_config(symbolicName,vo,active) values(:1,:2,:3,:4)";
+    std::string query = "insert into t_config(symbolicName,vo,active) values(:1,:2,:3)";
     oracle::occi::Statement* s = NULL;
 
     if (!checkIfSymbolicNameExistsForSrcDest(seConfig->symbolicName, seConfig->source, seConfig->destination)) {
         //first we need to add the t_config_symbolic entries
-        addSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination);
+        addSymbolic(seConfig->symbolicName, seConfig->source, seConfig->destination, seConfig->state);
     }
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -3884,7 +3884,6 @@ void OracleAPI::addNewConfig(SeConfig* seConfig) {
         s->setString(1, seConfig->symbolicName);
         s->setString(2, seConfig->vo);
         s->setInt(3, seConfig->active);
-        s->setString(4, seConfig->state);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
@@ -4567,9 +4566,9 @@ std::string OracleAPI::getSymbolicName(const std::string & src, const std::strin
     return symbolic;
 }
 
-void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest) {
+void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) {
     std::string tag = "addSymbolic";
-    std::string query = "insert into t_config_symbolic(symbolicName, source, dest) values(:1,:2,:3)";
+    std::string query = "insert into t_config_symbolic(symbolicName, source, dest, status) values(:1,:2,:3,:4)";
     oracle::occi::Statement* s = NULL;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -4582,6 +4581,7 @@ void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string 
         s->setString(1, symbolicName);
         s->setString(2, src);
         s->setString(3, dest);
+        s->setString(4, status);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
