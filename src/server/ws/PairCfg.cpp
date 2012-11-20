@@ -14,7 +14,7 @@ namespace ws {
 
 PairCfg::PairCfg(CfgParser& parser) : Configuration(parser) {
 
-	symbolic_name = parser.get<string>("symbolic_name");
+	symbolic_name_opt = parser.get_opt("symbolic_name");
 	share = parser.get< map<string, int> >("share");
 	protocol = parser.get< map<string, int> >("protocol");
 	active = parser.get<bool>("active");

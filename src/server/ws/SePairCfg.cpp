@@ -17,6 +17,11 @@ SePairCfg::SePairCfg(CfgParser& parser) : PairCfg(parser) {
 	source = parser.get<string>("source_se");
 	destination = parser.get<string>("destination_se");
 
+	if (symbolic_name_opt)
+		symbolic_name = *symbolic_name_opt;
+	else
+		symbolic_name = source + "-" + destination;
+
 	addSe(source);
 	addSe(destination);
 }

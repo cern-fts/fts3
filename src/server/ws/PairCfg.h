@@ -13,10 +13,13 @@
 #include <string>
 #include <map>
 
+#include <boost/optional.hpp>
+
 namespace fts3 {
 namespace ws {
 
 using namespace std;
+using namespace boost;
 using namespace fts3::common;
 
 class PairCfg : public Configuration {
@@ -35,10 +38,12 @@ protected:
 	string source;
 	/// destination
 	string destination;
+	/// optional symbolic name
+	optional<string> symbolic_name_opt;
+	/// symbolic name (given by user or generated)
+	string symbolic_name;
 
 private:
-	/// symbolic name
-	string symbolic_name;
 	/// active state
 	bool active;
 	/// inbound share
