@@ -113,7 +113,10 @@ void Configuration::addCfg(string symbolic_name, bool active, string source, str
 	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
 	pc->symbolicName = symbolic_name;
 
-	scoped_ptr<SeProtocolConfig> curr = db->getProtocol(symbolic_name);
+	scoped_ptr<SeProtocolConfig> curr (
+			db->getProtocol(symbolic_name)
+		);
+
 	if (curr.get()) {
 		// update
 		db->updateProtocol(pc.get());
