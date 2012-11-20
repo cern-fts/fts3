@@ -204,7 +204,7 @@ CREATE TABLE t_config_symbolic (
    symbolicName         VARCHAR2(255)  NOT NULL
    ,source         VARCHAR2(255)   NOT NULL
    ,dest         VARCHAR2(255)   NOT NULL
-   ,active INTEGER NOT NULL
+   ,state VARCHAR2(30)  NOT NULL
    ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)    
 );
 
@@ -212,7 +212,6 @@ CREATE TABLE t_config (
    symbolicName VARCHAR2(255)  NOT NULL
    ,vo VARCHAR2(100) NOT NULL
    ,active INTEGER NOT NULL
-   ,state VARCHAR2(30)  NOT NULL			
    ,CONSTRAINT t_config_pk PRIMARY KEY (symbolicName, vo)
    ,CONSTRAINT t_config_fk2 FOREIGN KEY (symbolicName) REFERENCES t_config_symbolic (symbolicName)
 );
