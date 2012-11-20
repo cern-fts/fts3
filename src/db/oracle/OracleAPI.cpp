@@ -3762,13 +3762,13 @@ std::vector<SeConfig*> OracleAPI::getConfig(const std::string & source, const st
     std::string query("");
 
     if (vo.length() > 0) {
-        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
-                " t_config.state from t_config,t_config_symbolic "
+        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active "
+                " from t_config,t_config_symbolic "
                 " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
                 " t_config_symbolic.dest=:2 and t_config.vo=:3 ";
     } else {
-        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active, "
-                " t_config.state from t_config,t_config_symbolic "
+        query = " select t_config.symbolicName, t_config_symbolic.source, t_config_symbolic.dest, t_config.vo, t_config.active "
+                " from t_config,t_config_symbolic "
                 " where t_config.symbolicName=t_config_symbolic.symbolicName and  t_config_symbolic.source=:1 and "
                 " t_config_symbolic.dest=:2";
         tag += "222";
@@ -4568,7 +4568,7 @@ std::string OracleAPI::getSymbolicName(const std::string & src, const std::strin
 
 void OracleAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) {
     std::string tag = "addSymbolic";
-    std::string query = "insert into t_config_symbolic(symbolicName, source, dest, status) values(:1,:2,:3,:4)";
+    std::string query = "insert into t_config_symbolic(symbolicName, source, dest, state) values(:1,:2,:3,:4)";
     oracle::occi::Statement* s = NULL;
 
     ThreadTraits::LOCK_R lock(_mutex);
