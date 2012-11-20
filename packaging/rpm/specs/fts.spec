@@ -200,6 +200,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
+%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz

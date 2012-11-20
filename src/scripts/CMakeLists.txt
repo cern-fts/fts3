@@ -29,7 +29,11 @@ install(FILES         fts-records-cleaner.initd
 	
 install(FILES         fts-records-cleaner
         DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily 
-	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)		
+	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)
+	
+install(FILES         fts-msg-cron
+        DESTINATION ${SYSCONF_INSTALL_DIR}/cron.hourly
+	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)			
 	
 install(FILES         fts-msg-cron.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 

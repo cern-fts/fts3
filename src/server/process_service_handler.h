@@ -353,7 +353,7 @@ protected:
                         }
 
 			std::string host = DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);	
-			bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);\
+			bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
 			
 			if(host.compare(ftsHostName)==0 && ready==true){
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;

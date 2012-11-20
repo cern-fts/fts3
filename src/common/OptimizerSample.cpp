@@ -103,10 +103,10 @@ bool OptimizerSample::transferStart(std::string sourceSe, std::string destSe, in
 	}else if(numOfPairInDB<10 && destActive>10){ //wait until we collect 10 samples for each src/dest pair
 		allowed = false;		
 	}else{ 	
-		if(currentActive<=activeInStore){
-			allowed = true;	
+		if(currentActive==activeInStore){
+			allowed = false;	
 		}else{
-			allowed = false;			
+			allowed = true;			
 		}		
 	}
 return allowed;
