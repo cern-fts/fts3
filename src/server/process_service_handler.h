@@ -237,8 +237,7 @@ protected:
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }else{
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
-		        int protocolId = DBSingleton::instance().getDBObjectInstance()->getProtocolIdFromConfig(symbolicName,temp->VO_NAME);			
-		        protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(protocolId);
+		        protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(symbolicName);
 			if(protocol){
 				if(protocol->NOSTREAMS > 0)
 					internalParams << "nostreams:" << protocol->NOSTREAMS;
@@ -497,8 +496,7 @@ protected:
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
 		    }else{
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
-		        int protocolId = DBSingleton::instance().getDBObjectInstance()->getProtocolIdFromConfig(symbolicName,vo_name);			
-		        protocol = DBSingleton::instance().getDBObjectInstance()->getProtocol(protocolId);
+		        protocol =  DBSingleton::instance().getDBObjectInstance()->getProtocol(symbolicName);
 			if(protocol){
 				if(protocol->NOSTREAMS > 0)
 					internalParams << "nostreams:" << protocol->NOSTREAMS;
