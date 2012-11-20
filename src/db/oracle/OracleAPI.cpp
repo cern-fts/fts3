@@ -3680,8 +3680,7 @@ SeProtocolConfig* OracleAPI::getProtocol(std::string symbolicName) {
 void OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig) {
     const std::string tag = "addProtocol";
     const std::string tag1 = "addProtocolCurr";
-    int protocolId = 0;
-    std::string query = "insert into t_se_protocol(NOSTREAMS,tcp_buffer_size,URLCOPY_TX_TO,no_tx_activity_to) values(:1,:2,:3,:4)";
+    std::string query = "insert into t_se_protocol(NOSTREAMS,tcp_buffer_size,URLCOPY_TX_TO,no_tx_activity_to,symbolicName) values(:1,:2,:3,:4,:5)";
     ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s = NULL;
     try {
@@ -3690,6 +3689,7 @@ void OracleAPI::addProtocol(SeProtocolConfig* seProtocolConfig) {
         s->setInt(2, seProtocolConfig->TCP_BUFFER_SIZE);
         s->setInt(3, seProtocolConfig->URLCOPY_TX_TO);
         s->setInt(4, seProtocolConfig->NO_TX_ACTIVITY_TO);
+        s->setString(5, seProtocolConfig->symbolicName);
         if (s->executeUpdate() != 0)
             conn->commit();
         conn->destroyStatement(s, tag);
