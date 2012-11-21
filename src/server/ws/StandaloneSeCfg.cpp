@@ -40,13 +40,13 @@ StandaloneSeCfg::~StandaloneSeCfg() {
 
 }
 
-string StandaloneSeCfg::get() {
+string StandaloneSeCfg::json() {
 
 	stringstream ss;
 
 	ss << "{";
 	ss << "\"" << "se" << "\":\"" << se << "\",";
-	ss << StandaloneCfg::get();
+	ss << StandaloneCfg::json();
 	ss << "}";
 
 	return ss.str();

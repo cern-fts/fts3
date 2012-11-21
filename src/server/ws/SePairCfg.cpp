@@ -29,14 +29,14 @@ SePairCfg::SePairCfg(CfgParser& parser) : PairCfg(parser) {
 SePairCfg::~SePairCfg() {
 }
 
-string SePairCfg::get() {
+string SePairCfg::json() {
 
 	stringstream ss;
 
 	ss << "{";
 	ss << "\"" << "source_se" << "\":\"" << source << "\",";
 	ss << "\"" << "destination_se" << "\":\"" << destination << "\",";
-	ss << PairCfg::get();
+	ss << PairCfg::json();
 	ss << "}";
 
 	return ss.str();

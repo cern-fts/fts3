@@ -27,14 +27,14 @@ GrPairCfg::GrPairCfg(CfgParser& parser) : PairCfg(parser) {
 GrPairCfg::~GrPairCfg() {
 }
 
-string GrPairCfg::get() {
+string GrPairCfg::json() {
 
 	stringstream ss;
 
 	ss << "{";
 	ss << "\"" << "source_group" << "\":\"" << source << "\",";
 	ss << "\"" << "destination_group" << "\":\"" << destination << "\",";
-	ss << PairCfg::get();
+	ss << PairCfg::json();
 	ss << "}";
 
 	return ss.str();

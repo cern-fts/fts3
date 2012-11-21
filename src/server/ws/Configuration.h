@@ -56,7 +56,7 @@ public:
 		static const string PREPARING_FILES_RATIO;
 	};
 
-	virtual string get() = 0;
+	virtual string json() = 0;
 	virtual void save() = 0;
 	virtual void del() = 0;
 

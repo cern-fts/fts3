@@ -26,7 +26,7 @@ public:
 	StandaloneSeCfg(CfgParser& parser);
 	virtual ~StandaloneSeCfg();
 
-	virtual string get();
+	virtual string json();
 	virtual void save();
 	virtual void del();
 

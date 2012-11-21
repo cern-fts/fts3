@@ -21,7 +21,7 @@ public:
 	SePairCfg(CfgParser& parser);
 	virtual ~SePairCfg();
 
-	virtual string get();
+	virtual string json();
 	virtual void del();
 };
 

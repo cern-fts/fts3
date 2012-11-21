@@ -28,7 +28,7 @@ public:
 
 	virtual ~StandaloneCfg();
 
-	virtual string get();
+	virtual string json();
 	virtual void save() = 0;
 	virtual void del() = 0;
 

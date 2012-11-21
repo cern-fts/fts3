@@ -36,7 +36,7 @@ PairCfg::PairCfg(CfgParser& parser) : Configuration(parser) {
 PairCfg::~PairCfg() {
 }
 
-string PairCfg::get() {
+string PairCfg::json() {
 
 	stringstream ss;
 

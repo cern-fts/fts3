@@ -30,7 +30,7 @@ public:
 	PairCfg(CfgParser& parser);
 	virtual ~PairCfg();
 
-	virtual string get();
+	virtual string json();
 	virtual void save();
 	virtual void del() = 0;
 

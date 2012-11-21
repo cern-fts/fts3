@@ -46,14 +46,14 @@ StandaloneGrCfg::StandaloneGrCfg(CfgParser& parser) : StandaloneCfg(parser) {
 StandaloneGrCfg::~StandaloneGrCfg() {
 }
 
-string StandaloneGrCfg::get() {
+string StandaloneGrCfg::json() {
 
 	stringstream ss;
 
 	ss << "{";
 	ss << "\"" << "group" << "\":\"" << group << "\",";
 	ss << "\"" << "members" << "\":" << Configuration::get(members) << ",";
-	ss << StandaloneCfg::get();
+	ss << StandaloneCfg::json();
 	ss << "}";
 
 	return ss.str();

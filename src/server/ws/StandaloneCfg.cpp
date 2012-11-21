@@ -34,7 +34,7 @@ void StandaloneCfg::init(string name) {
 	out_protocol = getProtocolMap(name + "-*");
 }
 
-string StandaloneCfg::get() {
+string StandaloneCfg::json() {
 
 	stringstream ss;
 

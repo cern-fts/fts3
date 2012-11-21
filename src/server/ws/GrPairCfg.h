@@ -21,7 +21,7 @@ public:
 	GrPairCfg(CfgParser& parser);
 	virtual ~GrPairCfg();
 
-	virtual string get();
+	virtual string json();
 	virtual void del();
 
 private:

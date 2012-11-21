@@ -113,7 +113,7 @@ vector<string> ConfigurationHandler::get(string name) {
 		type = CfgParser::STANDALONE_SE_CFG;
 	}
 
-	ret.push_back(cfg->get());
+	ret.push_back(cfg->json());
 
 	return ret;
 }
@@ -138,7 +138,7 @@ vector<string> ConfigurationHandler::getPair(string src, string dest) {
 	} else
 		throw Err_Custom("The source and destination have to bem either two SEs or two SE groups!");
 
-	ret.push_back(cfg->get());
+	ret.push_back(cfg->json());
 
 	return ret;
 }

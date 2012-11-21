@@ -27,7 +27,7 @@ public:
 	StandaloneGrCfg(CfgParser& parser);
 	virtual ~StandaloneGrCfg();
 
-	virtual string get();
+	virtual string json();
 	virtual void save();
 	virtual void del();
 
