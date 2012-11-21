@@ -84,16 +84,19 @@ void Configuration::addSe(string se, bool active) {
 }
 
 void Configuration::addGroup(string group, vector<string>& members) {
-	vector<string>::iterator it;
-	for (it = members.begin(); it != members.end(); it++) {
-		addSe(*it);
-	}
 
 	if (db->checkGroupExists(group)) {
 		// if the group exists remove it!
 		vector<string> tmp;
 		db->getGroupMembers(group, tmp);
 		db->deleteMembersFromGroup(group, tmp);
+	}
+
+	vector<string>::iterator it;
+	for (it = members.begin(); it != members.end(); it++) {
+		addSe(*it);
+		if (db->checkIfSeIsMemberOfAnotherGroup(*it))
+			throw Err_Custom("The SE: " + *it + " is already a member of another SE group!");
 	}
 
 	db->addMemberToGroup(group, members);
