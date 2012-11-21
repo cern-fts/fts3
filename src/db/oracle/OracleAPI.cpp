@@ -3682,7 +3682,7 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
     std::string query =
     		"update t_link_config "
     		"set state=:1,symbolicName=:2,NOSTREAMS=:3,tcp_buffer_size=:4,URLCOPY_TX_TO=:5,no_tx_activity_to=:6 "
-    		"where source=:7 and destiantion=:8";
+    		"where source=:7 and destination=:8";
     oracle::occi::Statement* s = NULL;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -3854,7 +3854,7 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg) {
 	std::string query =
 			"update t_share_config "
 			"set active=:1 "
-			"where source=:2 and destiantion=:3 and vo=:4";
+			"where source=:2 and destination=:3 and vo=:4";
 	oracle::occi::Statement* s = NULL;
 
 	ThreadTraits::LOCK_R lock(_mutex);
