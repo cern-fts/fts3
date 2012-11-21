@@ -3905,6 +3905,31 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
     }
 }
 
+void OracleAPI::deleteShareConfig(std::string source, std::string destination) {
+    const std::string tag = "deleteShareConfig";
+    std::string query = "delete from t_share_config where source=:1 and destination=:2";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
 ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destination, std::string vo) {
     std::string tag = "getShareConfig";
     std::string query =

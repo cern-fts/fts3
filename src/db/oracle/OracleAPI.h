@@ -290,6 +290,7 @@ public:
     virtual void addShareConfig(ShareConfig* cfg);
     virtual void updateShareConfig(ShareConfig* cfg);
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo);
+    virtual void deleteShareConfig(std::string source, std::string destination);
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
     virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);
     
