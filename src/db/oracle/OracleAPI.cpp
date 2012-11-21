@@ -3637,6 +3637,218 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
     }
 }
 
+// todo
+
+void OracleAPI::addLinkConfig(LinkConfig* cfg) {
+    const std::string tag = "addLinkConfig";
+    std::string query =
+    		"insert into t_link_config("
+    		"	source,"
+    		"	destination,"
+    		"	state,"
+    		"	symbolicName,"
+    		"	NOSTREAMS,"
+    		"	tcp_buffer_size,"
+    		"	URLCOPY_TX_TO,"
+    		"	no_tx_activity_to"
+    		") values(:1,:2,:3,:4,:5,:6,:7,:8)";
+    ThreadTraits::LOCK_R lock(_mutex);
+    oracle::occi::Statement* s = NULL;
+    try {
+
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, cfg->source);
+        s->setString(2, cfg->destination);
+        s->setString(3, cfg->state);
+        s->setString(4, cfg->symbolic_name);
+        s->setInt(5, cfg->NOSTREAMS);
+        s->setInt(6, cfg->TCP_BUFFER_SIZE);
+        s->setInt(7, cfg->URLCOPY_TX_TO);
+        s->setInt(8, cfg->NO_TX_ACTIVITY_TO);
+        if (s->executeUpdate() != 0)
+            conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
+    const std::string tag = "deleteLinkConfig";
+    std::string query = "delete from t_link_config where source=:1 and destination=:2";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination) {
+    std::string tag = "getlinkConfig";
+    std::string query =
+    		"select source,destination,state,symbolicName,nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to "
+    		"from t_link_config where source=:1 and destination=:2";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    LinkConfig* cfg = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return NULL;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        r = conn->createResultset(s);
+        if (r->next()) {
+            cfg = new LinkConfig();
+            cfg->source = r->getString(1);
+            cfg->destination = r->getString(2);
+            cfg->state = r->getString(3);
+            cfg->symbolic_name = r->getString(4);
+            cfg->NOSTREAMS = r->getInt(5);
+            cfg->TCP_BUFFER_SIZE = r->getInt(6);
+            cfg->URLCOPY_TX_TO = r->getInt(7);
+            cfg->NO_TX_ACTIVITY_TO = r->getInt(8);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+        return cfg;
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+    return cfg;
+}
+
+void OracleAPI::addShareConfig(ShareConfig* cfg) {
+    const std::string tag = "addShareConfig";
+    std::string query =
+    		"insert into t_share_config("
+    		"	source,"
+    		"	destination,"
+    		"	vo,"
+    		"	active"
+    		") values(:1,:2,:3,:4)";
+    ThreadTraits::LOCK_R lock(_mutex);
+    oracle::occi::Statement* s = NULL;
+    try {
+
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, cfg->source);
+        s->setString(2, cfg->destination);
+        s->setString(3, cfg->vo);
+        s->setInt(4, cfg->active_transfers);
+        if (s->executeUpdate() != 0)
+            conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+void OracleAPI::deleteShareConfig(std::string source, std::string destination, std::string vo) {
+    const std::string tag = "deleteShareConfig";
+    std::string query = "delete from t_share_config where source=:1 and destination=:2 and vo=:3";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        s->setString(3, vo);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
+ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destination, std::string vo) {
+    std::string tag = "getlinkConfig";
+    std::string query =
+    		"select source,destination,vo,active "
+    		"from t_share_config where source=:1 and destination=:2 and vo=:3";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    ShareConfig* cfg = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return NULL;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        s->setString(3, vo);
+        r = conn->createResultset(s);
+        if (r->next()) {
+            cfg = new ShareConfig();
+            cfg->source = r->getString(1);
+            cfg->destination = r->getString(2);
+            cfg->vo = r->getString(3);
+            cfg->active_transfers = r->getInt(4);
+         }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+        return cfg;
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+    return cfg;
+}
+
+// todo
+
 //t_se_protocol
 
 SeProtocolConfig* OracleAPI::getProtocol(std::string symbolicName) {

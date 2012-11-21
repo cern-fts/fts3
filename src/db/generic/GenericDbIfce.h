@@ -47,6 +47,9 @@
 #include "definitions.h"
 #include "OptimizerSample.h"
 
+#include "LinkConfig.h"
+#include "ShareConfig.h"
+
 #include <utility>
 
 /**
@@ -264,6 +267,14 @@ public:
     virtual std::string transferHostV(std::map<int,std::string>& fileIds) = 0;  
     
     //t_config_symbolic
+    virtual void addLinkConfig(LinkConfig* cfg) = 0;
+    virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
+    virtual LinkConfig* getLinkConfig(std::string source, std::string destination) = 0;
+
+    virtual void addShareConfig(ShareConfig* cfg) = 0;
+    virtual void deleteShareConfig(std::string source, std::string destination, std::string vo) = 0;
+    virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo) = 0;
+
     virtual std::pair<std::string, std::string> getSymbolicName(const std::string & src, const std::string & dest) = 0;
     
     virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) = 0;
