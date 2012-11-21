@@ -271,6 +271,7 @@ public:
     virtual void updateLinkConfig(LinkConfig* cfg) = 0;
     virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination) = 0;
+    virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name) = 0;
 
     virtual void addShareConfig(ShareConfig* cfg) = 0;
     virtual void updateShareConfig(ShareConfig* cfg) = 0;

@@ -205,7 +205,7 @@ CREATE TABLE t_link_config (
    source         VARCHAR2(255)   NOT NULL
    ,destination         VARCHAR2(255)   NOT NULL
    ,state VARCHAR2(30)  NOT NULL
-   ,symbolicName         VARCHAR2(255)  NOT NULL
+   ,symbolicName         VARCHAR2(255)  NOT NULL UNIQUE
    ,nostreams       	INTEGER NOT NULL
    ,tcp_buffer_size     INTEGER DEFAULT 0
    ,urlcopy_tx_to      INTEGER NOT NULL  

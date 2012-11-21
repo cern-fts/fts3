@@ -3637,8 +3637,6 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
     }
 }
 
-// todo
-
 void OracleAPI::addLinkConfig(LinkConfig* cfg) {
     const std::string tag = "addLinkConfig";
     std::string query =
@@ -3782,6 +3780,44 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
     return cfg;
 }
 
+std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::string symbolic_name) {
+
+    std::string tag = "getSourceAndDestination";
+    std::string query =
+    		"select source,destination "
+    		"from t_link_config where symbolicName=:1";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    std::pair<std::string, std::string>* ret = 0;;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return NULL;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, symbolic_name);
+        r = conn->createResultset(s);
+        if (r->next()) {
+        	ret = new std::pair<std::string, std::string>();
+        	ret->first = r->getString(1);
+        	ret->second = r->getString(2);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+        return ret;
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+    return ret;
+}
+
 void OracleAPI::addShareConfig(ShareConfig* cfg) {
     const std::string tag = "addShareConfig";
     std::string query =
@@ -3909,8 +3945,6 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
 
     return cfg;
 }
-
-// todo
 
 //t_se_protocol
 
