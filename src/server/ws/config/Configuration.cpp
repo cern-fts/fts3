@@ -8,6 +8,7 @@
 #include "Configuration.h"
 #include "common/error.h"
 
+#include <set>
 
 namespace fts3 {
 namespace ws {
@@ -142,26 +143,33 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 }
 
 void Configuration::addShareCfg(string source, string destination, map<string, int>& share) {
-
+	// set with VOs that need an update
+	set<string> update;
+	// find all share configuration for source and destination
+	vector<ShareConfig*> vec = db->getShareConfig(source, destination);
+	vector<ShareConfig*>::iterator iv;
+	// loop over share configuration
+	for (iv = vec.begin(); iv != vec.end(); iv++) {
+		scoped_ptr<ShareConfig> cfg (*iv);
+		if (share.find(cfg->vo) == share.end()) {
+			// if the VO was not in the new configuration remove the record
+			db->deleteShareConfig(source, destination, cfg->vo);
+		} else {
+			// otherwise schedule it for update
+			update.insert(cfg->vo);
+		}
+	}
+	// save the configuration in DB
 	map<string, int>::iterator it;
 	for (it = share.begin(); it != share.end(); it++) {
-
-		scoped_ptr<ShareConfig> cfg (
-				db->getShareConfig(source, destination, it->first)
-			);
-
-		bool update = true;
-		if (!cfg.get()) {
-			cfg.reset(new ShareConfig);
-			update = false;
-		}
-
+		// create new share configuration
+		scoped_ptr<ShareConfig> cfg(new ShareConfig);
 		cfg->source = source;
 		cfg->destination = destination;
 		cfg->vo = it->first;
 		cfg->active_transfers = it->second;
-
-		if (update) {
+		// check if the configuration should use insert or update
+		if (update.count(it->first)) {
 			db->updateShareConfig(cfg.get());
 		} else {
 			db->addShareConfig(cfg.get());
