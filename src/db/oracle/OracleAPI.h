@@ -291,6 +291,7 @@ public:
     virtual void updateShareConfig(ShareConfig* cfg);
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo);
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
+    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);
     
 private:
 	OracleConnection *conn;	

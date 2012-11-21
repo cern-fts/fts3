@@ -3737,7 +3737,7 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
 }
 
 LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination) {
-    std::string tag = "getlinkConfig";
+    std::string tag = "getLinkConfig";
     std::string query =
     		"select source,destination,state,symbolicName,nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to "
     		"from t_link_config where source=:1 and destination=:2";
@@ -3906,7 +3906,7 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
 }
 
 ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destination, std::string vo) {
-    std::string tag = "getlinkConfig";
+    std::string tag = "getShareConfig";
     std::string query =
     		"select source,destination,vo,active "
     		"from t_share_config where source=:1 and destination=:2 and vo=:3";
@@ -3944,6 +3944,48 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
     }
 
     return cfg;
+}
+
+std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::string destination) {
+    std::string tag = "getShareConfig2";
+    std::string query =
+    		"select source,destination,vo,active "
+    		"from t_share_config where source=:1 and destination=:2";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    std::vector<ShareConfig*> ret;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return NULL;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        s->setString(3, vo);
+        r = conn->createResultset(s);
+        while (r->next()) {
+        	ShareConfig* cfg = new ShareConfig();
+            cfg->source = r->getString(1);
+            cfg->destination = r->getString(2);
+            cfg->vo = r->getString(3);
+            cfg->active_transfers = r->getInt(4);
+            ret.push_back(cfg);
+         }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+        return ret;
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+    return ret;
 }
 
 //t_se_protocol
