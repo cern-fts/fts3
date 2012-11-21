@@ -167,14 +167,11 @@ map<string, int> Configuration::getShareMap(string symbolic_name) {
 
 	vector<SeConfig*> vec = db->getConfig(symbolic_name, string());
 
-	// TODO
-//	if (vec.empty()) {
-//		throw Err_Custom(
-//				"A configuration for source: " + source
-//				+ " and destination: " + destination
-//				+ " does not exist!"
-//			);
-//	}
+	if (vec.empty()) {
+		throw Err_Custom(
+				"A '" + symbolic_name + "' configuration does not exist!"
+			);
+	}
 
 	map<string, int> ret;
 
