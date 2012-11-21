@@ -18,6 +18,9 @@ PairCfg::PairCfg(string source, string destination) : source(source), destinatio
 
 	pair<string, string> p = db->getSymbolicName(source, destination);
 
+	if (p.first.empty())
+		throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
+
 	symbolic_name = p.first;
 	active = p.second == "on";
 

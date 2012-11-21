@@ -17,7 +17,7 @@ class SePairCfg : public PairCfg {
 
 public:
 
-	SePairCfg(string source, string destination) : PairCfg(source, destination) {}; // check if SEs exist
+	SePairCfg(string source, string destination) : PairCfg(source, destination) {};
 	SePairCfg(CfgParser& parser);
 	virtual ~SePairCfg();
 
