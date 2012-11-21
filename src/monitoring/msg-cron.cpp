@@ -122,7 +122,7 @@ public:
         static int links_found = 0;
         char hostname[1024] = {0};
         gethostname(hostname, 1024);
-        string host = hostname;
+        string host = theServerConfig().get<std::string>("Alias");
 
         try {
             bool fileExists = get_mon_cfg_file();
