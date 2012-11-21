@@ -97,10 +97,21 @@ shared_ptr<SeProtocolConfig> Configuration::getProtocolConfig(map<string, int> p
 	return ret;
 }
 
-void Configuration::addShareCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share) {
+void Configuration::addSymbolicName(string symbolic_name, string source, string destination, bool active) {
+	// handle symbolic name
+	pair<string, string> p = db->getSymbolicName(source, destination);
+	if (p.first.empty()) {
+		db->addSymbolic(symbolic_name, source, destination, active ? "on" : "off");
+	} else if (p.first != symbolic_name) {
+		db->deleteSymbolic(symbolic_name);
+		db->addSymbolic(symbolic_name, source, destination, active ? "on" : "off");
+	}
+}
 
+void Configuration::addShareCfg(string symbolic_name, pair<string, int> share) {
+	// handle share configuration
 	bool update = true;
-	vector<SeConfig*> v = db->getConfig(source, destination, share.first);
+	vector<SeConfig*> v = db->getConfig(symbolic_name, share.first);
 	scoped_ptr<SeConfig> cfg (
 			v.empty() ? 0 : v.front()
 		);
@@ -111,11 +122,8 @@ void Configuration::addShareCfg(string symbolic_name, bool active, string source
 	}
 
 	cfg->active = share.second;
-	cfg->destination = destination;
-	cfg->source = source;
 	cfg->symbolicName = symbolic_name;
 	cfg->vo = share.first;
-	cfg->state = active ? "on" : "off";
 
 	if (update) {
 		// update

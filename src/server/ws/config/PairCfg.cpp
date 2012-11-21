@@ -53,12 +53,11 @@ string PairCfg::json() {
 
 void PairCfg::save() {
 
+	addSymbolicName(symbolic_name, source, destination, active);
+
 	map<string, int>::iterator it;
 	for (it = share.begin(); it != share.end(); it++) {
 		addShareCfg(
-				symbolic_name,
-				active,
-				source,
 				destination,
 				*it
 			);

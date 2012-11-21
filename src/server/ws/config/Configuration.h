@@ -75,7 +75,8 @@ protected:
 
 	void addSe(string se, bool active = true);
 
-	void addShareCfg(string symbolic_name, bool active, string source, string destination, pair<string, int> share);
+	void addSymbolicName(string symbolic_name, string source, string destination, bool active);
+	void addShareCfg(string symbolic_name, pair<string, int> share);
 	void addProtocolCfg(string symbolic_name, map<string, int> protocol);
 };
 

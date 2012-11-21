@@ -53,27 +53,27 @@ string StandaloneCfg::json() {
 
 void StandaloneCfg::save(string name) {
 
+	// handle symbolic name
+	addSymbolicName("*-" + name, "*", name, active);
+
 	map<string, int>::iterator it;
 	// create  '* -> se' records
 	for (it = in_share.begin(); it != in_share.end(); it++) {
 		addShareCfg(
 				"*-" + name,
-				active,
-				"*",
-				name,
 				*it
 			);
 	}
 	// create the coresponding protocol cfg
 	addProtocolCfg("*-" + name, in_protocol);
 
+	// handle symbolic name
+	addSymbolicName(name + "-*", name, "*", active);
+
 	// create 'se -> *' record
 	for (it = out_share.begin(); it != out_share.end(); it++) {
 		addShareCfg(
 				name + "-*",
-				active,
-				name,
-				"*",
 				*it
 			);
 	}

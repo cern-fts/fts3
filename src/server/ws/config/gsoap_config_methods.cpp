@@ -19,7 +19,7 @@
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
-#include "ws/ConfigurationHandler.h"
+#include "ConfigurationHandler.h"
 #include "ws/AuthorizationManager.h"
 #include "ws/CGsiAdapter.h"
 
