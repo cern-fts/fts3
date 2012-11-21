@@ -3964,7 +3964,6 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
         s = conn->createStatement(query, tag);
         s->setString(1, source);
         s->setString(2, destination);
-        s->setString(3, vo);
         r = conn->createResultset(s);
         while (r->next()) {
         	ShareConfig* cfg = new ShareConfig();
