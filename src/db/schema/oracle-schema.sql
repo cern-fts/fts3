@@ -200,30 +200,26 @@ CREATE TABLE t_group_members(
 ); 
 
 -- SE HOSTNAME / GROUP NAME / *
-CREATE TABLE t_config_symbolic ( 
-   symbolicName         VARCHAR2(255)  NOT NULL
-   ,source         VARCHAR2(255)   NOT NULL
-   ,dest         VARCHAR2(255)   NOT NULL
+
+CREATE TABLE t_link_config ( 
+   source         VARCHAR2(255)   NOT NULL
+   ,destination         VARCHAR2(255)   NOT NULL
    ,state VARCHAR2(30)  NOT NULL
-   ,CONSTRAINT t_config_symbolic_pk PRIMARY KEY (symbolicName)    
-);
-
-CREATE TABLE t_config ( 
-   symbolicName VARCHAR2(255)  NOT NULL
-   ,vo VARCHAR2(100) NOT NULL
-   ,active INTEGER NOT NULL
-   ,CONSTRAINT t_config_pk PRIMARY KEY (symbolicName, vo)
-   ,CONSTRAINT t_config_fk2 FOREIGN KEY (symbolicName) REFERENCES t_config_symbolic (symbolicName)
-);
-
-CREATE TABLE t_se_protocol (
-	symbolicName         VARCHAR2(255)  NOT NULL
+   ,symbolicName         VARCHAR2(255)  NOT NULL
    ,nostreams       	INTEGER NOT NULL
    ,tcp_buffer_size     INTEGER DEFAULT 0
    ,urlcopy_tx_to      INTEGER NOT NULL  
    ,no_tx_activity_to INTEGER DEFAULT 360
-   ,CONSTRAINT t_se_protocol_pk PRIMARY KEY (symbolicName)
-   ,CONSTRAINT t_se_protocol_fk FOREIGN KEY (symbolicName) REFERENCES t_config_symbolic (symbolicName)	
+   ,CONSTRAINT t_link_config_pk PRIMARY KEY (source, destination)    
+);
+
+CREATE TABLE t_share_config ( 
+   source         VARCHAR2(255)   NOT NULL
+   ,destination         VARCHAR2(255)   NOT NULL
+   ,vo VARCHAR2(100) NOT NULL
+   ,active INTEGER NOT NULL
+   ,CONSTRAINT t_share_config_pk PRIMARY KEY (source, destination, vo)
+   ,CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination)
 );
 
 --
@@ -688,7 +684,6 @@ CREATE INDEX stagereq_jobfinished_id    ON t_stage_req(job_finished);
 -- Config index
 CREATE INDEX t_group_members_1  ON t_group_members(groupName);
 CREATE INDEX t_group_members_2  ON t_group_members(member);
-CREATE INDEX t_config_1  ON t_config(symbolicName);
 
 -- 
 --
