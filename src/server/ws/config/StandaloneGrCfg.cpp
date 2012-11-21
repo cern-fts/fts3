@@ -53,7 +53,11 @@ void StandaloneGrCfg::save() {
 
 void StandaloneGrCfg::del() {
 
-	// TODO if there is a pair using this group throw
+	// check if pair configuration uses the group
+	if (db->isGrInPair(group))
+		throw Err_Custom("The group is used in a group-pair configuration, you need first to remove the pair!");
+
+	// delete group
 	StandaloneCfg::del(group);
 }
 
