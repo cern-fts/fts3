@@ -23,7 +23,6 @@ public:
 
 	virtual string json();
 	virtual void save();
-	virtual void del();
 };
 
 } /* namespace ws */

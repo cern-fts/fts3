@@ -38,7 +38,7 @@ string StandaloneGrCfg::json() {
 
 	ss << "{";
 	ss << "\"" << "group" << "\":\"" << group << "\",";
-	ss << "\"" << "members" << "\":" << Configuration::get(members) << ",";
+	ss << "\"" << "members" << "\":" << Configuration::json(members) << ",";
 	ss << StandaloneCfg::json();
 	ss << "}";
 
@@ -53,6 +53,8 @@ void StandaloneGrCfg::save() {
 
 void StandaloneGrCfg::del() {
 
+	// TODO if there is a pair using this group throw
+	StandaloneCfg::del(group);
 }
 
 } /* namespace common */

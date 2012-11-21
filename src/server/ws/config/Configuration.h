@@ -65,19 +65,23 @@ protected:
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 
-	static string get(map<string, int> params);
-	static string get(vector<string> members);
+	static string json(map<string, int> params);
+	static string json(vector<string> members);
 
 	map<string, int> getProtocolMap(string source, string destination);
 	map<string, int> getProtocolMap(LinkConfig* cfg);
 	map<string, int> getShareMap(string source, string destination);
 
 	void addSe(string se, bool active = true);
+	void eraseSe(string se);
 	void addGroup(string group, vector<string>& members);
 	void checkGroup(string group);
 
 	void addLinkCfg(string source, string destination, bool active, string symbolic_name, map<string, int>& protocol);
 	void addShareCfg(string source, string destination, map<string, int>& share);
+
+	void delLinkCfg(string source, string destination);
+	void delShareCfg(string source, string destination);
 };
 
 } /* namespace cli */

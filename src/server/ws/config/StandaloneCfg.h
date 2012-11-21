@@ -35,6 +35,7 @@ public:
 protected:
 
 	virtual void save(string name);
+	virtual void del(string name);
 
 	void init(string name);
 

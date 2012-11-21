@@ -57,7 +57,8 @@ void StandaloneSeCfg::save() {
 }
 
 void StandaloneSeCfg::del() {
-
+	eraseSe(se);
+	StandaloneCfg::del(se);
 }
 
 } /* namespace common */

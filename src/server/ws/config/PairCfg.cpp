@@ -47,8 +47,8 @@ string PairCfg::json() {
 
 	ss << "\"" << "symbolic_name" << "\":\"" << symbolic_name << "\",";
 	ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
-	ss << "\"" << "share" << "\":" << Configuration::get(share) << ",";
-	ss << "\"" << "protocol" << "\":" << Configuration::get(protocol);
+	ss << "\"" << "share" << "\":" << Configuration::json(share) << ",";
+	ss << "\"" << "protocol" << "\":" << Configuration::json(protocol);
 
 	return ss.str();
 }
@@ -58,6 +58,13 @@ void PairCfg::save() {
 	addLinkCfg(source, destination, active, symbolic_name, protocol);
 	// add shres for the link
 	addShareCfg(source, destination, share);
+}
+
+void PairCfg::del() {
+	// delete shares
+	delShareCfg(source, destination);
+	// delete the link itself
+	delLinkCfg(source, destination);
 }
 
 } /* namespace ws */

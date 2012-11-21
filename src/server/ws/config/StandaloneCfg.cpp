@@ -40,12 +40,12 @@ string StandaloneCfg::json() {
 
 	ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
 	ss << "\"" << "in" << "\":{";
-	ss << "\"" << "share" << "\":" << Configuration::get(in_share) << ",";
-	ss << "\"" << "protocol" << "\":" << Configuration::get(in_protocol);
+	ss << "\"" << "share" << "\":" << Configuration::json(in_share) << ",";
+	ss << "\"" << "protocol" << "\":" << Configuration::json(in_protocol);
 	ss << "},";
 	ss << "\"" << "out" << "\":{";
-	ss << "\"" << "share" << "\":" << Configuration::get(out_share) << ",";
-	ss << "\"" << "protocol" << "\":" << Configuration::get(out_protocol);
+	ss << "\"" << "share" << "\":" << Configuration::json(out_share) << ",";
+	ss << "\"" << "protocol" << "\":" << Configuration::json(out_protocol);
 	ss << "}";
 
 	return ss.str();
@@ -62,6 +62,19 @@ void StandaloneCfg::save(string name) {
 	addLinkCfg(name, "*", active, name + "-*", out_protocol);
 	// add the shares for out-link
 	addShareCfg(name, "*", out_share);
+}
+
+void StandaloneCfg::del(string name) {
+
+	// delete the shares for the in-link
+	delShareCfg("*", name);
+	// delete the in-link
+	delLinkCfg("*", name);
+
+	// delete the shares for the out-link
+	delShareCfg("*", name);
+	// delete the out-link
+	delLinkCfg("*", name);
 }
 
 } /* namespace common */

@@ -43,9 +43,5 @@ void GrPairCfg::save() {
 	PairCfg::save();
 }
 
-void GrPairCfg::del() {
-
-}
-
 } /* namespace ws */
 } /* namespace fts3 */

@@ -32,7 +32,7 @@ public:
 
 	virtual string json();
 	virtual void save();
-	virtual void del() = 0;
+	virtual void del();
 
 protected:
 	/// source

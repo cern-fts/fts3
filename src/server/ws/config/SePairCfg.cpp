@@ -45,9 +45,5 @@ void SePairCfg::save() {
 	PairCfg::save();
 }
 
-void SePairCfg::del() {
-
-}
-
 } /* namespace ws */
 } /* namespace fts3 */

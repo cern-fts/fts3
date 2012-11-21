@@ -37,7 +37,7 @@ Configuration::Configuration(CfgParser& parser) : db (DBSingleton::instance().ge
 
 }
 
-string Configuration::get(map<string, int> params) {
+string Configuration::json(map<string, int> params) {
 
 	stringstream ss;
 
@@ -55,7 +55,7 @@ string Configuration::get(map<string, int> params) {
 	return ss.str();
 }
 
-string Configuration::get(vector<string> members) {
+string Configuration::json(vector<string> members) {
 
 	stringstream ss;
 
@@ -82,6 +82,10 @@ void Configuration::addSe(string se, bool active) {
 		db->addSe(string(), string(), string(), se, active ? "on" : "off", string(), string(), string(), string(), string(), string());
 	} else
 		delete ptr;
+}
+
+void Configuration::eraseSe(string se) {
+	db->updateSe(string(), string(), string(), se, "on", string(), string(), string(), string(), string(), string());
 }
 
 void Configuration::addGroup(string group, vector<string>& members) {
@@ -220,6 +224,23 @@ map<string, int> Configuration::getShareMap(string source, string destination) {
 	}
 
 	return ret;
+}
+
+void Configuration::delLinkCfg(string source, string destination) {
+
+	scoped_ptr<LinkConfig> cfg (
+			db->getLinkConfig(source, destination)
+		);
+
+	if (!cfg.get())
+		throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
+
+	db->deleteLinkConfig(source, destination);
+}
+
+void Configuration::delShareCfg(string source, string destination) {
+
+	db->deleteShareConfig(source, destination);
 }
 
 }
