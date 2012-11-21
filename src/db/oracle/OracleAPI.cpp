@@ -3959,7 +3959,7 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
 
     try {
         if (false == conn->checkConn())
-            return NULL;
+            return ret;
 
         s = conn->createStatement(query, tag);
         s->setString(1, source);
