@@ -2135,17 +2135,17 @@ void MySqlAPI::deleteMembersFromGroup(const std::string & groupName, std::vector
 }
     
     //t_se_protocol
-SeProtocolConfig*  MySqlAPI::getProtocol(int protocolId){
+SeProtocolConfig*  MySqlAPI::getProtocol(std::string symbolicName){
 }
 int  MySqlAPI::getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo){
 }
 int MySqlAPI::getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo){
 }
-int MySqlAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
+void MySqlAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
 }
-void MySqlAPI::deleteProtocol(int protocolId){
+void MySqlAPI::deleteProtocol(std::string symbolicName){
 }
-void MySqlAPI::updateProtocol(SeProtocolConfig* config, int protocolId){
+void MySqlAPI::updateProtocol(SeProtocolConfig* config){
 }         
     
     //t_config
@@ -2175,11 +2175,11 @@ std::string MySqlAPI::transferHost(int fileId){
 std::string MySqlAPI::transferHostV(std::map<int,std::string>& fileIds){
 }
 
-std::string MySqlAPI::getSymbolicName(const std::string & src, const std::string & dest){
+std::pair<std::string, std::string> MySqlAPI::getSymbolicName(const std::string & src, const std::string & dest){
 }
-void MySqlAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
+void MySqlAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status){
 }
-void MySqlAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest){
+void MySqlAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status){
 }
 void MySqlAPI::deleteSymbolic(const std::string & symbolicName){
 }   

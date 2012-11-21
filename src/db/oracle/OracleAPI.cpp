@@ -2623,127 +2623,136 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     const std::string tag2 = "isTrAllowed2";
     const std::string tag3 = "isTrAllowed3";
     const std::string tag4 = "isTrAllowed4";
-    const std::string tag5 = "isTrAllowed5";    
-    const std::string tag6 = "isTrAllowed6";        
-    const std::string tag7 = "isTrAllowed7";        
-    const std::string tag8 = "isTrAllowed8";                
+    const std::string tag5 = "isTrAllowed5"; 
+    const std::string tag6 = "isTrAllowed6";     
     bool allowed = true;
-    //double actThr = 0;
     int act = 0;
     int maxDest = 0;
-    int maxSource = 0;
-    //int noFailedPerSePair = 0;
-    int pairInDb = 0;
+    int maxSource = 0;   
     double numberOfFinished = 0;
     double numberOfFailed = 0;    
     double ratioSuccessFailure = 0;
-    int sample = 0;
-    std::string query_stmt1 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 ";   
-
-    std::string query_stmt3 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.dest_se=:1 ";
-
-    std::string query_stmt4 = " select file_state  from (select file_state  from t_file, t_job where  "
-            " t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 and t_file.FINISH_TIME "
-            " is not null  order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) where rownum <10 ";
+    double numberOfFinishedAll = 0;
+    double numberOfFailedAll = 0;    
+  
+    std::string query_stmt1 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.source_se=:1 ";
 	    
-    std::string query_stmt5 = "select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.source_se=:1";	    
+    std::string query_stmt2 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.dest_se=:1";
     
-    std::string query_stmt6 = "select count(*) from  t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 and file_state in ('FAILED','FINISHED')";
-    
-    std::string query_stmt7 = "select file_state from t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 "
-    				" and t_job.dest_se=:2 and file_state in ('FAILED','FINISHED') order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc ";
-        	        
+    std::string query_stmt3 = " select file_state from  (select file_state from t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
+    			      " and file_state in ('FAILED','FINISHED') and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour)) order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) WHERE ROWNUM < 11";
+
+    std::string query_stmt4 = " select count(*) from  t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
+    			      " and file_state = 'ACTIVE' ";
+			      
+    std::string query_stmt5 = " select count(*) from  t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
+    			      " and file_state = 'FINISHED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";
+			      
+    std::string query_stmt6 = " select count(*) from  t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
+    			      " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";			      
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;   
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::ResultSet* r2 = NULL;   
     oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;   
+    oracle::occi::ResultSet* r3 = NULL;          
+    oracle::occi::Statement* s4 = NULL;
+    oracle::occi::ResultSet* r4 = NULL; 
     oracle::occi::Statement* s5 = NULL;
-    oracle::occi::ResultSet* r5 = NULL;    
+    oracle::occi::ResultSet* r5 = NULL;        
     oracle::occi::Statement* s6 = NULL;
-    oracle::occi::ResultSet* r6 = NULL;  
-    oracle::occi::Statement* s7 = NULL;
-    oracle::occi::ResultSet* r7 = NULL;        
+    oracle::occi::ResultSet* r6 = NULL;    
 
     ThreadTraits::LOCK_R lock(_mutex);
 
     try {
 
         if (false == conn->checkConn())
-            return false;	           	    
+            return false;	
+	    	    
+	s1 = conn->createStatement(query_stmt1, tag1);
+        s1->setString(1, source_hostname);
+        s1->setPrefetchRowCount(1);
+        r1 = conn->createResultset(s1);
+        if (r1->next()) {
+            maxSource = r1->getInt(1);
+        }
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+        s1 = NULL;
+        r1 = NULL;	    
 	    
-        s7 = conn->createStatement(query_stmt7, tag7);
-        s7->setString(1, source_hostname);
-	s7->setString(2, destin_hostname);	
-        s7->setPrefetchRowCount(100);
-        r7 = conn->createResultset(s7);
+  	s2 = conn->createStatement(query_stmt2, tag2);
+        s2->setString(1, destin_hostname);
+        s2->setPrefetchRowCount(1);
+        r2 = conn->createResultset(s2);
+        if (r2->next()) {
+            maxDest = r2->getInt(1);
+        }
+        conn->destroyResultset(s2, r2);
+        conn->destroyStatement(s2, tag2);
+        s2 = NULL;
+        r2 = NULL;	    
+	    
+   	s3 = conn->createStatement(query_stmt3, tag3);
+        s3->setString(1, source_hostname);
+	s3->setString(2, destin_hostname);	
+        s3->setPrefetchRowCount(20);
+        r3 = conn->createResultset(s3);
 	
-        while (r7->next() && sample!=10) {
-   	    sample++;
-	    std::string fileState = r7->getString(1);
-	    std::cout << fileState << std::endl;
+        while (r3->next()) {
+	    std::string fileState = r3->getString(1);
 	    if(fileState.compare("FAILED")==0)
-		    numberOfFailed +=1.0;
+		    numberOfFailed += 1.0;
 	    
     	    if(fileState.compare("FINISHED")==0)
-		    numberOfFinished+=1.0;
-        }
-        conn->destroyResultset(s7, r7);
-        conn->destroyStatement(s7, tag7);
-        s7 = NULL;
-        r7 = NULL;	    
-	    
-        s6 = conn->createStatement(query_stmt6, tag6);
-        s6->setString(1, source_hostname);
-	s6->setString(2, destin_hostname);	
-        s6->setPrefetchRowCount(1);
-        r6 = conn->createResultset(s6);
-        if (r6->next()) {
-            pairInDb = r6->getInt(1);
-        }
-        conn->destroyResultset(s6, r6);
-        conn->destroyStatement(s6, tag6);
-        s6 = NULL;
-        r6 = NULL;		    
-	    
-        s5 = conn->createStatement(query_stmt5, tag5);
-        s5->setString(1, source_hostname);
-        s5->setPrefetchRowCount(1);
-        r5 = conn->createResultset(s5);
-        if (r5->next()) {
-            maxSource = r5->getInt(1);
-        }
-        conn->destroyResultset(s5, r5);
-        conn->destroyStatement(s5, tag5);
-        s5 = NULL;
-        r5 = NULL;	    
-	    
-        s3 = conn->createStatement(query_stmt3, tag3);
-        s3->setString(1, destin_hostname);
-        s3->setPrefetchRowCount(1);
-        r3 = conn->createResultset(s3);
-        if (r3->next()) {
-            maxDest = r3->getInt(1);
+		    numberOfFinished += 1.0;		        	    	    
         }
         conn->destroyResultset(s3, r3);
         conn->destroyStatement(s3, tag3);
         s3 = NULL;
-        r3 = NULL;
-			
-        s1 = conn->createStatement(query_stmt1, tag1);
-        s1->setString(1, source_hostname);
-        s1->setString(2, destin_hostname);
-        s1->setPrefetchRowCount(1);
-        r1 = conn->createResultset(s1);
-        if (r1->next()) { //active tr's
-            act = r1->getInt(1);
+        r3 = NULL;	
+	
+  	s4 = conn->createStatement(query_stmt4, tag4);
+        s4->setString(1, source_hostname);
+	s4->setString(2, destin_hostname);
+        s4->setPrefetchRowCount(1);
+        r4 = conn->createResultset(s4);
+        if (r4->next()) {
+            act = r4->getInt(1);
         }
-
-        conn->destroyResultset(s1, r1);
-        conn->destroyStatement(s1, tag1);
-        s1 = NULL;
-        r1 = NULL;
-			
+        conn->destroyResultset(s4, r4);
+        conn->destroyStatement(s4, tag4);
+        s4 = NULL;
+        r4 = NULL;	  
+	
+  	s5 = conn->createStatement(query_stmt5, tag5);
+        s5->setString(1, source_hostname);
+	s5->setString(2, destin_hostname);
+        s5->setPrefetchRowCount(1);
+        r5 = conn->createResultset(s5);
+        if (r5->next()) {
+            numberOfFinishedAll = r5->getInt(1);	    
+        }
+        conn->destroyResultset(s5, r5);
+        conn->destroyStatement(s5, tag5);
+        s5 = NULL;
+        r5 = NULL;
+	
+  	s6 = conn->createStatement(query_stmt6, tag6);
+        s6->setString(1, source_hostname);
+	s6->setString(2, destin_hostname);
+        s6->setPrefetchRowCount(1);
+        r6 = conn->createResultset(s6);
+        if (r6->next()) {
+            numberOfFailedAll = r6->getInt(1);	    
+        }
+        conn->destroyResultset(s6, r6);
+        conn->destroyStatement(s6, tag6);
+        s6 = NULL;
+        r6 = NULL;		  	  	
+	  	    	    
 	if(numberOfFinished>0){		
 		ratioSuccessFailure = numberOfFinished/(numberOfFinished + numberOfFailed) * (100.0/1.0);
 	}
@@ -2751,7 +2760,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 		ratioSuccessFailure = 0;
 	}
 		
-	allowed = optimizerObject.transferStart(source_hostname, destin_hostname, act, maxSource, maxDest, ratioSuccessFailure, 0, pairInDb);
+	allowed = optimizerObject.transferStart(numberOfFinished,numberOfFailed,source_hostname, destin_hostname, act, maxSource, maxDest,
+	ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll);
         return allowed;
 	
     } catch (oracle::occi::SQLException const &e) {

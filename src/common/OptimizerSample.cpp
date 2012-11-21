@@ -17,97 +17,145 @@
 
 #include "OptimizerSample.h"
 
-OptimizerSample::OptimizerSample(){
+OptimizerSample::OptimizerSample() {
 }
 
-OptimizerSample::~OptimizerSample(){
+OptimizerSample::~OptimizerSample() {
 }
 
-OptimizerSample::OptimizerSample(int spf, int nf, int bs, float gp): streamsperfile(spf), numoffiles(nf), bufsize(bs), goodput(gp){
+OptimizerSample::OptimizerSample(int spf, int nf, int bs, float gp) : streamsperfile(spf), numoffiles(nf), bufsize(bs), goodput(gp) {
 }
 
-
-int OptimizerSample::getBufSize()
-{
-	return bufsize;
+int OptimizerSample::getBufSize() {
+    return bufsize;
 }
 
-float OptimizerSample::getGoodput()
-{
-	return goodput;
+float OptimizerSample::getGoodput() {
+    return goodput;
 }
 
-int OptimizerSample::getNumOfFiles()
-{
-	return numoffiles;
+int OptimizerSample::getNumOfFiles() {
+    return numoffiles;
 }
 
-int OptimizerSample::getStreamsperFile()
-{
-	return streamsperfile;
+int OptimizerSample::getStreamsperFile() {
+    return streamsperfile;
 }
 
-int OptimizerSample::getTimeout()
-{
-	return timeout;
+int OptimizerSample::getTimeout() {
+    return timeout;
 }
 
-bool OptimizerSample::transferStart(std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double trSuccessRateForPair, double lastOneThroughput, int numOfPairInDB){
-/*
-	currectActive: number of active between src/dest
-	sourceActive: number of active for a given source
-	destActive:   number of active for a given dest
-	trSuccessRateForPair: success rate of last 10 transfers between src/dest, must always be > 90%
-	lastOneThroughput: througput of the last transfer between src/dest, must be > 1Mbit/sec
-	numOfPairInDB: number of records(no matter the state) in the db for a given source/dest pair
+bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int
+destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll) {
+    /*
+            currectActive: number of active for a given src/dest pair
+            sourceActive: number of active for a given source
+            destActive:   number of active for a given dest
+            trSuccessRateForPair: success rate of the last 10 transfers between src/dest, must always be > 90%                      
+     */
+
+    bool allowed = false;
+    std::vector<struct transfersStore>::iterator iter;
+    bool found = false;
+    int activeInStore = 0;
+
+
+  /*
+    std::cout << "Function input: " << std::endl;
+    std::cout << "    sourceSe            =" << sourceSe << std::endl;
+    std::cout << "    destSe              =" << destSe << std::endl;
+    std::cout << "    numFinished         =" << numFinished << std::endl;
+    std::cout << "    numFailed           =" << numFailed << std::endl;
+    std::cout << "    currentActive       =" << currentActive << std::endl;
+    std::cout << "    sourceActive        =" << sourceActive << std::endl;
+    std::cout << "    destActive          =" << destActive << std::endl;
+    std::cout << "    trSuccessRateForPair=" << trSuccessRateForPair << std::endl;
+    std::cout << "    numberOfFinishedAll =" << numberOfFinishedAll << std::endl;
+    std::cout << "    numberOfFailedAll   =" << numberOfFailedAll << std::endl;    
+    std::cout << std::endl;
 */
 
-	bool allowed = false;
-	std::vector<struct transfersStore>::iterator iter;
-	struct transfersStore initial = {currentActive,trSuccessRateForPair,sourceSe, destSe};
-	int activeInStore = 0;
-	int successInStore = 0;
-	bool found = false;	
-	
-	for ( iter=transfersStoreVector.begin() ; iter < transfersStoreVector.end(); iter++ ){		
-		if((*iter).source.compare(sourceSe)==0 && (*iter).dest.compare(destSe)==0){
-			if(trSuccessRateForPair>=90){
-				(*iter).numOfActivePerPair = currentActive + 2; 
-			(*iter).successRate = trSuccessRateForPair; 													
-			}else{	
-				if(trSuccessRateForPair > (*iter).successRate)			
-					(*iter).numOfActivePerPair = currentActive + 1; 
-				else
-					(*iter).numOfActivePerPair = currentActive - 1; 				
-				
-				(*iter).successRate = trSuccessRateForPair;								
-			}
+    //check if this src/dest pair already exists
+    if (transfersStoreVector.empty()) {
+        struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe};
+        transfersStoreVector.push_back(initial);
+    } else {
+        for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); iter++) {
+            if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe};
+            transfersStoreVector.push_back(initial);
+        }
+    }
 
-			activeInStore = (*iter).numOfActivePerPair;
-			if(activeInStore <= 0)
-				 activeInStore = 1;
-			successInStore = (*iter).successRate;			 			
-			found  = true;
-			break;
-		}			
-	}
-			
-	if(found==false){							
-		transfersStoreVector.push_back(initial);
-	}								
-	
-	if(sourceActive==0 && destActive==0){ //no active for src and dest, simply let it start
-		allowed = true;
-	}else if(numOfPairInDB<10 && destActive<10){ //allow not more than 10 per dest if we do not have enough samples per se pair
-		allowed = true;
-	}else if(numOfPairInDB<10 && destActive>10){ //wait until we collect 10 samples for each src/dest pair
-		allowed = false;		
-	}else{ 	
-		if(currentActive==activeInStore){
-			allowed = false;	
-		}else{
-			allowed = true;			
-		}		
-	}
-return allowed;
+    for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); iter++) {
+       
+        if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
+       /*
+            std::cout << "Se pair was found: " << sourceSe << "  " << destSe << std::endl;
+            std::cout << "Before check Vector values: " << std::endl;
+            std::cout << "    (*iter).sourceSe            =" << (*iter).source << std::endl;
+            std::cout << "    (*iter).destSe              =" << (*iter).dest << std::endl;
+            std::cout << "    (*iter).numFinished         =" << (*iter).numFinished << std::endl;
+            std::cout << "    (*iter).numFailed           =" << (*iter).numFailed << std::endl;
+            std::cout << "    (*iter).numOfActivePerPair  =" << (*iter).numOfActivePerPair << std::endl;
+            std::cout << "    (*iter).successRate         =" << (*iter).successRate << std::endl;
+	    std::cout << "    (*iter).numberOfFinishedAll =" << (*iter).numberOfFinishedAll << std::endl;
+	    std::cout << "    (*iter).numberOfFailedAll   =" << (*iter).numberOfFailedAll << std::endl;	    
+            std::cout << std::endl;
+	*/	
+	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished
+				(*iter).numOfActivePerPair += 1;              
+				(*iter).numFinished = numFinished;
+				(*iter).numFailed = numFailed;  
+				(*iter).successRate = trSuccessRateForPair;
+				(*iter).numberOfFinishedAll = numberOfFinishedAll;
+				(*iter).numberOfFailedAll = numberOfFailedAll;
+	   }else if((*iter).numberOfFailedAll != numberOfFailedAll){
+	   			(*iter).numOfActivePerPair -= 1;
+				(*iter).numFinished = numFinished;
+				(*iter).numFailed = numFailed;  
+				(*iter).successRate = trSuccessRateForPair;
+				(*iter).numberOfFinishedAll = numberOfFinishedAll;
+				(*iter).numberOfFailedAll = numberOfFailedAll;				
+	   }
+
+	/*
+            std::cout << "After check Vector values: " << std::endl;
+            std::cout << "    (*iter).sourceSe            =" << (*iter).source << std::endl;
+            std::cout << "    (*iter).destSe              =" << (*iter).dest << std::endl;
+            std::cout << "    (*iter).numFinished         =" << (*iter).numFinished << std::endl;
+            std::cout << "    (*iter).numFailed           =" << (*iter).numFailed << std::endl;
+            std::cout << "    (*iter).numOfActivePerPair  =" << (*iter).numOfActivePerPair << std::endl;
+            std::cout << "    (*iter).successRate         =" << (*iter).successRate << std::endl;
+	    std::cout << "    (*iter).numberOfFinishedAll =" << (*iter).numberOfFinishedAll << std::endl;
+	    std::cout << "    (*iter).numberOfFailedAll   =" << (*iter).numberOfFailedAll << std::endl;	    	    	    
+            std::cout << std::endl;
+	*/
+	    if((*iter).numOfActivePerPair <=0 )
+	    	activeInStore = 1;
+	    else
+                activeInStore = (*iter).numOfActivePerPair;  
+            break;
+        }
+    }
+
+    if (sourceActive == 0 && destActive == 0) { //no active for src and dest, simply let it start
+        allowed = true;
+    } else if (currentActive <= 3) { //allow no more than 3 per pair if we do not have enough samples
+        allowed = true;
+    } else {
+        if (currentActive < activeInStore) {
+            allowed = true;
+        } else {
+            allowed = false;
+        }
+    }
+
+    return allowed;
 }

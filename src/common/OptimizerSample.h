@@ -19,10 +19,15 @@
 
 #include <vector>
 #include <iostream>
+#include <ctime>
 
-struct transfersStore{
-	int numOfActivePerPair;
-	double successRate;
+struct transfersStore{	
+	double numberOfFinishedAll;
+	double numberOfFailedAll;	
+	int numFinished;
+	int numFailed;
+	int numOfActivePerPair;	
+	double successRate;	
 	std::string source;
 	std::string dest;	
 };
@@ -40,7 +45,8 @@ public:
 	int getBufSize();
 	float getGoodput();
 	int getTimeout();
-	bool transferStart(std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double lastTenSuccessRate, double lastOneThroughput, int numOfPairInDB);
+	bool transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
+	lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll);
 	
 	int streamsperfile;
 	int numoffiles;

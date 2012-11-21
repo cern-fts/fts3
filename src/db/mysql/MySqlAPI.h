@@ -191,17 +191,17 @@ public:
     virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers);
     
     //t_se_protocol
-    virtual SeProtocolConfig*  getProtocol(int protocolId);
+    virtual SeProtocolConfig*  getProtocol(std::string symbolicName);
     
     virtual int getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo);
     
     virtual int getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo);   
     
-    virtual int addProtocol(SeProtocolConfig* seProtocolConfig);    
+    virtual void addProtocol(SeProtocolConfig* seProtocolConfig);    
     
-    virtual void deleteProtocol(int protocolId);       
+    virtual void deleteProtocol(std::string symbolicName);       
     
-    virtual void updateProtocol(SeProtocolConfig* config, int protocolId);                       
+    virtual void updateProtocol(SeProtocolConfig* config);                       
     
     //t_config
     virtual std::vector<SeConfig*>  getConfig(const std::string & source,const std::string & dest, const std::string & vo);
@@ -228,11 +228,11 @@ public:
     virtual std::string transferHostV(std::map<int,std::string>& fileIds);  
     
     //t_config_symbolic
-    virtual std::string getSymbolicName(const std::string & src, const std::string & dest);
+    virtual std::pair<std::string, std::string> getSymbolicName(const std::string & src, const std::string & dest);
     
-    virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest);    
+    virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status);    
     
-    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest);        
+    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status);        
     
     virtual void deleteSymbolic(const std::string & symbolicName);  
     
