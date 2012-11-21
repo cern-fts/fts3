@@ -3818,6 +3818,44 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
     return ret;
 }
 
+bool OracleAPI::isGrInPair(std::string group) {
+
+    std::string tag = "isGrInPair";
+    std::string query =
+    		"select * from t_link_config "
+    		"where (source=:1 and destination<>'*') or (source<>'*' and destination=:1)";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    bool ret = false;
+
+    try {
+        if (false == conn->checkConn())
+            return NULL;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, group);
+        r = conn->createResultset(s);
+        if (r->next()) {
+        	ret = true;
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+        return ret;
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+    // if the exception was thrown don't allow to remove group
+	return true;
+}
+
 void OracleAPI::addShareConfig(ShareConfig* cfg) {
     const std::string tag = "addShareConfig";
     std::string query =

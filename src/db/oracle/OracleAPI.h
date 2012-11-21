@@ -286,6 +286,7 @@ public:
     virtual void deleteLinkConfig(std::string source, std::string destination);
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination);
     virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
+    virtual bool isGrInPair(std::string group);
 
     virtual void addShareConfig(ShareConfig* cfg);
     virtual void updateShareConfig(ShareConfig* cfg);
