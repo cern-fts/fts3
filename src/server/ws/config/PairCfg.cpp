@@ -16,16 +16,18 @@ namespace ws {
 
 PairCfg::PairCfg(string source, string destination) : source(source), destination(destination) {
 
-	pair<string, string> p = db->getSymbolicName(source, destination);
+	scoped_ptr<LinkConfig> cfg (
+			db->getLinkConfig(source, destination)
+		);
 
-	if (p.first.empty())
+	if (!cfg.get())
 		throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
 
-	symbolic_name = p.first;
-	active = p.second == "on";
+	symbolic_name = cfg->symbolic_name;
+	active = cfg->state == "on";
 
-	share = getShareMap(symbolic_name);
-	protocol = getProtocolMap(symbolic_name);
+	share = getShareMap(source, destination);
+	protocol = getProtocolMap(cfg.get());
 }
 
 PairCfg::PairCfg(CfgParser& parser) : Configuration(parser) {
@@ -52,18 +54,10 @@ string PairCfg::json() {
 }
 
 void PairCfg::save() {
-
-	addSymbolicName(symbolic_name, source, destination, active);
-
-	map<string, int>::iterator it;
-	for (it = share.begin(); it != share.end(); it++) {
-		addShareCfg(
-				destination,
-				*it
-			);
-	}
-
-	addProtocolCfg(symbolic_name, protocol);
+	// add link
+	addLinkCfg(source, destination, active, symbolic_name, protocol);
+	// add shres for the link
+	addShareCfg(source, destination, share);
 }
 
 } /* namespace ws */

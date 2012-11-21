@@ -22,11 +22,8 @@ public:
 	virtual ~GrPairCfg();
 
 	virtual string json();
+	virtual void save();
 	virtual void del();
-
-private:
-
-	void checkGroup(string group);
 };
 
 } /* namespace ws */

@@ -21,9 +21,6 @@ SePairCfg::SePairCfg(CfgParser& parser) : PairCfg(parser) {
 		symbolic_name = *symbolic_name_opt;
 	else
 		symbolic_name = source + "-" + destination;
-
-	addSe(source);
-	addSe(destination);
 }
 
 SePairCfg::~SePairCfg() {
@@ -40,6 +37,12 @@ string SePairCfg::json() {
 	ss << "}";
 
 	return ss.str();
+}
+
+void SePairCfg::save() {
+	addSe(source);
+	addSe(destination);
+	PairCfg::save();
 }
 
 void SePairCfg::del() {

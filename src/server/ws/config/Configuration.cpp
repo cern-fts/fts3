@@ -73,7 +73,6 @@ string Configuration::get(vector<string> members) {
 }
 
 void Configuration::addSe(string se, bool active) {
-
 	//check if SE exists
 	Se* ptr = 0;
 	db->getSe(ptr, se);
@@ -84,110 +83,129 @@ void Configuration::addSe(string se, bool active) {
 		delete ptr;
 }
 
-shared_ptr<SeProtocolConfig> Configuration::getProtocolConfig(map<string, int> protocol) {
+void Configuration::addGroup(string group, vector<string>& members) {
+	vector<string>::iterator it;
+	for (it = members.begin(); it != members.end(); it++) {
+		addSe(*it);
+	}
 
-	shared_ptr<SeProtocolConfig> ret(new SeProtocolConfig);
-	// we are relaying here on the fact that if a parameter is not in the map
-	// the default value will be returned which is 0
-	ret->NOSTREAMS = protocol[Protocol::NOSTREAMS];
-	ret->TCP_BUFFER_SIZE = protocol[Protocol::TCP_BUFFER_SIZE];
-	ret->URLCOPY_TX_TO = protocol[Protocol::URLCOPY_TX_TO];
-	ret->NO_TX_ACTIVITY_TO = protocol[Protocol::NO_TX_ACTIVITY_TO];
+	if (db->checkGroupExists(group)) {
+		// if the group exists remove it!
+		vector<string> tmp;
+		db->getGroupMembers(group, tmp);
+		db->deleteMembersFromGroup(group, tmp);
+	}
 
-	return ret;
+	db->addMemberToGroup(group, members);
 }
 
-void Configuration::addSymbolicName(string symbolic_name, string source, string destination, bool active) {
-	// handle symbolic name
-	pair<string, string> p = db->getSymbolicName(source, destination);
-	if (p.first.empty()) {
-		db->addSymbolic(symbolic_name, source, destination, active ? "on" : "off");
-	} else if (p.first != symbolic_name) {
-		db->deleteSymbolic(symbolic_name);
-		db->addSymbolic(symbolic_name, source, destination, active ? "on" : "off");
+void Configuration::checkGroup(string group) {
+	// check if the group exists
+	if (!db->checkGroupExists(group)) {
+		throw Err_Custom(
+				"The group: " +  group + " does not exist!"
+			);
 	}
 }
 
-void Configuration::addShareCfg(string symbolic_name, pair<string, int> share) {
-	// handle share configuration
-	bool update = true;
-	vector<SeConfig*> v = db->getConfig(symbolic_name, share.first);
-	scoped_ptr<SeConfig> cfg (
-			v.empty() ? 0 : v.front()
+void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, map<string, int>& protocol) {
+
+	scoped_ptr<LinkConfig> cfg (
+			db->getLinkConfig(source, destination)
 		);
 
+	bool update = true;
 	if (!cfg.get()) {
-		cfg.reset(new SeConfig);
+		cfg.reset(new LinkConfig);
 		update = false;
 	}
 
-	cfg->active = share.second;
-	cfg->symbolicName = symbolic_name;
-	cfg->vo = share.first;
+	cfg->source = source;
+	cfg->destination = destination;
+	cfg->state = active ? "on" : "off";
+	cfg->symbolic_name = symbolic_name;
+
+	cfg->NOSTREAMS = protocol[Protocol::NOSTREAMS];
+	cfg->TCP_BUFFER_SIZE = protocol[Protocol::TCP_BUFFER_SIZE];
+	cfg->URLCOPY_TX_TO = protocol[Protocol::URLCOPY_TX_TO];
+	cfg->NO_TX_ACTIVITY_TO = protocol[Protocol::NO_TX_ACTIVITY_TO];
 
 	if (update) {
-		// update
-		db->updateConfig(cfg.get());
+		db->updateLinkConfig(cfg.get());
 	} else {
-		// insert
-		db->addNewConfig(cfg.get());
+		db->addLinkConfig(cfg.get());
+	}
+
+}
+
+void Configuration::addShareCfg(string source, string destination, map<string, int>& share) {
+
+	map<string, int>::iterator it;
+	for (it = share.begin(); it != share.end(); it++) {
+
+		scoped_ptr<ShareConfig> cfg (
+				db->getShareConfig(source, destination, it->first)
+			);
+
+		bool update = true;
+		if (!cfg.get()) {
+			cfg.reset(new ShareConfig);
+			update = false;
+		}
+
+		cfg->source = source;
+		cfg->destination = destination;
+		cfg->vo = it->first;
+		cfg->active_transfers = it->second;
+
+		if (update) {
+			db->updateShareConfig(cfg.get());
+		} else {
+			db->addShareConfig(cfg.get());
+		}
 	}
 }
 
-void Configuration::addProtocolCfg(string symbolic_name, map<string, int> protocol) {
+map<string, int> Configuration::getProtocolMap(string source, string destination) {
 
-	shared_ptr<SeProtocolConfig> pc = getProtocolConfig(protocol);
-	pc->symbolicName = symbolic_name;
-
-	scoped_ptr<SeProtocolConfig> curr (
-			db->getProtocol(symbolic_name)
+	scoped_ptr<LinkConfig> cfg (
+			db->getLinkConfig(source, destination)
 		);
 
-	if (curr.get()) {
-		// update
-		db->updateProtocol(pc.get());
-	} else {
-		// insert
-		db->addProtocol(pc.get());
-	}
+	return getProtocolMap(cfg.get());
 }
 
-map<string, int> Configuration::getProtocolMap(string symbolic_name) {
-
-	shared_ptr<SeProtocolConfig> protocol (
-			db->getProtocol(symbolic_name)
-		);
+map<string, int> Configuration::getProtocolMap(LinkConfig* cfg) {
 
 	map<string, int> ret;
-
-	if (protocol->NOSTREAMS)
-		ret[Protocol::NOSTREAMS] = protocol->NOSTREAMS;
-	if (protocol->TCP_BUFFER_SIZE)
-		ret[Protocol::TCP_BUFFER_SIZE] = protocol->TCP_BUFFER_SIZE;
-	if (protocol->URLCOPY_TX_TO)
-		ret[Protocol::URLCOPY_TX_TO] = protocol->URLCOPY_TX_TO;
-	if (protocol->NO_TX_ACTIVITY_TO)
-		ret[Protocol::NO_TX_ACTIVITY_TO] = protocol->NO_TX_ACTIVITY_TO;
+	if (cfg->NOSTREAMS)
+		ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;
+	if (cfg->TCP_BUFFER_SIZE)
+		ret[Protocol::TCP_BUFFER_SIZE] = cfg->TCP_BUFFER_SIZE;
+	if (cfg->URLCOPY_TX_TO)
+		ret[Protocol::URLCOPY_TX_TO] = cfg->URLCOPY_TX_TO;
+	if (cfg->NO_TX_ACTIVITY_TO)
+		ret[Protocol::NO_TX_ACTIVITY_TO] = cfg->NO_TX_ACTIVITY_TO;
 
 	return ret;
 }
 
-map<string, int> Configuration::getShareMap(string symbolic_name) {
+map<string, int> Configuration::getShareMap(string source, string destination) {
 
-	vector<SeConfig*> vec = db->getConfig(symbolic_name, string());
+	vector<ShareConfig*> vec = db->getShareConfig(source, destination);
 
 	if (vec.empty()) {
 		throw Err_Custom(
-				"A '" + symbolic_name + "' configuration does not exist!"
+				"A configuration for source: '" + source + "' and destination: '" + destination + "' does not exist!"
 			);
 	}
 
 	map<string, int> ret;
 
-	vector<SeConfig*>::iterator it;
+	vector<ShareConfig*>::iterator it;
 	for (it = vec.begin(); it != vec.end(); it++) {
-		scoped_ptr<SeConfig> cfg(*it);
-		ret[cfg->vo] = cfg->active;
+		scoped_ptr<ShareConfig> cfg(*it);
+		ret[cfg->vo] = cfg->active_transfers;
 	}
 
 	return ret;

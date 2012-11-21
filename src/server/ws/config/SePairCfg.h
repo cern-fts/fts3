@@ -22,6 +22,7 @@ public:
 	virtual ~SePairCfg();
 
 	virtual string json();
+	virtual void save();
 	virtual void del();
 };
 

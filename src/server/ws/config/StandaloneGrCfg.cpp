@@ -27,20 +27,6 @@ StandaloneGrCfg::StandaloneGrCfg(string name) : group(name) {
 StandaloneGrCfg::StandaloneGrCfg(CfgParser& parser) : StandaloneCfg(parser) {
 	group = parser.get<string>("group");
 	members = parser.get< vector<string> >("members");
-
-	vector<string>::iterator it;
-	for (it = members.begin(); it != members.end(); it++) {
-		addSe(*it);
-	}
-
-	if (db->checkGroupExists(group)) {
-		// if the group exists remove it!
-		vector<string> tmp;
-		db->getGroupMembers(group, tmp);
-		db->deleteMembersFromGroup(group, tmp);
-	}
-
-	db->addMemberToGroup(group, members);
 }
 
 StandaloneGrCfg::~StandaloneGrCfg() {
@@ -61,6 +47,7 @@ string StandaloneGrCfg::json() {
 
 void StandaloneGrCfg::save() {
 
+	addGroup(group, members);
 	StandaloneCfg::save(group);
 }
 

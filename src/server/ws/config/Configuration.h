@@ -68,16 +68,16 @@ protected:
 	static string get(map<string, int> params);
 	static string get(vector<string> members);
 
-	shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
-
-	map<string, int> getProtocolMap(string symbolic_name);
-	map<string, int> getShareMap(string symbolic_name);
+	map<string, int> getProtocolMap(string source, string destination);
+	map<string, int> getProtocolMap(LinkConfig* cfg);
+	map<string, int> getShareMap(string source, string destination);
 
 	void addSe(string se, bool active = true);
+	void addGroup(string group, vector<string>& members);
+	void checkGroup(string group);
 
-	void addSymbolicName(string symbolic_name, string source, string destination, bool active);
-	void addShareCfg(string symbolic_name, pair<string, int> share);
-	void addProtocolCfg(string symbolic_name, map<string, int> protocol);
+	void addLinkCfg(string source, string destination, bool active, string symbolic_name, map<string, int>& protocol);
+	void addShareCfg(string source, string destination, map<string, int>& share);
 };
 
 } /* namespace cli */

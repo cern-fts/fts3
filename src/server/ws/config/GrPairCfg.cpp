@@ -19,9 +19,6 @@ GrPairCfg::GrPairCfg(CfgParser& parser) : PairCfg(parser) {
 		symbolic_name = *symbolic_name_opt;
 	else
 		symbolic_name = source + "-" + destination;
-
-	checkGroup(source);
-	checkGroup(destination);
 }
 
 GrPairCfg::~GrPairCfg() {
@@ -40,17 +37,14 @@ string GrPairCfg::json() {
 	return ss.str();
 }
 
-void GrPairCfg::del() {
-
+void GrPairCfg::save() {
+	checkGroup(source);
+	checkGroup(destination);
+	PairCfg::save();
 }
 
-void GrPairCfg::checkGroup(string group) {
-	// check if the group exists
-	if (!db->checkGroupExists(group)) {
-		throw Err_Custom(
-				"The group: " +  group + " does not exist!"
-			);
-	}
+void GrPairCfg::del() {
+
 }
 
 } /* namespace ws */

@@ -27,11 +27,11 @@ StandaloneCfg::~StandaloneCfg() {
 
 void StandaloneCfg::init(string name) {
 	// get SE in and out share
-	in_share = getShareMap("*-" + name);
-	out_share = getShareMap(name + "-*");
+	in_share = getShareMap("*", name);
+	out_share = getShareMap(name, "*");
 	// get SE in and out protocol
-	in_protocol = getProtocolMap("*-" + name);
-	out_protocol = getProtocolMap(name + "-*");
+	in_protocol = getProtocolMap("*", name);
+	out_protocol = getProtocolMap(name, "*");
 }
 
 string StandaloneCfg::json() {
@@ -53,32 +53,15 @@ string StandaloneCfg::json() {
 
 void StandaloneCfg::save(string name) {
 
-	// handle symbolic name
-	addSymbolicName("*-" + name, "*", name, active);
+	// add the in-link
+	addLinkCfg("*", name, active, "*-" + name, in_protocol);
+	// add the shares for the in-link
+	addShareCfg("*", name, in_share);
 
-	map<string, int>::iterator it;
-	// create  '* -> se' records
-	for (it = in_share.begin(); it != in_share.end(); it++) {
-		addShareCfg(
-				"*-" + name,
-				*it
-			);
-	}
-	// create the coresponding protocol cfg
-	addProtocolCfg("*-" + name, in_protocol);
-
-	// handle symbolic name
-	addSymbolicName(name + "-*", name, "*", active);
-
-	// create 'se -> *' record
-	for (it = out_share.begin(); it != out_share.end(); it++) {
-		addShareCfg(
-				name + "-*",
-				*it
-			);
-	}
-	// create the coresponding protocol cfg
-	addProtocolCfg(name + "-*", out_protocol);
+	// add the out-link
+	addLinkCfg(name, "*", active, name + "-*", out_protocol);
+	// add the shares for out-link
+	addShareCfg(name, "*", out_share);
 }
 
 } /* namespace common */

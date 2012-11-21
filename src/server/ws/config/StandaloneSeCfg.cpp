@@ -33,7 +33,6 @@ StandaloneSeCfg::StandaloneSeCfg(string name) : se(name) {
 
 StandaloneSeCfg::StandaloneSeCfg(CfgParser& parser) : StandaloneCfg(parser)  {
 	se = parser.get<string>("se");
-	addSe(se);
 }
 
 StandaloneSeCfg::~StandaloneSeCfg() {
@@ -53,7 +52,7 @@ string StandaloneSeCfg::json() {
 }
 
 void StandaloneSeCfg::save() {
-
+	addSe(se, active);
 	StandaloneCfg::save(se);
 }
 
