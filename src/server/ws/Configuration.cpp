@@ -63,6 +63,7 @@ string Configuration::get(vector<string> members) {
 	vector<string>::iterator it;
 	for (it = members.begin(); it != members.end();) {
 		ss << "\"" << *it << "\"";
+		it++;
 		if (it != members.end()) ss << ",";
 	}
 
