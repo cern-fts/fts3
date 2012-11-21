@@ -268,10 +268,12 @@ public:
     
     //t_config_symbolic
     virtual void addLinkConfig(LinkConfig* cfg) = 0;
+    virtual void updateLinkConfig(LinkConfig* cfg) = 0;
     virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination) = 0;
 
     virtual void addShareConfig(ShareConfig* cfg) = 0;
+    virtual void updateShareConfig(ShareConfig* cfg) = 0;
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo) = 0;
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo) = 0;
 

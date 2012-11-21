@@ -282,10 +282,12 @@ public:
     virtual bool checkSeExist(const std::string & se);
                 
     virtual void addLinkConfig(LinkConfig* cfg);
+    virtual void updateLinkConfig(LinkConfig* cfg);
     virtual void deleteLinkConfig(std::string source, std::string destination);
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination);
 
     virtual void addShareConfig(ShareConfig* cfg);
+    virtual void updateShareConfig(ShareConfig* cfg);
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo);
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
     

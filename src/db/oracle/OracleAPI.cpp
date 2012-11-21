@@ -3679,6 +3679,40 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
     }
 }
 
+void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
+    std::string tag = "updateLinkConfig";
+    std::string query =
+    		"update t_link_config "
+    		"set state=:1,symbolicName=:2,NOSTREAMS=:3,tcp_buffer_size=:4,URLCOPY_TX_TO=:5,no_tx_activity_to=:6 "
+    		"where source=:7 and destiantion=:8";
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        if (false == conn->checkConn())
+            return;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, cfg->state);
+        s->setString(2, cfg->symbolic_name);
+        s->setInt(3, cfg->NOSTREAMS);
+        s->setInt(4, cfg->TCP_BUFFER_SIZE);
+        s->setInt(5, cfg->URLCOPY_TX_TO);
+        s->setInt(6, cfg->NO_TX_ACTIVITY_TO);
+        s->setString(7, cfg->source);
+        s->setString(8, cfg->destination);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+}
+
 void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
     const std::string tag = "deleteLinkConfig";
     std::string query = "delete from t_link_config where source=:1 and destination=:2";
@@ -3778,6 +3812,35 @@ void OracleAPI::addShareConfig(ShareConfig* cfg) {
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
+}
+void OracleAPI::updateShareConfig(ShareConfig* cfg) {
+	std::string tag = "updateShareConfig";
+	std::string query =
+			"update t_share_config "
+			"set active=:1 "
+			"where source=:2 and destiantion=:3 and vo=:4";
+	oracle::occi::Statement* s = NULL;
+
+	ThreadTraits::LOCK_R lock(_mutex);
+
+	try {
+		if (false == conn->checkConn())
+			return;
+
+		s = conn->createStatement(query, tag);
+		s->setInt(1, cfg->active_transfers);
+		s->setString(2, cfg->source);
+		s->setString(3, cfg->destination);
+		s->setString(4, cfg->vo);
+		s->executeUpdate();
+		conn->commit();
+		conn->destroyStatement(s, tag);
+	}    catch (oracle::occi::SQLException const &e) {
+		if (conn)
+			conn->rollback();
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	}
 }
 
 void OracleAPI::deleteShareConfig(std::string source, std::string destination, std::string vo) {
