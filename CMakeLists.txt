@@ -39,7 +39,10 @@ set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
-option(EPELBUILD "Build for EPEL" OFF)
+option(ORACLEBUILD "Build oracle plug-in" OFF)
+option(MYSQLBUILD "Build for EPEL" OFF)
+option(MAINBUILD "Build fts" OFF)
+option(ALLBUILD "Build fts all including db plug-ins" OFF)
 	 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -finstrument-functions -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wunsafe-loop-optimizations -Winit-self -Wmissing-braces -Wparentheses")
 
@@ -67,13 +70,27 @@ endif ()
 set(BOOST_LIBRARYDIR /usr/lib64)
 SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
 set(Boost_USE_MULTITHREADED ON)
-if (EPELBUILD STREQUAL "OFF")
+
+if (ORACLEBUILD STREQUAL "ON")
 find_package(OCCI)
 endif ()
-find_package(Boost)
+
+if (ALLBUILD STREQUAL "ON")
+find_package(OCCI)
 find_package(APR 1.2.7 REQUIRED)
 find_package(APRUtil 1.2.7 REQUIRED)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
+endif ()
+
+if (MAINBUILD STREQUAL "ON")
+find_package(APR 1.2.7 REQUIRED)
+find_package(APRUtil 1.2.7 REQUIRED)
+find_package(ActiveMQcpp 3.2.0 REQUIRED)
+endif ()
+
+
+find_package(Boost)
+
 
 add_subdirectory(test)
 add_subdirectory(src)

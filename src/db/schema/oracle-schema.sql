@@ -210,6 +210,9 @@ CREATE TABLE t_link_config (
    ,tcp_buffer_size     INTEGER DEFAULT 0
    ,urlcopy_tx_to      INTEGER NOT NULL  
    ,no_tx_activity_to INTEGER DEFAULT 360
+   ,placeholder1 INTEGER
+   ,placeholder2 INTEGER   
+   ,placeholder3 VARCHAR2(255)
    ,CONSTRAINT t_link_config_pk PRIMARY KEY (source, destination)    
 );
 

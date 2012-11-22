@@ -15,6 +15,19 @@
 
 cmake_minimum_required(VERSION 2.6)
 
+if (ORACLEBUILD STREQUAL "ON")
+add_subdirectory(common)
+add_subdirectory(config)
+add_subdirectory(db)
+ENDIF()
+
+IF (MYSQLBUILD STREQUAL "ON")
+add_subdirectory(common)
+add_subdirectory(config)
+add_subdirectory(db)
+ENDIF()
+
+IF (MAINBUILD STREQUAL "ON")
 add_subdirectory(ws-ifce)
 add_subdirectory(common)
 add_subdirectory(config)
@@ -27,6 +40,22 @@ add_subdirectory(monitoring)
 add_subdirectory(url-copy)
 add_subdirectory(scripts)
 add_subdirectory(dbClear)
+ENDIF()
+
+IF (ALLBUILD STREQUAL "ON")
+add_subdirectory(ws-ifce)
+add_subdirectory(common)
+add_subdirectory(config)
+add_subdirectory(db)
+add_subdirectory(cred)
+add_subdirectory(delegation-cli)
+add_subdirectory(cli)
+add_subdirectory(server)
+add_subdirectory(monitoring)
+add_subdirectory(url-copy)
+add_subdirectory(scripts)
+add_subdirectory(dbClear)
+ENDIF()
 
 
 

@@ -1,14 +1,27 @@
 cmake_minimum_required(VERSION 2.6)
 
-set(CMAKE_BUILD_TYPE Debug)
 ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
 
 add_subdirectory(generic)
-if (EPELBUILD STREQUAL "OFF")
+
+if (ORACLEBUILD STREQUAL "ON")
 add_subdirectory(oracle)
+add_subdirectory(python)
+add_subdirectory(schema)
 endif ()
+
+if (MYSQLBUILD STREQUAL "ON")
 add_subdirectory(mysql)
 add_subdirectory(python)
 add_subdirectory(schema)
+endif ()
+
+if (ALLBUILD STREQUAL "ON")
+add_subdirectory(oracle)
+add_subdirectory(mysql)
+add_subdirectory(python)
+add_subdirectory(schema)
+endif ()
+
 

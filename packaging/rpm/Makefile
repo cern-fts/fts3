@@ -28,29 +28,3 @@ rpm: srpm
 
 mock: srpm
 	/usr/bin/mock $(MOCKARGS) -r $(MOCKENV) --rebuild $(rpmbuild)/SRPMS/$(name)-$(version)-*.src.rpm
-
-#EPEL section
-distEPEL: cleanEPEL
-	tar --create --gzip --directory ../.. --file ./${name}-${version}.tar.gz --exclude=./packaging --exclude .svn .
-
-cleanEPEL:
-	@rm -rf $(rpmbuild)
-	@rm -f ${name}-${version}.tar.gz
-
-prepareEPEL: distEPEL
-	@mkdir -p  $(rpmbuild)/RPMS/noarch
-	@mkdir -p  $(rpmbuild)/SRPMS/
-	@mkdir -p  $(rpmbuild)/SPECS/
-	@mkdir -p  $(rpmbuild)/SOURCES/
-	@mkdir -p  $(rpmbuild)/BUILD/
-	mv ${name}-${version}.tar.gz $(rpmbuild)/SOURCES 
-
-srpmEPEL: prepareEPEL ./specsEPEL/$(name).spec
-	rpmbuild --nodeps -bs --define='_topdir ${rpmbuild}' ./specsEPEL/$(name).spec
-
-rpmEPEL: srpmEPEL
-	rpmbuild --nodeps -bb --define='_topdir ${rpmbuild}' ./specsEPEL/$(name).spec
-
-mockEPEL: srpmEPEL
-	/usr/bin/mock $(MOCKARGS) -r $(MOCKENV) --rebuild $(rpmbuild)/SRPMS/$(name)-$(version)-*.src.rpm
-

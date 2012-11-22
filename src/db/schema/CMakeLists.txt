@@ -19,7 +19,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts_include_dir})
 
-if (EPELBUILD STREQUAL "OFF")
+if (ORACLEBUILD STREQUAL "ON")
 install(FILES         oracle-drop.sql
         DESTINATION ${DOC_INSTALL_DIR} )
 
@@ -27,6 +27,7 @@ install(FILES         oracle-schema.sql
         DESTINATION ${DOC_INSTALL_DIR} )
 endif ()
 
+if (MYSQLBUILD STREQUAL "ON")
 install(FILES         mysql-schema.sql
         DESTINATION ${DOC_INSTALL_DIR} )
 
@@ -35,3 +36,21 @@ install(FILES         mysql-drop.sql
 
 install(FILES         mysql_truncate.sql
         DESTINATION ${DOC_INSTALL_DIR} )
+endif ()
+
+if (ALLBUILD STREQUAL "ON")
+install(FILES         oracle-drop.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+
+install(FILES         oracle-schema.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+	
+	install(FILES         mysql-schema.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+
+install(FILES         mysql-drop.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+
+install(FILES         mysql_truncate.sql
+        DESTINATION ${DOC_INSTALL_DIR} )
+endif ()
