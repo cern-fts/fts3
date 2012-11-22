@@ -96,7 +96,6 @@ public:
 	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
 	 * 	The configuration can also be restricted to a given SE and/or VO.
 	 *
-	 * @param vo - VO name
 	 * @param se - SE name
 	 *
 	 * @return vector containing single configuration entries in JSON format
@@ -146,23 +145,8 @@ private:
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 
-	/// the whole cfg comand
-	string all;
-
-	/// type of the configuration that is being submitted
-	CfgParser::CfgType type;
-
 	/// user DN
 	string dn;
-
-	/// number of SQL updates triggered by configuration command
-	int updateCount;
-	/// number of SQL inserts triggered by configuration command
-	int insertCount;
-	/// number of SQL deletes triggered by configuration command
-	int deleteCount;
-	/// number of debug cmd triggered by configuration command
-	int debugCount;
 
 	scoped_ptr<Configuration> cfg;
 };

@@ -40,10 +40,6 @@
 using namespace fts3::ws;
 
 ConfigurationHandler::ConfigurationHandler(string dn):
-		updateCount(0),
-		insertCount(0),
-		deleteCount(0),
-		debugCount(0),
 		dn(dn),
 		db (DBSingleton::instance().getDBObjectInstance()),
 		cfg(0){
@@ -59,31 +55,25 @@ void ConfigurationHandler::parse(string configuration) {
 
 	CfgParser parser (configuration);
 
-	// the whole cfg cmd
-	all = configuration;
-
-	// configuration type
-	type = parser.getCfgType();
-
-	switch(type) {
+	switch(parser.getCfgType()) {
 	case CfgParser::STANDALONE_SE_CFG:
 		cfg.reset(
-				new StandaloneSeCfg(parser)
+				new StandaloneSeCfg(dn, parser)
 			);
 		break;
 	case CfgParser::STANDALONE_GR_CFG:
 		cfg.reset(
-				new StandaloneGrCfg(parser)
+				new StandaloneGrCfg(dn, parser)
 			);
 		break;
 	case CfgParser::SE_PAIR_CFG:
 		cfg.reset(
-				new SePairCfg(parser)
+				new SePairCfg(dn, parser)
 			);
 		break;
 	case CfgParser::GR_PAIR_CFG:
 		cfg.reset(
-				new GrPairCfg(parser)
+				new GrPairCfg(dn, parser)
 			);
 		break;
 	case CfgParser::NOT_A_CFG:
@@ -94,23 +84,24 @@ void ConfigurationHandler::parse(string configuration) {
 
 void ConfigurationHandler::add() {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is adding configuration" << commit;
 	cfg->save();
 }
 
 vector<string> ConfigurationHandler::get(string name) {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
+
 	vector<string> ret;
 
 	if (db->checkGroupExists(name)) {
 		cfg.reset(
-				new StandaloneGrCfg(name)
+				new StandaloneGrCfg(dn, name)
 			);
-		type = CfgParser::STANDALONE_GR_CFG;
 	} else {
 		cfg.reset(
-				new StandaloneSeCfg(name)
+				new StandaloneSeCfg(dn, name)
 			);
-		type = CfgParser::STANDALONE_SE_CFG;
 	}
 
 	ret.push_back(cfg->json());
@@ -120,6 +111,8 @@ vector<string> ConfigurationHandler::get(string name) {
 
 vector<string> ConfigurationHandler::getPair(string src, string dest) {
 
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
+
 	vector<string> ret;
 
 	bool grPair = db->checkGroupExists(src) && db->checkGroupExists(dest);
@@ -127,14 +120,12 @@ vector<string> ConfigurationHandler::getPair(string src, string dest) {
 
 	if (grPair) {
 		cfg.reset(
-				new GrPairCfg(src, dest)
+				new GrPairCfg(dn, src, dest)
 			);
-		type = CfgParser::STANDALONE_GR_CFG;
 	} else if (sePair) {
 		cfg.reset(
-				new SePairCfg(src, dest)
+				new SePairCfg(dn, src, dest)
 			);
-		type = CfgParser::STANDALONE_SE_CFG;
 	} else
 		throw Err_Custom("The source and destination have to bem either two SEs or two SE groups!");
 
@@ -159,6 +150,5 @@ void ConfigurationHandler::del() {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is deleting configuration" << commit;
 	cfg->del();
-	string action = "delete (x" + lexical_cast<string>(deleteCount) + ")";
 }
 

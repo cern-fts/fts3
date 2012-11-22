@@ -12,7 +12,7 @@
 namespace fts3 {
 namespace ws {
 
-SePairCfg::SePairCfg(CfgParser& parser) : PairCfg(parser) {
+SePairCfg::SePairCfg(string dn, CfgParser& parser) : PairCfg(dn, parser) {
 
 	source = parser.get<string>("source_se");
 	destination = parser.get<string>("destination_se");
@@ -24,6 +24,8 @@ SePairCfg::SePairCfg(CfgParser& parser) : PairCfg(parser) {
 		symbolic_name = *symbolic_name_opt;
 	else
 		symbolic_name = source + "-" + destination;
+
+	all = json();
 }
 
 SePairCfg::~SePairCfg() {

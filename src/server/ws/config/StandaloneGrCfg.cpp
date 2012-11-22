@@ -10,7 +10,7 @@
 namespace fts3 {
 namespace ws {
 
-StandaloneGrCfg::StandaloneGrCfg(string name) : group(name) {
+StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), group(name) {
 
 	if (!db->checkGroupExists(group))
 		throw Err_Custom("The SE group: " + group + " does not exist!");
@@ -24,9 +24,11 @@ StandaloneGrCfg::StandaloneGrCfg(string name) : group(name) {
 	db->getGroupMembers(name, members);
 }
 
-StandaloneGrCfg::StandaloneGrCfg(CfgParser& parser) : StandaloneCfg(parser) {
+StandaloneGrCfg::StandaloneGrCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser) {
 	group = parser.get<string>("group");
 	members = parser.get< vector<string> >("members");
+
+	all = json();
 }
 
 StandaloneGrCfg::~StandaloneGrCfg() {
@@ -62,6 +64,7 @@ void StandaloneGrCfg::del() {
 
 	// remove group members
 	db->deleteMembersFromGroup(group, members);
+	deleteCount++;
 }
 
 } /* namespace common */

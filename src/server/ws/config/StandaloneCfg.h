@@ -23,8 +23,8 @@ class StandaloneCfg : public Configuration {
 
 public:
 
-	StandaloneCfg() {}
-	StandaloneCfg(CfgParser& parser);
+	StandaloneCfg(string dn) : Configuration(dn) {}
+	StandaloneCfg(string dn, CfgParser& parser);
 
 	virtual ~StandaloneCfg();
 

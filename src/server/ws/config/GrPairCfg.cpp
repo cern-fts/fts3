@@ -10,7 +10,7 @@
 namespace fts3 {
 namespace ws {
 
-GrPairCfg::GrPairCfg(CfgParser& parser) : PairCfg(parser) {
+GrPairCfg::GrPairCfg(string dn, CfgParser& parser) : PairCfg(dn, parser) {
 
 	source = parser.get<string>("source_group");
 	destination = parser.get<string>("destination_group");
@@ -22,6 +22,9 @@ GrPairCfg::GrPairCfg(CfgParser& parser) : PairCfg(parser) {
 		symbolic_name = *symbolic_name_opt;
 	else
 		symbolic_name = source + "-" + destination;
+
+
+	all = json();
 }
 
 GrPairCfg::~GrPairCfg() {

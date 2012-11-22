@@ -30,9 +30,8 @@ class Configuration {
 
 public:
 
-	Configuration() : db (DBSingleton::instance().getDBObjectInstance()) {};
-	Configuration(CfgParser& parser);
-	virtual ~Configuration() {};
+	Configuration(string dn);
+	virtual ~Configuration();
 
 	/**
 	 * protocol parameters
@@ -86,6 +85,21 @@ protected:
 
 	void delLinkCfg(string source, string destination);
 	void delShareCfg(string source, string destination);
+
+	///
+	string all;
+
+	/// number of SQL updates triggered by configuration command
+	int updateCount;
+	/// number of SQL inserts triggered by configuration command
+	int insertCount;
+	/// number of SQL deletes triggered by configuration command
+	int deleteCount;
+
+private:
+
+	///
+	string dn;
 };
 
 } /* namespace cli */

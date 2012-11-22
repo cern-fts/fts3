@@ -23,8 +23,8 @@ class StandaloneGrCfg : public StandaloneCfg {
 
 public:
 
-	StandaloneGrCfg(string name);
-	StandaloneGrCfg(CfgParser& parser);
+	StandaloneGrCfg(string dn, string name);
+	StandaloneGrCfg(string dn, CfgParser& parser);
 	virtual ~StandaloneGrCfg();
 
 	virtual string json();

@@ -22,8 +22,8 @@ class StandaloneSeCfg : public StandaloneCfg {
 
 public:
 
-	StandaloneSeCfg(string name);
-	StandaloneSeCfg(CfgParser& parser);
+	StandaloneSeCfg(string dn, string name);
+	StandaloneSeCfg(string dn, CfgParser& parser);
 	virtual ~StandaloneSeCfg();
 
 	virtual string json();

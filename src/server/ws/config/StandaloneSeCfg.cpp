@@ -17,7 +17,7 @@ namespace ws {
 
 using namespace boost;
 
-StandaloneSeCfg::StandaloneSeCfg(string name) : se(name) {
+StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se(name) {
 
 	// get SE active state
 	Se* se = 0;
@@ -31,8 +31,10 @@ StandaloneSeCfg::StandaloneSeCfg(string name) : se(name) {
 	init(name);
 }
 
-StandaloneSeCfg::StandaloneSeCfg(CfgParser& parser) : StandaloneCfg(parser)  {
+StandaloneSeCfg::StandaloneSeCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser)  {
+
 	se = parser.get<string>("se");
+	all = json();
 }
 
 StandaloneSeCfg::~StandaloneSeCfg() {

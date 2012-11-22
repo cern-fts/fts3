@@ -14,7 +14,10 @@
 namespace fts3 {
 namespace ws {
 
-PairCfg::PairCfg(string source, string destination) : source(source), destination(destination) {
+PairCfg::PairCfg(string dn, string source, string destination) :
+		Configuration(dn),
+		source(source),
+		destination(destination) {
 
 	scoped_ptr<LinkConfig> cfg (
 			db->getLinkConfig(source, destination)
@@ -30,7 +33,7 @@ PairCfg::PairCfg(string source, string destination) : source(source), destinatio
 	protocol = getProtocolMap(cfg.get());
 }
 
-PairCfg::PairCfg(CfgParser& parser) : Configuration(parser) {
+PairCfg::PairCfg(string dn, CfgParser& parser) : Configuration(dn) {
 
 	symbolic_name_opt = parser.get_opt("symbolic_name");
 	share = parser.get< map<string, int> >("share");

@@ -17,8 +17,8 @@ class GrPairCfg : public PairCfg {
 
 public:
 
-	GrPairCfg(string source, string destination) : PairCfg(source, destination) {}; // check if SE groups exist
-	GrPairCfg(CfgParser& parser);
+	GrPairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {}; // check if SE groups exist
+	GrPairCfg(string dn, CfgParser& parser);
 	virtual ~GrPairCfg();
 
 	virtual string json();

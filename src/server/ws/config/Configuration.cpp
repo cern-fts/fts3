@@ -10,9 +10,12 @@
 
 #include <set>
 
+#include <boost/lexical_cast.hpp>
+
 namespace fts3 {
 namespace ws {
 
+using namespace boost;
 
 const string Configuration::Protocol::BANDWIDTH = "bandwidth";
 const string Configuration::Protocol::NOSTREAMS = "nostreams";
@@ -35,8 +38,25 @@ const string Configuration::any = "*";
 const string Configuration::on = "on";
 const string Configuration::off = "off";
 
-Configuration::Configuration(CfgParser& parser) : db (DBSingleton::instance().getDBObjectInstance()) {
+Configuration::Configuration(string dn) :
+		dn(dn),
+		db (DBSingleton::instance().getDBObjectInstance()),
+		insertCount(0),
+		updateCount(0),
+		deleteCount(0) {
 
+}
+
+Configuration::~Configuration() {
+
+	if (deleteCount)
+		db->auditConfiguration(dn, all, "delete (x" + lexical_cast<string>(deleteCount) + ")");
+
+	if (insertCount)
+		db->auditConfiguration(dn, all, "insert (x" + lexical_cast<string>(insertCount) + ")");
+
+	if (updateCount)
+		db->auditConfiguration(dn, all, "update (x" + lexical_cast<string>(updateCount) + ")");
 }
 
 string Configuration::json(map<string, int> params) {
@@ -82,12 +102,14 @@ void Configuration::addSe(string se, bool active) {
 	if (!ptr) {
 		// if not add it to the DB
 		db->addSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
+		insertCount++;
 	} else
 		delete ptr;
 }
 
 void Configuration::eraseSe(string se) {
 	db->updateSe(string(), string(), string(), se, on, string(), string(), string(), string(), string(), string());
+	updateCount++;
 }
 
 void Configuration::addGroup(string group, vector<string>& members) {
@@ -97,6 +119,7 @@ void Configuration::addGroup(string group, vector<string>& members) {
 		vector<string> tmp;
 		db->getGroupMembers(group, tmp);
 		db->deleteMembersFromGroup(group, tmp);
+		deleteCount++;
 	}
 
 	vector<string>::iterator it;
@@ -107,6 +130,7 @@ void Configuration::addGroup(string group, vector<string>& members) {
 	}
 
 	db->addMemberToGroup(group, members);
+	insertCount++;
 }
 
 void Configuration::checkGroup(string group) {
@@ -142,8 +166,10 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 
 	if (update) {
 		db->updateLinkConfig(cfg.get());
+		updateCount++;
 	} else {
 		db->addLinkConfig(cfg.get());
+		insertCount++;
 	}
 
 }
@@ -160,6 +186,7 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
 		if (share.find(cfg->vo) == share.end()) {
 			// if the VO was not in the new configuration remove the record
 			db->deleteShareConfig(source, destination, cfg->vo);
+			deleteCount++;
 		} else {
 			// otherwise schedule it for update
 			update.insert(cfg->vo);
@@ -177,8 +204,10 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
 		// check if the configuration should use insert or update
 		if (update.count(it->first)) {
 			db->updateShareConfig(cfg.get());
+			updateCount++;
 		} else {
 			db->addShareConfig(cfg.get());
+			insertCount++;
 		}
 	}
 }
@@ -238,11 +267,13 @@ void Configuration::delLinkCfg(string source, string destination) {
 		throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
 
 	db->deleteLinkConfig(source, destination);
+	deleteCount++;
 }
 
 void Configuration::delShareCfg(string source, string destination) {
 
 	db->deleteShareConfig(source, destination);
+	deleteCount++;
 }
 
 }

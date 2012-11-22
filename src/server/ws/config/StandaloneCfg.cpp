@@ -12,7 +12,7 @@
 namespace fts3 {
 namespace ws {
 
-StandaloneCfg::StandaloneCfg(CfgParser& parser) : Configuration(parser) {
+StandaloneCfg::StandaloneCfg(string dn, CfgParser& parser) : Configuration(dn) {
 
 	active = parser.get<bool>("active");
 	in_share = parser.get< map<string, int> >("in.share");

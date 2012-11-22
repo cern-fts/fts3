@@ -26,8 +26,8 @@ class PairCfg : public Configuration {
 
 public:
 
-	PairCfg(string source, string destination);
-	PairCfg(CfgParser& parser);
+	PairCfg(string dn, string source, string destination);
+	PairCfg(string dn, CfgParser& parser);
 	virtual ~PairCfg();
 
 	virtual string json();

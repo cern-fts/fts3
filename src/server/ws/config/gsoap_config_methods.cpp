@@ -96,9 +96,9 @@ int fts3::implcfg__getConfiguration(soap* soap, string vo, string name, string s
 
 		bool standalone = !source.empty() && destination.empty();
 		bool pair = !source.empty() && !destination.empty();
-		bool symboli_name = !name.empty();
+		bool symbolic_name = !name.empty();
 
-		if (symboli_name && (standalone || pair) ) {
+		if (symbolic_name && (standalone || pair) ) {
 			throw Err_Custom("Either a stand alone configuration or pair configuration or symbolic name may be specified for the query!");
 		}
 
@@ -107,7 +107,7 @@ int fts3::implcfg__getConfiguration(soap* soap, string vo, string name, string s
 			response.configuration->cfg = handler.get(source);
 		} else if (pair) {
 			response.configuration->cfg = handler.getPair(source, destination);
-		} else if (symboli_name) {
+		} else if (symbolic_name) {
 			response.configuration->cfg = handler.getPair(name);
 		} else {
 			throw Err_Custom("Wrongly specified parameters, either both the source and destination have to be specified or the configuration name!");

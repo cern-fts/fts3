@@ -17,8 +17,8 @@ class SePairCfg : public PairCfg {
 
 public:
 
-	SePairCfg(string source, string destination) : PairCfg(source, destination) {};
-	SePairCfg(CfgParser& parser);
+	SePairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {};
+	SePairCfg(string dn, CfgParser& parser);
 	virtual ~SePairCfg();
 
 	virtual string json();
