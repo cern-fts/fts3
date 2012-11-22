@@ -144,6 +144,15 @@ void Configuration::checkGroup(string group) {
 
 void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, map<string, int>& protocol) {
 
+	scoped_ptr< pair<string, string> > p (
+			db->getSourceAndDestination(symbolic_name)
+		);
+
+	if (p.get()) {
+		if (source != p->first || destination != p->second)
+			throw Err_Custom("A 'pair' with the same symbolic name exists already!");
+	}
+
 	scoped_ptr<LinkConfig> cfg (
 			db->getLinkConfig(source, destination)
 		);
