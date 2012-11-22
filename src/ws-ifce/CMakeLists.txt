@@ -109,7 +109,7 @@ add_library(fts_ws_ifce_server SHARED
 )
 set_target_properties(fts_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
 add_dependencies(fts_ws_ifce_server fts_common)
-target_link_libraries(fts_ws_ifce_server -lgsoap++)
+target_link_libraries(fts_ws_ifce_server -lgsoap++ -lfts_common)
 
 # Client side library 
 add_library(fts_ws_ifce_client SHARED
@@ -120,15 +120,15 @@ add_library(fts_ws_ifce_client SHARED
     ${PROJECT_SOURCE_DIR}/src/ws-ifce/LogFileStreamer.cpp
 )
 
+set_target_properties(fts_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
+target_link_libraries(fts_ws_ifce_client -lgsoap++ -lfts_common)
+
 # Client side delegation library 
 add_library(fts_delegation_api_cpp SHARED
 #    ${gsoap_env_source_files}
     ${generated_files_dir}/${delegation_prefix}C.cpp
     ${generated_files_dir}/${delegation_prefix}Client.cpp
 )
-
-set_target_properties(fts_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
-target_link_libraries(fts_ws_ifce_client -lgsoap++)
 
 set_target_properties(fts_delegation_api_cpp PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/ws-ifce)
 set_target_properties(fts_delegation_api_cpp PROPERTIES VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
