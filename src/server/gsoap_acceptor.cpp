@@ -25,7 +25,7 @@
 #include <cgsi_plugin.h>
 #include <signal.h>
 #include "StaticSslLocking.h"
-#include "common/LogFileStreamer.h"
+#include "ws-ifce/LogFileStreamer.h"
 #include <sys/socket.h>
 #include <fstream>
 

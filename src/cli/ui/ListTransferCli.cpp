@@ -23,7 +23,7 @@
  */
 
 #include "ListTransferCli.h"
-#include "common/JobStatusHandler.h"
+#include "ws-ifce/JobStatusHandler.h"
 
 using namespace fts3::cli;
 using namespace fts3::common;

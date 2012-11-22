@@ -25,7 +25,7 @@
 
 #include "ws-ifce/gsoap/fts3.nsmap"
 
-#include "common/LogFileStreamer.h"
+#include "ws-ifce/LogFileStreamer.h"
 
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>

@@ -26,7 +26,7 @@
 #include "GSoapContextAdapter.h"
 #include "ui/ListTransferCli.h"
 
-#include "common/JobStatusHandler.h"
+#include "ws-ifce/JobStatusHandler.h"
 
 #include <memory>
 

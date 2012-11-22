@@ -32,7 +32,7 @@
 #include "FileTransferScheduler.h"
 
 #include "common/logger.h"
-#include "common/JobStatusHandler.h"
+#include "ws-ifce/JobStatusHandler.h"
 
 
 using namespace db;

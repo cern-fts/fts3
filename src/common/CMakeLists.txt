@@ -22,7 +22,7 @@ set(fts_include_dir
 )
 include_directories (${fts_include_dir})
 
-file(GLOB fts_common_sources "*.cpp" "json/*.cpp")
+file(GLOB fts_common_sources "*.cpp")
 #add_definitions(-E)
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
