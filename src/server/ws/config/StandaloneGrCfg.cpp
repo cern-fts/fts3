@@ -59,6 +59,9 @@ void StandaloneGrCfg::del() {
 
 	// delete group
 	StandaloneCfg::del(group);
+
+	// remove group members
+	db->deleteMembersFromGroup(group, members);
 }
 
 } /* namespace common */
