@@ -62,6 +62,10 @@ public:
 
 protected:
 
+	static const string any;
+	static const string on;
+	static const string off;
+
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 

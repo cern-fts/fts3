@@ -155,41 +155,7 @@ vector<string> ConfigurationHandler::getPair(string symbolic) {
 void ConfigurationHandler::del() {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is deleting configuration" << commit;
-
 	cfg->del();
-
-//	switch (type) {
-//	case CfgParser::SE_TRANSFER_CFG: {
-//		scoped_ptr<SeGroup> sg (new SeGroup);
-//		sg->active = *active_transfers;
-//		sg->groupName = *name;
-//		sg->member = *member;
-//		sg->symbolicName = *cfg_name;
-//		db->deleteGroupConfig(sg.get());
-//		deleteCount++;
-//		break;
-//	}
-//	case CfgParser::TRANSFER_CFG: {
-//
-//		vector<SeConfig*> v = db->getConfig(source.get().get<0>(), destination.get().get<0>(), *vo);
-//		scoped_ptr<SeConfig> sc (
-//				v.empty() ? 0 : v.front()
-//			);
-//		int id = sc->protocolId;
-//		db->deleteConfig(sc.get());
-//		deleteCount++;
-//		db->deleteProtocol(id);
-//		deleteCount++;
-//		break;
-//	}
-//	case CfgParser::GROUP_MEMBERS_CFG: {
-//		db->deleteMembersFromGroup(*name, *members);
-//		deleteCount++;
-//		break;
-//	}
-//	}
-
 	string action = "delete (x" + lexical_cast<string>(deleteCount) + ")";
-//	db->auditConfiguration(dn, all, action);
 }
 

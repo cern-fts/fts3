@@ -23,7 +23,7 @@ StandaloneSeCfg::StandaloneSeCfg(string name) : se(name) {
 	Se* se = 0;
 	db->getSe(se, name);
 	if (se) {
-		active = se->STATE == "on";
+		active = se->STATE == on;
 		delete se;
 	} else
 		throw Err_Custom("The SE: " + name + " does not exist!");

@@ -31,7 +31,9 @@ const string Configuration::Protocol::TX_TO_PER_MB = "tx_to_per_mb";
 const string Configuration::Protocol::NO_TX_ACTIVITY_TO = "no_tx_activity_to";
 const string Configuration::Protocol::PREPARING_FILES_RATIO = "preparing_files_ratio";
 
-
+const string Configuration::any = "*";
+const string Configuration::on = "on";
+const string Configuration::off = "off";
 
 Configuration::Configuration(CfgParser& parser) : db (DBSingleton::instance().getDBObjectInstance()) {
 
@@ -79,13 +81,13 @@ void Configuration::addSe(string se, bool active) {
 	db->getSe(ptr, se);
 	if (!ptr) {
 		// if not add it to the DB
-		db->addSe(string(), string(), string(), se, active ? "on" : "off", string(), string(), string(), string(), string(), string());
+		db->addSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
 	} else
 		delete ptr;
 }
 
 void Configuration::eraseSe(string se) {
-	db->updateSe(string(), string(), string(), se, "on", string(), string(), string(), string(), string(), string());
+	db->updateSe(string(), string(), string(), se, on, string(), string(), string(), string(), string(), string());
 }
 
 void Configuration::addGroup(string group, vector<string>& members) {
@@ -130,7 +132,7 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 
 	cfg->source = source;
 	cfg->destination = destination;
-	cfg->state = active ? "on" : "off";
+	cfg->state = active ? on : off;
 	cfg->symbolic_name = symbolic_name;
 
 	cfg->NOSTREAMS = protocol[Protocol::NOSTREAMS];

@@ -24,7 +24,7 @@ PairCfg::PairCfg(string source, string destination) : source(source), destinatio
 		throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
 
 	symbolic_name = cfg->symbolic_name;
-	active = cfg->state == "on";
+	active = cfg->state == on;
 
 	share = getShareMap(source, destination);
 	protocol = getProtocolMap(cfg.get());
