@@ -1096,9 +1096,6 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
     query.append(" WHERE NAME='");
     query.append(NAME);
     query.append("'");
-    query.append(" AND SE_TRANSFER_PROTOCOL='");
-    query.append(SE_TRANSFER_PROTOCOL);
-    query.append("'");
     ThreadTraits::LOCK_R lock(_mutex);				
     try {
         oracle::occi::Statement* s = conn->createStatement(query, "");
