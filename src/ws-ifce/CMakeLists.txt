@@ -17,6 +17,7 @@ cmake_minimum_required(VERSION 2.6)
 
 set(fts_include_dir 
     "${PROJECT_SOURCE_DIR}/src/"
+    "${CMAKE_BINARY_DIR}/src/"
 )
 
 include_directories (${fts_include_dir})
