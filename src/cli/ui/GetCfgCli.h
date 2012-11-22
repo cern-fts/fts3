@@ -33,7 +33,7 @@ namespace fts3 { namespace cli {
 /**
  *
  */
-class GetCfgCli: public VoNameCli, public SrcDestCli {
+class GetCfgCli: public SrcDestCli {
 
 public:
 

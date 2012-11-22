@@ -26,10 +26,10 @@
 
 using namespace fts3::cli;
 
-GetCfgCli::GetCfgCli(): VoNameCli(false) {
+GetCfgCli::GetCfgCli() {
 
 	specific.add_options()
-					("symbolic name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
+					("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
 					;
 }
 

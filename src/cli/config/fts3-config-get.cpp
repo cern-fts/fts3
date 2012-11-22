@@ -51,7 +51,7 @@ int main(int ac, char* av[]) {
 		GSoapContextAdapter& ctx = opt.get();
 
 		implcfg__getConfigurationResponse resp;
-		ctx.getConfiguration(cli->getSource(), cli->getDestination(), cli->getVoName(), cli->getName(), resp);
+		ctx.getConfiguration(cli->getSource(), cli->getDestination(), string(), cli->getName(), resp);
 
 		vector<string> &cfgs = resp.configuration->cfg;
 		vector<string>::iterator it;
