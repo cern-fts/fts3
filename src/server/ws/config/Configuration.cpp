@@ -104,6 +104,7 @@ void Configuration::addSe(string se, bool active) {
 		db->addSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
 		insertCount++;
 	} else
+		db->updateSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
 		delete ptr;
 }
 
