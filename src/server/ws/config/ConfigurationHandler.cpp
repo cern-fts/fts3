@@ -145,8 +145,14 @@ vector<string> ConfigurationHandler::getPair(string src, string dest) {
 
 vector<string> ConfigurationHandler::getPair(string symbolic) {
 
-	pair<string, string> p = db->getSourceAndDestination(symbolic);
-	return getPair(p.first, p.second);
+	scoped_ptr< pair<string, string> > p (
+			db->getSourceAndDestination(symbolic)
+		);
+
+	if (p.get())
+		return getPair(p->first, p->second);
+	else
+		throw Err_Custom("The symbolic name does not exist!");
 }
 
 void ConfigurationHandler::del() {
