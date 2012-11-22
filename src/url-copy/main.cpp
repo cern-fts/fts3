@@ -609,6 +609,7 @@ int main(int argc, char **argv) {
 
 
         reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
+		
 
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);

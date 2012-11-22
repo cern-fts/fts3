@@ -2640,7 +2640,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     std::string query_stmt2 = " select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and t_job.dest_se=:1";
     
     std::string query_stmt3 = " select file_state from  (select file_state from t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
-    			      " and file_state in ('FAILED','FINISHED') and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour)) order by SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) WHERE ROWNUM < 11";
+    			      " and file_state in ('FAILED','FINISHED') and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour)) order by "
+			      " SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) WHERE ROWNUM < 20 ";
 
     std::string query_stmt4 = " select count(*) from  t_file, t_job where t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2 "
     			      " and file_state = 'ACTIVE' ";

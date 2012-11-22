@@ -2222,6 +2222,35 @@ bool MySqlAPI::checkDestinationGroup(const std::string & src, const std::string 
 bool MySqlAPI::checkSeExist(const std::string & se){
 }
 
+void MySqlAPI::addLinkConfig(LinkConfig* cfg){
+}
+
+void MySqlAPI::updateLinkConfig(LinkConfig* cfg){
+}
+
+void MySqlAPI::deleteLinkConfig(std::string source, std::string destination){
+}
+LinkConfig* MySqlAPI::getLinkConfig(std::string source, std::string destination){
+}
+std::pair<std::string, std::string>* MySqlAPI::getSourceAndDestination(std::string symbolic_name){
+}
+bool MySqlAPI::isGrInPair(std::string group){
+}
+
+void MySqlAPI::addShareConfig(ShareConfig* cfg){
+}
+void MySqlAPI::updateShareConfig(ShareConfig* cfg){
+}
+void MySqlAPI::deleteShareConfig(std::string source, std::string destination, std::string vo){
+}
+void MySqlAPI::deleteShareConfig(std::string source, std::string destination){
+}
+ShareConfig* MySqlAPI::getShareConfig(std::string source, std::string destination, std::string vo){
+}
+std::vector<ShareConfig*> MySqlAPI::getShareConfig(std::string source, std::string destination){
+}
+
+
 // the class factories
 extern "C" GenericDbIfce* create() {
     return new MySqlAPI;

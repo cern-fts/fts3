@@ -263,6 +263,20 @@ public:
     virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);    
       
     virtual bool checkSeExist(const std::string & se);
+    
+    virtual void addLinkConfig(LinkConfig* cfg);
+    virtual void updateLinkConfig(LinkConfig* cfg);
+    virtual void deleteLinkConfig(std::string source, std::string destination);
+    virtual LinkConfig* getLinkConfig(std::string source, std::string destination);
+    virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
+    virtual bool isGrInPair(std::string group);
+
+    virtual void addShareConfig(ShareConfig* cfg);
+    virtual void updateShareConfig(ShareConfig* cfg);
+    virtual void deleteShareConfig(std::string source, std::string destination, std::string vo);
+    virtual void deleteShareConfig(std::string source, std::string destination);
+    virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
+    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);    
 
 private:
     size_t                poolSize;

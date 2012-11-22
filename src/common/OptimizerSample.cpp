@@ -59,22 +59,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
     std::vector<struct transfersStore>::iterator iter;
     bool found = false;
     int activeInStore = 0;
-
-
-  /*
-    std::cout << "Function input: " << std::endl;
-    std::cout << "    sourceSe            =" << sourceSe << std::endl;
-    std::cout << "    destSe              =" << destSe << std::endl;
-    std::cout << "    numFinished         =" << numFinished << std::endl;
-    std::cout << "    numFailed           =" << numFailed << std::endl;
-    std::cout << "    currentActive       =" << currentActive << std::endl;
-    std::cout << "    sourceActive        =" << sourceActive << std::endl;
-    std::cout << "    destActive          =" << destActive << std::endl;
-    std::cout << "    trSuccessRateForPair=" << trSuccessRateForPair << std::endl;
-    std::cout << "    numberOfFinishedAll =" << numberOfFinishedAll << std::endl;
-    std::cout << "    numberOfFailedAll   =" << numberOfFailedAll << std::endl;    
-    std::cout << std::endl;
-*/
+ 
 
     //check if this src/dest pair already exists
     if (transfersStoreVector.empty()) {
@@ -96,21 +81,10 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
     for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); iter++) {
        
         if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
-       /*
-            std::cout << "Se pair was found: " << sourceSe << "  " << destSe << std::endl;
-            std::cout << "Before check Vector values: " << std::endl;
-            std::cout << "    (*iter).sourceSe            =" << (*iter).source << std::endl;
-            std::cout << "    (*iter).destSe              =" << (*iter).dest << std::endl;
-            std::cout << "    (*iter).numFinished         =" << (*iter).numFinished << std::endl;
-            std::cout << "    (*iter).numFailed           =" << (*iter).numFailed << std::endl;
-            std::cout << "    (*iter).numOfActivePerPair  =" << (*iter).numOfActivePerPair << std::endl;
-            std::cout << "    (*iter).successRate         =" << (*iter).successRate << std::endl;
-	    std::cout << "    (*iter).numberOfFinishedAll =" << (*iter).numberOfFinishedAll << std::endl;
-	    std::cout << "    (*iter).numberOfFailedAll   =" << (*iter).numberOfFailedAll << std::endl;	    
-            std::cout << std::endl;
-	*/	
+      
 	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished
-				(*iter).numOfActivePerPair += 1;              
+	   			if(trSuccessRateForPair >= 90)
+					(*iter).numOfActivePerPair += 1;              
 				(*iter).numFinished = numFinished;
 				(*iter).numFailed = numFailed;  
 				(*iter).successRate = trSuccessRateForPair;
@@ -124,19 +98,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
 				(*iter).numberOfFinishedAll = numberOfFinishedAll;
 				(*iter).numberOfFailedAll = numberOfFailedAll;				
 	   }
-
-	/*
-            std::cout << "After check Vector values: " << std::endl;
-            std::cout << "    (*iter).sourceSe            =" << (*iter).source << std::endl;
-            std::cout << "    (*iter).destSe              =" << (*iter).dest << std::endl;
-            std::cout << "    (*iter).numFinished         =" << (*iter).numFinished << std::endl;
-            std::cout << "    (*iter).numFailed           =" << (*iter).numFailed << std::endl;
-            std::cout << "    (*iter).numOfActivePerPair  =" << (*iter).numOfActivePerPair << std::endl;
-            std::cout << "    (*iter).successRate         =" << (*iter).successRate << std::endl;
-	    std::cout << "    (*iter).numberOfFinishedAll =" << (*iter).numberOfFinishedAll << std::endl;
-	    std::cout << "    (*iter).numberOfFailedAll   =" << (*iter).numberOfFailedAll << std::endl;	    	    	    
-            std::cout << std::endl;
-	*/
+	
 	    if((*iter).numOfActivePerPair <=0 )
 	    	activeInStore = 1;
 	    else
