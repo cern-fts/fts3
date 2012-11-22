@@ -9,6 +9,7 @@ DROP TABLE t_credential_vers;
 drop table T_BAD_SES cascade constraints;
 drop table T_BAD_DNS cascade constraints;
 drop table T_FILE cascade constraints;
+drop table T_JOB_SHARE_CONFIG cascade constraints;
 drop table T_JOB cascade constraints;
 drop table T_SCHEMA_VERS cascade constraints;
 drop table T_LOG cascade constraints;
