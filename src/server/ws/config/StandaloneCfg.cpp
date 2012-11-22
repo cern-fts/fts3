@@ -72,9 +72,9 @@ void StandaloneCfg::del(string name) {
 	delLinkCfg("*", name);
 
 	// delete the shares for the out-link
-	delShareCfg("*", name);
+	delShareCfg(name, "*");
 	// delete the out-link
-	delLinkCfg("*", name);
+	delLinkCfg(name, "*");
 }
 
 } /* namespace common */
