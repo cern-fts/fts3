@@ -145,11 +145,8 @@ vector<string> ConfigurationHandler::getPair(string src, string dest) {
 
 vector<string> ConfigurationHandler::getPair(string symbolic) {
 
-	vector<string> ret;
-
-	// TODO ...
-
-	return ret;
+	pair<string, string> p = db->getSourceAndDestination(symbolic);
+	return getPair(p.first, p.second);
 }
 
 void ConfigurationHandler::del() {
