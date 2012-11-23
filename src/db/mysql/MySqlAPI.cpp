@@ -2253,6 +2253,11 @@ std::vector<ShareConfig*> MySqlAPI::getShareConfig(std::string source, std::stri
 void MySqlAPI::addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo){
 }
 
+std::string MySqlAPI::getGroupForSe(const std::string se){
+}
+
+bool MySqlAPI::isThereLinkConfig(std::string source, std::string destination){
+}
 
 // the class factories
 extern "C" GenericDbIfce* create() {

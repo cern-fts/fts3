@@ -278,7 +278,11 @@ public:
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
     virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination); 
     
-    virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo);       
+    virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo);  
+    
+    virtual std::string getGroupForSe(const std::string se);
+    
+    virtual bool isThereLinkConfig(std::string source, std::string destination);             
 
 private:
     size_t                poolSize;
