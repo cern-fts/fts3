@@ -59,11 +59,14 @@ public:
 	virtual void save() = 0;
 	virtual void del() = 0;
 
-protected:
-
 	static const string any;
+	static const string wildcard;
 	static const string on;
 	static const string off;
+
+protected:
+
+	set<string> notAllowed;
 
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;

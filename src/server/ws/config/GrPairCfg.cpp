@@ -15,8 +15,8 @@ GrPairCfg::GrPairCfg(string dn, CfgParser& parser) : PairCfg(dn, parser) {
 	source = parser.get<string>("source_group");
 	destination = parser.get<string>("destination_group");
 
-	if (source == any || destination == any)
-		throw Err_Custom("Asterisk (*) is not a valid source or destination name for a 'pair' configuration!");
+	if (notAllowed.count(source) || notAllowed.count(destination))
+		throw Err_Custom("The source or destination name is not a valid!");
 
 	if (symbolic_name_opt)
 		symbolic_name = *symbolic_name_opt;

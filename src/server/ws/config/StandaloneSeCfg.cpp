@@ -35,6 +35,12 @@ StandaloneSeCfg::StandaloneSeCfg(string dn, CfgParser& parser) : StandaloneCfg(d
 
 	se = parser.get<string>("se");
 	all = json();
+
+	if (notAllowed.count(se))
+		throw Err_Custom("The SE name is not a valid!");
+
+	// replace any with wildcard
+	if (se == any) se = wildcard;
 }
 
 StandaloneSeCfg::~StandaloneSeCfg() {

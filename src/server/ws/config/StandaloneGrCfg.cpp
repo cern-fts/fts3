@@ -25,10 +25,16 @@ StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), gr
 }
 
 StandaloneGrCfg::StandaloneGrCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser) {
+
+	notAllowed.insert(any);
+
 	group = parser.get<string>("group");
 	members = parser.get< vector<string> >("members");
 
 	all = json();
+
+	if (notAllowed.count(group))
+		throw Err_Custom("The SE name is not a valid!");
 }
 
 StandaloneGrCfg::~StandaloneGrCfg() {

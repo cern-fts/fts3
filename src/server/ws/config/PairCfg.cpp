@@ -35,6 +35,8 @@ PairCfg::PairCfg(string dn, string source, string destination) :
 
 PairCfg::PairCfg(string dn, CfgParser& parser) : Configuration(dn) {
 
+	notAllowed.insert(any);
+
 	symbolic_name_opt = parser.get_opt("symbolic_name");
 	share = parser.get< map<string, int> >("share");
 	protocol = parser.get< map<string, int> >("protocol");

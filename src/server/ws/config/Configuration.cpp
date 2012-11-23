@@ -35,6 +35,7 @@ const string Configuration::Protocol::NO_TX_ACTIVITY_TO = "no_tx_activity_to";
 const string Configuration::Protocol::PREPARING_FILES_RATIO = "preparing_files_ratio";
 
 const string Configuration::any = "*";
+const string Configuration::wildcard = "(*)";
 const string Configuration::on = "on";
 const string Configuration::off = "off";
 
@@ -44,6 +45,8 @@ Configuration::Configuration(string dn) :
 		insertCount(0),
 		updateCount(0),
 		deleteCount(0) {
+
+	notAllowed.insert(wildcard);
 
 }
 
