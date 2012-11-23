@@ -5635,6 +5635,38 @@ bool OracleAPI::checkSeExist(const std::string & se){
     return ret;
 }
 
+void OracleAPI::addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo) {
+	   const std::string tag = "addJobShareConfig";
+	    std::string query =
+	    		"insert into t_job_share_config("
+	    		"	job_id,"
+	    		"	source,"
+	    		"	destination,"
+	    		"	vo"
+	    		") values(:1,:2,:3,:4)";
+	    ThreadTraits::LOCK_R lock(_mutex);
+	    oracle::occi::Statement* s = NULL;
+	    try {
+
+	        if (false == conn->checkConn())
+	            return;
+
+	        s = conn->createStatement(query, tag);
+	        s->setString(1, job_id);
+	        s->setString(2, source);
+	        s->setString(3, destination);
+	        s->setString(4, vo);
+	        if (s->executeUpdate() != 0)
+	            conn->commit();
+	        conn->destroyStatement(s, tag);
+
+	    } catch (oracle::occi::SQLException const &e) {
+	        if (conn)
+	            conn->rollback();
+	        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	    }
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

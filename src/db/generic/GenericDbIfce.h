@@ -324,6 +324,8 @@ public:
     virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;	
     
     virtual bool checkSeExist(const std::string & se) = 0;
+
+    virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo) = 0;
 };
 
 
