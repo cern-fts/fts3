@@ -15,6 +15,8 @@
 
 cmake_minimum_required(VERSION 2.6)
 
+
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts_include_dir})
@@ -31,7 +33,8 @@ ${PROJECT_BINARY_DIR}/src/config
                                                 VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
                                                 SOVERSION ${VERSION_MAJOR}
                                                 CLEAN_DIRECT_OUTPUT 1)
-
+						
+if (MAINBUILD STREQUAL "ON" OR ALLBUILD STREQUAL "ON")
 
 install(TARGETS         fts_config 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
@@ -42,4 +45,4 @@ install(FILES         fts3config
 
 install(FILES         fts-msg-monitoring.conf
         DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )	
-
+endif ()

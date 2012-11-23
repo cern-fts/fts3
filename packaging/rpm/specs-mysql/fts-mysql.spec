@@ -28,9 +28,6 @@ Requires: fts-libs = %{version}-%{release}
 Requires:  soci-mysql%{?_isa}
 
 %description mysql
-FTS mysql plug-ins
-
-%description mysql
 FTS V3 mysql plug-ins
 
 %prep
@@ -59,7 +56,10 @@ rm -rf $RPM_BUILD_ROOT
 %files mysql
 %defattr(-,root,root,-)
 %{python_sitearch}/fts/ftsdb.so*
-%{_libdir}/libfts_db_mysql.so.*
+%{_libdir}/libfts_db_mysql.so*
+%doc %{_docdir}/fts3/mysql-schema.sql
+%doc %{_docdir}/fts3/mysql-drop.sql
+%doc %{_docdir}/fts3/mysql_truncate.sql
 
 %changelog
  * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51

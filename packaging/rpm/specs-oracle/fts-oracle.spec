@@ -45,6 +45,7 @@ make %{?_smp_mflags}
 cd build
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+mkdir -p %{buildroot}%{python_sitearch}/fts
 
 %post oracle -p /sbin/ldconfig
 
@@ -57,7 +58,9 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root,-)
 %{_bindir}/fts*
 %{python_sitearch}/fts/ftsdb.so*
-%{_libdir}/libfts_db_oracle.so.*
+%{_libdir}/libfts_db_oracle.so
+%doc %{_docdir}/fts3/oracle-schema.sql
+%doc %{_docdir}/fts3/oracle-drop.sql
 
 %changelog
  * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51
