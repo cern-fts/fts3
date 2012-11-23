@@ -43,8 +43,8 @@ make %{?_smp_mflags}
 
 %install
 cd build
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
 
 %post oracle -p /sbin/ldconfig
@@ -52,7 +52,7 @@ mkdir -p %{buildroot}%{python_sitearch}/fts
 %postun oracle -p /sbin/ldconfig
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %files oracle
 %defattr(-,root,root,-)

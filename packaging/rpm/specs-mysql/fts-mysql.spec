@@ -42,8 +42,8 @@ make %{?_smp_mflags}
 
 %install
 cd build
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
 
 %post mysql -p /sbin/ldconfig
@@ -51,7 +51,7 @@ mkdir -p %{buildroot}%{python_sitearch}/fts
 %postun mysql -p /sbin/ldconfig
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %files mysql
 %defattr(-,root,root,-)
