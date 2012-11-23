@@ -233,6 +233,8 @@ public:
     
     virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
     
+    virtual std::string getGroupForSe(const std::string se) = 0;
+
     //t_se_protocol
     virtual SeProtocolConfig*  getProtocol(std::string symbolicName) = 0;
     
@@ -271,6 +273,7 @@ public:
     virtual void updateLinkConfig(LinkConfig* cfg) = 0;
     virtual void deleteLinkConfig(std::string source, std::string destination) = 0;
     virtual LinkConfig* getLinkConfig(std::string source, std::string destination) = 0;
+    virtual bool isThereLinkConfig(std::string source, std::string destination) = 0;
     virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name) = 0;
     virtual bool isGrInPair(std::string group) = 0;
 

@@ -3588,6 +3588,38 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
     }
 }
 
+std::string OracleAPI::getGroupForSe(const std::string se) {
+    const std::string tag = "getGroupForSe";
+    std::string query = "select groupName from t_group_members where member=:1";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    std::string ret;
+
+    try {
+        if (false == conn->checkConn())
+            return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, se);
+        r = conn->createResultset(s);
+        if (r->next()) {
+            ret = r->getString(1);
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+    return ret;
+}
+
 
 void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers){
 	std::string tag="addMemberToGroup";
@@ -3786,6 +3818,44 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
     }
 
     return cfg;
+}
+
+bool OracleAPI::isThereLinkConfig(std::string source, std::string destination) {
+
+    std::string tag = "isThereLinkConfig";
+    std::string query =
+    		"select count(*) "
+    		"from t_link_config where source=:1 and destination=:2";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    bool ret = false;
+
+    try {
+        if (false == conn->checkConn())
+            return NULL;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        r = conn->createResultset(s);
+        if (r->next()) {
+        	ret = r->getInt(1) > 0;
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+        return ret;
+    }    catch (oracle::occi::SQLException const &e) {
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+
+    return ret;
 }
 
 std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::string symbolic_name) {
