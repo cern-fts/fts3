@@ -362,7 +362,7 @@ int ExecuteProcess::execProcessShell() {
         }
         close(pipefds[0]);
 	/*execvp doesn't return if a lib is missing during loading, check proc fts then*/
-	usleep(100000);
+	usleep(400000);
 	int checkProc =  check_pid(pid);
 	if(-1 == checkProc){
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking proc FS for pid error: " << pid << commit;
