@@ -23,6 +23,8 @@
  */
 
 #include "JobSubmitter.h"
+#include "config/Configuration.h"
+
 #include "uuid_generator.h"
 #include "db/generic/SingleDbInstance.h"
 
@@ -36,14 +38,20 @@
 
 #include <algorithm>
 
+#include <boost/scoped_ptr.hpp>
+#include <boost/assign.hpp>
 
 using namespace db;
 using namespace fts3::ws;
+using namespace boost::assign;
 
 
 const regex JobSubmitter::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
-JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) {
+const string JobSubmitter::pub("public");
+
+JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
+		db (DBSingleton::instance().getDBObjectInstance()) {
 
 	GSoapDelegationHandler handler(soap);
 	delegationId = handler.makeDelegationId();
@@ -114,7 +122,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
 
-JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) {
+JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
+		db (DBSingleton::instance().getDBObjectInstance()) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
 
@@ -192,8 +201,34 @@ JobSubmitter::~JobSubmitter() {
 
 string JobSubmitter::submit() {
     
-    
-    DBSingleton::instance().getDBObjectInstance()->submitPhysical (
+    // possible configurations for SE
+    list<cfg_type> se_cfgs = list_of
+    		( cfg_type( share(sourceSe, destinationSe, vo), content(true, true) ) )
+    		( cfg_type( share(sourceSe, Configuration::any, vo), content(true, false) ) )
+    		( cfg_type( share(Configuration::wildcard, Configuration::any, vo), content(true, false) ) )
+    		( cfg_type( share(Configuration::any, destinationSe, vo), content(false, true) ) )
+       		( cfg_type( share(Configuration::any, Configuration::wildcard, vo), content(false, true) ) )
+    		;
+    // assign configuration at SE level
+    assignShareCfg(se_cfgs);
+
+    // get group names for source and destination SEs
+    string sourceGr = db->getGroupForSe(sourceSe);
+    string destinationGr = db->getGroupForSe(destinationSe);
+
+    // possible configuration for SE group
+    list<cfg_type> gr_cfgs;
+    if (!sourceGr.empty() && !destinationGr.empty())
+    	gr_cfgs.push_back( cfg_type( share(sourceGr, destinationGr, vo), content(true, true) ) );
+    if (!sourceGr.empty())
+    	gr_cfgs.push_back( cfg_type( share(sourceGr, Configuration::any, vo), content(true, false) ) );
+    if (!destinationGr.empty())
+    	gr_cfgs.push_back( cfg_type( share(Configuration::any, destinationGr, vo), content(false, true) ) );
+    // assign configuration at SE group level
+    assignShareCfg(gr_cfgs);
+
+    // submit the transfer job (add it to the DB)
+    db->submitPhysical (
     		id,
     		jobs,
     		params.get(JobParameterHandler::FTS3_PARAM_GRIDFTP),
@@ -214,8 +249,11 @@ string JobSubmitter::submit() {
             sourceSe,
             destinationSe
     	);
-    DBSingleton::instance().getDBObjectInstance()->submitHost(id);	
 
+    db->submitHost(id);
+
+    // add the assigned shares to DB
+    addAssignedShareCfg(id, assigned_shares);
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
 	return id;
@@ -242,5 +280,75 @@ string JobSubmitter::fileUrlToSeName(string url) {
 
 	} else
 		return string();
+}
+
+void JobSubmitter::assignShareCfg(list<cfg_type> arg) {
+
+	content both (false, false);
+
+	list<cfg_type>::iterator it;
+	for (it = arg.begin(); it != arg.end(); it++) {
+
+		share s = get<SHARE>(*it);
+		content c = get<CONTENT>(*it);
+
+		// check if configuration for the given side has not been assigned already
+		if ( (c.first && both.first) || (c.second && both.second) ) continue;
+
+		string source = get<SOURCE>(s);
+		string destination = get<DESTINATION>(s);
+		string vo = get<VO>(s);
+
+		// check if there is a link configuration, if no there will be no share
+		if (!db->isThereLinkConfig(source, destination)) continue;
+
+		// check if there is a VO share
+		scoped_ptr<ShareConfig> ptr (
+				db->getShareConfig(source, destination, vo)
+			);
+
+		if (ptr.get()) {
+			// assign the share configuration to transfer job
+			assigned_shares.push_back(
+					share(ptr->source, ptr->destination, ptr->vo)
+				);
+			// set the respective flags
+			both.first |= c.first;
+			both.second |= c.second;
+			// if both source and destination are covert break;
+			if (both.first && both.second) break;
+			// otherwise continue
+			continue;
+		}
+
+		// check if there is a public share
+		ptr.reset(
+				db->getShareConfig(source, destination, pub)
+			);
+
+		if (ptr.get()) {
+			// assign the share configuration to transfer job
+			assigned_shares.push_back(
+					share(ptr->source, ptr->destination, ptr->vo)
+				);
+			// set the respective flags
+			both.first |= c.first;
+			both.second |= c.second;
+			// if both source and destination are covert break;
+			if (both.first && both.second) break;
+			// otherwise continue
+			continue;
+		}
+
+		throw Err_Custom("The link: " + source + "-" + destination + " does not allow transfer for your VO!");
+	}
+}
+
+void JobSubmitter::addAssignedShareCfg(string job_id, list<share> assigned_shares) {
+
+	list<share>::iterator it;
+	for (it = assigned_shares.begin(); it != assigned_shares.end(); it++) {
+		db->addJobShareConfig(job_id, get<SOURCE>(*it), get<DESTINATION>(*it), get<VO>(*it));
+	}
 }
 

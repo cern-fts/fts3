@@ -32,8 +32,11 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <list>
+#include <utility>
 
 #include <boost/regex.hpp>
+#include <boost/tuple/tuple.hpp>
 
 namespace fts3 { namespace ws {
 
@@ -49,6 +52,21 @@ using namespace boost;
  *
  */
 class JobSubmitter {
+
+	enum {
+		SHARE,
+		CONTENT
+	};
+
+	enum {
+		SOURCE = 0,
+		DESTINATION,
+		VO
+	};
+
+	typedef tuple<string, string, string> share;
+	typedef pair<bool, bool> content;
+	typedef tuple< share, content > cfg_type;
 
 public:
 	/**
@@ -81,6 +99,8 @@ public:
 	string submit();
 
 private:
+
+	GenericDbIfce* db;
 
 	/**
 	 * Default constructor.
@@ -143,10 +163,23 @@ private:
 	///
 	static const regex fileUrlRegex;
 
+	///
+	static const string pub;
+
 	/**
 	 *
 	 */
 	string fileUrlToSeName(string url);
+
+	///
+	list<share> assigned_shares;
+
+	void assignShareCfg(list<cfg_type> arg);
+
+	void addAssignedShareCfg(string job_id, list<share> assigned_shares);
+
+
+
 };
 
 }
