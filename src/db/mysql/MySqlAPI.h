@@ -276,7 +276,9 @@ public:
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo);
     virtual void deleteShareConfig(std::string source, std::string destination);
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo);
-    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination);    
+    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination); 
+    
+    virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo);       
 
 private:
     size_t                poolSize;

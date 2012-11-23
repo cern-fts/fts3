@@ -19,6 +19,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_proxy_SOURCES cred-utility.cpp CredService.cpp DelegCred.cpp utility.cpp)
 
 add_library(fts_proxy SHARED ${fts_proxy_SOURCES})
+add_dependencies(fts_proxy fts_common)
 target_link_libraries(fts_proxy -ldl)
 target_link_libraries(fts_proxy -lpthread)
 target_link_libraries(fts_proxy -lglobus_common -lglobus_gsi_credential)

@@ -47,6 +47,7 @@ make %{?_smp_mflags}
 cd build
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
+mkdir -p %{buildroot}%{python_sitearch}/fts
 
 %post mysql -p /sbin/ldconfig
 
@@ -57,7 +58,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files mysql
 %defattr(-,root,root,-)
-%{_bindir}/fts*
 %{python_sitearch}/fts/ftsdb.so*
 %{_libdir}/libfts_db_mysql.so.*
 
