@@ -4022,7 +4022,7 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
 }
 
 void OracleAPI::deleteShareConfig(std::string source, std::string destination) {
-    const std::string tag = "deleteShareConfig";
+    const std::string tag = "deleteShareConfig2";
     std::string query = "delete from t_share_config where source=:1 and destination=:2";
     oracle::occi::Statement* s = NULL;
 
