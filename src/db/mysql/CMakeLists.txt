@@ -6,6 +6,7 @@ include_directories (BEFORE ../generic)
 include_directories (BEFORE ../../common)
 include_directories (.)
 include_directories (${MYSQL_INCLUDE_DIR})
+include_directories (/usr/include/openssl)
 include_directories (/usr/include/soci)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

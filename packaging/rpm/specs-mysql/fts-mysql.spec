@@ -55,7 +55,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %files mysql
 %defattr(-,root,root,-)
-%{python_sitearch}/fts/ftsdb.so*
 %{_libdir}/libfts_db_mysql.so*
 %doc %{_docdir}/fts3/mysql-schema.sql
 %doc %{_docdir}/fts3/mysql-drop.sql

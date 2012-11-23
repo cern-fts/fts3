@@ -29,7 +29,7 @@ Requires: fts-libs = %{version}-%{release}
 Requires:  oracle-instantclient-basic%{?_isa}
 
 %description oracle
-FTS oracle plug-ins
+FTS V3 oracle plug-ins
 
 %prep
 %setup -qc
@@ -56,9 +56,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files oracle
 %defattr(-,root,root,-)
-%{_bindir}/fts*
-%{python_sitearch}/fts/ftsdb.so*
-%{_libdir}/libfts_db_oracle.so
+%{_libdir}/libfts_db_oracle.so*
 %doc %{_docdir}/fts3/oracle-schema.sql
 %doc %{_docdir}/fts3/oracle-drop.sql
 

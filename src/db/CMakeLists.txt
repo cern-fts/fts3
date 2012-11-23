@@ -7,13 +7,11 @@ add_subdirectory(generic)
 
 if (ORACLEBUILD STREQUAL "ON")
 add_subdirectory(oracle)
-add_subdirectory(python)
 add_subdirectory(schema)
 endif ()
 
 if (MYSQLBUILD STREQUAL "ON")
 add_subdirectory(mysql)
-add_subdirectory(python)
 add_subdirectory(schema)
 endif ()
 
@@ -22,6 +20,11 @@ add_subdirectory(oracle)
 add_subdirectory(mysql)
 add_subdirectory(python)
 add_subdirectory(schema)
+endif ()
+
+
+if (MAINBUILD STREQUAL "ON")
+add_subdirectory(python)
 endif ()
 
 

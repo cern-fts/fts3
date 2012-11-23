@@ -20,13 +20,29 @@ set(fts_include_dir
 	"${PROJECT_SOURCE_DIR}/src/"
 	"${CMAKE_BINARY_DIR}/src/"
 )
+
+include_directories (/usr/include/openssl)
 include_directories (${fts_include_dir})
+include_directories (.)
+
+FILE(GLOB SSL_CPP "StaticSslLocking*")
 
 file(GLOB fts_common_sources "*.cpp")
-#add_definitions(-E)
+if (ORACLEBUILD STREQUAL "ON")
+list(REMOVE_ITEM fts_common_sources ${SSL_CPP})
+endif ()
+
+
+
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
-target_link_libraries(fts_common -lboost_regex-mt -lssl -lboost_iostreams -lboost_thread-mt)
+target_link_libraries(fts_common -lboost_regex-mt -lboost_iostreams -lboost_thread-mt)
+if (ORACLEBUILD STREQUAL "OFF")
+target_link_libraries(fts_common -lssl)
+endif ()
+
+
+
 set_target_properties(fts_common             PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/common

@@ -195,6 +195,7 @@ rm -rf $RPM_BUILD_ROOT
 %files libs
 %defattr(-,root,root,-)
 %{_bindir}/fts*
+%{python_sitearch}/fts/ftsdb.so*
 %{python_sitearch}/fts/libftspython.so*
 %{_libdir}/libfts_common.so.*
 %{_libdir}/libfts_config.so.*
@@ -212,6 +213,7 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(-,root,root,-)
 %{_bindir}/fts*
+%{python_sitearch}/fts/ftsdb.so
 %{python_sitearch}/fts/libftspython.so
 %{_libdir}/libfts_common.so
 %{_libdir}/libfts_config.so
