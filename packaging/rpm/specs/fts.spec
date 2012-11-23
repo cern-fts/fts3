@@ -58,17 +58,6 @@ Summary: File Transfer Service version 3 client
 Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
 
-%package all
-Summary: Meta package for FTS v3
-Group: Applications/Internet
-Requires: %{name}-server%{?_isa} = %{version}-%{release} 
-Requires: %{name}-client%{?_isa} = %{version}-%{release} 
-Requires: %{name}-libs%{?_isa} = %{version}-%{release}
-
-%description all
-Meta-package for complete installation of FTS3 clients, server and db plug-ins
-
-
 %description server
 FTS server is a service which accepts transfer jobs, querying their status, etc
 
@@ -91,11 +80,11 @@ make %{?_smp_mflags}
 
 %install
 cd build
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/log/fts3
-make install DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
 
 %pre server
@@ -145,7 +134,7 @@ exit 0
 
 %clean
 if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 
 
@@ -228,8 +217,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libfts_delegation_api_simple.so
 %{_libdir}/libfts_delegation_api_cpp.so
 
-%files all
-%defattr (-,root,root)
 
 %changelog
  * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51
