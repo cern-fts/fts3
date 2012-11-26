@@ -64,7 +64,7 @@ public:
 	Configuration(string dn);
 
 	/**
-	 * Destructor
+	 * Destructor, it updates the configuration audit traits
 	 */
 	virtual ~Configuration();
 
