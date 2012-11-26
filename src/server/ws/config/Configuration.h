@@ -1,8 +1,25 @@
 /*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use soap file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implcfgied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ *
  * Configuration.h
  *
  *  Created on: Nov 19, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #ifndef CONFIGURATION_H_
@@ -26,15 +43,33 @@ using namespace boost;
 using namespace db;
 using namespace fts3::common;
 
+
+/**
+ * Configuration is the base class for all configuration types.
+ *
+ * The class provides an API for configuration handling:
+ * - saving configuration into the DB
+ * - retrieving the configuration from DB
+ * - deleting the configuration from DB
+ */
 class Configuration {
 
 public:
 
+	/**
+	 * Constructor
+	 *
+	 * For logging reasons the object needs the user's DN
+	 */
 	Configuration(string dn);
+
+	/**
+	 * Destructor
+	 */
 	virtual ~Configuration();
 
 	/**
-	 * protocol parameters
+	 * Protocol parameters
 	 */
 	struct Protocol {
 		static const string BANDWIDTH;
@@ -55,41 +90,153 @@ public:
 		static const string PREPARING_FILES_RATIO;
 	};
 
+	/**
+	 * Returns a configuration in JSON format
+	 *
+	 * @return a string with JSON configuration
+	 */
 	virtual string json() = 0;
+
+	/**
+	 * Saves the current configuration into the DB
+	 */
 	virtual void save() = 0;
+
+	/**
+	 * Removes the current configuration from the DB
+	 */
 	virtual void del() = 0;
 
+	/// the 'any' character used to describe the SE (or SE group) to 'any' relation
 	static const string any;
+	/// the 'wildcard' string, so called catch-all
 	static const string wildcard;
+	/// 'on' string
 	static const string on;
+	/// 'off' string
 	static const string off;
 
 protected:
 
+	/// set of strings that are not allowed as SE or SE group name
 	set<string> notAllowed;
 
 	/// Pointer to the 'GenericDbIfce' singleton
 	GenericDbIfce* db;
 
+	/**
+	 * Converts a STL map to JSON configuration string
+	 *
+	 * @param params - the parameters to be converted to JSON
+	 * @return string containing the JSON configuration
+	 */
 	static string json(map<string, int> params);
+
+	/**
+	 * Converts a STL vector to JSON configuration string
+	 *
+	 * @param members - the vector members to be converted to JSON
+	 * @return string containing the JSON configuration
+	 */
 	static string json(vector<string> members);
 
+	/**
+	 * Gets a map containing the protocol parameter names and the respective values
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 *
+	 * @return map with protocol parameter names and their values
+	 */
 	map<string, int> getProtocolMap(string source, string destination);
+
+	/**
+	 * Gets a map containing the protocol parameter names and the respective values
+	 *
+	 * @param cfg - link configuration object
+	 *
+	 * @return map with protocol parameter names and their values
+	 */
 	map<string, int> getProtocolMap(LinkConfig* cfg);
+
+	/**
+	 * Gets a map containing the VO names and the respective share value (for the given source-destination pair)
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 *
+	 * @return map with VOs and their share values
+	 */
 	map<string, int> getShareMap(string source, string destination);
 
+	/**
+	 * Adds a SE to the DB (if not already added)
+	 *
+	 * @param se - SE name
+	 * @param active - the state of the SE (active ('on') by default)
+	 */
 	void addSe(string se, bool active = true);
+
+	/**
+	 * Changes the SE state to the default one ('on'),
+	 * 	should be used in case a SE configuration is being removed
+	 *
+	 * @param se - SE name
+	 */
 	void eraseSe(string se);
+
+	/**
+	 * Adds SE group and its members to the DB.
+	 *
+	 * @param group - SE group name
+	 * @param members - SE members of the group
+	 */
 	void addGroup(string group, vector<string>& members);
+
+	/**
+	 * Checks if the group exists in the DB. Throws an exception if not.
+	 *
+	 * @param group - SE group name
+	 */
 	void checkGroup(string group);
 
+	/**
+	 * Adds a link configuration to the DB.
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 * @param active - the state
+	 * @param symbolic_name - the symbolic name describing the link
+	 * @param protocol - the protocol parameters and the rrespective values
+	 */
 	void addLinkCfg(string source, string destination, bool active, string symbolic_name, map<string, int>& protocol);
+
+	/**
+	 * Adds a share configuration to the DB.
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 * @param share - VO names and their shares
+	 */
 	void addShareCfg(string source, string destination, map<string, int>& share);
 
+	/**
+	 * Deletes the link configuration
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 */
 	void delLinkCfg(string source, string destination);
+
+	/**
+	 * Deletes the share configuration
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 */
 	void delShareCfg(string source, string destination);
 
-	///
+	/// the whole configuration in JSON format
 	string all;
 
 	/// number of SQL updates triggered by configuration command
@@ -101,7 +248,7 @@ protected:
 
 private:
 
-	///
+	/// client's DN
 	string dn;
 };
 
