@@ -5801,7 +5801,7 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
 
-    int ret = -1;
+    int ret = 0;
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
@@ -5857,7 +5857,7 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
 
-    int ret = -1;
+    int ret = 0;
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
@@ -5912,7 +5912,7 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
 
-    int ret = -1;
+    int ret = 0;
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
