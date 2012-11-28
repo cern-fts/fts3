@@ -36,6 +36,12 @@ using namespace boost;
 
 StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se(name) {
 
+	if (notAllowed.count(se))
+		throw Err_Custom("The SE name is not a valid!");
+
+	// replace any with wildcard
+	if (se == any) se = wildcard;
+
 	// get SE active state
 	Se* se = 0;
 	db->getSe(se, name);

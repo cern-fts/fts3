@@ -29,6 +29,10 @@ namespace ws {
 
 StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), group(name) {
 
+	notAllowed.insert(any);
+	if (notAllowed.count(group))
+		throw Err_Custom("The SE name is not a valid!");
+
 	if (!db->checkGroupExists(group))
 		throw Err_Custom("The SE group: " + group + " does not exist!");
 
