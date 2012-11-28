@@ -300,6 +300,14 @@ public:
     
     virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo);
 
+    virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id);
+
+    virtual int countActiveTransfers(std::string source, std::string destination, std::string vo);
+
+    virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo);
+
+    virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

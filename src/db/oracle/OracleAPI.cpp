@@ -5737,6 +5737,218 @@ void OracleAPI::addJobShareConfig(std::string job_id, std::string source, std::s
 	    }
 }
 
+std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::getJobShareConfig(std::string job_id) {
+
+    std::string tag = "getJobShareConfig";
+    std::string query = " select source, destination, vo from t_job_share_config where job_id=:1 ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    std::vector< boost::tuple<std::string, std::string, std::string> > ret;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, job_id);
+        r = conn->createResultset(s);
+
+        while (r->next()) {
+        	boost::tuple<std::string, std::string, std::string> tmp;
+        	boost::get<0>(tmp) = r->getString(1);
+        	boost::get<1>(tmp) = r->getString(2);
+        	boost::get<2>(tmp) = r->getString(3);
+        	ret.push_back(tmp);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+
+int OracleAPI::countActiveTransfers(std::string source, std::string destination, std::string vo) {
+
+    std::string tag = "countSeActiveTransfers";
+    std::string query =
+    		"select count(*) "
+    		"from t_file f, t_job_share_config c "
+    		"where "
+    		"	(f.file_state = 'ACTIVE' or f.file_state = 'READY') and "
+    		"	f.job_id = c.job_id and "
+    		"	c.source = :1 and "
+    		"	c.destination = :2 and "
+    		"	c.vo = :3"
+    		;
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    int ret = -1;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, source);
+        s->setString(2, destination);
+        s->setString(3, vo);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        	ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+
+int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo) {
+
+    std::string tag = "countActiveOutboundTransfersUsingDefaultCfg";
+    std::string query =
+    		"select count(*) "
+    		"from t_file f, t_job j, t_job_share_config c "
+    		"where "
+    		"	(f.file_state = 'ACTIVE' or f.file_state = 'READY') and "
+    		"	f.job_id = j.job_id and "
+    		"	j.source_se = :1 and "
+    		"	j.job_id = c.job_id and "
+    		"	c.source = '(*)' and "
+    		"	c.destination = '*' and "
+    		"	c.vo = :2"
+    		;
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    int ret = -1;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, se);
+        s->setString(2, vo);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        	ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+
+int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo) {
+
+    std::string tag = "countActiveInboundTransfersUsingDefaultCfg";
+    std::string query =
+    		"select count(*) "
+    		"from t_file f, t_job j, t_job_share_config c "
+    		"where "
+    		"	(f.file_state = 'ACTIVE' or f.file_state = 'READY') and "
+    		"	f.job_id = j.job_id and "
+    		"	j.dest_se = :1 and "
+    		"	j.job_id = c.job_id and "
+    		"	c.source = '*' and "
+    		"	c.destination = '(*)' and "
+    		"	c.vo = :2"
+    		;
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    int ret = -1;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, se);
+        s->setString(2, vo);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        	ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {
