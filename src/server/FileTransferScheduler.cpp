@@ -56,8 +56,8 @@ string FileTransferScheduler::fileUrlToSeName(string url) {
 }
 
 FileTransferScheduler::FileTransferScheduler(TransferFiles* file) :
-		db (DBSingleton::instance().getDBObjectInstance()),
-		file (file) {
+		file (file), db (DBSingleton::instance().getDBObjectInstance())
+		{
 
 	srcSeName = fileUrlToSeName(file->SOURCE_SURL);
 	destSeName = fileUrlToSeName(file->DEST_SURL);

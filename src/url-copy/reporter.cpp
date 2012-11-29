@@ -95,10 +95,11 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         msg->buffersize = buffersize;
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
-	if(qm)
+	if(qm){
         	qm->send(msg);
+        }
     } catch (...) {
-        //attempt to resend the message
+        //second attempt to resend the message
         strcpy(msg->job_id, job_id.c_str());
         strcpy(msg->file_id, file_id.c_str());
         strcpy(msg->transfer_status, transfer_status.c_str());
@@ -114,7 +115,7 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
 	if(qm)
-        	qm->t_send(msg);
+        	qm->send(msg);
 
     }
 }

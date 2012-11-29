@@ -134,7 +134,7 @@ protected:
         std::vector<int>::const_iterator iter;
         for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter) {
             int pid = *iter;
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing process: " << pid << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;	    
             kill(pid, SIGTERM);
         }
     }

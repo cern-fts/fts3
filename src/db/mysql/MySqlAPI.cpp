@@ -2259,6 +2259,19 @@ std::string MySqlAPI::getGroupForSe(const std::string se){
 bool MySqlAPI::isThereLinkConfig(std::string source, std::string destination){
 }
 
+std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::getJobShareConfig(std::string job_id){
+}
+
+int MySqlAPI::countActiveTransfers(std::string source, std::string destination, std::string vo){
+}
+
+int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo){
+}
+
+int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo){
+}
+
+
 // the class factories
 extern "C" GenericDbIfce* create() {
     return new MySqlAPI;

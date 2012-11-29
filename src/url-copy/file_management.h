@@ -28,7 +28,7 @@ public:
     ~FileManagement();
 
 public:
-    void archive();
+    std::string archive();
     std::string generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id);
     bool directoryExists(const char* pzPath);
     std::string timestamp();

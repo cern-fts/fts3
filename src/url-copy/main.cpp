@@ -125,7 +125,7 @@ extern std::string stackTrace;
 //boost::mutex guard;
 gfalt_params_t params;
 
-std::string srmVersion(const std::string & url) {
+static std::string srmVersion(const std::string & url) {
     if (url.compare(0, 6, "srm://") == 0)
         return std::string("2.2.0");
 
@@ -167,8 +167,19 @@ static std::vector<std::string> split(const char *str, char c = ':') {
 
 static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpointer) {
     if (h) {
-        size_t avg = gfalt_copy_get_average_baudrate(h, NULL) / 1024;
-        size_t inst = gfalt_copy_get_instant_baudrate(h, NULL) / 1024;
+        size_t avg = gfalt_copy_get_average_baudrate(h, NULL);
+        if (avg > 0) {
+            avg = avg / 1024;
+        } else {
+            avg = 0;
+        }
+        size_t inst = gfalt_copy_get_instant_baudrate(h, NULL);
+        if (inst > 0) {
+            inst = inst / 1024;
+        } else {
+            inst = 0;
+        }
+
         size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
         time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
         logStream << fileManagement.timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
@@ -205,8 +216,10 @@ void canceler() {
         reporter.nostreams = nbstreams;
         reporter.buffersize = tcpbuffersize;
         reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-        logStream.close();
-        fileManagement.archive();
+        std::string moveFile = fileManagement.archive();
+        if (moveFile.length() != 0) {
+            logStream << fileManagement.timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+        }
         if (reuseFile.length() > 0)
             unlink(readFile.c_str());
         sleep(1);
@@ -245,8 +258,11 @@ void signalHandler(int signum) {
         reporter.nostreams = nbstreams;
         reporter.buffersize = tcpbuffersize;
         reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-        logStream.close();
-        fileManagement.archive();
+        std::string moveFile = fileManagement.archive();
+        if (moveFile.length() != 0) {
+            logStream << fileManagement.timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+        }
+
         if (reuseFile.length() > 0)
             unlink(readFile.c_str());
         exit(1);
@@ -266,8 +282,11 @@ void signalHandler(int signum) {
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
             reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
-            logStream.close();
-            fileManagement.archive();
+            std::string moveFile = fileManagement.archive();
+            if (moveFile.length() != 0) {
+                logStream << fileManagement.timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+            }
+
             if (reuseFile.length() > 0)
                 unlink(readFile.c_str());
             sleep(1);
@@ -289,8 +308,11 @@ void signalHandler(int signum) {
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
             reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-            logStream.close();
-            fileManagement.archive();
+            std::string moveFile = fileManagement.archive();
+            if (moveFile.length() != 0) {
+                logStream << fileManagement.timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+            }
+
             if (reuseFile.length() > 0)
                 unlink(readFile.c_str());
             sleep(1);
@@ -312,8 +334,11 @@ void signalHandler(int signum) {
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
             reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
-            logStream.close();
-            fileManagement.archive();
+            std::string moveFile = fileManagement.archive();
+            if (moveFile.length() != 0) {
+                logStream << fileManagement.timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+            }
+
             if (reuseFile.length() > 0)
                 unlink(readFile.c_str());
             sleep(1);
@@ -372,7 +397,7 @@ void myterminate() {
         unlink(readFile.c_str());
     sleep(1);
 }
-*/
+ */
 
 /*courtesy of:
 "Setuid Demystified" by Hao Chen, David Wagner, and Drew Dean: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
@@ -433,10 +458,9 @@ int main(int argc, char **argv) {
     /*
     set_terminate(myterminate);
     set_unexpected(myunexpected);
-    */
+     */
 
-    std::string bytes_to_string("");
-    //transfer_completed tr_completed;
+    std::string bytes_to_string("");   
     struct stat statbufsrc;
     struct stat statbufdest;
     GError * tmp_err = NULL; // classical GError/glib error management   
@@ -553,7 +577,7 @@ int main(int argc, char **argv) {
     unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
     boost::thread bt(taskTimer, timerTimeout);
 
-    if (reuseFile.length() > 0 && urlsFile.empty()==true) {
+    if (reuseFile.length() > 0 && urlsFile.empty() == true) {
         errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
         msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -573,6 +597,10 @@ int main(int argc, char **argv) {
 
     std::string strArray[4];
     for (register unsigned int ii = 0; ii < reuseOrNot; ii++) {
+        errorScope = std::string("");
+        reasonClass = std::string("");
+        errorPhase = std::string("");
+
         if (reuseFile.length() > 0) {
             std::string mid_str(urlsFile[ii]);
             typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -609,7 +637,7 @@ int main(int argc, char **argv) {
 
 
         reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
-		
+
 
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
@@ -714,7 +742,7 @@ int main(int argc, char **argv) {
                     errorScope = SOURCE;
                     reasonClass = mapErrnoToString(gfal_posix_code_error());
                     errorPhase = TRANSFER_PREPARATION;
-                    if (sourceStatRetry == 3 || ENOENT==gfal_posix_code_error() || EACCES==gfal_posix_code_error())
+                    if (sourceStatRetry == 3 || ENOENT == gfal_posix_code_error() || EACCES == gfal_posix_code_error())
                         goto stop;
                 } else {
                     //seteuid(privid);
@@ -779,10 +807,12 @@ int main(int argc, char **argv) {
 
             log << fileManagement.timestamp() << "INFO Transfer Starting" << '\n';
 
-            g_clear_error(&tmp_err);
+	    if(tmp_err)
+            	g_clear_error(&tmp_err);
+		
             if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
                 diff = std::difftime(std::time(NULL), start);
-                if (tmp_err->message) {
+                if (tmp_err != NULL && tmp_err->message != NULL) {
                     log << fileManagement.timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
                     if (tmp_err->code == 110) {
                         errorMessage = std::string(tmp_err->message);
@@ -868,40 +898,42 @@ int main(int argc, char **argv) {
 
             msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         }//logStream
-stop:
-        if (propagated == false) {
-            propagated == true;
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-            if (errorMessage.length() > 0) {
-                msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-                reporter.timeout = timeout;
-                reporter.nostreams = nbstreams;
-                reporter.buffersize = tcpbuffersize;
-                reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
-            } else {
-                msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
-                reporter.timeout = timeout;
-                reporter.nostreams = nbstreams;
-                reporter.buffersize = tcpbuffersize;
-                reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
-            }
-
-            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-
-            if (logStream.is_open()) {
-                logStream.close();
-            }
-            if (debug == true) {
-                fclose(stderr);
-            }
-            fileManagement.archive();
+stop:        
+        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
+        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
+        msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
+        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
+        if (errorMessage.length() > 0) {
+            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
+            reporter.timeout = timeout;
+            reporter.nostreams = nbstreams;
+            reporter.buffersize = tcpbuffersize;
+            reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
+        } else {
+            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
+            reporter.timeout = timeout;
+            reporter.nostreams = nbstreams;
+            reporter.buffersize = tcpbuffersize;
+            reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
         }
 
-    }//end for reuse loop	
+        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+
+        if (logStream.is_open()) {
+            logStream.close();
+        }
+        if (debug == true) {
+            fclose(stderr);
+        }
+
+        std::string moveFile = fileManagement.archive();
+        if (moveFile.length() != 0) {
+            logStream << fileManagement.timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+        }
+
+    }//end for reuse loop
+    	
     if (params) {
         gfalt_params_handle_delete(params, NULL);
         params = NULL;

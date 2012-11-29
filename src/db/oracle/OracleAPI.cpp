@@ -1402,7 +1402,10 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
 void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
     const std::string tag = "getCancelJob";
     const std::string tag1 = "getCancelJobUpdateCancel";
-    std::string query = "select t_file.pid, t_job.job_id from t_file, t_job where t_file.job_id=t_job.job_id and t_file.FILE_STATE='CANCELED' and t_file.PID IS NOT NULL AND t_job.CANCEL_JOB IS NULL ";
+    char hostname[MAXHOSTNAMELEN];
+    gethostname(hostname, MAXHOSTNAMELEN);        
+    std::string query = " select t_file.pid, t_job.job_id from t_file, t_job where t_file.job_id=t_job.job_id and "
+    			" t_file.FILE_STATE='CANCELED' and t_file.PID IS NOT NULL AND t_job.CANCEL_JOB IS NULL and t_file.TRANSFERHOST=:1 ";
     std::string update = "update t_job SET CANCEL_JOB='Y' where job_id=:1 ";
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -1413,6 +1416,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
         if (false == conn->checkConn())
             return;
         s = conn->createStatement(query, tag);
+	s->setString(1, std::string(hostname));
         r = conn->createResultset(s);
         s1 = conn->createStatement(update, tag1);
 
@@ -2831,7 +2835,10 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
 /* REUSE CASE*/
 void OracleAPI::forceFailTransfers() {
     std::string tag = "forceFailTransfers";
-    std::string query = "select job_id, file_id, START_TIME ,PID, INTERNAL_FILE_PARAMS from t_file where file_state='ACTIVE' and pid is not null";
+    char hostname[MAXHOSTNAMELEN];
+    gethostname(hostname, MAXHOSTNAMELEN);    
+    std::string vmHostname("");
+    std::string query = "select job_id, file_id, START_TIME ,PID, INTERNAL_FILE_PARAMS, TRANSFERHOST from t_file where file_state='ACTIVE' and pid is not null";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     std::string job_id("");
@@ -2859,12 +2866,14 @@ void OracleAPI::forceFailTransfers() {
             internalParams = r->getString(5);
             timeout = extractTimeout(internalParams);
             time_t lifetime = std::time(NULL);
+	    vmHostname = r->getString(6);
             diff = difftime(lifetime, start_time);
             if (timeout != 0 && diff > (timeout + 1000)) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;
                 std::stringstream ss;
                 ss << file_id;
-                kill(pid, SIGUSR1);
+		if(vmHostname.compare(std::string(hostname))==0)
+                	kill(pid, SIGUSR1);
                 updateFileTransferStatus(job_id, ss.str(), transfer_status, transfer_message, pid, 0, 0);
                 updateJobTransferStatus(ss.str(), job_id, status);
             }

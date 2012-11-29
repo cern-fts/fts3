@@ -25,51 +25,51 @@ static int fexists(const char *filename) {
     return -1;
 }
 
-FileManagement::FileManagement():base_scheme(NULL), base_host(NULL),base_path(NULL),base_port(0) {
- try{
-    FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
-    logFileName = theServerConfig().get<std::string>("TransferLogDirectory");
-    bdii  = theServerConfig().get<std::string>("Infosys");
-    if (logFileName.length() > 0)
-        directoryExists(logFileName.c_str());
+FileManagement::FileManagement() : base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0) {
+    try {
+        FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
+        logFileName = theServerConfig().get<std::string > ("TransferLogDirectory");
+        bdii = theServerConfig().get<std::string > ("Infosys");
+        if (logFileName.length() > 0)
+            directoryExists(logFileName.c_str());
 
-    //generate arc based on date
-    std::string dateArch = logFileName + "/" + dateDir();	
-    directoryExists(dateArch.c_str());	
-    logFileName = dateArch;
-   }catch(...){
-	/*try again before let it fail*/
-	try{
-	    FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
-	    logFileName = theServerConfig().get<std::string>("TransferLogDirectory");
-    	    bdii  = theServerConfig().get<std::string>("Infosys");
-    	    if (logFileName.length() > 0)
-            	directoryExists(logFileName.c_str());
-    	   //generate arc based on date
-    	   std::string dateArch = logFileName + "/" + dateDir();	
-    	   directoryExists(dateArch.c_str());	
-    	   logFileName = dateArch;
-	}catch(...){
-   		/*no way to recover if an exception is thrown here, better let it fail and log the error*/
-	}
-   }    
+        //generate arc based on date
+        std::string dateArch = logFileName + "/" + dateDir();
+        directoryExists(dateArch.c_str());
+        logFileName = dateArch;
+    } catch (...) {
+        /*try again before let it fail*/
+        try {
+            FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
+            logFileName = theServerConfig().get<std::string > ("TransferLogDirectory");
+            bdii = theServerConfig().get<std::string > ("Infosys");
+            if (logFileName.length() > 0)
+                directoryExists(logFileName.c_str());
+            //generate arc based on date
+            std::string dateArch = logFileName + "/" + dateDir();
+            directoryExists(dateArch.c_str());
+            logFileName = dateArch;
+        } catch (...) {
+            /*no way to recover if an exception is thrown here, better let it fail and log the error*/
+        }
+    }
 }
 
-FileManagement::~FileManagement() {    
+FileManagement::~FileManagement() {
 }
 
-void FileManagement::generateLogFile(){
-	fname = generateLogFileName(source_url, dest_url, file_id, job_id);
+void FileManagement::generateLogFile() {
+    fname = generateLogFileName(source_url, dest_url, file_id, job_id);
 }
 
 int FileManagement::getLogStream(std::ofstream& logStream) {
     log = logFileName + "/" + fname;
     fullPath = log + ".debug";
     logStream.open(log.c_str(), ios::app);
-    if (logStream.fail()){
-    	return errno;
-    }else{
-    	return 0;
+    if (logStream.fail()) {
+        return errno;
+    } else {
+        return 0;
     }
 }
 
@@ -78,25 +78,25 @@ void FileManagement::setSourceUrl(std::string& source_url) {
     //source
     parse_url(source_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
     shost = std::string(base_host);
-        if (base_scheme)
-            free(base_scheme);
-        if (base_host)
-            free(base_host);
-        if (base_path)
-            free(base_path);    
+    if (base_scheme)
+        free(base_scheme);
+    if (base_host)
+        free(base_host);
+    if (base_path)
+        free(base_path);
 }
 
 void FileManagement::setDestUrl(std::string& dest_url) {
     this->dest_url = dest_url;
     //dest
     parse_url(dest_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    dhost = std::string(base_host);    
-        if (base_scheme)
-            free(base_scheme);
-        if (base_host)
-            free(base_host);
-        if (base_path)
-            free(base_path);    
+    dhost = std::string(base_host);
+    if (base_scheme)
+        free(base_scheme);
+    if (base_host)
+        free(base_host);
+    if (base_path)
+        free(base_path);
 }
 
 void FileManagement::setFileId(std::string& file_id) {
@@ -106,9 +106,6 @@ void FileManagement::setFileId(std::string& file_id) {
 void FileManagement::setJobId(std::string& job_id) {
     this->job_id = job_id;
 }
-
-
-//get timestamp in calendar time
 
 std::string FileManagement::timestamp() {
     std::string timestapStr("");
@@ -140,22 +137,37 @@ bool FileManagement::directoryExists(const char* pzPath) {
     return bExists;
 }
 
-void FileManagement::archive() {
-
-    //archiveFileName: src__dest
-    //: full path to file
+std::string FileManagement::archive() {
+    char buf[256] = {0};
     std::string arcFileName = logFileName + "/" + archiveFileName;
     directoryExists(arcFileName.c_str());
-    arcFileName += "/" + fname; 
-    rename(log.c_str(), arcFileName.c_str());
-    if (fexists(fullPath.c_str()) == 0){
-        std::string debugArchFile = arcFileName + ".debug";
-	rename(fullPath.c_str(), debugArchFile.c_str());
-    }   
-    
+    arcFileName += "/" + fname;
+    int r = rename(log.c_str(), arcFileName.c_str());
+    if (r == 0) {
+        if (fexists(fullPath.c_str()) == 0) {
+            std::string debugArchFile = arcFileName + ".debug";
+            int r2 = rename(fullPath.c_str(), debugArchFile.c_str());
+            if (r2 != 0) {
+                char const * str = strerror_r(errno, buf, 256);
+                if (str) {
+                    return std::string(str);
+                } else {
+                    return std::string("Unknown error when moving debug log file");
+                }
+            }
+        }
+    } else {
+        char const * str = strerror_r(errno, buf, 256);
+        if (str) {
+            return std::string(str);
+        } else {
+            return std::string("Unknown error when moving log file");
+        }
+    }
+    return std::string("");
 }
 
-std::string FileManagement::dateDir(){
+std::string FileManagement::dateDir() {
     // add date
     time_t current;
     time(&current);

@@ -21,12 +21,10 @@ password_(password),  connectString_(connectString){
 
 void OracleConnection::initConn(){
     // Check Preconditions
-    if(NULL != conn){
-	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "DB Connection object already exists" << commit;
+    if(NULL != conn){	
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("DB Connection object already exists"));
     }
     try{
-	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Initializing DB connection" << commit;
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Initializing DB connection"));	
         // Initialize Connection Object
 	if(env){
@@ -46,12 +44,12 @@ void OracleConnection::destroyConn(){
         // Connection Already Deleted
         return;
     }
-    
     try{
         // Finalize the Connection Object
-	if(env)
+	if(env){
         	env->terminateConnection(conn);
-    } catch(const oracle::occi::SQLException& e){	
+	}
+    } catch(const oracle::occi::SQLException& e){
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));	
     }
 
@@ -61,13 +59,12 @@ void OracleConnection::destroyConn(){
     
 bool OracleConnection::isAlive(){
 	bool result = false;
-	if(NULL == conn){		
+	if(NULL == conn){	
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("No Connection to DB established"));
 		return false;
 	}
    try{
         const std::string tag = "isAlive";
-   
         // Create Statement
         oracle::occi::Statement* stmt = conn->createStatement("SELECT SYSDATE FROM DUAL", tag);
         // Execute a Simple Query
@@ -75,12 +72,13 @@ bool OracleConnection::isAlive(){
         conn->terminateStatement(stmt, tag);
         // Connection is still Alive
         result = true;
-    } catch(const oracle::occi::SQLException& e){  
-        if(conn)
-        	this->conn->rollback();   
+    } catch(const oracle::occi::SQLException& e){           
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         result = false;
-    } 
+    } catch(...){           
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unresolved database exception raised"));
+        result = false;
+    }     
     return result;	
 }
 
@@ -99,7 +97,7 @@ bool OracleConnection::checkConn(){
             initConn();
             
             // Check if now the connection is alive
-            if(false == isAlive()){		
+            if(false == isAlive()){
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Invalid DAO Context after reinitialization"));
                 // Dispose Context
                 destroyConn();
@@ -117,7 +115,9 @@ OracleConnection::~OracleConnection() {
             oracle::occi::Environment::terminateEnvironment(env);
     } catch (oracle::occi::SQLException const &e) {
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));   
-    }
+    } catch(...){           
+	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unresolved database exception raised during shutdown"));        
+    }        
 
 }
 
