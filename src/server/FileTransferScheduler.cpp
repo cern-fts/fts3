@@ -67,9 +67,11 @@ FileTransferScheduler::~FileTransferScheduler() {
 
 }
 
-bool FileTransferScheduler::schedule(bool optimize, bool manualConfig) {
+bool FileTransferScheduler::schedule(bool optimize) {
 
-	if(optimize == true && manualConfig==false) {
+	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(file->JOB_ID);
+
+	if(optimize == true && cfgs.empty()) {
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);
 		// update file state to READY
 		if(allowed == true) {
@@ -83,9 +85,7 @@ bool FileTransferScheduler::schedule(bool optimize, bool manualConfig) {
 		return false;
 	}
 
-	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(file->JOB_ID);
 	vector< tuple<string, string, string> >::iterator it;
-
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
 
 		string source = get<SOURCE>(*it);

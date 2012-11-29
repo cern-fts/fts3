@@ -340,7 +340,7 @@ void JobSubmitter::assignShareCfg(list<cfg_type> arg) {
 			continue;
 		}
 
-		throw Err_Custom("The link: " + source + "-" + destination + " does not allow transfer for your VO!");
+		throw Err_Custom("The link: " + source + "-" + destination + " has no share defined for your VO!");
 	}
 }
 

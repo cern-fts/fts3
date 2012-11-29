@@ -231,7 +231,7 @@ protected:
                     }
   	    	    
                     FileTransferScheduler scheduler(temp);
-                    if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
+                    if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
 		    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
 		    if(optimize && manualConfigExists==false){
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
@@ -490,24 +490,24 @@ protected:
 		}
 
                 FileTransferScheduler scheduler(tempUrl);
-                if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
+                if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
  		    std::stringstream internalParams;
-		    if(optimize && manualConfigExists==false){
+		    if (optimize && manualConfigExists==false) {
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-		    }else{
+		    } else {
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
 		        protocol =  DBSingleton::instance().getDBObjectInstance()->getProtocol(symbolicName);
-			if(protocol){
-				if(protocol->NOSTREAMS > 0)
-					internalParams << "nostreams:" << protocol->NOSTREAMS;
-				if(protocol->URLCOPY_TX_TO > 0)
-					internalParams << ",timeout:"<< protocol->URLCOPY_TX_TO;
-				if(protocol->TCP_BUFFER_SIZE > 0)	
-					internalParams << ",buffersize:" << protocol->TCP_BUFFER_SIZE;
-			}else{
-				internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;			
-			}
-			DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(job_id, 0, internalParams.str());			
+				if(protocol){
+					if(protocol->NOSTREAMS > 0)
+						internalParams << "nostreams:" << protocol->NOSTREAMS;
+					if(protocol->URLCOPY_TX_TO > 0)
+						internalParams << ",timeout:"<< protocol->URLCOPY_TX_TO;
+					if(protocol->TCP_BUFFER_SIZE > 0)
+						internalParams << ",buffersize:" << protocol->TCP_BUFFER_SIZE;
+				}else{
+					internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
+				}
+				DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(job_id, 0, internalParams.str());
 		    }		    
 
                 proxy_file = get_proxy_cert(
