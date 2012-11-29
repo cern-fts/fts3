@@ -84,6 +84,12 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(file->JOB_ID);
 	vector< tuple<string, string, string> >::iterator it;
 
+	if (cfgs.empty() && manual) {
+		// there is a configuration for the link, but non was assigned to the transfer job,
+		// meaning that no appropriate share was defined (either VO or public)
+		return false;
+	}
+
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
 
 		string source = get<SOURCE>(*it);
