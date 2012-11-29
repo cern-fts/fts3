@@ -290,7 +290,9 @@ public:
 
     virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo);
 
-    virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo);               
+    virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo);
+    
+    virtual bool isThereJobShareConfig(std::string job_id);                   
 
 private:
     size_t                poolSize;

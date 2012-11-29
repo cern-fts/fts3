@@ -2271,6 +2271,8 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
 int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo){
 }
 
+bool isThereJobShareConfig(std::string job_id){
+}
 
 // the class factories
 extern "C" GenericDbIfce* create() {
