@@ -302,6 +302,8 @@ public:
 
     virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id);
 
+    virtual bool isThereJobShareConfig(std::string job_id);
+
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo);
 
     virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo);

@@ -5793,6 +5793,49 @@ std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::ge
     return ret;
 }
 
+bool OracleAPI::isThereJobShareConfig(std::string job_id) {
+
+    std::string tag = "isThereJobShareConfig";
+    std::string query = " select count(*) from t_job_share_config where job_id=:1 ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    bool ret = false;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, job_id);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        	ret = r->getInt(1) > 0;
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn)
+            conn->rollback();
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if (conn) {
+            if (s && r)
+                conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag);
+        }
+    }
+
+    return ret;
+}
+
 int OracleAPI::countActiveTransfers(std::string source, std::string destination, std::string vo) {
 
     std::string tag = "countSeActiveTransfers";

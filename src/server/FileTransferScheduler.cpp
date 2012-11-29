@@ -85,8 +85,9 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 	vector< tuple<string, string, string> >::iterator it;
 
 	if (cfgs.empty() && manual) {
-		// there is a configuration for the link, but non was assigned to the transfer job,
-		// meaning that no appropriate share was defined (either VO or public)
+		// the configuration has been removed,
+		// return false in next round auto-tuner
+		// will take care of it
 		return false;
 	}
 

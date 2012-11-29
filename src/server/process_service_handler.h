@@ -211,7 +211,7 @@ protected:
                     destin_hostname = extractHostname(temp->DEST_SURL);
 		    
 		    /*check if manual config exist for this pair and vo*/
-                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereLinkConfig(source_hostname, destin_hostname);
+                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereJobShareConfig(temp->JOB_ID);
 				if(manualConfigExists){
 					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
 				}
@@ -457,7 +457,7 @@ protected:
                 createJobFile(job_id, urls);
 
 		   /*check if manual config exist for this pair and vo*/
-                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereLinkConfig(source_hostname, destin_hostname);
+                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereJobShareConfig(job_id);
 				if(manualConfigExists){
 					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
 				}
