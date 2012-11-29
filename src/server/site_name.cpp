@@ -49,6 +49,17 @@ std::string SiteName::getSiteName(std::string& hostname){
 std::string  SiteName::getFromBDII(std::string& hostname){
 	std::string site("");
         char* sitename = NULL;
+	
+	char const* tmp = getenv( "LCG_GFAL_INFOSYS" );
+	if ( tmp == NULL ) {
+		return std::string("");
+	} else {
+    		std::string s( tmp );
+		if(s.compare("false") == 0)
+			return std::string("");
+	}
+	
+	
 	sitename = SD_getServiceSite(hostname.c_str(), &exception);
 	if (exception.status != SDStatus_SUCCESS){
 	    FTS3_COMMON_LOGGER_NEWLOG (ERR) <<  "BDII error:" << exception.reason << commit;
