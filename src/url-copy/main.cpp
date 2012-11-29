@@ -425,15 +425,6 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 
 int main(int argc, char **argv) {
 
-    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
-    SSL_library_init(); // Initialize OpenSSL's SSL libraries
-    SSL_load_error_strings(); // Load SSL error strings
-    ERR_load_BIO_strings(); // Load BIO error strings
-    OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
-    OpenSSL_add_all_digests();
-    OpenSSL_add_all_ciphers();
-    StaticSslLocking::init_locks();
-
     //switch to non-priviledged user to avoid reading the hostcert
     privid = geteuid();
     char user[ ] = "fts3";
@@ -454,7 +445,7 @@ int main(int argc, char **argv) {
     // register signal SIGINT & SIGUSR1signal handler  
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
-
+    
     /*
     set_terminate(myterminate);
     set_unexpected(myunexpected);
@@ -544,6 +535,19 @@ int main(int argc, char **argv) {
         if (temp.compare("-proxy") == 0)
             proxy = std::string(argv[i + 1]);
     }
+    
+        g_file_id = file_id;
+        g_job_id = job_id;
+    
+    
+    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
+    SSL_library_init(); // Initialize OpenSSL's SSL libraries
+    SSL_load_error_strings(); // Load SSL error strings
+    ERR_load_BIO_strings(); // Load BIO error strings
+    OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
+    OpenSSL_add_all_digests();
+    OpenSSL_add_all_ciphers();
+    StaticSslLocking::init_locks();           	   
 
     /*send an update message back to the server to indicate it's alive*/
     boost::thread btUpdater(taskStatusUpdater, 30);
@@ -637,8 +641,7 @@ int main(int argc, char **argv) {
 
 
         reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
-
-
+	
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
         msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());

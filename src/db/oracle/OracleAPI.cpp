@@ -1164,6 +1164,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     query << " and (file_state='READY' OR file_state='ACTIVE')";
     oracle::occi::Statement* s = NULL;
     ThreadTraits::LOCK_R lock(_mutex);
+        
     try {
         s = conn->createStatement(query.str(), tag);
         index = 1; //reset index
@@ -1238,11 +1239,11 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     std::string update =
             "UPDATE t_job "
             "SET JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 "
-            "WHERE job_id = :5 AND JOB_STATE='ACTIVE'";
+            "WHERE job_id = :5 AND JOB_STATE not in ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED')";
 
     std::string updateJobNotFinished =
             "UPDATE t_job "
-            "SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE IN ('READY','ACTIVE') ";
+            "SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE not in ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ";
 
     std::string query = "select Num1, Num2, Num3, Num4  from "
             "(select count(*) As Num1 from t_file where job_id=:1), "
