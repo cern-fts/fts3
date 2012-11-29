@@ -67,25 +67,23 @@ FileTransferScheduler::~FileTransferScheduler() {
 
 }
 
-bool FileTransferScheduler::schedule(bool optimize) {
+bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 
-	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(file->JOB_ID);
-
-	if(optimize == true && cfgs.empty()) {
+	if(optimize && !manual) {
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);
 		// update file state to READY
 		if(allowed == true) {
 			unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-			if(updated == 0) {
-				return false;
-			} else {
-				return true;
-			}
+			if(updated == 0) return false;
+			return true;
 		}
 		return false;
 	}
 
+	// source, destination & VO
+	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(file->JOB_ID);
 	vector< tuple<string, string, string> >::iterator it;
+
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
 
 		string source = get<SOURCE>(*it);

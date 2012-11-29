@@ -211,11 +211,10 @@ protected:
                     destin_hostname = extractHostname(temp->DEST_SURL);
 		    
 		    /*check if manual config exist for this pair and vo*/
-		    symbolicName = DBSingleton::instance().getDBObjectInstance()->checkConfigExists(source_hostname, destin_hostname,temp->VO_NAME);		    
-		    if(symbolicName.length() > 0){
-		    	manualConfigExists = true;
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
-		    }
+                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereLinkConfig(source_hostname, destin_hostname);
+				if(manualConfigExists){
+					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
+				}
 			
                     bool optimize = false;
                     if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {		    	
@@ -231,7 +230,7 @@ protected:
                     }
   	    	    
                     FileTransferScheduler scheduler(temp);
-                    if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
+                    if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
 		    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
 		    if(optimize && manualConfigExists==false){
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
@@ -458,11 +457,10 @@ protected:
                 createJobFile(job_id, urls);
 
 		   /*check if manual config exist for this pair and vo*/
-		    symbolicName = DBSingleton::instance().getDBObjectInstance()->checkConfigExists(source_hostname, destin_hostname,vo_name);		    
-		    if(symbolicName.length() > 0){
-		    	manualConfigExists = true;
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
-		    }		
+                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereLinkConfig(source_hostname, destin_hostname);
+				if(manualConfigExists){
+					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
+				}
 		
 		bool optimize = false;
                
@@ -490,7 +488,7 @@ protected:
 		}
 
                 FileTransferScheduler scheduler(tempUrl);
-                if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
+                if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
  		    std::stringstream internalParams;
 		    if (optimize && manualConfigExists==false) {
 		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);

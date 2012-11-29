@@ -74,7 +74,7 @@ public:
 	 *
 	 * @return returns true if file status has been changed to Ready, false otherwise
 	 */
-	bool schedule(bool optimize);
+	bool schedule(bool optimize, bool manual);
 
 private:
 
