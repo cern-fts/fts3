@@ -41,15 +41,15 @@ endif ()
 
 # Web service / gsoap part.
 set(fts_server_gsoap_transfer_sources
-    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/RequestLister.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/JobSubmitter.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/GSoapDelegationHandler.cpp"
+#    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/CGsiAdapter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/InternalLogRetriever.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/AuthorizationManager.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_transfer_methods.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap_deleg_methods.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/gsoap_transfer_methods.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/RequestLister.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/JobSubmitter.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/gsoap_deleg_methods.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/GSoapDelegationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/config/gsoap_config_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/config/ConfigurationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/config/Configuration.cpp"

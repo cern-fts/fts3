@@ -23,10 +23,10 @@
 #include "db/generic/SingleDbInstance.h"
 #include "config/serverconfig.h"
 
-#include "ws/JobSubmitter.h"
-#include "ws/RequestLister.h"
+#include "JobSubmitter.h"
+#include "RequestLister.h"
 //#include "ws/GSoapDelegationHandler.h"
-#include "CGsiAdapter.h"
+#include "ws/CGsiAdapter.h"
 #include "ws/AuthorizationManager.h"
 //#include "ws/InternalLogRetriever.h"
 

@@ -23,7 +23,7 @@
  */
 
 #include "JobSubmitter.h"
-#include "config/Configuration.h"
+#include "ws/config/Configuration.h"
 
 #include "uuid_generator.h"
 #include "db/generic/SingleDbInstance.h"
@@ -31,8 +31,8 @@
 #include "common/logger.h"
 #include "common/error.h"
 
-#include "CGsiAdapter.h"
-#include "GSoapDelegationHandler.h"
+#include "ws/CGsiAdapter.h"
+#include "ws/delegation/GSoapDelegationHandler.h"
 
 #include <boost/lexical_cast.hpp>
 

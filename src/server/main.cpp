@@ -25,7 +25,7 @@ limitations under the License. */
 #include "common/logger.h"
 #include "config/serverconfig.h"
 #include "db/generic/SingleDbInstance.h"
-#include "ws/GSoapDelegationHandler.h"
+#include "ws/delegation/GSoapDelegationHandler.h"
 #include <fstream>
 #include "server.h"
 #include "daemonize.h"

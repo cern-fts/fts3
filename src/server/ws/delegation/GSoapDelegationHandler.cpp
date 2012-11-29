@@ -23,7 +23,7 @@
  */
 
 #include "GSoapDelegationHandler.h"
-#include "CGsiAdapter.h"
+#include "ws/CGsiAdapter.h"
 
 #include "db/generic/SingleDbInstance.h"
 

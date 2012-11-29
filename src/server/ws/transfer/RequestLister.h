@@ -28,8 +28,8 @@
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 #include "db/generic/JobStatus.h"
 
-#include "CGsiAdapter.h"
-#include "AuthorizationManager.h"
+#include "ws/CGsiAdapter.h"
+#include "ws/AuthorizationManager.h"
 
 #include <string>
 #include <vector>
