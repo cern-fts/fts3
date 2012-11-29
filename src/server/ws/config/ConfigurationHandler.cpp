@@ -127,7 +127,7 @@ vector<string> ConfigurationHandler::getPair(string src, string dest) {
 				new SePairCfg(dn, src, dest)
 			);
 	} else
-		throw Err_Custom("The source and destination have to bem either two SEs or two SE groups!");
+		throw Err_Custom("The source and destination have to be either two SEs or two SE groups!");
 
 	ret.push_back(cfg->json());
 

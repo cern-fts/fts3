@@ -43,15 +43,15 @@ StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se
 	if (se == any) se = wildcard;
 
 	// get SE active state
-	Se* se = 0;
-	db->getSe(se, name);
-	if (se) {
-		active = se->STATE == on;
-		delete se;
+	Se* seobj = 0;
+	db->getSe(seobj, se);
+	if (seobj) {
+		active = seobj->STATE == on;
+		delete seobj;
 	} else
 		throw Err_Custom("The SE: " + name + " does not exist!");
 
-	init(name);
+	init(se);
 }
 
 StandaloneSeCfg::StandaloneSeCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser)  {
@@ -75,7 +75,7 @@ string StandaloneSeCfg::json() {
 	stringstream ss;
 
 	ss << "{";
-	ss << "\"" << "se" << "\":\"" << se << "\",";
+	ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";
 	ss << StandaloneCfg::json();
 	ss << "}";
 
