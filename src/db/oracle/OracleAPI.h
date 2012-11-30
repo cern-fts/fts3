@@ -206,83 +206,17 @@ public:
 
     //t_se_protocol
     virtual SeProtocolConfig*  getProtocol(std::string symbolicName);
-    
-    virtual void addProtocol(SeProtocolConfig* seProtocolConfig);
-    
-    virtual void deleteProtocol(std::string symbolicName);
-    
-    virtual void updateProtocol(SeProtocolConfig* config);
-   
-    
-    //t_config
-    virtual std::vector<SeConfig*> getConfig(const std::string & source,const std::string & dest, const std::string & vo);
-    
-    virtual std::vector<SeConfig*> getConfig(const std::string & symbolicName, const std::string & vo);    
-    
-    virtual void addNewConfig(SeConfig* config);    
-    
-    virtual void deleteConfig(SeConfig* config); 
-    
-    virtual void updateConfig(SeConfig* config);              
-    
-    //general purpose
-    virtual std::string checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo);		    	          
-    
-    virtual bool isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo); 
-    
-    virtual void allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo);
+      
+  
     
     virtual void submitHost(const std::string & jobId);     
     
     virtual std::string transferHost(int fileId);         
     
     virtual std::string transferHostV(std::map<int,std::string>& fileIds);  
-    
-    //t_config_symbolic
-    virtual std::pair<std::string, std::string> getSymbolicName(const std::string & src, const std::string & dest);
-    
-    virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status);
-    
-    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status);
-    
-    virtual void deleteSymbolic(const std::string & symbolicName); 
-    
-   //check the number of active is not > than in configuration pair
-    virtual bool checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active);
-    
-    //there if a share in configure pair for this vo exist
-    virtual bool checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo); 
-    
-    virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo);
-    
-    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member);
-    
-    /*    
-    true:  the symbolic name doesn't exists
-    true:  if symbolic is used in the same pair
-    false: if symbolic is already used in a diff pair
-    */
-    virtual bool checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest); 
-    
-    /*we need to check if a member already belongs to another group 
-    true: is member of another group
-    false: is not a member of another group
-    */
+       
     virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member); 
-    
-    virtual bool checkSePair(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);
-    
-	//check if both src and dest are GROUPS
-    virtual bool checkGroupToGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);
-	
-	//check if source is GROUP
-    virtual bool checkSourceGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);
-	
-	//check if dest is GROUP
-    virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config);	
-    
-    virtual bool checkSeExist(const std::string & se);
-                
+       
     virtual void addLinkConfig(LinkConfig* cfg);
     virtual void updateLinkConfig(LinkConfig* cfg);
     virtual void deleteLinkConfig(std::string source, std::string destination);

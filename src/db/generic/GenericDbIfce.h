@@ -239,30 +239,7 @@ public:
 
     //t_se_protocol
     virtual SeProtocolConfig*  getProtocol(std::string symbolicName) = 0;
-    
-    virtual void addProtocol(SeProtocolConfig* seProtocolConfig) = 0;
-    
-    virtual void deleteProtocol(std::string symbolicName) = 0;
-    
-    virtual void updateProtocol(SeProtocolConfig* config) = 0;
-    
-    //t_config
-    virtual std::vector<SeConfig*> getConfig(const std::string & source,const std::string & dest, const std::string & vo) = 0;
-    
-    virtual std::vector<SeConfig*> getConfig(const std::string & symbolicName, const std::string & vo) = 0;    
-    
-    virtual void addNewConfig(SeConfig* config) = 0;    
-    
-    virtual void deleteConfig(SeConfig* config) = 0; 
-    
-    virtual void updateConfig(SeConfig* config) = 0;              
-    
-    //general purpose
-    virtual std::string checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo) = 0;		    	          
-    
-    virtual bool isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo) = 0; 
-    
-    virtual void allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo) = 0;
+      
     
     virtual void submitHost(const std::string & jobId) = 0;     
     
@@ -284,51 +261,9 @@ public:
     virtual void deleteShareConfig(std::string source, std::string destination, std::string vo) = 0;
     virtual void deleteShareConfig(std::string source, std::string destination) = 0;
     virtual ShareConfig* getShareConfig(std::string source, std::string destination, std::string vo) = 0;
-    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination) = 0;
-
-    virtual std::pair<std::string, std::string> getSymbolicName(const std::string & src, const std::string & dest) = 0;
-    
-    virtual void addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) = 0;
-    
-    virtual void updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status) = 0;
-    
-    virtual void deleteSymbolic(const std::string & symbolicName) = 0;
-    
-    //check the number of active is not > than in configuration pair
-    virtual bool checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active) = 0;
-    
-    //there if a share in configure pair for this vo exist
-    virtual bool checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo) = 0; 
-    
-    virtual bool checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo) = 0;   
-    
-    virtual bool checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member) = 0; 
-    /*    
-    true:  the symbolic name doesn't exists
-    true:  if symbolic is used in the same pair
-    false: if symbolic is already used in a diff pair
-    */
-    virtual bool checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest) = 0;
-    
-    /*we need to check if a member already belongs to another group 
-    true: is member of another group
-    false: is not a member of another group
-    */
-    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member) = 0; 
+    virtual std::vector<ShareConfig*> getShareConfig(std::string source, std::string destination) = 0;  
      
-    //check if it is SE pair, e.g.SE-SE, SE-*, *-SE
-    virtual bool checkSePair(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;    
-    
-	//check if both src and dest are GROUPS
-    virtual bool checkGroupToGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;
-	
-	//check if source is GROUP
-    virtual bool checkSourceGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;
-	
-	//check if dest is GROUP
-    virtual bool checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config) = 0;	
-    
-    virtual bool checkSeExist(const std::string & se) = 0;
+    virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member) = 0; 
 
     virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo) = 0;
 

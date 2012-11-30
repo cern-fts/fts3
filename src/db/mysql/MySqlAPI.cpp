@@ -2136,37 +2136,8 @@ void MySqlAPI::deleteMembersFromGroup(const std::string & groupName, std::vector
     
     //t_se_protocol
 SeProtocolConfig*  MySqlAPI::getProtocol(std::string symbolicName){
-}
-int  MySqlAPI::getProtocolIdFromConfig(const std::string & symbolicName,const std::string & vo){
-}
-int MySqlAPI::getProtocolIdFromConfig(const std::string & source, const std::string & dest, const std::string & vo){
-}
-void MySqlAPI::addProtocol(SeProtocolConfig* seProtocolConfig){
-}
-void MySqlAPI::deleteProtocol(std::string symbolicName){
-}
-void MySqlAPI::updateProtocol(SeProtocolConfig* config){
-}         
-    
-    //t_config
-std::vector<SeConfig*>  MySqlAPI::getConfig(const std::string & source,const std::string & dest, const std::string & vo){
-}
-std::vector<SeConfig*>  MySqlAPI::getConfig(const std::string & symbolicName, const std::string & vo){
-}
-void MySqlAPI::addNewConfig(SeConfig* config){
-}
-void MySqlAPI::deleteConfig(SeConfig* config){
-}
-void MySqlAPI::updateConfig(SeConfig* config){
-}
-    
-    //general purpose
-std::string MySqlAPI::checkConfigExists(const std::string & source, const std::string & dest, const std::string & vo){
-}
-bool MySqlAPI::isTransferAllowed(const std::string & src, const std::string & dest, const std::string & vo){
-}
-void MySqlAPI::allocateToConfig(const std::string & jobId, const std::string & src, const std::string & dest, const std::string & vo){
-}
+}   
+     
     
 void MySqlAPI::submitHost(const std::string & jobId){
 }
@@ -2175,51 +2146,7 @@ std::string MySqlAPI::transferHost(int fileId){
 std::string MySqlAPI::transferHostV(std::map<int,std::string>& fileIds){
 }
 
-std::pair<std::string, std::string> MySqlAPI::getSymbolicName(const std::string & src, const std::string & dest){
-}
-void MySqlAPI::addSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status){
-}
-void MySqlAPI::updateSymbolic(const std::string & symbolicName, const std::string & src, const std::string & dest, const std::string & status){
-}
-void MySqlAPI::deleteSymbolic(const std::string & symbolicName){
-}   
-
-  //check the number of active is not > than in configuration pair
-bool MySqlAPI::checkCreditsForMemberOfGroup(const std::string & symbolicName, const std::string & vo, int active){
-}
-    
-    //there if a share in configure pair for this vo exist
-bool MySqlAPI::checkVOForMemberOfGroup(const std::string & symbolicName, const std::string & vo){
-}
-
-bool MySqlAPI::checkIfSymbolicNameExists(const std::string & symbolicName, const std::string & vo){
-}
-
-bool MySqlAPI::checkIfSeIsMemberOfGroup(const std::string & groupName, const std::string & member){
-}
-    
-bool MySqlAPI::checkIfSymbolicNameExistsForSrcDest(const std::string & symbolicName, const std::string & src, const std::string & dest){
-}    
-
 bool MySqlAPI::checkIfSeIsMemberOfAnotherGroup( const std::string & member){
-}
-
-bool MySqlAPI::checkSePair(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
-}
-
-//check if both src and dest are GROUPS
-bool MySqlAPI::checkGroupToGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
-}
-	
-//check if source is GROUP
-bool MySqlAPI::checkSourceGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
-}
-	
-//check if dest is GROUP
-bool MySqlAPI::checkDestinationGroup(const std::string & src, const std::string & dest, const std::string & vo, const std::string & config){
-}
-
-bool MySqlAPI::checkSeExist(const std::string & se){
 }
 
 void MySqlAPI::addLinkConfig(LinkConfig* cfg){
