@@ -360,16 +360,17 @@ int ExecuteProcess::execProcessShell() {
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Child's execvp error: " << strerror(err)  << commit; 
             return -1;
         }
-        close(pipefds[0]);
-	/*execvp doesn't return if a lib is missing during loading, check proc fts then*/
-	usleep(350000);
-	int checkProc =  check_pid(pid);
+        close(pipefds[0]);	
+	/*int checkProc =  check_pid(pid);
+	execvp doesn't return if a lib is missing during loading, check proc fts then
 	if(-1 == checkProc){
+		usleep(500000);		
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking proc FS for pid error: " << pid << commit;
 		return -1;
 	}else{
 		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Pid is running: " << pid << commit;
 	} 
+	*/
     }    
     return err;
 }

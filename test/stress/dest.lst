@@ -1,3 +1,5 @@
 https://lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
 srm://nohost:8446/srm/managervs?SFN=/fake/path.$ID
+gsiftp://lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
+srm://nohost222:8446/srm/managervs?SFN=/fake/path.$ID
 
