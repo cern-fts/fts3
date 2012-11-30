@@ -48,6 +48,7 @@ Group: System Environment/Daemons
 Requires: fts-libs = %{version}-%{release}
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-srm
+Requires: gfal2-plugin-http
 
 %package libs
 Summary: File Transfer Service version 3 libs
