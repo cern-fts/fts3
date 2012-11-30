@@ -199,8 +199,7 @@ std::string getDefaultErrorPhase() {
     return errorPhase.length() == 0 ? GENERAL_FAILURE : errorPhase;
 }
 
-void canceler() {
-    //boost::mutex::scoped_lock lock(guard);
+void canceler() {   
     if (propagated == false) {
         propagated = true;
         errorMessage = "WARN Transfer " + g_job_id + " was canceled because it was not responding";

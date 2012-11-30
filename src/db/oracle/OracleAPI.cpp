@@ -496,8 +496,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
         const std::string & sourceSE, const std::string & destSe) {
 
-    std::string source;
-    std::string destination;
+
     const std::string initial_state = "SUBMITTED";
     time_t timed = time(NULL);
     char hostname[512] = {0};

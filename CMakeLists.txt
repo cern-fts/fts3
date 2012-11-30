@@ -44,7 +44,7 @@ option(MYSQLBUILD "Build for EPEL" OFF)
 option(MAINBUILD "Build fts" OFF)
 option(ALLBUILD "Build fts all including db plug-ins" OFF)
 	 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -finstrument-functions -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wunsafe-loop-optimizations -Winit-self -Wmissing-braces -Wparentheses")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -finstrument-functions  -Wsign-promo -Wstrict-overflow=5  -Winit-self -Wmissing-braces -Wparentheses")
 
 ADD_DEFINITIONS(-DWITH_IPV6)
 ADD_DEFINITIONS(-DPURIFY) 

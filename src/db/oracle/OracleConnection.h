@@ -96,14 +96,7 @@ public:
     
     bool isAlive();
     
-    bool checkConn();
-    
-    oracle::occi::Connection* getConn(){
-        if(conn)
-		return conn;
-
-	checkConn();
-    	}    
+    bool checkConn();           
 
 private:
     oracle::occi::Environment* env;
