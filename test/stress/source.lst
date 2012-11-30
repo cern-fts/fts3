@@ -1,0 +1,4 @@
+https://lxfsra04a04.cern.ch/dpm/cern.ch/home/dteam/vector-sample.txt
+https://lxfsra04a04.cern.ch/dpm/cern.ch/home/dteam/does-not-exist
+srm://nohost:8446/srm/managervs?SFN=/fake/path
+
