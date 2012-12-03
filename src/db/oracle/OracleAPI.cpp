@@ -3834,7 +3834,8 @@ bool OracleAPI::isThereLinkConfig(std::string source, std::string destination) {
     std::string tag = "isThereLinkConfig";
     std::string query =
     		"select count(*) "
-    		"from t_link_config where source=:1 and destination=:2";
+    		"from t_link_config "
+    		"where state='on' and source=:1 and destination=:2 ";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
 
