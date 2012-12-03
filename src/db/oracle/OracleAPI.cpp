@@ -1594,12 +1594,14 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
     const std::string tag = "deleteGrDPStorageCacheElement";
     std::string query = "DELETE FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
 
+    oracle::occi::Statement* s = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
         if (false == conn->checkConn())
             return;
 
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, delegationID);
         s->setString(2, dn);
         if (s->executeUpdate() != 0)
@@ -1610,7 +1612,10 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
         if (conn)
             conn->rollback();
         throw Err_Custom(e.what());
-
+        if(conn){
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
     }
 }
 
@@ -1744,13 +1749,15 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
     const std::string tag = "deleteGrDPStorageElement";
     std::string query = "DELETE FROM t_credential WHERE dlg_id = :1 AND dn = :2";
 
+    oracle::occi::Statement* s = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
 
         if (false == conn->checkConn())
             return;
 
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, delegationID);
         s->setString(2, dn);
         if (s->executeUpdate() != 0)
@@ -1761,7 +1768,10 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
         if (conn)
             conn->rollback();
         throw Err_Custom(e.what());
-
+        if(conn){
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
     }
 }
 
@@ -1823,14 +1833,18 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
         query1 = "delete from t_debug where source_se=:1 and dest_se =:2";
         query2 = "insert into t_debug(source_se,dest_se,debug) values(:1,:2,:3)";
     }
+
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
 
         if (false == conn->checkConn())
             return;
 
-        oracle::occi::Statement* s1 = conn->createStatement(query1, tag1);
-        oracle::occi::Statement* s2 = conn->createStatement(query2, tag2);
+        s1 = conn->createStatement(query1, tag1);
+        s2 = conn->createStatement(query2, tag2);
         if (destin_hostname.length() == 0) {
             s1->setString(1, source_hostname);
             s2->setString(1, source_hostname);
@@ -1854,6 +1868,12 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if(conn){
+        	if(s1)
+        		conn->destroyStatement(s1, tag1);
+        	if(s2)
+        		conn->destroyStatement(s2, tag2);
+        }
 
     }
 }
@@ -1997,10 +2017,12 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
     const std::string tag = "auditConfiguration";
     std::string query = "INSERT INTO t_config_audit (when, dn, config, action ) VALUES (:1, :2, :3, :4)";
 
+    oracle::occi::Statement* s = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
         time_t timed = time(NULL);
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
         s->setString(2, dn);
         s->setString(3, config);
@@ -2012,7 +2034,10 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
+        if(conn){
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
     }
 }
 
@@ -2610,11 +2635,27 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
             if (s1 && r1) {
                 conn->destroyResultset(s1, r1);
                 conn->destroyStatement(s1, tag1);
-            }           
+            }
+            if (s2 && r2) {
+                conn->destroyResultset(s1, r1);
+                conn->destroyStatement(s1, tag1);
+            }
             if (s3 && r3) {
                 conn->destroyResultset(s3, r3);
                 conn->destroyStatement(s3, tag3);
-            }            
+            }
+            if (s4 && r4) {
+                conn->destroyResultset(s4, r4);
+                conn->destroyStatement(s4, tag4);
+            }
+            if (s5 && r5) {
+                conn->destroyResultset(s5, r5);
+                conn->destroyStatement(s5, tag5);
+            }
+            if (s6 && r6) {
+                conn->destroyResultset(s6, r6);
+                conn->destroyStatement(s6, tag6);
+            }
         }
         return allowed;
     }
@@ -2840,6 +2881,9 @@ void OracleAPI::terminateReuseProcess(const std::string & jobId) {
                 conn->destroyResultset(s, r);
                 conn->destroyStatement(s, tag);
             }
+            if (s1) {
+            	conn->destroyStatement(s1, tag);
+            }
         }
     }
 }
@@ -2972,6 +3016,18 @@ void OracleAPI::revertToSubmitted() {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if(conn){
+        	if(s1) {
+        		conn->destroyStatement(s1, tag1);
+        	}
+        	if(s2 && r2) {
+        		conn->destroyResultset(s2, r2);
+        		conn->destroyStatement(s2, tag2);
+        	}
+        	if(s3) {
+        		conn->destroyStatement(s3, tag3);
+        	}
+        }
     }
 }
 
@@ -3006,6 +3062,14 @@ void OracleAPI::revertToSubmittedTerminate() {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if(conn){
+        	if(s1) {
+        		conn->destroyStatement(s1, tag1);
+        	}
+        	if(s2) {
+        		conn->destroyStatement(s2, tag2);
+        	}
+        }
     }
 }
 
