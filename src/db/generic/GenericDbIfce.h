@@ -104,8 +104,6 @@ public:
     virtual void getSe(Se* &se, std::string seName) = 0;
    
     virtual unsigned int updateFileStatus(TransferFiles* file, const std::string status) = 0;
-    
-    virtual std::set<std::string> getAllMatchingSeNames(std::string name) = 0; 
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
             std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) = 0;
@@ -213,9 +211,6 @@ public:
     virtual void deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers) = 0;
     
     virtual std::string getGroupForSe(const std::string se) = 0;
-
-    //t_se_protocol
-    virtual SeProtocolConfig*  getProtocol(std::string symbolicName) = 0;
       
     
     virtual void submitHost(const std::string & jobId) = 0;     
