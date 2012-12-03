@@ -902,66 +902,6 @@ std::set<std::string> OracleAPI::getAllMatchingSeNames(std::string name) {
     return result;
 }
 
-
-void OracleAPI::getAllSeInfoNoCritiria(std::vector<Se*>& se) {
-    Se* seData = NULL;
-    std::vector<Se*>::const_iterator iter;
-    const std::string tag = "getAllSeInfoNoCritiria";
-    std::string query_stmt = "SELECT "
-            " t_se.ENDPOINT, "
-            " t_se.SE_TYPE, "
-            " t_se.SITE,  "
-            " t_se.NAME,  "
-            " t_se.STATE, "
-            " t_se.VERSION,  "
-            " t_se.HOST, "
-            " t_se.SE_TRANSFER_TYPE, "
-            " t_se.SE_TRANSFER_PROTOCOL, "
-            " t_se.SE_CONTROL_PROTOCOL, "
-            " t_se.GOCDB_ID "
-            " FROM t_se";
-
-	oracle::occi::Statement* s = NULL;
-	oracle::occi::ResultSet* r = NULL;
-	
-    try {
-        s = conn->createStatement(query_stmt, tag);
-        r = conn->createResultset(s);
-        while (r->next()) {
-            seData = new Se();
-            seData->ENDPOINT = r->getString(1);
-            seData->SE_TYPE = r->getString(2);
-            if (!r->isNull(3)) {
-                seData->SITE = r->getString(3);
-            }
-            seData->NAME = r->getString(4);
-            seData->STATE = r->getString(5);
-            seData->VERSION = r->getString(6);
-            seData->HOST = r->getString(7);
-            seData->SE_TRANSFER_TYPE = r->getString(8);
-            seData->SE_TRANSFER_PROTOCOL = r->getString(9);
-            seData->SE_CONTROL_PROTOCOL = r->getString(10);
-            seData->GOCDB_ID = r->getString(11);
-            se.push_back(seData);
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
-    } catch (oracle::occi::SQLException const &e) {
-		if(conn)
-			conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-		if(conn){
-				conn->destroyResultset(s, r);
-				conn->destroyStatement(s, tag);
-		}
-
-    }
-
-}
-
-
-
 void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
         std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) {
     std::string query = "INSERT INTO t_se (ENDPOINT, SE_TYPE, SITE, NAME, STATE, VERSION, HOST, SE_TRANSFER_TYPE, SE_TRANSFER_PROTOCOL,SE_CONTROL_PROTOCOL,GOCDB_ID) VALUES (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)";

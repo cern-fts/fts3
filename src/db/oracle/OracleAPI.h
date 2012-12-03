@@ -71,8 +71,6 @@ public:
     virtual void getSe(Se* &se, std::string seName);
    
     virtual unsigned int updateFileStatus(TransferFiles* file, const std::string status);
-
-    virtual void getAllSeInfoNoCritiria(std::vector<Se*>& se);
     
     virtual std::set<std::string> getAllMatchingSeNames(std::string name); 
 
