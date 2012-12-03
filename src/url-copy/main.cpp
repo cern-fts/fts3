@@ -714,7 +714,11 @@ int main(int argc, char **argv) {
                 char *bdii = (char *) fileManagement.getBDII().c_str();
                 if (bdii) {
                     log << fileManagement.timestamp() << "INFO BDII:" << bdii << '\n';
-                    gfal2_set_opt_string(handle, "bdii", "LCG_GFAL_INFOSYS", bdii, &tmp_err);
+		    if(std::string(bdii).compare("false")){
+		    	gfal2_set_opt_boolean(handle,"BDII","ENABLED", false, &tmp_err);
+		    }else{
+                    	gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", bdii, &tmp_err);
+		    }
                 }
             }
 

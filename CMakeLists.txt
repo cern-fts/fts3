@@ -33,6 +33,7 @@ link_directories (${PROJECT_BINARY_DIR}/src/cli)
 link_directories (${PROJECT_BINARY_DIR}/src/monitoring) 
 link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli) 
 link_directories (${PROJECT_BINARY_DIR}/src/dbClear) 
+link_directories (${PROJECT_BINARY_DIR}/src/glue2-publisher) 
 
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)

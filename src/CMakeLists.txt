@@ -40,6 +40,7 @@ add_subdirectory(monitoring)
 add_subdirectory(url-copy)
 add_subdirectory(scripts)
 add_subdirectory(dbClear)
+add_subdirectory(glue2-publisher)
 ENDIF()
 
 IF (ALLBUILD STREQUAL "ON")
@@ -55,6 +56,7 @@ add_subdirectory(monitoring)
 add_subdirectory(url-copy)
 add_subdirectory(scripts)
 add_subdirectory(dbClear)
+add_subdirectory(glue2-publisher)
 ENDIF()
 
 

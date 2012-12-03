@@ -106,6 +106,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "Set infosys"
         )
         (
+            "InfoPublisher,P",
+            po::value<std::string>( &(_vars["InfoPublisher"]) )->default_value("false"),
+            "Set this VM to be the info provider for Glue2"
+        )	
+        (
             "Alias,a",
             po::value<std::string>( &(_vars["Alias"]) )->default_value(""),
             "Set the alias for FTS 3 endpoint"

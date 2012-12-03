@@ -48,6 +48,9 @@ Group: System Environment/Daemons
 Requires: fts-libs = %{version}-%{release}
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-srm
+Requires: emi-resource-information-service
+Requires: emi-version
+#Requires: fetch-crl3
 #Requires: gfal2-plugin-http
 
 %package libs
@@ -108,6 +111,7 @@ exit 0
 /sbin/chkconfig --add fts-msg-bulk
 /sbin/chkconfig --add fts-msg-cron
 /sbin/chkconfig --add fts-records-cleaner
+/sbin/chkconfig --add fts-info-publisher
 exit 0
 
 %preun server
@@ -119,7 +123,9 @@ if [ $1 -eq 0 ] ; then
     /sbin/service fts-msg-cron stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-msg-cron
     /sbin/service fts-records-cleaner stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-records-cleaner    
+    /sbin/chkconfig --del fts-records-cleaner
+    /sbin/service fts-info-publisher stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-info-publisher        
 fi
 exit 0
 
@@ -129,6 +135,7 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
     /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :    
+    /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :        
 fi
 exit 0
 
@@ -149,13 +156,16 @@ rm -rf %{buildroot}
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_cleaner
+%{_sbindir}/fts_info_publisher
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
+%attr(0755,root,root) %{_initddir}/fts-info-publisher
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
+%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz

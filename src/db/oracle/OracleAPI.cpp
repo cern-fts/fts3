@@ -473,6 +473,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
                 files.push_back(tr_files);
             }
             conn->destroyResultset(s, r);
+	    r=NULL;
         }
 
         conn->destroyStatement(s, selecttag);
@@ -485,8 +486,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 				conn->destroyResultset(s, r);
 			if (s)
 				conn->destroyStatement(s, selecttag);
-		}
-		
+	     }
     }
 }
 

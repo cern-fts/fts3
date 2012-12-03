@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-lockfile=/var/lock/subsys/fts-msg-cron
+lockfile=/var/lock/subsys/fts-info-publisher
 
 
 if [ -f $lockfile ]; then
-	/usr/sbin/fts_msg_cron > /dev/null 2>&1
+	/usr/sbin/fts_info_publisher > /var/lib/bdii/gip/ldif/fts3.ldif
 fi
 
  
