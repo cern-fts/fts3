@@ -300,6 +300,7 @@ void JobSubmitter::assignShareCfg(list<cfg_type> arg) {
 		string vo = get<VO>(s);
 
 		// check if there is a link configuration, if no there will be no share
+		// ('isTherelinkConfig' will return 'false' also if the link configuration state is 'off'
 		if (!db->isThereLinkConfig(source, destination)) continue;
 
 		// check if there is a VO share
