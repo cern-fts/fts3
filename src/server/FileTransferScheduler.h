@@ -86,7 +86,7 @@ private:
 	string destSeName;
 
 
-	// DB singleton instance
+	/// DB singleton instance
 	GenericDbIfce* db;
 
 	///
