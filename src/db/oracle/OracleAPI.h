@@ -93,28 +93,6 @@ public:
     virtual void cancelJob(std::vector<std::string>& requestIDs);
     
     virtual void getCancelJob(std::vector<int>& requestIDs);        
-    
-    virtual std::vector<std::string> get_group_names();
-
-    virtual std::vector<std::string> get_group_members(std::string name);
-
-    virtual std::string get_group_name(std::string se);    
-    
-    /*check if a SE is already member of a group*/
-    virtual bool is_se_group_member(std::string se);
-    
-    /*check if a group already exists*/
-    virtual bool is_se_group_exist(std::string group);    
-      
-    /*se group operations*/
-    /*add a SE to a group*/
-    virtual void add_se_to_group(std::string sd, std::string group);
-    
-    /*remove se from a group*/
-    virtual void remove_se_from_group(std::string sd, std::string group);	
-    
-    /*delete a group*/
-    virtual void delete_group(std::string group);	
  
     /*t_credential API*/
     virtual void insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs);
