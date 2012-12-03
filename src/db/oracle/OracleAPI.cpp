@@ -3722,7 +3722,7 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 }
 
@@ -3756,7 +3756,7 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 }
 
@@ -3781,7 +3781,7 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 }
 
@@ -3861,8 +3861,7 @@ bool OracleAPI::isThereLinkConfig(std::string source, std::string destination) {
     }    catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
-
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 
     return ret;
@@ -3900,7 +3899,7 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 
     return ret;
@@ -3937,7 +3936,7 @@ bool OracleAPI::isGrInPair(std::string group) {
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 
     // if the exception was thrown don't allow to remove group
@@ -3972,7 +3971,7 @@ void OracleAPI::addShareConfig(ShareConfig* cfg) {
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 }
 void OracleAPI::updateShareConfig(ShareConfig* cfg) {
@@ -4001,7 +4000,7 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg) {
 		if (conn)
 			conn->rollback();
 
-		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+		throw Err_Custom(e.what());
 	}
 }
 
@@ -4027,7 +4026,7 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 }
 
@@ -4052,7 +4051,7 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination) {
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 }
 
@@ -4132,7 +4131,7 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
         if (conn)
             conn->rollback();
 
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     }
 
     return ret;
@@ -4387,7 +4386,7 @@ void OracleAPI::addJobShareConfig(std::string job_id, std::string source, std::s
 	    } catch (oracle::occi::SQLException const &e) {
 	        if (conn)
 	            conn->rollback();
-	        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	        throw Err_Custom(e.what());
 	    }
 }
 
