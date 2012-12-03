@@ -38,11 +38,11 @@ target_link_libraries(fts_info_publisher -lfts_common)
 install(TARGETS         fts_info_publisher 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
 
-install(FILES         fts-msg-cron
+install(FILES         fts-info-provider
         DESTINATION ${SYSCONF_INSTALL_DIR}/cron.hourly
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)			
 	
-install(FILES         fts-msg-cron.initd
+install(FILES         fts-info-provider.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts-msg-cron )
