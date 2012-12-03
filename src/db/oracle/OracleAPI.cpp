@@ -3109,6 +3109,20 @@ void OracleAPI::backup() {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if(conn){
+        	if(s1) {
+        		conn->destroyStatement(s1, "");
+        	}
+        	if(s2) {
+        		conn->destroyStatement(s2, "");
+        	}
+        	if(s3) {
+        		conn->destroyStatement(s3, "");
+        	}
+        	if(s4) {
+        		conn->destroyStatement(s2, "");
+        	}
+        }
     }
 }
 
@@ -3134,6 +3148,10 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId) {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        if(conn){
+        	if(stmt)
+        		conn->destroyStatement(stmt, tag);
+        }
     }
 }
 
@@ -3213,6 +3231,9 @@ void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn)
     std::string query = "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn) VALUES (:1, :2, :3, :4)";
     std::string tag = "blacklistSe";
 
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
 
@@ -3220,12 +3241,12 @@ void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn)
 
         time_t timed = time(NULL);
 
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, se);
         s->setString(2, msg);
         s->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
         s->setString(4, adm_dn);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
+        r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -3234,7 +3255,11 @@ void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn)
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 }
 
@@ -3243,6 +3268,9 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
     std::string query = "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) VALUES (:1, :2, :3, :4)";
     std::string tag = "blacklistSe";
 
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
 
@@ -3250,12 +3278,12 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 
         time_t timed = time(NULL);
 
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, dn);
         s->setString(2, msg);
         s->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
         s->setString(4, adm_dn);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
+        r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -3264,7 +3292,11 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 }
 
@@ -3273,14 +3305,17 @@ void OracleAPI::unblacklistSe(std::string se) {
     std::string query = "DELETE FROM t_bad_ses WHERE se = :1";
     std::string tag = "unblacklistSe";
 
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
 
         if (false == conn->checkConn()) return;
 
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, se);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
+        r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -3289,7 +3324,11 @@ void OracleAPI::unblacklistSe(std::string se) {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 }
 
@@ -3298,14 +3337,17 @@ void OracleAPI::unblacklistDn(std::string dn) {
     std::string query = "DELETE FROM t_bad_dns WHERE dn = :1";
     std::string tag = "unblacklistSe";
 
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+
     ThreadTraits::LOCK_R lock(_mutex);
     try {
 
         if (false == conn->checkConn()) return;
 
-        oracle::occi::Statement* s = conn->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, dn);
-        oracle::occi::ResultSet* r = conn->createResultset(s);
+        r = conn->createResultset(s);
         conn->commit();
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
@@ -3314,7 +3356,11 @@ void OracleAPI::unblacklistDn(std::string dn) {
         if (conn)
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 }
 
@@ -3350,9 +3396,10 @@ bool OracleAPI::isSeBlacklisted(std::string se) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         if (conn) {
-            if (s && r)
+            if (s && r) {
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+                conn->destroyStatement(s, tag);
+            }
         }
     }
 
@@ -3391,9 +3438,10 @@ bool OracleAPI::isDnBlacklisted(std::string dn) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         if (conn) {
-            if (s && r)
+            if (s && r) {
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+                conn->destroyStatement(s, tag);
+            }
         }
     }
 
@@ -3430,6 +3478,12 @@ bool OracleAPI::isFileReadyState(int fileID) {
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
     return ready;
 }
@@ -3461,6 +3515,12 @@ bool OracleAPI::checkGroupExists(const std::string & groupName) {
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 
     return groupExist;
@@ -3494,6 +3554,12 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 }
 
@@ -3524,6 +3590,12 @@ std::string OracleAPI::getGroupForSe(const std::string se) {
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 
     return ret;
@@ -3555,6 +3627,12 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 }
 
@@ -3583,6 +3661,11 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
     }
 }
 
@@ -3622,7 +3705,13 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
     } catch (oracle::occi::SQLException const &e) {
         if (conn)
             conn->rollback();
-        throw Err_Custom(e.what());
+
+        if(conn)
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
+
+		throw Err_Custom(e.what());
     }
 }
 
@@ -3653,9 +3742,12 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
         conn->commit();
         conn->destroyStatement(s, tag);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
-
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
+        }
         throw Err_Custom(e.what());
     }
 }
@@ -3678,8 +3770,12 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
         conn->commit();
         conn->destroyStatement(s, tag);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         throw Err_Custom(e.what());
     }
@@ -3724,6 +3820,12 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
 
     return cfg;
@@ -3759,8 +3861,13 @@ bool OracleAPI::isThereLinkConfig(std::string source, std::string destination) {
 
         return ret;
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
+        }
         throw Err_Custom(e.what());
     }
 
@@ -3796,8 +3903,13 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
 
         return ret;
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         throw Err_Custom(e.what());
     }
@@ -3833,8 +3945,13 @@ bool OracleAPI::isGrInPair(std::string group) {
 
         return ret;
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         throw Err_Custom(e.what());
     }
@@ -3869,8 +3986,12 @@ void OracleAPI::addShareConfig(ShareConfig* cfg) {
         conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
+        }
         throw Err_Custom(e.what());
     }
 }
@@ -3897,8 +4018,12 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg) {
 		conn->commit();
 		conn->destroyStatement(s, tag);
 	}    catch (oracle::occi::SQLException const &e) {
-		if (conn)
-			conn->rollback();
+        if (conn) {
+            conn->rollback();
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
 		throw Err_Custom(e.what());
 	}
@@ -3923,8 +4048,12 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
         conn->commit();
         conn->destroyStatement(s, tag);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         throw Err_Custom(e.what());
     }
@@ -3948,8 +4077,12 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination) {
         conn->commit();
         conn->destroyStatement(s, tag);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s) {
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         throw Err_Custom(e.what());
     }
@@ -3987,8 +4120,13 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
 
         return cfg;
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
@@ -4028,8 +4166,13 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
 
         return ret;
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         throw Err_Custom(e.what());
     }
@@ -4068,8 +4211,13 @@ SeProtocolConfig* OracleAPI::getProtocol(std::string symbolicName) {
 
         return seProtocolConfig;
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
+        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
@@ -4103,6 +4251,11 @@ void OracleAPI::submitHost(const std::string & jobId) {
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn){
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
     }
 }
 
@@ -4132,6 +4285,12 @@ std::string OracleAPI::transferHost(int fileId) {
             conn->rollback();
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        if(conn)
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
     }
     
     return hostname;
@@ -4170,9 +4329,10 @@ bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds) {
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         if (conn) {
-            if (s) {
-                conn->destroyStatement(s, tag);
-            }
+        	if(s && r) {
+        		conn->destroyResultset(s, r);
+        		conn->destroyStatement(s, tag);
+        	}
         }
     }
     return isReady;
@@ -4206,7 +4366,8 @@ std::string OracleAPI::transferHostV(std::map<int, std::string>& fileIds) {
             conn->rollback();
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         if (conn) {
-            if (s) {
+            if (s && r) {
+            	conn->destroyResultset(s, r);
                 conn->destroyStatement(s, tag);
             }
         }
@@ -4250,7 +4411,8 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member) {
         if (conn) {
             if (s && r)
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+            if (s)
+            	conn->destroyStatement(s, tag);
         }
     }
 
@@ -4284,8 +4446,11 @@ void OracleAPI::addJobShareConfig(std::string job_id, std::string source, std::s
 	        conn->destroyStatement(s, tag);
 
 	    } catch (oracle::occi::SQLException const &e) {
-	        if (conn)
+	        if (conn) {
 	            conn->rollback();
+	        	if(s)
+	        		conn->destroyStatement(s, tag);
+	        }
 	        throw Err_Custom(e.what());
 	    }
 }
@@ -4330,7 +4495,8 @@ std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::ge
         if (conn) {
             if (s && r)
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+            if (s)
+            	conn->destroyStatement(s, tag);
         }
     }
 
@@ -4373,7 +4539,8 @@ bool OracleAPI::isThereJobShareConfig(std::string job_id) {
         if (conn) {
             if (s && r)
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+            if (s)
+            	conn->destroyStatement(s, tag);
         }
     }
 
@@ -4427,7 +4594,8 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
         if (conn) {
             if (s && r)
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+            if (s)
+            	conn->destroyStatement(s, tag);
         }
     }
 
@@ -4482,7 +4650,8 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
         if (conn) {
             if (s && r)
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+            if (s)
+            	conn->destroyStatement(s, tag);
         }
     }
 
@@ -4537,7 +4706,8 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
         if (conn) {
             if (s && r)
                 conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag);
+            if (s)
+            	conn->destroyStatement(s, tag);
         }
     }
 
