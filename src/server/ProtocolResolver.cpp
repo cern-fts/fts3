@@ -146,19 +146,8 @@ SeProtocolConfig* ProtocolResolver::merge(SeProtocolConfig* source_ptr, SeProtoc
 
 SeProtocolConfig* ProtocolResolver::resolve() {
 
-	// check if there's a SE pair configuration
-	SeProtocolConfig* ret = getProtocolCfg(link[SE_PAIR]);
-	if (ret) return ret;
-
-	// check if there are standalone SE configurations and merge them
-	ret = merge(
-			getProtocolCfg(link[SOURCE_SE]),
-			getProtocolCfg(link[DESTINATION_SE])
-		);
-	if (ret) return ret;
-
 	// check if there is a SE group pair configuration
-	ret = getProtocolCfg(link[GR_PAIR]);
+	SeProtocolConfig* ret = getProtocolCfg(link[GR_PAIR]);
 	if (ret) return ret;
 
 	// check if there are standalone SE group configurations and merge them
@@ -168,7 +157,15 @@ SeProtocolConfig* ProtocolResolver::resolve() {
 		);
 	if (ret) return ret;
 
-	// TODO there is no distinction between (*) and normal SE, is it OK?
+	// check if there's a SE pair configuration
+	ret = getProtocolCfg(link[SE_PAIR]);
+	if (ret) return ret;
+
+	// check if there are standalone SE configurations and merge them
+	ret = merge(
+			getProtocolCfg(link[SOURCE_SE]),
+			getProtocolCfg(link[DESTINATION_SE])
+		);
 
 	return ret;
 }
