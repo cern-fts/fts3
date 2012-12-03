@@ -45,4 +45,4 @@ install(FILES         fts-info-provider
 install(FILES         fts-info-provider.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
-	RENAME fts-msg-cron )
+	RENAME fts-info-provider )
