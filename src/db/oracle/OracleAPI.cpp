@@ -3629,8 +3629,7 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         if(conn)
-        	if(s && r) {
-        		conn->destroyResultset(s, r);
+        	if(s) {
         		conn->destroyStatement(s, tag);
         	}
     }
