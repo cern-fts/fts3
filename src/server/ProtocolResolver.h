@@ -29,6 +29,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 
+#include <list>
 #include <string>
 #include <utility>
 
@@ -44,11 +45,13 @@ class ProtocolResolver {
 
 	enum LinkType {
 		SE_PAIR = 0,
+		GROUP_PAIR,
 		SOURCE_SE,
+		SOURCE_GROUP,
+		SOURCE_WILDCARD,
 		DESTINATION_SE,
-		GR_PAIR,
-		SOURCE_GR,
-		DESTINATION_GR
+		DESTINATION_GROUP,
+		DESTINATION_WILDCARD
 	};
 
 	enum {
@@ -66,14 +69,12 @@ private:
 
 	bool isGr(string name);
 
+	optional< pair<string, string> > getFirst(list<LinkType> l);
+
 	SeProtocolConfig* getProtocolCfg(optional< pair<string, string> > link);
 
 	SeProtocolConfig* merge(SeProtocolConfig* source_ptr, SeProtocolConfig* destination_ptr);
 
-
-
-	///
-	string job_id;
 	/// DB singleton instance
 	GenericDbIfce* db;
 

@@ -30,14 +30,14 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/assign/list_of.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
 using namespace fts3::ws;
+using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(string job_id) :
-	job_id(job_id),
-	db(DBSingleton::instance().getDBObjectInstance()) {
+ProtocolResolver::ProtocolResolver(string job_id) :	db(DBSingleton::instance().getDBObjectInstance()) {
 
 	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(job_id);
 	vector< tuple<string, string, string> >::iterator it;
@@ -51,20 +51,31 @@ ProtocolResolver::ProtocolResolver(string job_id) :
 		// create source-destination pair
 		pair<string, string> entry = pair<string, string>(source, destination);
 
+		// check if it is default configuration for destination SE
+		if (destination == Configuration::wildcard && source == Configuration::any) {
+			link[DESTINATION_WILDCARD] = entry;
+			continue;
+		}
+		// check if it is default configuration for source SE
+		if (source == Configuration::wildcard && destination == Configuration::any) {
+			link[SOURCE_WILDCARD] = entry;
+			continue;
+		}
+
 		// check if we are dealing with groups or SEs
 		if (isGr(source) || isGr(destination)) {
 			// check if it's standalone group configuration of the destination
 			if (destination != Configuration::any && source == Configuration::any) {
-				link[DESTINATION_GR] = entry;
+				link[DESTINATION_GROUP] = entry;
 				continue;
 			}
 			// check if it's standalone group configuration of the source
 			if (source != Configuration::any && destination == Configuration::any) {
-				link[SOURCE_GR] = entry;
+				link[SOURCE_GROUP] = entry;
 				continue;
 			}
 			// if it's neither of the above it has to be a pair
-			link[GR_PAIR] = entry;
+			link[GROUP_PAIR] = entry;
 
 		} else {
 			// check if it's standalone SE configuration of the destination
@@ -144,27 +155,40 @@ SeProtocolConfig* ProtocolResolver::merge(SeProtocolConfig* source_ptr, SeProtoc
 	return ret;
 }
 
+optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l) {
+	// look for the first link
+	list<LinkType>::iterator it;
+	for (it = l.begin(); it != l.end(); it++) {
+		// return the first existing link
+		if (link[*it]) return link[*it];
+	}
+	// if nothing was found return empty link
+	return optional< pair<string, string> >();
+}
+
 SeProtocolConfig* ProtocolResolver::resolve() {
 
-	// check if there is a SE group pair configuration
-	SeProtocolConfig* ret = getProtocolCfg(link[GR_PAIR]);
-	if (ret) return ret;
-
-	// check if there are standalone SE group configurations and merge them
-	ret = merge(
-			getProtocolCfg(link[SOURCE_GR]),
-			getProtocolCfg(link[DESTINATION_GR])
-		);
-	if (ret) return ret;
-
 	// check if there's a SE pair configuration
-	ret = getProtocolCfg(link[SE_PAIR]);
+	SeProtocolConfig* ret = getProtocolCfg(link[SE_PAIR]);
 	if (ret) return ret;
 
-	// check if there are standalone SE configurations and merge them
+	// check if there is a SE group pair configuration
+	ret = getProtocolCfg(link[GROUP_PAIR]);
+	if (ret) return ret;
+
+	// get the first existing standalone source link from the list
+	optional< pair<string, string> > source_link = getFirst(
+			list_of (SOURCE_SE) (SOURCE_GROUP) (SOURCE_WILDCARD)
+		);
+	// get the first existing standalone destination link from the list
+	optional< pair<string, string> > destination_link = getFirst(
+			list_of (DESTINATION_SE) (DESTINATION_GROUP) (DESTINATION_WILDCARD)
+		);
+
+	// merge the configuration of the most specific standlone source and destination links
 	ret = merge(
-			getProtocolCfg(link[SOURCE_SE]),
-			getProtocolCfg(link[DESTINATION_SE])
+			getProtocolCfg(source_link),
+			getProtocolCfg(destination_link)
 		);
 
 	return ret;
