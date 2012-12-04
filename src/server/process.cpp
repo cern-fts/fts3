@@ -254,10 +254,10 @@ int ExecuteProcess::execProcessShell() {
     std::vector<std::string>::iterator iter;
     std::string p;
     int pipefds[2];
-    int count, err;
+    int count=0, err=0;
     pid_t child;    
-    const char *path;
-    char *copy;
+    const char *path=NULL;
+    char *copy=NULL;
     int maxfd;
     ssize_t checkWriteSize;
     int checkDir = 0;
@@ -360,18 +360,15 @@ int ExecuteProcess::execProcessShell() {
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Child's execvp error: " << strerror(err)  << commit; 
             return -1;
         }
-        close(pipefds[0]);	
-	/*int checkProc =  check_pid(pid);
-	execvp doesn't return if a lib is missing during loading, check proc fts then
-	if(-1 == checkProc){
-		usleep(500000);		
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Checking proc FS for pid error: " << pid << commit;
-		return -1;
-	}else{
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Pid is running: " << pid << commit;
-	} 
-	*/
-    }    
+        close(pipefds[0]);		
+    }   
+
+    /*sleep for awhile but do not block waiting for child*/
+    usleep(10000);
+    err  = waitpid(pid, NULL, WNOHANG);
+    if(err != 0){    	
+	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno)  << commit; 
+    }
     return err;
 }
 
