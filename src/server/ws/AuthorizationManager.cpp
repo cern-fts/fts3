@@ -55,6 +55,8 @@ const string AuthorizationManager::WILD_CARD_OP = "*";
 
 const string AuthorizationManager::ROLES_SECTION_PREFIX = "roles.";
 
+const string AuthorizationManager::dummy = "dummy";
+
 template<>
 vector<string> AuthorizationManager::get< vector<string> >(string cfg) { // TODO same code is in serverconfig.h, Michail is using it!
 
@@ -242,9 +244,9 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
 	if (lvl != NONE) return lvl;
 	else {
 		string msg = "Authorization failed, access was not granted. ";
-		msg += "(The user has not the right Role to perform ";
+		msg += "(The user has not the right Role to perform '";
 		msg += op_str;
-		msg += 	" operation)";
+		msg += 	"' operation)";
 		throw Err_Custom(msg);
 	}
 }
@@ -260,7 +262,7 @@ AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Oper
 
 	switch(op) {
 	case DELEG:
-		return PRV; // it is only possible to remove own proxy certificate so it's always 'PRV'
+		return PRV; // it is only possible to remove someone else's proxy-certificate so it's always 'PRV'
 	case TRANSFER: {
 
 		scoped_ptr<TransferJobs> job (
@@ -272,9 +274,8 @@ AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Oper
 		if (job->VO_NAME == cgsi.getClientVo()) return VO; // it is a job that has been created within user's VO
 		return ALL; // it needs global access
 	}
-	case CONFIG: return ALL; // so far only global admins will be able to configure TODO probably it is possible to get it from BDII
-							// maybe it will be possible to distinguish between ALL and VO, but probably never PRV will be returned
-	default: return ALL; // in case a a bug return the highest possible level
+	case CONFIG: return ALL; // so far only global admins will be able to configure
+	default: return ALL; // in case of a bug return the highest possible level
 	}
 }
 
@@ -291,7 +292,6 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
 		msg += lvlToString(requiredLvl);
 		msg += "' level!";
 
-		// TODO to be uncommented when clients will have proxy certs with Roles
 		throw Err_Custom(msg);
 	}
 

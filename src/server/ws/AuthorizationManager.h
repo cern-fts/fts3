@@ -75,6 +75,10 @@ public:
 		CONFIG 	  //< configuration
 	};
 
+	/// it is used as resource ID for all authorization operations for which the rsc_id doesn't matter
+	/// but the required level should be the default for operation (not NONE)
+	static const string dummy;
+
 	/**
 	 * Destructor
 	 */
