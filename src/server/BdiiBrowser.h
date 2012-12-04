@@ -115,6 +115,9 @@ private:
 	static const string FIND_SE_SITE(string se);
 	static const char* FIND_SE_SITE_ATTR[];
 
+	static const string false_str;
+	bool inuse;
+
 	BdiiBrowser() : querying(0) {}
 	BdiiBrowser(BdiiBrowser const&);
 	BdiiBrowser& operator=(BdiiBrowser const&);

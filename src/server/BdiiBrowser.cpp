@@ -30,6 +30,8 @@
 namespace fts3 {
 namespace common {
 
+// TODO reorganize + do queries for glue2
+
 const string BdiiBrowser::GLUE1 = "o=grid";
 const string BdiiBrowser::GLUE2 = "o=glue";
 
@@ -44,12 +46,16 @@ const char* BdiiBrowser::ATTR_HOSTINGORG = "GlueServiceHostingOrganization";
 
 const char* BdiiBrowser::CLASS_SERVICE = "GlueService";
 
+const string BdiiBrowser::false_str = "false";
+
 /* Query expressing "No VO attribute" */
 #define QUERY_VO_ANY "(!(" ATTR_VO "=*))"
 
 #define QUERY_VO_PRE  "(|" QUERY_VO_ANY
 #define QUERY_VO      "(" ATTR_VO "=%s)"
 #define QUERY_VO_POST ")"
+
+// "(| (%sAccessControlBaseRule=VO:%s) (%sAccessControlBaseRule=%s) (%sAccessControlRule=%s)"
 
 const string BdiiBrowser::FIND_SE_STATUS(string se) {
 
@@ -79,6 +85,8 @@ BdiiBrowser::~BdiiBrowser() {
 void BdiiBrowser::connect(string infosys, time_t sec) {
 
 	this->infosys = infosys;
+	inuse = infosys != false_str;
+	if (!inuse) return;
 
 	timeout.tv_sec = sec;
 	timeout.tv_usec = 0;
@@ -179,6 +187,8 @@ bool BdiiBrowser::isValid() {
 
 template<typename R>
 list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr) {
+
+	if (!inuse) return list< map<string, R> >();
 
 	if (!isValid()) reconnect();
 
