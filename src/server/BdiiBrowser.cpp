@@ -42,7 +42,14 @@ const char* BdiiBrowser::ATTR_LINK = "GlueForeignKey";
 const char* BdiiBrowser::ATTR_SITE = "GlueSiteUniqueID";
 const char* BdiiBrowser::ATTR_HOSTINGORG = "GlueServiceHostingOrganization";
 
-#define CLASS_SERVICE		"GlueService"
+const char* BdiiBrowser::CLASS_SERVICE = "GlueService";
+
+/* Query expressing "No VO attribute" */
+#define QUERY_VO_ANY "(!(" ATTR_VO "=*))"
+
+#define QUERY_VO_PRE  "(|" QUERY_VO_ANY
+#define QUERY_VO      "(" ATTR_VO "=%s)"
+#define QUERY_VO_POST ")"
 
 const string BdiiBrowser::FIND_SE_STATUS(string se) {
 
@@ -69,10 +76,9 @@ BdiiBrowser::~BdiiBrowser() {
     disconnect();
 }
 
-void BdiiBrowser::connect(string infosys, string base, time_t sec) {
+void BdiiBrowser::connect(string infosys, time_t sec) {
 
 	this->infosys = infosys;
-	this->base = base;
 
 	timeout.tv_sec = sec;
 	timeout.tv_usec = 0;
@@ -136,7 +142,7 @@ void BdiiBrowser::reconnect() {
 	waitIfBrowsing();
 
 	disconnect();
-	connect(infosys, base, timeout.tv_sec);
+	connect(infosys, timeout.tv_sec);
 
 	notifyBrowsers();
 }
@@ -172,7 +178,7 @@ bool BdiiBrowser::isValid() {
 }
 
 template<typename R>
-list< map<string, R> > BdiiBrowser::browse(string query, const char **attr) {
+list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr) {
 
 	if (!isValid()) reconnect();
 
@@ -246,7 +252,7 @@ string BdiiBrowser::parseForeingKey(list<string> values, const char *attr) {
 
 bool BdiiBrowser::getSeStatus(string se) {
 
-	list< map<string, string> > rs = browse<string>(FIND_SE_STATUS(se), FIND_SE_STATUS_ATTR);
+	list< map<string, string> > rs = browse<string>(GLUE1, FIND_SE_STATUS(se), FIND_SE_STATUS_ATTR);
 
 	if (rs.empty()) return true;
 
@@ -262,7 +268,7 @@ string BdiiBrowser::getSiteName(string se) {
 		return it->second;
 	}
 
-	list< map<string, list<string> > > rs = browse< list<string> >(FIND_SE_SITE(se), FIND_SE_SITE_ATTR);
+	list< map<string, list<string> > > rs = browse< list<string> >(GLUE1, FIND_SE_SITE(se), FIND_SE_SITE_ATTR);
 
 	if (rs.empty()) return string();
 
@@ -277,6 +283,10 @@ string BdiiBrowser::getSiteName(string se) {
 	if(seToSite.size() > 5000) seToSite.clear();
 
 	return site;
+}
+
+bool BdiiBrowser::isVoAllowed(string se, string vo) {
+	return true;
 }
 
 } /* namespace ws */

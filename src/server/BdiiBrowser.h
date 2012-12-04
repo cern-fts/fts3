@@ -52,9 +52,10 @@ public:
 
 	virtual ~BdiiBrowser();
 
-	void connect(string infosys, string base = GLUE1, time_t sec = 60);
+	void connect(string infosys, time_t sec = 60);
 	void disconnect();
 
+	bool isVoAllowed(string se, string vo);
 	bool getSeStatus(string se);
 	string getSiteName (string se);
 
@@ -68,7 +69,7 @@ private:
 
 	// if we want all available attributes we leave attr = 0
 	template<typename R>
-	list< map<string, R> > browse(string query, const char **attr = 0);
+	list< map<string, R> > browse(string base, string query, const char **attr = 0);
 
 	template<typename R>
 	list< map<string, R> > parseBdiiResponse(LDAPMessage *reply);
@@ -85,7 +86,6 @@ private:
 
 	LDAP *ld;
 	timeval timeout;
-	string base;
 	string infosys;
 	string url;
 
@@ -106,6 +106,8 @@ private:
 	static const char* ATTR_LINK;
 	static const char* ATTR_SITE;
 	static const char* ATTR_HOSTINGORG;
+
+	static const char* CLASS_SERVICE;
 
 	static const string FIND_SE_STATUS(string se);
 	static const char* FIND_SE_STATUS_ATTR[];
