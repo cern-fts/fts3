@@ -73,7 +73,7 @@ QueueManager::~QueueManager() {
 
 void QueueManager::sendUpdater(struct message_updater* msg) throw (boost::interprocess::interprocess_exception) {
     try {
-        mq_updater->send(msg, sizeof (message_updater), 0);
+        mq_updater->try_send(msg, sizeof (message_updater), 0);
     } catch (interprocess_exception &ex) {
         throw;
     }
@@ -91,7 +91,7 @@ void QueueManager::receiveUpdater(struct message_updater* msg) throw (boost::int
 
 void QueueManager::send(struct message* msg) throw (interprocess_exception) {
     try {
-        mq_->send(msg, sizeof (message), 0);
+        mq_->try_send(msg, sizeof (message), 0);
     } catch (interprocess_exception &ex) {
         throw;
     }
@@ -122,7 +122,7 @@ void QueueManager::msg_send(const char* msg) throw (interprocess_exception) {
         struct msg_message m;
         strcpy(m.json, msg);
 
-        mq_mon->send(&m, sizeof (msg_message), 0);
+        mq_mon->try_send(&m, sizeof (msg_message), 0);
     } catch (interprocess_exception &ex) {
         throw;
     }

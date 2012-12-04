@@ -113,9 +113,9 @@ int main(int argc, char** argv) {
             stream << "GLUE2ServiceQualityLevel: production" << "\n";
             stream << "GLUE2ServiceAdminDomainForeignKey: CERN-PROD" << "\n";
 
-            stream << "dn: GLUE2EndpointID=" << hostVM << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
+            stream << "dn: GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
             stream << "objectClass: GLUE2Endpoint" << "\n";
-            stream << "GLUE2EndpointID: " << hostVM << "_org.glite.fts" << "\n";
+            stream << "GLUE2EndpointID: " << alias << "_org.glite.fts" << "\n";
             stream << "GLUE2EndpointInterfaceVersion: " << versionFTS.str() << "\n";
             stream << "GLUE2EndpointQualityLevel: production" << "\n";
             stream << "GLUE2EndpointImplementationName: FTS" << "\n";
@@ -131,14 +131,14 @@ int main(int argc, char** argv) {
             stream << "GLUE2EndpointServingState: production" << "\n";
             stream << "GLUE2EndpointServiceForeignKey: https://" << alias << ":" << port << "_org.glite.fts" << "\n";
 
-            stream << "dn: GLUE2PolicyID=" << hostVM << "_fts3_policy" << ",GLUE2EndpointID=" << hostVM << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
+            stream << "dn: GLUE2PolicyID=" << alias << "_fts3_policy" << ",GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
             stream << "objectClass: GLUE2Policy" << "\n";
             stream << "objectClass: GLUE2AccessPolicy" << "\n";
-            stream << "GLUE2PolicyID: " << hostVM << "_fts3_policy" << "\n";
+            stream << "GLUE2PolicyID: " << alias << "_fts3_policy" << "\n";
             stream << "GLUE2EntityCreationTime: " << timestamp.str() << "\n";
             stream << "GLUE2PolicyScheme: org.glite.standard" << "\n";
 	    stream << "GLUE2PolicyRule: ALL" << "\n";
-            stream << "GLUE2AccessPolicyEndpointForeignKey: " << hostVM << "_org.glite.fts" << "\n";
+            stream << "GLUE2AccessPolicyEndpointForeignKey: " << alias << "_org.glite.fts" << "\n";
 
             std::cout << stream.str() << std::endl;
         //}
