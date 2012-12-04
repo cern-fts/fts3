@@ -3771,10 +3771,10 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
     }    catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s && r) {
+        	if(s && r)
         		conn->destroyResultset(s, r);
+        	if (s)
         		conn->destroyStatement(s, tag);
-        	}
         }
 
         throw Err_Custom(e.what());
@@ -3813,10 +3813,10 @@ bool OracleAPI::isGrInPair(std::string group) {
     }    catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s && r) {
+        	if(s && r)
         		conn->destroyResultset(s, r);
+        	if (s)
         		conn->destroyStatement(s, tag);
-        	}
         }
 
         throw Err_Custom(e.what());
@@ -3854,9 +3854,8 @@ void OracleAPI::addShareConfig(ShareConfig* cfg) {
     } catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s) {
+        	if(s)
         		conn->destroyStatement(s, tag);
-        	}
         }
         throw Err_Custom(e.what());
     }
@@ -3886,9 +3885,8 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg) {
 	}    catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s) {
+        	if(s)
         		conn->destroyStatement(s, tag);
-        	}
         }
 
 		throw Err_Custom(e.what());
@@ -3916,9 +3914,8 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
     }    catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s) {
+        	if(s)
         		conn->destroyStatement(s, tag);
-        	}
         }
 
         throw Err_Custom(e.what());
@@ -3945,9 +3942,8 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination) {
     }    catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s) {
+        	if(s)
         		conn->destroyStatement(s, tag);
-        	}
         }
 
         throw Err_Custom(e.what());
@@ -3988,10 +3984,10 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
     }    catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s && r) {
+        	if(s && r)
         		conn->destroyResultset(s, r);
+        	if (s)
         		conn->destroyStatement(s, tag);
-        	}
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -4034,10 +4030,10 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
     }    catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
-        	if(s && r) {
+        	if(s && r)
         		conn->destroyResultset(s, r);
+        	if (s)
         		conn->destroyStatement(s, tag);
-        	}
         }
 
         throw Err_Custom(e.what());
@@ -4066,15 +4062,13 @@ void OracleAPI::submitHost(const std::string & jobId) {
         conn->commit();
         conn->destroyStatement(s, tag);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
-
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if(conn){
-        	if(s)
+        	if (s)
         		conn->destroyStatement(s, tag);
         }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
 }
 
@@ -4100,16 +4094,15 @@ std::string OracleAPI::transferHost(int fileId) {
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);
     }catch (oracle::occi::SQLException const &e) {
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if(conn)
-        	if(s && r) {
-        		conn->destroyResultset(s, r);
-        		conn->destroyStatement(s, tag);
-        	}
     }
     
     return hostname;
@@ -4144,15 +4137,14 @@ bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds) {
         s = NULL;
         return isReady;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         if (conn) {
-        	if(s && r) {
+            conn->rollback();
+        	if(s && r)
         		conn->destroyResultset(s, r);
+        	if (s)
         		conn->destroyStatement(s, tag);
-        	}
-        }
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
     return isReady;
 }
@@ -4181,15 +4173,14 @@ std::string OracleAPI::transferHostV(std::map<int, std::string>& fileIds) {
         s = NULL;
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn)
-            conn->rollback();
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         if (conn) {
-            if (s && r) {
-            	conn->destroyResultset(s, r);
-                conn->destroyStatement(s, tag);
-            }
-        }
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }
     
     return host;
@@ -4222,17 +4213,15 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member) {
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if (conn) {
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-            	conn->destroyStatement(s, tag);
-        }
     }
 
     return ret;
@@ -4306,17 +4295,15 @@ std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::ge
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if (conn) {
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-            	conn->destroyStatement(s, tag);
-        }
     }
 
     return ret;
@@ -4350,17 +4337,15 @@ bool OracleAPI::isThereJobShareConfig(std::string job_id) {
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if (conn) {
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-            	conn->destroyStatement(s, tag);
-        }
     }
 
     return ret;
@@ -4405,17 +4390,15 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if (conn) {
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-            	conn->destroyStatement(s, tag);
-        }
     }
 
     return ret;
@@ -4461,17 +4444,15 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if (conn) {
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-            	conn->destroyStatement(s, tag);
-        }
     }
 
     return ret;
@@ -4517,17 +4498,15 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn)
+        if (conn) {
             conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
-        if (conn) {
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-            	conn->destroyStatement(s, tag);
-        }
     }
 
     return ret;
