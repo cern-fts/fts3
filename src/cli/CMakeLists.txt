@@ -137,23 +137,6 @@ add_dependencies(fts-transfer-cancel fts_cli_common)
 target_link_libraries (fts-transfer-cancel fts_cli_common)
 
 # ------------------------------------------------------------------------
-# fts-transfer-getroles
-
-add_executable(fts-transfer-getroles 
-    transfer/fts3-transfer-getroles.cpp
-)
-add_dependencies(fts-transfer-getroles fts_cli_common)
-target_link_libraries (fts-transfer-getroles fts_cli_common)
-
-# ------------------------------------------------------------------------
-# fts-transfer-listvomanagers
-add_executable(fts-transfer-listvomanagers
-    transfer/fts3-transfer-listvomanagers.cpp
-)
-add_dependencies(fts-transfer-listvomanagers fts_cli_common)
-target_link_libraries (fts-transfer-listvomanagers fts_cli_common)
-
-# ------------------------------------------------------------------------
 # FTS3 config transfer - common structures
 
 # ------------------------------------------------------------------------
@@ -245,8 +228,6 @@ install(TARGETS
     fts-transfer-status
     fts-transfer-cancel
     fts-transfer-list
-    fts-transfer-listvomanagers
-    fts-transfer-getroles
 	fts-config-get
 	fts-config-set
 	fts-config-del

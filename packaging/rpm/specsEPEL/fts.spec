@@ -3,7 +3,7 @@
 
 Name: fts
 Version: 0.0.1 
-Release: 51%{?dist}
+Release: 50%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons 
 License: ASL 2.0
@@ -28,7 +28,9 @@ BuildRequires:  gfal2-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
 BuildRequires:  python-devel%{?_isa}
 BuildRequires:  pugixml-devel%{?_isa}
+BuildRequires:  soci-mysql-devel%{?_isa}
 Requires(pre):  shadow-utils
+
 
 %description
 The File Transfer Service V3
@@ -48,10 +50,6 @@ Group: System Environment/Daemons
 Requires: fts-libs = %{version}-%{release}
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-srm
-Requires: emi-resource-information-service
-Requires: emi-version
-#Requires: fetch-crl3
-#Requires: gfal2-plugin-http
 
 %package libs
 Summary: File Transfer Service version 3 libs
@@ -62,6 +60,23 @@ Summary: File Transfer Service version 3 client
 Group: Applications/Internet
 Requires: fts-libs = %{version}-%{release}
 
+%package mysql
+Summary: File Transfer Service version 3 mysql plug-ins
+Group: Applications/Internet
+Requires: fts-libs = %{version}-%{release}
+Requires:  soci-mysql%{?_isa}
+
+%package all
+Summary: Meta package for FTS v3
+Group: Applications/Internet
+Requires: %{name}-server%{?_isa} = %{version}-%{release} 
+Requires: %{name}-client%{?_isa} = %{version}-%{release} 
+Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+
+%description all
+Meta-package for complete installation of FTS3 clients, server and db plug-ins
+
+
 %description server
 FTS server is a service which accepts transfer jobs, querying their status, etc
 
@@ -71,6 +86,10 @@ FTS common libraries used across the client and server
 %description client
 FTS client CLI tool for submitting transfers, etc
 
+%description mysql
+FTS mysql plug-ins
+
+
 %prep
 %setup -qc
 
@@ -78,17 +97,17 @@ FTS client CLI tool for submitting transfers, etc
 %build
 mkdir build
 cd build
-%cmake -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
+%cmake -DEPELBUILD=ON -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
 make %{?_smp_mflags}
 
 
 %install
 cd build
-rm -rf %{buildroot}
+rm -rf $RPM_BUILD_ROOT
 if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/log/fts3
-make install DESTDIR=%{buildroot}
+make install DESTDIR=$RPM_BUILD_ROOT
 mkdir -p %{buildroot}%{python_sitearch}/fts
 
 %pre server
@@ -106,12 +125,15 @@ exit 0
 
 %postun devel -p /sbin/ldconfig
 
+%post mysql -p /sbin/ldconfig
+
+%postun mysql -p /sbin/ldconfig
+
 %post server
 /sbin/chkconfig --add fts-server
 /sbin/chkconfig --add fts-msg-bulk
 /sbin/chkconfig --add fts-msg-cron
 /sbin/chkconfig --add fts-records-cleaner
-/sbin/chkconfig --add fts-info-publisher
 exit 0
 
 %preun server
@@ -123,9 +145,7 @@ if [ $1 -eq 0 ] ; then
     /sbin/service fts-msg-cron stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-msg-cron
     /sbin/service fts-records-cleaner stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-records-cleaner
-    /sbin/service fts-info-publisher stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-info-publisher        
+    /sbin/chkconfig --del fts-records-cleaner    
 fi
 exit 0
 
@@ -135,14 +155,13 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
     /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :    
-    /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :        
 fi
 exit 0
 
 
 %clean
 if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
-rm -rf %{buildroot}
+rm -rf $RPM_BUILD_ROOT
 
 
 
@@ -156,19 +175,19 @@ rm -rf %{buildroot}
 %{_sbindir}/fts_server
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_cleaner
-%{_sbindir}/fts_info_publisher
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
-%attr(0755,root,root) %{_initddir}/fts-info-publisher
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
-%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
-%attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz
+%doc %{_docdir}/fts3/mysql-schema.sql
+%doc %{_docdir}/fts3/mysql-drop.sql
+%doc %{_docdir}/fts3/mysql_truncate.sql
+
 
 %files client
 %defattr(-,root,root,-)
@@ -191,8 +210,8 @@ rm -rf %{buildroot}
 %files libs
 %defattr(-,root,root,-)
 %{_bindir}/fts*
-%{python_sitearch}/fts/ftsdb.so*
 %{python_sitearch}/fts/libftspython.so*
+%{python_sitearch}/fts/ftsdb.so*
 %{_libdir}/libfts_common.so.*
 %{_libdir}/libfts_config.so.*
 %{_libdir}/libfts_db_generic.so.*
@@ -206,14 +225,20 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_delegation_api_simple.so.*
 %{_libdir}/libfts_delegation_api_cpp.so.*
 
+
+%files mysql
+%defattr(-,root,root,-)
+%{_libdir}/libfts_db_mysql.so.*
+
 %files devel
 %defattr(-,root,root,-)
 %{_bindir}/fts*
-%{python_sitearch}/fts/ftsdb.so
 %{python_sitearch}/fts/libftspython.so
+%{python_sitearch}/fts/ftsdb.so
 %{_libdir}/libfts_common.so
 %{_libdir}/libfts_config.so
 %{_libdir}/libfts_db_generic.so
+%{_libdir}/libfts_db_mysql.so
 %{_libdir}/libfts_msg_ifce.so
 %{_libdir}/libfts_proxy.so
 %{_libdir}/libfts_server_gsoap_transfer.so
@@ -224,7 +249,9 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_delegation_api_simple.so
 %{_libdir}/libfts_delegation_api_cpp.so
 
+%files all
+%defattr (-,root,root)
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-50
   - A bit like a fedora package
