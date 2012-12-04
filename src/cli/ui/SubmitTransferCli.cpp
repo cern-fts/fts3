@@ -51,7 +51,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("file,f", value<string>(&bulk_file), "Name of a configuration file.")
 			("gparam,g", value<string>(), "Gridftp parameters.")
 			("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
-			("myproxysrv,m", value<string>(), "MyProxy server to use.")
+//			("myproxysrv,m", value<string>(), "MyProxy server to use.")
 			("password,p", value<string>(), "MyProxy password to send with the job")
 			("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
 			("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
