@@ -732,7 +732,6 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
             std::string voName = r->getString(6);
             int fileCount = r->getInt(7);
             int priority = r->getInt(8);
-            std::string canceling = r->getString(9);
 
             j = new JobStatus();
             if (j) {
@@ -1147,10 +1146,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     int finishedDirty = 0;
     int numberOfFileInJob = 0;
     int numOfFilesInGivenState = 0;
-    int failedExistInJob = 0;
-    const std::string tag1 = "updateJobTransferStatus";
-    const std::string tag2 = "selectJobTransferStatus";
-    const std::string tag3 = "selectJobNotFinished";
+    int failedExistInJob = 0;   
     std::string update =
             "UPDATE t_job "
             "SET JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 "
@@ -1768,7 +1764,6 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
 
 void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) {
     TransferJobs* tr_jobs = NULL;
-    std::vector<TransferJobs*>::const_iterator iter;
     std::string tag = "getSubmittedJobsReuse";
     std::string query_stmt("");
 
@@ -1934,7 +1929,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     const std::string tag1 = "fetchOptimizationConfig2YYY";
     const std::string tag2 = "fetchOptimizationConfig2YYYXXX";
     const std::string tag3 = "fetchOptimizationConfig2ZZZZ";
-    const std::string tag4 = "111fetchOptimizationConfig2ZZZZ";
     const std::string tagMid = "midRangeTimeout";
     int foundNoThrouput = 0;
     int foundNoRecords = 0;
@@ -2125,7 +2119,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
     const std::string tag1 = "updateOptimizer1";
     const std::string tag2 = "updateOptimizer2";
-    const std::string tag3 = "updateOptimizer3";
     double throughput = 0;
     bool activeExists = false;
     int active = 0;
@@ -2138,7 +2131,6 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
     std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, when=:4, timeout=:5 "
             " WHERE nostreams = :6 and timeout=:7 and buffer=:8 and source_se=:9 and dest_se=:10 ";
 
-    std::string query3 = "select count(*) from t_optimize where source_se=:1 and dest_se=:2";
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
     oracle::occi::Statement* s2 = NULL;
