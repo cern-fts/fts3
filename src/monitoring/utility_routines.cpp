@@ -725,7 +725,7 @@ bool send_message(std::string & text)
 
         if(0 == fexists(path.c_str())){
 		qm = new QueueManager(false, FTS3_MQ_NAME_MON, true);
-		qm->msg_t_send(text.c_str());
+		qm->msg_send(text.c_str());
 	}
 	if(qm)	
 		delete qm;

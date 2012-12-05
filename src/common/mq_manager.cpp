@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "mq_manager.h"
+#include "common/logger.h"
+#include "common/error.h"
 #include <boost/scoped_ptr.hpp>
 
 using namespace boost::interprocess;
@@ -21,14 +23,14 @@ boost::scoped_ptr<message_queue> mq_;
 boost::scoped_ptr<message_queue> mq_mon;
 boost::scoped_ptr<message_queue> mq_updater;
 
+using namespace FTS3_COMMON_NAMESPACE;
+
 struct msg_message {
     char json[5120];
 };
 
 QueueManager::QueueManager(bool consumer) : drop_(false), init(false) {
-    //fts_server
-    if (consumer == true) {
-        //remove();
+    if (consumer == true) {        
         mq_.reset(new message_queue(create_only, FTS3_MQ_NAME, MAX_NUM_MSGS, sizeof (message)));
         std::string path = "/dev/shm/fts3mq";
         chmod(path.c_str(), 0777);
@@ -40,7 +42,6 @@ QueueManager::QueueManager(bool consumer) : drop_(false), init(false) {
 QueueManager::QueueManager(bool, bool consumer) : drop_(false), init(false) {
     const std::string path = "/dev/shm/fts3mqupdater";
     try {
-        //fts_server
         if (consumer == true) {
             mq_updater.reset(new message_queue(create_only, FTS3_MQ_NAME_UPDATER, MAX_NUM_MSGS, sizeof (message_updater)));
             chmod(path.c_str(), 0777);
@@ -55,9 +56,7 @@ QueueManager::QueueManager(bool, bool consumer) : drop_(false), init(false) {
 QueueManager::QueueManager(bool consumer, std::string, bool) : drop_(false), init(false) {
     const std::string path = "/dev/shm/fts3mqmon";
     try {
-        //fts_server
         if (consumer == true) {
-            //remove();
             mq_mon.reset(new message_queue(create_only, FTS3_MQ_NAME_MON, MAX_NUM_MSGS, sizeof (msg_message)));
             chmod(path.c_str(), 0777);
         } else { //fts_url_copy
@@ -71,12 +70,20 @@ QueueManager::QueueManager(bool consumer, std::string, bool) : drop_(false), ini
 QueueManager::~QueueManager() {
 }
 
-void QueueManager::sendUpdater(struct message_updater* msg) throw (boost::interprocess::interprocess_exception) {
-    try {
-        mq_updater->try_send(msg, sizeof (message_updater), 0);
-    } catch (interprocess_exception &ex) {
-        throw;
-    }
+void QueueManager::sendUpdater(struct message_updater* msg)  {
+       int counter = 0;
+       bool sent = false;
+       while(counter<5 && sent==false){
+    	try {
+        	sent = mq_updater->try_send(msg, sizeof (message_updater), 0);
+		usleep(1000);
+		counter++;
+	   }
+	catch (interprocess_exception &ex) {
+		usleep(1000);
+		counter++;
+    	}	   
+    } 
 }
 
 void QueueManager::receiveUpdater(struct message_updater* msg) throw (boost::interprocess::interprocess_exception) {
@@ -89,15 +96,23 @@ void QueueManager::receiveUpdater(struct message_updater* msg) throw (boost::int
     }
 }
 
-void QueueManager::send(struct message* msg) throw (interprocess_exception) {
-    try {
-        mq_->try_send(msg, sizeof (message), 0);
-    } catch (interprocess_exception &ex) {
-        throw;
-    }
+void QueueManager::send(struct message* msg) {
+       int counter = 0;
+       bool sent = false;
+       while(counter<5 && sent==false){
+    	try {
+        	sent = mq_->try_send(msg, sizeof (message), 0);
+		usleep(1000);
+		counter++;
+	   }
+	catch (interprocess_exception &ex) {        	
+		usleep(1000);
+		counter++;
+    	}	   
+    }     
 }
 
-void QueueManager::t_send(struct message* msg) throw (interprocess_exception) {
+void QueueManager::t_send(struct message* msg){
     try {
         boost::posix_time::ptime start(boost::posix_time::second_clock::local_time());
         boost::posix_time::ptime end = start + boost::posix_time::hours(1);
@@ -107,7 +122,7 @@ void QueueManager::t_send(struct message* msg) throw (interprocess_exception) {
     }
 }
 
-void QueueManager::receive(struct message* msg) throw (interprocess_exception) {
+void QueueManager::receive(struct message* msg) throw (boost::interprocess::interprocess_exception){
     unsigned int priority;
     std::size_t recvd_size;
     try {
@@ -117,18 +132,26 @@ void QueueManager::receive(struct message* msg) throw (interprocess_exception) {
     }
 }
 
-void QueueManager::msg_send(const char* msg) throw (interprocess_exception) {
-    try {
-        struct msg_message m;
-        strcpy(m.json, msg);
+void QueueManager::msg_send(const char* msg) {
+       int counter = 0;
+       bool sent = false;
+       struct msg_message m;
+       strcpy(m.json, msg);
 
-        mq_mon->try_send(&m, sizeof (msg_message), 0);
-    } catch (interprocess_exception &ex) {
-        throw;
-    }
+       while(counter<5 && sent==false){
+    	try {	
+        	sent = mq_mon->try_send(&m, sizeof (msg_message), 0);
+		usleep(1000);
+		counter++;
+	   }
+	catch (interprocess_exception &ex) {        	
+		usleep(1000);
+		counter++;
+    	}	   
+    }         
 }
 
-void QueueManager::msg_t_send(const char* msg) throw (interprocess_exception) {
+void QueueManager::msg_t_send(const char* msg){
     try {
         struct msg_message m;
         strcpy(m.json, msg);
