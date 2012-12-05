@@ -668,7 +668,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
     if (inGivenStates.size() > 0) {
         sel.append(" WHERE J.job_state IN (" + jobStatuses + ") ");
-        tag.append("5");
+        tag.append(jobStatuses);
     } else {
         sel.append(" WHERE J.job_state <> '0' ");
         tag.append("6");	
