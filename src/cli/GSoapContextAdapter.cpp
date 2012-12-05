@@ -500,11 +500,15 @@ void GSoapContextAdapter::getLog(string& logname, string jobId) {
 
 void GSoapContextAdapter::handleSoapFault(string msg) {
 
-	cout << "gsoap fault: ";
-
 	stringstream ss;
 	soap_stream_fault(ctx, ss);
-	cout << ss.str();
+
+	// replace the standard gSOAP error message before printing
+	cout << regex_replace (
+			ss.str(),
+			regex ("SOAP 1.1 fault: SOAP-ENV:Server\\[.*\\]\\\n"),
+			string()
+		);
 
 	regex re (".+CGSI-gSOAP running on .+ reports Error reading token data header: Connection closed.+");
 	if (regex_match(ss.str(), re)) {
