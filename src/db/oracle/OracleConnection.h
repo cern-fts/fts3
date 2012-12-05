@@ -50,7 +50,7 @@ public:
 /**
  * OracleConnection class dctr
  **/    
-    ~OracleConnection();
+    virtual ~OracleConnection();
 
 
 /**

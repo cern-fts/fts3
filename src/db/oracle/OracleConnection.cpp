@@ -109,10 +109,12 @@ bool OracleConnection::checkConn(){
 
 OracleConnection::~OracleConnection() {
     try {
-        if (conn)
-            env->terminateConnection(conn);
-        if (env)
-            oracle::occi::Environment::terminateEnvironment(env);
+        if (env){
+	   if(conn){
+             env->terminateConnection(conn);
+	   }
+	   oracle::occi::Environment::terminateEnvironment(env);
+        }
     } catch (oracle::occi::SQLException const &e) {
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));   
     } catch(...){           

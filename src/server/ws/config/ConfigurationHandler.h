@@ -43,7 +43,7 @@
 
 #include "db/generic/SingleDbInstance.h"
 
-#include "Configuration.h";
+#include "Configuration.h"
 
 namespace fts3 { namespace ws {
 
