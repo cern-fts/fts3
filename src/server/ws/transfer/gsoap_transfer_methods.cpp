@@ -59,8 +59,13 @@ int fts3::impltns__transferSubmit(soap *soap, tns3__TransferJob *_job, struct im
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit' request" << commit;
 
 	try {
-		// since submitting requires sometimes delegation we need authorization on the delegation level
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
+		// since submitting requires (sometimes) delegation we need authorization on the delegation level
+		AuthorizationManager::getInstance().authorize(
+				soap,
+				AuthorizationManager::DELEG,
+				AuthorizationManager::dummy
+			);
+
 		JobSubmitter submitter (soap, _job, false);
 		_param_3._transferSubmitReturn = submitter.submit();
 
@@ -80,7 +85,12 @@ int fts3::impltns__transferSubmit2(soap *soap, tns3__TransferJob *_job, struct i
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit2' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
+		AuthorizationManager::getInstance().authorize(
+				soap,
+				AuthorizationManager::DELEG,
+				AuthorizationManager::dummy
+			);
+
 		JobSubmitter submitter (soap, _job, true);
 		_param_4._transferSubmit2Return = submitter.submit();
 
@@ -100,7 +110,12 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'transferSubmit3' request" << commit;
 
 	try {
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::DELEG);
+		AuthorizationManager::getInstance().authorize(
+				soap,
+				AuthorizationManager::DELEG,
+				AuthorizationManager::dummy
+			);
+
 		JobSubmitter submitter (soap, _job);
 		_param_5._transferSubmit3Return = submitter.submit();
 
@@ -120,7 +135,6 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'listRequests' request" << commit;
 
 	try {
-		// todo the jobs should be listed accordingly to the authorization level
 		AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER);
 		RequestLister lister(soap, _inGivenStates);
 		_param_7._listRequestsReturn = lister.list(lvl);
