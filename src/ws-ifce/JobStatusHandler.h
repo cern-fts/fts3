@@ -79,7 +79,7 @@ public:
 	 *
 	 * @return true if the transfer is ready
 	 */
-	bool isTransferReady(string status);
+	bool isTransferFinished(string status);
 
 	/**
 	 * Check weather the given state is valid

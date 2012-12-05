@@ -37,7 +37,7 @@ JobStatusHandler::JobStatusHandler():
 	// the constant map is initialized in initializer list
 }
 
-bool JobStatusHandler::isTransferReady(string status) {
+bool JobStatusHandler::isTransferFinished(string status) {
 
 	to_upper(status);
 	map<string, JobStatusEnum>::const_iterator it = statusNameToId.find(status);

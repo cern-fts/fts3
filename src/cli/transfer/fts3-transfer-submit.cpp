@@ -93,7 +93,7 @@ int main(int ac, char* av[]) {
 			do {
 				sleep(2);
 				status = ctx.getTransferJobStatus(jobId);
-			} while (!JobStatusHandler::getInstance().isTransferReady(status.jobStatus));
+			} while (!JobStatusHandler::getInstance().isTransferFinished(status.jobStatus));
 		}
 
     } catch(std::exception& e) {
