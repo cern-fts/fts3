@@ -499,21 +499,21 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 					// if not throw an exception
 					if (!ptr.get()) throw Err_Custom("Transfer job: " + *it + "does not exist!");
 
-//					vector<JobStatus*> status;
-//					DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(*it, status);
-//
-//					if (!status.empty()) {
-//						// get transfer-job status
-//						string stat = status.begin()->jobStatus;
-//						// release the memory
-//						vector<JobStatus*>::iterator it_s;
-//						for (it_s = status.begin(); it_s != status.end(); it_s++) {
-//							delete *it_s;
-//						}
+					vector<JobStatus*> status;
+					DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(*it, status);
+
+					if (!status.empty()) {
+						// get transfer-job status
+						string stat = (*status.begin())->jobStatus;
+						// release the memory
+						vector<JobStatus*>::iterator it_s;
+						for (it_s = status.begin(); it_s != status.end(); it_s++) {
+							delete *it_s;
+						}
 						// check if transfer-job is finished
-//						if (JobStatusHandler::getInstance().isTransferFinished(stat))
-//							throw Err_Custom("Transfer job: " *it + "cannot be canceled (it is in " + stat + " state)");
-//					}
+						if (JobStatusHandler::getInstance().isTransferFinished(stat))
+							throw Err_Custom("Transfer job: " + *it + " cannot be canceled (it is in " + stat + " state)");
+					}
 
 					jobId += *it;
 					++it;
