@@ -511,8 +511,8 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 							delete *it_s;
 						}
 						// check if transfer-job is finished
-						if (JobStatusHandler::getInstance().isTransferFinished(stat))
-							throw Err_Custom("Transfer job: " *it + "cannot be canceled (it is in " + stat + " state)");
+//						if (JobStatusHandler::getInstance().isTransferFinished(stat))
+//							throw Err_Custom("Transfer job: " *it + "cannot be canceled (it is in " + stat + " state)");
 					}
 
 					jobId += *it;
