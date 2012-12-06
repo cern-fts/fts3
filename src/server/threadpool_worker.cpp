@@ -19,7 +19,6 @@ limitations under the License. */
 #include "StaticSslLocking.h"
 
 extern bool  stopThreads;
-extern int terminateJobsGracefully;
 
 FTS3_SERVER_NAMESPACE_START
 
