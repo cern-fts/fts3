@@ -43,6 +43,7 @@ limitations under the License. */
 
 extern bool stopThreads;
 
+
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -108,8 +109,7 @@ protected:
                 ThreadSafeList::get_instance().deleteMsg(pids);
                 pids.clear();
             }
-
-            sleep(50);
+            sleep(5);
         }
 
     }

@@ -19,6 +19,7 @@ limitations under the License. */
 #include "StaticSslLocking.h"
 
 extern bool  stopThreads;
+extern int terminateJobsGracefully;
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -31,29 +32,37 @@ using namespace FTS3_COMMON_NAMESPACE;
 Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id) 
 	: _tracer("ThreadPoolWorker", id)
 {	
-	tg.create_thread(boost::bind(&Worker::_doWork, this));		
+	thr = tg.create_thread(boost::bind(&Worker::_doWork, this));		
+}
+
+
+void Worker::cancel(){
+	boost::thread::native_handle_type hnd=thr->native_handle();
+	try{
+		pthread_cancel(hnd);
+	}catch(...){
+		throw;
+	}
 }
 
 /* ---------------------------------------------------------------------- */
 
 void Worker::_doWork() 
 {
-	
-	while(1) {
-          if(stopThreads)
-                return;
-
+	try{
+	while(stopThreads==false) {
 		_TIMEOUT().actualize();
 		ThreadPool::element_type task(ThreadPool::instance().pop(_TIMEOUT()));	
 
 		if (task.get() != NULL) 
-        {
-	    if(stopThreads) break;
+        {	    
             task->execute();
 			
 	}
 	}
-	
+	}catch(...){
+		throw;
+	}
 
 }
 

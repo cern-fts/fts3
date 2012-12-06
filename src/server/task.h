@@ -66,10 +66,13 @@ public:
 			_op();
 		} catch (const Err& e) {
 			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "FTS3 Server Exception in " << id() << commit;
+			throw;
 		} catch (const std::exception& e) {
 			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "C++ Exception in " << id() << e.what() << commit;
+			throw;
 		} catch (...) {
 			std::cerr << "Unknown exception " << std::endl;
+			throw;
 		}
 	}
 	

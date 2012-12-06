@@ -49,7 +49,21 @@ void ThreadPool::stop()
 {
 FTS3_COMMON_MONITOR_START_CRITICAL
 	_thgrp.interrupt_all();
-	//_thgrp.join_all();
+
+boost::ptr_vector<Worker>::iterator iter = _workers.begin();
+ 
+while (iter != _workers.end())
+{
+    if (!boost::is_null(iter))
+    {    	
+	iter = _workers.erase(iter);			
+	iter->cancel();		
+    }
+    else
+    {
+        ++iter;
+    }
+}
 FTS3_COMMON_MONITOR_END_CRITICAL
 }
 

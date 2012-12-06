@@ -33,7 +33,11 @@ class Worker
 public:
 	Worker(ThreadTraits::THREAD_GROUP& tg, const int id);	
 
-	virtual ~Worker() {};
+	virtual ~Worker() {}
+	
+	ThreadTraits::THREAD *thr;
+	
+	void cancel();	
 
 private:
 	void _doWork();

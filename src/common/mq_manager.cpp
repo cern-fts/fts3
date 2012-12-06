@@ -30,7 +30,7 @@ struct msg_message {
 };
 
 QueueManager::QueueManager(bool consumer) : drop_(false), init(false) {
-    if (consumer == true) {        
+    if (consumer == true) {
         mq_.reset(new message_queue(create_only, FTS3_MQ_NAME, MAX_NUM_MSGS, sizeof (message)));
         std::string path = "/dev/shm/fts3mq";
         chmod(path.c_str(), 0777);
@@ -70,88 +70,142 @@ QueueManager::QueueManager(bool consumer, std::string, bool) : drop_(false), ini
 QueueManager::~QueueManager() {
 }
 
-void QueueManager::sendUpdater(struct message_updater* msg)  {
-       int counter = 0;
-       bool sent = false;
-       while(counter<5 && sent==false){
-    	try {
-        	sent = mq_updater->try_send(msg, sizeof (message_updater), 0);
-		usleep(1000);
-		counter++;
-	   }
-	catch (interprocess_exception &ex) {
-		usleep(1000);
-		counter++;
-    	}	   
-    } 
-}
-
-void QueueManager::receiveUpdater(struct message_updater* msg) throw (boost::interprocess::interprocess_exception) {
-    unsigned int priority;
-    std::size_t recvd_size;
-    try {
-        mq_updater->receive(msg, sizeof (message_updater), recvd_size, priority);
-    } catch (interprocess_exception &ex) {
-        throw;
+void QueueManager::sendUpdater(struct message_updater* msg) {
+    int counter = 0;
+    bool sent = false;
+    while (counter < 5 && sent == false) {
+        try {
+            sent = mq_updater->try_send(msg, sizeof (message_updater), 0);
+            usleep(1000);
+            counter++;
+        } catch (interprocess_exception &ex) {
+            usleep(1000);
+            counter++;
+        } catch (...) {
+            usleep(1000);
+            counter++;
+        }
     }
 }
 
-void QueueManager::send(struct message* msg) {
-       int counter = 0;
-       bool sent = false;
-       while(counter<5 && sent==false){
-    	try {
-        	sent = mq_->try_send(msg, sizeof (message), 0);
-		usleep(1000);
-		counter++;
-	   }
-	catch (interprocess_exception &ex) {        	
-		usleep(1000);
-		counter++;
-    	}	   
-    }     
+bool QueueManager::receiveUpdater(struct message_updater* msg) {
+    unsigned int priority;
+    std::size_t recvd_size;
+    bool receive = false;
+
+        try {
+            receive = mq_updater->try_receive(msg, sizeof (message_updater), recvd_size, priority);
+	    usleep(20000);
+        } catch (interprocess_exception &ex) {
+	    usleep(20000);
+            receive = false;
+        } catch (...) {
+	    usleep(20000);
+            receive = false;
+        }
+ return receive;	  
 }
 
-void QueueManager::t_send(struct message* msg){
+void QueueManager::send(struct message* msg) {
+    int counter = 0;
+    bool sent = false;
+    while (counter < 5 && sent == false) {
+        try {
+            sent = mq_->try_send(msg, sizeof (message), 0);
+            usleep(1000);
+            counter++;
+        } catch (interprocess_exception &ex) {
+            usleep(1000);
+            counter++;
+        } catch (...) {
+            usleep(1000);
+            counter++;
+        }
+    }
+}
+
+
+
+bool QueueManager::receive(struct message* msg) {
+    unsigned int priority;
+    std::size_t recvd_size;
+    bool receive = false;
+
+        try {
+            receive = mq_->try_receive(msg, sizeof (message), recvd_size, priority);
+	    usleep(20000);
+        } catch (interprocess_exception &ex) {
+	    usleep(20000);
+            receive = false;
+        } catch (...) {
+	    usleep(20000);
+            receive = false;
+        }
+	
+ return receive;	
+}
+
+void QueueManager::msg_send(const char* msg) {
+    int counter = 0;
+    bool sent = false;
+    struct msg_message m;
+    strcpy(m.json, msg);
+
+    while (counter < 5 && sent == false) {
+        try {
+            sent = mq_mon->try_send(&m, sizeof (msg_message), 0);
+            usleep(1000);
+            counter++;
+        } catch (interprocess_exception &ex) {
+            usleep(1000);
+            counter++;
+        } catch (...) {
+            usleep(1000);
+            counter++;
+        }
+    }
+}
+
+
+
+void QueueManager::msg_receive(char* msg) {
+    unsigned int priority;
+    std::size_t recvd_size;
+    bool receive = false;
+
+    while (receive == false) {
+        try {
+            struct msg_message m;
+            receive = mq_mon->try_receive(&m, sizeof (msg_message), recvd_size, priority);
+            if (receive) {
+                strcpy(msg, m.json);
+            }
+	    usleep(1000);
+        } catch (interprocess_exception &ex) {
+            usleep(1000);
+            receive = false;
+        } catch (...) {
+            usleep(1000);
+            receive = false;
+        }
+    }
+}
+
+
+
+/*Next three are not in use for leave as placeholders*/
+void QueueManager::t_send(struct message* msg) {
     try {
         boost::posix_time::ptime start(boost::posix_time::second_clock::local_time());
         boost::posix_time::ptime end = start + boost::posix_time::hours(1);
         mq_->timed_send(msg, sizeof (message), 0, end);
     } catch (interprocess_exception &ex) {
-        throw;
+
     }
 }
 
-void QueueManager::receive(struct message* msg) throw (boost::interprocess::interprocess_exception){
-    unsigned int priority;
-    std::size_t recvd_size;
-    try {
-        mq_->receive(msg, sizeof (message), recvd_size, priority);
-    } catch (interprocess_exception &ex) {
-        throw;
-    }
-}
 
-void QueueManager::msg_send(const char* msg) {
-       int counter = 0;
-       bool sent = false;
-       struct msg_message m;
-       strcpy(m.json, msg);
-
-       while(counter<5 && sent==false){
-    	try {	
-        	sent = mq_mon->try_send(&m, sizeof (msg_message), 0);
-		usleep(1000);
-		counter++;
-	   }
-	catch (interprocess_exception &ex) {        	
-		usleep(1000);
-		counter++;
-    	}	   
-    }         
-}
-
-void QueueManager::msg_t_send(const char* msg){
+void QueueManager::msg_t_send(const char* msg) {
     try {
         struct msg_message m;
         strcpy(m.json, msg);
@@ -159,19 +213,7 @@ void QueueManager::msg_t_send(const char* msg){
         boost::posix_time::ptime end = start + boost::posix_time::minutes(1);
         mq_mon->timed_send(&m, sizeof (msg_message), 0, end);
     } catch (interprocess_exception &ex) {
-        throw;
-    }
-}
 
-void QueueManager::msg_receive(char* msg) throw (interprocess_exception) {
-    unsigned int priority;
-    std::size_t recvd_size;
-    try {
-        struct msg_message m;
-        mq_mon->receive(&m, sizeof (msg_message), recvd_size, priority);
-        strcpy(msg, m.json);
-    } catch (interprocess_exception &ex) {
-        throw;
     }
 }
 

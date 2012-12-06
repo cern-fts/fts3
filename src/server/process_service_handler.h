@@ -49,7 +49,7 @@ limitations under the License. */
 #include <sys/param.h>
 
 extern bool  stopThreads;
-extern int terminateJobsGracefully;
+
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
@@ -676,7 +676,6 @@ protected:
                         delete *iter2;
                     jobs2.clear();
                 }				
-			terminateJobsGracefully +=1;		       
 			return;
 		}
 	                  

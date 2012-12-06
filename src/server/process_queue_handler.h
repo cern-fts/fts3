@@ -32,7 +32,7 @@ limitations under the License. */
 #include <boost/scoped_ptr.hpp>
 
 extern bool stopThreads;
-extern int terminateJobsGracefully;
+
 
 using namespace boost::interprocess;
 FTS3_SERVER_NAMESPACE_START
@@ -106,13 +106,14 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
 
-        while (1) { /*need to receive more than one messages at a time*/
-            if (stopThreads) {
-                return;
-            }
+        while (stopThreads==false) { /*need to receive more than one messages at a time*/            
             try {
                 struct message msg;
-                qm->receive(&msg);
+                bool hasMessage = qm->receive(&msg);
+		if(hasMessage==false)
+			continue;		
+		
+		
                 std::string job = std::string(msg.job_id).substr(0, 36);
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << job
                         << "\nFile id: " << msg.file_id
@@ -161,8 +162,7 @@ protected:
                 FTS3_COMMON_EXCEPTION_THROW(e);
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
-            }
-            if (stopThreads) break;
+            }            
         }
     }
 

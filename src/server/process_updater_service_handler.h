@@ -42,7 +42,6 @@ limitations under the License. */
 #include <boost/interprocess/ipc/message_queue.hpp>
 
 extern bool stopThreads;
-extern int terminateJobsGracefully;
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
@@ -112,13 +111,12 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-        while (1) { /*need to receive more than one messages at a time*/
-            if (stopThreads) {
-                return;
-            }
+        while (stopThreads==false) { /*need to receive more than one messages at a time*/
             try {
                 struct message_updater msg;
-                qm->receiveUpdater(&msg);
+                bool hasMessage = qm->receiveUpdater(&msg);
+		if(hasMessage==false)
+			continue;
                 std::string job = std::string(msg.job_id).substr(0, 36);
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
                         << "\nJob id: " << job
@@ -132,8 +130,7 @@ protected:
                 FTS3_COMMON_EXCEPTION_THROW(e);
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
-            }
-            if (stopThreads) break;
+            }            
         }
     }
 

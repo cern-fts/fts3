@@ -41,7 +41,6 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
 bool stopThreads = false;
-int terminateJobsGracefully = 0;
 
 /* -------------------------------------------------------------------------- */
 
@@ -55,27 +54,28 @@ static int fexists(const char *filename) {
 void fts3_teardown_db_backend() {
     try {
         db::DBSingleton::tearDown();
-    }    catch (...) {
+    } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
         exit(1);
     }
 }
 
-
-
 void _handle_sigint(int) {
-    int doNotSleepForever = 10;
+    int doNotSleepForever = 4;
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     stopThreads = true;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    while(terminateJobsGracefully!=1 && 0 != --doNotSleepForever){
-    	sleep(1);
+    sleep(4);
+    theServer().stop();
+    while (0 != --doNotSleepForever) {
+        sleep(1);
     }
+
     fts3_teardown_db_backend();
     StaticSslLocking::kill_locks();
-    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;    
-    exit(EXIT_SUCCESS);
+    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
+    exit(0);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -155,6 +155,19 @@ int DoServer(int argc, char** argv) {
         }
 
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+        std::string arguments("");
+        size_t foundHelp;
+        if (argc > 1) {
+            int i;
+            for (i = 1; i < argc; i++) {
+                arguments += argv[i];
+            }
+            foundHelp = arguments.find("-h");
+            if (foundHelp != string::npos) {
+                exit(0);
+            }
+        }
+
         std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
         if (logDir.length() > 0) {
             logDir += "/fts3server.log";
@@ -207,9 +220,9 @@ int DoServer(int argc, char** argv) {
         sigemptyset(&action.sa_mask);
         action.sa_flags = SA_RESTART;
         res = sigaction(SIGINT, &action, NULL);
-	
+
         //initialize queue updater here to avoid race conditions  
-        ThreadSafeList::get_instance();	
+        ThreadSafeList::get_instance();
 
         std::string infosys = theServerConfig().get<std::string > ("Infosys");
         if (infosys.length() > 0) {
@@ -219,13 +232,11 @@ int DoServer(int argc, char** argv) {
         }
 
         theServer().start();
-        fts3_teardown_db_backend();
-        StaticSslLocking::kill_locks();
-    }    catch (Err& e) {
+    } catch (Err& e) {
         std::string msg = "Fatal error, exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
         return EXIT_FAILURE;
-    }    catch (...) {
+    } catch (...) {
         std::string msg = "Fatal error (unknown origin), exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
         return EXIT_FAILURE;
@@ -238,6 +249,7 @@ int main(int argc, char** argv) {
 
     std::string arguments("");
     size_t found;
+    size_t foundHelp;
     int d = 0;
     if (argc > 1) {
         int i;
@@ -245,13 +257,21 @@ int main(int argc, char** argv) {
             arguments += argv[i];
         }
         found = arguments.find("-n");
+        foundHelp = arguments.find("-h");
         if (found != string::npos) {
-	  {
-            DoServer(argc, argv);
-          }
-           pthread_exit(0);
+            {
+                DoServer(argc, argv);
+            }
+            pthread_exit(0);
             return EXIT_SUCCESS;
-        } else {
+        } else if (foundHelp != string::npos) {
+            {
+                DoServer(argc, argv);
+            }
+            pthread_exit(0);
+            return EXIT_SUCCESS;
+        }
+        else {
             d = daemon(0, 0);
             if (d < 0)
                 std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
@@ -285,7 +305,7 @@ int main(int argc, char** argv) {
                 exit(1);
             }
         }
-        sleep(15);
+        sleep(12);
     }
 
     return 0;
