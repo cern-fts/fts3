@@ -12,7 +12,7 @@
 class ShareConfig {
 public:
 	ShareConfig(){};
-	virtual ~ShareConfig(){};
+	~ShareConfig(){};
 
 	std::string source;
 	std::string destination;

@@ -14,7 +14,7 @@
 class LinkConfig {
 public:
 	LinkConfig(){};
-	virtual ~LinkConfig(){};
+	~LinkConfig(){};
 
 	std::string source;
 	std::string destination;

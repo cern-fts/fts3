@@ -56,12 +56,14 @@ static double round(double d)
 }
 */
 
-OracleAPI::OracleAPI() : conn(NULL), conv(NULL)  {
+OracleAPI::OracleAPI() : conn(NULL),  conn2(NULL), conv(NULL)  {
 }
 
 OracleAPI::~OracleAPI() {
     if (conn)
         delete conn;
+    if (conn2)
+        delete conn2;	
     if (conv)
         delete conv;
 }
@@ -69,6 +71,8 @@ OracleAPI::~OracleAPI() {
 void OracleAPI::init(std::string username, std::string password, std::string connectString) {
     if (!conn)
         conn = new OracleConnection(username, password, connectString);   	
+    if (!conn2)
+        conn2 = new OracleConnection(username, password, connectString);   		
     if (!conv)
         conv = new OracleTypeConversions();
 }
@@ -506,15 +510,15 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
             " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22)";
     const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex2);
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
     try {
-        if ( false == conn->checkConn() ){
+        if ( false == conn2->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}
 		
-        s_job_statement = conn->createStatement(job_statement, tag_job_statement);
+        s_job_statement = conn2->createStatement(job_statement, tag_job_statement);
         s_job_statement->setString(1, jobId); //job_id
         s_job_statement->setString(2, initial_state); //job_state
         s_job_statement->setString(3, paramFTP); //job_params
@@ -522,7 +526,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->setString(5, cred); //user_cred
         s_job_statement->setInt(6, 3); //priority
         s_job_statement->setString(7, voName); //vo_name
-        s_job_statement->setTimestamp(8, conv->toTimestamp(timed, conn->getEnv())); //submit_time
+        s_job_statement->setTimestamp(8, conv->toTimestamp(timed, conn2->getEnv())); //submit_time
         s_job_statement->setString(9, ""); //internal_job_params
         s_job_statement->setString(10, currenthost); //submit_host
         s_job_statement->setString(11, delegationID); //cred_id
@@ -547,7 +551,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
 
         //now insert each src/dest pair for this job id
         std::vector<src_dest_checksum_tupple>::const_iterator iter;
-        s_file_statement = conn->createStatement(file_statement, tag_file_statement);		
+        s_file_statement = conn2->createStatement(file_statement, tag_file_statement);		
         
 	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
             s_file_statement->setString(1, jobId);
@@ -557,19 +561,19 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
             s_file_statement->setString(5, iter->checksum);
             s_file_statement->executeUpdate();
         }
-        conn->commit();
-        conn->destroyStatement(s_job_statement, tag_job_statement);
-        conn->destroyStatement(s_file_statement, tag_file_statement);
+        conn2->commit();
+        conn2->destroyStatement(s_job_statement, tag_job_statement);
+        conn2->destroyStatement(s_file_statement, tag_file_statement);
     } catch (oracle::occi::SQLException const &e) {
-		if(conn) {
-			conn->rollback();
+		if(conn2) {
+			conn2->rollback();
 
 			if(s_job_statement){
-				conn->destroyStatement(s_job_statement, tag_job_statement);
+				conn2->destroyStatement(s_job_statement, tag_job_statement);
 			}
 
 			if(s_file_statement){
-				conn->destroyStatement(s_file_statement, tag_file_statement);
+				conn2->destroyStatement(s_file_statement, tag_file_statement);
 			}
 		}
 
@@ -587,17 +591,17 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     JobStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex2);
     try {
     
-        if ( false == conn->checkConn() ){
+        if ( false == conn2->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}    
     
-        s = conn->createStatement(query, tag);
+        s = conn2->createStatement(query, tag);
         s->setString(1, requestID);
         s->setString(2, requestID);
-        r = conn->createResultset(s);
+        r = conn2->createResultset(s);
         while (r->next()) {
             js = new JobStatus();
             js->jobID = r->getString(1);
@@ -611,15 +615,15 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
             js->numFiles = r->getInt(9);
             jobs.push_back(js);
         }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
+        conn2->destroyResultset(s, r);
+        conn2->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-		if(conn) {
-			conn->rollback();    
+		if(conn2) {
+			conn2->rollback();    
 			if(s && r)
-				conn->destroyResultset(s, r);
+				conn2->destroyResultset(s, r);
 			if (s)
-				conn->destroyStatement(s, tag);
+				conn2->destroyStatement(s, tag);
 		}
         throw Err_Custom(e.what());		
     }
@@ -698,15 +702,15 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
    oracle::occi::Statement* s = NULL;
    oracle::occi::ResultSet* r = NULL;
-   ThreadTraits::LOCK_R lock(_mutex);
+   ThreadTraits::LOCK_R lock(_mutex2);
    
     try {
     
-        if ( false == conn->checkConn() ){
+        if ( false == conn2->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}        
     
-        s = conn->createStatement(sel, tag);
+        s = conn2->createStatement(sel, tag);
         if (restrictToClientDN.length() > 0) {
             s->setString(cc++, restrictToClientDN);
             s->setString(cc++, restrictToClientDN);
@@ -722,7 +726,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         }
 
 
-        r = conn->createResultset(s);
+        r = conn2->createResultset(s);
         while (r->next()) {
             std::string jid = r->getString(1);
             std::string jstate = r->getString(2);
@@ -747,17 +751,17 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
             }
         }
 
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
+        conn2->destroyResultset(s, r);
+        conn2->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
-		if(conn) {
-			conn->rollback();    
+		if(conn2) {
+			conn2->rollback();    
 
 			if(s && r)
-				conn->destroyResultset(s, r);
+				conn2->destroyResultset(s, r);
 			if (s)
-				conn->destroyStatement(s, tag);
+				conn2->destroyStatement(s, tag);
 		}
         throw Err_Custom(e.what());		
     }
@@ -771,16 +775,16 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
     FileTransferStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex2);
     try {
     
-        if ( false == conn->checkConn() ){
+        if ( false == conn2->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}       
 	    
-        s = conn->createStatement(query, tag);
+        s = conn2->createStatement(query, tag);
         s->setString(1, requestID);
-        r = conn->createResultset(s);
+        r = conn2->createResultset(s);
         while (r->next()) {
             js = new FileTransferStatus();
             js->sourceSURL = r->getString(1);
@@ -792,16 +796,16 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
 
             files.push_back(js);
         }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
+        conn2->destroyResultset(s, r);
+        conn2->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-		if(conn) {
-			conn->rollback();    
+		if(conn2) {
+			conn2->rollback();    
 
 			if(s && r)
-				conn->destroyResultset(s, r);
+				conn2->destroyResultset(s, r);
 			if (s)
-				conn->destroyStatement(s, tag);
+				conn2->destroyStatement(s, tag);
 		}
         throw Err_Custom(e.what());	
     }

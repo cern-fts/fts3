@@ -214,9 +214,11 @@ public:
     virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo);
 
 private:
-	OracleConnection *conn;	
+	OracleConnection *conn;
+	OracleConnection *conn2;	
 	OracleTypeConversions *conv;
 	bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
 	OptimizerSample optimizerObject;
 	mutable ThreadTraits::MUTEX_R _mutex;
+	mutable ThreadTraits::MUTEX_R _mutex2;	
 };
