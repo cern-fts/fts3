@@ -73,7 +73,7 @@ QueueManager::~QueueManager() {
 void QueueManager::sendUpdater(struct message_updater* msg) {
     int counter = 0;
     bool sent = false;
-    while (counter < 5 && sent == false) {
+    while (counter < 50 && sent == false) {
         try {
             sent = mq_updater->try_send(msg, sizeof (message_updater), 0);
             usleep(1000);
@@ -109,7 +109,7 @@ bool QueueManager::receiveUpdater(struct message_updater* msg) {
 void QueueManager::send(struct message* msg) {
     int counter = 0;
     bool sent = false;
-    while (counter < 5 && sent == false) {
+    while (counter < 50 && sent == false) {
         try {
             sent = mq_->try_send(msg, sizeof (message), 0);
             usleep(1000);
@@ -151,7 +151,7 @@ void QueueManager::msg_send(const char* msg) {
     struct msg_message m;
     strcpy(m.json, msg);
 
-    while (counter < 5 && sent == false) {
+    while (counter < 50 && sent == false) {
         try {
             sent = mq_mon->try_send(&m, sizeof (msg_message), 0);
             usleep(1000);
