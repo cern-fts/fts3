@@ -209,7 +209,7 @@ protected:
                     int StreamsperFile = 0;
                     int Timeout = 0;
 		    std::stringstream internalParams;
-                    TransferFiles* temp = (TransferFiles*) * fileiter;
+                    TransferFiles* temp = (TransferFiles*) *fileiter;
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);
 		    
@@ -430,7 +430,7 @@ protected:
 		    if(stopThreads){
 			return;
 		    }
-                    TransferFiles* temp = (TransferFiles*) * fileiter;
+                    TransferFiles* temp = (TransferFiles*) *fileiter;
                     tempUrl = temp;
                     surl = temp->SOURCE_SURL;
                     durl = temp->DEST_SURL;
