@@ -31,11 +31,7 @@
 class SeProtocolConfig {
 public:
 
-    SeProtocolConfig() {
-        NOSTREAMS = 0;
-        TCP_BUFFER_SIZE = 0;
-        URLCOPY_TX_TO = 0;
-        NO_TX_ACTIVITY_TO = 0;
+    SeProtocolConfig(): symbolicName(""), NOSTREAMS(0),  TCP_BUFFER_SIZE(0), URLCOPY_TX_TO(0), NO_TX_ACTIVITY_TO(0){
     }
 
     ~SeProtocolConfig() {

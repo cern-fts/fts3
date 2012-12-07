@@ -104,7 +104,7 @@ bool ProtocolResolver::isGr(string name) {
 
 SeProtocolConfig* ProtocolResolver::getProtocolCfg(optional< pair<string, string> > link) {
 
-	if (!link) return 0;
+	if (!link) return NULL;
 
 	string source = (*link).first;
 	string destination = (*link).second;
@@ -169,7 +169,10 @@ optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l) {
 SeProtocolConfig* ProtocolResolver::resolve() {
 
 	// check if there's a SE pair configuration
-	SeProtocolConfig* ret = getProtocolCfg(link[SE_PAIR]);
+	SeProtocolConfig* ret = NULL;
+		
+	ret = getProtocolCfg(link[SE_PAIR]);
+	
 	if (ret) return ret;
 
 	// check if there is a SE group pair configuration

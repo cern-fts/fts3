@@ -147,13 +147,16 @@ protected:
         char *base_path = NULL;
         int base_port = 0;
         parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-        hostname = base_host;
+	if(base_host)
+	
+            hostname = std::string(base_host);
         if (base_scheme)
             free(base_scheme);
         if (base_host)
             free(base_host);
         if (base_path)
             free(base_path);
+	    
         return hostname;
     }
 
@@ -213,9 +216,7 @@ protected:
 		    
 		    /*check if manual config exist for this pair and vo*/
                 manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereJobShareConfig(temp->JOB_ID);
-				if(manualConfigExists){
-					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
-				}
+				
 			
                     bool optimize = false;
                     if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {		    	
@@ -460,10 +461,7 @@ protected:
 
 		   /*check if manual config exist for this pair and vo*/
                 manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereJobShareConfig(job_id);
-				if(manualConfigExists){
-					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Manual config is used: " << symbolicName << commit;
-				}
-		
+
 		bool optimize = false;
                
                 if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {

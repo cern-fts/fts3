@@ -122,8 +122,15 @@ std::string tcpbuffer_to_string("");
 std::string block_to_string("");
 std::string timeout_to_string("");
 extern std::string stackTrace;
-//boost::mutex guard;
 gfalt_params_t params;
+
+
+static int fexists(const char *filename) {
+    struct stat buffer;
+    if (stat(filename, &buffer) == 0) return 0;
+    return -1;
+}
+
 
 static std::string srmVersion(const std::string & url) {
     if (url.compare(0, 6, "srm://") == 0)
@@ -706,6 +713,16 @@ int main(int argc, char **argv) {
             log << fileManagement.timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
             log << fileManagement.timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
             log << fileManagement.timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
+	    
+	    if (fexists(proxy.c_str()) != 0) {
+	            errorMessage = "ERROR proxy doesn't exist, probably expired and not renewed " + proxy;
+                    errorScope = SOURCE;
+                    reasonClass = mapErrnoToString(errno);
+                    errorPhase = TRANSFER_PREPARATION;
+	    	    log << fileManagement.timestamp() << errorMessage << '\n';
+		    goto stop;
+	    }
+	    
 
             msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
