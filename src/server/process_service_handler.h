@@ -147,8 +147,7 @@ protected:
         char *base_path = NULL;
         int base_port = 0;
         parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-	if(base_host)
-	
+	if(base_host)	
             hostname = std::string(base_host);
         if (base_scheme)
             free(base_scheme);
