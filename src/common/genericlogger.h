@@ -144,7 +144,7 @@ public:
     /// Commits (writes) the actual log line.
 	void _commit()
     {
-    ThreadTraits::LOCK_R lock(_mutex);
+    //ThreadTraits::LOCK_R lock(_mutex);
         if ( _isLogOn &&
              ! _logLine.str().empty())
         {
@@ -204,7 +204,7 @@ public:
     template <typename T>
     GenericLogger& operator << (const T& aSrc)
     {
-    ThreadTraits::LOCK_R lock(_mutex);
+    //ThreadTraits::LOCK_R lock(_mutex);
 	    if (_isLogOn)
         {
 		    _logLine << aSrc;

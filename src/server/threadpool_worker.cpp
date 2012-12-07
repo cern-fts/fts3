@@ -38,7 +38,8 @@ Worker::Worker(ThreadTraits::THREAD_GROUP& tg, const int id)
 void Worker::cancel(){
 	boost::thread::native_handle_type hnd=thr->native_handle();
 	try{
-		pthread_cancel(hnd);
+	 	if(hnd)
+			pthread_cancel(hnd);
 	}catch(...){
 		throw;
 	}

@@ -37,7 +37,7 @@ FTS3_SERVER_NAMESPACE_START
 using namespace fts3::ws;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(string job_id) :	db(DBSingleton::instance().getDBObjectInstance()) {
+ProtocolResolver::ProtocolResolver(string &job_id) :	db(DBSingleton::instance().getDBObjectInstance()) {
 
 	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(job_id);
 	vector< tuple<string, string, string> >::iterator it;

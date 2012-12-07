@@ -65,7 +65,6 @@ public:
     /** Stop the service. */
     void stop() 
     {
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS3 server stopping...";
         TRAITS::ThreadPoolType::instance().stop();
         theLogger() << commit;
     }

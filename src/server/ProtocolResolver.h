@@ -80,7 +80,7 @@ public:
 	 *
 	 * @param job_id - transfer job ID
 	 */
-	ProtocolResolver(string job_id);
+	ProtocolResolver(string &job_id);
 
 	/**
 	 * Destructor.
