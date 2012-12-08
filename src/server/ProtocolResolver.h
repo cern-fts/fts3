@@ -85,14 +85,19 @@ public:
 	/**
 	 * Destructor.
 	 */
-	virtual ~ProtocolResolver();
+	~ProtocolResolver();
 
 	/**
 	 * Resolves the protocol parameters.
 	 *
 	 * @return an object containing protocol parameters (the memory has to be released by the user)
 	 */
-	SeProtocolConfig* resolve();
+	bool resolve();
+	
+        int NOSTREAMS;
+	int NO_TX_ACTIVITY_TO;
+	int TCP_BUFFER_SIZE;
+	int URLCOPY_TX_TO;	
 
 private:
 

@@ -178,7 +178,8 @@ protected:
         std::string destSiteName("");
         std::string source_hostname("");
         std::string destin_hostname("");
-        SeProtocolConfig* protocol = NULL;
+        SeProtocolConfig protocol;
+        bool protocolExists;	
         std::string proxy_file("");
         bool debug = false;
         OptimizerSample* opt_config = NULL;
@@ -238,14 +239,19 @@ protected:
 		    }else{
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
 		        ProtocolResolver resolver(temp->JOB_ID);
-		        protocol = resolver.resolve();
-			if(protocol){
-				if(protocol->NOSTREAMS > 0)
-					internalParams << "nostreams:" << protocol->NOSTREAMS;
-				if(protocol->URLCOPY_TX_TO > 0)
-					internalParams << ",timeout:"<< protocol->URLCOPY_TX_TO;
-				if(protocol->TCP_BUFFER_SIZE > 0)	
-					internalParams << ",buffersize:" << protocol->TCP_BUFFER_SIZE;
+		        protocolExists = resolver.resolve();			
+			if(protocolExists){
+				protocol.NOSTREAMS = resolver.NOSTREAMS;
+				protocol.NO_TX_ACTIVITY_TO = resolver.NO_TX_ACTIVITY_TO;
+				protocol.TCP_BUFFER_SIZE = resolver.TCP_BUFFER_SIZE;
+				protocol.URLCOPY_TX_TO = resolver.URLCOPY_TX_TO;
+			
+				if(protocol.NOSTREAMS > 0)
+					internalParams << "nostreams:" << protocol.NOSTREAMS;
+				if(protocol.URLCOPY_TX_TO > 0)
+					internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
+				if(protocol.TCP_BUFFER_SIZE > 0)	
+					internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
 			}else{
 				internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;			
 			}
@@ -319,9 +325,9 @@ protected:
                             params.append(" -e ");
                             params.append(to_string(StreamsperFile));
                         } else {
-                            if (protocol != NULL && protocol->NOSTREAMS > 0) {
+                            if (protocol.NOSTREAMS > 0) {
                                 params.append(" -e ");
-                                params.append(to_string(protocol->NOSTREAMS));
+                                params.append(to_string(protocol.NOSTREAMS));
                             }
                         }
 
@@ -329,9 +335,9 @@ protected:
                             params.append(" -f ");
                             params.append(to_string(BufSize));
                         } else {
-                            if (protocol != NULL && protocol->TCP_BUFFER_SIZE > 0) {
+                            if (protocol.TCP_BUFFER_SIZE > 0) {
                                 params.append(" -f ");
-                                params.append(to_string(protocol->TCP_BUFFER_SIZE));
+                                params.append(to_string(protocol.TCP_BUFFER_SIZE));
                             }
                         }
 
@@ -339,9 +345,9 @@ protected:
                             params.append(" -h ");
                             params.append(to_string(Timeout));
                         } else {
-                            if (protocol != NULL && protocol->URLCOPY_TX_TO > 0) {
+                            if (protocol.URLCOPY_TX_TO > 0) {
                                 params.append(" -h ");
-                                params.append(to_string(protocol->URLCOPY_TX_TO));
+                                params.append(to_string(protocol.URLCOPY_TX_TO));
                             }
                         }
                         if (std::string(temp->SOURCE_SPACE_TOKEN).length() > 0) {
@@ -377,9 +383,6 @@ protected:
 			}
                         params.clear();
                     }
-
-                    if (protocol)
-                        delete protocol;
                 }
 
                 /** cleanup resources */
@@ -494,14 +497,19 @@ protected:
 		    } else {
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
 		        ProtocolResolver resolver(job_id);
-		        protocol =  resolver.resolve();
-				if(protocol){
-					if(protocol->NOSTREAMS > 0)
-						internalParams << "nostreams:" << protocol->NOSTREAMS;
-					if(protocol->URLCOPY_TX_TO > 0)
-						internalParams << ",timeout:"<< protocol->URLCOPY_TX_TO;
-					if(protocol->TCP_BUFFER_SIZE > 0)
-						internalParams << ",buffersize:" << protocol->TCP_BUFFER_SIZE;
+		        protocolExists =  resolver.resolve();
+				if(protocolExists){
+				protocol.NOSTREAMS = resolver.NOSTREAMS;
+				protocol.NO_TX_ACTIVITY_TO = resolver.NO_TX_ACTIVITY_TO;
+				protocol.TCP_BUFFER_SIZE = resolver.TCP_BUFFER_SIZE;
+				protocol.URLCOPY_TX_TO = resolver.URLCOPY_TX_TO;
+				
+					if(protocol.NOSTREAMS > 0)
+						internalParams << "nostreams:" << protocol.NOSTREAMS;
+					if(protocol.URLCOPY_TX_TO > 0)
+						internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
+					if(protocol.TCP_BUFFER_SIZE > 0)
+						internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
 				}else{
 					internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
 				}
@@ -564,27 +572,27 @@ protected:
                         params.append(" -e ");
                         params.append(to_string(StreamsperFile));
                     } else {
-                        if (protocol != NULL && protocol->NOSTREAMS > 0) {
+                        if (protocol.NOSTREAMS > 0) {
                             params.append(" -e ");
-                            params.append(to_string(protocol->NOSTREAMS));
+                            params.append(to_string(protocol.NOSTREAMS));
                         }
                     }
                     if (optimize && manualConfigExists==false) {
                         params.append(" -f ");
                         params.append(to_string(BufSize));
                     } else {
-                        if (protocol != NULL && protocol->TCP_BUFFER_SIZE > 0) {
+                        if (protocol.TCP_BUFFER_SIZE > 0) {
                             params.append(" -f ");
-                            params.append(to_string(protocol->TCP_BUFFER_SIZE));
+                            params.append(to_string(protocol.TCP_BUFFER_SIZE));
                         }
                     }
                     if (optimize && manualConfigExists==false) {
                         params.append(" -h ");
                         params.append(to_string(Timeout));
                     } else {
-                        if (protocol != NULL && protocol->URLCOPY_TX_TO > 0) {
+                        if (protocol.URLCOPY_TX_TO > 0) {
                             params.append(" -h ");
-                            params.append(to_string(protocol->URLCOPY_TX_TO));
+                            params.append(to_string(protocol.URLCOPY_TX_TO));
                         }
                     }
                     if (std::string(source_space_token).length() > 0) {
@@ -624,8 +632,6 @@ protected:
                     params.clear();
                 }
 
-                if (protocol)
-                    delete protocol;
 
                 /** cleanup resources */
                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)

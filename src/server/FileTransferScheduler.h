@@ -66,7 +66,7 @@ public:
 	/**
 	 * Destructor
 	 */
-	virtual ~FileTransferScheduler();
+	~FileTransferScheduler();
 
 	/**
 	 * Makes the scheduling decision for the file that has been used to create the

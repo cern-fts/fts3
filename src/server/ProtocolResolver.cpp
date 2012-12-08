@@ -166,18 +166,33 @@ optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l) {
 	return optional< pair<string, string> >();
 }
 
-SeProtocolConfig* ProtocolResolver::resolve() {
+bool ProtocolResolver::resolve() {
 
 	// check if there's a SE pair configuration
 	SeProtocolConfig* ret = NULL;
 		
 	ret = getProtocolCfg(link[SE_PAIR]);
 	
-	if (ret) return ret;
+	if (ret){
+        	NOSTREAMS = ret->NOSTREAMS;
+		NO_TX_ACTIVITY_TO = ret->NO_TX_ACTIVITY_TO;
+		TCP_BUFFER_SIZE = ret->TCP_BUFFER_SIZE;
+		URLCOPY_TX_TO = ret->URLCOPY_TX_TO;			
+		delete ret;
+		return true;
+	}
 
 	// check if there is a SE group pair configuration
 	ret = getProtocolCfg(link[GROUP_PAIR]);
-	if (ret) return ret;
+	if (ret){
+        	NOSTREAMS = ret->NOSTREAMS;
+		NO_TX_ACTIVITY_TO = ret->NO_TX_ACTIVITY_TO;
+		TCP_BUFFER_SIZE = ret->TCP_BUFFER_SIZE;
+		URLCOPY_TX_TO = ret->URLCOPY_TX_TO;			
+		delete ret;
+		return true;
+	}
+
 
 	// get the first existing standalone source link from the list
 	optional< pair<string, string> > source_link = getFirst(
@@ -194,7 +209,15 @@ SeProtocolConfig* ProtocolResolver::resolve() {
 			getProtocolCfg(destination_link)
 		);
 
-	return ret;
+	if(ret){
+        	NOSTREAMS = ret->NOSTREAMS;
+		NO_TX_ACTIVITY_TO = ret->NO_TX_ACTIVITY_TO;
+		TCP_BUFFER_SIZE = ret->TCP_BUFFER_SIZE;
+		URLCOPY_TX_TO = ret->URLCOPY_TX_TO;			
+		delete ret;
+		return true;
+	}
+	return false;
 }
 
 FTS3_SERVER_NAMESPACE_END

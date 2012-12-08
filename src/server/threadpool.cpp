@@ -56,8 +56,8 @@ while (iter != _workers.end())
 {
     if (!boost::is_null(iter))
     {    	
-	iter = _workers.erase(iter);			
-	iter->cancel();		
+        //iter->cancel();	
+	iter = _workers.erase(iter);					
     }
     else
     {
