@@ -98,6 +98,7 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
         while (1) { /*need to receive more than one messages at a time*/
+	 try{
             if (stopThreads) {
                 ThreadSafeList::get_instance().clear();
                 return;
@@ -110,9 +111,11 @@ protected:
                 pids.clear();
             }
             sleep(5);
-        }
-
+        }catch (...) {
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message updater thrown unhandled exception"));
+            }            
     }
+  }
 
     /* ---------------------------------------------------------------------- */
     struct TestHelper {

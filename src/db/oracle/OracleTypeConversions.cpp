@@ -68,6 +68,8 @@ oracle::occi::Timestamp OracleTypeConversions::toTimestamp(time_t t, oracle::occ
         }
     } catch(const oracle::occi::SQLException& e){
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch(...){
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return timestamp;
@@ -83,7 +85,10 @@ longlong OracleTypeConversions::toLongLong(const ::oracle::occi::Number& number,
         }
     } catch(const oracle::occi::SQLException& e){
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch(...){
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
+    
     return n;
 }
 
@@ -99,6 +104,8 @@ oracle::occi::Number OracleTypeConversions::toNumber(longlong n, oracle::occi::E
         number.fromText(m_env,n_str,LONGLONG_FMT);
     } catch(const oracle::occi::SQLException& e){
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch(...){
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     return number;
 }
@@ -155,6 +162,8 @@ void OracleTypeConversions::toString(::oracle::occi::Clob clob, std::string& str
         }catch(...){}
         std::string reason = (std::string)"Failed to read clob: " + exc.getMessage();
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(reason));
+    }catch(...){
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 

@@ -161,7 +161,7 @@ protected:
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
             } catch (...) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown unhandled exception"));
             }            
         }
     }

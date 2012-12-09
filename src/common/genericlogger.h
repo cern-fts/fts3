@@ -21,6 +21,7 @@ limitations under the License. */
 #include "monitorobject.h"
 #include <iostream>
 #include <stdio.h>
+#include <time.h>
 
 
 FTS3_COMMON_NAMESPACE_START
@@ -76,12 +77,16 @@ public:
     }
     
     std::string timestamp() {
-    		std::string timestapStr("");
-    		time_t ltime; /* calendar time */
-    		ltime = time(NULL); /* get current cal time */
-    		timestapStr = asctime(localtime(&ltime));
-    		timestapStr.erase(timestapStr.end() - 1);
-    		return timestapStr + " ";
+	std::string timestapStr("");	
+        char timebuf[128] = "";        
+        // Get Current Time
+        time_t current;
+        time(&current);
+        struct tm local_tm;
+        localtime_r(&current, &local_tm);
+        timestapStr = std::string(asctime_r(&local_tm, timebuf));		    	
+    	timestapStr.erase(timestapStr.end() - 1);
+    	return timestapStr + " ";		
 	}
 
     std::string logLevelStringRepresentation(int loglevel) {
@@ -122,7 +127,7 @@ public:
     /// Switch logging on. Log messages will be displayed.
 	GenericLogger& setLogOn()
     {
-    ThreadTraits::LOCK_R lock(_mutex);
+    //ThreadTraits::LOCK_R lock(_mutex);
 	    _isLogOn = true;
         //Traits::openLog();
 	    return *this;
@@ -133,7 +138,7 @@ public:
     /// Switch log messages off. No log messages are displayed.
     GenericLogger& setLogOff()
     {
-    ThreadTraits::LOCK_R lock(_mutex);
+    //ThreadTraits::LOCK_R lock(_mutex);
 	    _isLogOn = false;
         //Traits::closeLog();
 	    return *this;
@@ -144,9 +149,8 @@ public:
     /// Commits (writes) the actual log line.
 	void _commit()
     {
-    //ThreadTraits::LOCK_R lock(_mutex);
-        if ( _isLogOn &&
-             ! _logLine.str().empty())
+    ThreadTraits::LOCK_R lock(_mutex);
+        if ( ! _logLine.str().empty())
         {
 	   fprintf(stderr, "%s\n",_logLine.str().c_str());
 	   fflush(stderr);
@@ -204,13 +208,11 @@ public:
     template <typename T>
     GenericLogger& operator << (const T& aSrc)
     {
-    //ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex);
 	    if (_isLogOn)
         {
 		    _logLine << aSrc;
         }
-
-
         return *this;
     }
 

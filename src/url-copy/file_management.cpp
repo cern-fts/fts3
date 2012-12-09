@@ -123,12 +123,16 @@ void FileManagement::setJobId(std::string& job_id) {
 }
 
 std::string FileManagement::timestamp() {
-    std::string timestapStr("");
-    time_t ltime; /* calendar time */
-    ltime = time(NULL); /* get current cal time */
-    timestapStr = asctime(localtime(&ltime));
-    timestapStr.erase(timestapStr.end() - 1);
-    return timestapStr + " ";
+	std::string timestapStr("");	
+        char timebuf[128] = "";        
+        // Get Current Time
+        time_t current;
+        time(&current);
+        struct tm local_tm;
+        localtime_r(&current, &local_tm);
+        timestapStr = std::string(asctime_r(&local_tm, timebuf));		    	
+    	timestapStr.erase(timestapStr.end() - 1);
+    	return timestapStr + " ";
 }
 
 bool FileManagement::directoryExists(const char* pzPath) {
