@@ -109,6 +109,22 @@ public:
 	char hostname[MAXHOSTNAMELEN];
         gethostname(hostname, MAXHOSTNAMELEN);
 	ftsHostName = std::string(hostname);
+	allowedVOs = std::string("");
+	const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
+	if(voNameList.size()>0 && std::string(voNameList[0]).compare("*")!=0){
+		std::vector<std::string>::const_iterator iterVO;
+		allowedVOs+="(";
+		for (iterVO = voNameList.begin(); iterVO != voNameList.end(); ++iterVO) {
+			allowedVOs+="'";
+			allowedVOs+=(*iterVO);
+			allowedVOs+="',";			
+		}
+		allowedVOs = allowedVOs.substr(0, allowedVOs.size()-1);
+		allowedVOs+=")";
+		boost::algorithm::to_lower(allowedVOs);
+	}
+	
+	
     }
 
     /* ---------------------------------------------------------------------- */
@@ -130,6 +146,7 @@ public:
 protected:
     SiteName siteResolver;
     std::string ftsHostName;
+    std::string allowedVOs;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
         std::vector<int>::const_iterator iter;
@@ -246,11 +263,11 @@ protected:
 				protocol.TCP_BUFFER_SIZE = resolver.TCP_BUFFER_SIZE;
 				protocol.URLCOPY_TX_TO = resolver.URLCOPY_TX_TO;
 			
-				if(protocol.NOSTREAMS > 0)
+				if(protocol.NOSTREAMS >= 0)
 					internalParams << "nostreams:" << protocol.NOSTREAMS;
-				if(protocol.URLCOPY_TX_TO > 0)
+				if(protocol.URLCOPY_TX_TO >= 0)
 					internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
-				if(protocol.TCP_BUFFER_SIZE > 0)	
+				if(protocol.TCP_BUFFER_SIZE >= 0)	
 					internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
 			}else{
 				internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;			
@@ -325,7 +342,7 @@ protected:
                             params.append(" -e ");
                             params.append(to_string(StreamsperFile));
                         } else {
-                            if (protocol.NOSTREAMS > 0) {
+                            if (protocol.NOSTREAMS >= 0) {
                                 params.append(" -e ");
                                 params.append(to_string(protocol.NOSTREAMS));
                             }
@@ -335,7 +352,7 @@ protected:
                             params.append(" -f ");
                             params.append(to_string(BufSize));
                         } else {
-                            if (protocol.TCP_BUFFER_SIZE > 0) {
+                            if (protocol.TCP_BUFFER_SIZE >= 0) {
                                 params.append(" -f ");
                                 params.append(to_string(protocol.TCP_BUFFER_SIZE));
                             }
@@ -345,7 +362,7 @@ protected:
                             params.append(" -h ");
                             params.append(to_string(Timeout));
                         } else {
-                            if (protocol.URLCOPY_TX_TO > 0) {
+                            if (protocol.URLCOPY_TX_TO >= 0) {
                                 params.append(" -h ");
                                 params.append(to_string(protocol.URLCOPY_TX_TO));
                             }
@@ -504,11 +521,11 @@ protected:
 				protocol.TCP_BUFFER_SIZE = resolver.TCP_BUFFER_SIZE;
 				protocol.URLCOPY_TX_TO = resolver.URLCOPY_TX_TO;
 				
-					if(protocol.NOSTREAMS > 0)
+					if(protocol.NOSTREAMS >= 0)
 						internalParams << "nostreams:" << protocol.NOSTREAMS;
-					if(protocol.URLCOPY_TX_TO > 0)
+					if(protocol.URLCOPY_TX_TO >= 0)
 						internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
-					if(protocol.TCP_BUFFER_SIZE > 0)
+					if(protocol.TCP_BUFFER_SIZE >= 0)
 						internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
 				}else{
 					internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
@@ -572,7 +589,7 @@ protected:
                         params.append(" -e ");
                         params.append(to_string(StreamsperFile));
                     } else {
-                        if (protocol.NOSTREAMS > 0) {
+                        if (protocol.NOSTREAMS >= 0) {
                             params.append(" -e ");
                             params.append(to_string(protocol.NOSTREAMS));
                         }
@@ -581,7 +598,7 @@ protected:
                         params.append(" -f ");
                         params.append(to_string(BufSize));
                     } else {
-                        if (protocol.TCP_BUFFER_SIZE > 0) {
+                        if (protocol.TCP_BUFFER_SIZE >= 0) {
                             params.append(" -f ");
                             params.append(to_string(protocol.TCP_BUFFER_SIZE));
                         }
@@ -590,7 +607,7 @@ protected:
                         params.append(" -h ");
                         params.append(to_string(Timeout));
                     } else {
-                        if (protocol.URLCOPY_TX_TO > 0) {
+                        if (protocol.URLCOPY_TX_TO >= 0) {
                             params.append(" -h ");
                             params.append(to_string(protocol.URLCOPY_TX_TO));
                         }
@@ -654,21 +671,6 @@ protected:
 	static bool drainMode = false;
 	static long double counter = 0;
 	static unsigned int countReverted = 0;
-	std::string allowedVOs("");
-	const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
-	if(voNameList.size()>0 && std::string(voNameList[0]).compare("*")!=0){
-		std::vector<std::string>::const_iterator iterVO;
-		allowedVOs+="(";
-		for (iterVO = voNameList.begin(); iterVO != voNameList.end(); ++iterVO) {
-			allowedVOs+="'";
-			allowedVOs+=(*iterVO);
-			allowedVOs+="',";			
-		}
-		allowedVOs = allowedVOs.substr(0, allowedVOs.size()-1);
-		allowedVOs+=")";
-		boost::algorithm::to_lower(allowedVOs);
-	}
-
 
         while (1) {
 	

@@ -217,6 +217,9 @@ bool ProtocolResolver::resolve() {
 		delete ret;
 		return true;
 	}
+	
+	if(ret)
+		delete ret;
 	return false;
 }
 
