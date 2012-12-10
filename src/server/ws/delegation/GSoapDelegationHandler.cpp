@@ -371,6 +371,8 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 	// lock the cache
 	mutex::scoped_lock lock(rqstCache);
 
+	time_t time = readTerminationTime(proxy);
+
 	// check if the proxy was not delegated in mean while by someone else
 	if (!rqstCache.check(delegationId)) {
 		// get the termination time of current proxy
@@ -380,12 +382,9 @@ void GSoapDelegationHandler::putProxy(string delegationId, string proxy) {
 			t = cred->termination_time;
 			delete cred;
 		}
-		// check if the termination time is greater than 6h (if there is no proxy it will be negative)
-		if (t - ::time(0) > 6 * 3600)return;
+		// check if the termination time is better than for the current proxy (if not we don't bother)
+		if (time > t) return;
 	}
-
-
-	time_t time = readTerminationTime(proxy);
 
 	string key;
 	CredCache* cache = DBSingleton::instance().getDBObjectInstance()->findGrDPStorageCacheElement(delegationId, dn);
