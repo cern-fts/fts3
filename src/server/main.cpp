@@ -36,6 +36,8 @@ limitations under the License. */
 #include <sys/wait.h>
 #include "queue_updater.h"
 
+#include "config/FileMonitor.h"
+
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -150,7 +152,7 @@ int DoServer(int argc, char** argv) {
             exit(1);
         }
 
-        FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+        FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
         std::string arguments("");
         size_t foundHelp;
         if (argc > 1) {

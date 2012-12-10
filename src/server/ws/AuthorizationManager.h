@@ -115,7 +115,7 @@ private:
 	/// 'config' string corresponding to configuration operations
 	static const string CONFIG_OP;
 	/// operation wild-card ('*') - covers all above operations
-	static const string WILD_CARD_OP;
+	static const string WILD_CARD;
 
 	/// the prefix corresponding to the 'roles' section
 	static const string ROLES_SECTION_PREFIX;
@@ -212,9 +212,9 @@ private:
 	AuthorizationManager& operator=(const AuthorizationManager&);
 
 	/// a set containing authorized VOs
-	const set<string> vos;
+	set<string> vos;
 	/// a map mapping roles to operations, for each operation access level is defined
-	const map<string, map<string, Level> > access;
+	map<string, map<string, Level> > access;
 
 	/**
 	 * Method used to initialize authorized VOs set
@@ -229,6 +229,8 @@ private:
 	 * @return access map
 	 */
 	map<string, map<string, Level> > accessInit();
+
+	time_t cfgReadTime;
 
 };
 

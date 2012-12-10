@@ -51,7 +51,7 @@ const string AuthorizationManager::DELEG_OP = "deleg";
 const string AuthorizationManager::TRANSFER_OP = "transfer";
 const string AuthorizationManager::CONFIG_OP = "config";
 
-const string AuthorizationManager::WILD_CARD_OP = "*";
+const string AuthorizationManager::WILD_CARD = "*";
 
 const string AuthorizationManager::ROLES_SECTION_PREFIX = "roles.";
 
@@ -104,7 +104,7 @@ map<string, map<string, AuthorizationManager::Level> > AuthorizationManager::acc
 	map<string, map<string, Level> > ret;
 
 	// roles.* is a regular expression for all role entries
-	map<string, string> rolerights = theServerConfig().get< map<string, string> > ("roles.*");
+	map<string, string> rolerights = theServerConfig().get< map<string, string> > (ROLES_SECTION_PREFIX + WILD_CARD);
 	if (!rolerights.empty()) {
 		map<string, string>::iterator it;
 		for (it = rolerights.begin(); it != rolerights.end(); it++) {
@@ -131,7 +131,10 @@ map<string, map<string, AuthorizationManager::Level> > AuthorizationManager::acc
 	return ret;
 }
 
-AuthorizationManager::AuthorizationManager() : vos(vostInit()), access(accessInit()) {
+AuthorizationManager::AuthorizationManager() :
+		vos(vostInit()),
+		access(accessInit()),
+		cfgReadTime(theServerConfig().getReadTime()) {
 
 }
 
@@ -181,7 +184,7 @@ AuthorizationManager::Level AuthorizationManager::check(string role, string oper
 	Level ret = NONE;
 
 	// check is there is a wild card
-	l_it = a_it->second.find(WILD_CARD_OP);
+	l_it = a_it->second.find(WILD_CARD);
 	if (l_it != a_it->second.end()) {
 		ret = l_it->second;
 	}
@@ -280,6 +283,14 @@ AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Oper
 }
 
 AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation op, string rsc_id) {
+
+	// check if the configuration file has been modified
+	if (cfgReadTime != theServerConfig().getReadTime()) {
+		// if yes we have to update the data
+		vos = vostInit();
+		access = accessInit();
+		cfgReadTime = theServerConfig().getReadTime();
+	}
 
 	Level grantedLvl = getGrantedLvl(ctx, op);
 	Level requiredLvl = getRequiredLvl(ctx, op, rsc_id);
