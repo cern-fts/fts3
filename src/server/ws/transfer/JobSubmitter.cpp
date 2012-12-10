@@ -341,7 +341,7 @@ void JobSubmitter::assignShareCfg(list<cfg_type> arg) {
 			continue;
 		}
 
-		throw Err_Custom("The link: " + source + "-" + destination + " has no share defined for your VO!");
+		// Handle no share defined for given VO if required!
 	}
 }
 
