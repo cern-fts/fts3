@@ -1,0 +1,80 @@
+from django.db import models
+
+class Job(models.Model):
+    job_id          = models.CharField(max_length = 36, primary_key = True)
+    job_state       = models.CharField(max_length = 32)
+    reuse_job       = models.CharField(max_length = 3)
+    cancel_job      = models.CharField(max_length = 1)
+    job_params      = models.CharField(max_length = 255)
+    submitHost      = models.CharField(max_length = 255)
+    source          = models.CharField(max_length = 255)
+    dest            = models.CharField(max_length = 255)
+    source_se       = models.CharField(max_length = 255)
+    dest_se         = models.CharField(max_length = 255)
+    user_dn         = models.CharField(max_length = 1024)
+    agent_dn        = models.CharField(max_length = 1024)
+    user_cred       = models.CharField(max_length = 255)
+    cred_id         = models.CharField(max_length = 100)
+    voms_cred       = models.CharField()
+    vo_name         = models.CharField(max_length = 50)
+    reason          = models.CharField(max_length = 2048)
+    submit_time     = models.DateTimeField()
+    finish_time     = models.DateTimeField()
+    priority        = models.IntegerField()
+    submit_host     = models.CharField(max_length = 255)
+    max_time_in_queue = models.IntegerField()
+    space_token     = models.CharField(max_length = 255)
+    storage_class   = models.CharField(max_length = 255)
+    myproxy_server  = models.CharField(max_length = 255)
+    src_catalog     = models.CharField(max_length = 1024)
+    src_catalog_type = models.CharField(max_length = 1024)
+    dest_catalog     = models.CharField(max_length = 1024)
+    dest_catalog_type = models.CharField(max_length = 1024)
+    internal_job_params = models.CharField(max_length = 255)
+    overwrite_flag  = models.CharField(max_length = 1)
+    job_finished    = models.DateTimeField()
+    source_space_token = models.CharField(max_length = 255)
+    source_token_description = models.CharField(max_length = 255) 
+    copy_pin_lifetime = models.IntegerField()
+    lan_connection  = models.CharField(max_length = 1)
+    fail_nearline   = models.CharField(max_length = 1)
+    checksum_method = models.CharField(max_length = 1)
+    
+    class Meta:
+        db_table = 't_job'
+        
+    def isFinished(self):
+        return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE']
+
+class File(models.Model):
+    file_id      = models.IntegerField(primary_key = True)
+    job          = models.ForeignKey('Job', db_column = 'job_id')
+    symbolicName = models.CharField(max_length = 255)
+    file_state   = models.CharField(max_length = 32)
+    transferHost = models.CharField(max_length = 255)
+    logical_name = models.CharField(max_length = 1100)
+    source_surl  = models.CharField(max_length = 1100)
+    dest_surl    = models.CharField(max_length = 1100)
+    agent_dn     = models.CharField(max_length = 1024)
+    error_scope  = models.CharField(max_length = 32)
+    error_phase  = models.CharField(max_length = 32)
+    reason_class = models.CharField(max_length = 32)
+    reason       = models.CharField(max_length = 2048)
+    num_failures = models.IntegerField()
+    current_failures  = models.IntegerField()
+    catalog_failures  = models.IntegerField()
+    prestage_failures = models.IntegerField()
+    filesize     = models.BigIntegerField()
+    checksum     = models.CharField(max_length = 100)
+    finish_time  = models.DateTimeField()
+    start_time   = models.DateTimeField()
+    internal_file_params = models.CharField(max_length = 255)
+    job_finished = models.DateTimeField()
+    pid          = models.IntegerField()
+    tx_duration  = models.FloatField()
+    throughput   = models.FloatField()
+    
+    class Meta:
+        db_table = 't_file'
+
+    

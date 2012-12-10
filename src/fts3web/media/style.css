@@ -1,0 +1,250 @@
+body {
+  background: white;
+  font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",sans-serif;
+  font-size: 12pt;
+  padding: 0;
+  padding-bottom: 2em;
+  margin: auto;
+  width: 95%;
+}
+
+a {
+  color: blue;
+}
+
+a:visited {
+  color: blue;
+}
+
+#header {
+  margin: 0;
+  padding: 0;
+}
+
+#header h1 img {
+  vertical-align: middle;
+}
+
+#header h1 a {
+  color: #406080;
+  text-decoration: none;
+}
+
+#header h1 a:hover {
+  text-decoration: underline;
+}
+
+#toolbox {
+  background: #406080;
+  text-align: left;
+  position: relative;
+  height: 1.5em;
+}
+
+#toolbox a {
+  color: white;
+}
+
+#toolbox a:visited {
+  color: white;
+}
+
+#toolbox div {
+  display: inline;
+  padding-left: 1em;
+}
+
+#toolbox form {
+  display: inline;
+}
+
+#toolbox #links {
+  font-size: 120%;
+}
+
+#links a {
+  padding-right: 1em;
+}
+
+#toolbox #filters {
+  position: absolute;
+  right: 0;
+}
+
+#jobSearchForm {
+  font-size: 80%;
+}
+
+#jobSearchForm input {
+  border: solid 1px;
+}
+
+#voDropBox {
+}
+
+#voDropBox label {
+  color: white;
+}
+
+#content {
+  
+}
+
+.reason {
+  font-family: mono;
+  border: dotted 1px black;
+  padding: 0.5em;
+  background: #FFFFCC;
+}
+
+.surl {
+  font-family: mono;
+}
+
+#content table {
+  width: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 95%;
+}
+
+th {
+  background: #CAE8EA;
+  padding: 0.2em;
+}
+
+td {
+  padding: 0.2em;
+}
+
+.jobList td {
+  text-align: center;
+}
+
+.jobList tr td:nth-child(1) {
+  text-align: left;
+}
+
+.jobList tr.FAILED td:nth-child(3) {
+  background: #FFAAAA;
+}
+
+.jobList tr.FINISHED td:nth-child(3) {
+  background: #AAFFAA
+}
+
+.jobList tr.SUBMITTED td:nth-child(3) {
+  background: #FFFFAA
+}
+
+.jobList tr.READY td:nth-child(3) {
+  background: #99FFFF
+}
+
+.jobList tr.ACTIVE td:nth-child(3) {
+  background: #AAAAFF
+}
+
+.jobList tr.FINISHEDDIRTY td:nth-child(3) {
+  background: #AAAAAA;
+}
+
+
+.jobList tr.CANCELED td:nth-child(3) {
+  background: #FF7777;
+}
+
+.details {
+  display: none;
+  background: #CCCCCC;
+}
+
+.showDetails {
+  cursor: pointer;
+}
+
+.fileList td {
+  text-align: center;
+}
+
+.fileList tr td:nth-child(1) {
+  text-align: left;
+}
+
+.fileList tr.FAILED td:nth-child(4) {
+  background: #FFAAAA;
+}
+
+.fileList tr.FINISHED td:nth-child(4) {
+  background: #AAFFAA
+}
+
+.fileList tr.SUBMITTED td:nth-child(4) {
+  background: #FFFFAA
+}
+
+.fileList tr.READY td:nth-child(4) {
+  background: #99FFFF
+}
+
+.fileList tr.ACTIVE td:nth-child(4) {
+  background: #AAAAFF
+}
+
+.fileList tr.FINISHEDDIRTY td:nth-child(4) {
+  background: #AAAAAA;
+}
+
+.fileList tr.CANCELED td:nth-child(4) {
+  background: #FF7777;
+}
+
+.statistics tr td:nth-child(1) {
+  font-weight: bold;
+  width: 10em;
+}
+
+.msgBox {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  margin-top: -7.5em;
+}
+
+.msgBox p {
+  font-size: 1500%;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+
+span.ACTIVE {
+  color: green;
+}
+
+span.SUBMITTED {
+  color: #ff6600;
+}
+
+span.READY {
+  color: blue;
+}
+
+tr.even {
+  background: #DDD;
+}
+
+h2 {
+  font-size: 120%;
+}
+
+h3 {
+  font-size: 110%;
+}
+
+h4 {
+  font-size: 100%;
+}

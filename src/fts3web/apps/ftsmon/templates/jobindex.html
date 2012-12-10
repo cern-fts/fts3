@@ -1,0 +1,112 @@
+{% load settingsTag %}
+{% load voDropBox %}
+{% load formatTimestamp %}
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <title>{% getSetting "SITE_NAME" %} FTS3</title>
+    
+    <link rel="stylesheet" href="{{ STATIC_URL }}style.css" type="text/css"/>
+    <link rel="shortcut icon" href="{% getSetting "SITE_LOGO_SMALL" %}"/>
+    
+    {% block refreshMeta %}
+    <meta http-equiv="refresh" content="5"/>
+    {% endblock %}
+    
+    <script type="text/javascript">
+    function toggleView(id)
+    {
+      var obj = document.getElementById("details_" + id);
+      var img = document.getElementById("toggle_" + id)
+      
+      if(obj.style.display != 'none') {
+        obj.style.display = 'none';
+        img.src = "{{STATIC_URL}}/plus.gif";
+      }
+      else {
+        obj.style.display = 'table-row';
+        img.src = "{{STATIC_URL}}/minus.gif";
+      }
+    }
+    </script>
+    
+  </head>
+  <body>
+    <div id="header">
+      <h1>
+        <img src="{% getSetting "SITE_LOGO" %}" alt="{% getSetting 'SITE_NAME' %}"/>
+        <a href="{% url ftsmon.views.jobIndex %}">{% getSetting "SITE_NAME" %} FTS3 Monitoring</a>
+      </h1>
+     </div>
+     <div id="toolbox">
+      <div id="links">
+        <a href="{% url ftsmon.views.jobIndex %}">Jobs</a>
+        <a href="{% url ftsmon.views.jobQueue %}">Queue</a>
+        <a href="{% url ftsmon.views.statistics %}">Statistics</a>
+      </div>
+      <div id="filters">
+        {% block voFilter %}
+          {% voDropBox %}
+        {% endblock %}
+        <div id="jobSearchForm">
+          <form method="get" action="{% url ftsmon.views.jobIndex %}">
+            <input type="text" name="jobId" size="64"/>
+            <input type="submit" value="Search job"/>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div id="content">
+      {% block content %}
+      <h2>Showing {{ jobs|length }} jobs {{ additionalTitle }}</h2>
+      <table class="jobList">
+        <thead>
+          <tr>
+            <th>JOB ID</th>
+            <th>SUBMIT TIME</th>
+            <th>JOB STATE</th>
+            <th>VO</th>
+            <th>SOURCE SE</th>
+            <th>DEST SE</th>
+            <th>SUBMISSION HOST</th>
+           </tr>
+        </thead>
+        <tbody>
+        {% for j in jobs %}
+          <tr class="{{ j.job_state }} {% cycle 'odd' 'even' %}">
+            <td>
+              <img class="showDetails" alt="[+]" src="{{ STATIC_URL }}plus.gif"
+                   title="Show details" onclick="toggleView('{{ j.job_id }}')"
+                   id="toggle_{{ j.job_id }}"/>
+              <a href="{% url ftsmon.views.jobDetails j.job_id %}">
+                {{ j.job_id }}
+              </a>
+            </td>
+            <td>{{ j.submit_time }}</td>
+            <td>{{ j.job_state }}</td>
+            <td>{{ j.vo_name }}</td>
+            <td>{{ j.source_se }}</td>
+            <td>{{ j.dest_se }}</td>
+            <td>{{ j.submitHost }}</td>
+           </tr>
+          <tr class="details" style="display: none" id="details_{{ j.job_id }}">
+            <td colspan="7">
+              <ul>
+                <li><b>Finish time:</b> {{ j.finish_time }}</li>
+                <li><b>User DN:</b> {{ j.user_dn }}</li>
+                {% if j.reason %}
+                <li><b>Reason:</b> {{ j.reason }}</li>
+                {% endif %}
+              </ul>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% endblock %}
+    </div>
+  </body>
+</html>
