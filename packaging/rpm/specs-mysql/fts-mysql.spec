@@ -58,7 +58,7 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_db_mysql.so*
 %doc %{_docdir}/fts3/mysql-schema.sql
 %doc %{_docdir}/fts3/mysql-drop.sql
-%doc %{_docdir}/fts3/mysql_truncate.sql
+%doc %{_docdir}/fts3/mysql-truncate.sql
 
 %changelog
  * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51

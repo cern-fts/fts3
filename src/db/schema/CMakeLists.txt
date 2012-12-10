@@ -51,6 +51,6 @@ install(FILES         oracle-schema.sql
 install(FILES         mysql-drop.sql
         DESTINATION ${DOC_INSTALL_DIR} )
 
-install(FILES         mysql_truncate.sql
+install(FILES         mysql-truncate.sql
         DESTINATION ${DOC_INSTALL_DIR} )
 endif ()
