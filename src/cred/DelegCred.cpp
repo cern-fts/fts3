@@ -29,6 +29,10 @@
 #include "SingleDbInstance.h"
 #include "common/logger.h"
 #include "common/error.h"
+#include <sys/types.h>
+#include <grp.h>
+#include <sys/stat.h>
+#include <pwd.h>
 
 using namespace FTS3_COMMON_NAMESPACE;
 using boost::scoped_ptr;
@@ -39,6 +43,23 @@ const char * const PROXY_NAME_PREFIX         = "x509up_h";
 }
 
 const std::string repository = "/tmp/";
+static uid_t privid;
+static uid_t pw_uid;
+
+uid_t name_to_uid(char const *name) {
+    if (!name)
+        return static_cast<uid_t>(-1);
+    long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
+    if (buflen == -1)
+        return static_cast<uid_t>(-1);
+
+    char buf[buflen];
+    struct passwd pwbuf, *pwbufp;
+    if (0 != getpwnam_r(name, &pwbuf, buf, static_cast<size_t>(buflen), &pwbufp)
+            || !pwbufp)
+        return static_cast<uid_t>(-1);
+    return pwbufp->pw_uid;
+}
 
 /*
  * DelegCred
@@ -70,6 +91,7 @@ void DelegCred::getNewCertificate(const std::string& userDn, const std::string& 
    
 	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Get the Cred Id " << cred_id << " " << userDn << commit;
         
+ 	
         // write the content of the certificate property into the file
         std::ofstream ofs(filename.c_str(), std::ios_base::binary);
 	
@@ -85,6 +107,13 @@ void DelegCred::getNewCertificate(const std::string& userDn, const std::string& 
         	ofs << cred->proxy.c_str();
         // Close the file
         ofs.close();
+ 	char user[ ] = "fts3";
+        uid_t pw_uid;
+        pw_uid = name_to_uid(user);
+        int checkChown = chown(filename.c_str(), pw_uid, getgid());
+	if(checkChown!=0){
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << filename << commit;
+	}
 	
 	if(cred)
 		delete cred;

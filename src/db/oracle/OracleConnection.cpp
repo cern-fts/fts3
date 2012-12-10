@@ -15,9 +15,9 @@ password_(password),  connectString_(connectString){
         }
     }catch (oracle::occi::SQLException const &e) {
 	FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-	throw Err_Custom(e.what());
+	//throw Err_Custom(e.what());
     }catch(...){
-        throw Err_Custom("Unknown exception");
+        //throw Err_Custom("Unknown exception");
     }
 }
 
@@ -32,7 +32,7 @@ void OracleConnection::initConn(){
 	if(env){
         	conn = env->createConnection(username_, password_, connectString_);
         	// SetStatement Cache Size
-        	conn->setStmtCacheSize(150);
+        	conn->setStmtCacheSize(300);
 	}
     } catch(const oracle::occi::SQLException& e){
         conn = NULL;
@@ -99,7 +99,7 @@ bool OracleConnection::checkConn(){
         if(false == isAlive()){
             // Dispose Context
             destroyConn();
-        
+            sleep(5);
             // Initialize Connection
             initConn();
             

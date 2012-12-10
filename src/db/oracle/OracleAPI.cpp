@@ -1198,11 +1198,12 @@ void OracleAPI::deleteSe(std::string NAME) {
 
 
 
-void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double
+bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double
         filesize, double duration) {
     job_id = "";
     unsigned int index = 1;
     double throughput = 0;
+    bool ok = true;
     std::string tag = "updateFileTransferStatus";
     std::stringstream query;
     query << "UPDATE t_file SET file_state=:" << 1 << ", REASON=:" << ++index;
@@ -1224,6 +1225,12 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     ThreadTraits::LOCK_R lock(_mutex3);
         
     try {
+       if (false == conn->checkConn()){
+       	    ok = false;
+            return ok;
+	}
+    
+    
         s = conn->createStatement(query.str(), tag);
         index = 1; //reset index
         s->setString(1, transfer_status);
@@ -1275,6 +1282,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+      	ok = false;
     } catch (...) {
 		if(conn) {
 			conn->rollback();
@@ -1283,10 +1291,13 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+      	ok = false;	
     }
+    
+    return ok;
 }
 
-void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status) {
+bool OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status) {
     file_id = "";
     std::string reason = "One or more files failed. Please have a look at the details for more information";
     const std::string terminal1 = "FINISHED";
@@ -1298,6 +1309,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     int numberOfFileInJob = 0;
     int numOfFilesInGivenState = 0;
     int failedExistInJob = 0;   
+    bool ok = true;
     std::string update =
             "UPDATE t_job "
             "SET JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 "
@@ -1323,8 +1335,10 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
     oracle::occi::ResultSet* r = NULL;
     try {
     
-        if (false == conn->checkConn())
-            return;    
+        if (false == conn->checkConn()){
+       	    ok = false;
+            return ok;    
+	}
     
         st = conn->createStatement(query, "");
         st->setString(1, job_id);
@@ -1401,7 +1415,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
         }
         finishedDirty = 0;
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-
+	ok = false;
     }catch (...) {
         if (conn) {
             conn->rollback();
@@ -1412,8 +1426,10 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
         }
         finishedDirty = 0;
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
-
+	ok = false;
     }
+   return ok; 
+    
 }
 
 void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
@@ -2434,11 +2450,12 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     }
 }
 
-void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+bool OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
     const std::string tag1 = "updateOptimizer1";
     const std::string tag2 = "updateOptimizer2";
     double throughput = 0;
     bool activeExists = false;
+    bool ok = true;
     int active = 0;
 
     std::string query1 = " select active from t_optimize where "
@@ -2456,8 +2473,10 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
     try {
 
 
-        if (false == conn->checkConn())
-            return;
+        if (false == conn->checkConn()){
+	    ok = false;
+            return ok;
+	}
 
         time_t now = std::time(NULL);
         s1 = conn->createStatement(query1, tag1);
@@ -2522,6 +2541,7 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
                 conn->destroyStatement(s2, tag2);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	    ok = false;	
     }catch (...) {
         if (conn) {
             conn->rollback();
@@ -2534,7 +2554,10 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
                 conn->destroyStatement(s2, tag2);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+	    ok = false;	
     }
+    
+    return ok;
 }
 
 void OracleAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int) {
@@ -3153,7 +3176,7 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
     }
 }
 
-void OracleAPI::terminateReuseProcess(const std::string & jobId) {
+bool OracleAPI::terminateReuseProcess(const std::string & jobId) {
     const std::string tag = "terminateReuseProcess";
     const std::string tag1 = "terminateReuseProcess11";
     std::string query = "select REUSE_JOB from t_job where job_id=:1 and REUSE_JOB is not null";
@@ -3162,11 +3185,14 @@ void OracleAPI::terminateReuseProcess(const std::string & jobId) {
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r = NULL;
     unsigned int updated = 0;
+    bool ok = true;
     ThreadTraits::LOCK_R lock(_mutex3);
 
     try {
-        if (false == conn->checkConn())
-            return;
+        if (false == conn->checkConn()){
+	    ok = false;
+            return ok;
+	}
 
         s = conn->createStatement(query, tag);
         s->setString(1, jobId);
@@ -3197,6 +3223,7 @@ void OracleAPI::terminateReuseProcess(const std::string & jobId) {
             	conn->destroyStatement(s1, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	    ok = false;	
     }catch (...) {
         if (conn) {
             conn->rollback();
@@ -3210,7 +3237,10 @@ void OracleAPI::terminateReuseProcess(const std::string & jobId) {
             	conn->destroyStatement(s1, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+	    ok = false;	
     }
+    
+    return ok;
 }
 
 void OracleAPI::setPid(const std::string & jobId, const std::string & fileId, int pid) {
@@ -3580,17 +3610,20 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
     }
 }
 
-void OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
+bool OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
     const std::string tag = "retryFromDead";
     std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2 and file_state not in ('FINISHED','FAILED','CANCELED')";
     oracle::occi::Statement* s = NULL;
     std::map<int, std::string>::const_iterator iter;
     unsigned int updated = 0;
+    bool isUpdated = true;
     ThreadTraits::LOCK_R lock(_mutex3);
 
     try {
-        if (false == conn->checkConn())
-            return;
+        if (false == conn->checkConn()){
+ 	    isUpdated  = false;
+            return isUpdated;
+	}
 
         s = conn->createStatement(query, tag);
         for (iter = pids.begin(); iter != pids.end(); ++iter) {
@@ -3610,6 +3643,7 @@ void OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	isUpdated = false;
     }catch (...) {
         if (conn) {
             conn->rollback();
@@ -3617,7 +3651,10 @@ void OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+	isUpdated = false;
     }
+    
+    return isUpdated;
 }
 
 void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn) {
@@ -5376,6 +5413,17 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
     return ret;
 }
 
+
+bool OracleAPI::checkConnectionStatus(){
+
+	bool alive = false;
+	try{
+		alive = conn->checkConn();
+	}catch(...){
+		alive = false;	
+	}
+   return alive;
+}
 
 // the class factories
 

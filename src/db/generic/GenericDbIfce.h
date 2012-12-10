@@ -113,9 +113,9 @@ public:
 
     virtual void deleteSe(std::string NAME) = 0;
        
-    virtual void updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration) = 0;    
+    virtual bool updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration) = 0;    
     
-    virtual void updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status) = 0;
+    virtual bool updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status) = 0;
     
     virtual void updateJObStatus(std::string jobId, const std::string status) = 0;  
     
@@ -151,7 +151,7 @@ public:
         
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) = 0;
     
-    virtual void updateOptimizer(std::string file_id , double filesize, int timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname) = 0;
+    virtual bool updateOptimizer(std::string file_id , double filesize, int timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname) = 0;
     
     virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers) = 0;    
     
@@ -165,7 +165,7 @@ public:
     
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) = 0;
     
-    virtual void terminateReuseProcess(const std::string & jobId) = 0;
+    virtual bool terminateReuseProcess(const std::string & jobId) = 0;
     
     virtual void forceFailTransfers() = 0;
     
@@ -183,7 +183,7 @@ public:
     
     virtual void forkFailedRevertStateV(std::map<int,std::string>& pids) = 0; 
     
-    virtual void retryFromDead(std::map<int,std::string>& pids) = 0;
+    virtual bool retryFromDead(std::map<int,std::string>& pids) = 0;
     
     virtual void blacklistSe(std::string se, std::string msg, std::string adm_dn) = 0;
 
@@ -248,6 +248,8 @@ public:
     virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo) = 0;
 
     virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo) = 0;
+    
+    virtual bool checkConnectionStatus() = 0;
 };
 
 

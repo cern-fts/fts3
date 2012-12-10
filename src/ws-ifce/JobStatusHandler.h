@@ -72,7 +72,7 @@ public:
 	/**
 	 * Destructor (empty).
 	 */
-	virtual ~JobStatusHandler() {};
+	virtual ~JobStatusHandler() {}
 
 	/**
 	 * Check whether the given status name indicates that a transfer is ready

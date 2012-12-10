@@ -672,8 +672,7 @@ protected:
 	static long double counter = 0;
 	static unsigned int countReverted = 0;
 
-        while (1) {
-	
+        while (1) {	
 	   	if(stopThreads){
 		if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::iterator iter2;

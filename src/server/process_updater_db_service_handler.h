@@ -103,12 +103,19 @@ protected:
                 ThreadSafeList::get_instance().clear();
                 return;
             }
+	    
+            bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
+	    if(!alive)
+		continue;		    
+	    
             std::map<int, std::string> pids;
             ThreadSafeList::get_instance().checkExpiredMsg(pids);
             if (!pids.empty()) {
-                DBSingleton::instance().getDBObjectInstance()->retryFromDead(pids); /*max retry 3 times*/
-                ThreadSafeList::get_instance().deleteMsg(pids);
-                pids.clear();
+                bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(pids); /*max retry 3 times*/
+		if(updated){
+                	ThreadSafeList::get_instance().deleteMsg(pids);
+                	pids.clear();
+		}
             }
             sleep(5);
         }catch (...) {
