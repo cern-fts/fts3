@@ -1,6 +1,5 @@
 TRUNCATE t_job_backup;
 TRUNCATE t_file_backup;
-TRUNCATE t_schema_vers;
 TRUNCATE t_stage_req;
 TRUNCATE t_file;
 TRUNCATE t_job_share_config;
@@ -15,7 +14,6 @@ TRUNCATE t_link_config;
 TRUNCATE t_group_members;
 TRUNCATE t_se_acl;
 TRUNCATE t_se;
-TRUNCATE t_credential_vers;
 TRUNCATE t_credential;
 TRUNCATE t_credential_cache;
 TRUNCATE t_debug;
