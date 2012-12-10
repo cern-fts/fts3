@@ -2530,7 +2530,7 @@ bool MySqlAPI::checkConnectionStatus() {
     bool couldConnect = false;
     try {
         soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
-        mysql_ping(static_cast<MYSQL*>(be->conn_));
+        couldConnect = (mysql_ping(static_cast<MYSQL*>(be->conn_)) == 0);
     }
     catch (std::exception& e) {
         // Pass
