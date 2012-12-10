@@ -159,8 +159,7 @@ protected:
 		if(!alive)
 			continue;
 			
-                if(!queueMsgRecovery.empty()){
-			std::cout << "11111111111111111111111" << std::endl;
+                if(!queueMsgRecovery.empty()){			
 			std::vector<struct message>::const_iterator iter;
 			for (iter = queueMsgRecovery.begin(); iter != queueMsgRecovery.end(); ++iter) {
 				bool dbUpdated = updateDatabase(*iter);
@@ -182,8 +181,7 @@ protected:
                         << "\nDest: " << msg.dest_se << commit;
 
 		bool dbUpdated = updateDatabase(msg);
-		if(!dbUpdated){
-			std::cout << "2222222222" << std::endl;
+		if(!dbUpdated){			
 			queueMsgRecovery.push_back(msg);
 		}
 
