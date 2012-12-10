@@ -77,7 +77,8 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
         sql.open(soci::mysql, connStr);
 
         soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
-        mysql_options(be->conn_, MYSQL_OPT_RECONNECT, &reconnect);
+        mysql_options(static_cast<MYSQL*>(be->conn_),
+                      MYSQL_OPT_RECONNECT, &reconnect);
     }
 }
 
@@ -2523,7 +2524,19 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
     return nActiveInbound;
 }
 
-bool MySqlAPI::checkConnectionStatus(){
+bool MySqlAPI::checkConnectionStatus() {
+    soci::session sql(connectionPool);
+
+    bool couldConnect = false;
+    try {
+        soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
+        mysql_ping(static_cast<MYSQL*>(be->conn_));
+    }
+    catch (std::exception& e) {
+        // Pass
+    }
+
+    return couldConnect;
 }
 
 // the class factories
