@@ -572,7 +572,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
             " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22)";
     const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
-    ThreadTraits::LOCK_R lock(_mutex2);
+    ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
     try {
@@ -667,7 +667,7 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     JobStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
-    ThreadTraits::LOCK_R lock(_mutex2);
+    ThreadTraits::LOCK_R lock(_mutex);
     try {
     
         if ( false == conn->checkConn() ){
@@ -787,7 +787,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
    oracle::occi::Statement* s = NULL;
    oracle::occi::ResultSet* r = NULL;
-   ThreadTraits::LOCK_R lock(_mutex2);
+   ThreadTraits::LOCK_R lock(_mutex);
    
     try {
     
@@ -870,7 +870,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
     FileTransferStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
-    ThreadTraits::LOCK_R lock(_mutex2);
+    ThreadTraits::LOCK_R lock(_mutex);
     try {
     
         if ( false == conn->checkConn() ){
@@ -1222,7 +1222,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     query << " WHERE file_id =:" << ++index;
     query << " and (file_state='READY' OR file_state='ACTIVE')";
     oracle::occi::Statement* s = NULL;
-    ThreadTraits::LOCK_R lock(_mutex3);
+    ThreadTraits::LOCK_R lock(_mutex);
         
     try {
        if (false == conn->checkConn()){
@@ -1330,7 +1330,7 @@ bool OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
             "UPDATE t_file "
             "SET JOB_FINISHED=:1 "
             "WHERE job_id=:2 ";
-    ThreadTraits::LOCK_R lock(_mutex3);
+    ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* st = NULL;	    
     oracle::occi::ResultSet* r = NULL;
     try {
@@ -2469,7 +2469,7 @@ bool OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
     oracle::occi::Statement* s2 = NULL;
-    ThreadTraits::LOCK_R lock(_mutex3);
+    ThreadTraits::LOCK_R lock(_mutex);
     try {
 
 
@@ -3061,7 +3061,7 @@ void OracleAPI::forceFailTransfers() {
             time_t lifetime = std::time(NULL);
 	    vmHostname = r->getString(6);
             diff = difftime(lifetime, start_time);
-            if (timeout != 0 && diff > (timeout + 1000)) {
+            if (timeout != 0 && diff > (timeout + 2000)) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;
                 std::stringstream ss;
                 ss << file_id;
@@ -3186,7 +3186,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId) {
     oracle::occi::ResultSet* r = NULL;
     unsigned int updated = 0;
     bool ok = true;
-    ThreadTraits::LOCK_R lock(_mutex3);
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn()){
@@ -3361,7 +3361,7 @@ void OracleAPI::revertToSubmitted() {
             reuseFlag = r2->getString(4);
             time_t current_time = std::time(NULL);
             diff = difftime(current_time, start_time);
-            if (diff > 15000) { /*~5h*/
+            if (diff > 500) { 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1);
                 s1->setInt(1, file_id);
@@ -3617,7 +3617,7 @@ bool OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
     std::map<int, std::string>::const_iterator iter;
     unsigned int updated = 0;
     bool isUpdated = true;
-    ThreadTraits::LOCK_R lock(_mutex3);
+    ThreadTraits::LOCK_R lock(_mutex);
 
     try {
         if (false == conn->checkConn()){
@@ -5416,6 +5416,7 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
 
 bool OracleAPI::checkConnectionStatus(){
 
+	ThreadTraits::LOCK_R lock(_mutex);
 	bool alive = false;
 	try{
 		alive = conn->checkConn();

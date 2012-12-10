@@ -702,7 +702,7 @@ protected:
                             counter=0;
                     }
                     countReverted++;
-                    if(countReverted==1000){
+                    if(countReverted==100){
                             DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                             countReverted=0;
                     }

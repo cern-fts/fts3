@@ -153,6 +153,7 @@ protected:
     void executeTransfer_a() {
 
         while (stopThreads==false) { /*need to receive more than one messages at a time*/            
+	    struct message msg;
             try {
 	    
 	        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
@@ -166,8 +167,7 @@ protected:
 			}			
 			queueMsgRecovery.clear();	
 		}
-	    
-                struct message msg;
+	                    
                 bool hasMessage = qm->receive(&msg);
 		if(hasMessage==false)
 			continue;		
@@ -187,10 +187,13 @@ protected:
 
             } catch (interprocess_exception &ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+		queueMsgRecovery.push_back(msg);
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
+		queueMsgRecovery.push_back(msg);
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown unhandled exception"));
+		queueMsgRecovery.push_back(msg);
             }            
         }
     }

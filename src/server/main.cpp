@@ -193,8 +193,8 @@ int DoServer(int argc, char** argv) {
             exit(1);
         }
 
-        set_terminate(myterminate);
-        set_unexpected(myunexpected);
+        //set_terminate(myterminate);
+        //set_unexpected(myunexpected);
 
         if (res == -1) {
             FTS3_COMMON_EXCEPTION_THROW(Err_System());
