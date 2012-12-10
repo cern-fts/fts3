@@ -163,7 +163,7 @@ protected:
                 if(!queueMsgRecovery.empty()){			
 			std::vector<struct message>::const_iterator iter;
 			for (iter = queueMsgRecovery.begin(); iter != queueMsgRecovery.end(); ++iter) {
-				bool dbUpdated = updateDatabase(*iter);
+				updateDatabase(*iter);
 			}			
 			queueMsgRecovery.clear();	
 		}
