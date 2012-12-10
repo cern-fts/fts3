@@ -30,8 +30,22 @@ BuildRequires:  python-devel%{?_isa}
 BuildRequires:  pugixml-devel%{?_isa}
 Requires(pre):  shadow-utils
 
+
 %description
 The File Transfer Service V3
+
+%package webmonitoring
+Summary: FTS3 Web Application for monitoring
+Group: Applications/Internet
+Requires: cx_Oracle
+Requires: Django
+Requires: httpd
+Requires: mod_wsgi
+Requires: MySQL-python
+Requires: python
+
+%description webmonitoring
+FTS3 Web Application for monitoring
 
 %package devel
 Summary: Development files for File Transfer Service V3
@@ -40,7 +54,6 @@ Requires: fts-libs = %{version}-%{release}
 
 %description devel
 Development files for File Transfer Service V3
-
 
 %package server
 Summary: File Transfer Service version 3 server
@@ -85,11 +98,14 @@ make %{?_smp_mflags}
 %install
 cd build
 rm -rf %{buildroot}
-if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/log/fts3
 make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
+mkdir -p %{buildroot}%{_datadir}/fts3web
+mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
+cp -dr --no-preserve=ownership %{_builddir}/%{name}-%{version}/src/fts3web %{buildroot}%{_datadir}/fts3web/
+install -m 644 %{_builddir}/%{name}-%{version}/src/fts3web/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/
 
 %pre server
 getent group fts3 >/dev/null || groupadd -r fts3
@@ -141,7 +157,6 @@ exit 0
 
 
 %clean
-if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi 
 rm -rf %{buildroot}
 
 
@@ -223,6 +238,11 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_ws_ifce_server.so
 %{_libdir}/libfts_delegation_api_simple.so
 %{_libdir}/libfts_delegation_api_cpp.so
+
+%files webmonitoring
+%defattr(-,root,root,-)
+%{_datadir}/fts3web
+%{_sysconfdir}/httpd/conf.d/
 
 
 %changelog
