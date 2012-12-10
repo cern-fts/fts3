@@ -7,10 +7,12 @@
 #include <CredCache.h>
 #include <FileTransferStatus.h>
 #include <JobStatus.h>
+#include <LinkConfig.h>
 #include <Se.h>
 #include <SeAndConfig.h>
 #include <SeGroup.h>
 #include <SeProtocolConfig.h>
+#include <ShareConfig.h>
 #include <TransferJobs.h>
 #include <soci.h>
 #include <time.h>
@@ -152,6 +154,7 @@ namespace soci
             job.submitTime = timegm(&aux_tm);
             job.priority   = v.get<int>("priority");
             job.voName     = v.get<std::string>("vo_name");
+            job.numFiles   = v.get<int>("numFiles");
 
             try {
                 job.fileStatus = v.get<std::string>("file_state");
@@ -207,13 +210,25 @@ namespace soci
         typedef values base_type;
 
         static void from_base(values const& v, indicator, SeConfig& config) {
-            config.source     = v.get<std::string>("source");
+            config.source         = v.get<std::string>("source");
             config.destination    = v.get<std::string>("dest");
-            config.vo  = v.get<std::string>("vo");
-            config.symbolicName = v.get<std::string>("symbolicName");
-            config.state = v.get<std::string>("state");	    
+            config.vo             = v.get<std::string>("vo");
+            config.symbolicName   = v.get<std::string>("symbolicName");
+            config.state          = v.get<std::string>("state");
         }
 
+    };
+
+    template <>
+    struct type_conversion<ShareConfig> {
+        typedef values base_type;
+
+        static void from_base(values const& v, indicator, ShareConfig& config) {
+            config.source           = v.get<std::string>("source");
+            config.destination      = v.get<std::string>("destination");
+            config.vo               = v.get<std::string>("vo");
+            config.active_transfers = v.get<int>("active");
+        }
     };
 
     template <>
@@ -226,5 +241,21 @@ namespace soci
           grp.member       = v.get<std::string>("member");
           grp.symbolicName = v.get<std::string>("symbolicName");
       }
+    };
+
+    template <>
+    struct type_conversion<LinkConfig> {
+        typedef values base_type;
+
+        static void from_base(values const& v, indicator, LinkConfig& lnk) {
+            lnk.source            = v.get<std::string>("source");
+            lnk.destination       = v.get<std::string>("destination");
+            lnk.state             = v.get<std::string>("state");
+            lnk.symbolic_name     = v.get<std::string>("symbolicName");
+            lnk.NOSTREAMS         = v.get<int>("nostreams");
+            lnk.TCP_BUFFER_SIZE   = v.get<int>("tcp_buffer_size");
+            lnk.URLCOPY_TX_TO     = v.get<int>("urlcopy_tx_to");
+            lnk.NO_TX_ACTIVITY_TO = v.get<int>("no_tx_activity_to");
+        }
     };
 }
