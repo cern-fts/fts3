@@ -26,7 +26,7 @@ file(GLOB fts_config "*.cpp")
 #add_definitions(-E)
 add_library(fts_config SHARED ${fts_config})
 #target_link_libraries(fts_config ${Boost_LIBRARIES} )
-target_link_libraries(fts_config -lboost_program_options-mt -lboost_regex-mt)
+target_link_libraries(fts_config -lboost_program_options-mt -lboost_regex-mt -lboost_thread-mt)
 set_target_properties(fts_config                PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/config

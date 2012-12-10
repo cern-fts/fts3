@@ -18,11 +18,15 @@ limitations under the License. */
 #pragma once
 
 #include "config_dev.h"
+#include "FileMonitor.h"
+
 #include <map>
 #include <vector>
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/thread.hpp>
+
 
 FTS3_CONFIG_NAMESPACE_START
 
@@ -47,7 +51,8 @@ public:
     void read
     (
         int argc, /**< The command line arguments (from main) */
-        char** argv /**< The command line arguments (from main) */
+        char** argv, /**< The command line arguments (from main) */
+        bool monitor = false
     );
 
     /* ---------------------------------------------------------------------- */
@@ -92,8 +97,11 @@ protected:
         char** argv /**< The command line arguments (from main) */
     )
     {
-         READER_TYPE reader;
-        _vars = reader(argc, argv);
+		READER_TYPE reader;
+		waitIfGetting();
+		_vars = reader(argc, argv);
+		readTime = time(0);
+		notifyGetters();
     }
 
     /* ---------------------------------------------------------------------- */
@@ -113,6 +121,46 @@ protected:
     
     /** The internal store of config variables. */
     _t_vars _vars;
+
+    /// configuration file monitor
+    FileMonitor cfgmonitor;
+
+    ///
+    bool reading;
+    ///
+    int getting;
+
+    ///
+	mutex qm;
+	///
+	condition_variable qv;
+
+	time_t readTime;
+
+	/**
+	 *
+	 */
+	void waitIfReading();
+
+	/**
+	 *
+	 */
+	void notifyReaders();
+
+	/**
+	 *
+	 */
+	void waitIfGetting();
+
+	/**
+	 *
+	 */
+	void notifyGetters();
+
+public:
+	time_t getReadTime() {
+		return readTime;
+	}
 };
 
 /* ========================================================================== */
@@ -127,14 +175,19 @@ inline ServerConfig& theServerConfig()
 template <typename RET>
 RET ServerConfig::get (const std::string& aVariable /**< A config variable name. */) {
 
+	waitIfReading();
 	const std::string& str = _get_str(aVariable);
+	notifyReaders();
+
 	return boost::lexical_cast<RET>(str);
 }
 
 template <>
 inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (const std::string& aVariable /**< A config variable name. */) {
 
+	waitIfReading();
 	const std::string& str = _get_str(aVariable);
+	notifyReaders();
 
 	boost::char_separator<char> sep(";");
 	boost::tokenizer< boost::char_separator<char> > tokens(str, sep);
@@ -154,12 +207,16 @@ inline std::map<std::string, std::string> ServerConfig::get< std::map<std::strin
 	std::map<std::string, std::string> ret;
 	boost::regex re(aVariable);
 
+	waitIfReading();
+
 	_t_vars::iterator it;
 	for (it = _vars.begin(); it != _vars.end(); it++) {
 		if (boost::regex_match(it->first, re)) {
 			ret[it->first] = it->second;
 		}
 	}
+
+	notifyReaders();
 
 	return ret;
 }

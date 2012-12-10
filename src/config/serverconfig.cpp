@@ -33,7 +33,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 /* ---------------------------------------------------------------------- */
 
-ServerConfig::ServerConfig()
+ServerConfig::ServerConfig() : cfgmonitor (this), getting(0), reading(0)
 {
     // EMPTY
 }
@@ -130,10 +130,16 @@ BOOST_FIXTURE_TEST_CASE (Config_ServerConfig_get, ServerConfig)
 void ServerConfig::read
 (
     int argc,
-    char** argv
+    char** argv,
+    bool monitor
 )
 {
     _read<ServerConfigReader> (argc, argv);
+
+    if (monitor)
+		cfgmonitor.start(
+				get<std::string>("configfile")
+			);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -154,6 +160,30 @@ void ServerConfig::read
 }
 
 #endif // FTS3_COMPILE_WITH_UNITTEST
+
+void ServerConfig::waitIfReading() {
+	mutex::scoped_lock lock(qm);
+	while (reading) qv.wait(lock);
+	getting++;
+}
+
+void ServerConfig::notifyReaders() {
+	mutex::scoped_lock lock(qm);
+	getting--;
+	qv.notify_all(); // there is anyway only one thread to be notified
+}
+
+void ServerConfig::waitIfGetting() {
+	mutex::scoped_lock lock(qm);
+	while (getting > 0) qv.wait(lock);
+	reading = true;
+}
+
+void ServerConfig::notifyGetters() {
+	mutex::scoped_lock lock(qm);
+	reading = false;
+	qv.notify_all();
+}
 
 FTS3_CONFIG_NAMESPACE_END
 
