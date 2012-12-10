@@ -623,8 +623,10 @@ void MySqlAPI::deleteSe(std::string NAME) {
 
 
 
-void MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, std::string file_id, std::string transfer_status, std::string transfer_message,
+bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, std::string file_id, std::string transfer_status, std::string transfer_message,
                                         int process_id, double filesize, double duration) {
+
+    bool ok = true;
     soci::session sql(connectionPool);
 
     try {
@@ -672,14 +674,17 @@ void MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, std::string file
         sql.commit();
     }
     catch (std::exception& e) {
+	ok = false;    
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+    return ok;
 }
 
 
 
-void MySqlAPI::updateJobTransferStatus(std::string /*file_id*/, std::string job_id, const std::string status) {
+bool MySqlAPI::updateJobTransferStatus(std::string /*file_id*/, std::string job_id, const std::string status) {
+    bool ok = true;
     soci::session sql(connectionPool);
 
     try {
@@ -746,9 +751,12 @@ void MySqlAPI::updateJobTransferStatus(std::string /*file_id*/, std::string job_
         sql.commit();
     }
     catch (std::exception& e) {
+        ok = false;
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+    
+    return ok;
 }
 
 
@@ -1196,7 +1204,8 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
 
 
 
-void MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+bool MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+    bool ok = true;
     soci::session sql(connectionPool);
 
     try {
@@ -1256,9 +1265,11 @@ void MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int
         }
     }
     catch (std::exception& e) {
+        ok = false;
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+    return ok;
 }
 
 
@@ -1537,7 +1548,8 @@ void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::st
 
 
 
-void MySqlAPI::terminateReuseProcess(const std::string & jobId) {
+bool MySqlAPI::terminateReuseProcess(const std::string & jobId) {
+    bool ok = true;
     soci::session sql(connectionPool);
 
     try {
@@ -1555,9 +1567,11 @@ void MySqlAPI::terminateReuseProcess(const std::string & jobId) {
         sql.commit();
     }
     catch (std::exception& e) {
+        ok = false;
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+    return ok;
 }
 
 
@@ -1753,7 +1767,8 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
 
 
 
-void MySqlAPI::retryFromDead(std::map<int, std::string>& pids) {
+bool MySqlAPI::retryFromDead(std::map<int, std::string>& pids) {
+    bool ok = true;
     soci::session sql(connectionPool);
 
     try {
@@ -1776,9 +1791,11 @@ void MySqlAPI::retryFromDead(std::map<int, std::string>& pids) {
         sql.commit();
     }
     catch (std::exception& e) {
+        ok = false;
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+    return ok;
 }
 
 
@@ -2506,6 +2523,8 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
     return nActiveInbound;
 }
 
+bool MySqlAPI::checkConnectionStatus(){
+}
 
 // the class factories
 
