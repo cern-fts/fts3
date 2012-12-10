@@ -43,8 +43,7 @@ const char * const PROXY_NAME_PREFIX         = "x509up_h";
 }
 
 const std::string repository = "/tmp/";
-static uid_t privid;
-static uid_t pw_uid;
+
 
 uid_t name_to_uid(char const *name) {
     if (!name)
