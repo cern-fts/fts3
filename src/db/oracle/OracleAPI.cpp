@@ -56,23 +56,19 @@ static double round(double d)
 }
 */
 
-OracleAPI::OracleAPI() : conn(NULL),  conn2(NULL), conv(NULL)  {
+OracleAPI::OracleAPI() : conn(NULL), conv(NULL)  {
 }
 
 OracleAPI::~OracleAPI() {
     if (conn)
-        delete conn;
-    if (conn2)
-        delete conn2;	
+        delete conn;	
     if (conv)
         delete conv;
 }
 
 void OracleAPI::init(std::string username, std::string password, std::string connectString) {
     if (!conn)
-        conn = new OracleConnection(username, password, connectString);   	
-    if (!conn2)
-        conn2 = new OracleConnection(username, password, connectString);   		
+        conn = new OracleConnection(username, password, connectString);   	 			
     if (!conv)
         conv = new OracleTypeConversions();
 }
@@ -113,6 +109,15 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
 				conn->destroyStatement(s_se, tagse);
 		}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch(...){
+		if(conn) {
+			conn->rollback();
+			if(s_se && rSe)
+				conn->destroyResultset(s_se, rSe);
+			if (s_se)
+				conn->destroyStatement(s_se, tagse);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));    
     }
     
     return processSe;
@@ -164,6 +169,16 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId) {
 				conn->destroyStatement(s, tag);
 		}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+    	if(conn) {
+			conn->rollback();
+			if(s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
 
 	return job;
@@ -332,6 +347,22 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 		}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+
+			if(s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
+
+			if(s1 && r1)
+				conn->destroyResultset(s1, r1);
+			if (s1)
+				conn->destroyStatement(s1, tag1);
+		}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
 
 }
@@ -392,6 +423,20 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return 0;
+    }catch (...) {
+		if(conn) {
+			conn->rollback();
+
+			if(s1)
+				conn->destroyStatement(s1, tag1);
+
+			if(s2)
+				conn->destroyStatement(s2, tag2);
+		}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+
+        return 0;
     }
 
     return updated;
@@ -421,6 +466,13 @@ void OracleAPI::updateJObStatus(std::string jobId, const std::string status) {
 				conn->destroyStatement(s, tag);
 		}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();   
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
 }
 
@@ -488,6 +540,16 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
 		}
 
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+			if (r && s)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, selecttag);
+		}
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
 }
 
@@ -514,11 +576,11 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
     try {
-        if ( false == conn2->checkConn() ){
+        if ( false == conn->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}
 		
-        s_job_statement = conn2->createStatement(job_statement, tag_job_statement);
+        s_job_statement = conn->createStatement(job_statement, tag_job_statement);
         s_job_statement->setString(1, jobId); //job_id
         s_job_statement->setString(2, initial_state); //job_state
         s_job_statement->setString(3, paramFTP); //job_params
@@ -526,7 +588,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->setString(5, cred); //user_cred
         s_job_statement->setInt(6, 3); //priority
         s_job_statement->setString(7, voName); //vo_name
-        s_job_statement->setTimestamp(8, conv->toTimestamp(timed, conn2->getEnv())); //submit_time
+        s_job_statement->setTimestamp(8, conv->toTimestamp(timed, conn->getEnv())); //submit_time
         s_job_statement->setString(9, ""); //internal_job_params
         s_job_statement->setString(10, currenthost); //submit_host
         s_job_statement->setString(11, delegationID); //cred_id
@@ -551,7 +613,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
 
         //now insert each src/dest pair for this job id
         std::vector<src_dest_checksum_tupple>::const_iterator iter;
-        s_file_statement = conn2->createStatement(file_statement, tag_file_statement);		
+        s_file_statement = conn->createStatement(file_statement, tag_file_statement);		
         
 	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
             s_file_statement->setString(1, jobId);
@@ -561,23 +623,37 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
             s_file_statement->setString(5, iter->checksum);
             s_file_statement->executeUpdate();
         }
-        conn2->commit();
-        conn2->destroyStatement(s_job_statement, tag_job_statement);
-        conn2->destroyStatement(s_file_statement, tag_file_statement);
+        conn->commit();
+        conn->destroyStatement(s_job_statement, tag_job_statement);
+        conn->destroyStatement(s_file_statement, tag_file_statement);
     } catch (oracle::occi::SQLException const &e) {
-		if(conn2) {
-			conn2->rollback();
+		if(conn) {
+			conn->rollback();
 
 			if(s_job_statement){
-				conn2->destroyStatement(s_job_statement, tag_job_statement);
+				conn->destroyStatement(s_job_statement, tag_job_statement);
 			}
 
 			if(s_file_statement){
-				conn2->destroyStatement(s_file_statement, tag_file_statement);
+				conn->destroyStatement(s_file_statement, tag_file_statement);
 			}
 		}
 
 		throw Err_Custom(e.what());
+    }catch (...) {
+		if(conn) {
+			conn->rollback();
+
+			if(s_job_statement){
+				conn->destroyStatement(s_job_statement, tag_job_statement);
+			}
+
+			if(s_file_statement){
+				conn->destroyStatement(s_file_statement, tag_file_statement);
+			}
+		}
+
+		throw Err_Custom("Unknown exception");
     }
 }
 
@@ -594,14 +670,14 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
     ThreadTraits::LOCK_R lock(_mutex2);
     try {
     
-        if ( false == conn2->checkConn() ){
+        if ( false == conn->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}    
     
-        s = conn2->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, requestID);
         s->setString(2, requestID);
-        r = conn2->createResultset(s);
+        r = conn->createResultset(s);
         while (r->next()) {
             js = new JobStatus();
             js->jobID = r->getString(1);
@@ -615,17 +691,26 @@ void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatu
             js->numFiles = r->getInt(9);
             jobs.push_back(js);
         }
-        conn2->destroyResultset(s, r);
-        conn2->destroyStatement(s, tag);
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-		if(conn2) {
-			conn2->rollback();    
+		if(conn) {
+			conn->rollback();    
 			if(s && r)
-				conn2->destroyResultset(s, r);
+				conn->destroyResultset(s, r);
 			if (s)
-				conn2->destroyStatement(s, tag);
+				conn->destroyStatement(s, tag);
 		}
         throw Err_Custom(e.what());		
+    }catch (...) {
+		if(conn) {
+			conn->rollback();    
+			if(s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
+		}
+        throw Err_Custom("Unknown exception");		
     }
 }
 
@@ -706,11 +791,11 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
    
     try {
     
-        if ( false == conn2->checkConn() ){
+        if ( false == conn->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}        
     
-        s = conn2->createStatement(sel, tag);
+        s = conn->createStatement(sel, tag);
         if (restrictToClientDN.length() > 0) {
             s->setString(cc++, restrictToClientDN);
             s->setString(cc++, restrictToClientDN);
@@ -726,7 +811,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
         }
 
 
-        r = conn2->createResultset(s);
+        r = conn->createResultset(s);
         while (r->next()) {
             std::string jid = r->getString(1);
             std::string jstate = r->getString(2);
@@ -751,19 +836,29 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
             }
         }
 
-        conn2->destroyResultset(s, r);
-        conn2->destroyStatement(s, tag);
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
 
     } catch (oracle::occi::SQLException const &e) {
-		if(conn2) {
-			conn2->rollback();    
+		if(conn) {
+			conn->rollback();    
 
 			if(s && r)
-				conn2->destroyResultset(s, r);
+				conn->destroyResultset(s, r);
 			if (s)
-				conn2->destroyStatement(s, tag);
+				conn->destroyStatement(s, tag);
 		}
         throw Err_Custom(e.what());		
+    } catch (...) {
+		if(conn) {
+			conn->rollback();    
+
+			if(s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
+		}
+        throw Err_Custom("Unknown exception");		
     }
 }
 
@@ -778,13 +873,13 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
     ThreadTraits::LOCK_R lock(_mutex2);
     try {
     
-        if ( false == conn2->checkConn() ){
+        if ( false == conn->checkConn() ){
 		throw Err_Custom("Can't connect to the database");		
 	}       
 	    
-        s = conn2->createStatement(query, tag);
+        s = conn->createStatement(query, tag);
         s->setString(1, requestID);
-        r = conn2->createResultset(s);
+        r = conn->createResultset(s);
         while (r->next()) {
             js = new FileTransferStatus();
             js->sourceSURL = r->getString(1);
@@ -796,18 +891,28 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
 
             files.push_back(js);
         }
-        conn2->destroyResultset(s, r);
-        conn2->destroyStatement(s, tag);
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
     } catch (oracle::occi::SQLException const &e) {
-		if(conn2) {
-			conn2->rollback();    
+		if(conn) {
+			conn->rollback();    
 
 			if(s && r)
-				conn2->destroyResultset(s, r);
+				conn->destroyResultset(s, r);
 			if (s)
-				conn2->destroyStatement(s, tag);
+				conn->destroyStatement(s, tag);
 		}
         throw Err_Custom(e.what());	
+    }catch (...) {
+		if(conn) {
+			conn->rollback();    
+
+			if(s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
+		}
+        throw Err_Custom("Unknown exception");	
     }
 
 }
@@ -863,6 +968,16 @@ void OracleAPI::getSe(Se* &se, std::string seName) {
 		}
 
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+		if(conn) {
+			conn->rollback();
+			if (s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
+		}
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -899,6 +1014,14 @@ void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SIT
 		}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -1022,6 +1145,14 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
 		}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, "");
+		}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
 }
@@ -1054,6 +1185,14 @@ void OracleAPI::deleteSe(std::string NAME) {
 		}
 
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -1082,7 +1221,7 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     query << " WHERE file_id =:" << ++index;
     query << " and (file_state='READY' OR file_state='ACTIVE')";
     oracle::occi::Statement* s = NULL;
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex3);
         
     try {
         s = conn->createStatement(query.str(), tag);
@@ -1136,6 +1275,14 @@ void OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+        	if(s)
+	        	conn->destroyStatement(s, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -1171,7 +1318,7 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
             "UPDATE t_file "
             "SET JOB_FINISHED=:1 "
             "WHERE job_id=:2 ";
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex3);
     oracle::occi::Statement* st = NULL;	    
     oracle::occi::ResultSet* r = NULL;
     try {
@@ -1255,6 +1402,17 @@ void OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
         finishedDirty = 0;
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (st && r)
+            	conn->destroyResultset(st, r);
+            if (st)
+            	conn->destroyStatement(st, "");
+        }
+        finishedDirty = 0;
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+
     }
 }
 
@@ -1311,6 +1469,16 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (st1)
+                conn->destroyStatement(st1, cancelJTag);
+            if (st2)
+                conn->destroyStatement(st2, cancelFTag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+
     }
 }
 
@@ -1360,6 +1528,18 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (r && s)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag);
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+
     }
 }
 
@@ -1407,6 +1587,16 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
         }
         throw Err_Custom(e.what());
 
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+        }
+        throw Err_Custom("Unknown exception");
+
     }
 }
 
@@ -1438,6 +1628,13 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
                 conn->destroyStatement(s, tag);
         }
         throw Err_Custom(e.what());
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -1481,6 +1678,17 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return cred;
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (r && s)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+
+        return cred;
     }
     return cred;
 }
@@ -1511,6 +1719,14 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
         }
 
         throw Err_Custom(e.what());
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -1558,6 +1774,15 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
                 conn->destroyStatement(s1, tag1);
         }
         throw Err_Custom(e.what());
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+        }
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -1589,6 +1814,14 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
                 conn->destroyStatement(s, tag);
         }
         throw Err_Custom(e.what());
+
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        throw Err_Custom("Unknown exception");
 
     }
 }
@@ -1633,6 +1866,17 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         return cred;
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s && r)
+            	conn->destroyResultset(s, r);
+            if (s)
+            	conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+
+        return cred;
     }
     return cred;
 }
@@ -1663,6 +1907,13 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
         		conn->destroyStatement(s, tag);
         }
         throw Err_Custom(e.what());
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -1700,6 +1951,17 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        return debug;
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
 
         return debug;
     }
@@ -1763,6 +2025,15 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
         		conn->destroyStatement(s2, tag2);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s1)
+        		conn->destroyStatement(s1, tag1);
+        	if(s2)
+        		conn->destroyStatement(s2, tag2);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -1895,6 +2166,16 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+
     }
 
 }
@@ -1923,6 +2204,13 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
         		conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2117,6 +2405,32 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s3 && r3)
+                conn->destroyResultset(s3, r3);
+            if (s3)
+                conn->destroyStatement(s3, tag3);
+
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+
+            if (s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag2);
+
+            if (sMid && rMid)
+                conn->destroyResultset(sMid, rMid);
+            if (sMid)
+                conn->destroyStatement(sMid, tagMid);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+
     }
 }
 
@@ -2138,7 +2452,7 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
     oracle::occi::Statement* s2 = NULL;
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex3);
     try {
 
 
@@ -2208,6 +2522,18 @@ void OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, in
                 conn->destroyStatement(s2, tag2);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+
+            if (s2)
+                conn->destroyStatement(s2, tag2);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2245,6 +2571,14 @@ void OracleAPI::addOptimizer(time_t when, double throughput, const std::string &
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
 
     }
 }
@@ -2310,6 +2644,19 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2355,6 +2702,18 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+        return valid;
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
 
         return valid;
     }
@@ -2544,6 +2903,42 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         return allowed;
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+
+            if (s2 && r2)
+                conn->destroyResultset(s1, r1);
+            if (s2)
+                conn->destroyStatement(s1, tag1);
+
+            if (s3 && r3)
+                conn->destroyResultset(s3, r3);
+            if (s3)
+                conn->destroyStatement(s3, tag3);
+
+            if (s4 && r4)
+                conn->destroyResultset(s4, r4);
+            if (s4)
+                conn->destroyStatement(s4, tag4);
+
+            if (s5 && r5)
+                conn->destroyResultset(s5, r5);
+            if (s5)
+                conn->destroyStatement(s5, tag5);
+
+            if (s6 && r6)
+                conn->destroyResultset(s6, r6);
+            if (s6)
+                conn->destroyStatement(s6, tag6);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        return allowed;
     }
     return allowed;
 }
@@ -2591,6 +2986,18 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s)
+                conn->destroyStatement(s, tag);
+
+            if (s1)
+                conn->destroyStatement(s1, tag1);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2656,6 +3063,16 @@ void OracleAPI::forceFailTransfers() {
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2720,6 +3137,19 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s4)
+                conn->destroyStatement(s4, tag4);
+            if (s5)
+                conn->destroyStatement(s5, tag5);
+            if (s6)
+                conn->destroyStatement(s6, tag6);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2732,7 +3162,7 @@ void OracleAPI::terminateReuseProcess(const std::string & jobId) {
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r = NULL;
     unsigned int updated = 0;
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex3);
 
     try {
         if (false == conn->checkConn())
@@ -2767,6 +3197,19 @@ void OracleAPI::terminateReuseProcess(const std::string & jobId) {
             	conn->destroyStatement(s1, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag);
+
+            if (s1)
+            	conn->destroyStatement(s1, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2798,6 +3241,15 @@ void OracleAPI::setPid(const std::string & jobId, const std::string & fileId, in
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2833,6 +3285,14 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids) {
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2910,6 +3370,23 @@ void OracleAPI::revertToSubmitted() {
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s1)
+        		conn->destroyStatement(s1, tag1);
+
+        	if(s2 && r2)
+        		conn->destroyResultset(s2, r2);
+        	if (s2)
+        		conn->destroyStatement(s2, tag2);
+
+        	if(s3)
+        		conn->destroyStatement(s3, tag3);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2950,6 +3427,16 @@ void OracleAPI::revertToSubmittedTerminate() {
         		conn->destroyStatement(s2, tag2);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s1)
+        		conn->destroyStatement(s1, tag1);
+        	if(s2)
+        		conn->destroyStatement(s2, tag2);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -2999,6 +3486,20 @@ void OracleAPI::backup() {
         		conn->destroyStatement(s2, "");
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s1)
+        		conn->destroyStatement(s1, "");
+        	if(s2)
+        		conn->destroyStatement(s2, "");
+        	if(s3)
+        		conn->destroyStatement(s3, "");
+        	if(s4)
+        		conn->destroyStatement(s2, "");
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3028,6 +3529,14 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId) {
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(stmt)
+        		conn->destroyStatement(stmt, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3061,6 +3570,13 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3070,7 +3586,7 @@ void OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
     oracle::occi::Statement* s = NULL;
     std::map<int, std::string>::const_iterator iter;
     unsigned int updated = 0;
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK_R lock(_mutex3);
 
     try {
         if (false == conn->checkConn())
@@ -3094,6 +3610,13 @@ void OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
                 conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+            if (s)
+                conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3132,6 +3655,16 @@ void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn)
         		conn->destroyStatement(s, tag);
        	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3170,6 +3703,16 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
         		conn->destroyStatement(s, tag);
        	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3203,6 +3746,16 @@ void OracleAPI::unblacklistSe(std::string se) {
         		conn->destroyStatement(s, tag);
        	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3236,6 +3789,16 @@ void OracleAPI::unblacklistDn(std::string dn) {
         		conn->destroyStatement(s, tag);
        	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3275,6 +3838,18 @@ bool OracleAPI::isSeBlacklisted(std::string se) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
@@ -3316,6 +3891,18 @@ bool OracleAPI::isDnBlacklisted(std::string dn) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknoen exception"));
     }
 
     return ret;
@@ -3357,6 +3944,17 @@ bool OracleAPI::isFileReadyState(int fileID) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     return ready;
 }
@@ -3394,6 +3992,17 @@ bool OracleAPI::checkGroupExists(const std::string & groupName) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return groupExist;
@@ -3433,6 +4042,17 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3469,6 +4089,17 @@ std::string OracleAPI::getGroupForSe(const std::string se) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
@@ -3502,6 +4133,13 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
         		conn->destroyStatement(s, tag);
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3533,6 +4171,14 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+          	if(s)
+          		conn->destroyStatement(s, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -3577,6 +4223,14 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
         }
 
 		throw Err_Custom(e.what());
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+
+		throw Err_Custom("Unknown exception");
     }
 }
 
@@ -3613,6 +4267,13 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
         		conn->destroyStatement(s, tag);
         }
         throw Err_Custom(e.what());
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -3641,6 +4302,14 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
         }
 
         throw Err_Custom(e.what());
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -3688,6 +4357,16 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return cfg;
@@ -3731,6 +4410,15 @@ bool OracleAPI::isThereLinkConfig(std::string source, std::string destination) {
         		conn->destroyStatement(s, tag);
         }
         throw Err_Custom(e.what());
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+        }
+        throw Err_Custom("Unknown exception");
     }
 
     return ret;
@@ -3774,6 +4462,16 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
         }
 
         throw Err_Custom(e.what());
+    } catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        throw Err_Custom("Unknown exception");
     }
 
     return ret;
@@ -3816,6 +4514,16 @@ bool OracleAPI::isGrInPair(std::string group) {
         }
 
         throw Err_Custom(e.what());
+    }   catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        throw Err_Custom("Unknown exception");
     }
 
     // if the exception was thrown don't allow to remove group
@@ -3854,6 +4562,13 @@ void OracleAPI::addShareConfig(ShareConfig* cfg) {
         		conn->destroyStatement(s, tag);
         }
         throw Err_Custom(e.what());
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+        throw Err_Custom("Unknown exception");
     }
 }
 void OracleAPI::updateShareConfig(ShareConfig* cfg) {
@@ -3878,7 +4593,7 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg) {
 		s->executeUpdate();
 		conn->commit();
 		conn->destroyStatement(s, tag);
-	}    catch (oracle::occi::SQLException const &e) {
+	}  catch (oracle::occi::SQLException const &e) {
         if (conn) {
             conn->rollback();
         	if(s)
@@ -3886,6 +4601,14 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg) {
         }
 
 		throw Err_Custom(e.what());
+	}catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+
+		throw Err_Custom("Unknown exception");
 	}
 }
 
@@ -3915,6 +4638,14 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
         }
 
         throw Err_Custom(e.what());
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -3943,6 +4674,14 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination) {
         }
 
         throw Err_Custom(e.what());
+    }   catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        throw Err_Custom("Unknown exception");
     }
 }
 
@@ -3987,6 +4726,16 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return cfg;
@@ -4033,6 +4782,16 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
         }
 
         throw Err_Custom(e.what());
+    }  catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        throw Err_Custom("Unknown exception");
     }
 
     return ret;
@@ -4065,6 +4824,14 @@ void OracleAPI::submitHost(const std::string & jobId) {
         }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if (s)
+        		conn->destroyStatement(s, tag);
+        }
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 }
 
@@ -4099,6 +4866,16 @@ std::string OracleAPI::transferHost(int fileId) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     
     return hostname;
@@ -4141,6 +4918,15 @@ bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds) {
         		conn->destroyStatement(s, tag);
        	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     return isReady;
 }
@@ -4177,6 +4963,15 @@ std::string OracleAPI::transferHostV(std::map<int, std::string>& fileIds) {
         		conn->destroyStatement(s, tag);
        	}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     
     return host;
@@ -4218,6 +5013,17 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
@@ -4256,6 +5062,13 @@ void OracleAPI::addJobShareConfig(std::string job_id, std::string source, std::s
 	        		conn->destroyStatement(s, tag);
 	        }
 	        throw Err_Custom(e.what());
+	    }catch (...) {
+	        if (conn) {
+	            conn->rollback();
+	        	if(s)
+	        		conn->destroyStatement(s, tag);
+	        }
+	        throw Err_Custom("Unknown exception");
 	    }
 }
 
@@ -4300,6 +5113,17 @@ std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::ge
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
@@ -4342,6 +5166,17 @@ bool OracleAPI::isThereJobShareConfig(std::string job_id) {
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
@@ -4395,6 +5230,17 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
@@ -4449,6 +5295,17 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
@@ -4503,6 +5360,17 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
        	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
 
     return ret;
