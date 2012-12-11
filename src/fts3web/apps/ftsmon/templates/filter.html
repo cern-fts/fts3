@@ -58,7 +58,7 @@
 	  return split(term).pop();
   }
   
-  states = ["SUBMITTED", "READY", "ACTIVE", "FINISHED", "FINISHEDDIRTY", "FAILED"];
+  states = ["SUBMITTED", "READY", "ACTIVE", "FINISHED", "FINISHEDDIRTY", "FAILED", "CANCELED"];
   $("#filter_state").autocomplete({source: function(request, response) {
 	                                           response($.ui.autocomplete.filter(states, extractLast(request.term)));
 	                                         },

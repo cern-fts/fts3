@@ -1,3 +1,5 @@
+/* HTML Elements */
+
 body {
   background: white;
   font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",sans-serif;
@@ -8,32 +10,66 @@ body {
   width: 95%;
 }
 
-a {
-  color: blue;
-}
-
-a:visited {
-  color: blue;
-}
-
-#header {
+div {
   margin: 0;
   padding: 0;
 }
 
-#header h1 img {
-  vertical-align: middle;
-}
-
-#header h1 a {
+h1 a {
   color: #406080;
   text-decoration: none;
 }
 
-#header h1 a:hover {
+h1 a:hover {
   text-decoration: underline;
 }
 
+h1 img {
+  vertical-align: middle;
+}
+
+h2 {
+  font-size: 120%;
+}
+
+h3 {
+  font-size: 110%;
+}
+
+h4 {
+  font-size: 100%;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 95%;
+  width: 100%;
+}
+
+td {
+  padding: 0.2em;
+}
+
+th {
+  background: #CAE8EA;
+  padding: 0.2em;
+}
+
+/* Table even/odd rows */
+tr.even {
+  background: #DDD;
+}
+
+/* Content */
+#content a {
+  color: blue;
+}
+
+#content a:visited {
+  color: blue;
+}
+
+/* Header elements */
 #toolbox {
   background: #406080;
   text-align: left;
@@ -43,10 +79,17 @@ a:visited {
 
 #toolbox a {
   color: white;
+  font-size: 120%;
+  padding-right: 1em;
+  text-decoration: none;
 }
 
 #toolbox a:visited {
   color: white;
+}
+
+#toolbox a:hover {
+  text-decoration: underline;
 }
 
 #toolbox div {
@@ -56,41 +99,15 @@ a:visited {
 
 #toolbox form {
   display: inline;
-}
-
-#toolbox #links {
-  font-size: 120%;
-}
-
-#links a {
-  padding-right: 1em;
-  text-decoration: none;
-}
-
-#links a:hover {
-  text-decoration: underline;
-}
-
-#toolbox #jobSearchForm {
   position: absolute;
   right: 0;
 }
 
-#jobSearchForm input {
+#toolbox form input {
   border: solid 1px;
 }
 
-#voDropBox {
-}
-
-#voDropBox label {
-  color: white;
-}
-
-#content {
-  
-}
-
+/* Filter box */
 #filter_container a {
   font-size: 80%;
 }
@@ -101,14 +118,20 @@ a:visited {
   border: groove 2px;
 }
 
+#filters input.text_field {
+  width: 20em;
+}
+
 #filters label {
   display: inline-block;
   width: 10em;
   font-weight: bold;
 }
 
-#filters input.text_field {
-  width: 20em;
+/* Message dialogs */
+.details {
+  display: none;
+  background: #CCCCCC;
 }
 
 .error {
@@ -116,122 +139,6 @@ a:visited {
   border: dotted 1px;
   padding: 0.1em;
   background-color: #FF9999;
-}
-
-.reason {
-  font-family: mono;
-  border: dotted 1px black;
-  padding: 0.5em;
-  background: #FFFFCC;
-}
-
-.surl {
-  font-family: mono;
-}
-
-#content table {
-  width: 100%;
-}
-
-table {
-  border-collapse: collapse;
-  font-size: 95%;
-}
-
-th {
-  background: #CAE8EA;
-  padding: 0.2em;
-}
-
-td {
-  padding: 0.2em;
-}
-
-.jobList td {
-  text-align: center;
-}
-
-.jobList tr td:nth-child(1) {
-  text-align: left;
-}
-
-.jobList tr.FAILED td:nth-child(3) {
-  background: #FFAAAA;
-}
-
-.jobList tr.FINISHED td:nth-child(3) {
-  background: #AAFFAA
-}
-
-.jobList tr.SUBMITTED td:nth-child(3) {
-  background: #FFFFAA
-}
-
-.jobList tr.READY td:nth-child(3) {
-  background: #99FFFF
-}
-
-.jobList tr.ACTIVE td:nth-child(3) {
-  background: #AAAAFF
-}
-
-.jobList tr.FINISHEDDIRTY td:nth-child(3) {
-  background: #AAAAAA;
-}
-
-
-.jobList tr.CANCELED td:nth-child(3) {
-  background: #FF7777;
-}
-
-.details {
-  display: none;
-  background: #CCCCCC;
-}
-
-.showDetails {
-  cursor: pointer;
-}
-
-.fileList td {
-  text-align: center;
-}
-
-.fileList tr td:nth-child(1) {
-  text-align: left;
-}
-
-.fileList tr.FAILED td:nth-child(4) {
-  background: #FFAAAA;
-}
-
-.fileList tr.FINISHED td:nth-child(4) {
-  background: #AAFFAA;
-}
-
-.fileList tr.SUBMITTED td:nth-child(4) {
-  background: #FFFFAA;
-}
-
-.fileList tr.READY td:nth-child(4) {
-  background: #99FFFF;
-}
-
-.fileList tr.ACTIVE td:nth-child(4) {
-  background: #AAAAFF
-}
-
-.fileList tr.FINISHEDDIRTY td:nth-child(4) {
-  background: #AAAAAA;
-}
-
-.fileList tr.CANCELED td:nth-child(4) {
-  background: #FF7777;
-}
-
-.statistics tr td:nth-child(1) {
-  font-weight: bold;
-  width: 10em;
 }
 
 .msgBox {
@@ -249,46 +156,118 @@ td {
   text-align: center;
 }
 
-span.ACTIVE {
+.reason {
+  font-family: mono;
+  border: dotted 1px black;
+  padding: 0.5em;
+  background: #FFFFCC;
+}
+
+/* Job list */
+table.jobList td {
+  text-align: center;
+}
+
+table.jobList tr td:nth-child(1) {
+  text-align: left;
+}
+
+table.jobList tr.FAILED td:nth-child(3) {
+  background: #FFAAAA;
+}
+
+table.jobList tr.FINISHED td:nth-child(3) {
+  background: #AAFFAA
+}
+
+table.jobList tr.SUBMITTED td:nth-child(3) {
+  background: #FFFFAA
+}
+
+table.jobList tr.READY td:nth-child(3) {
+  background: #99FFFF
+}
+
+table.jobList tr.ACTIVE td:nth-child(3) {
+  background: #AAAAFF
+}
+
+table.jobList tr.FINISHEDDIRTY td:nth-child(3) {
+  background: #AAAAAA;
+}
+
+table.jobList tr.CANCELED td:nth-child(3) {
+  background: #FF7777;
+}
+
+/* File list */
+table.fileList td {
+  text-align: center;
+}
+
+table.fileList tr td:nth-child(1) {
+  text-align: left;
+}
+
+table.fileList tr.FAILED td:nth-child(4) {
+  background: #FFAAAA;
+}
+
+table.fileList tr.FINISHED td:nth-child(4) {
+  background: #AAFFAA;
+}
+
+table.fileList tr.SUBMITTED td:nth-child(4) {
+  background: #FFFFAA;
+}
+
+table.fileList tr.READY td:nth-child(4) {
+  background: #99FFFF;
+}
+
+table.fileList tr.ACTIVE td:nth-child(4) {
+  background: #AAAAFF;
+}
+
+table.fileList tr.FINISHEDDIRTY td:nth-child(4) {
+  background: #AAAAAA;
+}
+
+table.fileList tr.CANCELED td:nth-child(4) {
+  background: #FF7777;
+}
+
+/* Statistics */
+table.statistics tr td:nth-child(1) {
+  font-weight: bold;
+  width: 10em;
+}
+
+table.statistics span.ACTIVE {
   color: green;
 }
 
-span.SUBMITTED {
+table.statistics span.SUBMITTED {
   color: #ff6600;
 }
 
-span.READY {
+table.statistics span.READY {
   color: blue;
 }
 
-tr.even {
-  background: #DDD;
-}
-
-h2 {
-  font-size: 120%;
-}
-
-h3 {
-  font-size: 110%;
-}
-
-h4 {
-  font-size: 100%;
-}
-
-.configAudit tbody {
+/* Config audit */
+table.configAudit tbody {
   font-family: mono;
 }
 
-.configAudit .delete td:nth-child(1) {
+table.configAudit .delete td:nth-child(1) {
   background-color: #FF7777;
 }
 
-.configAudit .insert td:nth-child(1) {
+table.configAudit .insert td:nth-child(1) {
   background-color: #AAFFAA;
 }
 
-.configAudit .update td:nth-child(1) {
+table.configAudit .update td:nth-child(1) {
   background-color: #88BBFF;  
 }
