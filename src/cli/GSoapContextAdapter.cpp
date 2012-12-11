@@ -491,11 +491,11 @@ void GSoapContextAdapter::getLog(string& logname, string jobId) {
 		handleSoapFault("Operation getLog failed.");
 		return;
 	}
-//	log__Data* log = resp.log;
-//
-//	for (int i = 0; i < log->xop__Include.__size; i++)
-//		cout << log->xop__Include.__ptr[i];
-//	cout << endl;
+
+	fstream file (logname.c_str(), ios::out);
+	file.write((char*) resp.log->xop__Include.__ptr, resp.log->xop__Include.__size);
+	file.flush();
+	file.close();
 }
 
 void GSoapContextAdapter::handleSoapFault(string msg) {
