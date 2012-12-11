@@ -1,4 +1,5 @@
 from django.db import models
+from settings.database import DATABASES
 
 class Job(models.Model):
     job_id          = models.CharField(max_length = 36, primary_key = True)
@@ -46,6 +47,8 @@ class Job(models.Model):
     def isFinished(self):
         return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE']
 
+
+
 class File(models.Model):
     file_id      = models.IntegerField(primary_key = True)
     job          = models.ForeignKey('Job', db_column = 'job_id')
@@ -77,4 +80,23 @@ class File(models.Model):
     class Meta:
         db_table = 't_file'
 
+
+
+class  ConfigAudit(models.Model):
+    # This field is definitely NOT the primary key, but since we are not modifying
+    # this from Django, we can live with this workaround until Django supports fully
+    # composite primary keys
+    if DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+        datetime = models.DateTimeField(db_column = 'when', primary_key = True)
+    else:
+        datetime = models.DateTimeField(primary_key = True)
+     
+    dn       = models.CharField(max_length = 1024)
+    config   = models.CharField(max_length = 4000)
+    action   = models.CharField(max_length = 100)
     
+    class Meta:
+        db_table = 't_config_audit'
+
+    def simple_action(self):
+        return self.action.split(' ')[0]

@@ -4,7 +4,7 @@ from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from ftsmon import forms
-from fts3.models import Job, File
+from fts3.models import Job, File, ConfigAudit
 
 
 def jobIndex(httpRequest, states = ['FAILED', 'FAILEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE'],
@@ -121,4 +121,8 @@ def statistics(httpRequest):
 
 
 def configurationAudit(httpRequest):
-    return render(httpRequest, 'base.html')
+    configs = ConfigAudit.objects.order_by('-datetime')
+    return render(httpRequest, 'configurationAudit.html',
+                  {'configs': configs})
+
+

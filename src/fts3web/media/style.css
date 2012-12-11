@@ -206,15 +206,15 @@ td {
 }
 
 .fileList tr.FINISHED td:nth-child(4) {
-  background: #AAFFAA
+  background: #AAFFAA;
 }
 
 .fileList tr.SUBMITTED td:nth-child(4) {
-  background: #FFFFAA
+  background: #FFFFAA;
 }
 
 .fileList tr.READY td:nth-child(4) {
-  background: #99FFFF
+  background: #99FFFF;
 }
 
 .fileList tr.ACTIVE td:nth-child(4) {
@@ -275,4 +275,20 @@ h3 {
 
 h4 {
   font-size: 100%;
+}
+
+.configAudit tbody {
+  font-family: mono;
+}
+
+.configAudit .delete td:nth-child(1) {
+  background-color: #FF7777;
+}
+
+.configAudit .insert td:nth-child(1) {
+  background-color: #AAFFAA;
+}
+
+.configAudit .update td:nth-child(1) {
+  background-color: #88BBFF;  
 }
