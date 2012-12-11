@@ -2,7 +2,7 @@
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Summary:	FTS3 Web Application for monitoring
-Name:		ftsmonitoring
+Name:		fts-monitoring
 Version:	0.0.1
 Release:	51%{?dist}
 URL:		https://svnweb.cern.ch/trac/fts3

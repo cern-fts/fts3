@@ -1,5 +1,5 @@
-version=${shell grep '^Version:' ./specs-monitoring/ftsmonitoring.spec | awk '{print $$2}' }
-name=ftsmonitoring
+version=${shell grep '^Version:' ./specs-monitoring/fts-monitoring.spec | awk '{print $$2}' }
+name=fts-monitoring
 rpmbuild=${shell pwd}/rpmbuild
 MOCKENV=epel-6-cernonly-x86_64
 MOCKARGS=--trace --verbose
