@@ -154,7 +154,8 @@ namespace soci
             job.submitTime = timegm(&aux_tm);
             job.priority   = v.get<int>("priority");
             job.voName     = v.get<std::string>("vo_name");
-            job.numFiles   = v.get<int>("numFiles");
+            // COUNT(*) type is long long inside soci
+            job.numFiles   = v.get<long long>("numFiles");
 
             try {
                 job.fileStatus = v.get<std::string>("file_state");
