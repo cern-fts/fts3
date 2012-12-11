@@ -89,13 +89,23 @@ private:
 	/// DB singleton instance
 	GenericDbIfce* db;
 
-	///
-	static const regex fileUrlRegex;
-
 	/**
+	 * Retrieves SE name from URL
 	 *
+	 * @param url - URL to file
+	 *
+	 * @return SE name
 	 */
 	string fileUrlToSeName(string url);
+
+	/**
+	 * Creates a could-not-allocate-credits error message
+	 *
+	 * @param cfg - the configuration that is not allowing to schedule a file transfer
+	 *
+	 * @return error message
+	 */
+	string getNoCreditsErrMsg(ShareConfig* cfg);
 };
 
 #endif /* FILETRANSFERSCHEDULER_H_ */

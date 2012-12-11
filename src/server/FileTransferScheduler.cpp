@@ -45,12 +45,12 @@ const regex FileTransferScheduler::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?
 
 string FileTransferScheduler::fileUrlToSeName(string url) {
 
+	static const regex re(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 	smatch what;
-	if (regex_match(url, what, fileUrlRegex, match_extra)) {
 
+	if (regex_match(url, what, re, match_extra)) {
 		// indexes are shifted by 1 because at index 0 is the whole string
 		return string(what[1]);
-
 	} else
 		return string();
 }
@@ -111,7 +111,7 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 					file->JOB_ID,
 					lexical_cast<string>(file->FILE_ID),
 					JobStatusHandler::FTS3_STATUS_FAILED,
-					"Failed to allocate active transfer credits to transfer job!",
+					getNoCreditsErrMsg(cfg.get()), // TODO add only [list of vo] are allowed to submit
 					0,
 					0,
 					0
@@ -122,7 +122,7 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 					file->JOB_ID,
 					JobStatusHandler::FTS3_STATUS_FAILED
 				);
-
+			// the file has been resolved as FAILED, it won't be scheduled
 			return false;
 		}
 
@@ -151,5 +151,47 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 		return false;
 
 	return true;
+}
+
+string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg) {
+	stringstream ss;
+
+	ss << "Failed to allocate active transfer credits to transfer job due to ";
+
+	if (cfg->source == Configuration::wildcard || cfg->destination == Configuration::wildcard) {
+
+		ss << "the default standalone SE configuration.";
+
+	} else if (cfg->source != Configuration::any && cfg->destination != Configuration::any) {
+
+		ss << "a pair configuration (" << cfg->source << " -> " << cfg->destination << ").";
+
+	} else if (cfg->source != Configuration::any) {
+
+		ss << "a standalone out-bound configuration (" << cfg->source << ").";
+
+	} else if (cfg->destination != Configuration::any) {
+
+		ss << "a standalone in-bound configuration (" << cfg->destination << ").";
+
+	} else {
+
+		ss << "configuration constraints.";
+	}
+
+	ss << "Only the following VOs are allowed: ";
+
+	vector<ShareConfig*> cfgs = db->getShareConfig(cfg->source, cfg->destination);
+	vector<ShareConfig*>::iterator it;
+
+	for (it = cfgs.begin(); it != cfgs.end(); it++) {
+		scoped_ptr<ShareConfig> ptr (*it);
+		if (ptr->active_transfers) {
+			if (it != cfgs.begin()) ss << ", ";
+			ss << ptr->vo;
+		}
+	}
+
+	return ss.str();
 }
 
