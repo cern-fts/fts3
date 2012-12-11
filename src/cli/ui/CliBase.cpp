@@ -27,22 +27,17 @@
 #include <iostream>
 #include <fstream>
 
-//#include "ServiceDiscoveryIfce.h" // check "" or <>
-//#include <glite/data/glite-util.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 using namespace fts3::cli;
 
+const string CliBase::error = "error";
+const string CliBase::result = "result";
+const string CliBase::parameter_error = "parameter_error";
 
-CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0) {
-
-	// initialize variables needed for FTS3 service discovery
-//	FTS3_CA_SD_TYPE = "org.glite.ChannelAgent";
-//	FTS3_SD_ENV = "GLITE_SD_FTS_TYPE";
-//	FTS3_SD_TYPE = "org.glite.FileTransfer";
-//	FTS3_IFC_VERSION = "GLITE_FTS_IFC_VERSION";
-//	FTS3_INTERFACE_VERSION = "3.7.0"; // TODO where it comes from?
+CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0), ismute(false), isjson(false) {
 
 	// add basic command line options
     basic.add_options()
@@ -51,6 +46,7 @@ CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0) {
 			("verbose,v", "Be more verbose.")
 			("service,s", value<string>(), "Use the transfer service at the specified URL.")
 			("version,V", "Print the version number and exit.")
+			("json,j", "The output should be printed in JSON format")
 			;
 }
 
@@ -61,6 +57,11 @@ CliBase::~CliBase() {
 
 	if (ismute) {
 		unmute();
+	}
+
+	if (isjson) {
+		write_json(cout, json_out);
+		cout << endl;
 	}
 }
 
@@ -85,7 +86,7 @@ void CliBase::parse(int ac, char* av[]) {
 		endpoint = vm["service"].as<string>();
 		// check if the endpoint has the right prefix
 		if (endpoint.find("http") != 0 && endpoint.find("https") != 0 && endpoint.find("httpd") != 0) {
-			cout << "Wrongly formatted endpoint: " << endpoint << endl;
+			print("wrong_format", endpoint);
 			// if not erase
 			endpoint.erase();
 		}
@@ -121,6 +122,9 @@ void CliBase::parse(int ac, char* av[]) {
 			endpoint = discoverService();
 		}
 	}
+
+	isjson = vm.count("json");
+	isverbose = vm.count("verbose");
 }
 
 optional<GSoapContextAdapter&> CliBase::validate(bool init) {
@@ -173,7 +177,7 @@ bool CliBase::printVersion() {
 
 	// check whether the -V option was used
 	if (vm.count("version")) {
-        cout << "TODO" << endl;
+		print("version", "TODO");
         return true;
     }
 
@@ -275,5 +279,17 @@ void CliBase::mute() {
 void CliBase::unmute() {
 	ismute = false;
 	cout.rdbuf(cout_sbuf); // restore the original stream buffer
+}
+
+void CliBase::print (string name, string msg, bool verbose_only) {
+	// if verbose flag is required and CLI has been muted return
+	// if json output is used return
+	if ( (verbose_only && !isverbose)) return;
+
+	if (isjson) {
+		json_out.add(name, msg);
+	} else {
+		cout << name << " : " << msg << endl;
+	}
 }
 

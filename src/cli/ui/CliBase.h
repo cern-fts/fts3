@@ -27,16 +27,18 @@
 
 #include "GSoapContextAdapter.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
 #include <boost/optional.hpp>
-#include <fstream>
 
-using namespace boost::program_options;
-using namespace std;
+#include <fstream>
 
 
 namespace fts3 { namespace cli {
 
+using namespace boost::program_options;
+using namespace boost::property_tree;
+using namespace std;
 using namespace boost;
 
 /**
@@ -55,6 +57,13 @@ using namespace boost;
 class CliBase {
 
 public:
+
+	///
+	static const string error;
+	///
+	static const string result;
+	///
+	static const string parameter_error;
 
 	/**
 	 * Default constructor.
@@ -139,6 +148,10 @@ public:
 	 * @return implementing class should return a string with instruction on how to use the tool
 	 */
 	virtual string getUsageString(string tool);
+
+	/**
+	 */
+	void print (string name, string msg, bool verbose_only = false);
 
 	/**
 	 * Mutes the cout stream
@@ -246,6 +259,15 @@ private:
 
 	/// contains the mute state
 	bool ismute;
+
+	/// contains the json state
+	bool isjson;
+
+	///
+	bool isverbose;
+
+	///
+	ptree json_out;
 };
 
 /**
