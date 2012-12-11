@@ -64,15 +64,16 @@ a:visited {
 
 #links a {
   padding-right: 1em;
+  text-decoration: none;
 }
 
-#toolbox #filters {
+#links a:hover {
+  text-decoration: underline;
+}
+
+#toolbox #jobSearchForm {
   position: absolute;
   right: 0;
-}
-
-#jobSearchForm {
-  font-size: 80%;
 }
 
 #jobSearchForm input {
@@ -88,6 +89,33 @@ a:visited {
 
 #content {
   
+}
+
+#filter_container a {
+  font-size: 80%;
+}
+
+#filters {
+  background: #CCC;
+  padding: 0.5em;
+  border: groove 2px;
+}
+
+#filters label {
+  display: inline-block;
+  width: 10em;
+  font-weight: bold;
+}
+
+#filters input.text_field {
+  width: 20em;
+}
+
+.error {
+  font-size: 80%;
+  border: dotted 1px;
+  padding: 0.1em;
+  background-color: #FF9999;
 }
 
 .reason {

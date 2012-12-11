@@ -1,31 +1,21 @@
-{% extends "jobindex.html" %}
-{% load formatTimestamp %}
+{% extends "base.html" %}
 {% load filesize %}
 
-{% block voFilter %}
-{% endblock %}
-
-{% block refreshMeta %}
-{% if not transferJob.isFinished %}
-    <meta http-equiv="refresh" content="5"/>
-{% endif %}
-{% endblock %}
-
 {% block content %}
-
   <h2>Transfer '{{transferJob.job_id}}' {{transferJob.job_state}}</h2>
   <p>
-     Submitted by <span class="dn">'{{transferJob.user_dn}}'</span><br/>
-     VO: <span class="vo">{{transferJob.vo_name}}</span><br/>
-     Received by {{transferJob.submitHost}}
+    Submitted by <span class="dn">'{{transferJob.user_dn}}'</span><br/>
+    VO: <span class="vo">{{transferJob.vo_name}}</span><br/>
+    Received by {{transferJob.submitHost}}
   </p>
-  {% if transferJob.reason %}
-  <p class="reason">
-  {{transferJob.reason}}
-  </p>
-  {% endif %}
   
-  <h3>The job contains {{ transferFiles|length}} transfer</h3>
+  {% if transferJob.reason %}
+    <p class="reason">
+    {{transferJob.reason}}
+    </p>
+  {% endif %}
+    
+  <h3>The job contains {{ transferFiles|length}} transfers</h3>
   
   <table class="fileList">
     <thead>
@@ -39,14 +29,12 @@
         <th>FINISH TIME</th>
         <th>TRANSFER HOST</th>
       </tr>
-      </thead>
-      <tbody>
-        {% for t in transferFiles %}
+    </thead>
+    <tbody>
+      {% for t in transferFiles %}
         <tr class="{{ t.file_state }} {% cycle 'odd' 'even' %}">
           <td>
-            <img class="showDetails" alt="[+]" src="{{ STATIC_URL }}plus.gif"
-                   title="Show details" onclick="toggleView('{{ t.file_id }}')"
-                   id="toggle_{{ t.file_id }}"/>
+            <img alt="[+]" src="{{ STATIC_URL }}plus.gif"  title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
             {{ t.file_id }}
           </td>
           <td>{{ t.source_surl }}</td>
@@ -57,7 +45,7 @@
           <td>{{ t.finish_time }}</td>
           <td>{{ t.transferHost }}</td>
         </tr>
-        <tr class="details" style="display: none" id="details_{{ t.file_id }}">
+        <tr class="details" id="{{t.file_id}}">
           <td colspan="8">
             <ul>
               <li><b>Duration: </b> {{ t.tx_duration }} seconds</li>
@@ -65,13 +53,12 @@
               <li><b>Configuration: </b> {{ t.symbolicName }}</li>
               <li><b>Parameters:</b> {{ t.internal_file_params }}</li>
               {% if t.reason %}
-              <li><b>Reason:</b> {{ t.reason }}</li>
+                <li><b>Reason:</b> {{ t.reason }}</li>
               {% endif %}
             </ul>
           </td>
         </tr>
-        {% endfor %}
-      </tbody>
+      {% endfor %}
+    </tbody>
   </table>
-
 {% endblock %}

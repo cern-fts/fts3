@@ -15,12 +15,12 @@ DATABASES = {
 }
 
 # MySQL example
-#DATABASES = {
-#    'default': {
-#        'ENGINE':   'django.db.backends.mysql',
-#        'USER':     'fts3',
-#        'PASSWORD': 'fts3',
-#        'NAME':     'fts3',
-#        'HOST':     'localhost',
-#    }
-#}
+DATABASES = {
+    'default': {
+        'ENGINE':   'django.db.backends.mysql',
+        'USER':     'fts3',
+        'PASSWORD': 'fts3',
+        'NAME':     'fts3',
+        'HOST':     'arioch.cern.ch',
+    }
+}

@@ -1,0 +1,76 @@
+
+<div id="filter_container">
+
+  {% if filterForm.is_empty %}
+  <div id="filters" style="display: none">
+  {% else %}
+  <div id="filters">
+  {% endif %}
+    <form method="GET" action="{% url ftsmon.views.jobIndex %}">
+      <p>
+        <label for="filter_source_se">Source SE:</label>
+        <input type="text" id="filter_source_se" name="source_se" class="text_field"
+               value="{{filterForm.source_se.value|default_if_none:''}}"/>
+      </p>
+      <p>
+        <label for="filter_dest_se">Destination SE:</label>
+        <input type="text" id="filter_dest_se" name="dest_se" class="text_field"
+               value="{{filterForm.dest_se.value|default_if_none:''}}"/>
+      </p>
+      <p>
+        <label for="filter_state">State:</label>
+        <input type="text" id="filter_state" name="state" class="text_field"
+               value="{{filterForm.state.data|default_if_none:''}}"/>
+        {% if filterForm.state.errors %}
+          <span class="error">
+            {% for error in filterForm.state.errors %}
+              {{ error|escape }}
+            {% endfor %}
+          </span>
+        {% endif %}
+      </p>
+      <p>
+        <label for="filter_vo">VO:</label>
+        <input type="text" id="filter_vo" name="vo" class="text_field"
+               value="{{filterForm.vo.value|default_if_none:''}}"/>
+      </p>
+      <p>
+        <input type="submit"/>
+      </p>      
+    </form>
+  </div>
+  <p>
+    <a href="javascript:$('#filters').toggle('slide', {'direction':'up'})">
+      [Filters]
+    </a>
+  </p>
+  
+  <script type="text/javascript">
+  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources %}"});
+  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations %}"});
+  $("#filter_vo").autocomplete({source: "{% url ftsmon.views.uniqueVos %}"});
+  
+  function split(val) {
+	  return val.split(/,\s*/);
+  }
+  
+  function extractLast(term) {
+	  return split(term).pop();
+  }
+  
+  states = ["SUBMITTED", "READY", "ACTIVE", "FINISHED", "FINISHEDDIRTY", "FAILED"];
+  $("#filter_state").autocomplete({source: function(request, response) {
+	                                           response($.ui.autocomplete.filter(states, extractLast(request.term)));
+	                                         },
+	                                 select: function (event, ui) {
+	                                	         var terms = split(this.value);
+	                                	         terms.pop();
+	                                	         terms.push(ui.item.value);
+	                                	         terms.push("");
+	                                	         this.value = terms.join(", ");
+	                                	         return false;
+	                                         },
+	                                 focus: function () { return false; }
+                                  });
+  </script>
+</div>

@@ -8,79 +8,79 @@
 <h2>Statistics</h2>
 
 <table class="statistics">
-        <tr>
-          <td>TOTAL TRANSFERS SUCCEEDED</td>
-          <td>{{ numberOfFinished }}</td>
-        </tr>
-        <tr>
-          <td>TOTAL TRANSFERS FAILED</td>
-          <td>{{ numberOfFailed }}</td>
-        </tr>
-        <tr>
-          <td>SUCCESS RATE</td>
-          <td>{{ successRate|floatformat:2 }}%</td>
-        </tr>
-        <tr>
-          <td>TOTAL TRANSFERS ACTIVE</td>
-          <td>{{ numberOfActive }}</td>
-        </tr>
-        <tr>
-          <td>TOTAL TRANSFERS QUEUED</td>
-          <td>{{ numberOfQueued }}</td>
-        </tr>
-        <tr>
-          <td>ACTIVE PER VO</td>
-          <td>
-            {% for vo, count in activePerVO.items %}
-                    {{ vo }}: {{ count }}<br/>
-            {% endfor %}
-          </td>
-        </tr>
-        <tr>
-            <td>ACTIVE PER SE PAIR</td>
-            <td>
-                {% for pair, states in statePerPair.items %}
-                    {{ pair.0 }} -&gt; {{ pair.1 }} (
-                    {% for st in states %}
-                        <span class="{{ st.0 }}">
-                            {{ st.1 }} {{ st.0 }}
-                        </span>
-                    {% endfor %}
-                    )
-                    <br/>
-                {% endfor %}
-            </td>
-        </tr>
-        <tr>
-          <td>AVG. THROUGHPUT PER SE PAIR</td>
-          <td>
-            {% for pair in avgPerPair %}
-              {{ pair.0 }} -&gt;
-              {{ pair.1 }}: 
-              {{ pair.3|floatformat:2 }} Mbit/sec
-              <br/>
-            {% endfor %}
-          </td>
-        </tr>
-        <tr>
-          <td>AVG. TX DURATION PER SE PAIR</td>
-          <td>
-            {% for pair in avgPerPair %}
-              {{ pair.0 }} -&gt;
-              {{ pair.1 }}: 
-              {{ pair.2|floatformat:1 }} secs
-              <br/>
-            {% endfor %}
-          </td>
-        </tr>
-        <tr>
-          <td>DISTINCT FAILURES</td>
-          <td>
-            {% for r in uniqueReasons %}
-              <p>{{ r.count }}: {{ r.reason }}</p>
-            {% endfor %}
-          </td>
-        </tr>
+<tr>
+  <td>TOTAL TRANSFERS SUCCEEDED</td>
+  <td>{{ numberOfFinished }}</td>
+</tr>
+<tr>
+  <td>TOTAL TRANSFERS FAILED</td>
+  <td>{{ numberOfFailed }}</td>
+</tr>
+<tr>
+  <td>SUCCESS RATE</td>
+  <td>{{ successRate|floatformat:2 }}%</td>
+</tr>
+<tr>
+  <td>TOTAL TRANSFERS ACTIVE</td>
+  <td>{{ numberOfActive }}</td>
+</tr>
+<tr>
+  <td>TOTAL TRANSFERS QUEUED</td>
+  <td>{{ numberOfQueued }}</td>
+</tr>
+<tr>
+  <td>ACTIVE PER VO</td>
+  <td>
+    {% for vo, count in activePerVO.items %}
+            {{ vo }}: {{ count }}<br/>
+    {% endfor %}
+  </td>
+</tr>
+<tr>
+    <td>ACTIVE PER SE PAIR</td>
+    <td>
+      {% for pair, states in statePerPair.items %}
+        {{ pair.0 }} -&gt; {{ pair.1 }} (
+        {% for st in states %}
+            <span class="{{ st.0 }}">
+                {{ st.1 }} {{ st.0 }}
+            </span>
+        {% endfor %}
+        )
+        <br/>
+      {% endfor %}
+    </td>
+</tr>
+<tr>
+  <td>AVG. THROUGHPUT PER SE PAIR</td>
+  <td>
+    {% for pair in avgPerPair %}
+      {{ pair.0 }} -&gt;
+      {{ pair.1 }}: 
+      {{ pair.3|floatformat:2 }} Mbit/sec
+      <br/>
+    {% endfor %}
+  </td>
+</tr>
+<tr>
+  <td>AVG. TX DURATION PER SE PAIR</td>
+  <td>
+    {% for pair in avgPerPair %}
+      {{ pair.0 }} -&gt;
+      {{ pair.1 }}: 
+      {{ pair.2|floatformat:1 }} secs
+      <br/>
+    {% endfor %}
+  </td>
+</tr>
+<tr>
+  <td>DISTINCT FAILURES</td>
+  <td>
+    {% for r in uniqueReasons %}
+      <p>{{ r.count }}: {{ r.reason }}</p>
+    {% endfor %}
+  </td>
+</tr>
 </table>
 
 {% endblock %}

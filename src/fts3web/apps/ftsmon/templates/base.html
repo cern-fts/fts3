@@ -1,0 +1,45 @@
+{% load settingsTag %}
+ 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <title>{% getSetting "SITE_NAME" %} FTS3</title>
+    
+    <link rel="stylesheet" href="{{ STATIC_URL }}style.css" type="text/css"/>
+    <link rel="shortcut icon" href="{% getSetting 'SITE_LOGO_SMALL' %}"/>
+    
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"/>
+    <script src="http://code.jquery.com/jquery-1.8.3.js" type="text/javascript"></script>
+    <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js" type="text/javascript"></script>
+  </head>
+  
+  <body>
+    <div id="header">
+      <h1>
+        <img src="{% getSetting 'SITE_LOGO' %}" alt="{% getSetting 'SITE_NAME' %}"/>
+        <a href="{% url ftsmon.views.jobIndex %}">{% getSetting "SITE_NAME" %} FTS3 Monitoring</a>
+      </h1>
+    </div>
+    
+    <div id="toolbox">
+      <div id="links">
+        <a href="{% url ftsmon.views.jobIndex %}">Jobs</a>
+        <a href="{% url ftsmon.views.jobQueue %}">Queue</a>
+        <a href="{% url ftsmon.views.statistics %}">Statistics</a>
+        <a href="{% url ftsmon.views.configurationAudit %}">Configuration audit</a>
+      </div>
+      <div id="jobSearchForm">
+        <form method="get" action="{% url ftsmon.views.jobIndex %}">
+          <input type="text" name="jobId" size="64"/>
+          <input type="submit" value="Search job"/>
+        </form>
+      </div>
+    </div>
+      
+    <div id="content">
+      {% block content %}
+      {% endblock %}
+    </div>    
+  </body>
+</html>
