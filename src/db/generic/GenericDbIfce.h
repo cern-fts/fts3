@@ -53,6 +53,7 @@
 #include <utility>
 
 #include <boost/tuple/tuple.hpp>
+#include <boost/optional.hpp>
 
 /**
  * GenericDbIfce class declaration
@@ -239,17 +240,24 @@ public:
 
     virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo) = 0;
 
+    virtual void delJobShareConfig(std::string job_id) = 0;
+
     virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id) = 0;
 
-    virtual bool isThereJobShareConfig(std::string job_id) = 0;
+    virtual int countJobShareConfig(std::string job_id) = 0;
 
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo) = 0;
 
     virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo) = 0;
 
     virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo) = 0;
-    
+
+    virtual boost::optional<int> getJobConfigCount(std::string job_id) = 0;
+
+    virtual void setJobConfigCount(std::string job_id, int count) = 0;
+
     virtual bool checkConnectionStatus() = 0;
+
 };
 
 

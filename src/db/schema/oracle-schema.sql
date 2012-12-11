@@ -457,7 +457,11 @@ CREATE TABLE t_job (
   ,fail_nearline CHAR(1) default NULL
 --
 -- Specified is the checksum is required on the source and destination, destination or none
-  ,checksum_method CHAR(1) default NULL);
+  ,checksum_method CHAR(1) default NULL
+ --
+ -- Specifies how many configurations were assigned to the transfer-job
+  ,configuration_count INTEGER default NULL
+  );
   
   
 -- 

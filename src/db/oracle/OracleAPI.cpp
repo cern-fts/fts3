@@ -1220,7 +1220,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     query << ", TX_DURATION=:" << ++index;
     query << ", THROUGHPUT=:" << ++index;
     query << " WHERE file_id =:" << ++index;
-    query << " and (file_state='READY' OR file_state='ACTIVE')";
+    query << " and file_state not in ('FAILED', 'FINISHED', 'CANCELED')";
     oracle::occi::Statement* s = NULL;
     ThreadTraits::LOCK_R lock(_mutex);
         
@@ -5109,6 +5109,39 @@ void OracleAPI::addJobShareConfig(std::string job_id, std::string source, std::s
 	    }
 }
 
+void OracleAPI::delJobShareConfig(std::string job_id) {
+
+    std::string query = "delete from t_job_share_config where job_id = :1";
+    std::string tag = "delJobShareConfig";
+
+    oracle::occi::Statement* s = NULL;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+        s = conn->createStatement(query, tag);
+        s->setString(1, job_id);
+        if(s->executeUpdate() != 0) conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+}
+
 std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::getJobShareConfig(std::string job_id) {
 
     std::string tag = "getJobShareConfig";
@@ -5166,7 +5199,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::ge
     return ret;
 }
 
-bool OracleAPI::isThereJobShareConfig(std::string job_id) {
+int OracleAPI::countJobShareConfig(std::string job_id) {
 
     std::string tag = "isThereJobShareConfig";
     std::string query = " select count(*) from t_job_share_config where job_id=:1 ";
@@ -5174,7 +5207,7 @@ bool OracleAPI::isThereJobShareConfig(std::string job_id) {
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
 
-    bool ret = false;
+    int ret = 0;
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
@@ -5186,7 +5219,7 @@ bool OracleAPI::isThereJobShareConfig(std::string job_id) {
         r = conn->createResultset(s);
 
         if (r->next()) {
-        	ret = r->getInt(1) > 0;
+        	ret = r->getInt(1);
         }
 
         conn->destroyResultset(s, r);
@@ -5411,6 +5444,100 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
     }
 
     return ret;
+}
+
+boost::optional<int> OracleAPI::getJobConfigCount(std::string job_id) {
+
+    std::string tag = "getJobConfigCount";
+    std::string query =
+    		"select configuration_count "
+    		"from t_job "
+    		"where job_id = :1"
+    		;
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    boost::optional<int> ret;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        s->setString(1, job_id);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        	if (!r->isNull(1))
+        		ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+    return ret;
+}
+
+void OracleAPI::setJobConfigCount(std::string job_id, int count) {
+
+    const std::string tag = "setJobConfigCount";
+    std::string query =
+            "UPDATE t_job "
+            "SET configuration_count =:1 "
+            "WHERE job_id = :2 ";
+
+    oracle::occi::Statement* s = NULL;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        s = conn->createStatement(query, tag);
+        s->setInt(1, count);
+        s->setString(2, job_id);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
 }
 
 
