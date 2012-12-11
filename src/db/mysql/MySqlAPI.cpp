@@ -584,8 +584,9 @@ void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string S
 
         // There is always a comma at the end, so truncate
         std::string queryStr = query.str();
-        query.str(queryStr.substr(0, queryStr.length() - 1));
+        query.str(std::string());
 
+        query << queryStr.substr(0, queryStr.length() - 1);
         query << " WHERE name = :name";
         stmt.exchange(soci::use(NAME, "name"));
 
@@ -2149,7 +2150,8 @@ std::pair<std::string, std::string>* MySqlAPI::getSourceAndDestination(std::stri
         std::string source, destination;
         sql << "SELECT source, destination FROM t_link_config WHERE symbolicName = :sname",
                 soci::use(symbolic_name), soci::into(source), soci::into(destination);
-        return new std::pair<std::string, std::string>(source, destination);
+        if (sql.got_data())
+            pair = new std::pair<std::string, std::string>(source, destination);
     }
     catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
