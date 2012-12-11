@@ -1,30 +1,30 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
-Summary:	FTS3 Web Application for monitoring
-Name:		fts-monitoring
-Version:	0.0.1
-Release:	51%{?dist}
-URL:		https://svnweb.cern.ch/trac/fts3
-License:	ASL 2.0
-Group:		Applications/Internet
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+Summary: FTS3 Web Application for monitoring
+Name: fts-monitoring
+Version: 0.0.1
+Release: 51%{?dist}
+URL: https://svnweb.cern.ch/trac/fts3
+License: ASL 2.0
+Group: Applications/Internet
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Requires:	cx_Oracle
-Requires:	Django
-Requires:	httpd
-Requires:	mod_wsgi
-Requires:	MySQL-python
-Requires:	python
+Requires: cx_Oracle
+Requires: Django
+Requires: httpd
+Requires: mod_wsgi
+Requires: MySQL-python
+Requires: python
 
-Source0:	%{name}-%{version}.tar.gz
+Source0: http://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
 
 %description
 FTS v3 web application for monitoring
 
 
 %prep
-%setup -c
+%setup -qc
 
 %install
 rm -rf %{buildroot}
@@ -39,8 +39,8 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{_datadir}/fts3web
-%{_sysconfdir}/httpd/conf.d/
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/
 
 %changelog
-* Mon Nov 05 2012 Alejandro Álvarez Ayllón <aalvarez@cern.ch>
- - First version of the spec file.
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51
+  - A bit like a fedora package
