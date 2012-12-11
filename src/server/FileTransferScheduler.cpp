@@ -41,8 +41,6 @@
 using namespace db;
 using namespace fts3::ws;
 
-const regex FileTransferScheduler::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
-
 string FileTransferScheduler::fileUrlToSeName(string url) {
 
 	static const regex re(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
