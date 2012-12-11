@@ -115,6 +115,8 @@ public:
 	static const string on;
 	/// 'off' string
 	static const string off;
+	/// the public share
+	static const string pub;
 
 protected:
 

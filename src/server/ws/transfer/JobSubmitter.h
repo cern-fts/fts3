@@ -163,22 +163,10 @@ private:
 	///
 	static const regex fileUrlRegex;
 
-	///
-	static const string pub;
-
 	/**
 	 *
 	 */
 	string fileUrlToSeName(string url);
-
-	///
-	list<share> assigned_shares;
-
-	void assignShareCfg(list<cfg_type> arg);
-
-	void addAssignedShareCfg(string job_id, list<share> assigned_shares);
-
-
 
 };
 

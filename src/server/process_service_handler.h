@@ -30,6 +30,7 @@ limitations under the License. */
 #include <sstream>
 #include "site_name.h"
 #include "FileTransferScheduler.h"
+#include "ConfigurationAssigner.h"
 #include "ProtocolResolver.h"
 #include <signal.h>
 #include "parse_url.h"
@@ -232,8 +233,8 @@ protected:
                     destin_hostname = extractHostname(temp->DEST_SURL);
 		    
 		    /*check if manual config exist for this pair and vo*/
-                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereJobShareConfig(temp->JOB_ID);
-				
+                    ConfigurationAssigner cfgAssigner(temp);
+                    manualConfigExists = cfgAssigner.assign();
 			
                     bool optimize = false;
                     if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {		    	
@@ -479,7 +480,8 @@ protected:
                 createJobFile(job_id, urls);
 
 		   /*check if manual config exist for this pair and vo*/
-                manualConfigExists = DBSingleton::instance().getDBObjectInstance()->isThereJobShareConfig(job_id);
+                ConfigurationAssigner cfgAssigner(tempUrl);
+                manualConfigExists = cfgAssigner.assign();
 
 		bool optimize = false;
                

@@ -55,6 +55,7 @@ const string Configuration::any = "*";
 const string Configuration::wildcard = "(*)";
 const string Configuration::on = "on";
 const string Configuration::off = "off";
+const string Configuration::pub = "public";
 
 Configuration::Configuration(string dn) :
 		dn(dn),

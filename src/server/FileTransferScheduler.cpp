@@ -103,6 +103,29 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 
 		if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
 
+		// check if the configuration allows this type of transfer-job
+		if (!cfg->active_transfers) {
+			// failed to allocate active transfers credits to transfer-job
+			// set file status to failed
+			db->updateFileTransferStatus(
+					file->JOB_ID,
+					lexical_cast<string>(file->FILE_ID),
+					JobStatusHandler::FTS3_STATUS_FAILED,
+					"Failed to allocate active transfer credits to transfer job!",
+					0,
+					0,
+					0
+				);
+			// set job states if necessary
+			db->updateJobTransferStatus(
+					lexical_cast<string>(file->FILE_ID),
+					file->JOB_ID,
+					JobStatusHandler::FTS3_STATUS_FAILED
+				);
+
+			return false;
+		}
+
 		int active_transfers = 0;
 
 		if (source == Configuration::wildcard) {
