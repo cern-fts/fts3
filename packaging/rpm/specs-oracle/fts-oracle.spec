@@ -56,5 +56,5 @@ rm -rf %{buildroot}
 %doc %{_docdir}/fts3/oracle-drop.sql
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51%{?dist}
   - A bit like a fedora package
