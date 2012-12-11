@@ -6,7 +6,7 @@ Name:		ftsmonitoring
 Version:	0.0.1
 Release:	51%{?dist}
 URL:		https://svnweb.cern.ch/trac/fts3
-License:	Apache 2
+License:	ASL 2.0
 Group:		Applications/Internet
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -20,15 +20,8 @@ Requires:	python
 Source0:	%{name}-%{version}.tar.gz
 
 %description
-FTS3 web Application for monitoring
+FTS v3 web application for monitoring
 
-
-%package ftsmonitoring
-Summary: FTS3 Web Application for monitoring
-Group: Applications/Internet
-
-%description ftsmonitoring
-FTS3 web Application for monitoring
 
 %prep
 %setup -c
@@ -37,13 +30,13 @@ FTS3 web Application for monitoring
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_datadir}/fts3web
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
-cp -dr --no-preserve=ownership %{_builddir}/%{name}-%{version}/src/fts3web %{buildroot}%{_datadir}/fts3web/
-install -m 644 %{_builddir}/%{name}-%{version}/src/fts3web/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/
+cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/* %{buildroot}%{_datadir}/fts3web/
+install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/
 
 %clean
 rm -rf %{buildroot}
 
-%files ftsmonitoring
+%files
 %defattr(-,root,root,-)
 %{_datadir}/fts3web
 %{_sysconfdir}/httpd/conf.d/

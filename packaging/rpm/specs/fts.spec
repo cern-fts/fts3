@@ -8,7 +8,7 @@ Summary: File Transfer Service V3
 Group: System Environment/Daemons 
 License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki 
-Source0: http://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  cmake
@@ -48,10 +48,14 @@ Group: System Environment/Daemons
 Requires: fts-libs = %{version}-%{release}
 Requires: gfal2-plugin-gridftp
 Requires: gfal2-plugin-srm
-Requires: emi-resource-information-service
-Requires: emi-version
-#Requires: fetch-crl3
-#Requires: gfal2-plugin-http
+Requires: bdii
+Requires: glue-schema
+Requires: glue-validator
+
+#Requires: emi-resource-information-service (from EMI3)
+#Requires: emi-version (from EMI3)
+#Requires: fetch-crl3 (metapackage)
+#Requires: gfal2-plugin-http (when ready)
 
 %package libs
 Summary: File Transfer Service version 3 libs

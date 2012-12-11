@@ -45,6 +45,12 @@ int main(int argc, char** argv) {
     gethostname(hostname, MAXHOSTNAMELEN);
     std::string hostVM(hostname);
     std::stringstream versionFTS;
+    const char *emiVersion = "/etc/emi-version";
+    
+    if (fexists(emiVersion) != 0) {
+    	return EXIT_FAILURE;
+    }
+    	
 
     //get fts server version  
     FILE *in;
@@ -61,7 +67,7 @@ int main(int argc, char** argv) {
 
     //get emi-version	 
     string versionEMI;
-    ifstream myfile("/etc/emi-version");
+    ifstream myfile(emiVersion);
     getline(myfile, versionEMI);
 
     //get fts server health state 
