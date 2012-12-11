@@ -177,11 +177,11 @@ void ProxyCertificateDelegator::delegate() {
         	string errMsg = glite_delegation_get_error(dctx);
             cout << "delegation: " << errMsg << endl;
 
-//            // TODO don't use string value to discover the error (???) do we need retry?
-//            if (errMsg.find("key values mismatch") != string::npos) {
-//            	cout << "Retrying!" << endl;
-//            	return delegate();
-//            }
+//            // TODO don't use string value to discover the error (???) do we need retry? yes we do!
+            if (errMsg.find("key values mismatch") != string::npos) {
+            	cout << "Retrying!" << endl;
+            	return delegate();
+            }
             throw string("delegation: " + errMsg);
         }
         cout << "Credential has been successfully delegated to the service." << endl;
