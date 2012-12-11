@@ -2417,6 +2417,25 @@ void MySqlAPI::addJobShareConfig(std::string job_id, std::string source, std::st
 
 
 
+void MySqlAPI::delJobShareConfig(std::string job_id) {
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+
+        sql << "DELETE FROM t_job_share_config WHERE job_id = :jobId",
+                soci::use(job_id);
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
+
 std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::getJobShareConfig(std::string job_id) {
     soci::session sql(connectionPool);
 
@@ -2442,20 +2461,18 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::get
 
 
 
-bool MySqlAPI::isThereJobShareConfig(std::string job_id) {
+int MySqlAPI::countJobShareConfig(std::string job_id) {
     soci::session sql(connectionPool);
 
-    bool found = false;
+    int count = 0;
     try {
-        int count;
         sql << "SELECT COUNT(*) FROM t_job_share_config WHERE job_id = :jobId",
                 soci::use(job_id), soci::into(count);
-        found = (count > 0);
     }
     catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
-    return found;
+    return count;
 }
 
 
@@ -2525,6 +2542,54 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
     }
     return nActiveInbound;
 }
+
+
+
+boost::optional<int> MySqlAPI::getJobConfigCount(std::string job_id) {
+    soci::session sql(connectionPool);
+
+    boost::optional<int> opCount;
+    try {
+        int count = 0;
+        soci::indicator isNull;
+
+        sql << "SELECT configuration_count FROM t_job WHERE job_id = :jobId",
+                soci::use(job_id), soci::into(count, isNull);
+
+        if (isNull != soci::i_null) {
+            opCount = count;
+        }
+
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return opCount;
+}
+
+
+
+void MySqlAPI::setJobConfigCount(std::string job_id, int count) {
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+
+        sql << "UPDATE t_job SET "
+               "  configuration_count = :count "
+               "WHERE job_id = :jobId",
+               soci::use(count), soci::use(job_id);
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
 
 bool MySqlAPI::checkConnectionStatus() {
     soci::session sql(connectionPool);
