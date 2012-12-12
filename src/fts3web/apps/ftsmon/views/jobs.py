@@ -1,5 +1,6 @@
 import datetime
 import time
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
@@ -26,9 +27,9 @@ def jobIndex(httpRequest, states = ['FAILED', 'FAILEDDIRTY', 'FINISHED', 'CANCEL
         
     if additionalTitle is None:
         additionalTitle = '(running or finished in the last %dh)' % (hours)
-
+        
     # Initial query
-    jobs = Job.objects.filter(Q(job_state__in = states), Q(finish_time__gte = notBefore) | Q(finish_time = None))
+    jobs = Job.objects.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))
     
     # Filter
     if filterForm.is_valid():
@@ -43,15 +44,34 @@ def jobIndex(httpRequest, states = ['FAILED', 'FAILEDDIRTY', 'FINISHED', 'CANCEL
     
         if filterForm['dest_se'].value():
             jobs = jobs.filter(dest_se = filterForm['dest_se'].value())
+            
+    jobs = jobs.filter(job_state__in = states)
     
     # Ordering
     jobs = jobs.order_by('-finish_time', '-submit_time')
     jobs = jobs.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'}, order_by=['-nullFinished'])
+    
+    # Paginate
+    paginator = Paginator(jobs, 50)
+    try:
+        if 'page' in httpRequest.GET: 
+            jobs = paginator.page(httpRequest.GET.get('page'))
+        else:
+            jobs = paginator.page(1)
+    except PageNotAnInteger:
+        jobs = paginator.page(1)
+    except EmptyPage:
+        jobs = paginator.page(paginator.num_pages)
+        
+    # Remember extra attributes
+    extra_args = filterForm.args()
         
     # Render
     return render(httpRequest, 'jobindex.html',
                   {'filterForm': filterForm,
                    'jobs': jobs,
+                   'paginator': paginator,
+                   'extra_args': extra_args,
                    'additionalTitle': additionalTitle,
                    'request': httpRequest})
   

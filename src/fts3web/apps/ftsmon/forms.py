@@ -44,3 +44,8 @@ class FilterForm(forms.Form):
            self['state'].data or self['vo'].data or self['time_window'].data:
             return False
         return True
+    
+    def args(self):
+        return "source_se=%s&dest_se=%s&state=%s&vo=%s&time_window=%s" %\
+            (self['source_se'].data, self['dest_se'].data, self['state'].data,
+             self['vo'].data, self['time_window'].data)

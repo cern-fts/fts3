@@ -4,7 +4,22 @@
 
 {% include "filter.html" %}
 
-<h2>Showing {{ jobs|length }} jobs {{ additionalTitle }}</h2>
+<h2>
+  Showing {{ jobs.start_index }} to {{ jobs.end_index }} out of {{ paginator.count}} {{ additionalTitle }}
+  {% if jobs.has_previous %}
+    <a href="?page=1&{{ extra_args }}">&lt;&lt;</a>
+    <a href="?page={{ jobs.previous_page_number }}&{{ extra_args }}">&lt;</a>
+  {% else %}
+    &lt; &lt;&lt;
+  {% endif %} | 
+  {% if jobs.has_next %}
+    <a href="?page={{ jobs.next_page_number }}&{{ extra_args }}">&gt;</a>
+    <a href="?page={{ paginator.num_pages }}&{{ extra_args }}">&gt;&gt;</a>
+  {% else %}
+    &gt; &gt;&gt;
+  {% endif %}
+</h2>
+
 <table class="jobList">
   <thead>
     <tr>
@@ -18,7 +33,7 @@
     </tr>
   </thead>
   <tbody>
-    {% for j in jobs %}
+    {% for j in jobs.object_list %}
       <tr class="{{ j.job_state }} {% cycle 'odd' 'even' %}">
         <td>
           <img src="{{ STATIC_URL }}plus.gif" title="Show details" onclick="$('#{{j.job_id}}').toggle()"/>
