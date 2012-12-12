@@ -1,7 +1,7 @@
 !!!
 # !!! Important requirement!!!
 Web-server with "server" part should have Perl module JSON (http://search.cpan.org/~makamaka/JSON-2.53/) installed.
-Directory cgi-bin should be setting for cgi execution
+Directory cgi-bin should be set for cgi execution
 !!!
 
 "Server" part (cgi-bin directory with programm to communicate with Oracle DB) of fts3webconfig consists of two files:

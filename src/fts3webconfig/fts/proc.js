@@ -215,7 +215,6 @@ function sel_table (type, div, width, htm, w, h) {
 sel_table.prototype.drawTable = function (arr) {
 	this.clearTable();
 	var crow = 0;
-//	for (var i=arr.length-1; i>=0; i++) {
 	for (var i=0; i<arr.length; i++) {
 		crow += this.insRow(arr[i], crow);
 	}
@@ -231,12 +230,9 @@ sel_table.prototype.clearTable = function () {
 }
 
 sel_table.prototype.delRow = function (ind, len) {
-//alert("ind = " + ind + " len = " + len);
 	var j = this.tbody.rows.length - ind - len;
 	if (this.tbody.rows[j]){
 		for (var i = j; i< +len+j; i++) {
-//var tt = +len+j;
-//alert("j = " + j + " j+len = " + tt + " i = " + i);
 			this.tbody.deleteRow(j);
 		}
 		return true;
@@ -252,6 +248,7 @@ sel_table.prototype.insRow = function (rec, ind) {
 // specially for empty connections for SE
 if (this.type == "t_se" && !rec.connections[0].source) set = true;
 	var ret = proc_row(this.tbody, this.cfg, rec, 1, set);
+
 // add command buttons
 	tcell = ret.trow.insertCell(-1);
 	tcell.rowSpan = ret.span;
