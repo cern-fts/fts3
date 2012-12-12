@@ -8,9 +8,7 @@ from fts3.models import Job, File, ConfigAudit
 
 
 def jobIndex(httpRequest, states = ['FAILED', 'FAILEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE'],
-             additionalTitle = '(running or finished in the last 12h)'):
-    
-    notBefore = datetime.datetime.now() - datetime.timedelta(hours = 12)
+             additionalTitle = None):
     
     # If jobId is in the request, redirect directly
     if httpRequest.method == 'GET' and 'jobId' in httpRequest.GET:
@@ -19,6 +17,15 @@ def jobIndex(httpRequest, states = ['FAILED', 'FAILEDDIRTY', 'FINISHED', 'CANCEL
     # Initialize forms
     searchJobForm = forms.JobSearchForm(httpRequest.GET)
     filterForm    = forms.FilterForm(httpRequest.GET)
+    
+    # Time filter
+    hours = 12
+    if filterForm.is_valid() and filterForm['time_window'].value():
+        hours = int(filterForm['time_window'].value())
+    notBefore = datetime.datetime.now() -  datetime.timedelta(hours = hours)
+        
+    if additionalTitle is None:
+        additionalTitle = '(running or finished in the last %dh)' % (hours)
 
     # Initial query
     jobs = Job.objects.filter(Q(job_state__in = states), Q(finish_time__gte = notBefore) | Q(finish_time = None))

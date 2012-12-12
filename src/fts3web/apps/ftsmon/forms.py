@@ -33,13 +33,14 @@ class StateField(forms.CharField):
 
 
 class FilterForm(forms.Form):
-    source_se = forms.CharField(required = False)
-    dest_se   = forms.CharField(required = False)
-    state     = StateField(required = False)
-    vo        = forms.CharField(required = False)
+    source_se   = forms.CharField(required = False)
+    dest_se     = forms.CharField(required = False)
+    state       = StateField(required = False)
+    vo          = forms.CharField(required = False)
+    time_window = forms.IntegerField(required = False) 
     
     def is_empty(self):
         if self['source_se'].data or self['dest_se'].data or\
-           self['state'].data or self['vo'].data:
+           self['state'].data or self['vo'].data or self['time_window'].data:
             return False
         return True

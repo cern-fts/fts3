@@ -3,7 +3,7 @@
 
 {% block refresh %}
   {% if not transferJob.isFinished %}
-    <meta http-equiv="refresh" content="10"/>
+    {% include "refresh.html" %}
   {% endif %} 
 {% endblock %}
 
