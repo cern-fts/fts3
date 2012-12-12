@@ -45,7 +45,14 @@ class FilterForm(forms.Form):
             return False
         return True
     
+    def default(self, field, default = ''):
+        if not self[field].data:
+            return default
+        else:
+            return str(self[field].data)
+        
     def args(self):
         return "source_se=%s&dest_se=%s&state=%s&vo=%s&time_window=%s" %\
-            (self['source_se'].data, self['dest_se'].data, self['state'].data,
-             self['vo'].data, self['time_window'].data)
+            (self.default('source_se'), self.default('dest_se'),
+             self.default('state'), self.default('vo'),
+             self.default('time_window', 12))

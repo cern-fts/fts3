@@ -26,7 +26,7 @@ def jobIndex(httpRequest, states = ['FAILED', 'FAILEDDIRTY', 'FINISHED', 'CANCEL
     notBefore = datetime.datetime.now() -  datetime.timedelta(hours = hours)
         
     if additionalTitle is None:
-        additionalTitle = '(running or finished in the last %dh)' % (hours)
+        additionalTitle = '(from the last %dh)' % (hours)
         
     # Initial query
     jobs = Job.objects.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))
