@@ -109,12 +109,13 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 		// check if the configuration allows this type of transfer-job
 		if (!cfg->active_transfers) {
 			// failed to allocate active transfers credits to transfer-job
+			string msg = getNoCreditsErrMsg(cfg.get());
 			// set file status to failed
 			db->updateFileTransferStatus(
 					file->JOB_ID,
 					lexical_cast<string>(file->FILE_ID),
 					JobStatusHandler::FTS3_STATUS_FAILED,
-					getNoCreditsErrMsg(cfg.get()), // TODO add only [list of vo] are allowed to submit
+					msg,
 					0,
 					0,
 					0
@@ -125,6 +126,8 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 					file->JOB_ID,
 					JobStatusHandler::FTS3_STATUS_FAILED
 				);
+			// log it
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << msg << commit;
 			// the file has been resolved as FAILED, it won't be scheduled
 			return false;
 		}
