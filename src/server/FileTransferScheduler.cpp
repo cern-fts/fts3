@@ -82,11 +82,16 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(file->JOB_ID);
 	vector< tuple<string, string, string> >::iterator it;
 
-	if (cfgs.empty() && manual) {
-		// the configuration has been removed,
-		// return false in next round auto-tuner
-		// will take care of it
-		return false;
+	// get the number of configurations assigned to the transfer job
+	optional<int> count = db->getJobConfigCount(file->JOB_ID);
+	// check if count has been initialized, in principal it must been initialized, but anyway it is good to check
+	if (count) {
+		if ( (*count != cfgs.size()) && manual) {
+			// the configuration has been removed,
+			// return false in next round configuration will be reassigned
+			// or auto-tuner will take care of it
+			return false;
+		}
 	}
 
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
