@@ -11,4 +11,6 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^json/uniqueSources', 'uniqueSources'),
     url(r'^json/uniqueDestinations', 'uniqueDestinations'),
     url(r'^json/uniqueVos', 'uniqueVos'),
+    
+    url(r'^plot/pie', 'pie'),
 )

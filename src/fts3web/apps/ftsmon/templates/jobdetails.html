@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% load filesize %}
 
+{% block refresh %}
+  {% if not transferJob.isFinished %}
+    <meta http-equiv="refresh" content="10"/>
+  {% endif %} 
+{% endblock %}
+
 {% block content %}
   <h2>Transfer '{{transferJob.job_id}}' {{transferJob.job_state}}</h2>
   <p>

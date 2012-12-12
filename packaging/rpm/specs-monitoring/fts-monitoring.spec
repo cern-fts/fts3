@@ -17,6 +17,7 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: MySQL-python
 Requires: python
+Requires: python-matplotlib
 
 Source0: http://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
 
