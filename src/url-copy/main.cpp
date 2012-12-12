@@ -461,7 +461,7 @@ int main(int argc, char **argv) {
     struct stat statbufsrc;
     struct stat statbufdest;
     GError * tmp_err = NULL; // classical GError/glib error management   
-    params = gfalt_params_handle_new(&tmp_err);
+    params = gfalt_params_handle_new(NULL);
     gfal_context_t handle;
     int ret = -1;
     long long transferred_bytes = 0;
@@ -567,7 +567,7 @@ int main(int argc, char **argv) {
 
     //reuse session    
     if (reuseFile.length() > 0) {
-        gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, &tmp_err);
+        gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
     }
 
     std::vector<std::string> urlsFile;
@@ -733,9 +733,9 @@ int main(int argc, char **argv) {
                 if (bdii) {
                     log << fileManagement.timestamp() << "INFO BDII:" << bdii << '\n';
 		    if(std::string(bdii).compare("false")){
-		    	gfal2_set_opt_boolean(handle,"BDII","ENABLED", false, &tmp_err);
+		    	gfal2_set_opt_boolean(handle,"BDII","ENABLED", false, NULL);
 		    }else{
-                    	gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", bdii, &tmp_err);
+                    	gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", bdii, NULL);
 		    }
                 }
             }
@@ -756,7 +756,8 @@ int main(int argc, char **argv) {
             if (dest_token_desc.length() > 0)
                 gfalt_set_dst_spacetoken(params, dest_token_desc.c_str(), NULL);
 
-            gfalt_set_create_parent_dir(params, TRUE, &tmp_err);
+            gfalt_set_create_parent_dir(params, TRUE, NULL);
+
 
             for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++) {
                 if (gfal_stat((strArray[1]).c_str(), &statbufsrc) < 0) {
@@ -795,22 +796,22 @@ int main(int argc, char **argv) {
                     std::vector<std::string> token = split((strArray[3]).c_str());
                     std::string checkAlg = token[0];
                     std::string csk = token[1];
-                    gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), &tmp_err);
-                    gfalt_set_checksum_check(params, TRUE, &tmp_err);
+                    gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
+                    gfalt_set_checksum_check(params, TRUE, NULL);
                 } else {//use auto checksum
-                    gfalt_set_checksum_check(params, TRUE, &tmp_err);
+                    gfalt_set_checksum_check(params, TRUE, NULL);
                 }
             }
 
             //overwrite dest file if exists
             if (overwrite) {
-                gfalt_set_replace_existing_file(params, TRUE, &tmp_err);
+                gfalt_set_replace_existing_file(params, TRUE, NULL);
             }
 
             gfalt_set_timeout(params, timeout, NULL);
             gfalt_set_nbstreams(params, nbstreams, NULL);
             gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
-            gfalt_set_monitor_callback(params, &call_perf, &tmp_err);
+            gfalt_set_monitor_callback(params, &call_perf, NULL);
 
             msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
@@ -830,9 +831,6 @@ int main(int argc, char **argv) {
             }
 
             log << fileManagement.timestamp() << "INFO Transfer Starting" << '\n';
-
-	    if(tmp_err)
-            	g_clear_error(&tmp_err);
 		
             if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
                 diff = std::difftime(std::time(NULL), start);
