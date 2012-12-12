@@ -127,7 +127,7 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 					JobStatusHandler::FTS3_STATUS_FAILED
 				);
 			// log it
-			FTS3_COMMON_LOGGER_NEWLOG (INFO) << msg << commit;
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;
 			// the file has been resolved as FAILED, it won't be scheduled
 			return false;
 		}
