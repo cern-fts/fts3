@@ -352,9 +352,11 @@ void signalHandler(int signum) {
     }
 }
 
-/*
+
 void myunexpected() {
     errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
+    errorMessage += " Source: " +source_url;
+    errorMessage += " Dest: " +dest_url;
     logStream << fileManagement.timestamp() << errorMessage << '\n';
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -376,10 +378,14 @@ void myunexpected() {
     if (reuseFile.length() > 0)
         unlink(readFile.c_str());
     sleep(1);
+    exit(1);
+    
 }
 
 void myterminate() {
     errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
+    errorMessage += " Source: " +source_url;
+    errorMessage += " Dest: " +dest_url;    
     logStream << fileManagement.timestamp() << errorMessage << '\n';
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -401,8 +407,9 @@ void myterminate() {
     if (reuseFile.length() > 0)
         unlink(readFile.c_str());
     sleep(1);
+    exit(1);
 }
- */
+
 
 /*courtesy of:
 "Setuid Demystified" by Hao Chen, David Wagner, and Drew Dean: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
@@ -450,11 +457,9 @@ int main(int argc, char **argv) {
     // register signal SIGINT & SIGUSR1signal handler  
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
-    
-    /*
+        
     set_terminate(myterminate);
-    set_unexpected(myunexpected);
-     */
+    set_unexpected(myunexpected);    
 
     std::string bytes_to_string("");   
     struct stat statbufsrc;
@@ -621,7 +626,8 @@ int main(int argc, char **argv) {
             strArray[2] = dest_url;
             strArray[3] = checksum_value;
         }
-
+	
+	
         fileManagement.setSourceUrl(strArray[1]);
         fileManagement.setDestUrl(strArray[2]);
         fileManagement.setFileId(strArray[0]);

@@ -2056,84 +2056,112 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
 void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) {
     TransferJobs* tr_jobs = NULL;
     std::string tag = "getSubmittedJobsReuse";
-    std::string query_stmt("");
-
-    if (vos.length() == 0) {
-        query_stmt = "SELECT /* FIRST_ROWS(1) */ "
-                " t_job.job_id, "
-                " t_job.job_state, "
-                " t_job.vo_name,  "
-                " t_job.priority,  "
-                " t_job.source, "
-                " t_job.dest,  "
-                " t_job.agent_dn, "
-                " t_job.submit_host, "
-                " t_job.source_se, "
-                " t_job.dest_se, "
-                " t_job.user_dn, "
-                " t_job.user_cred, "
-                " t_job.cred_id,  "
-                " t_job.space_token, "
-                " t_job.storage_class,  "
-                " t_job.job_params, "
-                " t_job.overwrite_flag, "
-                " t_job.source_space_token, "
-                " t_job.source_token_description,"
-                " t_job.copy_pin_lifetime, "
-                " t_job.checksum_method "
-                " FROM t_job "
-                " WHERE t_job.job_finished is NULL"
-                " AND t_job.CANCEL_JOB is NULL"
-                " AND t_job.reuse_job='Y' "
-                " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-                " AND ROWNUM <=1 "
-                " ORDER BY t_job.priority DESC"
-                " , SYS_EXTRACT_UTC(t_job.submit_time)";
-    } else {
-        tag += "1";
-        query_stmt = "SELECT /* FIRST_ROWS(1) */ "
-                " t_job.job_id, "
-                " t_job.job_state, "
-                " t_job.vo_name,  "
-                " t_job.priority,  "
-                " t_job.source, "
-                " t_job.dest,  "
-                " t_job.agent_dn, "
-                " t_job.submit_host, "
-                " t_job.source_se, "
-                " t_job.dest_se, "
-                " t_job.user_dn, "
-                " t_job.user_cred, "
-                " t_job.cred_id,  "
-                " t_job.space_token, "
-                " t_job.storage_class,  "
-                " t_job.job_params, "
-                " t_job.overwrite_flag, "
-                " t_job.source_space_token, "
-                " t_job.source_token_description,"
-                " t_job.copy_pin_lifetime, "
-                " t_job.checksum_method "
-                " FROM t_job "
-                " WHERE t_job.job_finished is NULL"
-                " AND t_job.CANCEL_JOB is NULL"
-                " AND t_job.reuse_job='Y' "
-                " AND t_job.VO_NAME IN " + vos +
-                " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-                " AND ROWNUM <=1 "
-                " ORDER BY t_job.priority DESC"
-                " , SYS_EXTRACT_UTC(t_job.submit_time)";
-    }
+    std::string tag1 = "bringdistinctReuse";
+    std::string query_stmt(""); 
+    std::multimap<std::string, std::string> sePairs;
+    std::string bring_distinct = " SELECT distinct t_job.source_se, t_job.dest_se  FROM t_job "
+    				 " WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
+				 " AND t_job.reuse_job='Y' "
+				 " AND t_job.job_state in('SUBMITTED') and "
+				 " exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND "
+				 " t_file.file_state = 'SUBMITTED')";
+    
+    if(vos.length()==0){
+    query_stmt = "SELECT /* FIRST_ROWS(5) */"
+            " t_job.job_id, "
+            " t_job.job_state, "
+            " t_job.vo_name,  "
+            " t_job.priority,  "
+            " t_job.source, "
+            " t_job.dest,  "
+            " t_job.agent_dn, "
+            " t_job.submit_host, "
+            " t_job.source_se, "
+            " t_job.dest_se, "
+            " t_job.user_dn, "
+            " t_job.user_cred, "
+            " t_job.cred_id,  "
+            " t_job.space_token, "
+            " t_job.storage_class,  "
+            " t_job.job_params, "
+            " t_job.overwrite_flag, "
+            " t_job.source_space_token, "
+            " t_job.source_token_description,"
+            " t_job.copy_pin_lifetime, "
+            " t_job.checksum_method "
+            " FROM t_job"
+            " WHERE "
+            " t_job.job_finished is NULL"
+            " AND t_job.CANCEL_JOB is NULL"
+	    " AND t_job.source_se=:1 and t_job.dest_se=:2 "
+            " AND t_job.reuse_job='Y' "
+            " AND t_job.job_state in ('SUBMITTED') "
+	    " AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
+            " AND rownum <=1  ORDER BY t_job.priority DESC"
+            " , SYS_EXTRACT_UTC(t_job.submit_time)";
+    }else{
+    tag +="1";
+    query_stmt = "SELECT /* FIRST_ROWS(5) */"
+            " t_job.job_id, "
+            " t_job.job_state, "
+            " t_job.vo_name,  "
+            " t_job.priority,  "
+            " t_job.source, "
+            " t_job.dest,  "
+            " t_job.agent_dn, "
+            " t_job.submit_host, "
+            " t_job.source_se, "
+            " t_job.dest_se, "
+            " t_job.user_dn, "
+            " t_job.user_cred, "
+            " t_job.cred_id,  "
+            " t_job.space_token, "
+            " t_job.storage_class,  "
+            " t_job.job_params, "
+            " t_job.overwrite_flag, "
+            " t_job.source_space_token, "
+            " t_job.source_token_description,"
+            " t_job.copy_pin_lifetime, "
+            " t_job.checksum_method "
+            " FROM t_job"
+            " WHERE "
+            " t_job.job_finished is NULL"
+            " AND t_job.CANCEL_JOB is NULL"
+	    " AND t_job.source_se=:1 and t_job.dest_se=:2 "	    
+	    " AND t_job.VO_NAME IN " + vos +
+            " AND t_job.reuse_job='Y' "
+            " AND t_job.job_state in ('SUBMITTED') "
+	    " AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "	    
+            " AND rownum <=1  ORDER BY t_job.priority DESC"
+            " , SYS_EXTRACT_UTC(t_job.submit_time)";    
+    }	    
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;    
     ThreadTraits::LOCK_R lock(_mutex);
     try {
-        if (false == conn->checkConn())
-            return;
+    
+        if ( false == conn->checkConn() )
+		return;
 
-        s = conn->createStatement(query_stmt, tag);
-        s->setPrefetchRowCount(1);
-        r = conn->createResultset(s);
+        s1 = conn->createStatement(bring_distinct, tag1);	
+	r1 = conn->createResultset(s1);
+        while (r1->next()) {		
+		sePairs.insert(std::make_pair<std::string, std::string>(r1->getString(1),r1->getString(2)));
+	}
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1);
+	s1=NULL;
+	r1=NULL;
+
+        s = conn->createStatement(query_stmt, tag);	
+	s->setPrefetchRowCount(500);
+       for ( std::multimap< std::string, std::string>::const_iterator iter = sePairs.begin(); iter != sePairs.end(); ++iter ){
+	s->setString(1,iter->first);	
+	s->setString(2,iter->second);		
+	r = conn->createResultset(s);
         while (r->next()) {
             tr_jobs = new TransferJobs();
             tr_jobs->JOB_ID = r->getString(1);
@@ -2159,39 +2187,51 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
             tr_jobs->CHECKSUM_METHOD = r->getString(21);
 
             //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-            if (std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
-                bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-                if (process == true) {
-                    jobs.push_back(tr_jobs);
-                } else {
-                    delete tr_jobs;
-                }
-            }
-
+	    if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0){
+            	bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
+            	if (process == true) {
+                	jobs.push_back(tr_jobs);
+            	} else {
+                	delete tr_jobs;
+            	}
+	    }
         }
         conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag);
-
+        }
+      conn->destroyStatement(s, tag);
+      s=NULL;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
-            conn->rollback();
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag);
-        }
+		if(conn) {
+			conn->rollback();
+
+			if(s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
+
+			if(s1 && r1)
+				conn->destroyResultset(s1, r1);
+			if (s1)
+				conn->destroyStatement(s1, tag1);
+		}
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
 
-    }catch (...) {
-        if (conn) {
-            conn->rollback();
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag);
-        }
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+			if(s && r)
+				conn->destroyResultset(s, r);
+			if (s)
+				conn->destroyStatement(s, tag);
 
+			if(s1 && r1)
+				conn->destroyResultset(s1, r1);
+			if (s1)
+				conn->destroyStatement(s1, tag1);
+		}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
 
 }
