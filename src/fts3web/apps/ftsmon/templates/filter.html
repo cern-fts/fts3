@@ -61,7 +61,6 @@
   $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources %}"});
   $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations %}"});
   $("#filter_vo").autocomplete({source: "{% url ftsmon.views.uniqueVos %}"});
-  $("#filter_timewindow").spinner({min:1});
   
   function split(val) {
 	  return val.split(/,\s*/);

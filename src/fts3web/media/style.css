@@ -136,6 +136,10 @@ tr.even {
   font-weight: bold;
 }
 
+#filters input {
+  border: solid 1px gray;
+}
+
 /* Message dialogs */
 .details {
   display: none;
