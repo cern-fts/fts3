@@ -114,7 +114,6 @@ static std::string sourceSiteName("");
 static std::string destSiteName("");
 static char hostname[1024] = {0};
 static std::string proxy("");
-static char errorBuffer[2048] = {0};
 static bool debug = false;
 static volatile bool propagated = false;
 std::string nstream_to_string("");
@@ -760,14 +759,16 @@ int main(int argc, char **argv) {
 
 
             for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++) {
-                if (gfal_stat((strArray[1]).c_str(), &statbufsrc) < 0) {
-                    std::string tempError = std::string(gfal_posix_strerror_r(errorBuffer, 2048));
+                if (gfal2_stat(handle,(strArray[1]).c_str(), &statbufsrc, &tmp_err) < 0) {
+                    std::string tempError(tmp_err->message);
+                    const int errCode = tmp_err->code;
                     log << fileManagement.timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
                     errorMessage = "Failed to get source file size: " + tempError;
                     errorScope = SOURCE;
-                    reasonClass = mapErrnoToString(gfal_posix_code_error());
+                    reasonClass = mapErrnoToString(errCode);
                     errorPhase = TRANSFER_PREPARATION;
-                    if (sourceStatRetry == 3 || ENOENT == gfal_posix_code_error() || EACCES == gfal_posix_code_error())
+                    g_clear_error(&tmp_err);
+                    if (sourceStatRetry == 3 || ENOENT == errCode || EACCES == errCode)
                         goto stop;
                 } else {
                     //seteuid(privid);
@@ -867,24 +868,23 @@ int main(int argc, char **argv) {
 
             msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++) {
-                if (gfal_stat((strArray[2]).c_str(), &statbufdest) < 0) {
-                    memset(errorBuffer, 0, 2048);
-                    char *err = gfal_posix_strerror_r(errorBuffer, 2048);
-                    if (err) {
-                        std::string tempError = std::string(err);
+                if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0) {
+                    if (tmp_err->message) {
+                        std::string tempError(tmp_err->message);
                         log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
                         errorMessage = "Failed to get dest file size: " + tempError;
                         errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        reasonClass = mapErrnoToString(tmp_err->code);
                         errorPhase = TRANSFER_FINALIZATION;
                     } else {
                         std::string tempError = "Undetermined error";
                         log << fileManagement.timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
                         errorMessage = "Failed to get dest file size: " + tempError;
                         errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        reasonClass = mapErrnoToString(tmp_err->code);
                         errorPhase = TRANSFER_FINALIZATION;
                     }
+                    g_clear_error(&tmp_err);
                     if (destStatRetry == 3)
                         goto stop;
                 } else {
