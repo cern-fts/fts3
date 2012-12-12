@@ -47,9 +47,11 @@ def statistics(httpRequest):
         
     transfers = {}
     for t in File.objects.values('transferHost').annotate(count = Count('transferHost')):
-        transfers[t['transferHost']] = t['count']
-        if t['transferHost'] not in hostnames:
-            hostnames.append(t['transferHost'])
+        # Submitted do not have a transfer host!
+        if t['transferHost']:
+            transfers[t['transferHost']] = t['count']
+            if t['transferHost'] not in hostnames:
+                hostnames.append(t['transferHost'])
         
     servers = []
     for h in hostnames:

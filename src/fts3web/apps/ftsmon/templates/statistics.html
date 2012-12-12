@@ -89,8 +89,8 @@
                   {{ s.1 }} {{ s.0 }}
                 {% endfor %}
               </td>
-              <td>{{ p.avgThroughput }} Mb/s</td>
-              <td>{{ p.avgDuration }} s</td>
+              <td>{{ p.avgThroughput|floatformat:2 }} Mb/s</td>
+              <td>{{ p.avgDuration|floatformat:1 }} s</td>
             </tr>
           {% endfor %}
         </tbody>
