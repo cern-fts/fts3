@@ -294,8 +294,26 @@ void Configuration::delLinkCfg(string source, string destination) {
 			db->getLinkConfig(source, destination)
 		);
 
-	if (!cfg.get())
-		throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
+	if (!cfg.get()) {
+
+		if (source == wildcard || destination == wildcard) {
+			throw Err_Custom("The default configuration does not exist!");
+		}
+
+		string msg;
+		if (destination == any) {
+			msg += "A standalone configuration for " + source;
+		} else if (source == any) {
+			msg += "A standloane configuration for " + destination;
+		} else {
+			msg += "A pair configuration for " + source + " and " + destination;
+		}
+
+		msg += " does not exist!";
+
+		throw Err_Custom(msg);
+	}
+
 
 	db->deleteLinkConfig(source, destination);
 	deleteCount++;
