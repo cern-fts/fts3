@@ -3748,7 +3748,7 @@ void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn)
 void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn) {
 
     std::string query = "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) VALUES (:1, :2, :3, :4)";
-    std::string tag = "blacklistSe";
+    std::string tag = "blacklistDn";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -3839,7 +3839,7 @@ void OracleAPI::unblacklistSe(std::string se) {
 void OracleAPI::unblacklistDn(std::string dn) {
 
     std::string query = "DELETE FROM t_bad_dns WHERE dn = :1";
-    std::string tag = "unblacklistSe";
+    std::string tag = "unblacklistDn";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -3934,7 +3934,7 @@ bool OracleAPI::isSeBlacklisted(std::string se) {
 
 bool OracleAPI::isDnBlacklisted(std::string dn) {
 
-    std::string tag = "isSeBlacklisted";
+    std::string tag = "isDnBlacklisted";
     std::string stmt = "SELECT * FROM t_bad_dns WHERE dn = :1";
 
     oracle::occi::Statement* s = 0;
