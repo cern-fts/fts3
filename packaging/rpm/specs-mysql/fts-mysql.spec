@@ -42,9 +42,9 @@ rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
 
-%post mysql -p /sbin/ldconfig
+%post  -p /sbin/ldconfig
 
-%postun mysql -p /sbin/ldconfig
+%postun -p /sbin/ldconfig
 
 %clean
 rm -rf %{buildroot}
