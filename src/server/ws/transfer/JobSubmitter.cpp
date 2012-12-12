@@ -60,6 +60,10 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
 
+	if (db->isDnBlacklisted(dn)) {
+		throw Err_Custom("The DN: " + dn + " is blacklisted!");
+	}
+
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
 		throw Err_Custom("The job was not defined");
@@ -90,15 +94,21 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 		string* dest = (*job->transferJobElements.begin())->dest;
 
 		sourceSe = fileUrlToSeName(*src);
-		destinationSe = fileUrlToSeName(*dest);
-		if(sourceSe.length()==0){
+		if(sourceSe.empty()){
 			std::string errMsg = "Can't extract hostname from url " + *src;
 			throw Err_Custom(errMsg);
 		}
+		if (db->isSeBlacklisted(sourceSe)) {
+			throw Err_Custom("The source SE: " + sourceSe + " is blacklisted!");
+		}
 		
-		if(destinationSe.length()==0){
+		destinationSe = fileUrlToSeName(*dest);
+		if(destinationSe.empty()){
 			std::string errMsg = "Can't extract hostname from url " + *dest;		
 			throw Err_Custom(errMsg);
+		}
+		if (db->isSeBlacklisted(destinationSe)) {
+			throw Err_Custom("The destination SE: " + destinationSe + " is blacklisted!");
 		}
 	}
 
@@ -123,14 +133,18 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
 
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Constructing JobSubmitter" << commit;
-
 	GSoapDelegationHandler handler (soap);
 	delegationId = handler.makeDelegationId();
 
 	CGsiAdapter cgsi (soap);
 	vo = cgsi.getClientVo();
-        dn = cgsi.getClientDn();
+    dn = cgsi.getClientDn();
+
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
+
+	if (db->isDnBlacklisted(dn)) {
+		throw Err_Custom("The DN: " + dn + " is blacklisted!");
+	}
 
 	// check weather the job is well specified
 	if (job == 0 || job->transferJobElements.empty()) {
@@ -149,8 +163,23 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
                 string* src = (*job->transferJobElements.begin())->source;
                 string* dest = (*job->transferJobElements.begin())->dest;
 
-                sourceSe = fileUrlToSeName(*src);
-                destinationSe = fileUrlToSeName(*dest);
+        		sourceSe = fileUrlToSeName(*src);
+        		if(sourceSe.empty()){
+        			std::string errMsg = "Can't extract hostname from url " + *src;
+        			throw Err_Custom(errMsg);
+        		}
+        		if (db->isSeBlacklisted(sourceSe)) {
+        			throw Err_Custom("The source SE: " + sourceSe + " is blacklisted!");
+        		}
+
+        		destinationSe = fileUrlToSeName(*dest);
+        		if(destinationSe.empty()){
+        			std::string errMsg = "Can't extract hostname from url " + *dest;
+        			throw Err_Custom(errMsg);
+        		}
+        		if (db->isSeBlacklisted(destinationSe)) {
+        			throw Err_Custom("The destination SE: " + destinationSe + " is blacklisted!");
+        		}
         }
 
 
