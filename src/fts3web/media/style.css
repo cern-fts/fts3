@@ -55,6 +55,7 @@ table {
   border-collapse: collapse;
   font-size: 95%;
   width: 100%;
+  font-family: monospace;
 }
 
 td {
