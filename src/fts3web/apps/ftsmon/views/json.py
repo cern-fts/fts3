@@ -7,9 +7,7 @@ from fts3.models import Job, File
 
 
 def uniqueSources(httpRequest):
-    notBefore = datetime.datetime.now() - datetime.timedelta(hours = 12)
-    
-    query = Job.objects.values('source_se').distinct('source_se').filter(finish_time__gte = notBefore)
+    query = Job.objects.values('source_se').distinct('source_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(source_se__icontains = httpRequest.GET['term'])
     
@@ -20,10 +18,8 @@ def uniqueSources(httpRequest):
 
 
 
-def uniqueDestinations(httpRequest):
-    notBefore = datetime.datetime.now() - datetime.timedelta(hours = 12)
-    
-    query = Job.objects.values('dest_se').distinct('dest_se').filter(finish_time__gte = notBefore)
+def uniqueDestinations(httpRequest):    
+    query = Job.objects.values('dest_se').distinct('dest_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(dest_se__icontains = httpRequest.GET['term'])
     
@@ -34,10 +30,8 @@ def uniqueDestinations(httpRequest):
 
 
 
-def uniqueVos(httpRequest):
-    notBefore = datetime.datetime.now() - datetime.timedelta(hours = 12)
-    
-    query = Job.objects.values('vo_name').distinct('vo_name').filter(finish_time__gte = notBefore)
+def uniqueVos(httpRequest):    
+    query = Job.objects.values('vo_name').distinct('vo_name')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(vo_name__icontains = httpRequest.GET['term'])
     
