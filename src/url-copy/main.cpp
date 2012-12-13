@@ -75,9 +75,9 @@ static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
 static std::string reuseFile("");
-double source_size = 0;
-double dest_size = 0;
-double diff = 0;
+double source_size = 0.0;
+double dest_size = 0.0;
+double diff = 0.0;
 std::time_t start;
 static uid_t privid;
 static uid_t pw_uid;
@@ -776,9 +776,8 @@ int main(int argc, char **argv) {
                     g_clear_error(&tmp_err);
                     if (sourceStatRetry == 3 || ENOENT == errCode || EACCES == errCode)
                         goto stop;
-                } else {
-                    //seteuid(privid);
-                    if (statbufsrc.st_size == 0) {
+                } else {                    
+                    if (statbufsrc.st_size <= 0) {
                         errorMessage = "Source file size is 0";
                         log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
                         errorScope = SOURCE;
@@ -788,7 +787,8 @@ int main(int argc, char **argv) {
                             goto stop;
                     }
                     log << fileManagement.timestamp() << "INFO Source file size: " << statbufsrc.st_size << '\n';
-                    source_size = statbufsrc.st_size;
+		    if(statbufsrc.st_size > 0)
+                    	source_size = statbufsrc.st_size;
                     //conver longlong to string
                     std::string size_to_string = to_string<long double > (source_size, std::dec);
                     //set the value of file size to the message
@@ -894,7 +894,7 @@ int main(int argc, char **argv) {
                     if (destStatRetry == 3)
                         goto stop;
                 } else {
-                    if (statbufdest.st_size == 0) {
+                    if (statbufdest.st_size <= 0) {
                         errorMessage = "Destination file size is 0";
                         log << fileManagement.timestamp() << "ERROR " << errorMessage << '\n';
                         errorScope = DESTINATION;
