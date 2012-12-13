@@ -15,6 +15,10 @@ limitations under the License. */
 
 #pragma once
 
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+
 
 #define JOB_ID_LEN 36+1
 #define FILE_ID_LEN 36
@@ -28,34 +32,68 @@ limitations under the License. */
 #define FTS3_MQ_NAME_UPDATER "fts3mqupdater"
 #define FTS3_MQ_NAME_MON "fts3mqmon"
 
-struct message{  
-      char job_id[JOB_ID_LEN];
-      char file_id[FILE_ID_LEN];
-      char transfer_status[TRANFER_STATUS_LEN];
-      char transfer_message[TRANSFER_MESSAGE];
-      pid_t process_id;
-      double timeInSecs;
-      double filesize;
-      unsigned int nostreams;
-      unsigned int timeout;
-      unsigned int buffersize;
-      char source_se[SOURCE_SE_];
-      char dest_se[DEST_SE_];      
+using namespace std;
+
+struct message {
+public:
+
+    message() {
+        memset(job_id, 0, sizeof (job_id));
+        memset(file_id, 0, sizeof (file_id));
+        memset(transfer_status, 0, sizeof (transfer_status));
+        memset(transfer_message, 0, sizeof (transfer_message));
+        process_id = 0;
+        timeInSecs = 0.0;
+        filesize = 0.0;
+        nostreams = 2;
+        timeout = 3600;
+        buffersize = 0;
+        memset(source_se, 0, sizeof (source_se));
+        memset(dest_se, 0, sizeof (dest_se));
+    }
+
+    ~message() {
+    }
+    char job_id[JOB_ID_LEN];
+    char file_id[FILE_ID_LEN];
+    char transfer_status[TRANFER_STATUS_LEN];
+    char transfer_message[TRANSFER_MESSAGE];
+    pid_t process_id;
+    double timeInSecs;
+    double filesize;
+    unsigned int nostreams;
+    unsigned int timeout;
+    unsigned int buffersize;
+    char source_se[SOURCE_SE_];
+    char dest_se[DEST_SE_];
+
+
+
+};
+
+struct message_updater {
+public:
+
+    message_updater() {
+        memset(job_id, 0, sizeof (job_id));
+        file_id = 0;
+        process_id = 0;
+        timestamp = time(NULL);
+    }
+
+    ~message_updater() {
+    }
+    char job_id[JOB_ID_LEN];
+    int file_id;
+    pid_t process_id;
+    time_t timestamp;
 };
 
 
-struct message_updater{  
-      char job_id[JOB_ID_LEN];
-      int file_id;
-      pid_t process_id;
-      time_t timestamp;
-};
 
- 
- 
 #define DEFAULT_TIMEOUT 3600
 #define MID_TIMEOUT 5000
-const int timeouts[] = {4000, 5000, 6000,  9000, 11000,  13000, 14000};
+const int timeouts[] = {4000, 5000, 6000, 9000, 11000, 13000, 14000};
 const size_t timeoutslen = (sizeof (timeouts) / sizeof *(timeouts));
 
 #define DEFAULT_NOSTREAMS 4
@@ -64,7 +102,7 @@ const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
 
 
 #define DEFAULT_BUFFSIZE 0
-const int buffsizes[] = {1048576, 4194304, 5242880,  7340032, 8388608, 9437184,  11534336, 12582912,  14680064, 67108864};
+const int buffsizes[] = {1048576, 4194304, 5242880, 7340032, 8388608, 9437184, 11534336, 12582912, 14680064, 67108864};
 const size_t buffsizeslen = (sizeof (buffsizes) / sizeof *(buffsizes));
 
 

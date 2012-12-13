@@ -84,9 +84,17 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         strcpy(msg->job_id, job_id.c_str());
         strcpy(msg->file_id, file_id.c_str());
         strcpy(msg->transfer_status, transfer_status.c_str());
-        transfer_message = transfer_message.substr(0, 1023);
-        transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-        strcpy(msg->transfer_message, transfer_message.c_str());
+	if(transfer_message.length() > 0 && transfer_message.length() >= 1023){
+        	transfer_message = transfer_message.substr(0, 1023);
+        	transfer_message = ReplaceNonPrintableCharacters(transfer_message);
+        	strcpy(msg->transfer_message, transfer_message.c_str());
+	}else if(transfer_message.length() > 0 && transfer_message.length() < 1023){
+        	transfer_message = ReplaceNonPrintableCharacters(transfer_message);
+        	strcpy(msg->transfer_message, transfer_message.c_str());	
+	}else{		
+		memset(msg->transfer_message, 0, sizeof (msg->transfer_message));
+	}
+	
         msg->process_id = (int) getpid();
         msg->timeInSecs = timeInSecs;
         msg->filesize = filesize;
@@ -103,9 +111,17 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         strcpy(msg->job_id, job_id.c_str());
         strcpy(msg->file_id, file_id.c_str());
         strcpy(msg->transfer_status, transfer_status.c_str());
-        transfer_message = transfer_message.substr(0, 1023);
-        transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-        strcpy(msg->transfer_message, transfer_message.c_str());
+	if(transfer_message.length() > 0 && transfer_message.length() >= 1023){
+        	transfer_message = transfer_message.substr(0, 1023);
+        	transfer_message = ReplaceNonPrintableCharacters(transfer_message);
+        	strcpy(msg->transfer_message, transfer_message.c_str());
+	}else if(transfer_message.length() > 0 && transfer_message.length() < 1023){
+        	transfer_message = ReplaceNonPrintableCharacters(transfer_message);
+        	strcpy(msg->transfer_message, transfer_message.c_str());	
+	}else{		
+		memset(msg->transfer_message, 0, sizeof (msg->transfer_message));
+	}
+	
         msg->process_id = (int) getpid();
         msg->timeInSecs = timeInSecs;
         msg->filesize = filesize;
@@ -114,9 +130,9 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         msg->buffersize = buffersize;
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
-	if(qm)
+	if(qm){
         	qm->send(msg);
-
+        }
     }
 }
 

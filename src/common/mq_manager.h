@@ -38,17 +38,14 @@ public:
 
     void send(struct message* msg);
 
-    void t_send(struct message* msg);
-
     bool receive(struct message* msg);
 
     void msg_send(const char* msg);
 
-    void msg_t_send(const char* msg);
-
-    void msg_receive(char* msg);
+    bool msg_receive(char* msg);
 
     void sendUpdater(struct message_updater* msg);
+    
     bool receiveUpdater(struct message_updater* msg);
 
 };

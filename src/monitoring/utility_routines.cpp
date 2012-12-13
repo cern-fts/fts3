@@ -723,7 +723,7 @@ bool send_message(std::string & text)
 	std::string path="/dev/shm/fts3mqmon";
 	QueueManager* qm = NULL;
 
-        if(0 == fexists(path.c_str())){
+        if(0 == fexists(path.c_str())  && text.length() < 3000 ){
 		qm = new QueueManager(false, FTS3_MQ_NAME_MON, true);
 		qm->msg_send(text.c_str());
 	}

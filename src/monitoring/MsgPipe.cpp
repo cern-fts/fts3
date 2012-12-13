@@ -79,11 +79,12 @@ MsgPipe::~MsgPipe() {
 
 
 void MsgPipe::run() {
-    char tmpMsg[5120]={0};
+    char tmpMsg[3000]={0};
     while (1){
      try{
-   	qm->msg_receive(tmpMsg);
-	concurrent_queue::getInstance()->push(std::string(tmpMsg));					    
+   	bool received = qm->msg_receive(tmpMsg);
+	if(received)
+		concurrent_queue::getInstance()->push(std::string(tmpMsg));					    
       }
      catch (interprocess_exception &ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));

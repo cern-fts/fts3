@@ -315,8 +315,8 @@ void msg_ifce::SendTransferFinishMessage(transfer_completed *tr_completed) {
         temp.erase(std::remove(temp.begin(), temp.end(), '\''), temp.end());
         temp.erase(std::remove(temp.begin(), temp.end(), '\"'), temp.end());
 		
-	if(temp.length() > 2048)
-	        temp.erase(2048);
+	if(temp.length() > 1024)
+	        temp.erase(1024);
 
 	text.append(temp);
 
