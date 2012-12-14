@@ -496,17 +496,7 @@ protected:
                     delete opt_config;
                     opt_config = NULL;
                 }
-		if(stopThreads){
-		 /** cleanup resources */
-                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                    delete *iter2;
-                jobs2.clear();
-                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
-                    delete *fileiter;
-                files.clear();
-		fileIds.clear();
-			return;
-		}
+		
 
                 FileTransferScheduler scheduler(tempUrl);
                 if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/

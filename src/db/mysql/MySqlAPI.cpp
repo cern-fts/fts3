@@ -1059,64 +1059,40 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
     soci::session sql(connectionPool);
 
     try {
-        // Get unique SE pairs
-        std::multimap<std::string, std::string> sePairs;
-        soci::rowset<soci::row> rs = (sql.prepare << "SELECT DISTINCT source_se, dest_se "
-                                                     "FROM t_job "
-                                                     "WHERE t_job.job_finished IS NULL AND "
-                                                     "      t_job.cancel_job IS NULL AND "
-                                                     "      t_job.reuse_job = 'Y' AND "
-                                                     "      t_job.job_state IN ('SUBMITTED')");
-
-        for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
-            soci::row const& row = *i;
-            sePairs.insert(std::make_pair(row.get<std::string>("source_se"),
-                                          row.get<std::string>("dest_se")));
-        }
-
-        // Query depends on vos
         std::string query;
         if (vos.empty()) {
-            query = "SELECT t_job.* FROM t_job "
-                    "WHERE t_job.job_finished IS NULL AND "
-                    "      t_job.cancel_job IS NULL AND "
-                    "      t_job.source_se = :source AND t_job.dest_se = :dest AND "
-                    "      t_job.reuse_job = 'Y' AND "
-                    "      t_job.job_state IN ('SUBMITTED') AND "
-                    "      EXISTS ( SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
+            query = "SELECT t_job.* FROM t_job WHERE "
+                    "    t_job.job_finished IS NULL AND "
+                    "    t_job.cancel_job IS NULL AND "
+                    "    t_job.reuse_job='Y' AND "
+                    "    t_job.job_state IN ('SUBMITTED') "
                     "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
                     "LIMIT 1";
         }
         else {
-            query = "SELECT t_job.* FROM t_job "
-                                "WHERE t_job.job_finished IS NULL AND "
-                                "      t_job.cancel_job IS NULL AND "
-                                "      t_job.source_se = :source AND t_job.dest_se = :dest AND "
-                                "      t_job.reuse_job = 'Y' AND "
-                                "      t_job.job_state IN ('SUBMITTED') AND "
-                                "      t_job.vo_name IN " + vos + " AND "
-                                "      EXISTS ( SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
-                                "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
-                                "LIMIT 1";
+            query = "SELECT t_job.* FROM t_job WHERE "
+                    "    t_job.job_finished IS NULL AND "
+                    "    t_job.cancel_job IS NULL AND "
+                    "    t_job.reuse_job='Y' AND "
+                    "    t_job.job_state IN ('SUBMITTED') AND "
+                    "    t_job.vo_name IN " + vos + " "
+                    "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
+                    "LIMIT 1";
         }
 
-        // Iterate through pairs, getting jobs IF the VO has not run out of credits
-        // AND there are pending file transfers within the job
-        for (std::multimap<std::string, std::string>::const_iterator i = sePairs.begin(); i != sePairs.end(); ++i) {
-            soci::rowset<TransferJobs> jobRs = (sql.prepare << query ,
-                                                               soci::use(i->first), soci::use(i->second));
-            for (soci::rowset<TransferJobs>::const_iterator ji = jobRs.begin(); ji != jobRs.end(); ++ji) {
-                TransferJobs const & job = *ji;
+        soci::rowset<TransferJobs> rs = (sql.prepare << query);
+        for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+            TransferJobs const& tjob = *i;
 
-                if (getInOutOfSe(job.SOURCE_SE, job.DEST_SE))
-                    jobs.push_back(new TransferJobs(job));
-            }
+            if (getInOutOfSe(tjob.SOURCE_SE, tjob.DEST_SE))
+                    jobs.push_back(new TransferJobs(tjob));
         }
     }
     catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
+
 
 
 
