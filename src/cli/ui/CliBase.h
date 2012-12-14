@@ -235,6 +235,14 @@ protected:
 
 private:
 
+	/**
+	 *
+	 */
+	string getCliVersion();
+
+	string version;
+	string interface;
+
 	///@{
 	/**
 	 * string values used for discovering the FTS3 service

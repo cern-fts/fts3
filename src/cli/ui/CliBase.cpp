@@ -48,6 +48,9 @@ CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0), ismute(fal
 			("version,V", "Print the version number and exit.")
 			("json,j", "The output should be printed in JSON format")
 			;
+
+    version = getCliVersion();
+    interface = version;
 }
 
 CliBase::~CliBase() {
@@ -144,6 +147,8 @@ optional<GSoapContextAdapter&> CliBase::validate(bool init) {
 	// if verbose print general info
 	if (isVerbose()) {
 		ctx->printInfo();
+		cout << "# Client version: " << version << endl;
+		cout << "# Client interface version: " << interface << endl;
 	}
 
 	return *ctx;
@@ -177,7 +182,7 @@ bool CliBase::printVersion() {
 
 	// check whether the -V option was used
 	if (vm.count("version")) {
-		print("version", "TODO");
+		print("version", version);
         return true;
     }
 
@@ -293,3 +298,18 @@ void CliBase::print (string name, string msg, bool verbose_only) {
 	}
 }
 
+string CliBase::getCliVersion() {
+    FILE *in;
+    char buff[512];
+
+    in = popen("rpm -q --qf '%{VERSION}' fts-client", "r");
+
+    stringstream ss;
+    while (fgets(buff, sizeof (buff), in) != NULL) {
+        ss << buff;
+    }
+
+    pclose(in);
+
+    return ss.str();
+}
