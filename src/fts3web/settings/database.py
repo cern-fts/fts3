@@ -3,10 +3,10 @@
 DATABASES = {
     'default': {
         'ENGINE':   'django.db.backends.oracle',
-        'USER':     'FTS3',
-        'PASSWORD': 'FTS3',
+        'USER':     'system',
+        'PASSWORD': 'dssi73',
         'NAME':     'XE',
-        'HOST':     'localhost',
+        'HOST':     'fts2source.cern.ch',
         'PORT':     '1521',
         'OPTIONS': {
             'threaded': True,

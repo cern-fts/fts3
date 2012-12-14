@@ -4,9 +4,17 @@ os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
-
-
 from django.http import HttpResponse
+
+
+
+def strToArray(str):
+    a = []
+    for e in str.split(','):
+        if e:
+            a.append(e)
+    return a
+
 
 
 def error(httpRequest, msg = 'Error on plotting. Probably wrong query format.'):
@@ -36,11 +44,17 @@ def pie(httpRequest):
             if arg == 't':
                 title = argv
             elif arg == 'l':
-                labels = argv.split(',')
+               labels = strToArray(argv)
             elif arg == 'v':
-                values = argv.split(',')
+                values = strToArray(argv)
             elif arg == 'c':
-                colors = argv.split(',')
+                colors = strToArray(argv)
+                
+        if not values:
+            return error(httpRequest, 'No values')
+        
+        if sum(map(int, values)) == 0:
+            return error(httpRequest, 'Total is 0')
                 
         fig = Figure(figsize = (3,3))
         canvas = FigureCanvas(fig)
