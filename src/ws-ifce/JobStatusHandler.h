@@ -87,7 +87,7 @@ public:
 	 *
 	 * @return true if the the state is valid
 	 */
-	bool isStatusValid(string status);
+	bool isStatusValid(string& status);
 
 	/**
 	 * Counts how many states in the given vector are equal to given state

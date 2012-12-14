@@ -48,7 +48,7 @@ bool JobStatusHandler::isTransferFinished(string status) {
 	return it->second <= 0;
 }
 
-bool JobStatusHandler::isStatusValid(string status) {
+bool JobStatusHandler::isStatusValid(string& status) {
 
 	to_upper(status);
 	return statusNameToId.find(status) != statusNameToId.end();

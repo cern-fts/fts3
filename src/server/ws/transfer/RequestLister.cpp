@@ -79,6 +79,7 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
 	JobStatusHandler& handler = JobStatusHandler::getInstance();
 	vector<string>::iterator it;
 	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); it++) {
+		if (*it == "Pending") continue; // TODO for now we are ignoring the legacy state 'Pending'
 		if(!handler.isStatusValid(*it)) {
 			throw Err_Custom("Unknown job status: " + *it);
 		}
