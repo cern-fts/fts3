@@ -51,34 +51,51 @@ MySqlAPI::~MySqlAPI() {
 
 void MySqlAPI::init(std::string username, std::string password, std::string connectString) {
     std::ostringstream connParams;
-    std::string host, db;
+    std::string host, db, port;
 
-    // From connectString, get host and db
-    size_t slash = connectString.find('/');
-    if (slash != std::string::npos) {
-        connParams << "host='" << connectString.substr(0, slash) << "' "
-                   << "db='" << connectString.substr(slash + 1, std::string::npos) << "'";
+    try {
+        // From connectString, get host and db
+        size_t slash = connectString.find('/');
+        if (slash != std::string::npos) {
+            host = connectString.substr(0, slash);
+            db   = connectString.substr(slash + 1, std::string::npos);
+
+            size_t colon = host.find(':');
+            if (colon != std::string::npos) {
+                port = host.substr(colon + 1, std::string::npos);
+                host = host.substr(0, colon);
+            }
+
+            connParams << "host='" << host << "' "
+                       << "db='" << db << "' ";
+
+            if (!port.empty())
+                connParams << "port=" << port << " ";
+        }
+        else {
+            connParams << "db='" << connectString << "' ";
+        }
+        connParams << " ";
+
+        // Build connection string
+        connParams << "user='" << username << "' "
+                   << "pass='" << password << "'";
+
+        std::string connStr = connParams.str();
+
+        // Connect
+        static const my_bool reconnect = 1;
+        for (size_t i = 0; i < poolSize; ++i) {
+            soci::session& sql = connectionPool.at(i);
+            sql.open(soci::mysql, connStr);
+
+            soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
+            mysql_options(static_cast<MYSQL*>(be->conn_),
+                          MYSQL_OPT_RECONNECT, &reconnect);
+        }
     }
-    else {
-        connParams << "db='" << connectString << "'";
-    }
-    connParams << " ";
-
-    // Build connection string
-    connParams << "user='" << username << "' "
-               << "pass='" << password << "'";
-
-    std::string connStr = connParams.str();
-
-    // Connect
-    static const my_bool reconnect = 1;
-    for (size_t i = 0; i < poolSize; ++i) {
-        soci::session& sql = connectionPool.at(i);
-        sql.open(soci::mysql, connStr);
-
-        soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
-        mysql_options(static_cast<MYSQL*>(be->conn_),
-                      MYSQL_OPT_RECONNECT, &reconnect);
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
 
