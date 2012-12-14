@@ -4,6 +4,7 @@ os.environ['MPLCONFIGDIR'] = tempfile.mkdtemp()
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.font_manager import FontProperties
 from django.http import HttpResponse
 
 
@@ -34,7 +35,7 @@ def error(httpRequest, msg = 'Error on plotting. Probably wrong query format.'):
 
 
 def pie(httpRequest):
-    try:   
+    #try:   
         labels = []
         values = []
         colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
@@ -56,17 +57,23 @@ def pie(httpRequest):
         if sum(map(int, values)) == 0:
             return error(httpRequest, 'Total is 0')
                 
-        fig = Figure(figsize = (3,3))
+        fig = Figure(figsize = (6,3))
         canvas = FigureCanvas(fig)
         
-        ax = fig.add_subplot(111)
-        ax.pie(values, labels = labels, colors = colors, autopct='%1.1f%%')
+        ax = fig.add_subplot(1,2,1)
+        (patches, texts, auto) = ax.pie(values, labels = None, colors = colors, autopct='%1.1f%%')
         if title:
             ax.set_title(title)
-                
+        
+        ax2 = fig.add_subplot(1,2,2)
+        fontP = FontProperties()
+        fontP.set_size('small')
+        ax2.legend(patches, labels, loc='center left', prop = fontP)
+        ax2.set_axis_off()
+
         response = HttpResponse(content_type = 'image/png')
-        fig.savefig(response, format='png')
+        fig.savefig(response, format='png', bbox_inches = 'tight', transparent = True)
                 
         return response
-    except Exception, e:
-        return error(httpRequest, str(e))
+    #except Exception, e:
+    #    return error(httpRequest, str(e))
