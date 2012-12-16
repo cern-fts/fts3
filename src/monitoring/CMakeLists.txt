@@ -54,7 +54,7 @@ target_link_libraries(fts_msg_bulk ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${A
 set(fts_msg_cron_SOURCES msg-cron.cpp Logger.cpp utility_routines.cpp)
 add_executable (fts_msg_cron ${fts_msg_cron_SOURCES})
 target_link_libraries(fts_msg_cron  ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES}  -lglib-2.0)
-add_dependencies(fts_msg_cron fts_common)
+add_dependencies(fts_msg_cron fts_common fts_db_generic fts_config)
 target_link_libraries(fts_msg_cron -lpthread -lfts_db_generic -lfts_common -lfts_config -lboost_thread-mt -lboost_system-mt -lrt )
 
 

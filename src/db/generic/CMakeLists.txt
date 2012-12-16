@@ -22,10 +22,10 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_db_generic_SOURCES SingleDbInstance.cpp DynamicLibraryManager.cpp DynamicLibraryManagerException.cpp)
 
 add_library(fts_db_generic SHARED ${fts_db_generic_SOURCES})
-add_dependencies(fts_db_generic fts_config)
+add_dependencies(fts_db_generic fts_config fts_common)
 target_link_libraries(fts_db_generic -ldl)
 target_link_libraries(fts_db_generic -lpthread)
-#target_link_libraries(fts_db_generic -lfts_config)
+target_link_libraries(fts_db_generic -lfts_common -lfts_config)
 set_target_properties(fts_db_generic            PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/db/generic
                                                 VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}

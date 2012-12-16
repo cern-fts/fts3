@@ -135,7 +135,7 @@ set_target_properties(fts_delegation_api_cpp PROPERTIES LIBRARY_OUTPUT_DIRECTORY
 set_target_properties(fts_delegation_api_cpp PROPERTIES VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 set_target_properties(fts_delegation_api_cpp PROPERTIES SOVERSION ${VERSION_MAJOR})
 set_target_properties(fts_delegation_api_cpp PROPERTIES CLEAN_DIRECT_OUTPUT 1)
-
+target_link_libraries(fts_delegation_api_cpp -lgsoap++)
 
 set_target_properties(fts_ws_ifce_server PROPERTIES 
 						LIBRARY_OUTPUT_DIRECTORY
