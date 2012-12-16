@@ -64,8 +64,8 @@ set(fts_server_gsoap_transfer_sources
 
 add_library(fts_server_gsoap_transfer SHARED ${fts_server_gsoap_transfer_sources})
 set_target_properties(fts_server_gsoap_transfer PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
-add_dependencies(fts_server_gsoap_transfer fts_ws_ifce_server fts_ws_ifce_client)
-target_link_libraries(fts_server_gsoap_transfer fts_ws_ifce_server fts_ws_ifce_client)
+add_dependencies(fts_server_gsoap_transfer fts_ws_ifce_server fts_ws_ifce_client fts_common fts_config fts_db_generic)
+target_link_libraries(fts_server_gsoap_transfer fts_ws_ifce_server fts_ws_ifce_client fts_common fts_config fts_db_generic )
 set_target_properties(fts_server_gsoap_transfer PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/server

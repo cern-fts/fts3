@@ -36,7 +36,7 @@ endif ()
 
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
-target_link_libraries(fts_common -lboost_regex-mt -lboost_iostreams -lboost_thread-mt)
+target_link_libraries(fts_common -lboost_regex-mt -lboost_iostreams-mt)
 if (ORACLEBUILD STREQUAL "OFF")
 target_link_libraries(fts_common -lssl)
 endif ()
