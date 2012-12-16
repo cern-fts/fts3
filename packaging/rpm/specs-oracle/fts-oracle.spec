@@ -23,9 +23,6 @@ Requires:  oracle-instantclient-basic%{?_isa}
 %description
 The File Transfer Service V3 oracle plug-in
 
-%description
-FTS V3 oracle plug-ins
-
 %package devel
 Summary: Development files for File Transfer Service V3 oracle plug-in
 Group: Applications/Internet

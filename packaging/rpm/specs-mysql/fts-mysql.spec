@@ -8,7 +8,7 @@ Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet 
 License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki 
-Source0: https://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  cmake
@@ -23,8 +23,13 @@ Requires:  soci-mysql%{?_isa}
 %description
 The File Transfer Service V3 mysql plug-in
 
-%description
-FTS V3 mysql plug-ins
+%package devel
+Summary: Development files for File Transfer Service V3 mysql plug-in
+Group: Applications/Internet
+Requires: fts-mysql = %{version}-%{release}
+
+%description devel
+Development files for File Transfer Service V3 mysql plug-in
 
 %prep
 %setup -qc
@@ -51,11 +56,16 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%{_libdir}/libfts_db_mysql.so*
+%{_libdir}/libfts_db_mysql.so.*
 %doc %{_docdir}/fts3/mysql-schema.sql
 %doc %{_docdir}/fts3/mysql-drop.sql
 %doc %{_docdir}/fts3/mysql-truncate.sql
 
+%files devel
+%defattr(-,root,root,-)
+%{_libdir}/libfts_db_mysql.so
+
+
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51%{?dist}
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-51%{?dist}
   - A bit like a fedora package
