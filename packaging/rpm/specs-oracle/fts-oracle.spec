@@ -8,7 +8,7 @@ Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
 License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki 
-Source0: https://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  cmake
@@ -25,6 +25,14 @@ The File Transfer Service V3 oracle plug-in
 
 %description
 FTS V3 oracle plug-ins
+
+%package devel
+Summary: Development files for File Transfer Service V3 oracle plug-in
+Group: Applications/Internet
+Requires: fts-oracle = %{version}-%{release}
+
+%description devel
+Development files for File Transfer Service V3 oracle plug-in
 
 %prep
 %setup -qc
@@ -51,10 +59,14 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%{_libdir}/libfts_db_oracle.so*
+%{_libdir}/libfts_db_oracle.so.*
 %doc %{_docdir}/fts3/oracle-schema.sql
 %doc %{_docdir}/fts3/oracle-drop.sql
 
+%files devel
+%defattr(-,root,root,-)
+%{_libdir}/libfts_db_oracle.so
+
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51%{?dist}
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-51
   - A bit like a fedora package

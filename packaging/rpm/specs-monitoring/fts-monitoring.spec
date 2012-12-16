@@ -17,9 +17,9 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: MySQL-python
 Requires: python
-Requires: python-matplotlib
+#Requires: python-matplotlib
 
-Source0: http://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 
 %description
 FTS v3 web application for monitoring
@@ -27,6 +27,9 @@ FTS v3 web application for monitoring
 
 %prep
 %setup -qc
+
+%build
+mkdir build
 
 %install
 rm -rf %{buildroot}
@@ -44,5 +47,5 @@ rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-51
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-51
   - A bit like a fedora package

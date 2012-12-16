@@ -8,7 +8,7 @@ Summary: File Transfer Service V3
 Group: System Environment/Daemons 
 License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki 
-Source0: https://svnweb.cern.ch/trac/fts3/%{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  cmake
