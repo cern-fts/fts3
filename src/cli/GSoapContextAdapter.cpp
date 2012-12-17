@@ -25,8 +25,6 @@
 
 #include "ws-ifce/gsoap/fts3.nsmap"
 
-#include "ws-ifce/LogFileStreamer.h"
-
 #include <boost/tokenizer.hpp>
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
@@ -34,10 +32,9 @@
 #include <cgsi_plugin.h>
 
 #include <sstream>
+#include <fstream>
 
 namespace fts3 { namespace cli {
-
-using namespace fts3::common;
 
 GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new()/*soap_new1(SOAP_ENC_MTOM)*/) {
 
@@ -481,8 +478,6 @@ void GSoapContextAdapter::doDrain(bool drain) {
 }
 
 void GSoapContextAdapter::getLog(string& logname, string jobId) {
-
-	ctx->user = LogFileStreamer::getOutputHandler(logname);
 
 	log__GetLogResponse resp;
 	if (soap_call_log__GetLog(ctx, endpoint.c_str(), 0, jobId, resp)) {
