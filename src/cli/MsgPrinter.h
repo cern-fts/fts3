@@ -8,6 +8,8 @@
 #ifndef MSGPRINTER_H_
 #define MSGPRINTER_H_
 
+#include "TransferTypes.h"
+
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
@@ -25,8 +27,10 @@ public:
 	const string wrong_endpoint_format(string endpoint);
 	const string missing_parameter(string name);
 	const string version(string version);
-	const string job_status(string job_id, string status);
+	const string cancelled_job(string job_id);
 	const string error_msg(string msg);
+
+	const string job_status(JobStatus js);
 
 
 	MsgPrinter();
@@ -34,7 +38,7 @@ public:
 
 	void operator() (const string (MsgPrinter::*msg)(string), string subject);
 
-	void operator() (const string (MsgPrinter::*msg)(string, string), string subject, string param);
+	void operator() (const string (MsgPrinter::*msg)(JobStatus), JobStatus subject);
 
 	void setVerbose(bool verbose) {
 		this->verbose = verbose;

@@ -69,7 +69,7 @@ int main(int ac, char* av[]) {
 
 		vector<string>::iterator it;
 	    for (it = jobs.begin(); it < jobs.end(); it++) {
-	    	cli->print(&MsgPrinter::job_status, *it, JobStatusHandler::FTS3_STATUS_CANCELED);
+	    	cli->print(&MsgPrinter::cancelled_job, *it);
 
 	    }
 

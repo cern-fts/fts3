@@ -73,11 +73,7 @@ int main(int ac, char* av[]) {
 
 		vector<fts3::cli::JobStatus>::iterator it;
 		for (it = statuses.begin(); it < statuses.end(); it++) {
-			if (cli->isVerbose()) {
-				JobStatusHandler::printJobStatus(*it); // TODO
-			} else {
-				cli->print(&MsgPrinter::job_status, it->jobId, it->jobStatus);
-			}
+			cli->print(&MsgPrinter::job_status, *it);
 		}
 
     } catch(std::exception& ex) {

@@ -79,6 +79,15 @@ void CliBase::parse(int ac, char* av[]) {
 	store(command_line_parser(ac, av).options(all).positional(p).style(style).run(), vm);
 	notify(vm);
 
+	// check is the output is verbose
+	msgPrinter.setVerbose(
+			vm.count("verbose")
+		);
+	// check if the output is in json format
+	msgPrinter.setJson(
+			vm.count("json")
+		);
+
 	// check whether the -s option has been used
 	if (vm.count("service")) {
 		endpoint = vm["service"].as<string>();
@@ -120,14 +129,6 @@ void CliBase::parse(int ac, char* av[]) {
 			endpoint = discoverService();
 		}
 	}
-
-	msgPrinter.setVerbose(
-			vm.count("verbose")
-		);
-
-	msgPrinter.setJson(
-			vm.count("json")
-		);
 }
 
 optional<GSoapContextAdapter&> CliBase::validate(bool init) {

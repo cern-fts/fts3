@@ -169,8 +169,8 @@ public:
 		msgPrinter(msg, subject);
 	}
 
-	void print(const string (MsgPrinter::*msg)(string, string), string subject, string param) {
-		msgPrinter(msg, subject, param);
+	void print(const string (MsgPrinter::*msg)(JobStatus), JobStatus subject) {
+		msgPrinter(msg, subject);
 	}
 
 protected:
