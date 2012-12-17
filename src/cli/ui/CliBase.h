@@ -170,7 +170,7 @@ public:
 	}
 
 	void print(const string (MsgPrinter::*msg)(string, string), string subject, string param) {
-		msgPrinter(msg, subject, param);
+//		msgPrinter(msg, subject, param);
 	}
 
 protected:
