@@ -21,7 +21,7 @@
 #include "TransferTypes.h"
 #include "ui/TransferStatusCli.h"
 
-#include "ws-ifce/JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 
 #include <vector>
 #include <string>

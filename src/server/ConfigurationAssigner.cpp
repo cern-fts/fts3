@@ -27,7 +27,7 @@
 
 #include "ws/config/Configuration.h"
 
-#include "ws-ifce/JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 
 #include <boost/assign.hpp>
 #include <boost/regex.hpp>

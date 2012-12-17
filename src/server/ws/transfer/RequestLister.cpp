@@ -11,7 +11,7 @@
 
 #include "common/error.h"
 #include "common/logger.h"
-#include "ws-ifce/JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 
 using namespace db;
 using namespace fts3::ws;

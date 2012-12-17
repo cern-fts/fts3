@@ -31,7 +31,7 @@
 #include "ws/AuthorizationManager.h"
 //#include "ws/InternalLogRetriever.h"
 
-#include "ws-ifce/JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 #include "common/TarArchiver.h"
 #include "common/ZipCompressor.h"
 

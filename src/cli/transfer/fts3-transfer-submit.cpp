@@ -21,7 +21,7 @@
 #include "ProxyCertificateDelegator.h"
 #include "ui/SubmitTransferCli.h"
 
-#include "ws-ifce/JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 
 #include "TransferTypes.h"
 

@@ -16,8 +16,6 @@
 
 #include "db/generic/JobStatus.h"
 
-#include "ws-ifce/gsoap/gsoap_stubs.h"
-
 
 using namespace std;
 using namespace boost;
@@ -142,29 +140,30 @@ public:
 	 */
 	template <typename JS>
 	inline tns3__JobStatus* copyJobStatus(soap* soap, JS* status) {
-
-		tns3__JobStatus* copy = soap_new_tns3__JobStatus(soap, -1);
-
-		copy->clientDN = soap_new_std__string(soap, -1);
-		*copy->clientDN = status->clientDN;
-
-		copy->jobID = soap_new_std__string(soap, -1);
-		*copy->jobID = status->jobID;
-
-		copy->jobStatus = soap_new_std__string(soap, -1);
-		*copy->jobStatus = status->jobStatus;
-
-		copy->reason = soap_new_std__string(soap, -1);
-		*copy->reason = status->reason;
-
-		copy->voName = soap_new_std__string(soap, -1);
-		*copy->voName = status->voName;
-
-		copy->submitTime = status->submitTime;
-		copy->numFiles = status->numFiles;
-		copy->priority = status->priority;
-
-		return copy;
+//
+//		tns3__JobStatus* copy = soap_new_tns3__JobStatus(soap, -1);
+//
+//		copy->clientDN = soap_new_std__string(soap, -1);
+//		*copy->clientDN = status->clientDN;
+//
+//		copy->jobID = soap_new_std__string(soap, -1);
+//		*copy->jobID = status->jobID;
+//
+//		copy->jobStatus = soap_new_std__string(soap, -1);
+//		*copy->jobStatus = status->jobStatus;
+//
+//		copy->reason = soap_new_std__string(soap, -1);
+//		*copy->reason = status->reason;
+//
+//		copy->voName = soap_new_std__string(soap, -1);
+//		*copy->voName = status->voName;
+//
+//		copy->submitTime = status->submitTime;
+//		copy->numFiles = status->numFiles;
+//		copy->priority = status->priority;
+//
+//		return copy;
+		return 0;
 	}
 
 protected:

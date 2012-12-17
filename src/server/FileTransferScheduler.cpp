@@ -35,7 +35,7 @@
 #include "ws/config/Configuration.h"
 
 #include "common/logger.h"
-#include "ws-ifce/JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 
 
 using namespace db;

@@ -26,7 +26,7 @@
 #include "MsgPrinter.h"
 #include "ui/JobIdCli.h"
 
-#include "ws-ifce/JobStatusHandler.h"
+#include "common/JobStatusHandler.h"
 
 #include <exception>
 #include <iostream>

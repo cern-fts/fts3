@@ -88,6 +88,9 @@ void fts3_initialize_db_backend() {
     } catch (Err& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         exit(1);
+    } catch (std::exception& ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+        exit(1);
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the database, check username/password/connstring" << commit;
         exit(1);
