@@ -7,7 +7,7 @@
 
 #include "InternalLogRetriever.h"
 
-#include "transfer/LogFileStreamer.h"
+#include "ws/transfer/LogFileStreamer.h"
 
 //#include "ws-ifce/gsoap/fts3.nsmap"
 
