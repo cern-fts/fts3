@@ -19,7 +19,7 @@
  * RequestLister.h
  *
  *  Created on: Mar 9, 2012
- *      Author: simonm
+ *      Author: Michał Simon
  */
 
 #ifndef REQUESTLISTER_H_
