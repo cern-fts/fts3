@@ -173,6 +173,10 @@ public:
 		msgPrinter(msg, subject);
 	}
 
+	void print(const string (MsgPrinter::*msg)(JobSummary), JobSummary subject) {
+		msgPrinter(msg, subject);
+	}
+
 protected:
 
 	/**

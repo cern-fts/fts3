@@ -25,9 +25,11 @@
 
 #include <vector>
 #include <string>
-#include <memory>
+
+#include <boost/scoped_ptr.hpp>
 
 using namespace std;
+using namespace boost;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -36,9 +38,11 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[]) {
 
+	scoped_ptr<TransferStatusCli> cli;
+
 	try {
 		// create and initialize the command line utility
-		auto_ptr<TransferStatusCli> cli (
+		cli.reset (
 				getCli<TransferStatusCli>(ac, av)
 			);
 
@@ -56,47 +60,17 @@ int main(int ac, char* av[]) {
 			string jobId = *it;
 
 			if (cli->isVerbose()) {
-
-				if (ctx.isItVersion330()) {
-					// if version higher than 3.3.0 use getTransferJobSummary2
-
-					// do the request
-					JobSummary summary = ctx.getTransferJobSummary2(jobId);
-
-					// print the response
-					JobStatusHandler::printJobStatus(summary.status);
-
-				    cout << "\tActive: " << summary.numActive << endl;
-				    cout << "\tReady: " << summary.numReady << endl;
-				    cout << "\tCanceled: " << summary.numCanceled << endl;
-				    cout << "\tFinished: " << summary.numFinished << endl;
-				    cout << "\tSubmitted: " << summary.numSubmitted << endl;
-				    cout << "\tFailed: " << summary.numFailed << endl;
-
-
-				} else {
-					// if version higher than 3.3.0 use getTransferJobSummary
-
-					// do the request
-					JobSummary summary = ctx.getTransferJobSummary(jobId);
-
-					// print the response
-					JobStatusHandler::printJobStatus(summary.status);
-
-				    cout << "\tActive: " << summary.numActive << endl;
-				    cout << "\tCanceled: " << summary.numCanceled << endl;
-				    cout << "\tFinished: " << summary.numFinished << endl;
-				    cout << "\tSubmitted: " << summary.numSubmitted << endl;
-				    cout << "\tFailed: " << summary.numFailed << endl;
-				}
+				// do the request
+				JobSummary summary = ctx.getTransferJobSummary2(jobId);
+				// print the response
+				cli->print(&MsgPrinter::job_summary, summary);
 			} else {
-
 				// do the request
 				fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
 
 		    	// print the response
 		    	if (!status.jobStatus.empty()) {
-		    		cout << status.jobStatus << endl;
+		    		cli->print(&MsgPrinter::status, status.jobStatus);
 		    	}
 			}
 
@@ -128,14 +102,17 @@ int main(int ac, char* av[]) {
 			}
 		}
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
+    } catch(std::exception& ex) {
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, ex.what());
         return 1;
     } catch(string& ex) {
-    	cout << ex << endl;
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, ex);
     	return 1;
     } catch(...) {
-        cerr << "Exception of unknown type!\n";
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, "Exception of unknown type!");
         return 1;
     }
 

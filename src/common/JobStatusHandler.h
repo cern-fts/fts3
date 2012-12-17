@@ -114,33 +114,6 @@ public:
 	 */
 	int countInState(string status, vector<JobStatus*>& statuses);
 
-	/**
-	 *
-	 */
-	template <typename JS>
-	static void printJobStatus(JS js){
-
-		cout << "Request ID:\t" << js.jobId << endl;
-		cout << "Status: " << js.jobStatus << endl;
-		cout << "Client DN: " << js.clientDn << endl;
-
-		if (!js.reason.empty()) {
-
-			cout << "Reason: " << js.reason << endl;
-
-		} else {
-
-			cout << "Reason: <None>" << endl;
-		}
-
-		char buff[20];
-		strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.submitTime));
-		cout << "Submit time: " << buff << endl;
-		cout << "Files: " << js.numFiles << endl;
-	    cout << "Priority: " << js.priority << endl;
-	    cout << "VOName: " << js.voName << endl;
-	}
-
 protected:
 
 	/**

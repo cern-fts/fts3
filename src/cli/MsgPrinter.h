@@ -11,6 +11,7 @@
 #include "TransferTypes.h"
 
 #include <string>
+#include <map>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -29,9 +30,10 @@ public:
 	const string version(string version);
 	const string cancelled_job(string job_id);
 	const string error_msg(string msg);
+	const string status(string status);
 
 	const string job_status(JobStatus js);
-
+	const string job_summary(JobSummary js);
 
 	MsgPrinter();
 	virtual ~MsgPrinter();
@@ -39,6 +41,8 @@ public:
 	void operator() (const string (MsgPrinter::*msg)(string), string subject);
 
 	void operator() (const string (MsgPrinter::*msg)(JobStatus), JobStatus subject);
+
+	void operator() (const string (MsgPrinter::*msg)(JobSummary), JobSummary subject);
 
 	void setVerbose(bool verbose) {
 		this->verbose = verbose;
@@ -48,7 +52,12 @@ public:
 		this->json = json;
 	}
 
+
 private:
+
+	void put (string path, map<string, string> values);
+
+	ptree getItem (map<string, string> values);
 
 	///
 	bool verbose;
