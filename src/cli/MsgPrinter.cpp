@@ -105,6 +105,11 @@ void MsgPrinter::operator() (const string (MsgPrinter::*msg)(string), string sub
 	cout << (this->*msg)(subject);
 }
 
+void MsgPrinter::operator() (const string (MsgPrinter::*msg)(string, string), string subject, string param) {
+
+	cout << (this->*msg)(subject, param);
+}
+
 
 } /* namespace server */
 } /* namespace fts3 */
