@@ -28,9 +28,10 @@
 
 #include "ws-ifce/JobStatusHandler.h"
 
-#include <memory>
+#include <boost/scoped_ptr.hpp>
 
 using namespace std;
+using namespace boost;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -40,9 +41,11 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[]) {
 
+	scoped_ptr<ListTransferCli> cli;
+
 	try {
 		// create and initialize the command line utility
-		auto_ptr<ListTransferCli> cli (
+		cli.reset(
 				getCli<ListTransferCli>(ac, av)
 			);
 
@@ -71,22 +74,23 @@ int main(int ac, char* av[]) {
 		vector<fts3::cli::JobStatus>::iterator it;
 		for (it = statuses.begin(); it < statuses.end(); it++) {
 			if (cli->isVerbose()) {
-
-				JobStatusHandler::printJobStatus(*it);
-
+				JobStatusHandler::printJobStatus(*it); // TODO
 			} else {
-				cout << it->jobId << "\t" << it->jobStatus << endl;
+				cli->print(&MsgPrinter::job_status, it->jobId, it->jobStatus);
 			}
 		}
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
+    } catch(std::exception& ex) {
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, ex.what());
         return 1;
     } catch(string& ex) {
-    	cout << ex << endl;
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, ex);
     	return 1;
     } catch(...) {
-        cerr << "Exception of unknown type!\n";
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, "Exception of unknown type!");
         return 1;
     }
 

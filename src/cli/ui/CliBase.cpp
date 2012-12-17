@@ -37,7 +37,7 @@ const string CliBase::error = "error";
 const string CliBase::result = "result";
 const string CliBase::parameter_error = "parameter_error";
 
-CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0), ismute(false), isjson(false) {
+CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0), ismute(false) {
 
 	// add basic command line options
     basic.add_options()
@@ -60,11 +60,6 @@ CliBase::~CliBase() {
 
 	if (ismute) {
 		unmute();
-	}
-
-	if (isjson) {
-		write_json(cout, json_out);
-		cout << endl;
 	}
 }
 
@@ -89,7 +84,7 @@ void CliBase::parse(int ac, char* av[]) {
 		endpoint = vm["service"].as<string>();
 		// check if the endpoint has the right prefix
 		if (endpoint.find("http") != 0 && endpoint.find("https") != 0 && endpoint.find("httpd") != 0) {
-			print("wrong_format", endpoint);
+			msgPrinter(&MsgPrinter::wrong_endpoint_format, endpoint);
 			// if not erase
 			endpoint.erase();
 		}
@@ -126,8 +121,13 @@ void CliBase::parse(int ac, char* av[]) {
 		}
 	}
 
-	isjson = vm.count("json");
-	isverbose = vm.count("verbose");
+	msgPrinter.setVerbose(
+			vm.count("verbose")
+		);
+
+	msgPrinter.setJson(
+			vm.count("json")
+		);
 }
 
 optional<GSoapContextAdapter&> CliBase::validate(bool init) {
@@ -182,7 +182,7 @@ bool CliBase::printVersion() {
 
 	// check whether the -V option was used
 	if (vm.count("version")) {
-		print("version", version);
+		msgPrinter(&MsgPrinter::version, version);
         return true;
     }
 
@@ -286,17 +286,17 @@ void CliBase::unmute() {
 	cout.rdbuf(cout_sbuf); // restore the original stream buffer
 }
 
-void CliBase::print (string name, string msg, bool verbose_only) {
-	// if verbose flag is required and CLI has been muted return
-	// if json output is used return
-	if ( (verbose_only && !isverbose)) return;
-
-	if (isjson) {
-		json_out.add(name, msg);
-	} else {
-		cout << name << " : " << msg << endl;
-	}
-}
+//void CliBase::print (string name, string msg, bool verbose_only) {
+//	// if verbose flag is required and CLI has been muted return
+//	// if json output is used return
+//	if ( (verbose_only && !isverbose)) return;
+//
+//	if (isjson) {
+//		json_out.add(name, msg);
+//	} else {
+//		cout << name << " : " << msg << endl;
+//	}
+//}
 
 string CliBase::getCliVersion() {
     FILE *in;

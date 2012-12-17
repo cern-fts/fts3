@@ -23,25 +23,33 @@
  */
 
 #include "GSoapContextAdapter.h"
+#include "MsgPrinter.h"
 #include "ui/JobIdCli.h"
+
+#include "ws-ifce/JobStatusHandler.h"
 
 #include <exception>
 #include <iostream>
 #include <vector>
 #include <string>
-#include <memory>
 
+#include <boost/scoped_ptr.hpp>
+
+using namespace boost;
 using namespace std;
 using namespace fts3::cli;
+using namespace fts3::common;
 
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.
  */
 int main(int ac, char* av[]) {
 
+	scoped_ptr<JobIdCli> cli;
+
 	try {
 		// create and initialize the command line utility
-		auto_ptr<JobIdCli> cli (
+		cli.reset(
 				getCli<JobIdCli>(ac, av)
 			);
 
@@ -50,34 +58,32 @@ int main(int ac, char* av[]) {
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();
 
-//		string out = "/home/simonm/out.txt";
-//		ctx.getLog(out, "blabla");
-//
-//		return 0;
-
 		vector<string> jobs = cli->getJobIds();
 
 		if (jobs.empty()) {
-			cout << "No request ID has been specified" << endl;
+			cli->print(&MsgPrinter::missing_parameter, "Job ID");
 			return 0;
 		}
 
 		ctx.cancel(jobs);
 
 		vector<string>::iterator it;
-
 	    for (it = jobs.begin(); it < jobs.end(); it++) {
-	        cout << "Canceled " << *it << endl;;
+	    	cli->print(&MsgPrinter::job_status, *it, JobStatusHandler::FTS3_STATUS_CANCELED);
+
 	    }
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
+    } catch(std::exception& ex) {
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, ex.what());
         return 1;
     } catch(string& ex) {
-    	cout << ex << endl;
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, ex);
     	return 1;
     } catch(...) {
-        cerr << "Exception of unknown type!\n";
+    	if (cli.get())
+    		cli->print(&MsgPrinter::error_msg, "Exception of unknown type!");
         return 1;
     }
 

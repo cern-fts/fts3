@@ -26,12 +26,14 @@
 #define CLIBASE_H_
 
 #include "GSoapContextAdapter.h"
+#include "MsgPrinter.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/program_options.hpp>
 #include <boost/optional.hpp>
 
 #include <fstream>
+#include <vector>
 
 
 namespace fts3 { namespace cli {
@@ -151,7 +153,7 @@ public:
 
 	/**
 	 */
-	void print (string name, string msg, bool verbose_only = false);
+//	void print (string name, string msg, bool verbose_only = false);
 
 	/**
 	 * Mutes the cout stream
@@ -162,6 +164,14 @@ public:
 	 * Unmutes the cout stream
 	 */
 	void unmute();
+
+	void print(const string (MsgPrinter::*msg)(string), string subject) {
+		msgPrinter(msg, subject);
+	}
+
+	void print(const string (MsgPrinter::*msg)(string, string), string subject, string param) {
+		msgPrinter(msg, subject, param);
+	}
 
 protected:
 
@@ -268,14 +278,7 @@ private:
 	/// contains the mute state
 	bool ismute;
 
-	/// contains the json state
-	bool isjson;
-
-	///
-	bool isverbose;
-
-	///
-	ptree json_out;
+	MsgPrinter msgPrinter;
 };
 
 /**

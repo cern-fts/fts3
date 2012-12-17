@@ -83,6 +83,7 @@ set(fts_cli_common_sources
 	ui/BlacklistCli.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
+    MsgPrinter.cpp
 )
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})
@@ -178,7 +179,14 @@ add_executable(fts-set-blacklist
 target_link_libraries (fts-set-blacklist fts_cli_common)
 
 # ------------------------------------------------------------------------
+# fts-get-log command
 
+#add_executable(fts-get-log 
+#    set/fts3-get-log.cpp
+#)
+#target_link_libraries (fts-get-log fts_cli_common)
+
+# ------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------
 # python bindings
