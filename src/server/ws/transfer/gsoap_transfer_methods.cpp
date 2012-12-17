@@ -298,8 +298,8 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 
 		if(!fileStatuses.empty()){
 			_param_11._getTransferJobStatusReturn = 0;// TODOJobStatusHandler::getInstance().copyJobStatus(
-					soap, *fileStatuses.begin()
-				);
+//					soap, *fileStatuses.begin()
+//				);
 //			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
@@ -333,8 +333,8 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 
 			_param_12._getTransferJobSummaryReturn = soap_new_tns3__TransferJobSummary(soap, -1);
 			_param_12._getTransferJobSummaryReturn->jobStatus = 0; //TODOJobStatusHandler::getInstance().copyJobStatus(
-					soap, *fileStatuses.begin()
-				);
+//					soap, *fileStatuses.begin()
+//				);
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
 			_param_12._getTransferJobSummaryReturn->numActive = handler.countInState(
@@ -392,8 +392,8 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 
 			_param_13._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(soap, -1);
 			_param_13._getTransferJobSummary2Return->jobStatus = 0; //TODOJobStatusHandler::getInstance().copyJobStatus(
-					soap, *fileStatuses.begin()
-				);
+//					soap, *fileStatuses.begin()
+//				);
 
 			JobStatusHandler& handler = JobStatusHandler::getInstance();
 			_param_13._getTransferJobSummary2Return->numActive = handler.countInState(
