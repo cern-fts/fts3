@@ -108,7 +108,7 @@ add_library(fts_ws_ifce_server SHARED
 add_dependencies(fts_ws_ifce_server fts_common)
 set_target_properties(fts_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
 add_dependencies(fts_ws_ifce_server fts_common)
-target_link_libraries(fts_ws_ifce_server -lgsoap++ -lfts_common)
+target_link_libraries(fts_ws_ifce_server -lgsoap++)
 
 # Client side library 
 add_library(fts_ws_ifce_client SHARED
@@ -118,7 +118,7 @@ add_library(fts_ws_ifce_client SHARED
 )
 add_dependencies(fts_ws_ifce_client fts_common)
 set_target_properties(fts_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
-target_link_libraries(fts_ws_ifce_client -lgsoap++ -lfts_common)
+target_link_libraries(fts_ws_ifce_client -lgsoap++)
 
 # Client side delegation library 
 add_library(fts_delegation_api_cpp SHARED
