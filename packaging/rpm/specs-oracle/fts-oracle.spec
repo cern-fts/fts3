@@ -3,7 +3,7 @@
 
 Name: fts-oracle
 Version: 0.0.1 
-Release: 51%{?dist}
+Release: 52%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
 License: ASL 2.0
@@ -65,5 +65,5 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_db_oracle.so
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-51
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-52%{?dist}
   - A bit like a fedora package

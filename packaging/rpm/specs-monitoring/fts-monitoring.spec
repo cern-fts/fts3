@@ -4,7 +4,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 0.0.1
-Release: 51%{?dist}
+Release: 52%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -47,5 +47,5 @@ rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-51
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-52%{?dist}
   - A bit like a fedora package
