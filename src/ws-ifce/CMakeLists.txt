@@ -116,7 +116,6 @@ add_library(fts_ws_ifce_client SHARED
     ${gsoap_env_source_files}
     ${generated_files_dir}/${gsoap_prefix}C.cpp
     ${generated_files_dir}/${gsoap_prefix}Client.cpp
-    ${PROJECT_SOURCE_DIR}/src/ws-ifce/JobStatusHandler.cpp
     ${PROJECT_SOURCE_DIR}/src/ws-ifce/LogFileStreamer.cpp
 )
 add_dependencies(fts_ws_ifce_client fts_common)
