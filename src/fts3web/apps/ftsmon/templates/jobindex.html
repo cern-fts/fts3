@@ -53,6 +53,7 @@
       <tr class="details" id="{{j.job_id}}">
         <td colspan="7">
           <ul>
+            <li><b>Priority:</b> {{ j.priority }}</li>
             <li><b>Finish time:</b> {{ j.finish_time }}</li>
             <li><b>User DN:</b> {{ j.user_dn }}</li> {% if j.reason %}
             <li><b>Reason:</b> {{ j.reason }}</li> {% endif %}
