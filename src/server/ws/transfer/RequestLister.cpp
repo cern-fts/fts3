@@ -61,7 +61,7 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationMa
 	// fill it with job statuses
 	vector<JobStatus*>::iterator it;
 	for (it = jobs.begin(); it < jobs.end(); it++) {
-		tns3__JobStatus* job_ptr = JobStatusHandler::getInstance().copyJobStatus(soap, *it);
+		tns3__JobStatus* job_ptr = 0;//TODO JobStatusHandler::getInstance().copyJobStatus(soap, *it);
 		result->item.push_back(job_ptr);
 		delete *it;
 	}

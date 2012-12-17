@@ -138,8 +138,8 @@ public:
 	 *
 	 * @return a newly created tns3__JobStatus, with data copied from JS status
 	 */
-	template <typename JS>
-	inline tns3__JobStatus* copyJobStatus(soap* soap, JS* status) {
+//	template <typename JS>
+//	inline tns3__JobStatus* copyJobStatus(soap* soap, JS* status) {
 //
 //		tns3__JobStatus* copy = soap_new_tns3__JobStatus(soap, -1);
 //
@@ -163,8 +163,8 @@ public:
 //		copy->priority = status->priority;
 //
 //		return copy;
-		return 0;
-	}
+//		return 0;
+//	}
 
 protected:
 
