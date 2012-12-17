@@ -1,8 +1,25 @@
 /*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use soap file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or impltnsied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ *
  * JobStatusHandler.h
  *
  *  Created on: Mar 9, 2012
- *      Author: simonm
+ *      Author: Michał Simon
  */
 
 #ifndef JOBSTATUSHANDLER_H_
@@ -123,48 +140,6 @@ public:
 	    cout << "Priority: " << js.priority << endl;
 	    cout << "VOName: " << js.voName << endl;
 	}
-
-	/*
-	 * Creates a new instance of tns3__JobStatus, and copies the data from
-	 * JS status into this object.
-	 *
-	 * The transfer_JobStatus object is created using gSOAP memory-allocation utility, it
-	 * will be garbage collected! If there is a need to delete it manually gSOAP dedicated
-	 * functions should be used (in particular 'soap_unlink'!).
-	 *
-	 * @param JS - type of the class/structure that contains data about job status
-	 * @param soap - the soap object that is serving the given request
-	 * @param status - the job status that has to be copied
-	 *
-	 * @return a newly created tns3__JobStatus, with data copied from JS status
-	 */
-//	template <typename JS>
-//	inline tns3__JobStatus* copyJobStatus(soap* soap, JS* status) {
-//
-//		tns3__JobStatus* copy = soap_new_tns3__JobStatus(soap, -1);
-//
-//		copy->clientDN = soap_new_std__string(soap, -1);
-//		*copy->clientDN = status->clientDN;
-//
-//		copy->jobID = soap_new_std__string(soap, -1);
-//		*copy->jobID = status->jobID;
-//
-//		copy->jobStatus = soap_new_std__string(soap, -1);
-//		*copy->jobStatus = status->jobStatus;
-//
-//		copy->reason = soap_new_std__string(soap, -1);
-//		*copy->reason = status->reason;
-//
-//		copy->voName = soap_new_std__string(soap, -1);
-//		*copy->voName = status->voName;
-//
-//		copy->submitTime = status->submitTime;
-//		copy->numFiles = status->numFiles;
-//		copy->priority = status->priority;
-//
-//		return copy;
-//		return 0;
-//	}
 
 protected:
 
