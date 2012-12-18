@@ -82,7 +82,7 @@ int main(int ac, char* av[]) {
         return 1;
     } catch(string& ex) {
     	if (cli.get())
-    		cli->printer().error_msg(ex);
+    		cli->printer().gsoap_error_msg(ex);
     	return 1;
     } catch(...) {
     	if (cli.get())

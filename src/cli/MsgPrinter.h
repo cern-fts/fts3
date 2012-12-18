@@ -31,6 +31,7 @@ public:
 	void version(string version);
 	void cancelled_job(string job_id);
 	void error_msg(string msg);
+	void gsoap_error_msg(string msg);
 	void status(string status);
 
 	void job_status(JobStatus js);

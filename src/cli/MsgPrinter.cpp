@@ -13,6 +13,7 @@
 #include <boost/optional.hpp>
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 #include <utility>
 #include <sstream>
@@ -90,6 +91,21 @@ void MsgPrinter::error_msg(string msg) {
 	}
 
 	json_out.put("error.message", msg);
+}
+
+void MsgPrinter::gsoap_error_msg(string msg) {
+
+	if (!json) {
+		cout << "error : " << msg << endl;
+		return;
+	}
+
+	regex re ("\"(.+)\"\nDetail: (.+)\n");
+	smatch what;
+	regex_match(msg, what, re, match_extra);
+
+	json_out.put("error.message", what[1]);
+	json_out.put("error.detail", what[2]);
 }
 
 void MsgPrinter::job_status(JobStatus js) {
