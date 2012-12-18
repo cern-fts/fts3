@@ -93,7 +93,7 @@ void MsgPrinter::client_interface(string interface) {
 		return;
 	}
 
-	json_out.put("client_interface", version);
+	json_out.put("client_interface", interface);
 }
 
 void MsgPrinter::cancelled_job(string job_id) {
