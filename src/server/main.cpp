@@ -172,7 +172,7 @@ int DoServer(int argc, char** argv) {
         std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
         if (logDir.length() > 0) {
             logDir += "/fts3server.log";
-            int filedesc = open(logDir.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0777);
+            int filedesc = open(logDir.c_str(), O_CREAT | O_WRONLY | O_APPEND, 0644);
             if (filedesc != -1) { //if ok
                 close(filedesc);
                 FILE* freopenLogFile = freopen(logDir.c_str(), "a", stderr);

@@ -84,6 +84,7 @@ int FileManagement::getLogStream(std::ofstream& logStream) {
     if (logStream.fail()) {
         return errno;
     } else {
+        chmod(log.c_str(), (mode_t) 0644);
         return 0;
     }
 }
@@ -149,7 +150,7 @@ bool FileManagement::directoryExists(const char* pzPath) {
     } else {
         /* Directory does not exist */
         umask(0);
-        if (mkdir(pzPath, S_IRWXU | S_IRWXG | S_IRWXO) != 0)
+        if (mkdir(pzPath, 0744) != 0)
             bExists = false;
     }
 
