@@ -209,7 +209,7 @@ void MsgPrinter::job_status(JobStatus js) {
 				("dn", js.clientDn)
 				("reason", js.reason.empty() ? "<None>": js.reason)
 				("submision_time", time_buff)
-				("files_count", lexical_cast<string>(js.numFiles))
+				("file_count", lexical_cast<string>(js.numFiles))
 				("priority", lexical_cast<string>(js.priority))
 				("vo", js.voName)
 				;
@@ -242,13 +242,16 @@ void MsgPrinter::job_summary(JobSummary js) {
 			("dn", js.status.clientDn)
 			("reason", js.status.reason.empty() ? "<None>": js.status.reason)
 			("submision_time", time_buff)
+			("file_count", lexical_cast<string>(js.status.numFiles))
+			("priority", lexical_cast<string>(js.status.priority))
 			("vo", js.status.voName)
-			("active", lexical_cast<string>(js.numActive))
-			("ready", lexical_cast<string>(js.numReady))
-			("canceled", lexical_cast<string>(js.numCanceled))
-			("finished", lexical_cast<string>(js.numFinished))
-			("submitted", lexical_cast<string>(js.numSubmitted))
-			("failed", lexical_cast<string>(js.numFailed))
+
+			("summary.active", lexical_cast<string>(js.numActive))
+			("summary.ready", lexical_cast<string>(js.numReady))
+			("summary.canceled", lexical_cast<string>(js.numCanceled))
+			("summary.finished", lexical_cast<string>(js.numFinished))
+			("summary.submitted", lexical_cast<string>(js.numSubmitted))
+			("summary.failed", lexical_cast<string>(js.numFailed))
 			;
 
 	addToArray(json_out, "job", object);
