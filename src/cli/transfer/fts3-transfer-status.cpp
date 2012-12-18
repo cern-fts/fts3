@@ -69,10 +69,9 @@ int main(int ac, char* av[]) {
 			} else {
 				// do the request
 				fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
-
 		    	// print the response
 		    	if (!status.jobStatus.empty()) {
-		    		cli->printer().status(status.jobStatus);
+		    		cli->printer().status(status);
 		    	}
 			}
 

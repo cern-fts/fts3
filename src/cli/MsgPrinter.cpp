@@ -143,14 +143,15 @@ void MsgPrinter::version(string version) {
 	json_out.put("client_version", version);
 }
 
-void MsgPrinter::status(string status) {
+void MsgPrinter::status(JobStatus js) {
 
 	if (!json) {
-		cout << status << endl;
+		cout << js.jobStatus << endl;
 		return;
 	}
 
-	json_out.put("status", status);
+	map<string, string> object = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
+	addToArray(json_out, "job", object);
 }
 
 void MsgPrinter::error_msg(string msg) {
@@ -334,7 +335,20 @@ void MsgPrinter::addToArray(ptree& root, string name, map<string, string>& objec
 		put(root, name + array_sufix, object);
 	}
 }
+void MsgPrinter::addToArray(ptree& root, string name, string value) {
 
+	optional<ptree&> child = root.get_child_optional(name);
+	if (child.is_initialized()) {
+		ptree item;
+		item.put("", value);
+		child.get().push_front(make_pair("", item));
+	} else {
+		ptree child, item;
+		item.put("", value);
+		child.push_front(make_pair("", item));
+		root.put_child(name, child);
+	}
+}
 
 } /* namespace server */
 } /* namespace fts3 */

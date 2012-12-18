@@ -40,8 +40,8 @@ public:
 	void cancelled_job(string job_id);
 	void error_msg(string msg);
 	void gsoap_error_msg(string msg);
-	void status(string status);
 
+	void status(JobStatus js);
 	void job_status(JobStatus js);
 	void job_summary(JobSummary js);
 	void file_list(vector<string> values);
@@ -66,6 +66,8 @@ private:
 	void put (ptree&root, string name, map<string, string>& object);
 
 	void addToArray(ptree& root, string name, map<string, string>& object);
+
+	void addToArray(ptree& root, string name, string value);
 
 	///
 	bool verbose;
