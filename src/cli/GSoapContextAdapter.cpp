@@ -497,7 +497,7 @@ void GSoapContextAdapter::handleSoapFault(string msg) {
 	soap_stream_fault(ctx, ss);
 
 	// replace the standard gSOAP error message before printing
-	cout << regex_replace (
+	msg = regex_replace (
 			ss.str(),
 			regex ("SOAP 1.1 fault: SOAP-ENV:Server\\[.*\\]\\\n"),
 			string()
