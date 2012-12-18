@@ -26,9 +26,11 @@
 #include "TransferTypes.h"
 
 #include <exception>
-#include <memory>
+
+#include <boost/scoped_ptr.hpp>
 
 using namespace std;
+using namespace boost;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -37,9 +39,11 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[]) {
 
+	scoped_ptr<SubmitTransferCli> cli;
+
 	try {
 		// create and initialize the command line utility
-		auto_ptr<SubmitTransferCli> cli (
+		cli.reset (
 				getCli<SubmitTransferCli>(ac, av)
 			);
 
@@ -83,7 +87,7 @@ int main(int ac, char* av[]) {
 				);
 		}
 
-		cout << jobId << endl;
+		cli->printer().job_id(jobId);
 
 		// check if the -b option has been used
 		if (cli->isBlocking()) {
@@ -96,14 +100,17 @@ int main(int ac, char* av[]) {
 			} while (!JobStatusHandler::getInstance().isTransferFinished(status.jobStatus));
 		}
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
+    } catch(std::exception& ex) {
+    	if (cli.get())
+    		cli->printer().error_msg(ex.what());
         return 1;
     } catch(string& ex) {
-    	cout << ex << endl;
+    	if (cli.get())
+    		cli->printer().gsoap_error_msg(ex);
     	return 1;
     } catch(...) {
-        cerr << "Exception of unknown type!\n";
+    	if (cli.get())
+    		cli->printer().error_msg("Exception of unknown type!");
         return 1;
     }
 

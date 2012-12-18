@@ -143,6 +143,16 @@ void MsgPrinter::version(string version) {
 	json_out.put("client_version", version);
 }
 
+void MsgPrinter::job_id(string job_id) {
+
+	if (!json) {
+		cout << job_id << endl;
+		return;
+	}
+
+	json_out.put("job.job_id", job_id);
+}
+
 void MsgPrinter::status(JobStatus js) {
 
 	if (!json) {

@@ -41,6 +41,7 @@ public:
 	void error_msg(string msg);
 	void gsoap_error_msg(string msg);
 
+	void job_id(string job_id);
 	void status(JobStatus js);
 	void job_status(JobStatus js);
 	void job_summary(JobSummary js);
