@@ -488,11 +488,7 @@ void GSoapContextAdapter::handleSoapFault(string msg) {
 	soap_stream_fault(ctx, ss);
 
 	// replace the standard gSOAP error message before printing
-	msg = regex_replace (
-			ss.str(),
-			regex ("SOAP 1.1 fault: SOAP-ENV:Server\\[.*\\]\\\n"),
-			string()
-		);
+	msg = ss.str();
 
 	regex re (".+CGSI-gSOAP running on .+ reports Error reading token data header: Connection closed.+");
 	if (regex_match(ss.str(), re)) {

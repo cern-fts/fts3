@@ -170,7 +170,7 @@ void MsgPrinter::gsoap_error_msg(string msg) {
 		return;
 	}
 
-	regex re ("\"(.+)\"\nDetail: (.+)\n");
+	regex re (".*\"(.+)\"\nDetail: (.+)\n");
 	smatch what;
 	regex_match(msg, what, re, match_extra);
 
