@@ -26,6 +26,14 @@ class MsgPrinter {
 
 public:
 
+	void endpoint(string endpoint);
+	void service_version(string version);
+	void service_interface(string interface);
+	void service_schema(string schema);
+	void service_metadata(string metadata);
+	void client_version(string version);
+	void client_interface(string interface);
+
 	void wrong_endpoint_format(string endpoint);
 	void missing_parameter(string name);
 	void version(string version);

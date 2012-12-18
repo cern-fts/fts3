@@ -147,9 +147,13 @@ optional<GSoapContextAdapter&> CliBase::validate(bool init) {
 
 	// if verbose print general info
 	if (isVerbose()) {
-		ctx->printInfo();
-		cout << "# Client version: " << version << endl;
-		cout << "# Client interface version: " << interface << endl;
+		msgPrinter.endpoint(ctx->getEndpoint());
+		msgPrinter.service_version(ctx->getVersion());
+		msgPrinter.service_interface(ctx->getInterface());
+		msgPrinter.service_schema(ctx->getSchema());
+		msgPrinter.service_metadata(ctx->getMetadata());
+		msgPrinter.client_version(version);
+		msgPrinter.client_interface(interface);
 	}
 
 	return *ctx;

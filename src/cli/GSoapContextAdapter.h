@@ -81,12 +81,6 @@ public:
 	void init();
 
 	/**
-	 * Prints general information about the FTS3 service.
-	 * Should be used if the -v option has been used.
-	 */
-	void printInfo();
-
-	/**
 	 * Handles soap fault. Calls soap_stream_fault, then throws a string exception with given message
 	 *
 	 * @param msg exception message
@@ -284,6 +278,10 @@ public:
 	/**
 	 * A group of methods returning details about interface version of the FTS3 service
 	 */
+	string getEndpoint() {
+		return endpoint;
+	}
+
 	string getInterface() {
 		return interface;
 	}

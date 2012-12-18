@@ -107,15 +107,6 @@ void GSoapContextAdapter::init() {
 	}
 }
 
-void GSoapContextAdapter::printInfo() {
-	// print the info
-	cout << "# Using endpoint: " << endpoint << endl;
-	cout << "# Service version: " << version << endl;
-	cout << "# Interface version: " << interface << endl;
-	cout << "# Schema version: " << schema << endl;
-	cout << "# Service features: " << metadata << endl;
-}
-
 string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters, bool checksum) {
 
 	if (elements.empty()) {

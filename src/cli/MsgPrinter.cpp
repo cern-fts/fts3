@@ -26,10 +26,80 @@ using namespace boost;
 using namespace boost::assign;
 using namespace fts3::common;
 
+void MsgPrinter::endpoint(string endpoint) {
+
+	if (!json) {
+		cout << "# Using endpoint: " << endpoint << endl;
+		return;
+	}
+
+	json_out.put("endpoint", endpoint);
+}
+
+void MsgPrinter::service_version(string version) {
+
+	if (!json) {
+		cout << "# Service version: " << version << endl;
+		return;
+	}
+
+	json_out.put("service_version", version);
+}
+
+void MsgPrinter::service_interface(string interface) {
+
+	if (!json) {
+		cout << "# Interface version: " << interface << endl;
+		return;
+	}
+
+	json_out.put("service_interface", interface);
+}
+
+void MsgPrinter::service_schema(string schema) {
+
+	if (!json) {
+		cout << "# Schema version: " << schema << endl;
+		return;
+	}
+
+	json_out.put("service_schema", schema);
+}
+
+void MsgPrinter::service_metadata(string metadata) {
+
+	if (!json) {
+		cout << "# Service features: " << metadata << endl;
+		return;
+	}
+
+	json_out.put("service_metadata", metadata);
+}
+
+void MsgPrinter::client_version(string version) {
+
+	if (!json) {
+		cout << "# Client version: " << version << endl;
+		return;
+	}
+
+	json_out.put("client_version", version);
+}
+
+void MsgPrinter::client_interface(string interface) {
+
+	if (!json) {
+		cout << "# Client interface version: " << interface << endl;
+		return;
+	}
+
+	json_out.put("client_interface", version);
+}
+
 void MsgPrinter::cancelled_job(string job_id) {
 
 	if (!json) {
-		cout << "job " << job_id << " : " << JobStatusHandler::FTS3_STATUS_CANCELED << endl;
+		cout << "job " << job_id << ": " << JobStatusHandler::FTS3_STATUS_CANCELED << endl;
 		return;
 	}
 
@@ -45,7 +115,7 @@ void MsgPrinter::cancelled_job(string job_id) {
 void MsgPrinter::missing_parameter(string name) {
 
 	if (!json) {
-		cout << "missing parameter : " << name << endl;
+		cout << "missing parameter: " << name << endl;
 		return;
 	}
 
@@ -54,7 +124,7 @@ void MsgPrinter::missing_parameter(string name) {
 void MsgPrinter::wrong_endpoint_format(string endpoint) {
 
 	if (!json) {
-		cout << "wrongly formated endpoint : " << endpoint << endl;
+		cout << "wrongly formated endpoint: " << endpoint << endl;
 		return;
 	}
 
@@ -66,11 +136,11 @@ void MsgPrinter::wrong_endpoint_format(string endpoint) {
 void MsgPrinter::version(string version) {
 
 	if (!json) {
-		cout << "version : " << version << endl;
+		cout << "version: " << version << endl;
 		return;
 	}
 
-	json_out.put("version", version);
+	json_out.put("client_version", version);
 }
 
 void MsgPrinter::status(string status) {
@@ -86,7 +156,7 @@ void MsgPrinter::status(string status) {
 void MsgPrinter::error_msg(string msg) {
 
 	if (!json) {
-		cout << "error : " << msg << endl;
+		cout << "error: " << msg << endl;
 		return;
 	}
 
@@ -96,7 +166,7 @@ void MsgPrinter::error_msg(string msg) {
 void MsgPrinter::gsoap_error_msg(string msg) {
 
 	if (!json) {
-		cout << "error : " << msg << endl;
+		cout << "error: " << msg << endl;
 		return;
 	}
 
@@ -114,18 +184,18 @@ void MsgPrinter::job_status(JobStatus js) {
 	strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.submitTime));
 
 	if (!json) {
-		cout << "Request ID : " << js.jobId << endl;
-		cout << "Status : " << js.jobStatus << endl;
+		cout << "Request ID: " << js.jobId << endl;
+		cout << "Status: " << js.jobStatus << endl;
 
 		// if not verbose return
 		if (!verbose) return;
 
-		cout << "Client DN : " << js.clientDn << endl;
-		cout << "Reason : " << (js.reason.empty() ? "<None>" : js.reason) << endl;
-		cout << "Submission time : " << time_buff << endl;
-		cout << "Files : " << js.numFiles << endl;
-	    cout << "Priority : " << js.priority << endl;
-	    cout << "VOName : " << js.voName << endl;
+		cout << "Client DN: " << js.clientDn << endl;
+		cout << "Reason: " << (js.reason.empty() ? "<None>": js.reason) << endl;
+		cout << "Submission time: " << time_buff << endl;
+		cout << "Files: " << js.numFiles << endl;
+	    cout << "Priority: " << js.priority << endl;
+	    cout << "VOName: " << js.voName << endl;
 
 		return;
 	}
@@ -137,7 +207,7 @@ void MsgPrinter::job_status(JobStatus js) {
 				("job_id", js.jobId)
 				("status", js.jobStatus)
 				("dn", js.clientDn)
-				("reason", js.reason.empty() ? "<None>" : js.reason)
+				("reason", js.reason.empty() ? "<None>": js.reason)
 				("submision_time", time_buff)
 				("files_count", lexical_cast<string>(js.numFiles))
 				("priority", lexical_cast<string>(js.priority))
@@ -170,7 +240,7 @@ void MsgPrinter::job_summary(JobSummary js) {
 			("job_id", js.status.jobId)
 			("status", js.status.jobStatus)
 			("dn", js.status.clientDn)
-			("reason", js.status.reason.empty() ? "<None>" : js.status.reason)
+			("reason", js.status.reason.empty() ? "<None>": js.status.reason)
 			("submision_time", time_buff)
 			("vo", js.status.voName)
 			("active", lexical_cast<string>(js.numActive))
@@ -220,7 +290,7 @@ void MsgPrinter::file_list(vector<string> values) {
 	addToArray(it->second, "files", object);
 }
 
-MsgPrinter::MsgPrinter() : verbose(false), json(false) {
+MsgPrinter::MsgPrinter(): verbose(false), json(false) {
 
 }
 
