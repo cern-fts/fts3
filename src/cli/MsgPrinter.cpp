@@ -252,10 +252,10 @@ ptree MsgPrinter::getItem(map<string, string> values) {
 	return item;
 }
 
-void MsgPrinter::put (ptree&root, string name, map<string, string>& object) {
+void MsgPrinter::put (ptree& root, string name, map<string, string>& object) {
 	map<string, string>::iterator it;
 	for (it = object.begin(); it != object.end(); it++) {
-		json_out.put(name + it->first, it->second);
+		root.put(name + it->first, it->second);
 	}
 }
 
