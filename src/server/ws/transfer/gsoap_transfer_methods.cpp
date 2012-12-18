@@ -501,7 +501,7 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 							DBSingleton::instance().getDBObjectInstance()->getTransferJob(*it)
 						);
 					// if not throw an exception
-					if (!ptr.get()) throw Err_Custom("Transfer job: " + *it + "does not exist!");
+					if (!ptr.get()) throw Err_Custom("Transfer job: " + *it + " does not exist!");
 
 					vector<JobStatus*> status;
 					DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(*it, status);
