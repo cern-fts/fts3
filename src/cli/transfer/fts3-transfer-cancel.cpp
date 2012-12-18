@@ -61,7 +61,7 @@ int main(int ac, char* av[]) {
 		vector<string> jobs = cli->getJobIds();
 
 		if (jobs.empty()) {
-			cli->print(&MsgPrinter::missing_parameter, "Job ID");
+			cli->printer().missing_parameter("Job ID");
 			return 0;
 		}
 
@@ -69,21 +69,21 @@ int main(int ac, char* av[]) {
 
 		vector<string>::iterator it;
 	    for (it = jobs.begin(); it < jobs.end(); it++) {
-	    	cli->print(&MsgPrinter::cancelled_job, *it);
+	    	cli->printer().cancelled_job(*it);
 
 	    }
 
     } catch(std::exception& ex) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, ex.what());
+    		cli->printer().error_msg(ex.what());
         return 1;
     } catch(string& ex) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, ex);
+    		cli->printer().error_msg(ex);
     	return 1;
     } catch(...) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, "Exception of unknown type!");
+    		cli->printer().error_msg("Exception of unknown type!");
         return 1;
     }
 

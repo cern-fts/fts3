@@ -165,16 +165,8 @@ public:
 	 */
 	void unmute();
 
-	void print(const string (MsgPrinter::*msg)(string), string subject) {
-		msgPrinter(msg, subject);
-	}
-
-	void print(const string (MsgPrinter::*msg)(JobStatus), JobStatus subject) {
-		msgPrinter(msg, subject);
-	}
-
-	void print(const string (MsgPrinter::*msg)(JobSummary), JobSummary subject) {
-		msgPrinter(msg, subject);
+	MsgPrinter& printer() {
+		return msgPrinter;
 	}
 
 protected:

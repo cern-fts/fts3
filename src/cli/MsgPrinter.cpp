@@ -14,7 +14,6 @@
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <vector>
 #include <utility>
 #include <sstream>
 
@@ -33,16 +32,14 @@ const string MsgPrinter::cancelled_job(string job_id) {
 		return ss.str();
 	}
 
-	optional<ptree&> job = json_out.get_child_optional("job");
-	if (job.is_initialized()) {
-		ptree item;
-		item.put("job_id", job_id);
-		item.put("status", JobStatusHandler::FTS3_STATUS_CANCELED);
-		job.get().push_back(make_pair("", item));
-	} else {
-		json_out.put("job..job_id", job_id);
-		json_out.put("job..status", JobStatusHandler::FTS3_STATUS_CANCELED);
-	}
+	map<string, string> object = map_list_of ("job_id", job_id) ("status", JobStatusHandler::FTS3_STATUS_CANCELED);
+
+	addToArray(
+			json_out,
+			"job",
+			object
+		);
+
 
 	return string();
 }
@@ -131,30 +128,24 @@ const string MsgPrinter::job_status(JobStatus js) {
 		return ss.str();
 	}
 
-	map<string, string> values;
+	map<string, string> object;
 
 	if (verbose) {
-		values = map_list_of
+		object = map_list_of
 				("job_id", js.jobId)
 				("status", js.jobStatus)
 				("dn", js.clientDn)
 				("reason", js.reason.empty() ? "<None>" : js.reason)
 				("submision_time", time_buff)
+				("files_count", lexical_cast<string>(js.numFiles))
+				("priority", lexical_cast<string>(js.priority))
 				("vo", js.voName)
 				;
 	} else {
-		values = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
+		object = map_list_of ("job_id", js.jobId) ("status", js.jobStatus);
 	}
 
-	optional<ptree&> job = json_out.get_child_optional("job");
-	if (job.is_initialized()) {
-		job.get().push_back(
-				make_pair("", getItem(values))
-			);
-	} else {
-		string path = "job.."; // we want job to be an array
-		put(path, values);
-	}
+	addToArray(json_out, "job", object);
 
 	return string();
 }
@@ -179,7 +170,7 @@ const string MsgPrinter::job_summary(JobSummary js) {
 	char time_buff[20];
 	strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.status.submitTime));
 
-	map<string, string> values = map_list_of
+	map<string, string> object = map_list_of
 			("job_id", js.status.jobId)
 			("status", js.status.jobStatus)
 			("dn", js.status.clientDn)
@@ -194,15 +185,49 @@ const string MsgPrinter::job_summary(JobSummary js) {
 			("failed", lexical_cast<string>(js.numFailed))
 			;
 
-	optional<ptree&> job = json_out.get_child_optional("job");
-	if (job.is_initialized()) {
-		job.get().push_back(
-				make_pair("", getItem(values))
-			);
-	} else {
-		string path = "job.."; // we want job to be an array
-		put(path, values);
+	addToArray(json_out, "job", object);
+
+	return string();
+}
+
+const string MsgPrinter::file_list(vector<string> values) {
+
+	enum {
+		SOURCE,
+		DESTINATION,
+		STATE,
+		RETRIES,
+		REASON,
+		DURATION
+	};
+
+	if (!json) {
+
+		stringstream ss;
+
+		ss << "  Source:      " << values[SOURCE] << endl;
+		ss << "  Destination: " << values[DESTINATION] << endl;
+		ss << "  State:       " << values[STATE] << endl;;
+		ss << "  Retries:     " << values[RETRIES] << endl;
+		ss << "  Reason:      " << values[REASON] << endl;
+		ss << "  Duration:    " << values[DURATION] << endl;
+
+		return ss.str();
 	}
+
+	map<string, string> object =
+			map_list_of
+			("source", values[SOURCE])
+			("destination", values[DESTINATION])
+			("state", values[STATE])
+			("retries", values[RETRIES])
+			("reason", values[REASON])
+			("duration", values[DURATION])
+			;
+
+	ptree& job = json_out.get_child("job");
+	ptree::iterator it = job.begin();
+	addToArray(it->second, "files", object);
 
 	return string();
 }
@@ -215,29 +240,6 @@ MsgPrinter::~MsgPrinter() {
 
 }
 
-void MsgPrinter::operator() (const string (MsgPrinter::*msg)(string), string subject) {
-
-	cout << (this->*msg)(subject);
-}
-
-void MsgPrinter::operator() (const string (MsgPrinter::*msg)(JobStatus), JobStatus subject) {
-
-	cout << (this->*msg)(subject);
-}
-
-void MsgPrinter::operator() (const string (MsgPrinter::*msg)(JobSummary), JobSummary subject) {
-
-	cout << (this->*msg)(subject);
-}
-
-void MsgPrinter::put (string path, map<string, string> values) {
-
-	map<string, string>::iterator it;
-	for (it = values.begin(); it != values.end(); it++) {
-		json_out.put(path + it->first, it->second);
-	}
-}
-
 ptree MsgPrinter::getItem(map<string, string> values) {
 
 	ptree item;
@@ -248,6 +250,27 @@ ptree MsgPrinter::getItem(map<string, string> values) {
 	}
 
 	return item;
+}
+
+void MsgPrinter::put (ptree&root, string name, map<string, string>& object) {
+	map<string, string>::iterator it;
+	for (it = object.begin(); it != object.end(); it++) {
+		json_out.put(name + it->first, it->second);
+	}
+}
+
+void MsgPrinter::addToArray(ptree& root, string name, map<string, string>& object) {
+
+	static const string array_sufix = "..";
+
+	optional<ptree&> child = json_out.get_child_optional(name);
+	if (child.is_initialized()) {
+		child.get().push_front(
+				make_pair("", getItem(object))
+			);
+	} else {
+		put(root, name + array_sufix, object);
+	}
 }
 
 

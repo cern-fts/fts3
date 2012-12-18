@@ -73,20 +73,20 @@ int main(int ac, char* av[]) {
 
 		vector<fts3::cli::JobStatus>::iterator it;
 		for (it = statuses.begin(); it < statuses.end(); it++) {
-			cli->print(&MsgPrinter::job_status, *it);
+			cli->printer().job_status(*it);
 		}
 
     } catch(std::exception& ex) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, ex.what());
+    		cli->printer().error_msg(ex.what());
         return 1;
     } catch(string& ex) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, ex);
+    		cli->printer().error_msg(ex);
     	return 1;
     } catch(...) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, "Exception of unknown type!");
+    		cli->printer().error_msg("Exception of unknown type!");
         return 1;
     }
 

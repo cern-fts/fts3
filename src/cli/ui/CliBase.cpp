@@ -93,7 +93,7 @@ void CliBase::parse(int ac, char* av[]) {
 		endpoint = vm["service"].as<string>();
 		// check if the endpoint has the right prefix
 		if (endpoint.find("http") != 0 && endpoint.find("https") != 0 && endpoint.find("httpd") != 0) {
-			msgPrinter(&MsgPrinter::wrong_endpoint_format, endpoint);
+			msgPrinter.wrong_endpoint_format(endpoint);
 			// if not erase
 			endpoint.erase();
 		}
@@ -183,7 +183,7 @@ bool CliBase::printVersion() {
 
 	// check whether the -V option was used
 	if (vm.count("version")) {
-		msgPrinter(&MsgPrinter::version, version);
+		msgPrinter.version(version);
         return true;
     }
 

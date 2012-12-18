@@ -27,9 +27,11 @@
 #include <string>
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/assign.hpp>
 
 using namespace std;
 using namespace boost;
+using namespace boost::assign;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -63,14 +65,14 @@ int main(int ac, char* av[]) {
 				// do the request
 				JobSummary summary = ctx.getTransferJobSummary2(jobId);
 				// print the response
-				cli->print(&MsgPrinter::job_summary, summary);
+				cli->printer().job_summary(summary);
 			} else {
 				// do the request
 				fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
 
 		    	// print the response
 		    	if (!status.jobStatus.empty()) {
-		    		cli->print(&MsgPrinter::status, status.jobStatus);
+		    		cli->printer().status(status.jobStatus);
 		    	}
 			}
 
@@ -91,12 +93,17 @@ int main(int ac, char* av[]) {
 					for (it = vect.begin(); it < vect.end(); it++) {
 						tns3__FileTransferStatus* stat = *it;
 
-						cout << "  Source:      " << *stat->sourceSURL << endl;
-						cout << "  Destination: " << *stat->destSURL << endl;
-						cout << "  State:       " << *stat->transferFileState << endl;;
-						cout << "  Retries:     " << stat->numFailures << endl;
-						cout << "  Reason:      " << *stat->reason << endl;
-						cout << "  Duration:    " << stat->duration << endl;
+						vector<string> values =
+								list_of
+								(*stat->sourceSURL)
+								(*stat->destSURL)
+								(*stat->transferFileState)
+								(lexical_cast<string>(stat->numFailures))
+								(*stat->reason)
+								(lexical_cast<string>(stat->duration))
+								;
+
+						cli->printer().file_list(values);
 					}
 				}
 			}
@@ -104,15 +111,15 @@ int main(int ac, char* av[]) {
 
     } catch(std::exception& ex) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, ex.what());
+    		cli->printer().error_msg(ex.what());
         return 1;
     } catch(string& ex) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, ex);
+    		cli->printer().error_msg(ex);
     	return 1;
     } catch(...) {
     	if (cli.get())
-    		cli->print(&MsgPrinter::error_msg, "Exception of unknown type!");
+    		cli->printer().error_msg("Exception of unknown type!");
         return 1;
     }
 
