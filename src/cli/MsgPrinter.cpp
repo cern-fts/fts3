@@ -325,7 +325,7 @@ void MsgPrinter::addToArray(ptree& root, string name, map<string, string>& objec
 
 	static const string array_sufix = "..";
 
-	optional<ptree&> child = json_out.get_child_optional(name);
+	optional<ptree&> child = root.get_child_optional(name);
 	if (child.is_initialized()) {
 		child.get().push_front(
 				make_pair("", getItem(object))
