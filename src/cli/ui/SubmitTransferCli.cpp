@@ -62,7 +62,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("copy-pin-lifetime", value<int>(), "pin lifetime of the copy of the file (seconds)")
 			("lan-connection", "use LAN as ConnectionType (default = WAN)")
 			("fail-nearline", "fail the transfer if the file is nearline")
-			("reuse,r", "enable session reuse the transfer job")
+			("reuse,r", "enable session reuse for the transfer job")
 			;
 
 	// add hidden options
