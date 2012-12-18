@@ -312,5 +312,6 @@ string CliBase::getCliVersion() {
 
     pclose(in);
 
+    return "0.0.1";
     return ss.str();
 }
