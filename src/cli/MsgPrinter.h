@@ -26,16 +26,16 @@ class MsgPrinter {
 
 public:
 
-	const string wrong_endpoint_format(string endpoint);
-	const string missing_parameter(string name);
-	const string version(string version);
-	const string cancelled_job(string job_id);
-	const string error_msg(string msg);
-	const string status(string status);
+	void wrong_endpoint_format(string endpoint);
+	void missing_parameter(string name);
+	void version(string version);
+	void cancelled_job(string job_id);
+	void error_msg(string msg);
+	void status(string status);
 
-	const string job_status(JobStatus js);
-	const string job_summary(JobSummary js);
-	const string file_list(vector<string> values);
+	void job_status(JobStatus js);
+	void job_summary(JobSummary js);
+	void file_list(vector<string> values);
 
 
 	MsgPrinter();

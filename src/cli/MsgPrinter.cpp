@@ -16,6 +16,7 @@
 
 #include <utility>
 #include <sstream>
+#include <iostream>
 
 namespace fts3 {
 namespace cli {
@@ -24,12 +25,11 @@ using namespace boost;
 using namespace boost::assign;
 using namespace fts3::common;
 
-const string MsgPrinter::cancelled_job(string job_id) {
+void MsgPrinter::cancelled_job(string job_id) {
 
 	if (!json) {
-		stringstream ss;
-		ss << "job " << job_id << " : " << JobStatusHandler::FTS3_STATUS_CANCELED << endl;
-		return ss.str();
+		cout << "job " << job_id << " : " << JobStatusHandler::FTS3_STATUS_CANCELED << endl;
+		return;
 	}
 
 	map<string, string> object = map_list_of ("job_id", job_id) ("status", JobStatusHandler::FTS3_STATUS_CANCELED);
@@ -39,93 +39,79 @@ const string MsgPrinter::cancelled_job(string job_id) {
 			"job",
 			object
 		);
-
-
-	return string();
 }
 
-const string MsgPrinter::missing_parameter(string name) {
+void MsgPrinter::missing_parameter(string name) {
 
 	if (!json) {
-		stringstream ss;
-		ss << "missing parameter : " << name << endl;
-		return ss.str();
+		cout << "missing parameter : " << name << endl;
+		return;
 	}
 
 	json_out.put("missing_parameter", name);
-
-	return string();
 }
-
-const string MsgPrinter::wrong_endpoint_format(string endpoint) {
+void MsgPrinter::wrong_endpoint_format(string endpoint) {
 
 	if (!json) {
-		stringstream ss;
-		ss << "wrongly formated endpoint : " << endpoint << endl;
-		return ss.str();
+		cout << "wrongly formated endpoint : " << endpoint << endl;
+		return;
 	}
 
 	json_out.put("wrong_format.endpoint", endpoint);
 
-	return string();
+	return;
 }
 
-const string MsgPrinter::version(string version) {
+void MsgPrinter::version(string version) {
 
 	if (!json) {
-		stringstream ss;
-		ss << "version : " << version << endl;
-		return ss.str();
+		cout << "version : " << version << endl;
+		return;
 	}
 
 	json_out.put("version", version);
-
-	return string();
 }
 
-const string MsgPrinter::status(string status) {
-
-	if (!json) return status;
-
-	json_out.put("status", status);
-
-	return string();
-}
-
-const string MsgPrinter::error_msg(string msg) {
+void MsgPrinter::status(string status) {
 
 	if (!json) {
-		stringstream ss;
-		ss << "error : " << msg << endl;
-		return ss.str();
+		cout << status << endl;
+		return;
+	}
+
+	json_out.put("status", status);
+}
+
+void MsgPrinter::error_msg(string msg) {
+
+	if (!json) {
+		cout << "error : " << msg << endl;
+		return;
 	}
 
 	json_out.put("error.message", msg);
-
-	return string();
 }
 
-const string MsgPrinter::job_status(JobStatus js) {
+void MsgPrinter::job_status(JobStatus js) {
 
 	char time_buff[20];
 	strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.submitTime));
 
 	if (!json) {
-		stringstream ss;
-		ss << "Request ID : " << js.jobId << endl;
-		ss << "Status : " << js.jobStatus << endl;
+		cout << "Request ID : " << js.jobId << endl;
+		cout << "Status : " << js.jobStatus << endl;
 
 		// if not verbose return
-		if (!verbose) return ss.str();
+		if (!verbose) return;
 
-		ss << "Client DN : " << js.clientDn << endl;
-		ss << "Reason : " << (js.reason.empty() ? "<None>" : js.reason) << endl;
-		ss << "Submission time : " << time_buff << endl;
-		ss << "Files : " << js.numFiles << endl;
-	    ss << "Priority : " << js.priority << endl;
-	    ss << "VOName : " << js.voName << endl;
+		cout << "Client DN : " << js.clientDn << endl;
+		cout << "Reason : " << (js.reason.empty() ? "<None>" : js.reason) << endl;
+		cout << "Submission time : " << time_buff << endl;
+		cout << "Files : " << js.numFiles << endl;
+	    cout << "Priority : " << js.priority << endl;
+	    cout << "VOName : " << js.voName << endl;
 
-		return ss.str();
+		return;
 	}
 
 	map<string, string> object;
@@ -146,25 +132,19 @@ const string MsgPrinter::job_status(JobStatus js) {
 	}
 
 	addToArray(json_out, "job", object);
-
-	return string();
 }
 
-const string MsgPrinter::job_summary(JobSummary js) {
+void MsgPrinter::job_summary(JobSummary js) {
 
 	if (!json) {
-
-		stringstream ss;
-
-		ss << job_status(js.status);
-		ss << "\tActive: " << js.numActive << endl;
-		ss << "\tReady: " << js.numReady << endl;
-		ss << "\tCanceled: " << js.numCanceled << endl;
-		ss << "\tFinished: " << js.numFinished << endl;
-		ss << "\tSubmitted: " << js.numSubmitted << endl;
-		ss << "\tFailed: " << js.numFailed << endl;
-
-		return ss.str();
+		job_status(js.status);
+		cout << "\tActive: " << js.numActive << endl;
+		cout << "\tReady: " << js.numReady << endl;
+		cout << "\tCanceled: " << js.numCanceled << endl;
+		cout << "\tFinished: " << js.numFinished << endl;
+		cout << "\tSubmitted: " << js.numSubmitted << endl;
+		cout << "\tFailed: " << js.numFailed << endl;
+		return;
 	}
 
 	char time_buff[20];
@@ -186,11 +166,9 @@ const string MsgPrinter::job_summary(JobSummary js) {
 			;
 
 	addToArray(json_out, "job", object);
-
-	return string();
 }
 
-const string MsgPrinter::file_list(vector<string> values) {
+void MsgPrinter::file_list(vector<string> values) {
 
 	enum {
 		SOURCE,
@@ -202,17 +180,13 @@ const string MsgPrinter::file_list(vector<string> values) {
 	};
 
 	if (!json) {
-
-		stringstream ss;
-
-		ss << "  Source:      " << values[SOURCE] << endl;
-		ss << "  Destination: " << values[DESTINATION] << endl;
-		ss << "  State:       " << values[STATE] << endl;;
-		ss << "  Retries:     " << values[RETRIES] << endl;
-		ss << "  Reason:      " << values[REASON] << endl;
-		ss << "  Duration:    " << values[DURATION] << endl;
-
-		return ss.str();
+		cout << "  Source:      " << values[SOURCE] << endl;
+		cout << "  Destination: " << values[DESTINATION] << endl;
+		cout << "  State:       " << values[STATE] << endl;;
+		cout << "  Retries:     " << values[RETRIES] << endl;
+		cout << "  Reason:      " << values[REASON] << endl;
+		cout << "  Duration:    " << values[DURATION] << endl;
+		return;
 	}
 
 	map<string, string> object =
@@ -228,8 +202,6 @@ const string MsgPrinter::file_list(vector<string> values) {
 	ptree& job = json_out.get_child("job");
 	ptree::iterator it = job.begin();
 	addToArray(it->second, "files", object);
-
-	return string();
 }
 
 MsgPrinter::MsgPrinter() : verbose(false), json(false) {
@@ -237,7 +209,8 @@ MsgPrinter::MsgPrinter() : verbose(false), json(false) {
 }
 
 MsgPrinter::~MsgPrinter() {
-
+	if (json)
+		write_json(cout, json_out);
 }
 
 ptree MsgPrinter::getItem(map<string, string> values) {
