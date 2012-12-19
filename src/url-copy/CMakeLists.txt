@@ -38,7 +38,7 @@ include_directories (/usr/lib/glib-2.0/include)
 
 set(fts_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
 add_executable (fts_url_copy ${fts_url_copy_SOURCES})
-add_dependencies(fts_url_copy fts_common)
+add_dependencies(fts_url_copy fts_common fts_msg_ifce)
 SET(fts_libs "-lfts_config -lfts_common")
 target_link_libraries(fts_url_copy  -luuid  -lboost_thread-mt -lboost_system-mt -lssl -lgfal_transfer -lgfal2 -lglib-2.0 -lfts_msg_ifce ${fts_libs})
 
