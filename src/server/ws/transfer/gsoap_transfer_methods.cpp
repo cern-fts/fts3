@@ -667,6 +667,10 @@ int fts3::impltns__blacklist(soap* soap, string _type, string _subject, bool _bl
 
 		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG); // TODO
 
+		string cmd = "fts-set-blacklist " + _type + " " + _subject + (_blk ? " on" : " off");
+
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "blacklist");
+
 		if (_type == "se") {
 
 			if (_blk) {
