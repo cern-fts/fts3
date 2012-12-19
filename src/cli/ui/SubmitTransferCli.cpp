@@ -232,7 +232,7 @@ bool SubmitTransferCli::performChecks() {
 
 	// the job cannot be specified twice
 	if ((!getSource().empty() || !getDestination().empty()) && vm.count("file")) {
-		cout << "You may not specify a transfer on the command line if the -f option is used." << endl;
+		printer().error_msg("You may not specify a transfer on the command line if the -f option is used.");
 		return false;
 	}
 
