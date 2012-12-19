@@ -49,7 +49,6 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include "mq_manager.h"
-#include "compress.h"
 
 
 #define MILLI 36000000

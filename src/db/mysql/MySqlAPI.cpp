@@ -1390,7 +1390,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     bool allowed = false;
     try {
         int nActiveSource, nActiveDest;
-        int nFailedLastHour, nFinishedLastHour;
+        int nFailedLastHour=0, nFinishedLastHour=0;
         int nActive;
         int nFailedAll, nFinishedAll;
 

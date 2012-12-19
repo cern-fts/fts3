@@ -170,7 +170,6 @@ bool QueueManager::msg_receive(char* msg) {
     std::size_t recvd_size;
     bool receive = false;
 
-    while (receive == false) {
         try {
             char json[3000] = {0};
             receive = mq_mon->try_receive(json, 3000, recvd_size, priority);
@@ -185,8 +184,6 @@ bool QueueManager::msg_receive(char* msg) {
             usleep(1000);
             receive = false;
         }
-    }
-    
     return receive;
 }
 

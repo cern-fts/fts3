@@ -34,11 +34,14 @@
 #include <signal.h>
 #include "concurrent_queue.h"
 #include "Logger.h"
-#include "compress.h"
 #include <vector>
+
+extern bool stopThreads;
 
 void handler(int sig) {
     sig = 0;
+    stopThreads = true;
+    sleep(5);
     exit(0);
 }
 
@@ -79,9 +82,10 @@ MsgPipe::~MsgPipe() {
 
 
 void MsgPipe::run() {
-    char tmpMsg[3000]={0};
-    while (1){
+   
+    while (stopThreads==false){
      try{
+        char tmpMsg[3000]={0};
    	bool received = qm->msg_receive(tmpMsg);
 	if(received)
 		concurrent_queue::getInstance()->push(std::string(tmpMsg));					    

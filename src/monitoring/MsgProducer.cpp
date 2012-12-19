@@ -25,12 +25,13 @@
 #include "half_duplex.h" /* For name of the named-pipe */
 #include "utility_routines.h"
 #include "concurrent_queue.h"
-#include "compress.h"
 #include "Logger.h"
 #include <signal.h>
 #include "error.h"
 #include "logger.h"
 #include "serverconfig.h"
+
+bool stopThreads = false;
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -183,6 +184,8 @@ void MsgProducer::readConfig() {
 void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED) {
 	logger::writeLog(ex.getStackTraceString(), true);
 	connectionIsOK = false;	
+	stopThreads = true;
+	sleep(10);
 	exit(15); //force weird exit error code in order to restart
     }
 
@@ -191,7 +194,7 @@ void MsgProducer::run() {
 
     std::string msg("");
     std::string msgBk("");
-    while (1) {
+    while (stopThreads==false) {
         try {
             //send messages	  	   
             getConnection(); //make sure there is a valid connection to the broker   	        	    
