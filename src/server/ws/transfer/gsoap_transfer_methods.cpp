@@ -633,7 +633,7 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " and " << _destination << " pair" << commit;
 		}
 
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG); // TODO
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 		DBSingleton::instance().getDBObjectInstance()->setDebugMode (
 				_source,
 				_destination,
@@ -665,7 +665,7 @@ int fts3::impltns__blacklist(soap* soap, string _type, string _subject, bool _bl
 		CGsiAdapter cgsi(soap);
 		string dn = cgsi.getClientDn();
 
-		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG); // TODO
+		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
 		string cmd = "fts-set-blacklist " + _type + " " + _subject + (_blk ? " on" : " off");
 
@@ -710,6 +710,28 @@ int fts3::impltns__blacklist(soap* soap, string _type, string _subject, bool _bl
 }
 
 int fts3::impltns__prioritySet(soap* ctx, string jobId, int priority, impltns__prioritySetResponse &resp) {
+
+	try {
+
+		CGsiAdapter cgsi(ctx);
+		string dn = cgsi.getClientDn();
+
+		AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, jobId);
+
+		string cmd = "fts-set-priority " + jobId + " " + lexical_cast<string>(priority);
+
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "set_priority");
+
+		// TODO
+
+	} catch(Err& ex) {
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(ctx, ex.what(), "TransferException");
+		return SOAP_FAULT;
+	} catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the priority cannot be set"  << commit;
+	    return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
