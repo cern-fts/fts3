@@ -640,7 +640,8 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 				_debug ? "on" : "off"
 			);
 
-		string cmd = "fts3-debug-set " + _debug ? "on " : "off " + _source + " " + _destination;
+		string cmd = "fts3-debug-set ";
+		cmd += (_debug ? "on " : "off ") + _source + " " + _destination;
 		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
 
 	} catch(Err& ex) {
