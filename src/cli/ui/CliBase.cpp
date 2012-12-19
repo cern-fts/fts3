@@ -204,81 +204,9 @@ string CliBase::getService() {
 }
 
 string CliBase::discoverService() {
-/*
-	//string source = getSource(), destination = getDestination();
-	SDService *service;
-	scoped_array<char> c_strArr, errorArr;
-	char *error, *c_str = 0;
-	const char * srvtype;
-	const char * version;
-	SDException exc;
-*/
-	/*if (source.size() > 0 && destination.size() > 0) {
-
-		SDServiceData datas[] =
-		{
-			{"source", (char*) source.c_str()},
-			{"destination", (char*) destination.c_str()}
-		};
-
-		SDServiceDataList datalist = {NULL, 2, datas};
-
-		c_str = glite_discover_service_by_data(FTS3_CA_SD_TYPE.c_str(), &datalist, &error);
-		c_str_arr.reset(c_str);
-		error_arr.reset(error);
-	}*/
-/*
-	if (getenv(FTS3_SD_ENV.c_str()))
-		srvtype = getenv(FTS3_SD_ENV.c_str());
-	else
-		srvtype = FTS3_SD_TYPE.c_str();
-
-	if(getenv(FTS3_IFC_VERSION.c_str()))
-		version = getenv(FTS3_IFC_VERSION.c_str());
-	else
-		version = FTS3_INTERFACE_VERSION.c_str();
-
-	// Note: glite_discover_service will check if the service name passed
-	// has an associated service of the given type (fts_srvtype), if not
-	// it will check if the name refers to a site name or an host name
-
-	c_str = glite_discover_service_by_version(srvtype, c_str, version, &error);
-	c_strArr.reset(c_str);
-	errorArr.reset(error);
-
-	if (!c_str) {
-        cout << "Service discovery: " << error << endl;
-		return "";
-	}
-
-	service = SD_getService(c_str, &exc);
-	if (!service) {
-		cout << "Service discovery lookup failed for " << c_str << ": " << exc.reason << endl;
-		SD_freeException(&exc);
-		return "";
-	}
-
-	string tmp;
-	if (service->endpoint) {
-		tmp = service->endpoint;
-	}
-	SD_freeService(service);
-*/
 	string tmp;
 	return tmp;
 }
-
-//void CliBase::print (string name, string msg, bool verbose_only) {
-//	// if verbose flag is required and CLI has been muted return
-//	// if json output is used return
-//	if ( (verbose_only && !isverbose)) return;
-//
-//	if (isjson) {
-//		json_out.add(name, msg);
-//	} else {
-//		cout << name << " : " << msg << endl;
-//	}
-//}
 
 string CliBase::getCliVersion() {
     FILE *in;
