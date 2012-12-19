@@ -34,6 +34,7 @@ public:
 	void client_version(string version);
 	void client_interface(string interface);
 
+	void bulk_submission_error(int line, string msg);
 	void wrong_endpoint_format(string endpoint);
 	void missing_parameter(string name);
 	void version(string version);

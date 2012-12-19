@@ -121,6 +121,18 @@ void MsgPrinter::missing_parameter(string name) {
 
 	json_out.put("missing_parameter", name);
 }
+
+void MsgPrinter::bulk_submission_error(int line, string msg) {
+
+	if (!json) {
+		cout << "submit: in line " << line << ": " << msg << endl;
+		return;
+	}
+
+	json_out.put("submission_error.line", line);
+	json_out.put("submission_error.message", msg);
+}
+
 void MsgPrinter::wrong_endpoint_format(string endpoint) {
 
 	if (!json) {
@@ -129,8 +141,6 @@ void MsgPrinter::wrong_endpoint_format(string endpoint) {
 	}
 
 	json_out.put("wrong_format.endpoint", endpoint);
-
-	return;
 }
 
 void MsgPrinter::version(string version) {

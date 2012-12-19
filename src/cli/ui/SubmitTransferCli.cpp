@@ -160,7 +160,7 @@ bool SubmitTransferCli::createJobElements() {
     			get<DESTINATION>(e) = *it;
     		else {
     			// only one element is still not enough to define a job
-    			cout << "submit: in line " << lineCount << ": Destination is missing." << endl;
+    			printer().bulk_submission_error(lineCount, "destination is missing");
     			continue;
     		}
 
@@ -174,7 +174,7 @@ bool SubmitTransferCli::createJobElements() {
     		if (get<CHECKSUM>(e)) {
     			string::size_type colon = (*get<CHECKSUM>(e)).find(":");
    				if (colon == string::npos || colon == 0 || colon == (*get<CHECKSUM>(e)).size() - 1) {
-   					cout << "submit: in line " << lineCount << ": checksum format is not valid (ALGORITHM:1234af)." << endl;
+   					printer().bulk_submission_error(lineCount, "checksum format is not valid (ALGORITHM:1234af)");
    					continue;
    				}
     			checksum = true;
