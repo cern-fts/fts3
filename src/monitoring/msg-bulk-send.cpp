@@ -48,7 +48,6 @@
 #include <errno.h>
 #include <iostream>
 #include "MsgPipe.h"
-#include "MsgRecoverPipe.h"
 #include "MsgProducer.h"
 #include "concurrent_queue.h"
 #include "half_duplex.h"
