@@ -26,6 +26,90 @@ using namespace boost;
 using namespace boost::assign;
 using namespace fts3::common;
 
+void MsgPrinter::delegation_request_duration(long int h, long int m) {
+
+	if (!verbose) return;
+
+	if (!json) {
+        cout << "Requesting delegated proxy for " << h << " hours and " << m << " minutes." << endl;
+		return;
+	}
+
+	json_out.put("delegation.request.duration", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+}
+
+void MsgPrinter::delegation_request_retry() {
+
+	if (!verbose) return;
+
+	if (!json) {
+		cout << "Retrying!" << endl;
+		return;
+	}
+
+	json_out.put("delegation.request.retry", true);
+}
+
+void MsgPrinter::delegation_request_error(string error) {
+
+	if (!verbose) return;
+
+	if (!json) {
+		cout << "delegation: " << error << endl;
+		return;
+	}
+
+	json_out.put("delegation.request.error", error);
+}
+
+void MsgPrinter::delegation_request_success(bool b) {
+
+	if (!verbose) return;
+
+	if (!json) {
+		if (b) cout << "Credential has been successfully delegated to the service." << endl;
+		return;
+	}
+
+	json_out.put("delegation.request.delegated_successfully", b);
+}
+
+void MsgPrinter::delegation_local_expiration(long int h, long int m) {
+
+	if (!verbose) return;
+
+	if (!json) {
+	    cout << "Remaining time for the local proxy is " << h << "hours and " << m << " minutes." << endl;
+		return;
+	}
+
+	json_out.put("delegation.expiration_time.local", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+}
+
+void MsgPrinter::delegation_service_proxy(long int h, long int m) {
+
+	if (!verbose) return;
+
+	if (!json) {
+        cout << "Remaining time for the proxy on the server side is " << h << " hours and " << m << " minutes." << endl;
+		return;
+	}
+
+	json_out.put("delegation.expiration_time.service", lexical_cast<string>(h) + ":" + lexical_cast<string>(m));
+}
+
+void MsgPrinter::delegation_msg(string msg) {
+
+	if (!verbose) return;
+
+	if (!json) {
+		cout << msg << endl;
+		return;
+	}
+
+	json_out.put("delegation.message", msg);
+}
+
 void MsgPrinter::endpoint(string endpoint) {
 
 	if (!json) {

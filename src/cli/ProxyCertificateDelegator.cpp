@@ -33,11 +33,15 @@
 
 #include <iostream>
 
+namespace fts3 {
+namespace cli {
 
-ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, int userRequestedDelegationExpTime):
+
+ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, int userRequestedDelegationExpTime, MsgPrinter& printer):
 		delegationId(delegationId),
 		endpoint(endpoint),
-		userRequestedDelegationExpTime(userRequestedDelegationExpTime) {
+		userRequestedDelegationExpTime(userRequestedDelegationExpTime),
+		printer(printer) {
 
     dctx = glite_delegation_new(endpoint.c_str());
     if (dctx == NULL) {
@@ -87,11 +91,10 @@ void ProxyCertificateDelegator::delegate() {
 
     // get local proxy run time
     time_t localProxyTimeLeft = isCertValid(string());
-    cout << "Remaining time for local proxy is "
-    	<< (long int)((localProxyTimeLeft) / 3600)
-    	<< "hours and "
-    	<< (long int)((localProxyTimeLeft) % 3600 / 60)
-    	<< " minutes." << endl;
+    printer.delegation_local_expiration(
+    		(long int)((localProxyTimeLeft) / 3600),
+    		(long int)((localProxyTimeLeft) % 3600 / 60)
+    	);
 
     // checking if there is already a delegated credenial
     time_t expTime;
@@ -99,50 +102,40 @@ void ProxyCertificateDelegator::delegate() {
 
     if (!err) {   // there is already a delegated proxy on the server
 
-        time_t timeLeftOnServer = expTime - time(0);
+    	time_t timeLeftOnServer = expTime - time(0);
+
+    	printer.delegation_service_proxy(
+    			(long int)((timeLeftOnServer) / 3600),
+    			(long int)((timeLeftOnServer) % 3600 / 60)
+    		);
 
         if (timeLeftOnServer > REDELEGATION_TIME_LIMIT) {
             // don;t bother redelegating
-            cout << "Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours." << endl;
-            cout << "Remaining time on server for this credential is "
-                 << (long int)((timeLeftOnServer) / 3600)
-                 << " hours and "
-                 << (long int)((timeLeftOnServer) % 3600 / 60)
-                 << " minutes." << endl;
+        	printer.delegation_msg(
+        			"Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours."
+        		);
             needDelegation = false;
             renewDelegation = false;
         } else {
             // think about redelegating
             if (localProxyTimeLeft > timeLeftOnServer) {
                 // we improve the situation (the new proxy will last longer)
-                cout << "Will redo delegation since the credential on the server has left that 4 hours validity left." << endl;
-                cout << "Remaining time for this credential is "
-                     << (long int)((timeLeftOnServer) / 3600)
-                     << " hours and "
-                     << (long int)((timeLeftOnServer) % 3600 / 60)
-                     << " minutes." << endl;
+            	printer.delegation_msg(
+            			"Will redo delegation since the credential on the server has left that 4 hours validity left."
+            		);
                 needDelegation = true;
                 renewDelegation = true; // renew rather than put
             } else {
                 // we cannot improve the proxy on the server
-                cout << "Delegated proxy on server has less than 6 hours left." << endl;
-                cout << "But the local proxy has less time left than the one on the server, so cannot be used to refresh it!" << endl;
-                cout << "Remaining time on server for this credential is "
-                     << (long int)((timeLeftOnServer) / 3600)
-                     << " hours and "
-                     << (long int)((timeLeftOnServer) % 3600 / 60)
-                     << " minutes." << endl;
-                cout << "Remaining time for local proxy is "
-                     << (long int)((localProxyTimeLeft) / 3600)
-                     << " hours and "
-                     << (long int)((localProxyTimeLeft) % 3600 / 60)
-                     << " minutes." << endl;
+            	printer.delegation_msg(
+            			"Delegated proxy on server has less than 6 hours left.\nBut the local proxy has less time left than the one on the server, so cannot be used to refresh it!"
+            		);
                 needDelegation=false;
             }
         }
     } else {
         // no proxy on server: do standard delegation
-    	cout << "No proxy found on server. Requesting standard delegation" << endl;
+    	printer.delegation_msg("No proxy found on server. Requesting standard delegation");
         needDelegation = true;
         renewDelegation = false;
     }
@@ -163,27 +156,34 @@ void ProxyCertificateDelegator::delegate() {
         } else {
             requestProxyDelegationTime = userRequestedDelegationExpTime;
         }
-        cout << "Requesting delegated proxy for "
-             << (long int)((requestProxyDelegationTime) / 3600)
-             << " hours and "
-             << (long int)((requestProxyDelegationTime) % 3600 / 60)
-             << " minutes." << endl;
+
+        printer.delegation_request_duration(
+        		(long int)((requestProxyDelegationTime) / 3600),
+        		(long int)((requestProxyDelegationTime) % 3600 / 60)
+        	);
+
         err = glite_delegation_delegate(
         		dctx, delegationId.c_str(),
         		(requestProxyDelegationTime/60),
                 renewDelegation
         	);
+
         if (err == -1) {
+        	printer.delegation_request_success(false);
         	string errMsg = glite_delegation_get_error(dctx);
-            cout << "delegation: " << errMsg << endl;
+        	printer.delegation_request_error(errMsg);
 
 //            // TODO don't use string value to discover the error (???) do we need retry? yes we do!
             if (errMsg.find("key values mismatch") != string::npos) {
-            	cout << "Retrying!" << endl;
+            	printer.delegation_request_retry();
             	return delegate();
             }
             throw string("delegation: " + errMsg);
         }
-        cout << "Credential has been successfully delegated to the service." << endl;
+
+        printer.delegation_request_success(true);
     }
+}
+
+}
 }

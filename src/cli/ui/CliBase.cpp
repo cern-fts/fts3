@@ -37,7 +37,7 @@ const string CliBase::error = "error";
 const string CliBase::result = "result";
 const string CliBase::parameter_error = "parameter_error";
 
-CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0), ismute(false) {
+CliBase::CliBase(): visible("Allowed options"), ctx(0) {
 
 	// add basic command line options
     basic.add_options()
@@ -56,10 +56,6 @@ CliBase::CliBase(): visible("Allowed options"), ctx(0), cout_sbuf(0), ismute(fal
 CliBase::~CliBase() {
 	if (ctx) {
 		delete ctx;
-	}
-
-	if (ismute) {
-		unmute();
 	}
 }
 
@@ -270,25 +266,6 @@ string CliBase::discoverService() {
 */
 	string tmp;
 	return tmp;
-}
-
-void CliBase::mute() {
-
-	ismute = true;
-
-	if (!cout_sbuf) {
-		cout_sbuf = cout.rdbuf(); // save original sbuf
-	}
-
-	if (!fout.is_open()) {
-		fout.open("/dev/null");
-	}
-    cout.rdbuf(fout.rdbuf()); // redirect 'cout' to a 'fout'
-}
-
-void CliBase::unmute() {
-	ismute = false;
-	cout.rdbuf(cout_sbuf); // restore the original stream buffer
 }
 
 //void CliBase::print (string name, string msg, bool verbose_only) {

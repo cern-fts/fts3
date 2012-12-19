@@ -25,8 +25,13 @@
 #ifndef ProxyCertificateDelegator_H_
 #define ProxyCertificateDelegator_H_
 
+#include "MsgPrinter.h"
+
 #include <string>
 #include <delegation-cli/delegation-simple.h>
+
+namespace fts3 {
+namespace cli {
 
 using namespace std;
 
@@ -50,7 +55,7 @@ public:
 	 * @param userRequestedDelegationExpTime - user specified delegation expire time
 	 * 											(0 means that the default value should be used)
 	 */
-	ProxyCertificateDelegator(string endpoint, string delegationId, int userRequestedDelegationExpTime);
+	ProxyCertificateDelegator(string endpoint, string delegationId, int userRequestedDelegationExpTime, MsgPrinter& printer);
 
 	/**
 	 * Destructor
@@ -96,6 +101,12 @@ private:
 
 	/// delegation context (a facade for the GSoap delegation client)
 	glite_delegation_ctx *dctx;
+
+	/// the output printing facility
+	MsgPrinter& printer;
 };
+
+}
+}
 
 #endif /* ProxyCertificateDelegator_H_ */

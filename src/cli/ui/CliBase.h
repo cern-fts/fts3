@@ -151,20 +151,6 @@ public:
 	 */
 	virtual string getUsageString(string tool);
 
-	/**
-	 */
-//	void print (string name, string msg, bool verbose_only = false);
-
-	/**
-	 * Mutes the cout stream
-	 */
-	void mute();
-
-	/**
-	 * Unmutes the cout stream
-	 */
-	void unmute();
-
 	MsgPrinter& printer() {
 		return msgPrinter;
 	}
@@ -259,20 +245,6 @@ private:
 	string FTS3_IFC_VERSION;
 	string FTS3_INTERFACE_VERSION;
 	///@}
-
-	/**
-	 * standard output stream (cout)
-	 */
-	streambuf* cout_sbuf;
-
-	/**
-	 * replacement output stream
-	 * 	(devours things send to cout)
-	 */
-	ofstream fout;
-
-	/// contains the mute state
-	bool ismute;
 
 	MsgPrinter msgPrinter;
 };

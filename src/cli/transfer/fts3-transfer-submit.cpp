@@ -60,16 +60,11 @@ int main(int ac, char* av[]) {
 			ProxyCertificateDelegator handler (
 					cli->getService(),
 					cli->getDelegationId(),
-					cli->getExpirationTime()
+					cli->getExpirationTime(),
+					cli->printer()
 				);
 
-			if (cli->isVerbose()) {
-				handler.delegate();
-			} else {
-				cli->mute();
-				handler.delegate();
-				cli->unmute();
-			}
+			handler.delegate();
 
 			// submit the job
 			jobId = ctx.transferSubmit (
