@@ -54,7 +54,7 @@ int main(int ac, char* av[]) {
 
 		string jobId("");
 
-		if (cli->useDelegation()) {
+//		if (cli->useDelegation()) {
 
 			// delegate Proxy Certificate
 			ProxyCertificateDelegator handler (
@@ -77,15 +77,15 @@ int main(int ac, char* av[]) {
 					cli->getParams(),
 					cli->useCheckSum()
 				);
-
-		} else {
-			// submit the job
-			jobId = ctx.transferSubmit (
-					cli->getJobElements(),
-					cli->getParams(),
-					cli->getPassword()
-				);
-		}
+//
+//		} else {
+//			// submit the job
+//			jobId = ctx.transferSubmit (
+//					cli->getJobElements(),
+//					cli->getParams(),
+//					cli->getPassword()
+//				);
+//		}
 
 		cli->printer().job_id(jobId);
 

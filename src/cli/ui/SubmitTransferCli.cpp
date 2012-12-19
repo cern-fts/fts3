@@ -52,7 +52,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("gparam,g", value<string>(), "Gridftp parameters.")
 			("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
 //			("myproxysrv,m", value<string>(), "MyProxy server to use.")
-			("password,p", value<string>(), "MyProxy password to send with the job")
+//			("password,p", value<string>(), "MyProxy password to send with the job")
 			("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
 			("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
 			("overwrite,o", "Overwrite files.")
@@ -213,56 +213,28 @@ vector<JobElement> SubmitTransferCli::getJobElements() {
 
 bool SubmitTransferCli::performChecks() {
 
-    // check if the server supports delegation
-	if (ctx->isDelegationSupported()) {
-		// if the user did not specify a password use delegation
-		if (!vm.count("password")) {
-			if (isVerbose())
-				cout << "Server supports delegation. Delegation will be used by default." << endl;
-	        delegate = true;
-		} else {
-			if (isVerbose())
-				cout << "Server supports delegation, however a MyProxy pass phrase was given: will use MyProxy legacy mode." << endl;
-	        delegate = false;
-		}
-	}
+	// in FTS3 delegation is supported by default
+	delegate = true;
 
-	// if the user specified the password set the value of 'password' variable
-    if (vm.count("password")) {
-    	password = vm["password"].as<string>();
-    } else {
-    	// if not, and delegation mode is not use,
-    	// ask the user to give the password
-    	if (!delegate) {
-    		password = askForPassword();
-    	}
-    }
+//	// if the user specified the password set the value of 'password' variable
+//    if (vm.count("password")) {
+//    	password = vm["password"].as<string>();
+//		if (isVerbose())
+//			cout << "Server supports delegation, however a MyProxy pass phrase was given: will use MyProxy legacy mode." << endl;
+//        delegate = false;
+//    } else {
+//    	// if not, and delegation mode is not use,
+//    	// ask the user to give the password
+//    	if (!delegate) {
+//    		password = askForPassword();
+//    	}
+//    }
 
 	// the job cannot be specified twice
 	if ((!getSource().empty() || !getDestination().empty()) && vm.count("file")) {
 		cout << "You may not specify a transfer on the command line if the -f option is used." << endl;
 		return false;
 	}
-
-	// if the checksum algorithm is given the server has to be support checksum
-	if (checksum && !ctx->isChecksumSupported()) {
-		cout << "You have specified an optional checksum, but it is not supported by the server." << endl;
-		return false;
-	}
-
-    // if the checksum is used it has to be supported by the server
-    if (vm.count("compare-checksum") && !ctx->isChecksumSupported()) {
-    	cout << "The server you are contacting does not support checksum checking (it is running interface version ...). Please omit checksums for this server." << endl;
-		return false;
-    }
-
-    // if delegation is used it has to be supported by the server
-    if (delegate && !ctx->isDelegationSupported()) {
-    	cout <<
-    			"The server you are contacting does not support credential delegation (it is running interface version ...). Please use the MyProxy password legacy method for this server."
-    		<< endl;
-    	return false;
-    }
 
     return true;
 }

@@ -54,22 +54,9 @@ int main(int ac, char* av[]) {
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();
 
-		if (!cli->checkIfFeaturesSupported()) {
-			return 0;
-		}
-
 		vector<string> array = cli->getStatusArray();
-
 		vector<fts3::cli::JobStatus> statuses;
-
-		if (ctx.isUserVoRestrictListingSupported()) {
-
-			statuses = ctx.listRequests2(array, cli->getUserDn(), cli->getVoName());
-
-		} else {
-
-			statuses = ctx.listRequests(array);
-		}
+		statuses = ctx.listRequests2(array, cli->getUserDn(), cli->getVoName());
 
 		vector<fts3::cli::JobStatus>::iterator it;
 		for (it = statuses.begin(); it < statuses.end(); it++) {

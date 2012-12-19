@@ -250,32 +250,6 @@ public:
 
 	///@{
 	/**
-	 * A group of methods that check if the FTS3 service supports various functionalities.
-	 * TODO legacy verify if really needed
-	 */
-	int isChecksumSupported();
-	int isDelegationSupported();
-	int isRolesOfSupported();
-	int isSetTCPBufferSupported();
-	int isUserVoRestrictListingSupported();
-	int isVersion330StatesSupported();
-	///@}
-
-
-	///@{
-	/**
-	 * A group of methods that check the version of the FTS3 service
-	 * TODO legacy verify if really needed
-	 */
-	int isItVersion330();
-	int isItVersion340();
-	int isItVersion350();
-	int isItVersion370();
-	///@}
-
-
-	///@{
-	/**
 	 * A group of methods returning details about interface version of the FTS3 service
 	 */
 	string getEndpoint() {

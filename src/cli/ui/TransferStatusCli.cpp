@@ -45,7 +45,7 @@ optional<GSoapContextAdapter&> TransferStatusCli::validate(bool init) {
 	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
 	if (getJobIds().empty()) {
-		cout << "No request ID specified." << endl;
+		printer().missing_parameter("Request ID");
 		return 0;
 	}
 

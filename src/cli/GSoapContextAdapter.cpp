@@ -523,46 +523,5 @@ void GSoapContextAdapter::setInterfaceVersion(string interface) {
 	patch = lexical_cast<long>(s);
 }
 
-
-int GSoapContextAdapter::isChecksumSupported() {
-    return isItVersion370();
-}
-
-int GSoapContextAdapter::isDelegationSupported() {
-    return isItVersion330();
-}
-
-int GSoapContextAdapter::isRolesOfSupported() {
-    return isItVersion330();
-}
-
-int GSoapContextAdapter::isSetTCPBufferSupported() {
-    return isItVersion330();
-}
-
-int GSoapContextAdapter::isUserVoRestrictListingSupported() {
-    return isItVersion330();
-}
-
-int GSoapContextAdapter::isVersion330StatesSupported(){
-    return isItVersion330();
-}
-
-int GSoapContextAdapter::isItVersion330() {
-    return major >= 3 && minor >= 3 && patch >= 0;
-}
-
-int GSoapContextAdapter::isItVersion340() {
-    return major >= 3 && minor >= 4 && patch >= 0;
-}
-
-int GSoapContextAdapter::isItVersion350() {
-    return major >= 3 && minor >= 5 && patch >= 0;
-}
-
-int GSoapContextAdapter::isItVersion370() {
-	return major >= 3 && minor >= 7 && patch >= 0;
-}
-
 }
 }

@@ -54,31 +54,11 @@ public:
 	virtual ~ListTransferCli();
 
 	/**
-	 * Validates command line options
-	 * 1. Checks the endpoint
-	 * 2. If -h or -V option were used respective informations are printed
-	 * 3. GSoapContexAdapter is created, and info about server requested
-	 * 4. Additional check regarding server are performed
-	 * 5. If verbal additional info is printed
-	 *
-	 * @return GSoapContexAdapter instance, or null if all activities
-	 * 				requested using program options have been done.
-	 */
-	virtual optional<GSoapContextAdapter&> validate(bool init = true);
-
-	/**
 	 * Gives the instruction how to use the command line tool.
 	 *
 	 * @return a string with instruction on how to use the tool
 	 */
 	string getUsageString(string tool);
-
-	/**
-	 * Check if server supports -u and -o options.
-	 *
-	 * @return true if all used options are supported by the FTS3 service
-	 */
-	bool checkIfFeaturesSupported();
 
 	/**
 	 * Gets a pointer to impl__ArrayOf_USCOREsoapenc_USCOREstring object.

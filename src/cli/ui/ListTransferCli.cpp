@@ -42,37 +42,9 @@ ListTransferCli::ListTransferCli(): VoNameCli(false) {
 ListTransferCli::~ListTransferCli() {
 }
 
-optional<GSoapContextAdapter&> ListTransferCli::validate(bool init) {
-
-	// do the standard validation
-	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
-
-	// checks if requested features are supported
-	if(!checkIfFeaturesSupported()) return 0;
-
-	return *ctx;
-}
-
 string ListTransferCli::getUsageString(string tool) {
 
 	return "Usage: " + tool + " [options] [STATE...]";
-}
-
-bool ListTransferCli::checkIfFeaturesSupported() {
-
-	if (CliBase::vm.count("userdn") && !ctx->isUserVoRestrictListingSupported()) {
-		cout << "The server you are contacting does not support the -u option (it is running interface version ";
-		cout << ctx->getInterface() << ")." << endl;
-		return false;
-	}
-
-    if (CliBase::vm.count("voname") && !ctx->isUserVoRestrictListingSupported()) {
-        cout << "The server you are contacting does not support the -o option (it is running interface version ";
-        cout << ctx->getInterface() << ")." << endl;
-        return false;
-    }
-
-   return true;
 }
 
 vector<string> ListTransferCli::getStatusArray() {
@@ -86,10 +58,7 @@ vector<string> ListTransferCli::getStatusArray() {
 	if (array.empty()) {
 		array.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
 		array.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
-
-		if (ctx->isUserVoRestrictListingSupported()) {
-			array.push_back(JobStatusHandler::FTS3_STATUS_READY);
-		}
+		array.push_back(JobStatusHandler::FTS3_STATUS_READY);
 	}
 
 	return array;
