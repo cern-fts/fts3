@@ -67,7 +67,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     #ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)   
     ADD_DEFINITIONS(-D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG=1 -g3  -O0 )
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_FORTIFY_SOURCE=2 -fstack-protector-all")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-all")
 endif ()
 
 set(BOOST_LIBRARYDIR /usr/lib64)
