@@ -308,6 +308,15 @@
       <part name="fault" element="tns3:ExistsExceptionElement"/>
 
    </message>
+   
+   <message name="prioritySetRequest">
+   
+      <part name="jobId" type="xsd:string"/>
+      <part name="priority" type="xsd:int"/>
+   
+   </message>
+   
+   <message name="prioritySetResponse"/>
 
    <message name="debugSetRequest">
    
@@ -643,6 +652,22 @@
 
          <fault message="impl:InternalException" name="InternalException"/>
 
+      </operation>
+      
+      <operation name="prioritySet" parameterOrder="priority">
+      
+         <input message="impl:prioritySetRequest" name="prioritySetRequest"/>
+
+         <output message="impl:priritySetResponse" name="prioritySetResponse"/>
+      
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+         
       </operation>
       
       <operation name="debugSet" parameterOrder="debug">
@@ -1032,6 +1057,48 @@
          </input>
 
          <output name="transferSubmit3Response">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+      <operation name="prioritySet">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="prioritySetRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="prioritySetResponse">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 

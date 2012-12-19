@@ -709,6 +709,11 @@ int fts3::impltns__blacklist(soap* soap, string _type, string _subject, bool _bl
 	return SOAP_OK;
 }
 
+int fts3::impltns__prioritySet(soap* ctx, string jobId, int priority, impltns__prioritySetResponse &resp) {
+
+	return SOAP_OK;
+}
+
 
 int fts3::log__GetLog(struct soap* soap, string jobId, struct log__GetLogResponse &_param_36) {
 
