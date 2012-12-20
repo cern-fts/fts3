@@ -6,10 +6,10 @@ project (fts3-tests)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 install (PROGRAMS FTS3-config
                   Macros
-         DESTINATION ${DOC_INSTALL_DIR}/tests)
+         DESTINATION ${SHARE_INSTALL_PREFIX}/tests)
 
 install (DIRECTORY functional stress
-         DESTINATION ${DOC_INSTALL_DIR}/tests)
+         DESTINATION ${SHARE_INSTALL_PREFIX}/tests)
 endif ()
 
 
