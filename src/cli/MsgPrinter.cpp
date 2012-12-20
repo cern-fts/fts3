@@ -203,7 +203,7 @@ void MsgPrinter::missing_parameter(string name) {
 		return;
 	}
 
-	json_out.put("missing_parameter", name);
+	json_out.put("error.missing_parameter", name);
 }
 
 void MsgPrinter::bulk_submission_error(int line, string msg) {
