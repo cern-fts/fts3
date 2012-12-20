@@ -135,7 +135,7 @@ void ProxyCertificateDelegator::delegate() {
         }
     } else {
         // no proxy on server: do standard delegation
-    	printer.delegation_msg("No proxy found on server. Requesting standard delegation");
+    	printer.delegation_msg("No proxy found on server. Requesting standard delegation.");
         needDelegation = true;
         renewDelegation = false;
     }
