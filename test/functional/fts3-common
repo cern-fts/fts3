@@ -1,0 +1,993 @@
+#!/bin/bash
+
+function config-set()
+{
+    echo "config-set()"
+    echo "1. Noncorrect request"
+    echo -e "\nRun: fts-config-set -s https://$FTS3_HOST:8081"
+    fts-config-set -s https://$FTS3_HOST:8081 2>&1 > message
+    if [ $? != 0 ]; then
+	echo "OK, "
+	cat message
+	
+    else
+	echo "Bad, expected != exit code"
+	cat message
+    fi
+    echo "2. Correct request"
+    echo -e "\nRun: fts3-config-set -s http://$FTS3_HOST:8081 $CONF_STR"
+    fts3-config-set -s http://$FTS3_HOST:8081 $CONF_STR 2>&1 > message
+    if [ $? != 0 ]; then
+	echo "Faild, exit code"
+	cat message
+	return 1
+    fi
+    echo "OK"
+    return 0
+}
+#------------------------------------------------
+function config-get()
+{
+    echo "config-get()"
+    echo -e "\nRun: fts3-config-get -s http://$FTS3_HOST:8081"
+    fts3-config-get -s http://$FTS3_HOST:8081 > message
+    if [ $? != 0 ]; then
+	echo "Bad, exit code != 0"
+	cat message
+	return 1
+    fi
+    cat message
+    echo "OK"
+    return 0
+}
+#---------------------------------------------------
+function getRoles()
+{
+    echo -e "\nRun: fts3-transfer-getroles -s http://$FTS3_HOST:8080"
+    fts3-transfer-getroles -s http://$FTS3_HOST:8080 > $RES
+    res=$?
+    cat $RES
+    if [ $res != 0 ]; then
+	echo "fts3-transfer-getroles - failed (exit code)"
+	return 1
+    fi
+    
+    return 0
+}
+#-----------------------------------------------------------
+function list-vo-man()
+{
+    echo "1. Correct request, VO=$VO"
+    echo -e "\nRun:fts3-transfer-listvomanagers -s http://$FTS3_HOST:8080 $VO"
+    fts3-transfer-listvomanagers -s http://$FTS3_HOST:8080 $VO > message
+    res=$?
+    cat message
+    if [ $res != 0 ]; then
+	echo "fts3-transfer-listvomanagers - failed (Exit cod = $res"
+	return 1
+    fi
+    echo "OK"
+    echo "2.Non correct request (without VO)"
+    echo -e "\nRun:fts3-transfer-listvomanagers -s http://$FTS3_HOST:8080"
+    fts3-transfer-listvomanagers -s http://$FTS3_HOST:8080 > message
+    res=$?
+    cat message
+    if [ $res == 0 ]; then
+	echo "fts3-transfer-listvomanagers - failed (Exit cod = $res)"
+	echo "Expected != 0"
+	return 1
+    fi
+    return 0
+}
+#---------------------------------------------------
+function SURL_file_deletion ()
+{
+    echo "SURL_file_deletion($1)"  #  Remove if it exists
+    lcg-ls -l $1 &> /dev/null
+    if [ $? == 0 ]; then
+	#echo "Run: lcg-del --vo $VO -l  $1"
+        lcg-del --vo $VO -l $1 > /dev/null || return 1
+	#echo "$1 removed"
+    else 
+      echo "File $1 does not exists"
+      return 1
+    fi
+    # Check
+    lcg-ls -l $1 &> /dev/null
+    if [ $? -eq 0 ]; then
+      return 1
+    fi
+}
+#---------------------------------------------
+function GUID_file_deletion ()
+{ 
+    echo "GUID_file_deletion($1)"
+    # Remove if it exists
+    #echo "Run: lcg-lr --vo $VO  $1"
+    #lcg-lr --vo $VO  $1 # &> /dev/null
+    #echo $?
+    #echo "Run: lcg-del --vo $VO -a $1"
+    lcg-del --vo $VO -a $1
+    if [ $? == 0 ]; then
+	echo "File $1 removed"
+    else 
+    	echo "File $1 removed???"
+    fi
+    #echo "Check if removed"
+    #echo "Run: lcg-lr --vo $VO  $1"
+    #lcg-lr --vo $VO  $1
+    #echo $?                                                      
+    #echo "Run: lcg-la --vo $VO  $1"
+    #lcg-la --vo $VO  $1
+    #echo $?
+}
+#-------------------------------------------------
+function get_source_file()
+{
+    if [ "$source_TYPE" = "gsiftp" ]; then
+	export source_file=$GSIFTP
+    else
+	export source_file=$newSRM
+    fi 
+}
+#----------------------------------------------
+function get_dest_file()
+{
+echo "get_dest_file($dest_TYPE)"
+#echo "$dest_TYPE"
+    local type=$1
+    if [ -z $type ]; then
+	type="DPM"
+    fi
+    if [ "$dest_TYPE" = "gsiftp" ]; then
+	if [ "$type" = "DPM" ]; then
+	    export dest_file="$dpm_SE2/$DPM_DST_FILE"
+	else
+	    export dest_file="$dcache_SE2/$DCACHE_DST_FILE"
+	fi
+    else	# IF srm FILE
+    	if [ "$type" = "DPM" ]; then
+	    export dest_file="$CERN_SRM_DST_PATH/$DPM_DST_FILE"
+	else
+	    export dest_file="$DESY_SRM_DST_PATH/$DCACHE_DST_FILE"
+	fi
+    fi 
+    echo $dest_file
+}
+#-------------------------------------------------                                 
+function upload_test_file()
+{
+    echo "upload_test_file($1 $2 $3)"
+    local DESTINATION=$1
+    if [ -z "$DESTINATION" ]; then
+        echo "Needs a destination!!"
+        TEST_WARN "Needs a destination" # return 1
+    fi
+    local SIZE=$2
+    if [ -z "$SIZE" ]; then
+        SIZE=$FILE_SIZE           #   "1MB"
+    fi
+    local TYPE=$3
+    #echo $TYPE
+    if [ -z "$TYPE" ]; then
+	#local TYPE="DPM"
+	local PORT=$DPM_SRM_PORT #"8446"
+    else
+	local TYPE="DCACHE"
+	local PORT=$DCACHE_SRM_PORT #"8443"
+    fi
+    local TMP_FILE="/tmp/FTS_Test"
+    
+    # Create the dummy file
+    #echo "Creating $SIZE temporary test file for transfer"
+    dd if=/dev/zero of=$TMP_FILE bs=$SIZE count=1 &> /dev/null
+    # Upload to a SE
+
+    echo "1. Upload tmp file $TMP_FILE on: $DESTINATION"
+    #echo "Run: lcg-cr --vo $VO -d $DESTINATION file://$TMP_FILE"
+    export GUID=`lcg-cr --vo $VO -d $DESTINATION file://$TMP_FILE`
+    if [ $? -ne 0 ]; then
+        echo "Error uploading the file!!!"
+        TEST_WARN "Error uploading the file (exit code)"
+	#return 1
+    fi
+    echo $GUID | grep "guid:" > /dev/null
+    if [ $? -ne 0 ]; then
+	echo "Error GUID format filename '$GUID'"
+	TEST_WARN "Error GUID format filename '$GUID'"
+	#return 1
+    fi
+    #echo "GUID=$GUID"
+
+    #echo "2. Check grid file:lcg-lr --vo $VO $GUID" 
+    lcg-lr --vo $VO $GUID > message
+    grep "srm" message > srmname
+    if [ $? != 0 ]; then
+	TEST_WARN "Error convert GUID --> SRM"
+    fi
+    export SRM=`cat srmname`
+    #echo "SRM name = $SRM"
+    #echo "New SRM"
+    f1=`echo $SRM | cut -d "/" -f1-3`
+    f2=`echo $SRM | cut -d "/" -f4-20`
+    export newSRM=$f1:$PORT/$f2
+    #echo "SRM=$newSRM"
+
+    #echo "Convert SRM to gsiftp: lcg-gt $SRM gsiftp"
+    lcg-gt $SRM gsiftp > message
+    grep "gsiftp" message > gsiftpname
+    if [ $? != 0 ]; then
+	TEST_WARN "Error convert SRM --> GSIFTP"
+    fi
+    export GSIFTP=`cat gsiftpname`
+    #echo "gsiftp name = $GSIFTP"
+    #echo "Get checksum"
+    export CHECKSUM=`lcg-get-checksum --vo $VO -f $GSIFTP | awk '{print $1}' `
+    #echo $CHECKSUM
+
+    # Remove temporary
+    #echo "Removing the temporary file"
+    rm -rf $TMP_FILE
+
+    return 0
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+#-----------------------------------------------------
+function block-submit()
+{
+    echo "block-submit($1 $2)"
+    echo -e "\nRun: fts-transfer-submit -b $OVER -i $INTERVAL -s https://$FTS3_HOST:$FTS3_PORT $1 $2"
+    fts-transfer-submit  -b $OVER -i $INTERVAL -s https://$FTS3_HOST:$FTS3_PORT $1 $2 > JD
+    res=$?
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+
+    export    JID=$jobID 
+    return 0
+}
+#----------------------------------------------
+function submit()
+{
+    echo ""
+    echo "submit($1 $2)"
+    echo -e "\nRun: fts-transfer-submit $OVER -s https://$FTS3_HOST:$FTS3_PORT $1 $2"
+    fts-transfer-submit  $OVER -s https://$FTS3_HOST:$FTS3_PORT $1 $2 > JD
+    res=$?
+    #echo "$res"
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+
+    export    JID=$jobID  
+    return 0
+}
+#-------------------------------------------------------------
+function url-submit()
+{
+    echo ""
+    echo "url-submit($1 $2)"
+    echo -e "\nRun: fts-transfer-submit -s https://$FTS3_HOST:$FTS3_PORT $1 $2"
+    fts-transfer-submit -s https://$FTS3_HOST:$FTS3_PORT $1 $2 > JD
+    res=$?
+    #echo "$res"
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+
+    export    JID=$jobID  
+    return 0
+}
+
+#----------------------------------------------
+function submit-k()
+{
+    echo ""
+    echo "submit-k($1 $2)"
+    echo -e "\nRun: fts-transfer-submit -K $OVER -s https://$FTS3_HOST:$FTS3_PORT  $1 $2"
+    fts-transfer-submit -K  $OVER -s https://$FTS3_HOST:$FTS3_PORT  $1 $2 > JD
+    res=$?
+    #echo "$res"
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+
+    export    JID=$jobID  
+    return 0
+}
+#-----------------------------------------------
+function over-submit()
+{
+    echo ""
+    echo "over-submit($1 $2)"
+    echo -e "\nRun: fts-transfer-submit -o -s https://$FTS3_HOST:$FTS3_PORT $1 $2"
+    fts-transfer-submit -o -s https://$FTS3_HOST:$FTS3_PORT $1 $2 > JD
+    res=$?
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts3-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts3-transfer-submit - JobID- Failed"
+        return 1
+    fi
+
+    export    JID=$jobID 
+    return 0
+}
+#-----------------------------------------------
+function bulk-submit()
+{
+    echo "bulk-submit($1 $2 $3)"
+    count=1
+    while [ $count -le $3 ]
+    do
+	if [ $count == "1" ]; then
+	    echo "$1 $2-$count" > $FN
+	else
+	    echo "$1 $2-$count" >> $FN
+	fi
+	let count=count+1
+    done
+
+    #echo "$FN:"
+    #cat $FN
+    echo -e "\nRun: fts-transfer-submit $OVER -s https://$FTS3_HOST:$FTS3_PORT -f $FN"
+    fts-transfer-submit $OVER -s https://$FTS3_HOST:$FTS3_PORT -f $FN > JD
+    res=$?
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+    export    JID="$jobID"
+    return 0
+}
+#-----------------------------------------------
+function url-bulk-submit()
+{
+    echo "url-bulk-submit($1 $2 $3)"
+    count=1
+    while [ $count -le $3 ]
+    do
+	if [ $count == "1" ]; then
+	    echo "$1 $2-$count" > $FN
+	else
+	    echo "$1 $2-$count" >> $FN
+	fi
+	let count=count+1
+    done
+
+    #echo "$FN:"
+    #cat $FN
+    echo -e "\nRun: fts-transfer-submit -s https://$FTS3_HOST:$FTS3_PORT -f $FN"
+    fts-transfer-submit -s https://$FTS3_HOST:$FTS3_PORT -f $FN > JD
+    res=$?
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+    export    JID="$jobID"
+    return 0
+}
+#-----------------------------------------------
+function bulk-submit-k()
+{
+    echo "bulk-submit($1 $2 $3)"
+    count=1
+    while [ $count -le $3 ]
+    do
+	if [ $count == "1" ]; then
+	    echo "$1 $2-$count" > $FN
+	else
+	    echo "$1 $2-$count" >> $FN
+	fi
+	let count=count+1
+    done
+
+    #echo "$FN:"
+    #cat $FN
+    echo -e "\nRun: fts-transfer-submit -K $OVER -s https://$FTS3_HOST:$FTS3_PORT -f $FN"
+    fts-transfer-submit -K $OVER -s https://$FTS3_HOST:$FTS3_PORT -f $FN > JD
+    res=$?
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+    export    JID="$jobID"
+    return 0
+}
+
+#-----------------------------------------------
+function bulk-submit-r()
+{
+    echo "bulk-submit-r($1 $2 $3)"
+    count=1
+    while [ $count -le $3 ]
+    do
+	if [ $count == "1" ]; then
+	    echo "$1 $2-$count" > $FN
+	else
+	    echo "$1 $2-$count" >> $FN
+	fi
+	let count=count+1
+    done
+
+    #echo "$FN:"
+    #cat $FN
+    echo -e "\nRun: fts-transfer-submit $OVER -r -s https://$FTS3_HOST:$FTS3_PORT -f $FN"
+    fts-transfer-submit $OVER -s https://$FTS3_HOST:$FTS3_PORT -f $FN > JD
+    res=$?
+    cat JD
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID=`grep "-" JD`
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - JobID- Failed"
+        return 1
+    fi
+    export    JID="$jobID"
+    return 0
+}
+#---------------------------------------------------------
+function transfer()
+{
+    echo ""
+    echo "transfer($1 $2)"
+    
+    submit $1 $2
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+
+#---------------------------------------------------------
+function url-transfer()
+{
+    echo ""
+    echo "url-transfer($1 $2)"
+    
+    url-submit $1 $2
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+#---------------------------------------------------------
+function transfer-k()
+{
+    echo ""
+    echo "transfer-k($1 $2)"
+    
+    submit-k $1 $2
+    if [ $? != 0 ]; then
+        echo "fts-transfer-k-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+#-------------------------------------------------------
+function list-transfer()
+{
+    echo "list-transfer()"
+    echo "1. First submit job"    
+    submit $1 $2-A
+
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+    jobID1=$JID
+
+    echo "JobID1=$JID"
+
+    echo "2.  Second submission"
+    submit $1 $2-B
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    jobID2=$JID
+    echo "JobID2=$JID"
+    echo ""
+    echo "Check job IDs in joblist"
+    echo -e "\nRun: fts3-transfer-list -s http://$FTS3_HOST:FTS_PORT"
+    fts-transfer-list -s https://$FTS3_HOST:$FTS3_PORT > message
+    
+    grep $jobID1 message > /devnull
+    if [ $? != 0 ]; then
+	echo "jobID $jobID1 - not found in joblist"
+	return 1
+    fi
+    
+    grep $jobID2 message > /dev/null
+    if [ $? != 0 ]; then
+	echo "jobID $jobID2 - not found in joblist"
+	return 1
+    fi
+    res=0
+    job_cancel $jobID1
+    job_cancel $jobID2
+        poll_status_with_timeout $jobID1 $TIME_OUT
+        poll_status_with_timeout $jobID2 $TIME_OUT
+    echo "OK"
+    return $res
+}
+#-------------------------------------------------
+function overwrite-transfer()
+{
+    echo ""
+    echo "overwrite-transfer($1 $2)"
+    
+    over-submit $1 $2
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+#-------------------------------------------------
+function over-transfer()
+{
+    echo ""
+    echo "overwrite-transfer($1 $2)"
+    
+    over-submit $1 $2
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+
+#--------------------------------------------
+function bulk-transfer()
+{
+    echo ""
+    echo "bulk-transfer($1 $2 $3)"
+    
+    bulk-submit $1 $2 $3
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+#--------------------------------------------
+function url-bulk-transfer()
+{
+    echo ""
+    echo "url-bulk-transfer($1 $2 $3)"
+    
+    url-bulk-submit $1 $2 $3
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+#--------------------------------------------
+function bulk-transfer-k()
+{
+    echo ""
+    echo "bulk-transfer-k($1 $2 $3)"
+    
+    bulk-submit-k $1 $2 $3
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+#-----------------------------------------------------
+function bulk-transfer-r()
+{
+    echo ""
+    echo "bulk-transfer-r($1 $2 $3)"
+    
+    bulk-submit-r $1 $2 $3
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+#-------------------------------------------------
+function block-transfer()
+{
+    echo ""
+    echo "block-transfer($1 $2)"
+    
+    block-submit $1 $2
+    if [ $? != 0 ]; then
+        echo "fts-transfer-submit - Failed (Exit code)"
+        return 1
+    fi
+
+    echo "JobID=$JID"
+    #echo "Check status jobiD"
+    
+    poll_status_with_timeout $JID $TIME_OUT
+    res=$?
+    if [ $res != 0 ]; then
+        echo "fts-transfer-submit and fts-transfer-status - Failed"
+        if [ "$res" == "4" ]; then
+    	    echo "Time outed"
+    	    return 4
+    	fi
+        return 1
+    fi
+
+    echo "OK"
+    return 0
+}
+
+#----------------------------------------------
+function job_cancel() 
+{ 
+    echo "job_cancel ($1)"
+    echo -e "\nRun:fts-transfer-cancel -s https://$FTS3_HOST:$FTS3_PORT $1"
+    fts-transfer-cancel -s https://$FTS3_HOST:$FTS3_PORT $1 > message
+}
+#----------------------------------------------
+function cancel() 
+{ 
+    echo "cancel ($1)"
+    echo -e "\nRun:fts-transfer-cancel -s https://$FTS3_HOST:$FTS3_PORT $1"
+    fts-transfer-cancel -s https://$FTS3_HOST:$FTS3_PORT $1 > message
+    res=$?
+    cat message
+    if [ $res != 0 ]; then
+	echo "fts-transfer-cancel - failed (Exit cod = $res"
+	return $?
+    fi
+    grep "Canceled" message > /dev/null
+    if [ $? != 0 ]; then
+	echo "fts-transfer-cancel - failed (undefined reason:"
+	cat message
+	return 1
+    fi
+}
+#------------------------------------------------- 
+function is_status_valid()
+{	echo "is_status_valid($1)" 
+	valid_status_list=(\
+	"FAILED" 	"CATALOGFAILED"	"FINISHEDDIRTY" "CANCELED" \
+	"FINISHED" 	"SUBMITTED"	"PENDING"	"ACTIVE"	"CANCELING" \
+	"WAITING"	"HOLD"		"DONE"		"READY"		"DONEWITHERRORS")
+    
+    for item in ${valid_status_list[*]}
+    do
+	#echo $item
+	if test  $1 == $item
+	then
+	#if [ $1 == $item ]; then
+	    echo "Status $1 - valid"
+	    return 0
+	fi
+    done
+    return 1 
+}
+#---------------------------------------
+function get_status_result()
+{
+    echo "get_status-result($1)"
+    local SubId=$1
+    echo "JobID=$SubId"
+    previous_status="None"
+                                          
+    echo -e "\nRun: fts-transfer-status -s https://$FTS3_HOST:$FTS3_PORT $SubId"
+    fts-transfer-status -s https://$FTS3_HOST:$FTS3_PORT $SubId  > message
+    if [ $? != 0 ]; then
+    	return 1
+    fi
+    #cat message
+    status=`cat message`
+    echo $status
+
+    is_status_valid $status
+    if [ $? != 0 ]; then
+	echo "Status $status - invalid value"
+	return 1
+    fi
+    export STATUS=$status
+    #    echo "status is $status"
+    if test  $status == "FINISHED"
+    then
+    	echo "Job is successfully finished." 
+    	return 0
+                                                         
+    elif test $status == "FAILED"
+    then
+    	    echo "Job is Failed" 
+	    return 3 
+    elif test $status == "HOLD"
+    then
+        echo "Job is Hold"
+        return 4
+                                                
+    elif test $status == "SUBMITTED"
+    then
+        echo "Job is Submitted"
+        return 4
+                                                                    
+    elif test $status == "READY"
+    then
+	echo "Job is Ready"
+        return 4
+    elif test $status == "PENDING"
+    then
+        echo "Job is Pending"
+        return 4
+    elif test $status == "DONE"
+    then
+	echo "Job is Done"
+        return 0
+    elif test $status == "ACTIVE"
+    then
+        echo "Job is Active"
+        return 4        
+    elif test $status == "CANCELING"
+    then
+	echo "Job is Canceling"
+    	return 5                                                                                                                 :
+    elif test $status == "CANCELED"
+    then
+	echo "Job is Canceled"
+	return 6
+                    
+    else
+	echo "Job status unknown: $status"
+	return 1
+    fi 
+}
+#---------------------------------------------------
+function poll_status_with_timeout()
+{
+    echo "poll_status_with-timeout($1 $2)"
+
+    local SUBID=$1
+    local Timeout=$2
+                                        
+    echo "Checking status for job ID: $SUBID" 
+                                                                                                                     
+    previous_status="None"
+    t=0
+    while test $t -lt $Timeout
+    do
+	get_status_result $SUBID
+        status=$?
+        echo $status
+                                                                                                                                     
+        if [ "$status" -eq 1 ]; then
+            echo "error retrieving the status with get_status_result()"
+            return 1
+        fi
+                                                                                                                                                         
+        if [ "$status" -eq 0 ]; then
+            echo "Job finished or done"
+            return 0
+        fi
+                                                                                                                                                                                  
+        if [ "$status" -eq 3 ]; then
+            echo "Job failed"
+            return 3
+        fi
+                                                                                                                                                                              
+        if [ "$status" -eq 6 ]; then
+            echo "Job Canceled"
+            return 6                                                                                              
+        fi
+                                                                                                                                                               
+        if [ "$status" -eq 4 ]; then
+            echo "Waiting for status changes" 
+            sleep 10
+            t=`expr $t + 10`
+            echo "Time is $t timeout is $Timeout"  
+        fi
+                                                                                                                                                                                               
+        if [ "$t" -eq "$Timeout" ]; then
+            echo "Exceded timeout of $Timeout seconds"
+            return 4
+        else
+            continue
+        fi
+    done
+
+}                

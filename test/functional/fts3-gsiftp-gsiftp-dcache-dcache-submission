@@ -1,0 +1,57 @@
+#!/bin/bash
+
+source fts3-common
+source ../Macros
+export source_TYPE="gsiftp"
+export dest_TYPE="gsiftp"  
+
+    echo "fts3-dcahe-dcache-submission"
+    upload_test_file $DESY_SE1 $FILE_SIZE "dcache"
+    
+    get_source_file
+    get_dest_file "DCACHE"
+    
+    echo "Source file=$source_file"
+    echo "Dest file=$dest_file"
+
+    over-transfer $source_file $dest_file
+    res=$?
+    echo "Remove source file as GUID"
+    GUID_file_deletion $GUID
+    
+    #echo $res
+    if [ $res != 0 ]; then
+	echo "fts3-transfer-submit - Failed"
+	if [ $res == 4 ]; then
+	    TEST_FAILED "TIME outed"
+	fi
+	TEST_FAILED "  "
+    fi
+
+    #echo "Check dest files is $CHECK_DST"
+    echo "Check if SRM file"
+    echo $dest_file | grep "srm" >/dev/null
+    if [ $? == 0 ];then
+        SURL_file_deletion $dest_file
+    elif [ "$CHECK_DST" = "off" ]; then
+       echo  "Check dest. files is off"
+       TEST_PASSED
+    else
+	echo "Check if file exists"
+	echo "Run: globus-url-copy -vb -list $dcache_SE2/"
+	globus-url-copy -vb -list $dcache_SE2/ > message
+	if [ $? != 0 ]; then
+    	    TEST_FAILED "globus-url-copy -list - failed"
+	fi
+	#cat message
+	grep "$DCACHE_DST_FILE" message > /dev/null
+	if [ $? != 0 ]; then
+	    TEST_FAILED "file $DCACHE_DST_FILE - not exists"
+	fi
+	echo "File $DCACHE_DST_FILE - exists"
+    fi
+                        
+    echo "OK"
+    TEST_PASSED
+
+exit 0

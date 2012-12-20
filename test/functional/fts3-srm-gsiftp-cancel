@@ -1,0 +1,46 @@
+#!/bin/bash
+
+source fts3-common
+source ../Macros
+export source_TYPE="srm"
+export dest_TYPE="gsiftp"
+
+    echo "fts3-cancel"
+    echo "1. File submission"
+    upload_test_file $CERN_SE1 #"1MB"
+    get_source_file        
+    get_dest_file
+    echo "Source file=$source_file"
+    echo "Dest file=$dest_file"
+
+    submit $source_file $dest_file
+    res=$?
+    if [ $res != 0 ]; then
+	echo "fts3-transfer-submit - Failed"
+	TEST_FAILED " "
+    fi
+    echo "OK"
+
+    #sleep 5
+    echo "2. Cancel submission, jobID= $JID"
+    cancel $JID
+    if [ $? != 0 ]; then
+	TEST_FAILED "Job cancel -failed"
+    fi 
+    echo "Remove source file as GUID"
+    GUID_file_deletion $GUID
+        
+    echo "3. Check status for $JID after cancelling"
+    get_status_result $JID
+    echo $?
+    echo $STATUS
+    if test $STATUS == "CANCELING" 
+    then
+	TEST_PASSED
+    elif test $STATUS == "CANCELED"
+    then
+	TEST_PASSED
+    fi
+    TEST_FAILED "Status cancelled job - noncorrect"
+
+#exit 0

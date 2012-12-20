@@ -1,0 +1,53 @@
+#!/bin/bash
+
+source fts3-common
+source ../Macros
+export source_TYPE="srm"
+export dest_TYPE="srm"
+
+    echo "fts3-block-submission"
+    upload_test_file $CERN_SE1 # "1MB"
+
+    get_source_file 
+    get_dest_file
+    echo "Source file=$source_file"
+    echo "Dest file=$dest_file"
+
+    block-transfer $source_file $dest_file
+    res=$?
+    echo "Remove source file as GUID"
+    GUID_file_deletion $GUID
+            
+    if [ $res != 0 ]; then
+	echo "fts3-transfer-submit - Failed"
+	
+	if [ $res == 4 ]; then
+	    TEST_FAILED "Transfer- time outed"
+	fi
+	TEST_FAILED " "
+    fi    
+    echo "Check dest files is $CHECK_DST"
+    if [ "$CHECK_DST" != "off" ]; then
+	echo "Check if file exists"
+	echo "Run: globus-url-copy -vb -list $dpm_SE2/" 
+	globus-url-copy -vb -list $dpm_SE2/ > message
+	if [ $? != 0 ]; then
+    	    TEST_FAILED "globus-url-copy -list - failed"
+	fi
+	#cat message
+	grep "$DPM_DST_FILE" message > /dev/null
+	if [ $? != 0 ]; then
+    	    TEST_FAILED "file $DPM_DST_FILE - not exists"
+	fi
+	echo "File $DPM_DST_FILE - exists"
+    fi                
+    echo "Check if SRM file"
+    echo $dest_file | grep "srm" >/dev/null
+    if [ $? == 0 ];then
+        SURL_file_deletion $dest_file
+    fi
+                            
+    echo "OK"
+    TEST_PASSED
+
+exit 0

@@ -1,0 +1,72 @@
+#!/bin/bash
+
+#Configuration variables for FTS3 testing scripts
+
+#If LOGSLOCATON is not specified logs will be in the tests directory
+#LOGSLOCATION="/tmp"
+
+export FTS3_HOST="fts3-pilot.cern.ch"
+export FTS3_PORT=8443
+export FN="fsub"
+export RES="result"
+export BDII_HOST="certtb-bdii-top.cern.ch"
+export LCG_GFAL_INFOSYS="$BDII_HOST:2170"
+
+#The name of the top level BDII
+#BDII_HOST="lxbra2305.cern.ch"
+#The hostname of the LCG File Catalog
+#LFC_HOST="lxb7608v3.cern.ch"
+
+#Name of VO to use
+export VO="dteam"
+
+export URL_source="https://arioch.cern.ch/dpm/cern.ch/home/dteam/test.jpg" 
+export URL_dest="https://lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/test.jpg6"
+
+
+export OVER="-o"		### " " or " -o "
+export CHECK_DST="off"		### "on" or "off"
+
+export NFILES=10  		### for bulk submissions
+export OUT_TYPE="short"		### "full"  or "short" report
+export FILE_SIZE="5MB"		###  size of source file
+export source_TYPE="srm"
+export dest_TYPE="srm" 		# "gsiftp" or "srm"
+
+export INTERVAL=5
+export CERN_SE1="cvitbdpm1.cern.ch"
+export CERN_SE2="cvitbdpm2.cern.ch"
+#export CERN_SE2="lxbra1910.cern.ch"
+#export CERN_SE1="lxbra1910.cern.ch"
+
+#export DESY_SE1="ennis.desy.de"
+export DESY_SE1="galway.desy.de"
+export DESY_SE2="galway.desy.de"
+#export DESY_SE2="cork.desy.de"
+#export DESY_SE2="ennis.desy.de"
+
+
+export DESY_SE_PORT=2811
+export DCACHE_SRM_PORT=8443
+export DPM_SRM_PORT=8446
+
+export DESY_SE_VO_PATH="/pnfs/desy.de/data/$VO"
+export CERN_SE_VO_PATH="/dpm/cern.ch/home/$VO"
+export CERN_SRM_DST_PATH="srm://$CERN_SE2:$DPM_SRM_PORT$CERN_SE_VO_PATH"
+export DESY_SRM_DST_PATH="srm://$DESY_SE2:$DCACHE_SRM_PORT$DESY_SE_VO_PATH"
+
+export DESY_DATA="pnfs/desy.de/data"
+
+export DPM_SRC_FILE="src.dpm_file"
+export DPM_DST_FILE="dst.dpm_file"
+
+export DCACHE_SRC_FILE="src.dcache_file"
+export DCACHE_DST_FILE="dst.dcache_file"
+
+export dpm_SE1="gsiftp://$CERN_SE1/tmp"
+export dpm_SE2="gsiftp://$CERN_SE2/tmp"
+export dcache_SE1="gsiftp://$DESY_SE1:$DESY_SE_PORT//$DESY_DATA/$VO"
+export dcache_SE2="gsiftp://$DESY_SE2:$DESY_SE_PORT//$DESY_DATA/$VO"
+
+#Timeout for waiting the job to finish. Default is 100 sec.
+export TIME_OUT=300
