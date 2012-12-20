@@ -1,4 +1,4 @@
-Name:    fts3-tests
+Name:    fts-tests
 Version: 0.0.1
 Release: 1
 Summary: Testing package for FTS3
@@ -20,7 +20,7 @@ FTS3 tests
 %setup -q -n %{name}-%{version}
 
 %build
-cmake . -DCMAKE_INSTALL_PREFIX=$RPM_BUILD_ROOT/usr -DALLBUILD=ON -DCMAKE_BUILD_TYPE=Debug
+cmake . -DCMAKE_INSTALL_PREFIX=$RPM_BUILD_ROOT -DALLBUILD=ON -DCMAKE_BUILD_TYPE=Debug
 make
 
 %install
