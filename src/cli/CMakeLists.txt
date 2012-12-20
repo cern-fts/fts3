@@ -70,6 +70,7 @@ endif ()
 
 set(fts_cli_common_sources
 	ui/CliBase.cpp
+	ui/TransferCliBase.cpp
 	ui/DebugSetCli.cpp
 	ui/DnCli.cpp
 	ui/GetCfgCli.cpp

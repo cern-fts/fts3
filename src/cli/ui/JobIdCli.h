@@ -26,6 +26,7 @@
 #define JOBIDCLI_H_
 
 #include "CliBase.h"
+#include "TransferCliBase.h"
 #include <vector>
 #include <string>
 
@@ -41,7 +42,7 @@ namespace fts3 { namespace cli {
  *
  * @see CliBase
  */
-class JobIdCli: public CliBase {
+class JobIdCli: public TransferCliBase {
 public:
 
 	/**

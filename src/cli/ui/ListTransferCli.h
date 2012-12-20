@@ -28,6 +28,7 @@
 #include "DnCli.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 #include "VoNameCli.h"
+#include "TransferCliBase.h"
 
 namespace fts3 { namespace cli {
 
@@ -37,7 +38,7 @@ namespace fts3 { namespace cli {
  * 		- state, positional parameter, allows for specifying several
  * 			states of interest
  */
-class ListTransferCli : public DnCli, public VoNameCli {
+class ListTransferCli : public DnCli, public VoNameCli, public TransferCliBase {
 public:
 
 	/**

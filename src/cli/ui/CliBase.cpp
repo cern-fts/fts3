@@ -46,7 +46,6 @@ CliBase::CliBase(): visible("Allowed options"), ctx(0) {
 			("verbose,v", "Be more verbose.")
 			("service,s", value<string>(), "Use the transfer service at the specified URL.")
 			("version,V", "Print the version number and exit.")
-			("json,j", "The output should be printed in JSON format")
 			;
 
     version = getCliVersion();

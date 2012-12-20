@@ -26,6 +26,7 @@
 #define SUBMITTRANSFERCLI_H_
 
 #include "SrcDestCli.h"
+#include "TransferCliBase.h"
 #include "TransferTypes.h"
 
 #include <vector>
@@ -58,7 +59,7 @@ namespace fts3 { namespace cli {
  *
  * @see CliBase
  */
-class SubmitTransferCli : public SrcDestCli {
+class SubmitTransferCli : public SrcDestCli, public TransferCliBase {
 
 public:
 
