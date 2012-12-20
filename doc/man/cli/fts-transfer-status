@@ -13,6 +13,7 @@ fts-transfer-status is a tool for checking transfer-job status. The has to provi
   -v [ --verbose ]      Be more verbose.
   -s [ --service ] arg  Use the transfer service at the specified URL.
   -V [ --version ]      Print the version number and exit.
+  -j [ --json ]         The output should be printed in JSON format
 
   -l [ --list ]         List status for all files.
 .SH SEE ALSO

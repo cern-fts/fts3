@@ -13,6 +13,5 @@ fts-set-debug is a tool for switching the debug mode on/off in a single SE or SE
   -v [ --verbose ]      Be more verbose.
   -s [ --service ] arg  Use the transfer service at the specified URL.
   -V [ --version ]      Print the version number and exit.
-  -j [ --json ]         The output should be printed in JSON format
 .SH SEE ALSO
 https://svnweb.cern.ch/trac/fts3/wiki/UserGuide

@@ -13,6 +13,7 @@ fts-transfer-list is a tool for listing transfer-jobs in a given state (provided
   -v [ --verbose ]      Be more verbose.
   -s [ --service ] arg  Use the transfer service at the specified URL.
   -V [ --version ]      Print the version number and exit.
+  -j [ --json ]         The output should be printed in JSON format
 
   -u [ --userdn ] arg   Restrict to specific user DN.
   -o [ --voname ] arg   Restrict to specific VO
