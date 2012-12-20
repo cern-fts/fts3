@@ -709,20 +709,19 @@ int fts3::impltns__blacklist(soap* soap, string _type, string _subject, bool _bl
 	return SOAP_OK;
 }
 
-int fts3::impltns__prioritySet(soap* ctx, string jobId, int priority, impltns__prioritySetResponse &resp) {
+int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__prioritySetResponse &resp) {
 
 	try {
 
 		CGsiAdapter cgsi(ctx);
 		string dn = cgsi.getClientDn();
 
-		AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, jobId);
+		AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job_id);
 
-		string cmd = "fts-set-priority " + jobId + " " + lexical_cast<string>(priority);
+		string cmd = "fts-set-priority " + job_id + " " + lexical_cast<string>(priority);
 
+		DBSingleton::instance().getDBObjectInstance()->setPriority(job_id, priority);
 		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "set_priority");
-
-		// TODO
 
 	} catch(Err& ex) {
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
