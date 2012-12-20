@@ -20,12 +20,12 @@ export dest_TYPE="gsiftp"
     GUID_file_deletion $GUID
             
     if [ $res != 0 ]; then
-	echo "fts3-transfer-submit - Failed"
-	
-	if [ $res == 4 ]; then
-	    TEST_FAILED "Transfer- time outed"
-	fi
-	TEST_FAILED " "
+    echo "fts3-transfer-submit - Failed"
+    
+    if [ $res == 4 ]; then
+        TEST_FAILED "Transfer- time outed"
+    fi
+    TEST_FAILED " "
     fi
     echo "OK"
     TEST_PASSED

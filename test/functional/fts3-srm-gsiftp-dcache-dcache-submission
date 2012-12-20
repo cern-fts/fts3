@@ -21,11 +21,11 @@ export dest_TYPE="gsiftp"
     
     #echo $res
     if [ $res != 0 ]; then
-	echo "fts3-transfer-submit - Failed"
-	if [ $res == 4 ]; then
-	    TEST_FAILED "TIME outed"
-	fi
-	TEST_FAILED "  "
+    echo "fts3-transfer-submit - Failed"
+    if [ $res == 4 ]; then
+        TEST_FAILED "TIME outed"
+    fi
+    TEST_FAILED "  "
     fi
 
     echo "Check dest files is $CHECK_DST"
@@ -36,18 +36,18 @@ export dest_TYPE="gsiftp"
     elif [ "$CHECK_DST" = "off" ]; then
        TEST_PASSED "Check dest. files is off"
     else
-	echo "Check if file exists"
-	echo "Run: globus-url-copy -vb -list $dcache_SE2/"
-	globus-url-copy -vb -list $dcache_SE2/ > message
-	if [ $? != 0 ]; then
-    	    TEST_FAILED "globus-url-copy -list - failed"
-	fi
-	#cat message
-	grep "$DCACHE_DST_FILE" message > /dev/null
-	if [ $? != 0 ]; then
-	    TEST_FAILED "file $DCACHE_DST_FILE - not exists"
-	fi
-	echo "File $DCACHE_DST_FILE - exists"
+    echo "Check if file exists"
+    echo "Run: globus-url-copy -vb -list $dcache_SE2/"
+    globus-url-copy -vb -list $dcache_SE2/ > message
+    if [ $? != 0 ]; then
+            TEST_FAILED "globus-url-copy -list - failed"
+    fi
+    #cat message
+    grep "$DCACHE_DST_FILE" message > /dev/null
+    if [ $? != 0 ]; then
+        TEST_FAILED "file $DCACHE_DST_FILE - not exists"
+    fi
+    echo "File $DCACHE_DST_FILE - exists"
     fi
                         
     echo "OK"

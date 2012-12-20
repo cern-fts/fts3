@@ -16,8 +16,8 @@ export dest_TYPE="gsiftp"
     submit $source_file $dest_file
     res=$?
     if [ $res != 0 ]; then
-	echo "fts3-transfer-submit - Failed"
-	TEST_FAILED " "
+    echo "fts3-transfer-submit - Failed"
+    TEST_FAILED " "
     fi
     echo "OK"
 
@@ -25,7 +25,7 @@ export dest_TYPE="gsiftp"
     echo "2. Cancel submission, jobID= $JID"
     cancel $JID
     if [ $? != 0 ]; then
-	TEST_FAILED "Job cancel -failed"
+    TEST_FAILED "Job cancel -failed"
     fi 
     echo "Remove source file as GUID"
     GUID_file_deletion $GUID
@@ -36,10 +36,10 @@ export dest_TYPE="gsiftp"
     echo $STATUS
     if test $STATUS == "CANCELING" 
     then
-	TEST_PASSED
+    TEST_PASSED
     elif test $STATUS == "CANCELED"
     then
-	TEST_PASSED
+    TEST_PASSED
     fi
     TEST_FAILED "Status cancelled job - noncorrect"
 

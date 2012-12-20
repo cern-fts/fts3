@@ -7,20 +7,20 @@ function config-set()
     echo -e "\nRun: fts-config-set -s https://$FTS3_HOST:8081"
     fts-config-set -s https://$FTS3_HOST:8081 2>&1 > message
     if [ $? != 0 ]; then
-	echo "OK, "
-	cat message
-	
+    echo "OK, "
+    cat message
+    
     else
-	echo "Bad, expected != exit code"
-	cat message
+    echo "Bad, expected != exit code"
+    cat message
     fi
     echo "2. Correct request"
     echo -e "\nRun: fts3-config-set -s http://$FTS3_HOST:8081 $CONF_STR"
     fts3-config-set -s http://$FTS3_HOST:8081 $CONF_STR 2>&1 > message
     if [ $? != 0 ]; then
-	echo "Faild, exit code"
-	cat message
-	return 1
+    echo "Faild, exit code"
+    cat message
+    return 1
     fi
     echo "OK"
     return 0
@@ -32,9 +32,9 @@ function config-get()
     echo -e "\nRun: fts3-config-get -s http://$FTS3_HOST:8081"
     fts3-config-get -s http://$FTS3_HOST:8081 > message
     if [ $? != 0 ]; then
-	echo "Bad, exit code != 0"
-	cat message
-	return 1
+    echo "Bad, exit code != 0"
+    cat message
+    return 1
     fi
     cat message
     echo "OK"
@@ -48,8 +48,8 @@ function getRoles()
     res=$?
     cat $RES
     if [ $res != 0 ]; then
-	echo "fts3-transfer-getroles - failed (exit code)"
-	return 1
+    echo "fts3-transfer-getroles - failed (exit code)"
+    return 1
     fi
     
     return 0
@@ -63,8 +63,8 @@ function list-vo-man()
     res=$?
     cat message
     if [ $res != 0 ]; then
-	echo "fts3-transfer-listvomanagers - failed (Exit cod = $res"
-	return 1
+    echo "fts3-transfer-listvomanagers - failed (Exit cod = $res"
+    return 1
     fi
     echo "OK"
     echo "2.Non correct request (without VO)"
@@ -73,9 +73,9 @@ function list-vo-man()
     res=$?
     cat message
     if [ $res == 0 ]; then
-	echo "fts3-transfer-listvomanagers - failed (Exit cod = $res)"
-	echo "Expected != 0"
-	return 1
+    echo "fts3-transfer-listvomanagers - failed (Exit cod = $res)"
+    echo "Expected != 0"
+    return 1
     fi
     return 0
 }
@@ -85,9 +85,9 @@ function SURL_file_deletion ()
     echo "SURL_file_deletion($1)"  #  Remove if it exists
     lcg-ls -l $1 &> /dev/null
     if [ $? == 0 ]; then
-	#echo "Run: lcg-del --vo $VO -l  $1"
+    #echo "Run: lcg-del --vo $VO -l  $1"
         lcg-del --vo $VO -l $1 > /dev/null || return 1
-	#echo "$1 removed"
+    #echo "$1 removed"
     else 
       echo "File $1 does not exists"
       return 1
@@ -109,9 +109,9 @@ function GUID_file_deletion ()
     #echo "Run: lcg-del --vo $VO -a $1"
     lcg-del --vo $VO -a $1
     if [ $? == 0 ]; then
-	echo "File $1 removed"
+    echo "File $1 removed"
     else 
-    	echo "File $1 removed???"
+        echo "File $1 removed???"
     fi
     #echo "Check if removed"
     #echo "Run: lcg-lr --vo $VO  $1"
@@ -125,9 +125,9 @@ function GUID_file_deletion ()
 function get_source_file()
 {
     if [ "$source_TYPE" = "gsiftp" ]; then
-	export source_file=$GSIFTP
+    export source_file=$GSIFTP
     else
-	export source_file=$newSRM
+    export source_file=$newSRM
     fi 
 }
 #----------------------------------------------
@@ -137,20 +137,20 @@ echo "get_dest_file($dest_TYPE)"
 #echo "$dest_TYPE"
     local type=$1
     if [ -z $type ]; then
-	type="DPM"
+    type="DPM"
     fi
     if [ "$dest_TYPE" = "gsiftp" ]; then
-	if [ "$type" = "DPM" ]; then
-	    export dest_file="$dpm_SE2/$DPM_DST_FILE"
-	else
-	    export dest_file="$dcache_SE2/$DCACHE_DST_FILE"
-	fi
-    else	# IF srm FILE
-    	if [ "$type" = "DPM" ]; then
-	    export dest_file="$CERN_SRM_DST_PATH/$DPM_DST_FILE"
-	else
-	    export dest_file="$DESY_SRM_DST_PATH/$DCACHE_DST_FILE"
-	fi
+    if [ "$type" = "DPM" ]; then
+        export dest_file="$dpm_SE2/$DPM_DST_FILE"
+    else
+        export dest_file="$dcache_SE2/$DCACHE_DST_FILE"
+    fi
+    else    # IF srm FILE
+        if [ "$type" = "DPM" ]; then
+        export dest_file="$CERN_SRM_DST_PATH/$DPM_DST_FILE"
+    else
+        export dest_file="$DESY_SRM_DST_PATH/$DCACHE_DST_FILE"
+    fi
     fi 
     echo $dest_file
 }
@@ -170,11 +170,11 @@ function upload_test_file()
     local TYPE=$3
     #echo $TYPE
     if [ -z "$TYPE" ]; then
-	#local TYPE="DPM"
-	local PORT=$DPM_SRM_PORT #"8446"
+    #local TYPE="DPM"
+    local PORT=$DPM_SRM_PORT #"8446"
     else
-	local TYPE="DCACHE"
-	local PORT=$DCACHE_SRM_PORT #"8443"
+    local TYPE="DCACHE"
+    local PORT=$DCACHE_SRM_PORT #"8443"
     fi
     local TMP_FILE="/tmp/FTS_Test"
     
@@ -189,13 +189,13 @@ function upload_test_file()
     if [ $? -ne 0 ]; then
         echo "Error uploading the file!!!"
         TEST_WARN "Error uploading the file (exit code)"
-	#return 1
+    #return 1
     fi
     echo $GUID | grep "guid:" > /dev/null
     if [ $? -ne 0 ]; then
-	echo "Error GUID format filename '$GUID'"
-	TEST_WARN "Error GUID format filename '$GUID'"
-	#return 1
+    echo "Error GUID format filename '$GUID'"
+    TEST_WARN "Error GUID format filename '$GUID'"
+    #return 1
     fi
     #echo "GUID=$GUID"
 
@@ -203,7 +203,7 @@ function upload_test_file()
     lcg-lr --vo $VO $GUID > message
     grep "srm" message > srmname
     if [ $? != 0 ]; then
-	TEST_WARN "Error convert GUID --> SRM"
+    TEST_WARN "Error convert GUID --> SRM"
     fi
     export SRM=`cat srmname`
     #echo "SRM name = $SRM"
@@ -217,7 +217,7 @@ function upload_test_file()
     lcg-gt $SRM gsiftp > message
     grep "gsiftp" message > gsiftpname
     if [ $? != 0 ]; then
-	TEST_WARN "Error convert SRM --> GSIFTP"
+    TEST_WARN "Error convert SRM --> GSIFTP"
     fi
     export GSIFTP=`cat gsiftpname`
     #echo "gsiftp name = $GSIFTP"
@@ -351,12 +351,12 @@ function bulk-submit()
     count=1
     while [ $count -le $3 ]
     do
-	if [ $count == "1" ]; then
-	    echo "$1 $2-$count" > $FN
-	else
-	    echo "$1 $2-$count" >> $FN
-	fi
-	let count=count+1
+    if [ $count == "1" ]; then
+        echo "$1 $2-$count" > $FN
+    else
+        echo "$1 $2-$count" >> $FN
+    fi
+    let count=count+1
     done
 
     #echo "$FN:"
@@ -384,12 +384,12 @@ function url-bulk-submit()
     count=1
     while [ $count -le $3 ]
     do
-	if [ $count == "1" ]; then
-	    echo "$1 $2-$count" > $FN
-	else
-	    echo "$1 $2-$count" >> $FN
-	fi
-	let count=count+1
+    if [ $count == "1" ]; then
+        echo "$1 $2-$count" > $FN
+    else
+        echo "$1 $2-$count" >> $FN
+    fi
+    let count=count+1
     done
 
     #echo "$FN:"
@@ -417,12 +417,12 @@ function bulk-submit-k()
     count=1
     while [ $count -le $3 ]
     do
-	if [ $count == "1" ]; then
-	    echo "$1 $2-$count" > $FN
-	else
-	    echo "$1 $2-$count" >> $FN
-	fi
-	let count=count+1
+    if [ $count == "1" ]; then
+        echo "$1 $2-$count" > $FN
+    else
+        echo "$1 $2-$count" >> $FN
+    fi
+    let count=count+1
     done
 
     #echo "$FN:"
@@ -451,12 +451,12 @@ function bulk-submit-r()
     count=1
     while [ $count -le $3 ]
     do
-	if [ $count == "1" ]; then
-	    echo "$1 $2-$count" > $FN
-	else
-	    echo "$1 $2-$count" >> $FN
-	fi
-	let count=count+1
+    if [ $count == "1" ]; then
+        echo "$1 $2-$count" > $FN
+    else
+        echo "$1 $2-$count" >> $FN
+    fi
+    let count=count+1
     done
 
     #echo "$FN:"
@@ -497,9 +497,9 @@ function transfer()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -527,9 +527,9 @@ function url-transfer()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -556,9 +556,9 @@ function transfer-k()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -596,14 +596,14 @@ function list-transfer()
     
     grep $jobID1 message > /devnull
     if [ $? != 0 ]; then
-	echo "jobID $jobID1 - not found in joblist"
-	return 1
+    echo "jobID $jobID1 - not found in joblist"
+    return 1
     fi
     
     grep $jobID2 message > /dev/null
     if [ $? != 0 ]; then
-	echo "jobID $jobID2 - not found in joblist"
-	return 1
+    echo "jobID $jobID2 - not found in joblist"
+    return 1
     fi
     res=0
     job_cancel $jobID1
@@ -633,9 +633,9 @@ function overwrite-transfer()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -662,9 +662,9 @@ function over-transfer()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -692,9 +692,9 @@ function bulk-transfer()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -721,9 +721,9 @@ function url-bulk-transfer()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -750,9 +750,9 @@ function bulk-transfer-k()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -779,9 +779,9 @@ function bulk-transfer-r()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -808,9 +808,9 @@ function block-transfer()
     if [ $res != 0 ]; then
         echo "fts-transfer-submit and fts-transfer-status - Failed"
         if [ "$res" == "4" ]; then
-    	    echo "Time outed"
-    	    return 4
-    	fi
+            echo "Time outed"
+            return 4
+        fi
         return 1
     fi
 
@@ -834,33 +834,33 @@ function cancel()
     res=$?
     cat message
     if [ $res != 0 ]; then
-	echo "fts-transfer-cancel - failed (Exit cod = $res"
-	return $?
+    echo "fts-transfer-cancel - failed (Exit cod = $res"
+    return $?
     fi
     grep "Canceled" message > /dev/null
     if [ $? != 0 ]; then
-	echo "fts-transfer-cancel - failed (undefined reason:"
-	cat message
-	return 1
+    echo "fts-transfer-cancel - failed (undefined reason:"
+    cat message
+    return 1
     fi
 }
 #------------------------------------------------- 
 function is_status_valid()
-{	echo "is_status_valid($1)" 
-	valid_status_list=(\
-	"FAILED" 	"CATALOGFAILED"	"FINISHEDDIRTY" "CANCELED" \
-	"FINISHED" 	"SUBMITTED"	"PENDING"	"ACTIVE"	"CANCELING" \
-	"WAITING"	"HOLD"		"DONE"		"READY"		"DONEWITHERRORS")
+{    echo "is_status_valid($1)" 
+    valid_status_list=(\
+    "FAILED"     "CATALOGFAILED"    "FINISHEDDIRTY" "CANCELED" \
+    "FINISHED"     "SUBMITTED"    "PENDING"    "ACTIVE"    "CANCELING" \
+    "WAITING"    "HOLD"        "DONE"        "READY"        "DONEWITHERRORS")
     
     for item in ${valid_status_list[*]}
     do
-	#echo $item
-	if test  $1 == $item
-	then
-	#if [ $1 == $item ]; then
-	    echo "Status $1 - valid"
-	    return 0
-	fi
+    #echo $item
+    if test  $1 == $item
+    then
+    #if [ $1 == $item ]; then
+        echo "Status $1 - valid"
+        return 0
+    fi
     done
     return 1 
 }
@@ -875,7 +875,7 @@ function get_status_result()
     echo -e "\nRun: fts-transfer-status -s https://$FTS3_HOST:$FTS3_PORT $SubId"
     fts-transfer-status -s https://$FTS3_HOST:$FTS3_PORT $SubId  > message
     if [ $? != 0 ]; then
-    	return 1
+        return 1
     fi
     #cat message
     status=`cat message`
@@ -883,20 +883,20 @@ function get_status_result()
 
     is_status_valid $status
     if [ $? != 0 ]; then
-	echo "Status $status - invalid value"
-	return 1
+    echo "Status $status - invalid value"
+    return 1
     fi
     export STATUS=$status
     #    echo "status is $status"
     if test  $status == "FINISHED"
     then
-    	echo "Job is successfully finished." 
-    	return 0
+        echo "Job is successfully finished." 
+        return 0
                                                          
     elif test $status == "FAILED"
     then
-    	    echo "Job is Failed" 
-	    return 3 
+            echo "Job is Failed" 
+        return 3 
     elif test $status == "HOLD"
     then
         echo "Job is Hold"
@@ -909,7 +909,7 @@ function get_status_result()
                                                                     
     elif test $status == "READY"
     then
-	echo "Job is Ready"
+    echo "Job is Ready"
         return 4
     elif test $status == "PENDING"
     then
@@ -917,7 +917,7 @@ function get_status_result()
         return 4
     elif test $status == "DONE"
     then
-	echo "Job is Done"
+    echo "Job is Done"
         return 0
     elif test $status == "ACTIVE"
     then
@@ -925,16 +925,16 @@ function get_status_result()
         return 4        
     elif test $status == "CANCELING"
     then
-	echo "Job is Canceling"
-    	return 5                                                                                                                 :
+    echo "Job is Canceling"
+        return 5                                                                                                                 :
     elif test $status == "CANCELED"
     then
-	echo "Job is Canceled"
-	return 6
+    echo "Job is Canceled"
+    return 6
                     
     else
-	echo "Job status unknown: $status"
-	return 1
+    echo "Job status unknown: $status"
+    return 1
     fi 
 }
 #---------------------------------------------------
@@ -951,7 +951,7 @@ function poll_status_with_timeout()
     t=0
     while test $t -lt $Timeout
     do
-	get_status_result $SUBID
+    get_status_result $SUBID
         status=$?
         echo $status
                                                                                                                                      

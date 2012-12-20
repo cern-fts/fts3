@@ -18,11 +18,11 @@ export dest_TYPE="gsiftp"
     GUID_file_deletion $GUID
             
     if [ $res != 0 ]; then
-	echo "fts3-overwrite-transfer-submit - Failed"
-	if [ $res == 4 ]; then
-	    TEST_FAILED "Transfer- time outed"
-	fi
-	TEST_FAILED " "
+    echo "fts3-overwrite-transfer-submit - Failed"
+    if [ $res == 4 ]; then
+        TEST_FAILED "Transfer- time outed"
+    fi
+    TEST_FAILED " "
     fi
 
     echo "Check if SRM file"
@@ -31,17 +31,17 @@ export dest_TYPE="gsiftp"
         SURL_file_deletion $dest_file
     else               
         echo "Check if GSIFTP file exists"
-	echo "Run: globus-url-copy -vb -list $dpm_SE2/"
-	globus-url-copy -vb -list $dpm_SE2/ > message
-	if [ $? != 0 ]; then
-    	    TEST_FAILED "globus-url-copy -list - failed"
-	fi
-	#cat message
-	grep "$DPM_DST_FILE" message > /dev/null
-	if [ $? != 0 ]; then
-    	    TEST_FAILED "file $DPM_DST_FILE - not exists"
-	fi
-	echo "File $DPM_DST_FILE - exists"
+    echo "Run: globus-url-copy -vb -list $dpm_SE2/"
+    globus-url-copy -vb -list $dpm_SE2/ > message
+    if [ $? != 0 ]; then
+            TEST_FAILED "globus-url-copy -list - failed"
+    fi
+    #cat message
+    grep "$DPM_DST_FILE" message > /dev/null
+    if [ $? != 0 ]; then
+            TEST_FAILED "file $DPM_DST_FILE - not exists"
+    fi
+    echo "File $DPM_DST_FILE - exists"
     fi        
     echo "OK"
         
