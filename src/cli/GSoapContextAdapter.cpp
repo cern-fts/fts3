@@ -468,6 +468,13 @@ void GSoapContextAdapter::doDrain(bool drain) {
 	}
 }
 
+void GSoapContextAdapter::prioritySet(string jobId, int priority) {
+	impltns__prioritySetResponse resp;
+	if (soap_call_impltns__prioritySet(ctx, endpoint.c_str(), 0, jobId, priority, resp)) {
+		handleSoapFault("Operation prioritySet failed.");
+	}
+}
+
 void GSoapContextAdapter::getLog(string& logname, string jobId) {
 
 	log__GetLogResponse resp;

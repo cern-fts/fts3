@@ -81,6 +81,7 @@ set(fts_cli_common_sources
 	ui/TransferStatusCli.cpp
 	ui/VoNameCli.cpp
 	ui/BlacklistCli.cpp
+	ui/PriorityCli.cpp
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
     MsgPrinter.cpp
@@ -178,6 +179,11 @@ add_executable(fts-set-blacklist
 )
 target_link_libraries (fts-set-blacklist fts_cli_common)
 
+add_executable(fts-set-priority 
+    set/fts3-set-priority.cpp
+)
+target_link_libraries (fts-set-priority fts_cli_common)
+
 # ------------------------------------------------------------------------
 # fts-get-log command
 
@@ -239,6 +245,7 @@ install(TARGETS
 	fts-config-del
 	fts-set-debug
 	fts-set-blacklist
+	fts-set-priority
 	RUNTIME             DESTINATION ${BIN_INSTALL_DIR} )
 
 install(TARGETS         fts_cli_common 

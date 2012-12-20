@@ -246,6 +246,11 @@ public:
 	/**
 	 * TODO
 	 */
+	void prioritySet(string jobId, int priority);
+
+	/**
+	 * TODO
+	 */
 	void getLog(string& logname, string jobId);
 
 	///@{
