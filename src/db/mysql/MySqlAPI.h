@@ -210,7 +210,10 @@ public:
 
     virtual void setJobConfigCount(std::string job_id, int count);
 
+    virtual void setPriority(std::string jobId, int priority);
+
     virtual bool checkConnectionStatus();
+
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;

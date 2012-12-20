@@ -258,6 +258,7 @@ public:
 
     virtual bool checkConnectionStatus() = 0;
 
+    virtual void setPriority(std::string jobId, int priority) = 0;
 };
 
 

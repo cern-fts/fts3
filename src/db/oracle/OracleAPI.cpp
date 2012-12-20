@@ -5541,6 +5541,43 @@ void OracleAPI::setJobConfigCount(std::string job_id, int count) {
 }
 
 
+void OracleAPI::setPriority(std::string job_id, int priority) {
+
+    const std::string tag = "setPriority";
+    std::string query =
+            "UPDATE t_job "
+            "SET priority =:1 "
+            "WHERE job_id = :2 ";
+
+    oracle::occi::Statement* s = NULL;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        s = conn->createStatement(query, tag);
+        s->setInt(1, priority);
+        s->setString(2, job_id);
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+}
+
+
 bool OracleAPI::checkConnectionStatus(){
 
 	ThreadTraits::LOCK_R lock(_mutex);

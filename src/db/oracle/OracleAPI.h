@@ -221,6 +221,8 @@ public:
 
     virtual void setJobConfigCount(std::string job_id, int count);
 
+    virtual void setPriority(std::string jobId, int priority);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

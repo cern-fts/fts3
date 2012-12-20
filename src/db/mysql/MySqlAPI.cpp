@@ -2602,7 +2602,25 @@ void MySqlAPI::setJobConfigCount(std::string job_id, int count) {
     }
 }
 
+void MySqlAPI::setPriority(std::string job_id, int priority) {
 
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+
+        sql << "UPDATE t_job SET "
+               "  priority = :priority "
+               "WHERE job_id = :jobId",
+               soci::use(priority), soci::use(job_id);
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
 
 bool MySqlAPI::checkConnectionStatus() {
     soci::session sql(connectionPool);
