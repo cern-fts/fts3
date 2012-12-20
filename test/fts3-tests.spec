@@ -20,7 +20,7 @@ FTS3 tests
 %setup -q -n %{name}-%{version}
 
 %build
-cmake . -DCMAKE_INSTALL_PREFIX=$RPM_BUILD_ROOT/usr
+cmake . -DCMAKE_INSTALL_PREFIX=$RPM_BUILD_ROOT/usr -DALLBUILD=ON -DCMAKE_BUILD_TYPE=Debug
 make
 
 %install
