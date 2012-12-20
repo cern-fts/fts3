@@ -595,7 +595,7 @@ SDVOList *check_voms_proxy(void)
 
 	if (NULL == (vomsdir = getenv("X509_VOMS_DIR")))
 	{
-		vomsdir = "/etc/grid-security/vomsdir";
+		vomsdir = (char *) "/etc/grid-security/vomsdir";
 	}
 	
 	if (NULL == (creds = (char *)malloc(maxcreds*(credlen+1))))

@@ -57,7 +57,7 @@ bool ConfigurationAssigner::assign() {
 	string job_id = file->JOB_ID;
 
 	// check if a configuration has already been assigned to the transfer job
-	optional<int> count = db->getJobConfigCount(job_id);
+	optional<unsigned int> count = db->getJobConfigCount(job_id);
 	if (count) {
 		// if the job was already checked and no configuration was assigned return false
 		if (*count == 0) {

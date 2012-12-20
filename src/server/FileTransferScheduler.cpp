@@ -83,7 +83,7 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 	vector< tuple<string, string, string> >::iterator it;
 
 	// get the number of configurations assigned to the transfer job
-	optional<int> count = db->getJobConfigCount(file->JOB_ID);
+	optional<unsigned int> count = db->getJobConfigCount(file->JOB_ID);
 	// check if count has been initialized, in principal it must been initialized, but anyway it is good to check
 	if (count) {
 		if ( (*count != cfgs.size()) && manual) {

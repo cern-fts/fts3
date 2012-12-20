@@ -60,10 +60,10 @@ static void glite_delegation_set_error(glite_delegation_ctx *ctx, char *fmt, ...
 char *glite_delegation_get_error(glite_delegation_ctx *ctx)
 {
     if(!ctx)
-        return "Out of memory";
+        return (char *) "Out of memory";
 
     if(!ctx->error_message)
-        return "No error";
+        return (char *) "No error";
 
     return ctx->error_message;
 }
@@ -81,8 +81,8 @@ static void decode_exception(glite_delegation_ctx *ctx,
 #define SET_EXCEPTION(exc) \
     message = const_cast<char*>(((struct _delegation__ ## exc *)detail->fault)->msg->c_str()); \
     if (!message) \
-        message = #exc " received from the service"; \
-    glite_delegation_set_error(ctx, "%s: %s", method, message); \
+        message = (char *) #exc " received from the service"; \
+    glite_delegation_set_error(ctx, (char *) "%s: %s", method, message); \
     ctx->error = 1;
 
     switch (detail->__type)
@@ -143,10 +143,10 @@ static void _fault_to_error(glite_delegation_ctx *ctx, const char *method)
         }
 
         if (detail && *detail)
-            glite_delegation_set_error(ctx, "%s: SOAP fault: %s - %s (%s)", method, *code,
+            glite_delegation_set_error(ctx, (char *) "%s: SOAP fault: %s - %s (%s)", method, *code,
                 *string, *detail);
         else
-            glite_delegation_set_error(ctx, "%s: SOAP fault: %s - %s", method, *code,
+            glite_delegation_set_error(ctx, (char *) "%s: SOAP fault: %s - %s", method, *code,
                 *string);
     }
 
@@ -169,13 +169,13 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint)
         
         char *sd_type = getenv(GLITE_DELEGATION_SD_ENV);
         if(!sd_type)
-            sd_type = GLITE_DELEGATION_SD_TYPE;
+            sd_type = (char *) GLITE_DELEGATION_SD_TYPE;
         
         ctx->endpoint = glite_discover_endpoint(sd_type, endpoint, &error);
 
         if (!ctx->endpoint)
         {
-            glite_delegation_set_error(ctx, "glite_delegation: service discovery error %s", error);
+            glite_delegation_set_error(ctx, (char *) "glite_delegation: service discovery error %s", (char *) error);
             free(error);
             return ctx;
         }
@@ -185,7 +185,7 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint)
         ctx->endpoint = strdup(endpoint);
         if (!ctx->endpoint)
         {
-            glite_delegation_set_error(ctx, "glite_delegation: out of memory");
+            glite_delegation_set_error(ctx, (char *) "glite_delegation: out of memory");
             return ctx;
         }
     }
@@ -204,7 +204,7 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint)
 
     if (ret)
     {
-        glite_delegation_set_error(ctx, "Failed to initialize the GSI plugin");
+        glite_delegation_set_error(ctx, (char *) "Failed to initialize the GSI plugin");
         return ctx;
     }
 
@@ -245,7 +245,7 @@ const char *glite_delegation_get_endpoint(glite_delegation_ctx *ctx)
 int glite_delegation_delegate(glite_delegation_ctx *ctx, 
     const char *delegationID, int expiration, int force)
 {
-    char *sdelegationID = "", *localproxy, *certreq, *certtxt, *scerttxt;
+    char *sdelegationID = (char *) "", *localproxy, *certreq, *certtxt, *scerttxt;
     
     struct delegation__getProxyReqResponse get_resp;
     struct delegation__renewProxyReqResponse renew_resp;
@@ -262,7 +262,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         if (GLOBUS_GSI_SYSCONFIG_GET_PROXY_FILENAME(&localproxy,
             GLOBUS_PROXY_FILE_INPUT))
         {
-                glite_delegation_set_error(ctx, "glite_delegation_dowork: unable to get"
+                glite_delegation_set_error(ctx, (char *) "glite_delegation_dowork: unable to get"
                 " user proxy filename!");
             return -1;
         }
@@ -277,7 +277,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         sdelegationID = soap_strdup(ctx->soap, delegationID);
         if (!sdelegationID)
         {
-            glite_delegation_set_error(ctx, "glite_delegation_dowork: soap_strdup()"
+            glite_delegation_set_error(ctx, (char *) "glite_delegation_dowork: soap_strdup()"
                            " of delegationID failed!");
             return -1;
         }
@@ -315,7 +315,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         localproxy, localproxy, expiration);
     if (ret != GRST_RET_OK)
     {
-        glite_delegation_set_error(ctx, "glite_delegation_delegate: "
+        glite_delegation_set_error(ctx, (char *) "glite_delegation_delegate: "
                                    "GRSTx509MakeProxyCert call failed");
         return -1;
     }
@@ -323,7 +323,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
     scerttxt = soap_strdup(ctx->soap, certtxt);
     if (!scerttxt)
     {
-        glite_delegation_set_error(ctx, "glite_delegation_delegate: soap_strdup()"
+        glite_delegation_set_error(ctx, (char *) "glite_delegation_delegate: soap_strdup()"
                                    " of delegationID failed!");
         return -1;
     }
@@ -341,7 +341,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
 int glite_delegation_info(glite_delegation_ctx *ctx,
     const char *delegationID, time_t *expiration)
 {
-    char *sdelegationID = "";
+    char *sdelegationID = (char *) "";
     struct delegation__getTerminationTimeResponse resp;
 
     if(!ctx)
@@ -356,7 +356,7 @@ int glite_delegation_info(glite_delegation_ctx *ctx,
         sdelegationID = soap_strdup(ctx->soap, delegationID);
         if (!sdelegationID)
         {
-            glite_delegation_set_error(ctx, "glite_delegation_info: soap_strdup()"
+            glite_delegation_set_error(ctx, (char *)"glite_delegation_info: soap_strdup()"
                            " of delegationID failed!");
             return -1;
         }
@@ -375,7 +375,7 @@ int glite_delegation_info(glite_delegation_ctx *ctx,
 
 int glite_delegation_destroy(glite_delegation_ctx *ctx, const char *delegationID)
 {
-    char *sdelegationID = "";
+    char *sdelegationID = (char *) "";
     struct delegation__destroyResponse dest_resp;
 
     if(!ctx)
@@ -390,7 +390,7 @@ int glite_delegation_destroy(glite_delegation_ctx *ctx, const char *delegationID
         sdelegationID = soap_strdup(ctx->soap, delegationID);
         if (!sdelegationID)
         {
-            glite_delegation_set_error(ctx, "glite_delegation_destroy: soap_strdup()"
+            glite_delegation_set_error(ctx, (char *) "glite_delegation_destroy: soap_strdup()"
                            " of delegationID failed!");
             return -1;
         }
@@ -425,7 +425,7 @@ char *glite_delegation_getVersion(glite_delegation_ctx *ctx)
 
     if (!resp.getVersionReturn.empty())
     {
-        glite_delegation_set_error(ctx, "%s: service sent empty version", __func__);
+        glite_delegation_set_error(ctx, (char *)"%s: service sent empty version", __func__);
         soap_end(ctx->soap);
         return NULL;
     }
@@ -455,7 +455,7 @@ char *glite_delegation_getInterfaceVersion(glite_delegation_ctx *ctx)
 
     if (!resp.getInterfaceVersionReturn.empty())
     {
-        glite_delegation_set_error(ctx, "%s: service sent empty version", __func__);
+        glite_delegation_set_error(ctx, (char *) "%s: service sent empty version", __func__);
         soap_end(ctx->soap);
         return NULL;
     }
@@ -473,7 +473,7 @@ char *glite_delegation_getServiceMetadata(glite_delegation_ctx *ctx,
 
     if (!key) 
     {
-        glite_delegation_set_error(ctx, "%s: key must not be NULL", __func__);
+        glite_delegation_set_error(ctx, (char *) "%s: key must not be NULL", __func__);
         return NULL;
     }
 
@@ -488,7 +488,7 @@ char *glite_delegation_getServiceMetadata(glite_delegation_ctx *ctx,
     req_key = soap_strdup(ctx->soap, key);
     if (!req_key)
     {
-        glite_delegation_set_error(ctx, "%s: out of memory", __func__);
+        glite_delegation_set_error(ctx, (char *) "%s: out of memory", __func__);
         return NULL;
     }
 
@@ -500,8 +500,7 @@ char *glite_delegation_getServiceMetadata(glite_delegation_ctx *ctx,
 
     if (!resp._getServiceMetadataReturn.empty())
     {
-        glite_delegation_set_error(ctx, "%s: service had no value for key '%s'", 
-                __func__, key);
+        glite_delegation_set_error(ctx, (char *) "%s: service had no value for key '%s'", __func__, key);
         soap_end(ctx->soap);
         return NULL;
     }

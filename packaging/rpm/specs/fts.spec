@@ -194,6 +194,9 @@ rm -rf %{buildroot}
 %{_mandir}/man1/fts-transfer-list.1*
 %{_mandir}/man1/fts-transfer-status.1*
 %{_mandir}/man1/fts-transfer-submit.1*
+%{_mandir}/man1/fts-set-priority.1*
+%{_mandir}/man1/fts-set-debug.1*
+%{_mandir}/man1/fts-set-blacklist.1*
 
 %files libs
 %defattr(-,root,root,-)

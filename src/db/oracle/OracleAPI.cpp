@@ -5199,7 +5199,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::ge
     return ret;
 }
 
-int OracleAPI::countJobShareConfig(std::string job_id) {
+unsigned int OracleAPI::countJobShareConfig(std::string job_id) {
 
     std::string tag = "isThereJobShareConfig";
     std::string query = " select count(*) from t_job_share_config where job_id=:1 ";
@@ -5207,7 +5207,7 @@ int OracleAPI::countJobShareConfig(std::string job_id) {
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
 
-    int ret = 0;
+    unsigned int ret = 0;
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {
@@ -5446,7 +5446,7 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
     return ret;
 }
 
-boost::optional<int> OracleAPI::getJobConfigCount(std::string job_id) {
+boost::optional<unsigned int> OracleAPI::getJobConfigCount(std::string job_id) {
 
     std::string tag = "getJobConfigCount";
     std::string query =
@@ -5458,7 +5458,7 @@ boost::optional<int> OracleAPI::getJobConfigCount(std::string job_id) {
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
 
-    boost::optional<int> ret;
+    boost::optional<unsigned int> ret;
 
     ThreadTraits::LOCK_R lock(_mutex);
     try {

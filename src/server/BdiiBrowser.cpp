@@ -296,6 +296,8 @@ string BdiiBrowser::getSiteName(string se) {
 }
 
 bool BdiiBrowser::isVoAllowed(string se, string vo) {
+	se = std::string();
+	vo = std::string();	
 	return true;
 }
 

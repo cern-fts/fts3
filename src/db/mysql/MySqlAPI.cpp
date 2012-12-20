@@ -2474,10 +2474,10 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::get
 
 
 
-int MySqlAPI::countJobShareConfig(std::string job_id) {
+unsigned int MySqlAPI::countJobShareConfig(std::string job_id) {
     soci::session sql(connectionPool);
 
-    int count = 0;
+    unsigned int count = 0;
     try {
         sql << "SELECT COUNT(*) FROM t_job_share_config WHERE job_id = :jobId",
                 soci::use(job_id), soci::into(count);
@@ -2558,10 +2558,10 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
 
 
 
-boost::optional<int> MySqlAPI::getJobConfigCount(std::string job_id) {
+boost::optional<unsigned int> MySqlAPI::getJobConfigCount(std::string job_id) {
     soci::session sql(connectionPool);
 
-    boost::optional<int> opCount;
+    boost::optional<unsigned int> opCount;
     try {
         int count = 0;
         soci::indicator isNull;
