@@ -213,8 +213,8 @@ void MsgPrinter::bulk_submission_error(int line, string msg) {
 		return;
 	}
 
-	json_out.put("submission_error.line", line);
-	json_out.put("submission_error.message", msg);
+	json_out.put("error.line", line);
+	json_out.put("error.message", msg);
 }
 
 void MsgPrinter::wrong_endpoint_format(string endpoint) {
