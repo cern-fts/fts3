@@ -182,6 +182,7 @@ rm -rf %{buildroot}
 %{_bindir}/fts-config-del
 %{_bindir}/fts-set-debug
 %{_bindir}/fts-set-blacklist
+%{_bindir}/fts-set-priority
 %{_bindir}/fts-transfer-list
 %{_bindir}/fts-transfer-status
 %{_bindir}/fts-transfer-submit
