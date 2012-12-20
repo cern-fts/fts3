@@ -128,7 +128,10 @@ if [ $1 -eq 0 ] ; then
     /sbin/service fts-records-cleaner stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-records-cleaner
     /sbin/service fts-info-publisher stop >/dev/null 2>&1
-    /sbin/chkconfig --del fts-info-publisher        
+    /sbin/chkconfig --del fts-info-publisher
+    if [ -f /dev/shm/fts3mqupdater ]; then rm -rf /dev/shm/fts3mqupdater; fi
+    if [ -f /dev/shm/fts3mqmon ]; then rm -rf /dev/shm/fts3mqmon; fi
+    if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi
 fi
 exit 0
 
