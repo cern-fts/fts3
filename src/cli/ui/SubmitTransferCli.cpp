@@ -280,47 +280,43 @@ map<string, string> SubmitTransferCli::getParams() {
 	// check if the parameters were set using CLI, and if yes set them
 
 	if (vm.count("compare-checksum")) {
-		parameters[JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD] = "compare";
+		parameters[JobParameterHandler::CHECKSUM_METHOD] = "compare";
 	}
 
 	if (vm.count("overwrite")) {
-		parameters[JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG] = "Y";
+		parameters[JobParameterHandler::OVERWRITEFLAG] = "Y";
 	}
 
 	if (vm.count("lan-connection")) {
-		parameters[JobParameterHandler::FTS3_PARAM_LAN_CONNECTION] = "Y";
+		parameters[JobParameterHandler::LAN_CONNECTION] = "Y";
 	}
 
 	if (vm.count("fail-nearline")) {
-		parameters[JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE] = "Y";
+		parameters[JobParameterHandler::FAIL_NEARLINE] = "Y";
 	}
 
 	if (vm.count("gparam")) {
-		parameters[JobParameterHandler::FTS3_PARAM_GRIDFTP] = vm["gparam"].as<string>();
-	}
-
-	if (vm.count("myproxysrv")) {
-		parameters[JobParameterHandler::FTS3_PARAM_MYPROXY] = vm["myproxysrv"].as<string>();
+		parameters[JobParameterHandler::GRIDFTP] = vm["gparam"].as<string>();
 	}
 
 	if (vm.count("id")) {
-		parameters[JobParameterHandler::FTS3_PARAM_DELEGATIONID] = vm["id"].as<string>();
+		parameters[JobParameterHandler::DELEGATIONID] = vm["id"].as<string>();
 	}
 
 	if (vm.count("dest-token")) {
-		parameters[JobParameterHandler::FTS3_PARAM_SPACETOKEN] = vm["dest-token"].as<string>();
+		parameters[JobParameterHandler::SPACETOKEN] = vm["dest-token"].as<string>();
 	}
 
 	if (vm.count("source-token")) {
-		parameters[JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE] = vm["source-token"].as<string>();
+		parameters[JobParameterHandler::SPACETOKEN_SOURCE] = vm["source-token"].as<string>();
 	}
 
 	if (vm.count("copy-pin-lifetime")) {
-		parameters[JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME] = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
+		parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
 	}
 
 	if (vm.count("reuse")) {
-		parameters[JobParameterHandler::FTS3_PARAM_REUSE] = "Y";
+		parameters[JobParameterHandler::REUSE] = "Y";
 	}
 
 	return parameters;

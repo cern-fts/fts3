@@ -26,31 +26,33 @@ class MsgPrinter {
 
 public:
 
-	void delegation_local_expiration(long int h, long int m);
-	void delegation_service_proxy(long int h, long int m);
-	void delegation_msg(string msg);
-	void delegation_request_duration(long int h, long int m);
-	void delegation_request_retry();
-	void delegation_request_success(bool b);
-	void delegation_request_error(string error);
+	void delegation_local_expiration(long int h, long int m); //
+	void delegation_service_proxy(long int h, long int m); //
+	void delegation_msg(string msg); //
+	void delegation_request_duration(long int h, long int m); //
+	void delegation_request_retry(); //
+	void delegation_request_success(bool b); //
+	void delegation_request_error(string error); //
 
-	void endpoint(string endpoint);
-	void service_version(string version);
-	void service_interface(string interface);
-	void service_schema(string schema);
-	void service_metadata(string metadata);
-	void client_version(string version);
-	void client_interface(string interface);
+	void endpoint(string endpoint); //
+	void service_version(string version); //
+	void service_interface(string interface); //
+	void service_schema(string schema); //
+	void service_metadata(string metadata); //
+	void client_version(string version); //
+	void client_interface(string interface); //
 
-	void bulk_submission_error(int line, string msg);
-	void wrong_endpoint_format(string endpoint);
+
+	void version(string version); //
+
+	void bulk_submission_error(int line, string msg); //
+	void wrong_endpoint_format(string endpoint); //
 	void missing_parameter(string name);
-	void version(string version);
-	void cancelled_job(string job_id);
-	void error_msg(string msg);
-	void gsoap_error_msg(string msg);
+	void error_msg(string msg); //
+	void gsoap_error_msg(string msg); //
 
-	void job_id(string job_id);
+	void cancelled_job(string job_id);
+	void job_id(string job_id); //
 	void status(JobStatus js);
 	void job_status(JobStatus js);
 	void job_summary(JobSummary js);
