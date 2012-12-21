@@ -9,22 +9,21 @@
 
 using namespace fts3::common;
 
-const string JobParameterHandler::FTS3_PARAM_GRIDFTP = "gridftp";
-const string JobParameterHandler::FTS3_PARAM_MYPROXY = "myproxy";
-const string JobParameterHandler::FTS3_PARAM_DELEGATIONID = "delegationid";
-const string JobParameterHandler::FTS3_PARAM_SPACETOKEN = "spacetoken";
-const string JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE = "source_spacetoken";
-const string JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME = "copy_pin_lifetime";
-const string JobParameterHandler::FTS3_PARAM_LAN_CONNECTION = "lan_connection";
-const string JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE = "fail_nearline";
-const string JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG = "overwrite";
-const string JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD = "checksum_method";
-const string JobParameterHandler::FTS3_PARAM_REUSE = "reuse";
+const string JobParameterHandler::GRIDFTP = "gridftp";
+const string JobParameterHandler::DELEGATIONID = "delegationid";
+const string JobParameterHandler::SPACETOKEN = "spacetoken";
+const string JobParameterHandler::SPACETOKEN_SOURCE = "source_spacetoken";
+const string JobParameterHandler::COPY_PIN_LIFETIME = "copy_pin_lifetime";
+const string JobParameterHandler::LAN_CONNECTION = "lan_connection";
+const string JobParameterHandler::FAIL_NEARLINE = "fail_nearline";
+const string JobParameterHandler::OVERWRITEFLAG = "overwrite";
+const string JobParameterHandler::CHECKSUM_METHOD = "checksum_method";
+const string JobParameterHandler::REUSE = "reuse";
 
 
 JobParameterHandler::JobParameterHandler() {
 	// set defaults
-	parameters[FTS3_PARAM_COPY_PIN_LIFETIME] = "1";
+	parameters[COPY_PIN_LIFETIME] = "1";
 }
 
 

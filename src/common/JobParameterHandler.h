@@ -53,17 +53,16 @@ public:
 	/**
 	 * names of transfer job parameters
 	 */
-	static const string FTS3_PARAM_GRIDFTP;
-	static const string FTS3_PARAM_MYPROXY;
-	static const string FTS3_PARAM_DELEGATIONID;
-	static const string FTS3_PARAM_SPACETOKEN;
-	static const string FTS3_PARAM_SPACETOKEN_SOURCE;
-	static const string FTS3_PARAM_COPY_PIN_LIFETIME;
-	static const string FTS3_PARAM_LAN_CONNECTION;
-	static const string FTS3_PARAM_FAIL_NEARLINE;
-	static const string FTS3_PARAM_OVERWRITEFLAG;
-	static const string FTS3_PARAM_CHECKSUM_METHOD;
-	static const string FTS3_PARAM_REUSE;
+	static const string GRIDFTP;
+	static const string DELEGATIONID;
+	static const string SPACETOKEN;
+	static const string SPACETOKEN_SOURCE;
+	static const string COPY_PIN_LIFETIME;
+	static const string LAN_CONNECTION;
+	static const string FAIL_NEARLINE;
+	static const string OVERWRITEFLAG;
+	static const string CHECKSUM_METHOD;
+	static const string REUSE;
 	///@}
 
 	/**
