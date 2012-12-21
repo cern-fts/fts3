@@ -5,10 +5,9 @@
 #If LOGSLOCATON is not specified logs will be in the tests directory
 #LOGSLOCATION="/tmp"
 
-export FTS3_HOST="fts3-pilot.cern.ch"
+export FTS3_HOST="`hostname -f`"
 export FTS3_PORT=8443
 export FN="fsub"
-export RES="result"
 export BDII_HOST="certtb-bdii-top.cern.ch"
 export LCG_GFAL_INFOSYS="$BDII_HOST:2170"
 
@@ -18,10 +17,10 @@ export LCG_GFAL_INFOSYS="$BDII_HOST:2170"
 #LFC_HOST="lxb7608v3.cern.ch"
 
 #Name of VO to use
-export VO="dteam"
+export VO="testers.eu-emi.eu"
 
-export URL_source="https://arioch.cern.ch/dpm/cern.ch/home/dteam/test.jpg" 
-export URL_dest="https://lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/test.jpg6"
+export URL_source="https://cvitbdpm1.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/61445_1346631952.test.dat"
+export URL_dest="https://cvitbdpm2.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/61445_1346631952.test.dat.copy"
 
 
 export OVER="-o"		### " " or " -o "
@@ -36,15 +35,9 @@ export dest_TYPE="srm" 		# "gsiftp" or "srm"
 export INTERVAL=5
 export CERN_SE1="cvitbdpm1.cern.ch"
 export CERN_SE2="cvitbdpm2.cern.ch"
-#export CERN_SE2="lxbra1910.cern.ch"
-#export CERN_SE1="lxbra1910.cern.ch"
 
-#export DESY_SE1="ennis.desy.de"
 export DESY_SE1="galway.desy.de"
 export DESY_SE2="galway.desy.de"
-#export DESY_SE2="cork.desy.de"
-#export DESY_SE2="ennis.desy.de"
-
 
 export DESY_SE_PORT=2811
 export DCACHE_SRM_PORT=8443
@@ -68,5 +61,6 @@ export dpm_SE2="gsiftp://$CERN_SE2/tmp"
 export dcache_SE1="gsiftp://$DESY_SE1:$DESY_SE_PORT//$DESY_DATA/$VO"
 export dcache_SE2="gsiftp://$DESY_SE2:$DESY_SE_PORT//$DESY_DATA/$VO"
 
-#Timeout for waiting the job to finish. Default is 100 sec.
+#Timeout for waiting the job to finish.
 export TIME_OUT=300
+

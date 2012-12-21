@@ -44,10 +44,8 @@ function config-get()
 function getRoles()
 {
     echo -e "\nRun: fts3-transfer-getroles -s http://$FTS3_HOST:8080"
-    fts3-transfer-getroles -s http://$FTS3_HOST:8080 > $RES
-    res=$?
-    cat $RES
-    if [ $res != 0 ]; then
+    fts3-transfer-getroles -s http://$FTS3_HOST:8080
+    if [ $? != 0 ]; then
     echo "fts3-transfer-getroles - failed (exit code)"
     return 1
     fi
