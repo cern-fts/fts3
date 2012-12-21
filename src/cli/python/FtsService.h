@@ -17,42 +17,24 @@
  *	limitations under the License.
  * GSoapContextAdapter.h
  *
- * PythonCliWrapper.h
+ * FtsService.h
  *
- *  Created on: Sep 11, 2012
- *      Author: Michał Simon
+ *  Created on: Dec 20, 2012
+ *      Author: simonm
  */
 
-#ifndef PYTHONCLIWRAPPER_H_
-#define PYTHONCLIWRAPPER_H_
+#ifndef FTSSERVICE_H_
+#define FTSSERVICE_H_
 
-#include "GSoapContextAdapter.h"
-#include <boost/python.hpp>
+namespace fts3 {
+namespace cli {
 
-
-
-namespace fts3 { namespace cli {
-
-using namespace boost::python;
-
-class PythonApi {
-
+class FtsService {
 public:
-	PythonApi(str endpoint);
-	virtual ~PythonApi();
-
-	str submit(list elements, dict parameters, bool checksum); // deleg only
-	void cancel(list ids);
-	str getStatus(str id);
-
-private:
-	GSoapContextAdapter ctx;
-
-	static const object none;
-
+	FtsService();
+	virtual ~FtsService();
 };
 
-}
-}
-
-#endif /* PYTHONCLIWRAPPER_H_ */
+} /* namespace cli */
+} /* namespace fts3 */
+#endif /* FTSSERVICE_H_ */
