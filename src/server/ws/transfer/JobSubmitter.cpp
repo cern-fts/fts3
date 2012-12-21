@@ -78,7 +78,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 			throw Err_Custom("The MyProxy password should not be provided if delegation is used");
 		}
 	} else {
-		if (params.isParamSet(JobParameterHandler::FTS3_PARAM_DELEGATIONID)) {
+		if (params.isParamSet(JobParameterHandler::DELEGATIONID)) {
 			throw Err_Custom("The delegation ID should not be provided if MyProxy password mode is used");
 		}
 
@@ -232,21 +232,21 @@ string JobSubmitter::submit() {
     db->submitPhysical (
     		id,
     		jobs,
-    		params.get(JobParameterHandler::FTS3_PARAM_GRIDFTP),
+    		params.get(JobParameterHandler::GRIDFTP),
             dn,
             cred,
             vo,
-            params.get(JobParameterHandler::FTS3_PARAM_MYPROXY),
+            string(),
             delegationId,
-            params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN),
-            params.get(JobParameterHandler::FTS3_PARAM_OVERWRITEFLAG),
-            params.get(JobParameterHandler::FTS3_PARAM_SPACETOKEN_SOURCE),
+            params.get(JobParameterHandler::SPACETOKEN),
+            params.get(JobParameterHandler::OVERWRITEFLAG),
+            params.get(JobParameterHandler::SPACETOKEN_SOURCE),
             sourceSpaceTokenDescription,
-            params.get(JobParameterHandler::FTS3_PARAM_LAN_CONNECTION),
-            params.get<int>(JobParameterHandler::FTS3_PARAM_COPY_PIN_LIFETIME),
-            params.get(JobParameterHandler::FTS3_PARAM_FAIL_NEARLINE),
-            params.get(JobParameterHandler::FTS3_PARAM_CHECKSUM_METHOD),
-            params.get(JobParameterHandler::FTS3_PARAM_REUSE),
+            params.get(JobParameterHandler::LAN_CONNECTION),
+            params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME),
+            params.get(JobParameterHandler::FAIL_NEARLINE),
+            params.get(JobParameterHandler::CHECKSUM_METHOD),
+            params.get(JobParameterHandler::REUSE),
             sourceSe,
             destinationSe
     	);
