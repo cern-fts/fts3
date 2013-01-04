@@ -34,5 +34,5 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-/usr/share/fts3/*
+/usr/share/fts3/tests/*
 
