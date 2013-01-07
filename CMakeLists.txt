@@ -59,7 +59,7 @@ set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 include(DefineInstallationPaths REQUIRED)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-check -fno-strict-aliasing -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wextra -ansi -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -finstrument-functions -Wsign-promo -Wstrict-overflow=5 -Winit-self -Wmissing-braces -Wparentheses")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -Wextra -ansi -Wall -pedantic -Wno-long-long -Wno-write-strings -D_FORTIFY_SOURCE=2 -fexceptions -fstack-protector-all -finstrument-functions -Wsign-promo -Wstrict-overflow=5 -Winit-self -Wmissing-braces -Wparentheses")
     MESSAGE ("Building with Debug settings...")
     #add_definitions (-DFTS3_COMPILE_WITH_UNITTEST)
     #OPTION(FTS3_COMPILE_WITH_UNITTEST "Build with unit test" ON)

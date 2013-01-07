@@ -32,7 +32,7 @@ using namespace fts3::ws;
 string UuidGenerator::generateUUID() {
 
 	uuid_t id;
-	char c_str[36];
+	char c_str[37]={0};
 
 	uuid_generate(id);
 	// different algorithms:
