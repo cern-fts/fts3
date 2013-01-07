@@ -12,7 +12,8 @@ install (PROGRAMS FTS3-config
          DESTINATION ${SHARE_INSTALL_PREFIX}/fts3/tests)
 
 install (DIRECTORY functional stress
-         DESTINATION ${SHARE_INSTALL_PREFIX}/fts3/tests)
+         DESTINATION ${SHARE_INSTALL_PREFIX}/fts3/tests
+         USE_SOURCE_PERMISSIONS)
 endif ()
 
 
