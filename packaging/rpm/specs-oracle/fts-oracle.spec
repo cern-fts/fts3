@@ -56,7 +56,7 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%{_libdir}/libfts_db_oracle.so.*
+%{_libdir}/libfts_db_oracle.so*
 %doc %{_docdir}/fts3/oracle-schema.sql
 %doc %{_docdir}/fts3/oracle-drop.sql
 
