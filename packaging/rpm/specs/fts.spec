@@ -46,8 +46,8 @@ Development files for File Transfer Service V3
 Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
 Requires: fts-libs = %{version}-%{release}
-Requires: gfal2-plugin-gridftp
-Requires: gfal2-plugin-srm
+Requires: gfal2-plugin-gridftp >= 2.1.0
+Requires: gfal2-plugin-srm >= 2.1.0
 Requires: bdii
 Requires: glue-schema
 Requires: glue-validator
