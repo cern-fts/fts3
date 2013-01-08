@@ -2732,6 +2732,15 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId) {
 }
 
 
+int MySqlAPI::getMaxTimeInQueue(){
+}
+    
+void MySqlAPI::setMaxTimeInQueue(int afterXHours){
+}
+
+void MySqlAPI::setToFailOldQueuedJobs(){
+}
+
 
 // the class factories
 

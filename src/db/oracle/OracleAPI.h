@@ -231,7 +231,13 @@ public:
     
     virtual int getRetryTimes(const std::string & jobId, int fileId); 
     
-    virtual void setRetryTransfer(const std::string & jobId, int fileId);                
+    virtual void setRetryTransfer(const std::string & jobId, int fileId); 
+    
+    virtual int getMaxTimeInQueue();
+    
+    virtual void setMaxTimeInQueue(int afterXHours); 
+    
+    virtual void setToFailOldQueuedJobs();              
 
 private:
 	OracleConnection *conn;	

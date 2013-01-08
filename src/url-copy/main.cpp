@@ -54,11 +54,6 @@ limitations under the License. */
 #include <exception>
 #include "StaticSslLocking.h"
 
-/*
-PENDING
-        cancel transfer gracefully
- */
-
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace std;
@@ -146,7 +141,6 @@ static std::string mapErrnoToString(int err) {
             std::string rep(str);
             std::replace(rep.begin(), rep.end(), ' ', '_');
             return boost::to_upper_copy(rep);
-            ;
         }
     }
     return "GENERAL ERROR";
@@ -204,7 +198,7 @@ std::string getDefaultErrorPhase() {
     return errorPhase.length() == 0 ? GENERAL_FAILURE : errorPhase;
 }
 
-void abnormalTermination(const std::string& msg, const std::string& finalState) {
+void abnormalTermination(const std::string& classification, const std::string& msg, const std::string& finalState) {
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
@@ -216,7 +210,7 @@ void abnormalTermination(const std::string& msg, const std::string& finalState) 
     reporter.timeout = timeout;
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
-    reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
+    reporter.constructMessage(g_job_id, g_file_id, classification, errorMessage, diff, source_size);
     std::string moveFile = fileManagement->archive();
     if (moveFile.length() != 0) {
         logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
@@ -234,7 +228,7 @@ void canceler() {
         errorMessage = "WARN Transfer " + g_job_id + " was canceled because it was not responding";
         logStream << fileManagement->timestamp() << errorMessage << '\n';
 
-        abnormalTermination(errorMessage, "Abort");
+        abnormalTermination("FAILED", errorMessage, "Abort");
     }
 }
 
@@ -259,7 +253,7 @@ void signalHandler(int signum) {
         logStream << fileManagement->timestamp() << errorMessage << '\n';
         logStream << fileManagement->timestamp() << "ERROR " << stackTrace << '\n';
 
-        abnormalTermination(errorMessage, "Error");
+        abnormalTermination("FAILED", errorMessage, "Error");
     } else if (signum == 15) {
         if (propagated == false) {
             propagated = true;
@@ -267,7 +261,7 @@ void signalHandler(int signum) {
             logStream << fileManagement->timestamp() << errorMessage << '\n';
 
 
-            abnormalTermination(errorMessage, "Abort");
+            abnormalTermination("CANCELED", errorMessage, "Abort");
         }
     } else if (signum == 10) {
         if (propagated == false) {
@@ -275,7 +269,7 @@ void signalHandler(int signum) {
             errorMessage = "WARN Transfer " + g_job_id + " has been forced-canceled because it was stalled";
             logStream << fileManagement->timestamp() << errorMessage << '\n';
 
-            abnormalTermination(errorMessage, "Abort");
+            abnormalTermination("FAILED", errorMessage, "Abort");
         }
     } else {
         if (propagated == false) {
@@ -283,7 +277,7 @@ void signalHandler(int signum) {
             errorMessage = "WARN Transfer " + g_job_id + " canceled";
             logStream << fileManagement->timestamp() << errorMessage << '\n';
 
-            abnormalTermination(errorMessage, "Abort");
+            abnormalTermination("CANCELED", errorMessage, "Abort");
         }
     }
 }
@@ -295,7 +289,7 @@ void myunexpected() {
     errorMessage += " Dest: " +dest_url;
     logStream << fileManagement->timestamp() << errorMessage << '\n';
     
-    abnormalTermination(errorMessage, "Abort");
+    abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
 void myterminate() {
@@ -304,7 +298,7 @@ void myterminate() {
     errorMessage += " Dest: " +dest_url;    
     logStream << fileManagement->timestamp() << errorMessage << '\n';
 
-    abnormalTermination(errorMessage, "Abort");
+    abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
 
@@ -474,8 +468,9 @@ int main(int argc, char **argv) {
 
     if (!handle) {
         errorMessage  = "Failed to create the gfal2 handle: ";
-        errorMessage += handleError->message;
-        abnormalTermination(errorMessage, "Error");
+	if(handleError->message)
+        	errorMessage += handleError->message;
+        abnormalTermination("FAILED", errorMessage, "Error");
     }
 
     //reuse session    
@@ -503,7 +498,7 @@ int main(int argc, char **argv) {
     if (reuseFile.length() > 0 && urlsFile.empty() == true) {
         errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
 
-        abnormalTermination(errorMessage, "Error");
+        abnormalTermination("FAILED", errorMessage, "Error");
     }
 
     std::string strArray[4];

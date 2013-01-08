@@ -5788,6 +5788,91 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId){
 }
 
 
+int OracleAPI::getMaxTimeInQueue(){
+    std::string tag = "getMaxTimeInQueue";
+    std::string query =
+    		"select max_time_queue "
+    		"from t_server_config ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    int ret = 0;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        		ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+    return ret;
+
+}
+    
+void OracleAPI::setMaxTimeInQueue(int afterXHours){
+    const std::string tag = "setMaxTimeInQueue";
+    std::string query = " UPDATE t_server_config set max_time_queue=:1 ";
+
+    oracle::occi::Statement* s = NULL;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        s = conn->createStatement(query, tag);     
+        s->setInt(1, afterXHours);       	
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+}
+
+
 bool OracleAPI::checkConnectionStatus(){
 
 	ThreadTraits::LOCK_R lock(_mutex);
@@ -5798,6 +5883,95 @@ bool OracleAPI::checkConnectionStatus(){
 		alive = false;	
 	}
    return alive;
+}
+
+
+void OracleAPI::setToFailOldQueuedJobs(){
+    const std::string tag1 = "setToFailOldQueuedJobs111";
+    const std::string tag2 = "setToFailOldQueuedJobs222";
+    const std::string tag3 = "setToFailOldQueuedJobs333";    
+    
+    std::string query1 = " UPDATE t_file set file_state='CANCELED', reason=:1 where job_id=:2 and file_state in ('SUBMITTED','READY') ";
+    std::string query2 = " UPDATE t_job set job_state='CANCELED', reason=:1 where job_id=:2  and job_state in ('SUBMITTED','READY') ";
+    std::string message = "Job was canceled because it stayed in the queue for too long"; 
+    std::stringstream query3;      
+
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::Statement* s3 = NULL;
+    oracle::occi::ResultSet* r = 0;
+    std::vector<std::string> jobId;
+    std::vector<std::string>::const_iterator iter;
+    
+    /*in hours*/
+    int maxTime = getMaxTimeInQueue();
+    if(maxTime==0)
+    	return;
+	
+     query3 << " select job_id from t_job where (SUBMIT_TIME < (CURRENT_TIMESTAMP - interval '";
+     query3 << maxTime;
+     query3 << "' hour)) ";  
+    
+    
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        s3 = conn->createStatement(query3.str(), tag3);	
+        r = conn->createResultset(s3);
+        while (r->next()) {
+		jobId.push_back(r->getString(1));			
+        }
+        conn->destroyResultset(s3, r);
+        conn->destroyStatement(s3, tag3);
+    	
+	if(!jobId.empty()){
+       		s1 = conn->createStatement(query1, tag1);
+       		s2 = conn->createStatement(query2, tag2);		
+       		for (iter = jobId.begin(); iter != jobId.end(); ++iter) {
+			s1->setString(1,message);
+			s1->setString(2,*iter);
+		        s1->executeUpdate();
+			s2->setString(1,message);			
+			s2->setString(2,*iter);
+		        s2->executeUpdate();			
+       		}		        
+        conn->commit();
+        conn->destroyStatement(s1, tag1);
+        conn->destroyStatement(s2, tag2);	
+       }
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s3 && r)
+        		conn->destroyResultset(s3, r);
+        	if (s3)
+        		conn->destroyStatement(s3, tag3);
+        	if (s2)
+        		conn->destroyStatement(s2, tag2);			
+        	if (s1)
+        		conn->destroyStatement(s1, tag1);			
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s3 && r)
+        		conn->destroyResultset(s3, r);
+        	if (s3)
+        		conn->destroyStatement(s3, tag3);
+        	if (s2)
+        		conn->destroyStatement(s2, tag2);			
+        	if (s1)
+        		conn->destroyStatement(s1, tag1);						
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+
 }
 
 // the class factories

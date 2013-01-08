@@ -117,6 +117,10 @@ protected:
                 	pids.clear();
 		}
             }
+	    
+	    
+	    /*set to fail all old queued jobs which have exceeded max queue time*/
+	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
             sleep(5);
         }catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message updater thrown unhandled exception"));

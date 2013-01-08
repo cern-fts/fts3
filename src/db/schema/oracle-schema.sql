@@ -2,9 +2,10 @@
 -- Holds various server configuration options
 --
 CREATE TABLE t_server_config (
-  retry       INTEGER default 0
+  retry       INTEGER default 0,
+  max_time_queue INTEGER default 0
 );
-insert into t_server_config(retry) values(0);
+insert into t_server_config(retry,max_time_queue) values(0,0);
 
 
 --
