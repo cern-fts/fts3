@@ -54,7 +54,8 @@
         <tr class="details" id="{{t.file_id}}">
           <td colspan="8">
             <ul>
-              <li><b>Duration: </b> {{ t.tx_duration }} seconds</li>
+              <li><b>Attempts:</b> {{ t.retry }}</li>
+              <li><b>Duration:</b> {{ t.tx_duration }} seconds</li>
               <li><b>Checksum:</b> {{ t.checksum }}</li>
               <li><b>Configuration: </b> {{ t.symbolicName }}</li>
               <li><b>Parameters:</b> {{ t.internal_file_params }}</li>

@@ -76,6 +76,7 @@ class File(models.Model):
     pid          = models.IntegerField()
     tx_duration  = models.FloatField()
     throughput   = models.FloatField()
+    retry        = models.IntegerField()
     
     class Meta:
         db_table = 't_file'
