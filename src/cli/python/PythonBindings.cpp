@@ -26,13 +26,12 @@
 #include "GSoapContextAdapter.h"
 #include "python/PythonApi.h"
 #include "python/Job.h"
-#include "python/FileTransfer.h"
 
 #include <boost/optional/optional.hpp>
 #include <boost/python.hpp>
 
 using namespace boost;
-using namespace boost::python;
+//namespace py = boost::python;
 
 
 void exTranslator(string const& ex) {
@@ -44,26 +43,17 @@ BOOST_PYTHON_MODULE(libftspython) {
 
 	using namespace fts3::cli;
 
-	register_exception_translator<string>(exTranslator);
+	py::register_exception_translator<string>(exTranslator);
 
-	class_<PythonApi>("Fts", init<str>())
+	py::class_<PythonApi>("Fts", py::init<py::str>())
 			.def("submit", &PythonApi::submit)
 			.def("cancel", &PythonApi::cancel)
 			.def("cancel", &PythonApi::cancelAll)
 			.def("status", &PythonApi::getStatus)
 			;
 
-	class_<fts3::cli::FileTransfer>("FileTransfer", init<str, str, str>())
-			.def(init<str, str>())
-			.add_property("source", &FileTransfer::getSource, &FileTransfer::setSource)
-			.add_property("destination", &FileTransfer::getDestination, &FileTransfer::setDestination)
-			.add_property("checksum", &FileTransfer::getChecksum, &FileTransfer::setChecksum)
-			;
-
-	class_<fts3::cli::Job>("Job")
-			.def("add", &Job::add)
-			.def("add", &Job::addAll)
-			.def("clear", &Job::clear)
+	py::class_<fts3::cli::Job>("Job", py::init<py::tuple>())
+			.def(py::init<py::list>())
 			.add_property("files", &Job::files)
 			.add_property("delegationId", &Job::getDelegationId, &Job::setDelegationId)
 			.add_property("gridParam", &Job::getGridParam, &Job::setGridParam)

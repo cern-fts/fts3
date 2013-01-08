@@ -28,8 +28,6 @@
 
 #include "TransferTypes.h"
 
-#include "python/FileTransfer.h"
-
 #include <boost/python.hpp>
 #include <boost/tuple/tuple.hpp>
 
@@ -45,17 +43,16 @@ namespace py = boost::python;
 class Job {
 
 public:
-	Job();
+
+	Job(py::tuple file);
+
+	Job(py::list files);
+
 	virtual ~Job();
 
 	std::vector<JobElement> getJobElementsCpp();
 	std::map<std::string, std::string> getJobParametersCpp();
 	bool useChecksumCpp();
-
-	void add(FileTransfer element);
-	void addAll(py::list elements);
-
-	void clear();
 
 	py::list files();
 
@@ -90,6 +87,10 @@ public:
 	py::object sessionReuse();
 
 private:
+
+	bool wrongChecksumFormat(std::string checksum);
+
+	void add(py::tuple file);
 
 	///
 	std::vector<JobElement> elements;
