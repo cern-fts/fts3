@@ -19,8 +19,8 @@ export LCG_GFAL_INFOSYS="$BDII_HOST:2170"
 #Name of VO to use
 export VO="testers.eu-emi.eu"
 
-export URL_source="https://cvitbdpm1.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/61445_1346631952.test.dat"
-export URL_dest="https://cvitbdpm2.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/61445_1346631952.test.dat.copy"
+export URL_source="https://cvitbdpm1.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/ftstest01"
+export URL_dest="https://cvitbdpm2.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/ftstest01.copy"
 
 
 export OVER="-o"		### " " or " -o "

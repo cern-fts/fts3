@@ -1,4 +1,10 @@
 #!/bin/bash
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+
 
 source fts3-common
 source ../Macros

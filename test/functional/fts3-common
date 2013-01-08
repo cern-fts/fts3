@@ -1,4 +1,7 @@
 #!/bin/bash
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+
 
 function config-set()
 {
