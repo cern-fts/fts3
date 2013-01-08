@@ -204,30 +204,37 @@ std::string getDefaultErrorPhase() {
     return errorPhase.length() == 0 ? GENERAL_FAILURE : errorPhase;
 }
 
-void canceler() {   
+void abnormalTermination(const std::string& msg, const std::string& finalState) {
+    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
+    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
+    msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, msg);
+    msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
+    msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+
+    reporter.timeout = timeout;
+    reporter.nostreams = nbstreams;
+    reporter.buffersize = tcpbuffersize;
+    reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
+    std::string moveFile = fileManagement->archive();
+    if (moveFile.length() != 0) {
+        logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+    }
+    if (reuseFile.length() > 0)
+        unlink(readFile.c_str());
+    sleep(1);
+    exit(1);
+}
+
+void canceler() {
+
     if (propagated == false) {
         propagated = true;
         errorMessage = "WARN Transfer " + g_job_id + " was canceled because it was not responding";
         logStream << fileManagement->timestamp() << errorMessage << '\n';
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-        reporter.timeout = timeout;
-        reporter.nostreams = nbstreams;
-        reporter.buffersize = tcpbuffersize;
-        reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-        std::string moveFile = fileManagement->archive();
-        if (moveFile.length() != 0) {
-            logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
-        }
-        if (reuseFile.length() > 0)
-            unlink(readFile.c_str());
-        sleep(1);
-        exit(1);
+
+        abnormalTermination(errorMessage, "Abort");
     }
 }
 
@@ -251,102 +258,32 @@ void signalHandler(int signum) {
         errorMessage = "ERROR Transfer process died " + g_job_id;
         logStream << fileManagement->timestamp() << errorMessage << '\n';
         logStream << fileManagement->timestamp() << "ERROR " << stackTrace << '\n';
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-        reporter.timeout = timeout;
-        reporter.nostreams = nbstreams;
-        reporter.buffersize = tcpbuffersize;
-        reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-        std::string moveFile = fileManagement->archive();
-        if (moveFile.length() != 0) {
-            logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
-        }
 
-        if (reuseFile.length() > 0)
-            unlink(readFile.c_str());
-        exit(1);
+        abnormalTermination(errorMessage, "Error");
     } else if (signum == 15) {
         if (propagated == false) {
             propagated = true;
             errorMessage = "WARN Transfer " + g_job_id + " canceled by the user";
             logStream << fileManagement->timestamp() << errorMessage << '\n';
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-            reporter.timeout = timeout;
-            reporter.nostreams = nbstreams;
-            reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
-            std::string moveFile = fileManagement->archive();
-            if (moveFile.length() != 0) {
-                logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
-            }
 
-            if (reuseFile.length() > 0)
-                unlink(readFile.c_str());
-            sleep(1);
-            exit(1);
+
+            abnormalTermination(errorMessage, "Abort");
         }
     } else if (signum == 10) {
         if (propagated == false) {
             propagated = true;
             errorMessage = "WARN Transfer " + g_job_id + " has been forced-canceled because it was stalled";
             logStream << fileManagement->timestamp() << errorMessage << '\n';
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-            reporter.timeout = timeout;
-            reporter.nostreams = nbstreams;
-            reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-            std::string moveFile = fileManagement->archive();
-            if (moveFile.length() != 0) {
-                logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
-            }
 
-            if (reuseFile.length() > 0)
-                unlink(readFile.c_str());
-            sleep(1);
-            exit(1);
+            abnormalTermination(errorMessage, "Abort");
         }
     } else {
         if (propagated == false) {
             propagated = true;
             errorMessage = "WARN Transfer " + g_job_id + " canceled";
             logStream << fileManagement->timestamp() << errorMessage << '\n';
-            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-            msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-            msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-            msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-            reporter.timeout = timeout;
-            reporter.nostreams = nbstreams;
-            reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(g_job_id, g_file_id, "CANCELED", errorMessage, diff, source_size);
-            std::string moveFile = fileManagement->archive();
-            if (moveFile.length() != 0) {
-                logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
-            }
 
-            if (reuseFile.length() > 0)
-                unlink(readFile.c_str());
-            sleep(1);
-            exit(1);
+            abnormalTermination(errorMessage, "Abort");
         }
     }
 }
@@ -357,28 +294,8 @@ void myunexpected() {
     errorMessage += " Source: " +source_url;
     errorMessage += " Dest: " +dest_url;
     logStream << fileManagement->timestamp() << errorMessage << '\n';
-    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-    msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-    msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-    msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-    reporter.timeout = timeout;
-    reporter.nostreams = nbstreams;
-    reporter.buffersize = tcpbuffersize;
-    reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-    if (stackTrace.length() > 0) {
-        propagated = true;
-        logStream << fileManagement->timestamp() << stackTrace << '\n';
-    }
-    logStream.close();
-    fileManagement->archive();
-    if (reuseFile.length() > 0)
-        unlink(readFile.c_str());
-    sleep(1);
-    exit(1);
     
+    abnormalTermination(errorMessage, "Abort");
 }
 
 void myterminate() {
@@ -386,27 +303,8 @@ void myterminate() {
     errorMessage += " Source: " +source_url;
     errorMessage += " Dest: " +dest_url;    
     logStream << fileManagement->timestamp() << errorMessage << '\n';
-    msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-    msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-    msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-    msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Abort");
-    msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-    reporter.timeout = timeout;
-    reporter.nostreams = nbstreams;
-    reporter.buffersize = tcpbuffersize;
-    reporter.constructMessage(g_job_id, g_file_id, "FAILED", errorMessage, diff, source_size);
-    if (stackTrace.length() > 0) {
-        propagated = true;
-        logStream << fileManagement->timestamp() << stackTrace << '\n';
-    }
-    logStream.close();
-    fileManagement->archive();
-    if (reuseFile.length() > 0)
-        unlink(readFile.c_str());
-    sleep(1);
-    exit(1);
+
+    abnormalTermination(errorMessage, "Abort");
 }
 
 
@@ -571,7 +469,15 @@ int main(int argc, char **argv) {
         cert = new UserProxyEnv(proxy);
     }
 
-    handle = gfal_context_new(NULL);
+    // Wait until we got the logger before failing if handle is NULL
+    GError* handleError = NULL;
+    handle = gfal_context_new(&handleError);
+
+    if (!handle) {
+        errorMessage  = "Failed to create the gfal2 handle: ";
+        errorMessage += handleError->message;
+        abnormalTermination(errorMessage, "Error");
+    }
 
     //reuse session    
     if (reuseFile.length() > 0) {
@@ -597,20 +503,8 @@ int main(int argc, char **argv) {
 
     if (reuseFile.length() > 0 && urlsFile.empty() == true) {
         errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
-        msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
-        msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
-        msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-        msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
-        msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-        msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-        msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-        reporter.timeout = timeout;
-        reporter.nostreams = nbstreams;
-        reporter.buffersize = tcpbuffersize;
-        reporter.constructMessage(job_id, file_id, "FAILED", errorMessage, diff, source_size);
-        sleep(1);
-        exit(1);
 
+        abnormalTermination(errorMessage, "Error");
     }
 
     std::string strArray[4];
@@ -835,9 +729,6 @@ int main(int argc, char **argv) {
             start = std::time(NULL);
 
             //check all params before passed to gfal2
-            if (!handle) {
-                log << fileManagement->timestamp() << "ERROR Failed to create gfal2 context" << '\n';
-            }
             if ((strArray[1]).c_str() == NULL || (strArray[2]).c_str() == NULL) {
                 log << fileManagement->timestamp() << "ERROR Failed to get source or dest surl" << '\n';
             }
