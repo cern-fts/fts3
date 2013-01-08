@@ -658,7 +658,7 @@
       
          <input message="impl:prioritySetRequest" name="prioritySetRequest"/>
 
-         <output message="impl:priritySetResponse" name="prioritySetResponse"/>
+         <output message="impl:prioritySetResponse" name="prioritySetResponse"/>
       
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
 
