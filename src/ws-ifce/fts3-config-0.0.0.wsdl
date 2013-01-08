@@ -74,6 +74,17 @@
 
     <message name="DrainResponse"/>
 
+    <message name="RetryRequest">
+		<part name="retry" type="xsd:decimal"/>
+    </message>
+    
+    <message name="RetryResponse"/>
+
+    <message name="QueueTimeoutRequest">
+		<part name="timeout" type="xsd:decimal"/>
+    </message>
+    
+    <message name="QueueTimeoutResponse"/>
 
     <message name="SetConfigurationRequest">
         <part name="configuration" type="config:Configuration"/>
@@ -143,11 +154,28 @@
         
         <operation name="doDrain">
             <input message="impl:DrainRequest" name="DrainRequest"/>
-            <output message="impl:GetConfigurationResponse" name="DrainResponse"/>
+            <output message="impl:DrainResponse" name="DrainResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
         </operation>
+        
+        <operation name="setRetry">
+            <input message="impl:RetryRequest" name="RetryRequest"/>
+            <output message="impl:RetryResponse" name="RetryResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="setQueueTimeout">
+            <input message="impl:QueueTimeoutRequest" name="QueueTimeoutRequest"/>
+            <output message="impl:QueueTimeoutResponse" name="QueueTimeoutResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
     </portType>
 
     <binding name="SoapBinding" type="impl:Config">
@@ -242,6 +270,54 @@
             </input>
 
             <output name="DrainResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+        
+        <operation name="setRetry">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="RetryRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="RetryResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+        
+        <operation name="setQueueTimeout">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="QueueTimeoutRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="QueueTimeoutResponse">
                 <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
             </output>
 

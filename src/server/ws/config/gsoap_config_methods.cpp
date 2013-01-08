@@ -185,3 +185,17 @@ int fts3::implcfg__doDrain(soap* soap, bool drain, struct implcfg__doDrainRespon
 	DrainMode::getInstance() = drain;
 	return SOAP_OK;
 }
+
+/* ---------------------------------------------------------------------- */
+
+int fts3::implcfg__setRetry(soap* ctx, string retry, implcfg__setRetryResponse& _resp) {
+
+	return SOAP_OK;
+}
+
+/* ---------------------------------------------------------------------- */
+
+int fts3::implcfg__setQueueTimeout(soap* ctx, string timeout, implcfg__setQueueTimeoutResponse& resp) {
+
+	return SOAP_OK;
+}
