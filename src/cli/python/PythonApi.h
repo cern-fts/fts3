@@ -44,7 +44,8 @@ public:
 	virtual ~PythonApi();
 
 	py::str submit(Job job); // deleg only
-	void cancel(py::list ids);
+	void cancel(py::str id);
+	void cancelAll(py::list ids);
 	py::str getStatus(py::str id);
 
 private:

@@ -49,7 +49,8 @@ BOOST_PYTHON_MODULE(libftspython) {
 	class_<PythonApi>("Fts", init<str>())
 			.def("submit", &PythonApi::submit)
 			.def("cancel", &PythonApi::cancel)
-			.def("getStatus", &PythonApi::getStatus)
+			.def("cancel", &PythonApi::cancelAll)
+			.def("status", &PythonApi::getStatus)
 			;
 
 	class_<fts3::cli::FileTransfer>("FileTransfer", init<str, str, str>())

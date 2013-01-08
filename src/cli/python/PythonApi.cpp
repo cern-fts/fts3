@@ -49,7 +49,14 @@ py::str PythonApi::submit(Job job) {
 	return ctx.transferSubmit(job.getJobElementsCpp(), job.getJobParametersCpp(), job.useChecksumCpp()).c_str();
 }
 
-void PythonApi::cancel(py::list ids) {
+void PythonApi::cancel(py::str id) {
+
+	vector<string> c_ids;
+	c_ids.push_back(py::extract<string>(id));
+	ctx.cancel(c_ids);
+}
+
+void PythonApi::cancelAll(py::list ids) {
 
 	vector<string> c_ids;
 
