@@ -222,6 +222,16 @@ public:
     virtual void setJobConfigCount(std::string job_id, int count);
 
     virtual void setPriority(std::string jobId, int priority);
+    
+    virtual void setRetry(int retry);
+    
+    virtual int getRetry();
+    
+    virtual void setRetryTimes(int retry, const std::string & jobId, int fileId);
+    
+    virtual int getRetryTimes(const std::string & jobId, int fileId); 
+    
+    virtual void setRetryTransfer(const std::string & jobId, int fileId);                
 
 private:
 	OracleConnection *conn;	

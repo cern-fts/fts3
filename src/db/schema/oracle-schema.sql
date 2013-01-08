@@ -1,4 +1,13 @@
 --
+-- Holds various server configuration options
+--
+CREATE TABLE t_server_config (
+  retry       INTEGER default 0
+);
+insert into t_server_config(retry) values(0);
+
+
+--
 -- Holds the log files path and host
 --
 CREATE TABLE t_log (
@@ -570,6 +579,9 @@ CREATE TABLE t_file (
 --
 -- Average throughput
   ,throughput           NUMBER
+--
+-- How many times should the transfer be retried
+  ,retry           NUMBER DEFAULT 0  
 );
 --
 -- autoinc sequence on file_id

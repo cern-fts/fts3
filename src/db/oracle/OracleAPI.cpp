@@ -5577,6 +5577,216 @@ void OracleAPI::setPriority(std::string job_id, int priority) {
     }
 }
 
+int OracleAPI::getRetry(){
+    std::string tag = "getRetry";
+    std::string query =
+    		"select retry "
+    		"from t_server_config ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    int ret = 0;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        		ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+    return ret;
+
+}
+
+void OracleAPI::setRetry(int retry){
+    const std::string tag = "setRetry";
+    std::string query =
+            "UPDATE t_server_config "
+            "SET retry =:1 ";
+
+    oracle::occi::Statement* s = NULL;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        s = conn->createStatement(query, tag);
+        s->setInt(1, retry);       
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+}
+
+
+void OracleAPI::setRetryTimes(int retry, const std::string & jobId, int fileId){
+    const std::string tag = "setRetryTimes";
+    std::string query =
+            "UPDATE t_file "
+            "SET retry =:1 where job_id=:2 and file_id=:3 ";
+
+    oracle::occi::Statement* s = NULL;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        s = conn->createStatement(query, tag);
+        s->setInt(1, retry);   
+	s->setString(2,jobId);
+	s->setInt(3,fileId);	    
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+}
+    
+int OracleAPI::getRetryTimes(const std::string & jobId, int fileId){
+    std::string tag = "getRetryTimes";
+    std::string query =
+    		"select retry from t_file where job_id=:1 and file_id=:2 ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    int ret = 0;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+	s->setString(1,jobId);
+	s->setInt(2,fileId);	
+        r = conn->createResultset(s);
+
+        if (r->next()) {
+        		ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+    return ret;
+}
+
+
+void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId){
+    const std::string tag = "setRetryTransfer";
+    std::string query =
+            " UPDATE t_file set file_state='SUBMITTED' "
+            "  where job_id=:1 and file_id=:2 ";
+
+    oracle::occi::Statement* s = NULL;
+    ThreadTraits::LOCK_R lock(_mutex);
+
+    try {
+        s = conn->createStatement(query, tag);
+        s->setString(1, jobId);       
+        s->setInt(2, fileId);       	
+        s->executeUpdate();
+        conn->commit();
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+		if(conn) {
+			conn->rollback();
+			if(s)
+				conn->destroyStatement(s, tag);
+		}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+}
+
 
 bool OracleAPI::checkConnectionStatus(){
 

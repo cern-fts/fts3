@@ -41,11 +41,11 @@ CGsiAdapter::CGsiAdapter(soap* ctx) : ctx(ctx) {
 	// retrieve VOMS attributes (fqnas)
 	int nbfqans = 0;
 	char **arr = get_client_roles(ctx, &nbfqans);
-
+		
 	if (nbfqans == 0) {
 		// if the host certificate was used to submit the request we will not find any fqans
 		if (hostDn.empty() || dn != hostDn)
-			throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate (probably the CRL has expired)!");
+			throw Err_Custom("Failed to extract VOMS attributes from Proxy Certificate or can't read the host DN");
 	}
 
 	for (int i = 0; i < nbfqans; i++) {

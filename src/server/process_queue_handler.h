@@ -102,6 +102,22 @@ public:
     bool updateDatabase(struct message msg){    
 	       bool updated = true;    
 	       std::string job = std::string(msg.job_id).substr(0, 36);
+	       
+	       int retry = DBSingleton::instance().getDBObjectInstance()->getRetry();
+	       if(retry != 0 && std::string(msg.transfer_status).compare("FAILED") == 0){
+ 		       int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, atoi(std::string(msg.file_id).c_str()));
+		       if(retry == -1){ //unlimited times
+				DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, atoi(std::string(msg.file_id).c_str()));
+				DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, atoi(std::string(msg.file_id).c_str()));
+				return true;		       
+		       }else{	       		       
+			       if(retryTimes <= retry ){	
+					DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, atoi(std::string(msg.file_id).c_str()));
+					DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, atoi(std::string(msg.file_id).c_str()));
+					return true;			       					
+			       }
+		       }
+	       }
     
                if (std::string(msg.transfer_status).compare("FINISHED") == 0 && enableOptimization.compare("true") == 0) {
                     if (!(msg.nostreams == DEFAULT_NOSTREAMS && msg.buffersize == DEFAULT_BUFFSIZE && msg.timeout == DEFAULT_TIMEOUT)) {

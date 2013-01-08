@@ -27,4 +27,5 @@ drop table t_job_backup;
 drop table T_GROUP_MEMBERS cascade constraints;
 drop table T_SHARE_CONFIG cascade constraints;
 drop table T_LINK_CONFIG cascade constraints;
+drop table T_SERVER_CONFIG cascade constraints;
 exit;

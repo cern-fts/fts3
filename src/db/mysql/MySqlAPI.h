@@ -213,6 +213,16 @@ public:
     virtual void setPriority(std::string jobId, int priority);
 
     virtual bool checkConnectionStatus();
+    
+    virtual void setRetry(int retry);
+    
+    virtual int getRetry();     
+    
+    virtual void setRetryTimes(int retry, const std::string & jobId, int fileId);
+    
+    virtual int getRetryTimes(const std::string & jobId, int fileId);  
+    
+    virtual void setRetryTransfer(const std::string & jobId, int fileId);                        
 
 private:
     size_t                poolSize;

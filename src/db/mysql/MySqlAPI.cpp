@@ -2637,6 +2637,27 @@ bool MySqlAPI::checkConnectionStatus() {
     return couldConnect;
 }
 
+
+
+void MySqlAPI::setRetry(int retry){
+}
+    
+int MySqlAPI::getRetry(){
+	return 0;
+}
+
+void MySqlAPI::setRetryTimes(int retry, const std::string & jobId, int fileId){
+}
+    
+int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId){
+	return 0;
+}
+
+void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId){
+}
+
+
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {
