@@ -10,6 +10,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: cmake
 
+Requires: lcg-util
 Requires: fts-client
 Requires: voms-clients
 
