@@ -47,7 +47,7 @@ int main(int ac, char* av[]) {
 				getCli<SubmitTransferCli>(ac, av)
 			);
 
-		// validate command line options, and return respective gsoap context
+		// validate command line options, and return respective gSOAP context
 		optional<GSoapContextAdapter&> opt = cli->validate();
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();

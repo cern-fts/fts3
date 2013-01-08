@@ -21,23 +21,30 @@ namespace py = boost::python;
 class FileTransfer {
 
 public:
-	FileTransfer();
-	FileTransfer(py::str source, py::str destination, py::object checksum);
+	FileTransfer(std::string source, std::string destination, boost::optional<std::string> checksum);
+	FileTransfer(py::str source, py::str destination, py::str checksum);
+	FileTransfer(py::str source, py::str destination);
 
 	virtual ~FileTransfer();
 
 	void setSource(py::str source);
-	py::object getSource();
+	py::str getSource();
+	std::string getSourceCpp();
 
 	void setDestination(py::str destination);
-	py::object getDestination();
+	py::str getDestination();
+	std::string getDestinationCpp();
 
 	void setChecksum(py::str checksum);
 	py::object getChecksum();
+	boost::optional<std::string> getChecksumCpp();
 
-//private:
-	boost::optional<std::string> source;
-	boost::optional<std::string> destination;
+private:
+
+	bool wrongChecksumFormat(std::string checksum);
+
+	std::string source;
+	std::string destination;
 	boost::optional<std::string> checksum;
 };
 

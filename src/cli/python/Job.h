@@ -26,14 +26,16 @@
 #ifndef JOB_H_
 #define JOB_H_
 
+#include "TransferTypes.h"
+
 #include "python/FileTransfer.h"
 
 #include <boost/python.hpp>
 #include <boost/tuple/tuple.hpp>
 
 #include <string>
-#include <list>
 #include <map>
+#include <vector>
 
 namespace fts3 {
 namespace cli {
@@ -46,8 +48,16 @@ public:
 	Job();
 	virtual ~Job();
 
+	std::vector<JobElement> getJobElementsCpp();
+	std::map<std::string, std::string> getJobParametersCpp();
+	bool useChecksumCpp();
+
 	void add(FileTransfer element);
-//	void add(py::list elements);
+	void addAll(py::list elements);
+
+	void clear();
+
+	py::list files();
 
 	void setDelegationId(py::str id);
 	py::object getDelegationId();
@@ -80,8 +90,9 @@ public:
 	py::object sessionReuse();
 
 private:
+
 	///
-	std::list<FileTransfer> elements;
+	std::vector<JobElement> elements;
 	///
 	std::map<std::string, std::string> parameters;
 	///

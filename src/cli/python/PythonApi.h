@@ -27,29 +27,28 @@
 #define PYTHONCLIWRAPPER_H_
 
 #include "GSoapContextAdapter.h"
+#include "python/Job.h"
+
 #include <boost/python.hpp>
 
 
 
 namespace fts3 { namespace cli {
 
-using namespace boost::python;
+namespace py = boost::python;
 
 class PythonApi {
 
 public:
-	PythonApi(str endpoint);
+	PythonApi(py::str endpoint);
 	virtual ~PythonApi();
 
-	str submit(list elements, dict parameters, bool checksum); // deleg only
-	void cancel(list ids);
-	str getStatus(str id);
+	py::str submit(Job job); // deleg only
+	void cancel(py::list ids);
+	py::str getStatus(py::str id);
 
 private:
 	GSoapContextAdapter ctx;
-
-	static const object none;
-
 };
 
 }

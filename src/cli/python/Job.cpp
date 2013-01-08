@@ -35,20 +35,70 @@ namespace cli {
 
 using namespace fts3::common;
 
-Job::Job() : expiration(0) {
+Job::Job() : checksum(false), expiration(0) {
 
 }
 
 Job::~Job() {
 }
 
-void Job::add(FileTransfer element) {
-	elements.push_back(element);
+std::vector<JobElement> Job::getJobElementsCpp() {
+	return elements;
 }
-//
-//void Job::add(py::list elements) {
-//
-//}
+
+std::map<std::string, std::string> Job::getJobParametersCpp() {
+	return parameters;
+}
+
+bool Job::useChecksumCpp() {
+	return checksum;
+}
+
+void Job::add(FileTransfer file) {
+	// prepare the job element
+	JobElement e;
+	boost::get<SOURCE>(e) = file.getSourceCpp();
+	boost::get<DESTINATION>(e) = file.getDestinationCpp();
+	boost::get<CHECKSUM>(e) = file.getChecksumCpp();
+	// if at least one file transfer uses checksum set it to true
+	checksum |= file.getChecksumCpp().is_initialized();
+	// add the element
+	elements.push_back(e);
+}
+
+
+void Job::addAll(py::list elements) {
+	// check list size
+	int size = len(elements);
+	// iterate over all files
+	for (int i = 0; i < size; i++) {
+		FileTransfer file = py::extract<FileTransfer>(elements[i]);
+		add(file);
+	}
+}
+
+void Job::clear() {
+	// remove all elements
+	elements.erase(elements.begin(), elements.end());
+}
+
+py::list Job::files() {
+
+	py::list ret;
+
+	std::vector<JobElement>::iterator it;
+	for (it = elements.begin(); it != elements.end(); it++) {
+		JobElement e = *it;
+		FileTransfer file (
+				boost::get<SOURCE>(e),
+				boost::get<DESTINATION>(e),
+				boost::get<CHECKSUM>(e)
+			);
+		ret.append(file);
+	}
+
+	return ret;
+}
 
 void Job::setDelegationId(py::str id) {
 	// set the value
