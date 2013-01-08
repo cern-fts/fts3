@@ -469,7 +469,6 @@ int main(int argc, char **argv) {
         cert = new UserProxyEnv(proxy);
     }
 
-    // Wait until we got the logger before failing if handle is NULL
     GError* handleError = NULL;
     handle = gfal_context_new(&handleError);
 
