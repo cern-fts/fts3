@@ -20,3 +20,5 @@ TRUNCATE t_debug;
 TRUNCATE t_config_audit;
 TRUNCATE t_optimize;
 TRUNCATE t_log;
+TRUNCATE t_server_config;
+INSERT INTO t_server_config (retry) VALUES (0);

@@ -2603,7 +2603,6 @@ void MySqlAPI::setJobConfigCount(std::string job_id, int count) {
 }
 
 void MySqlAPI::setPriority(std::string job_id, int priority) {
-
     soci::session sql(connectionPool);
 
     try {
@@ -2640,20 +2639,96 @@ bool MySqlAPI::checkConnectionStatus() {
 
 
 void MySqlAPI::setRetry(int retry){
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+
+        sql << "UPDATE t_server_config SET retry = :retry",
+               soci::use(retry);
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
-    
+
+
+
 int MySqlAPI::getRetry(){
-	return 0;
+    soci::session sql(connectionPool);
+
+    int nRetries = 0;
+    try {
+        sql << "SELECT retry FROM t_server_config",
+               soci::into(nRetries);
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    return nRetries;
 }
 
-void MySqlAPI::setRetryTimes(int retry, const std::string & jobId, int fileId){
+
+
+void MySqlAPI::setRetryTimes(int retry, const std::string & jobId, int fileId) {
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+
+        sql << "UPDATE t_file SET "
+               "    retry = :retry "
+               "WHERE job_id = :jobId AND file_id = :fileId",
+               soci::use(retry), soci::use(jobId), soci::use(fileId);
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
-    
+
+
+
 int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId){
-	return 0;
+    soci::session sql(connectionPool);
+
+    int nRetries = 0;
+    try {
+        sql << "SELECT retry FROM t_file WHERE job_id = :jobId AND file_id = :fileId",
+               soci::use(jobId), soci::use(fileId), soci::into(nRetries);
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    return nRetries;
 }
 
-void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId){
+
+
+void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId) {
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+
+        sql << "UPDATE t_file SET "
+               "    file_state = 'SUBMITTED' "
+               "WHERE job_id = :jobId AND file_id = :fileId",
+               soci::use(jobId), soci::use(fileId);
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
 

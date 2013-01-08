@@ -1,6 +1,14 @@
 SET storage_engine=INNODB;
 
 --
+-- Holds various server configuration options
+--
+CREATE TABLE t_server_config (
+  retry   INTEGER default 0
+);
+INSERT INTO t_server_config (retry) VALUES (0);
+
+--
 -- Holds the log files path and host
 --
 CREATE TABLE t_log (
@@ -537,6 +545,9 @@ CREATE TABLE t_file (
 --
 -- Average throughput
   throughput            FLOAT,
+--
+-- How many times should the transfer be retried 
+  retry                 INTEGER DEFAULT 0,
   
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
