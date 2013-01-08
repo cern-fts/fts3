@@ -62,5 +62,5 @@ export dcache_SE1="gsiftp://$DESY_SE1:$DESY_SE_PORT//$DESY_DATA/$VO"
 export dcache_SE2="gsiftp://$DESY_SE2:$DESY_SE_PORT//$DESY_DATA/$VO"
 
 #Timeout for waiting the job to finish.
-export TIME_OUT=100
+export TIME_OUT=300
 
