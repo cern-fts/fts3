@@ -256,7 +256,7 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path) {
 			// get the string value
 			string str_value = kv.second.get_value<string>();
 			// check if it's auto-value
-			if (str_value == auto_value && kv.first == "public" /*TODO maybe it should be allowed for every vo?*/) {
+			if (str_value == auto_value) {
 				ret[kv.first] = -1;
 			} else {
 				// get the integer value
