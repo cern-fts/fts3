@@ -4,9 +4,10 @@ SET storage_engine=INNODB;
 -- Holds various server configuration options
 --
 CREATE TABLE t_server_config (
-  retry   INTEGER default 0
+  retry          INTEGER DEFAULT 0,
+  max_time_queue INTEGER DEFAULT 0
 );
-INSERT INTO t_server_config (retry) VALUES (0);
+INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
 
 --
 -- Holds the log files path and host

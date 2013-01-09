@@ -2712,7 +2712,7 @@ int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId){
 
 
 
-void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId) {
+void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId){
     soci::session sql(connectionPool);
 
     try {
@@ -2732,14 +2732,81 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId) {
 }
 
 
+
 int MySqlAPI::getMaxTimeInQueue(){
-}
-    
-void MySqlAPI::setMaxTimeInQueue(int afterXHours){
+    soci::session sql(connectionPool);
+
+    int maxTime = 0;
+    try {
+        sql << "SELECT max_time_queue FROM t_server_config",
+               soci::into(maxTime);
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    return maxTime;
 }
 
-void MySqlAPI::setToFailOldQueuedJobs(){
+
+
+void MySqlAPI::setMaxTimeInQueue(int afterXHours){
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+
+        sql << "UPDATE t_server_config SET max_time_queue = :maxTime",
+               soci::use(afterXHours);
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
+
+
+
+void MySqlAPI::setToFailOldQueuedJobs(){
+    const static std::string message = "Job has been canceled because it stayed in the queue for too long";
+
+    soci::session sql(connectionPool);
+
+    try {
+        int maxTime = getMaxTimeInQueue();
+        if (maxTime == 0)
+            return;
+
+        sql.begin();
+
+        soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
+                                                       "    (submit_time < (CURRENT_TIMESTAMP - interval :interval hour) AND "
+                                                       "    job_state in ('SUBMITTED', 'READY')",
+                                                       soci::use(maxTime));
+
+        for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+            sql << "UPDATE t_file SET "
+                   "    file_state = 'CANCELED', reason = :reason "
+                   "WHERE job_id = :jobId AND "
+                   "      file_state IN ('SUBMITTED','READY')",
+                   soci::use(message), soci::use(*i);
+
+            sql << "UPDATE t_job SET "
+                   "    job_state = 'CANCELED', reason = :reason "
+                   "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
+                   soci::use(message), soci::use(*i);
+        }
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
 
 
 // the class factories
