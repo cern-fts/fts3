@@ -5893,7 +5893,7 @@ void OracleAPI::setToFailOldQueuedJobs(){
     
     std::string query1 = " UPDATE t_file set file_state='CANCELED', reason=:1 where job_id=:2 and file_state in ('SUBMITTED','READY') ";
     std::string query2 = " UPDATE t_job set job_state='CANCELED', reason=:1 where job_id=:2  and job_state in ('SUBMITTED','READY') ";
-    std::string message = "Job was canceled because it stayed in the queue for too long"; 
+    std::string message = "Job has been canceled because it stayed in the queue for too long"; 
     std::stringstream query3;      
 
     oracle::occi::Statement* s1 = NULL;
@@ -5910,7 +5910,7 @@ void OracleAPI::setToFailOldQueuedJobs(){
 	
      query3 << " select job_id from t_job where (SUBMIT_TIME < (CURRENT_TIMESTAMP - interval '";
      query3 << maxTime;
-     query3 << "' hour)) ";  
+     query3 << "' hour)) and job_state in ('SUBMITTED','READY')  ";  
     
     
     ThreadTraits::LOCK_R lock(_mutex);
