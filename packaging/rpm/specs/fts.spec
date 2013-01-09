@@ -60,6 +60,7 @@ Requires: glue-validator
 %package libs
 Summary: File Transfer Service version 3 libs
 Group: System Environment/Libraries
+Requires: python
 
 %package client
 Summary: File Transfer Service version 3 client

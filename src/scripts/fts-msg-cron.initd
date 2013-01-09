@@ -2,7 +2,7 @@
 #
 # APPNAME - <summary>
 #
-# chkconfig:     - - -
+# chkconfig:     2345 - -
 # description:  Enable a run of fts periodic cron job for messaging
 # processname:  fts_msg_cron
 
