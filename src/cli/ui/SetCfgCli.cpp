@@ -37,7 +37,7 @@ SetCfgCli::SetCfgCli() {
 	specific.add_options()
 			("drain", value<string>(), "If set to 'on' drains the given endpoint.")
 			("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
-			("queue-timeout", value<unsigned>(), "Sets the maximum time transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
+			("queue-timeout", value<int>(), "Sets the maximum time transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
 			;
 
 	// add hidden options (not printed in help)
@@ -88,6 +88,22 @@ optional<GSoapContextAdapter&> SetCfgCli::validate(bool init) {
 
 	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
+	if (vm.count("retry")) {
+		int val = vm["retry"].as<int>();
+		if (val < -1) {
+			cout << "The retry value has to be greater or equal to -1." << endl;
+			return optional<GSoapContextAdapter&>();
+		}
+	}
+
+	if (vm.count("queue-timeout")) {
+		int val = vm["queue-timeout"].as<int>();
+		if (val < 0) {
+			cout << "The queue-timeout value has to be greater or equal to 0." << endl;
+			return optional<GSoapContextAdapter&>();
+		}
+	}
+
 	if (getConfigurations().empty() && !vm.count("drain") && !vm.count("retry") && !vm.count("queue-timeout")) {
 		cout << "No parameters have been specified." << endl;
 		return optional<GSoapContextAdapter&>();
@@ -125,7 +141,7 @@ optional<int> SetCfgCli::retry() {
 optional<unsigned> SetCfgCli::queueTimeout() {
 
 	if (vm.count("queue-timeout")) {
-		return vm["queue-timeout"].as<unsigned>();
+		return vm["queue-timeout"].as<int>();
 	}
 
 	return optional<unsigned>();
