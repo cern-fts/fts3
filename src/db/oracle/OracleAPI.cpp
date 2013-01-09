@@ -5799,6 +5799,10 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId){
 			conn->rollback();
 			if(s)
 				conn->destroyStatement(s, tag);
+			if(s1 && r)
+        			conn->destroyResultset(s1, r);
+        		if (s1)
+        			conn->destroyStatement(s1, tag1);				
 		}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     } catch (...) {
@@ -5806,6 +5810,10 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId){
 			conn->rollback();
 			if(s)
 				conn->destroyStatement(s, tag);
+			if(s1 && r)
+        			conn->destroyResultset(s1, r);
+        		if (s1)
+        			conn->destroyStatement(s1, tag1);								
 		}
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
