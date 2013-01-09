@@ -190,12 +190,78 @@ int fts3::implcfg__doDrain(soap* soap, bool drain, struct implcfg__doDrainRespon
 
 int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _resp) {
 
+	try {
+		// authorize
+		AuthorizationManager::getInstance().authorize(
+				ctx,
+				AuthorizationManager::CONFIG,
+				AuthorizationManager::dummy
+			);
+
+		// get user dn
+		CGsiAdapter cgsi(ctx);
+		string dn = cgsi.getClientDn();
+
+		// prepare the command for audit
+		stringstream cmd;
+		cmd << "fts-config-set --retry " << retry;
+
+		// audit the operation
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "debug");
+
+		// set the number of retries
+		DBSingleton::instance().getDBObjectInstance()->setRetry(retry);
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(ctx, ex.what(), "TransferException");
+
+		return SOAP_FAULT;
+	} catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+	    return SOAP_FAULT;
+	}
+
 	return SOAP_OK;
 }
 
 /* ---------------------------------------------------------------------- */
 
 int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__setQueueTimeoutResponse& resp) {
+
+	try {
+		// authorize
+		AuthorizationManager::getInstance().authorize(
+				ctx,
+				AuthorizationManager::CONFIG,
+				AuthorizationManager::dummy
+			);
+
+		// get user dn
+		CGsiAdapter cgsi(ctx);
+		string dn = cgsi.getClientDn();
+
+		// prepare the command for audit
+		stringstream cmd;
+		cmd << "fts-config-set --queue-timeout " << timeout;
+
+		// audit the operation
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "debug");
+
+		// set the number of retries
+		DBSingleton::instance().getDBObjectInstance()->setMaxTimeInQueue(timeout);
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(ctx, ex.what(), "TransferException");
+
+		return SOAP_FAULT;
+	} catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+	    return SOAP_FAULT;
+	}
 
 	return SOAP_OK;
 }
