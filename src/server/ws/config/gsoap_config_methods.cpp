@@ -188,14 +188,14 @@ int fts3::implcfg__doDrain(soap* soap, bool drain, struct implcfg__doDrainRespon
 
 /* ---------------------------------------------------------------------- */
 
-int fts3::implcfg__setRetry(soap* ctx, string retry, implcfg__setRetryResponse& _resp) {
+int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _resp) {
 
 	return SOAP_OK;
 }
 
 /* ---------------------------------------------------------------------- */
 
-int fts3::implcfg__setQueueTimeout(soap* ctx, string timeout, implcfg__setQueueTimeoutResponse& resp) {
+int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__setQueueTimeoutResponse& resp) {
 
 	return SOAP_OK;
 }

@@ -75,13 +75,13 @@
     <message name="DrainResponse"/>
 
     <message name="RetryRequest">
-		<part name="retry" type="xsd:decimal"/>
+		<part name="retry" type="xsd:int"/>
     </message>
     
     <message name="RetryResponse"/>
 
     <message name="QueueTimeoutRequest">
-		<part name="timeout" type="xsd:decimal"/>
+		<part name="timeout" type="xsd:unsignedInt"/>
     </message>
     
     <message name="QueueTimeoutResponse"/>
