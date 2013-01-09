@@ -41,6 +41,8 @@ const map<string, set <string> > CfgParser::standaloneGrCfgTokens = CfgParser::i
 const map<string, set <string> > CfgParser::sePairCfgTokens = CfgParser::initSePairCfgTokens();
 const map<string, set <string> > CfgParser::grPairCfgTokens = CfgParser::initGrPairCfgTokens();
 
+const string CfgParser::auto_value = "auto";
+
 const set<string> CfgParser::allTokens =
 		list_of
 		("se")

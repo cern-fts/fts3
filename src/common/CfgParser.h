@@ -83,6 +83,9 @@ public:
 	/**
 	 * Gets the specific value from the JSON object
 	 *
+	 * Please not that in case of a map<string, int> negative values are not allowed, they will result
+	 * in throwing an exception. However, a 'auto' value is allowed that will be indicated by -1 value!
+	 *
 	 * @param path - path that specifies the value, e.g. 'share.in'
 	 * @param T - the expected type of the value (int, string, bool, vector and map are supported)
 	 *
@@ -145,6 +148,9 @@ private:
 	static const map< string, set <string> > initSePairCfgTokens();
 	/// initializes allowed JSON members for se group pair
 	static const map< string, set <string> > initGrPairCfgTokens();
+
+	/// the auto value of a share
+	static const string auto_value;
 };
 
 template <typename T>
@@ -247,7 +253,20 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path) {
 
 		pair<string, ptree> kv = v.second.front();
 		try {
-			ret[kv.first] = kv.second.get_value<int>();
+			// get the string value
+			string str_value = kv.second.get_value<string>();
+			// check if it's auto-value
+			if (str_value == auto_value && kv.first == "public" /*TODO maybe it should be allowed for every vo?*/) {
+				ret[kv.first] = -1;
+			} else {
+				// get the integer value
+				int value = kv.second.get_value<int>();
+				// make sure it's not negative
+				if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
+				// set the value
+				ret[kv.first] = value;
+			}
+
 		} catch(ptree_bad_data& ex) {
 			throw Err_Custom("Wrong value type of " + kv.first);
 		}
