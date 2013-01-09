@@ -131,19 +131,20 @@ bool ConfigurationAssigner::assignShareCfg(list<cfg_type> arg) {
 		// ('isTherelinkConfig' will return 'false' also if the link configuration state is 'off'
 		if (!db->isThereLinkConfig(source, destination)) continue;
 
-		// if there is a link a configuration will be assigned
-		assign_count++;
-
 		// check if there is a VO share
 		scoped_ptr<ShareConfig> ptr (
 				db->getShareConfig(source, destination, vo)
 			);
 
 		if (ptr.get()) {
+			// if it is a auto-share don't assign a configuration
+			if (ptr->active_transfers == auto_share) continue;
 			// assign the share configuration to transfer job
 			db->addJobShareConfig(
 					file->JOB_ID, ptr->source, ptr->destination, ptr->vo
 				);
+			// a configuration has been assigned
+			assign_count++;
 			// set the respective flags
 			both.first |= c.first;
 			both.second |= c.second;
@@ -173,10 +174,14 @@ bool ConfigurationAssigner::assignShareCfg(list<cfg_type> arg) {
 			db->addShareConfig(ptr.get());
 		}
 
+		// if it is a auto-share don't assign a configuration
+		if (ptr->active_transfers == auto_share) continue;
 		// assign the share configuration to transfer job
 		db->addJobShareConfig(
 				file->JOB_ID, ptr->source, ptr->destination, ptr->vo
 			);
+		// a configuration has been assigned
+		assign_count++;
 		// set the respective flags
 		both.first |= c.first;
 		both.second |= c.second;

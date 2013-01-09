@@ -120,6 +120,8 @@ private:
 	 * @return SE name
 	 */
 	string fileUrlToSeName(string url);
+
+	static const int auto_share = -1;
 };
 
 } /* namespace server */
