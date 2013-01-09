@@ -212,6 +212,9 @@ int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _re
 		// set the number of retries
 		DBSingleton::instance().getDBObjectInstance()->setRetry(retry);
 
+		// log it
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the retry value to " << retry << commit;
+
 	} catch(Err& ex) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -251,6 +254,9 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
 
 		// set the number of retries
 		DBSingleton::instance().getDBObjectInstance()->setMaxTimeInQueue(timeout);
+
+		// log it
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the maximum timeout in the queue to " << timeout << commit;
 
 	} catch(Err& ex) {
 
