@@ -56,11 +56,21 @@ int main(int ac, char* av[]) {
 		optional<bool> drain = cli->drain();
 		if (drain.is_initialized()) {
 			ctx.doDrain(drain.get());
-			return 0;
+		}
+
+		optional<int> retry = cli->retry();
+		if (retry.is_initialized()) {
+			ctx.retrySet(*retry);
+		}
+
+		optional<unsigned> queueTimeout = cli->queueTimeout();
+		if (queueTimeout.is_initialized()) {
+			ctx.queueTimeoutSet(*queueTimeout);
 		}
 
 		config__Configuration *config = soap_new_config__Configuration(ctx, -1);
 		config->cfg = cli->getConfigurations();
+		if (config->cfg.empty()) return 0;
 
 		implcfg__setConfigurationResponse resp;
 		ctx.setConfiguration(config, resp);

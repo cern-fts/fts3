@@ -36,6 +36,8 @@ SetCfgCli::SetCfgCli() {
 	// add commandline options specific for fts3-transfer-submit
 	specific.add_options()
 			("drain", value<string>(), "If set to 'on' drains the given endpoint.")
+			("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
+			("queue-timeout", value<unsigned>(), "Sets the maximum time transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
 			;
 
 	// add hidden options (not printed in help)
@@ -109,5 +111,23 @@ optional<bool> SetCfgCli::drain() {
 	}
 
 	return optional<bool>();
+}
+
+optional<int> SetCfgCli::retry() {
+
+	if (vm.count("retry")) {
+		return vm["retry"].as<int>();
+	}
+
+	return optional<int>();
+}
+
+optional<unsigned> SetCfgCli::queueTimeout() {
+
+	if (vm.count("queue-timeout")) {
+		return vm["queue-timeout"].as<unsigned>();
+	}
+
+	return optional<unsigned>();
 }
 

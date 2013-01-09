@@ -111,6 +111,20 @@ public:
 	 */
 	optional<bool> drain();
 
+	/**
+	 * Check the retry option
+	 *
+	 * @return the number of retries if it has been set, otherwise the optional is not initialized
+	 */
+	optional<int> retry();
+
+	/**
+	 * Check the queue timeout
+	 *
+	 * @return the queue timeout if it has been set, otherwise the optional is not initialized
+	 */
+	optional<unsigned> queueTimeout();
+
 private:
 	/// JSON configurations specified by user
 	vector<string> cfgs;

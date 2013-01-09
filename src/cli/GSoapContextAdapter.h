@@ -251,6 +251,16 @@ public:
 	/**
 	 * TODO
 	 */
+	void retrySet(int retry);
+
+	/**
+	 * TODO
+	 */
+	void queueTimeoutSet(unsigned timeout);
+
+	/**
+	 * TODO
+	 */
 	void getLog(string& logname, string jobId);
 
 	///@{

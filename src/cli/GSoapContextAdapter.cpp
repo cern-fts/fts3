@@ -475,6 +475,20 @@ void GSoapContextAdapter::prioritySet(string jobId, int priority) {
 	}
 }
 
+void GSoapContextAdapter::retrySet(int retry) {
+	implcfg__setRetryResponse resp;
+	if (soap_call_implcfg__setRetry(ctx, endpoint.c_str(), 0, retry, resp)) {
+		handleSoapFault("Operation retrySet failed.");
+	}
+}
+
+void GSoapContextAdapter::queueTimeoutSet(unsigned timeout) {
+	implcfg__setQueueTimeoutResponse resp;
+	if (soap_call_implcfg__setQueueTimeout(ctx, endpoint.c_str(), 0, timeout, resp)) {
+		handleSoapFault("Operation queueTimeoutSet failed.");
+	}
+}
+
 void GSoapContextAdapter::getLog(string& logname, string jobId) {
 
 	log__GetLogResponse resp;
