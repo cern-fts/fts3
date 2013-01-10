@@ -838,7 +838,7 @@ function cancel()
     echo "fts-transfer-cancel - failed (Exit cod = $res"
     return $?
     fi
-    grep "Canceled" message > /dev/null
+    grep -i "Canceled" message > /dev/null
     if [ $? != 0 ]; then
     echo "fts-transfer-cancel - failed (undefined reason:"
     cat message
