@@ -1415,8 +1415,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
         for (soci::rowset<std::string>::const_iterator i = rs.begin();
              i != rs.end(); ++i) {
-            if      (i->compare("FAILED"))   ++nFailedLastHour;
-            else if (i->compare("FINISHED")) ++nFinishedLastHour;
+            if      (i->compare("FAILED") == 0)   ++nFailedLastHour;
+            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour;
         }
 
 
