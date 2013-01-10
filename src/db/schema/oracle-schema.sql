@@ -733,75 +733,7 @@ CREATE TABLE t_schema_vers (
 );
 INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 
-
-
-CREATE TABLE t_file_backup (
-   file_id		INTEGER
-   ,job_id		CHAR(36)
-   ,file_state		VARCHAR2(32)
-  ,logical_name      	VARCHAR2(1100)
-  ,symbolicName      	VARCHAR2(255)  
-  ,transferHost       	VARCHAR2(255)
-  ,source_surl      	VARCHAR2(1100)
-  ,dest_surl		VARCHAR2(1100)
-  ,agent_dn		VARCHAR2(1024)
-  ,error_scope          VARCHAR2(32)
-  ,error_phase          VARCHAR2(32)
-  ,reason_class		VARCHAR2(32)
-  ,reason           	VARCHAR2(2048)
-  ,num_failures         INTEGER
-  ,current_failures	INTEGER
-  ,catalog_failures	INTEGER
-  ,prestage_failures	INTEGER
-  ,filesize         	INTEGER
-  ,checksum         	VARCHAR2(100)
-  ,finish_time		TIMESTAMP WITH TIME ZONE
-  ,start_time		TIMESTAMP WITH TIME ZONE
-  ,internal_file_params    VARCHAR2(255)
-  ,job_finished          TIMESTAMP WITH TIME ZONE DEFAULT NULL
-  ,pid INTEGER
-  ,TX_DURATION		NUMBER
-  ,throughput           NUMBER
-);
-
-CREATE TABLE t_job_backup (
-   job_id		CHAR(36)
-  ,job_state       	VARCHAR2(32)
-  ,reuse_job           	VARCHAR2(3)
-  ,cancel_job           CHAR(1)
-  ,job_params       	VARCHAR2(255)
-  ,source            	VARCHAR2(255)
-  ,dest              	VARCHAR2(255)
-  ,source_se         	VARCHAR2(255)
-  ,dest_se           	VARCHAR2(255)
-  ,user_dn          	VARCHAR2(1024)
-  ,agent_dn         	VARCHAR2(1024)
-  ,user_cred        	VARCHAR2(255)
-  ,submitHost       	VARCHAR2(255)  
-  ,cred_id              VARCHAR2(100)
-  ,voms_cred            BLOB
-  ,vo_name              VARCHAR2(50)
-  ,reason           	VARCHAR2(2048)
-  ,submit_time      	TIMESTAMP WITH TIME ZONE DEFAULT SYSTIMESTAMP AT TIME ZONE '+00:00'
-  ,finish_time      	TIMESTAMP WITH TIME ZONE
-  ,priority      	INTEGER DEFAULT 3
-  ,submit_host		VARCHAR2(255)
-  ,max_time_in_queue	INTEGER
-  ,space_token          VARCHAR2(255)
-  ,storage_class        VARCHAR2(255)
-  ,myproxy_server       VARCHAR2(255)
-  ,src_catalog          VARCHAR2(1024)
-  ,src_catalog_type     VARCHAR2(1024)
-  ,dest_catalog         VARCHAR2(1024)
-  ,dest_catalog_type    VARCHAR2(1024)
-  ,internal_job_params  VARCHAR2(255)
-  ,overwrite_flag       CHAR(1) DEFAULT NULL
-  ,job_finished         TIMESTAMP WITH TIME ZONE DEFAULT NULL
-  ,source_space_token 	VARCHAR2(255)
-  ,source_token_description VARCHAR2(255)
-  ,copy_pin_lifetime INTEGER default NULL
-  ,lan_connection CHAR(1) default NULL
-  ,fail_nearline CHAR(1) default NULL
-  ,checksum_method CHAR(1) default NULL);
+CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
+CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 
 exit;
