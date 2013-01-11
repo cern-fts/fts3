@@ -207,7 +207,7 @@ int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _re
 		cmd << "fts-config-set --retry " << retry;
 
 		// audit the operation
-		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "debug");
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "retry");
 
 		// set the number of retries
 		DBSingleton::instance().getDBObjectInstance()->setRetry(retry);
@@ -250,7 +250,7 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
 		cmd << "fts-config-set --queue-timeout " << timeout;
 
 		// audit the operation
-		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "debug");
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "queue-timeout");
 
 		// set the number of retries
 		DBSingleton::instance().getDBObjectInstance()->setMaxTimeInQueue(timeout);
