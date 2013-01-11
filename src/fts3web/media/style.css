@@ -176,6 +176,35 @@ tr.even {
   background: #FFFFCC;
 }
 
+/* States */
+td.SUBMITTED {
+  background: #FFFFAA;
+}
+
+td.READY {
+  background: #99FFFF;
+}
+
+td.ACTIVE {
+  background: #AAAAFF;
+}
+
+td.FAILED {
+  background: #FFAAAA;
+}
+
+td.FINISHED {
+  background: #AAFFAA
+}
+
+td.FINISHEDDIRTY {
+  background: #AAAAAA;
+}
+
+td.CANCELED {
+  background: #FF7777;
+}
+
 /* Job list */
 table.jobList td {
   text-align: center;
@@ -183,34 +212,6 @@ table.jobList td {
 
 table.jobList tr td:nth-child(1) {
   text-align: left;
-}
-
-table.jobList tr.FAILED td:nth-child(3) {
-  background: #FFAAAA;
-}
-
-table.jobList tr.FINISHED td:nth-child(3) {
-  background: #AAFFAA
-}
-
-table.jobList tr.SUBMITTED td:nth-child(3) {
-  background: #FFFFAA
-}
-
-table.jobList tr.READY td:nth-child(3) {
-  background: #99FFFF
-}
-
-table.jobList tr.ACTIVE td:nth-child(3) {
-  background: #AAAAFF
-}
-
-table.jobList tr.FINISHEDDIRTY td:nth-child(3) {
-  background: #AAAAAA;
-}
-
-table.jobList tr.CANCELED td:nth-child(3) {
-  background: #FF7777;
 }
 
 /* File list */
@@ -222,32 +223,9 @@ table.fileList tr td:nth-child(1) {
   text-align: left;
 }
 
-table.fileList tr.FAILED td:nth-child(4) {
-  background: #FFAAAA;
-}
-
-table.fileList tr.FINISHED td:nth-child(4) {
-  background: #AAFFAA;
-}
-
-table.fileList tr.SUBMITTED td:nth-child(4) {
-  background: #FFFFAA;
-}
-
-table.fileList tr.READY td:nth-child(4) {
-  background: #99FFFF;
-}
-
-table.fileList tr.ACTIVE td:nth-child(4) {
-  background: #AAAAFF;
-}
-
-table.fileList tr.FINISHEDDIRTY td:nth-child(4) {
-  background: #AAAAAA;
-}
-
-table.fileList tr.CANCELED td:nth-child(4) {
-  background: #FF7777;
+/* Queue */
+table.queueList tr td {
+  text-align: center;
 }
 
 /* Statistics */

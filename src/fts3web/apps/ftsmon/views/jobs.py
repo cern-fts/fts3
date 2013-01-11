@@ -77,8 +77,26 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
   
   
 
-def jobQueue(httpRequest):
-  return jobIndex(httpRequest, ['READY', 'SUBMITTED'], '')
+def queue(httpRequest):
+  transfers = File.objects.filter(file_state__in = ['SUBMITTED', 'READY'])
+  transfers = transfers.order_by('-job__submit_time')
+  
+  # Paginate
+  paginator = Paginator(transfers, 50)
+  try:
+    if 'page' in httpRequest.GET:
+      transfers = paginator.page(httpRequest.GET.get('page'))
+    else:
+      transfers = paginator.page(1)
+  except PageNotAnInteger:
+      transfers = paginator.page(1)
+  except EmptyPage:
+    transfers = paginator.page(paginator.num_pages)
+  
+  return render(httpRequest, 'queue.html',
+                {'transfers': transfers,
+                 'paginator': paginator,
+                 'request': httpRequest})
 
 
 

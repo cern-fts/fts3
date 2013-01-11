@@ -38,14 +38,14 @@
     </thead>
     <tbody>
       {% for t in transferFiles %}
-        <tr class="{{ t.file_state }} {% cycle 'odd' 'even' %}">
+        <tr class="{% cycle 'odd' 'even' %}">
           <td>
             <img alt="[+]" src="{{ STATIC_URL }}plus.gif"  title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
             {{ t.file_id }}
           </td>
           <td>{{ t.source_surl }}</td>
           <td>{{ t.dest_surl }}</td>
-          <td>{{ t.file_state }}</td>
+          <td class="{{ t.file_state }}">{{ t.file_state }}</td>
           <td>{% filesize t.filesize %}</td>
           <td>{{ t.throughput }} MiB/sec</td>
           <td>{{ t.finish_time }}</td>
