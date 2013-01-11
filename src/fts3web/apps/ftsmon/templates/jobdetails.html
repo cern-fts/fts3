@@ -12,7 +12,8 @@
   <p>
     Submitted by <span class="dn">'{{transferJob.user_dn}}'</span><br/>
     VO: <span class="vo">{{transferJob.vo_name}}</span><br/>
-    Received by {{transferJob.submitHost}}
+    Received by {{transferJob.submitHost}}<br/>
+    Overwrite flag: {{transferJob.overwrite_flag}}
   </p>
   
   {% if transferJob.reason %}
