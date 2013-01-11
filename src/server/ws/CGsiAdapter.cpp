@@ -15,6 +15,9 @@
 #include <boost/regex.hpp>
 
 #include "common/error.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace fts3 {
 namespace ws {
@@ -92,6 +95,11 @@ string CGsiAdapter::initHostDn() {
 	// default path to host certificate
 	const string hostCert = "/etc/grid-security/hostcert.pem";
 	string dn;
+	
+    	struct stat buffer;
+    	if (stat(hostCert.c_str(), &buffer) != 0)
+  		return std::string("");	
+	
     // check the server host certificate
 	FILE *fp = fopen(hostCert.c_str(), "r");
 	X509 *cert = PEM_read_X509(fp, 0, 0, 0);

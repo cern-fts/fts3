@@ -151,7 +151,7 @@ int DoServer(int argc, char** argv) {
         REGISTER_SIGNAL(SIGSYS);
 
         if (fexists(configfile) != 0) {
-            std::cerr << "fts3 server config file doesn't exist" << std::endl;
+            std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
             exit(1);
         }
 
