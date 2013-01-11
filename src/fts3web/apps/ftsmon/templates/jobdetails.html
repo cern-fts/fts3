@@ -32,6 +32,7 @@
         <th>FILE STATE</th>
         <th>FILE SIZE</th>
         <th>THROUGHPUT</th>
+        <th>START TIME</th>
         <th>FINISH TIME</th>
         <th>TRANSFER HOST</th>
       </tr>
@@ -48,6 +49,7 @@
           <td class="{{ t.file_state }}">{{ t.file_state }}</td>
           <td>{% filesize t.filesize %}</td>
           <td>{{ t.throughput }} MiB/sec</td>
+          <td>{{ t.start_time }}</td>
           <td>{{ t.finish_time }}</td>
           <td>{{ t.transferHost }}</td>
         </tr>
