@@ -3,7 +3,7 @@
 
 Name: fts-mysql
 Version: 0.0.1 
-Release: 56%{?dist}
+Release: 57%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet 
 License: ASL 2.0
@@ -67,5 +67,5 @@ rm -rf %{buildroot}
 
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-56%{?dist}
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-57%{?dist}
   - A bit like a fedora package
