@@ -31,7 +31,6 @@ include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/cred/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/ws-ifce/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
 include_directories (/usr/lib64/glib-2.0/include)
-include_directories (/usr/lib/glib-2.0/include)
 include_directories (/usr/include/glib-2.0)
 set(fts_libs "-lfts_config -lfts_common -lfts_db_generic")
 

@@ -34,7 +34,6 @@ include_directories (${fts_include_dir})
 include_directories (/usr/include/gfal2)
 include_directories (/usr/include/glib-2.0)
 include_directories (/usr/lib64/glib-2.0/include)
-include_directories (/usr/lib/glib-2.0/include)
 
 set(fts_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
 add_executable (fts_url_copy ${fts_url_copy_SOURCES})
