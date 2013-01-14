@@ -288,13 +288,15 @@ void JobSubmitter::checkSe(string se) {
 
 	return;
 
+	BdiiBrowser& bdii = BdiiBrowser::getInstance();
 	// check in BDII if the SE is in 'production' or 'online' state
 	// TODO
 	// ...
+	if (!bdii.getSeStatus(se)) throw Err_Custom("The SE: " +  se + " has an incorrect status in the BDII!");
 
 	// check in BDII if the submitter's VO is on the VOsAllowed list
 	// TODO
-	// ...
+	if (!bdii.isVoAllowed(se, vo)) throw Err_Custom("The VO: " + vo + " is not on the allowed VOs list of the SE: " + se + " in the BDII!");
 
 	// TODO should be loaded from a URL (how often?)
 	OsgParser osg ("~/osg.xml");
