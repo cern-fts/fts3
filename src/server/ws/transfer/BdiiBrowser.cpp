@@ -301,5 +301,22 @@ bool BdiiBrowser::isVoAllowed(string se, string vo) {
 	return true;
 }
 
+template<>
+string BdiiBrowser::parseBdiiEntryAttribute<string>(berval **value) {
+
+	if (value && value[0] && value[0]->bv_val) return value[0]->bv_val;
+	return string();
+}
+
+template<>
+list<string> BdiiBrowser::parseBdiiEntryAttribute< list<string> >(berval **value) {
+
+	list<string> ret;
+	for (int i = 0; value && value[i] && value[i]->bv_val; i++) {
+		ret.push_back(value[i]->bv_val);
+	}
+	return ret;
+}
+
 } /* namespace ws */
 } /* namespace fts3 */
