@@ -34,15 +34,20 @@
 #include "ws/CGsiAdapter.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
 
+#include "ws/transfer/OsgParser.h"
+#include "ws/transfer/BdiiBrowser.h"
+
 #include <boost/lexical_cast.hpp>
 
 #include <algorithm>
 
+#include <boost/optional.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
 
 using namespace db;
 using namespace fts3::ws;
+using namespace boost;
 using namespace boost::assign;
 
 
@@ -98,18 +103,14 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 			std::string errMsg = "Can't extract hostname from url " + *src;
 			throw Err_Custom(errMsg);
 		}
-		if (db->isSeBlacklisted(sourceSe)) {
-			throw Err_Custom("The source SE: " + sourceSe + " is blacklisted!");
-		}
+		checkSe(sourceSe);
 		
 		destinationSe = fileUrlToSeName(*dest);
 		if(destinationSe.empty()){
 			std::string errMsg = "Can't extract hostname from url " + *dest;		
 			throw Err_Custom(errMsg);
 		}
-		if (db->isSeBlacklisted(destinationSe)) {
-			throw Err_Custom("The destination SE: " + destinationSe + " is blacklisted!");
-		}
+		checkSe(destinationSe);
 	}
 
 	// extract the job elements from tns3__TransferJob object and put them into a vector
@@ -278,5 +279,31 @@ string JobSubmitter::fileUrlToSeName(string url) {
 
 	} else
 		return string();
+}
+
+void JobSubmitter::checkSe(string se) {
+
+	// check if the SE is blacklisted
+	if (db->isSeBlacklisted(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
+
+	return;
+
+	// check in BDII if the SE is in 'production' or 'online' state
+	// TODO
+	// ...
+
+	// check in BDII if the submitter's VO is on the VOsAllowed list
+	// TODO
+	// ...
+
+	// TODO should be loaded from a URL (how often?)
+	OsgParser osg ("~/osg.xml");
+	// check in the OSG if the SE is 'active'
+	optional<bool> state = osg.isActive(se);
+	if (state.is_initialized() && !(*state)) throw Err_Custom("The SE: " + se + " is not active in the OSG!");
+	// check in the OSG if the SE is 'disabled'
+	state = osg.isDisabled(se);
+	if (state.is_initialized() && *state) throw Err_Custom("The SE: " + se + " is disabled in the OSG!");
+
 }
 

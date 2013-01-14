@@ -145,6 +145,18 @@ private:
 	void init(tns3__TransferParams *jobParams);
 
 	/**
+	 * Checks:
+	 * - if the SE has been blacklisted (if yes an exception is thrown)
+	 * - if the SE is in BDII and the state is either 'production' or 'online'
+	 *   (if it is in BDII but the state is wrong an exception is thrown)
+	 * - if the SE is in BDII and the submitted VO is on the VOsAllowed list
+	 *   (if it is in BDII but the VO is not on the list an exception is thrown)
+	 * - if the SE is in the OSG and if is's active and not disabled
+	 *   (it it is in BDII but the conditions are not met an exception is thrown)
+	 */
+	void checkSe(string se);
+
+	/**
 	 * Checks whether the right protocol has been used
 	 *
 	 * @file - source or destination file

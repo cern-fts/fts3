@@ -39,10 +39,11 @@
 #include <boost/thread.hpp>
 
 namespace fts3 {
-namespace common {
+namespace ws {
 
 using namespace std;
 using namespace boost;
+using namespace common;
 
 class BdiiBrowser: public ThreadSafeInstanceHolder<BdiiBrowser> {
 

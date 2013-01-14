@@ -28,7 +28,7 @@
 #include <sstream>
 
 namespace fts3 {
-namespace common {
+namespace ws {
 
 // TODO reorganize + do queries for glue2
 
