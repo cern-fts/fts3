@@ -178,7 +178,7 @@ void ProxyCertificateDelegator::delegate() {
             	printer.delegation_request_retry();
             	return delegate();
             }
-            throw string("delegation: " + errMsg);
+            throw string(errMsg);
         }
 
         printer.delegation_request_success(true);
