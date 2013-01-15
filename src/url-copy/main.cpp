@@ -728,6 +728,7 @@ int main(int argc, char **argv) {
             }
 
             log << fileManagement->timestamp() << "INFO Transfer Starting" << '\n';
+	   
 		
             if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
                 diff = std::difftime(std::time(NULL), start);
