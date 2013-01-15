@@ -52,7 +52,7 @@ void MsgPrinter::delegation_request_retry() {
 
 void MsgPrinter::delegation_request_error(string error) {
 
-	if (!verbose) return;
+//	if (!verbose) return;
 
 	if (!json) {
 		cout << "delegation: " << error << endl;
