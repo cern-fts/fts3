@@ -2457,14 +2457,16 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::get
         std::string source, dest, vo;
         soci::statement stmt = (sql.prepare << "SELECT source, destination, vo FROM t_job_share_config WHERE job_id = :jobId",
                                                soci::use(job_id), soci::into(source), soci::into(dest), soci::into(vo));
-
-        while (stmt.execute(true)) {
-            boost::tuple<std::string, std::string, std::string> tmp;
-            boost::get<0>(tmp) = source;
-            boost::get<1>(tmp) = dest;
-            boost::get<2>(tmp) = vo;
-            vConfig.push_back(tmp);
-        }
+       if (stmt.execute(true)) {
+            do {
+            	boost::tuple<std::string, std::string, std::string> tmp;
+            	boost::get<0>(tmp) = source;
+            	boost::get<1>(tmp) = dest;
+            	boost::get<2>(tmp) = vo;
+            	vConfig.push_back(tmp);
+            } while (stmt.fetch());
+        }	
+	
     }
     catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
