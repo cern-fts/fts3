@@ -88,6 +88,58 @@ void ConfigurationHandler::add() {
 	cfg->save();
 }
 
+vector<string> ConfigurationHandler::get() {
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
+
+	vector<string> ret;
+
+	// get all standalone configurations (SE names only)
+	vector<string> secfgs = DBSingleton::instance().getDBObjectInstance()->getAllStandAlloneCfgs();
+	vector<string>::iterator it;
+	// add the configurations for the SEs to the response
+	for (it = secfgs.begin(); it != secfgs.end(); it++) {
+		// get the SE name
+		string se = *it;
+		// if it's a wildcard change it to 'any', due to the convention
+		if (se == Configuration::wildcard) se = Configuration::any;
+		// check if it's a group or a SE
+		if (db->checkGroupExists(*it)) {
+			cfg.reset(
+					new StandaloneGrCfg(dn, se)
+				);
+		} else {
+			cfg.reset(
+					new StandaloneSeCfg(dn, se)
+				);
+		}
+
+		ret.push_back(cfg->json());
+	}
+	// get all pair configuration (source-destination pairs only)
+	vector< std::pair<string, string> > paircfgs = DBSingleton::instance().getDBObjectInstance()->getAllPairCfgs();
+	vector< std::pair<string, string> >::iterator it2;
+	// add the configurations for the pairs to the response
+	for (it2 = paircfgs.begin(); it2 != paircfgs.end(); it2++) {
+
+		bool grPair = db->checkGroupExists(it2->first) && db->checkGroupExists(it2->second);
+
+		if (grPair) {
+			cfg.reset(
+					new GrPairCfg(dn, it2->first, it2->second)
+				);
+		} else {
+			cfg.reset(
+					new SePairCfg(dn, it2->first, it2->second)
+				);
+		}
+
+		ret.push_back(cfg->json());
+	}
+
+	return ret;
+}
+
 vector<string> ConfigurationHandler::get(string name) {
 
 	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;

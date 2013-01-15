@@ -34,6 +34,7 @@
 #include <string>
 #include <set>
 #include <exception>
+#include <utility>
 
 #include <boost/regex.hpp>
 #include <boost/algorithm/string.hpp>
@@ -101,16 +102,19 @@ int fts3::implcfg__getConfiguration(soap* soap, string vo, string name, string s
 		CGsiAdapter cgsi(soap);
 		string dn = cgsi.getClientDn();
 
+		bool all = source.empty() && destination.empty();
 		bool standalone = !source.empty() && destination.empty();
 		bool pair = !source.empty() && !destination.empty();
 		bool symbolic_name = !name.empty();
 
-		if (symbolic_name && (standalone || pair) ) {
-			throw Err_Custom("Either a stand alone configuration or pair configuration or symbolic name may be specified for the query!");
-		}
+//		if (symbolic_name && (standalone || pair) ) {
+//			throw Err_Custom("Either a stand alone configuration or pair configuration or symbolic name may be specified for the query!");
+//		}
 
 		ConfigurationHandler handler (dn);
-		if (standalone) {
+		if (all) {
+			response.configuration->cfg = handler.get();
+		} else if (standalone) {
 			response.configuration->cfg = handler.get(source);
 		} else if (pair) {
 			response.configuration->cfg = handler.getPair(source, destination);
