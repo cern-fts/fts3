@@ -48,6 +48,8 @@ public:
 	void cancelAll(py::list ids);
 	py::str getStatus(py::str id);
 
+	py::str getVersion(void);
+
 private:
 	GSoapContextAdapter ctx;
 };

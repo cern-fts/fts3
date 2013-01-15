@@ -50,6 +50,7 @@ BOOST_PYTHON_MODULE(libftspython) {
 			.def("cancel", &PythonApi::cancel)
 			.def("cancel", &PythonApi::cancelAll)
 			.def("status", &PythonApi::getStatus)
+			.def("getVersion", &PythonApi::getVersion)
 			;
 
 	py::class_<fts3::cli::Job>("Job", py::init<py::tuple>())

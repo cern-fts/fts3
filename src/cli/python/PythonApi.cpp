@@ -73,6 +73,10 @@ py::str PythonApi::getStatus(py::str id) {
 	return s.jobStatus.c_str();
 }
 
+py::str PythonApi::getVersion() {
+    return ctx.getVersion().c_str();
+}
+
 }
 }
 
