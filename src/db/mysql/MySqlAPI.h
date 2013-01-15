@@ -230,6 +230,10 @@ public:
     
     virtual void setToFailOldQueuedJobs();
 
+    virtual std::vector<std::string> getAllStandAlloneCfgs();
+
+    virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
+
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;

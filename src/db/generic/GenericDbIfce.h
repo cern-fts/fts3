@@ -274,7 +274,11 @@ public:
     
     virtual void setMaxTimeInQueue(int afterXHours) = 0;
     
-    virtual void setToFailOldQueuedJobs() = 0;            
+    virtual void setToFailOldQueuedJobs() = 0;
+
+    virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
+
+    virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
 };
 
 

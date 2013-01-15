@@ -6008,6 +6008,113 @@ void OracleAPI::setToFailOldQueuedJobs(){
 
 }
 
+std::vector<std::string> OracleAPI::getAllStandAlloneCfgs() {
+
+	std::vector<std::string> ret;
+
+    std::string tag = "getAllStandAlloneCfgs";
+    std::string query = "select SOURCE from T_LINK_CONFIG where DESTINATION = '*'";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        r = conn->createResultset(s);
+
+        while (r->next()) {
+        		ret.push_back(r->getString(1));
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+    return ret;
+}
+
+std::vector< std::pair<std::string, std::string> > OracleAPI::getAllPairCfgs() {
+
+
+	std::vector< std::pair<std::string, std::string> > ret;
+
+    std::string tag = "getAllPairCfgs";
+    std::string query = "select SOURCE, DESTINATION from T_LINK_CONFIG where SOURCE <> '*' and DESTINATION <> '*'";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+
+    ThreadTraits::LOCK_R lock(_mutex);
+    try {
+
+        if (!conn->checkConn()) return ret;
+
+        s = conn->createStatement(query, tag);
+        r = conn->createResultset(s);
+
+        while (r->next()) {
+        		ret.push_back(
+        				std::make_pair(r->getString(1), r->getString(2))
+        			);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+        if (conn) {
+            conn->rollback();
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+    return ret;
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

@@ -2817,6 +2817,50 @@ void MySqlAPI::setToFailOldQueuedJobs(){
 }
 
 
+std::vector<std::string> MySqlAPI::getAllStandAlloneCfgs() {
+
+    soci::session sql(connectionPool);
+
+    std::vector<std::string> ret;
+
+    try {
+		soci::rowset<std::string> rs = (sql.prepare << "select source from t_link_config where destination = '*'");
+
+		for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+			ret.push_back(*i);
+		}
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return ret;
+}
+
+std::vector< std::pair<std::string, std::string> > MySqlAPI::getAllPairCfgs() {
+
+	soci::session sql(connectionPool);
+
+    std::vector< std::pair<std::string, std::string> > ret;
+
+    try {
+		soci::rowset<soci::row> rs = (sql.prepare << "select source, destination from t_link_config where source <> '*' and destination <> '*'");
+
+		for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+			soci::row const& row = *i;
+			ret.push_back(
+					std::make_pair(row.get<std::string>("source"), row.get<std::string>("destination"))
+				);
+		}
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return ret;
+}
+
+
 
 // the class factories
 

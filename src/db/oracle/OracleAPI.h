@@ -237,7 +237,11 @@ public:
     
     virtual void setMaxTimeInQueue(int afterXHours); 
     
-    virtual void setToFailOldQueuedJobs();              
+    virtual void setToFailOldQueuedJobs();
+
+    virtual std::vector<std::string> getAllStandAlloneCfgs();
+
+    virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
 
 private:
 	OracleConnection *conn;	
