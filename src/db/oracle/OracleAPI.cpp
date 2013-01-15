@@ -937,6 +937,8 @@ void OracleAPI::getSe(Se* &se, std::string seName) {
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    ThreadTraits::LOCK_R lock(_mutex);
+        
     try {
         s = conn->createStatement(query_stmt, tag);
         s->setString(1, seName);
