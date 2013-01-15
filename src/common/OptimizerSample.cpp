@@ -91,7 +91,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
 				(*iter).numberOfFinishedAll = numberOfFinishedAll;
 				(*iter).numberOfFailedAll = numberOfFailedAll;
 	   }else if((*iter).numberOfFailedAll != numberOfFailedAll){
-	   			(*iter).numOfActivePerPair -= 2;
+	   			(*iter).numOfActivePerPair -= 1;
 				(*iter).numFinished = numFinished;
 				(*iter).numFailed = numFailed;  
 				(*iter).successRate = trSuccessRateForPair;
