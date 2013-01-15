@@ -37,7 +37,7 @@ SetCfgCli::SetCfgCli() {
 	specific.add_options()
 			("drain", value<string>(), "If set to 'on' drains the given endpoint.")
 			("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
-			("queue-timeout", value<int>(), "Sets the maximum time transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
+			("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
 			;
 
 	// add hidden options (not printed in help)
