@@ -721,6 +721,29 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
 
 		AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job_id);
 
+		// check job status
+		vector<JobStatus*> fileStatuses;
+		DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(job_id, fileStatuses);
+
+		string status;
+		if(!fileStatuses.empty()){
+			// get the job status
+			status = (*fileStatuses.begin())->jobStatus;
+			// release the memory
+			vector<JobStatus*>::iterator it;
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+				delete *it;
+			}
+		} else {
+			throw Err_Custom("Job ID <" + job_id + "> was not found");
+		}
+
+		// check if the job is not finished already
+		if (JobStatusHandler::getInstance().isTransferFinished(status)) {
+			throw Err_Custom("The transfer job is in " + status + " state, it is not possible to set the priority");
+		}
+
+
 		string cmd = "fts-set-priority " + job_id + " " + lexical_cast<string>(priority);
 
 		DBSingleton::instance().getDBObjectInstance()->setPriority(job_id, priority);
