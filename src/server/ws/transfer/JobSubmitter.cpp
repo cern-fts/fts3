@@ -53,6 +53,8 @@ using namespace boost::assign;
 
 const regex JobSubmitter::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
+const string JobSubmitter::myosg_path = "/var/lib/fts3/osg.xml";
+
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
 
@@ -299,7 +301,7 @@ void JobSubmitter::checkSe(string se) {
 	if (!bdii.isVoAllowed(se, vo)) throw Err_Custom("The VO: " + vo + " is not on the allowed VOs list of the SE: " + se + " in the BDII!");
 
 	// TODO should be loaded from a URL (how often?)
-	OsgParser osg ("~/osg.xml");
+	OsgParser osg (myosg_path);
 	// check in the OSG if the SE is 'active'
 	optional<bool> state = osg.isActive(se);
 	if (state.is_initialized() && !(*state)) throw Err_Custom("The SE: " + se + " is not active in the OSG!");
