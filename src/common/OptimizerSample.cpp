@@ -82,7 +82,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
        
         if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
       
-	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished
+	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished	   
 	   			if(trSuccessRateForPair >= 80)
 					(*iter).numOfActivePerPair += 2;              
 				(*iter).numFinished = numFinished;

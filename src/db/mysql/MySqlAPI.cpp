@@ -1390,7 +1390,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     bool allowed = false;
     try {
         int nActiveSource, nActiveDest;
-        int nFailedLastHour=0, nFinishedLastHour=0;
+        double nFailedLastHour=0, nFinishedLastHour=0;
         int nActive;
         int nFailedAll, nFinishedAll;
 
@@ -1415,8 +1415,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
         for (soci::rowset<std::string>::const_iterator i = rs.begin();
              i != rs.end(); ++i) {
-            if      (i->compare("FAILED") == 0)   ++nFailedLastHour;
-            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour;
+            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
+            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
         }
 
 
@@ -1442,9 +1442,10 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                soci::into(nFailedAll);
 
         double ratioSuccessFailure = 0;
-        if(nFinishedLastHour > 0)
+        if(nFinishedLastHour > 0){	    
             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-
+	}
+		
         allowed = optimizerObject.transferStart(nFinishedLastHour, nFailedLastHour,
                                                 source_hostname, destin_hostname,
                                                 nActive, nActiveSource, nActiveDest,
