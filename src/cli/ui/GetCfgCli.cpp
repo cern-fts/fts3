@@ -49,17 +49,17 @@ string GetCfgCli::getName() {
 	return string();
 }
 
-optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {
-
-	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
-
-	bool standalone = !getSource().empty();
-	bool pair = standalone && !getDestination().empty();
-
-	if ( (standalone || pair) && !getName().empty()) {
-		throw string("You may specify either a stand alone configuration, pair configuration or the symbolic name for querying!");
-	}
-
-	return *ctx;
-}
+//optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {
+//
+//	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+//
+//	bool standalone = !getSource().empty();
+//	bool pair = standalone && !getDestination().empty();
+//
+//	if ( (standalone || pair) && !getName().empty()) {
+//		throw string("You may specify either a stand alone configuration, pair configuration or the symbolic name for querying!");
+//	}
+//
+//	return *ctx;
+//}
 
