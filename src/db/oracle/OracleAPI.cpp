@@ -228,7 +228,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
 	    " AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
-            " AND rownum <=5  ORDER BY t_job.priority DESC"
+            " AND rownum <=10  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time)";
     }else{
     tag +="1";
@@ -263,7 +263,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
 	    " AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "	    
-            " AND rownum <=5  ORDER BY t_job.priority DESC"
+            " AND rownum <=10  ORDER BY t_job.priority DESC"
             " , SYS_EXTRACT_UTC(t_job.submit_time)";    
     }	    
 
