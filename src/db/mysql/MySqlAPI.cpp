@@ -2524,11 +2524,12 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
                "WHERE t_file.file_state = 'ACTIVE' AND "
                "      t_file.job_id = t_job.job_id AND "
                "      t_job.source_se = :source AND "
+        	   "	  t_job.vo_name = :vo AND "
                "      t_job.job_id = t_job_share_config.job_id AND "
                "      t_job_share_config.source = '(*)' AND "
                "      t_job_share_config.destination = '*' AND "
                "      t_job_share_config.vo = :vo",
-               soci::use(se), soci::use(vo), soci::into(nActiveOutbound);
+               soci::use(se), soci::use(vo), soci::use(vo), soci::into(nActiveOutbound);
     }
     catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
@@ -2547,11 +2548,12 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
                "WHERE t_file.file_state = 'ACTIVE' AND "
                "      t_file.job_id = t_job.job_id AND "
                "      t_job.dest_se = :source AND "
+        	   "	  t_job.vo_name = :vo AND "
                "      t_job.job_id = t_job_share_config.job_id AND "
                "      t_job_share_config.source = '*' AND "
                "      t_job_share_config.destination = '(*)' AND "
                "      t_job_share_config.vo = :vo",
-               soci::use(se), soci::use(vo), soci::into(nActiveInbound);
+               soci::use(se), soci::use(vo), soci::use(vo), soci::into(nActiveInbound);
     }
     catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
