@@ -63,4 +63,13 @@
     {% endfor %}
   </tbody>
 </table>
+
+<script type="text/javascript">
+// Disable refresh when clicking a link on the table 
+var disableF = function() { clearTimeout(autoRefresh); };
+var links = document.getElementsByClassName('jobList')[0].getElementsByTagName('a');
+for (var i = 0; i < links.length; i++) {
+	links[i].onclick = disableF;
+}
+</script>
 {% endblock %}
