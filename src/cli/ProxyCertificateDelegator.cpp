@@ -171,7 +171,7 @@ void ProxyCertificateDelegator::delegate() {
         if (err == -1) {
         	printer.delegation_request_success(false);
         	string errMsg = glite_delegation_get_error(dctx);
-        	printer.delegation_request_error(errMsg);
+//        	printer.delegation_request_error(errMsg);
 
 //            // TODO don't use string value to discover the error (???) do we need retry? yes we do!
             if (errMsg.find("key values mismatch") != string::npos) {

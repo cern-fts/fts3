@@ -272,7 +272,10 @@ void MsgPrinter::gsoap_error_msg(string msg) {
 
 	regex re (".*\"(.+)\"\nDetail: (.+)\n");
 	smatch what;
-	if (!regex_match(msg, what, re, match_extra)) return;
+	if (!regex_match(msg, what, re, match_extra)) {
+		error_msg(msg);
+		return;
+	}
 
 	if (!json) {
 		cout << "error: " << msg << endl;
