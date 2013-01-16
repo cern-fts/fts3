@@ -175,6 +175,7 @@ namespace soci
             transfer.destSURL          = v.get<std::string>("dest_surl");
             transfer.transferFileState = v.get<std::string>("file_state");
             transfer.reason            = v.get<std::string>("reason", "");
+            transfer.numFailures	   = v.get<int>("retry");
             aux_tm = v.get<struct tm>("start_time");
             transfer.start_time = timegm(&aux_tm);
             if (v.get_indicator("finish_time") == soci::i_ok) {

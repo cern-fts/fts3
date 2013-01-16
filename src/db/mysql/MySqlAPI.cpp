@@ -469,7 +469,7 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, std::vector<FileTran
     soci::session sql(connectionPool);
      try {
          soci::rowset<FileTransferStatus> rs = (sql.prepare  << "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
-                                                                "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.file_id "
+                                                                "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
                                                                 "FROM t_file WHERE t_file.job_id = :jobId",
                                                                 soci::use(requestID));
 
