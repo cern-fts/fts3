@@ -77,9 +77,9 @@ def statistics(httpRequest):
         avgsPerPair[pair_tuple] = {'avgDuration': pairAvg['tx_duration__avg'], 'avgThroughput': pairAvg['throughput__avg']}
     
     activePerPair = {}
-    for pair in Job.objects.filter(job_state__in = ACTIVE_STATES).values('source_se', 'dest_se', 'job_state').annotate(count = Count('job_state')):
-        pair_tuple = (pair['source_se'], pair['dest_se'])
-        state      = pair['job_state']
+    for pair in File.objects.filter(file_state__in = ACTIVE_STATES).values('job__source_se', 'job__dest_se', 'file_state').annotate(count = Count('file_state')):
+        pair_tuple = (pair['job__source_se'], pair['job__dest_se'])
+        state      = pair['file_state']
         count      = pair['count']
         
         if pair_tuple not in sePairs:
@@ -104,13 +104,13 @@ def statistics(httpRequest):
     
     statsDict['pairs'] = pairs
     
-    # State per VO
+    # State per VO    
     perVoDict = {}
-    for voJob in Job.objects.values('vo_name', 'job_state').annotate(count = Count('job_state')):
-        vo = voJob['vo_name']
+    for voJob in File.objects.values('file_state', 'job__vo_name').annotate(count = Count('file_state')):
+        vo = voJob['job__vo_name']
         if vo not in perVoDict:
             perVoDict[vo] = []
-        perVoDict[vo].append((voJob['job_state'], voJob['count']))
+        perVoDict[vo].append((voJob['file_state'], voJob['count']))
         
     perVo = []
     for (vo, states) in perVoDict.iteritems():
