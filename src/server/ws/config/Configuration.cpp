@@ -72,13 +72,16 @@ Configuration::Configuration(string dn) :
 Configuration::~Configuration() {
 
 	if (deleteCount)
-		db->auditConfiguration(dn, all, "delete (x" + lexical_cast<string>(deleteCount) + ")");
+//		db->auditConfiguration(dn, all, "delete (x" + lexical_cast<string>(deleteCount) + ")");
+		db->auditConfiguration(dn, all, "delete");
 
 	if (insertCount)
-		db->auditConfiguration(dn, all, "insert (x" + lexical_cast<string>(insertCount) + ")");
+//		db->auditConfiguration(dn, all, "insert (x" + lexical_cast<string>(insertCount) + ")");
+		db->auditConfiguration(dn, all, "insert");
 
 	if (updateCount)
-		db->auditConfiguration(dn, all, "update (x" + lexical_cast<string>(updateCount) + ")");
+//		db->auditConfiguration(dn, all, "update (x" + lexical_cast<string>(updateCount) + ")");
+		db->auditConfiguration(dn, all, "update");
 }
 
 string Configuration::json(map<string, int> params) {
