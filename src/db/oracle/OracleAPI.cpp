@@ -5945,7 +5945,7 @@ void OracleAPI::setToFailOldQueuedJobs(){
 	
      query3 << " select job_id from t_job where (SUBMIT_TIME < (CURRENT_TIMESTAMP - interval '";
      query3 << maxTime;
-     query3 << "' hour)) and job_state in ('SUBMITTED','READY')  ";  
+     query3 << "' hour(5))) and job_state in ('SUBMITTED','READY')  ";  
     
     
     ThreadTraits::LOCK_R lock(_mutex);
