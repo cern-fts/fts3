@@ -24,6 +24,7 @@
 
 #include "Configuration.h"
 #include "common/error.h"
+#include "common/definitions.h"
 
 #include <set>
 
@@ -190,10 +191,16 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 	cfg->state = active ? on : off;
 	cfg->symbolic_name = symbolic_name;
 
-	cfg->NOSTREAMS = protocol[Protocol::NOSTREAMS];
-	cfg->TCP_BUFFER_SIZE = protocol[Protocol::TCP_BUFFER_SIZE];
-	cfg->URLCOPY_TX_TO = protocol[Protocol::URLCOPY_TX_TO];
-	cfg->NO_TX_ACTIVITY_TO = protocol[Protocol::NO_TX_ACTIVITY_TO];
+	int value = protocol[Protocol::NOSTREAMS];
+	cfg->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
+
+	value = protocol[Protocol::TCP_BUFFER_SIZE];
+	cfg->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
+
+	value = protocol[Protocol::URLCOPY_TX_TO];
+	cfg->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
+
+//	cfg->NO_TX_ACTIVITY_TO = protocol[Protocol::NO_TX_ACTIVITY_TO];
 
 	if (update) {
 		db->updateLinkConfig(cfg.get());
@@ -255,14 +262,10 @@ map<string, int> Configuration::getProtocolMap(string source, string destination
 map<string, int> Configuration::getProtocolMap(LinkConfig* cfg) {
 
 	map<string, int> ret;
-	if (cfg->NOSTREAMS)
-		ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;
-	if (cfg->TCP_BUFFER_SIZE)
-		ret[Protocol::TCP_BUFFER_SIZE] = cfg->TCP_BUFFER_SIZE;
-	if (cfg->URLCOPY_TX_TO)
-		ret[Protocol::URLCOPY_TX_TO] = cfg->URLCOPY_TX_TO;
-	if (cfg->NO_TX_ACTIVITY_TO)
-		ret[Protocol::NO_TX_ACTIVITY_TO] = cfg->NO_TX_ACTIVITY_TO;
+	ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;
+	ret[Protocol::TCP_BUFFER_SIZE] = cfg->TCP_BUFFER_SIZE;
+	ret[Protocol::URLCOPY_TX_TO] = cfg->URLCOPY_TX_TO;
+	ret[Protocol::NO_TX_ACTIVITY_TO] = cfg->NO_TX_ACTIVITY_TO;
 
 	return ret;
 }
