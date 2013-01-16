@@ -22,9 +22,10 @@
   <table class="queueList">
     <thead>
       <tr>
-        <th>FILE STATE</th>
         <th>FILE ID</th>
+        <th>FILE STATE</th>
         <th>JOB ID</th>
+        <th>VO</th>
         <th>SOURCE URL</th>
         <th>DEST URL</th>
       </tr>
@@ -32,15 +33,16 @@
     <tbody>
       {% for t in transfers.object_list %}
         <tr class="{% cycle 'odd' 'even' %}">
+          <td>{{ t.file_id }}</td>
           <td class="{{ t.file_state }}">
             {{ t.file_state }}
           </td>
-          <td>{{ t.file_id }}</td>
           <td>
             <a href="{% url ftsmon.views.jobDetails t.job.job_id %}">
               {{ t.job.job_id }}
             </a>
           </td>
+          <td>{{ t.job.vo_name }}</td>
           <td>{{ t.source_surl }}</td>
           <td>{{ t.dest_surl }}</td>
         </tr>

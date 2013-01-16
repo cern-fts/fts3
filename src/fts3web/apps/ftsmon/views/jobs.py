@@ -79,8 +79,8 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
 
 def queue(httpRequest):
   transfers = File.objects.filter(file_state__in = ['SUBMITTED', 'READY'])
-  transfers = transfers.order_by('-job__submit_time')
-  
+  transfers = transfers.order_by('-job__submit_time', '-file_id')
+    
   # Paginate
   paginator = Paginator(transfers, 50)
   try:
