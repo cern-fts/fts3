@@ -667,6 +667,9 @@ CREATE INDEX stagereq_jobfinished_id    ON t_stage_req(job_finished);
 CREATE INDEX t_group_members_1  ON t_group_members(groupName);
 CREATE INDEX t_group_members_2  ON t_group_members(member);
 
+CREATE INDEX idx_debug      ON t_debug (debug);
+CREATE INDEX idx_source      ON t_debug (source_se);
+CREATE INDEX idx_dest      ON t_debug (dest_se);
 -- 
 --
 -- Schema version
