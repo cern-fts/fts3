@@ -51,5 +51,6 @@ public:
     time_t start_time;    
     std::string error_scope;
     std::string error_phase;
+    int fileId;
 
 };

@@ -215,7 +215,7 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
 			*status->transferFileState = tmp->transferFileState;
 
 			status->duration = tmp->finish_time - tmp->start_time;
-			status->numFailures = 0;//tmp->numFailures; //TODO retries not implemented yet
+			status->numFailures = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(_requestID, tmp->fileId);
 
 			_param_9._getFileStatusReturn->item.push_back(status);
 			delete tmp;
@@ -270,7 +270,7 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 			*status->transferFileState = tmp->transferFileState;
 
 			status->duration = tmp->finish_time - tmp->start_time;
-			status->numFailures = tmp->numFailures;
+			status->numFailures = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(_requestID, tmp->fileId);
 
 			_param_10._getFileStatus2Return->item.push_back(status);
 			delete tmp;

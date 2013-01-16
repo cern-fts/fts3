@@ -469,7 +469,7 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, std::vector<FileTran
     soci::session sql(connectionPool);
      try {
          soci::rowset<FileTransferStatus> rs = (sql.prepare  << "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
-                                                                "       t_file.reason, t_file.start_time, t_file.finish_time "
+                                                                "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.file_id "
                                                                 "FROM t_file WHERE t_file.job_id = :jobId",
                                                                 soci::use(requestID));
 
@@ -2520,14 +2520,14 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
 
     int nActiveOutbound = 0;
     try {
-        sql << "SELECT COUNT(*) FROM t_file, t_job, t_job_share_config"
-               "WHERE t_file.file_state = 'ACTIVE' AND "
-               "      t_file.job_id = t_job.job_id AND "
-               "      t_job.source_se = :source AND "
-               "      t_job.job_id = t_job_share_config.job_id AND "
-               "      t_job_share_config.source = '(*)' AND "
-               "      t_job_share_config.destination = '*' AND "
-               "      t_job_share_config.vo = :vo",
+        sql << "SELECT COUNT(*) FROM t_file f, t_job j, t_job_share_config c"
+               "WHERE f.file_state = 'ACTIVE' AND "
+               "      f.job_id = j.job_id AND "
+               "      j.source_se = :source AND "
+               "      j.job_id = c.job_id AND "
+               "      c.source = '(*)' AND "
+               "      c.destination = '*' AND "
+               "      c.vo = :vo",
                soci::use(se), soci::use(vo), soci::into(nActiveOutbound);
     }
     catch (std::exception& e) {
