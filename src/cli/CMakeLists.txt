@@ -254,4 +254,7 @@ install(TARGETS         fts_cli_common
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 	
 install (TARGETS ftspython
-         LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}/fts)	
+         LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}/fts)
+install (FILES       ${CMAKE_CURRENT_SOURCE_DIR}/python/__init__.py
+         DESTINATION ${PYTHON_SITE_PACKAGES}/fts)
+
