@@ -2,7 +2,7 @@
 #
 # APPNAME - <summary>
 #
-# chkconfig:    2345 - -
+# chkconfig:    2345 80 20
 # description:  Clean old records from the primary database tables (7 days old)
 # processname:  fts_db_cleaner
 
