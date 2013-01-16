@@ -25,6 +25,7 @@
         <th>FILE ID</th>
         <th>FILE STATE</th>
         <th>JOB ID</th>
+        <th>SUBMISSION TIME</th>
         <th>VO</th>
         <th>SOURCE URL</th>
         <th>DEST URL</th>
@@ -42,6 +43,7 @@
               {{ t.job.job_id }}
             </a>
           </td>
+          <td>{{ t.job.submit_time }}</td>
           <td>{{ t.job.vo_name }}</td>
           <td>{{ t.source_surl }}</td>
           <td>{{ t.dest_surl }}</td>
