@@ -1,0 +1,8 @@
+INCLUDE(FindPkgConfig)
+
+PKG_SEARCH_MODULE(GLOBUS "REQUIRED" globus-gsi-credential)
+
+IF(GLOBUS_FOUND)
+  MESSAGE(STATUS "Found Globus")
+ENDIF(GLOBUS_FOUND)
+
