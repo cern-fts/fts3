@@ -11,8 +11,9 @@ include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
 find_package (GLIB2)
 include_directories (${GLIB2_INCLUDE_DIRS})
 
-include_directories (/usr/include/globus)
-include_directories (/usr/lib64/globus/include)
+find_package (GLOBUS)
+include_directories (${GLOBUS_INCLUDE_DIRS})
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 include_directories (${fts_include_dir})
