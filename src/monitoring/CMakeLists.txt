@@ -44,8 +44,9 @@ include_directories (${ACTIVEMQCPP_INCLUDE_DIR})
 
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (${fts_include_dir})
-include_directories (/usr/include/glib-2.0)
-include_directories (/usr/lib64/glib-2.0/include)
+
+find_package (GLIB2)
+include_directories (${GLIB2_INCLUDE_DIRS})
 
 set(fts_msg_bulk_SOURCES utility_routines.cpp msg-bulk-send.cpp MsgPipe.cpp MsgProducer.cpp concurrent_queue.cpp Logger.cpp)
 add_executable (fts_msg_bulk ${fts_msg_bulk_SOURCES})

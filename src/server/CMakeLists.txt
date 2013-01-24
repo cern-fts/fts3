@@ -30,8 +30,10 @@ include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/cred/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/ws-ifce/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
-include_directories (/usr/lib64/glib-2.0/include)
-include_directories (/usr/include/glib-2.0)
+
+find_package (GLIB2)
+include_directories (${GLIB2_INCLUDE_DIRS})
+
 set(fts_libs "-lfts_config -lfts_common -lfts_db_generic")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")

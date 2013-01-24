@@ -7,8 +7,10 @@ include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/common/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/gsoap)
 include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
-include_directories (/usr/include/glib-2.0)
-include_directories (/usr/lib64/glib-2.0/include)
+
+find_package (GLIB2)
+include_directories (${GLIB2_INCLUDE_DIRS})
+
 include_directories (/usr/include/globus)
 include_directories (/usr/lib64/globus/include)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
