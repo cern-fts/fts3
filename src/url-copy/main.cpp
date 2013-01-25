@@ -314,11 +314,12 @@ void event_logger(const gfalt_event_t e, gpointer udata)
     logger* log = static_cast<logger*>(udata);
 
     if (log) {
-        (*log) << '[' << timestampStr << "] "
-                  << sideStr[e->side] << ' '
-                  << g_quark_to_string(e->domain) << '\t'
-                  << g_quark_to_string(e->stage) << '\t'
-                  << e->description << '\n';
+        (*log) << fileManagement->timestamp() << "DEBUG "
+               << '[' << timestampStr << "] "
+               << sideStr[e->side] << ' '
+               << g_quark_to_string(e->domain) << '\t'
+               << g_quark_to_string(e->stage) << '\t'
+               << e->description << '\n';
     }
 
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
