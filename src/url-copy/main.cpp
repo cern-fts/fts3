@@ -53,6 +53,7 @@ limitations under the License. */
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <exception>
 #include "StaticSslLocking.h"
+#include "monitoring/utility_routines.h"
 
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -301,6 +302,51 @@ void myterminate() {
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
+// Callback used to populate the messaging with the different stages
+void event_logger(const gfalt_event_t e, gpointer udata)
+{
+    static const char* sideStr[] = {"SRC", "DST", "BTH"};
+    static const GQuark SRM_DOMAIN = g_quark_from_static_string("SRM");
+
+    msg_ifce*   msg          = msg_ifce::getInstance();
+    std::string timestampStr = _to_string<long double>(e->timestamp, std::dec);
+
+    logger* log = static_cast<logger*>(udata);
+
+    if (log) {
+        (*log) << '[' << timestampStr << "] "
+                  << sideStr[e->side] << ' '
+                  << g_quark_to_string(e->domain) << '\t'
+                  << g_quark_to_string(e->stage) << '\t'
+                  << e->description << '\n';
+    }
+
+    if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
+        msg->set_timestamp_transfer_started(&tr_completed, timestampStr);
+    else if (e->stage == GFAL_EVENT_TRANSFER_EXIT)
+        msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);
+
+    else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE)
+        msg->set_timestamp_checksum_source_started(&tr_completed, timestampStr);
+    else if (e->stage == GFAL_EVENT_CHECKSUM_EXIT && e->side == GFAL_EVENT_SOURCE)
+        msg->set_timestamp_checksum_source_ended(&tr_completed, timestampStr);
+
+    else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_DESTINATION)
+        msg->set_timestamp_checksum_dest_started(&tr_completed, timestampStr);
+    else if (e->stage == GFAL_EVENT_CHECKSUM_EXIT && e->side == GFAL_EVENT_DESTINATION)
+        msg->set_timestamp_checksum_dest_ended(&tr_completed, timestampStr);
+
+    else if (e->stage == GFAL_EVENT_PREPARE_ENTER && e->domain == SRM_DOMAIN)
+        msg->set_time_spent_in_srm_preparation_start(&tr_completed, timestampStr);
+    else if (e->stage == GFAL_EVENT_PREPARE_EXIT && e->domain == SRM_DOMAIN)
+        msg->set_time_spent_in_srm_preparation_end(&tr_completed, timestampStr);
+
+    else if (e->stage == GFAL_EVENT_CLOSE_ENTER && e->domain == SRM_DOMAIN)
+        msg->set_time_spent_in_srm_finalization_start(&tr_completed, timestampStr);
+    else if (e->stage == GFAL_EVENT_CLOSE_EXIT && e->domain == SRM_DOMAIN)
+        msg->set_time_spent_in_srm_finalization_end(&tr_completed, timestampStr);
+}
+
 
 /*courtesy of:
 "Setuid Demystified" by Hao Chen, David Wagner, and Drew Dean: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
@@ -362,6 +408,9 @@ int main(int argc, char **argv) {
     struct stat statbufdest;
     GError * tmp_err = NULL; // classical GError/glib error management   
     params = gfalt_params_handle_new(NULL);
+
+    gfalt_set_event_callback(params, event_logger, NULL);
+
     gfal_context_t handle;
     int ret = -1;
     long long transferred_bytes = 0;
@@ -581,6 +630,8 @@ int main(int argc, char **argv) {
         { //add curly brackets to delimit the scope of the logger
             logger log(logStream);
 
+            gfalt_set_user_data(params, &log, NULL);
+
             log << fileManagement->timestamp() << "INFO Transfer accepted" << '\n';
             log << fileManagement->timestamp() << "INFO Proxy:" << proxy << '\n';
             log << fileManagement->timestamp() << "INFO VO:" << vo << '\n'; //a
@@ -599,7 +650,7 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO markers_timeout:" << markers_timeout << '\n'; //l
             log << fileManagement->timestamp() << "INFO first_marker_timeout:" << first_marker_timeout << '\n'; //m
             log << fileManagement->timestamp() << "INFO srm_get_timeout:" << srm_get_timeout << '\n'; //n
-            log << fileManagement->timestamp() << "INFO srm_put_timeout:" << srm_put_timeout << '\n'; //o	
+            log << fileManagement->timestamp() << "INFO srm_put_timeout:" << srm_put_timeout << '\n'; //o
             log << fileManagement->timestamp() << "INFO http_timeout:" << http_timeout << '\n'; //p
             log << fileManagement->timestamp() << "INFO dont_ping_source:" << dont_ping_source << '\n'; //q
             log << fileManagement->timestamp() << "INFO dont_ping_dest:" << dont_ping_dest << '\n'; //r
@@ -620,9 +671,6 @@ int main(int argc, char **argv) {
 	    	    log << fileManagement->timestamp() << errorMessage << '\n';
 		    goto stop;
 	    }
-	    
-
-            msg_ifce::getInstance()->set_time_spent_in_srm_preparation_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
             /*set infosys to gfal2*/
             if (handle) {
@@ -713,11 +761,7 @@ int main(int argc, char **argv) {
             gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
             gfalt_set_monitor_callback(params, &call_perf, NULL);
 
-            msg_ifce::getInstance()->set_timestamp_checksum_source_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
-            msg_ifce::getInstance()->set_timestamp_checksum_source_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->set_time_spent_in_srm_preparation_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->set_timestamp_transfer_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
             //calculate tr time in seconds
             start = std::time(NULL);
@@ -760,10 +804,7 @@ int main(int argc, char **argv) {
             transferred_bytes = source_size;
             bytes_to_string = to_string<double>(transferred_bytes, std::dec);
             msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
-            msg_ifce::getInstance()->set_timestamp_transfer_completed(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->set_time_spent_in_srm_finalization_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-            msg_ifce::getInstance()->set_timestamp_checksum_dest_started(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++) {
                 if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0) {
                     if (tmp_err->message) {
@@ -799,8 +840,6 @@ int main(int argc, char **argv) {
                     break;
                 }
             }
-            msg_ifce::getInstance()->set_timestamp_checksum_dest_ended(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-
 
             //check source and dest file sizes
             if (source_size == dest_size) {
@@ -814,8 +853,7 @@ int main(int argc, char **argv) {
                 goto stop;
             }
 
-
-            msg_ifce::getInstance()->set_time_spent_in_srm_finalization_end(&tr_completed, msg_ifce::getInstance()->getTimestamp());
+          gfalt_set_user_data(params, NULL, NULL);
         }//logStream
 stop:        
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
