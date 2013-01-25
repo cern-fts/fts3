@@ -737,6 +737,7 @@ int main(int argc, char **argv) {
                     msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
                     break;
                 }
+		sleep(3); //give it some time to breath
             }
 
             /*Checksuming*/
@@ -840,6 +841,7 @@ int main(int argc, char **argv) {
                     dest_size = statbufdest.st_size;
                     break;
                 }
+		sleep(3); //give it some time to breath
             }
 
             //check source and dest file sizes

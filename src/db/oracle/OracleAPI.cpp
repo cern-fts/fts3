@@ -188,17 +188,26 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     TransferJobs* tr_jobs = NULL;
     std::string tag = "getSubmittedJobs";
     std::string tag1 = "bringdistinct";
+    std::string tag2 = "bringdistinctvo";    
     std::string query_stmt(""); 
     std::multimap<std::string, std::string> sePairs;
+    std::vector<std::string> distinctVOS;
+    std::vector<std::string>::const_iterator iter2;
+    std::string bring_distinct_vo = " SELECT distinct t_job.vo_name  FROM t_job "
+    				 " WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
+				 " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
+				 " AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') ";    
+    
+    
     std::string bring_distinct = " SELECT distinct t_job.source_se, t_job.dest_se  FROM t_job "
     				 " WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
 				 " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
-				 " AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') and "
+				 " AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') and t_job.vo_name=:1 and "
 				 " exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND "
 				 " t_file.file_state = 'SUBMITTED')";
     
     if(vos.length()==0){
-    query_stmt = "SELECT /* FIRST_ROWS(5) */"
+    query_stmt = "SELECT /* FIRST_ROWS(15) */"
             " t_job.job_id, "
             " t_job.job_state, "
             " t_job.vo_name,  "
@@ -232,7 +241,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " , SYS_EXTRACT_UTC(t_job.submit_time)";
     }else{
     tag +="1";
-    query_stmt = "SELECT /* FIRST_ROWS(5) */"
+    query_stmt = "SELECT /* FIRST_ROWS(15) */"
             " t_job.job_id, "
             " t_job.job_state, "
             " t_job.vo_name,  "
@@ -271,18 +280,37 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     oracle::occi::ResultSet* r = NULL;
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;    
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::ResultSet* r2 = NULL;    
     ThreadTraits::LOCK_R lock(_mutex);
     try {
     
         if ( false == conn->checkConn() )
 		return;
 
-        s1 = conn->createStatement(bring_distinct, tag1);	
-	r1 = conn->createResultset(s1);
-        while (r1->next()) {		
-		sePairs.insert(std::make_pair<std::string, std::string>(r1->getString(1),r1->getString(2)));
+	//get distinct vos
+        s2 = conn->createStatement(bring_distinct_vo, tag2);	
+	r2 = conn->createResultset(s2);
+        while (r2->next()) {		
+		distinctVOS.push_back(r2->getString(1));
 	}
-        conn->destroyResultset(s1, r1);
+        conn->destroyResultset(s2, r2);
+        conn->destroyStatement(s2, tag2);
+	s2=NULL;
+	r2=NULL;
+
+
+	//get distinct source_se/dest_Se for each distinct vo
+        s1 = conn->createStatement(bring_distinct, tag1);
+	
+	for (iter2 = distinctVOS.begin(); iter2 != distinctVOS.end(); ++iter2) {	
+		s1->setString(1, *iter2);
+		r1 = conn->createResultset(s1);
+        	while (r1->next()) {		
+			sePairs.insert(std::make_pair<std::string, std::string>(r1->getString(1),r1->getString(2)));
+		}
+        	conn->destroyResultset(s1, r1);
+	}
         conn->destroyStatement(s1, tag1);
 	s1=NULL;
 	r1=NULL;
@@ -344,6 +372,11 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 				conn->destroyResultset(s1, r1);
 			if (s1)
 				conn->destroyStatement(s1, tag1);
+				
+			if(s2 && r2)
+				conn->destroyResultset(s2, r2);
+			if (s2)
+				conn->destroyStatement(s2, tag2);				
 		}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -360,6 +393,11 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 				conn->destroyResultset(s1, r1);
 			if (s1)
 				conn->destroyStatement(s1, tag1);
+				
+			if(s2 && r2)
+				conn->destroyResultset(s2, r2);
+			if (s2)
+				conn->destroyStatement(s2, tag2);								
 		}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
