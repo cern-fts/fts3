@@ -1284,8 +1284,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
        	    ok = false;
             return ok;
 	}
-    
-    
+        
         s = conn->createStatement(query.str(), tag);
         index = 1; //reset index
         s->setString(1, transfer_status);
@@ -1307,8 +1306,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
             ++index;
             s->setTimestamp(index, conv->toTimestamp(timed, conn->getEnv()));
         }	
-	
-	
+		
         ++index;
         s->setInt(index, process_id);
         ++index;

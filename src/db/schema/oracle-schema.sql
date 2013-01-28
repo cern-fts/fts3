@@ -458,7 +458,7 @@ CREATE TABLE t_job (
 -- pin lifetime of the copy of the file created after a successful srmPutDone
 -- or srmCopy operations, in seconds
   ,copy_pin_lifetime INTEGER default NULL
-  ,bring_online default NULL
+  ,bring_online INTEGER default NULL
 --
 -- use "LAN" as ConnectionType (FTS by default uses WAN). Default value is false.
   ,lan_connection CHAR(1) default NULL
@@ -583,10 +583,9 @@ CREATE TABLE t_file (
   ,throughput           NUMBER
 --
 -- How many times should the transfer be retried
-  ,retry           NUMBER DEFAULT 0  
+  ,retry           NUMBER DEFAULT 0
   ,staging_start          TIMESTAMP WITH TIME ZONE DEFAULT NULL
-  ,staging_finished       TIMESTAMP WITH TIME ZONE DEFAULT NULL     
-  
+  ,staging_finished       TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 --
 -- autoinc sequence on file_id

@@ -678,7 +678,8 @@ int main(int argc, char **argv) {
                     errorScope = SOURCE;
                     reasonClass = mapErrnoToString(errCode);
                     errorPhase = TRANSFER_PREPARATION;
-                    g_clear_error(&tmp_err);			    
+                    g_clear_error(&tmp_err);	
+		    sleep(100);		    
 		    goto stop;	
 		}
 	    }
