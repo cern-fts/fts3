@@ -117,6 +117,7 @@ std::string block_to_string("");
 std::string timeout_to_string("");
 extern std::string stackTrace;
 gfalt_params_t params;
+gfal_context_t handle = NULL;
 
 
 static int fexists(const char *filename) {
@@ -260,7 +261,8 @@ void signalHandler(int signum) {
             propagated = true;
             errorMessage = "WARN Transfer " + g_job_id + " canceled by the user";
             logStream << fileManagement->timestamp() << errorMessage << '\n';
-
+	    if(handle) // finish all transfer in a clean way
+		gfal2_cancel(handle);
 
             abnormalTermination("CANCELED", errorMessage, "Abort");
         }
@@ -412,7 +414,6 @@ int main(int argc, char **argv) {
 
     gfalt_set_event_callback(params, event_logger, NULL);
 
-    gfal_context_t handle;
     int ret = -1;
     long long transferred_bytes = 0;
     UserProxyEnv* cert = NULL;
