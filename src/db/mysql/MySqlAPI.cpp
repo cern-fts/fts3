@@ -304,7 +304,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_ch
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        const std::string & sourceSE, const std::string & destSe) {
+        const std::string & sourceSE, const std::string & destSe, int bringonline) {
 
     const std::string currenthost = hostname;
     const std::string initialState = "SUBMITTED";
@@ -328,12 +328,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_ch
                "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,                  "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
                "        :copyPinLifetime, :lanConnection, :failNearline, :checksumMethod,             "
-               "        :reuseJob, :sourceSE, :destSE)",
+               "        :reuseJob, :sourceSE, :destSE, :bringonline)",
                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
                soci::use(voName), soci::use(params), soci::use(currenthost), soci::use(delegationID),
                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                soci::use(copyPinLifeTime), soci::use(lanConnection), soci::use(failNearLine), soci::use(checksumMethod),
-               soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe);
+               soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe), soci::use(bringonline);
 
         // Insert src/dest pair
         std::string sourceSurl, destSurl, checksum;

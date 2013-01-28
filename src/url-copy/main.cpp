@@ -96,7 +96,8 @@ static unsigned int http_timeout = 180; //p
 static bool dont_ping_source = false; //q
 static bool dont_ping_dest = false; //r
 static bool disable_dir_check = false; //s
-static unsigned int copy_pin_lifetime = 0; //t
+static int copy_pin_lifetime = -1; //t
+static int bringonline = -1; //H
 static bool lan_connection = false; //u
 static bool fail_nearline = false; //v
 static unsigned int timeout_per_mb = 0; //w
@@ -425,8 +426,10 @@ int main(int argc, char **argv) {
 
     for (register int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
+        if (temp.compare("-H") == 0)
+            bringonline = boost::lexical_cast<int>(argv[i + 1]);
         if (temp.compare("-G") == 0)
-            reuseFile = std::string(argv[i + 1]);
+            reuseFile = std::string(argv[i + 1]);	    
         if (temp.compare("-F") == 0)
             debug = true;
         if (temp.compare("-D") == 0)
@@ -450,7 +453,7 @@ int main(int argc, char **argv) {
         if (temp.compare("-v") == 0)
             fail_nearline = true;
         if (temp.compare("-t") == 0)
-            copy_pin_lifetime = boost::lexical_cast<unsigned int>(argv[i + 1]);
+            copy_pin_lifetime = boost::lexical_cast<int>(argv[i + 1]);
         if (temp.compare("-q") == 0)
             dont_ping_source = true;
         if (temp.compare("-r") == 0)
@@ -595,9 +598,6 @@ int main(int argc, char **argv) {
         reporter.dest_se = fileManagement->getDestHostname();
         fileManagement->generateLogFile();
 
-
-        reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
-	
 	
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
@@ -666,6 +666,25 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
             log << fileManagement->timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
             log << fileManagement->timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
+	    
+	    
+	    if(bringonline >0 || copy_pin_lifetime>0 ){ //issue a bring online	    	
+                reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
+		if (gfal2_bring_online(handle,(strArray[1]).c_str(), &tmp_err) < 0) {
+                    std::string tempError(tmp_err->message);
+                    const int errCode = tmp_err->code;
+                    log << fileManagement->timestamp() << "ERROR Failed to stage file, errno:" << tempError << '\n';
+                    errorMessage = "Failed to get source file size: " + tempError;
+                    errorScope = SOURCE;
+                    reasonClass = mapErrnoToString(errCode);
+                    errorPhase = TRANSFER_PREPARATION;
+                    g_clear_error(&tmp_err);			    
+		    goto stop;	
+		}
+	    }
+	    	    
+	    //set to active
+            reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
 	    
 	    if (fexists(proxy.c_str()) != 0) {
 	            errorMessage = "ERROR proxy doesn't exist, probably expired and not renewed " + proxy;

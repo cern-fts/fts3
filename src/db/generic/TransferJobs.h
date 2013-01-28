@@ -77,5 +77,5 @@ public:
  std::string LAN_CONNECTION;//	 				    CHAR(1)
  std::string FAIL_NEARLINE;//						    CHAR(1)
  std::string CHECKSUM_METHOD;//					    CHAR(1)
-
+ int BRINGONLINE; //					    NUMBER(38)
 };

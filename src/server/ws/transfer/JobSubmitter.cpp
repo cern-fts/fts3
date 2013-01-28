@@ -230,6 +230,7 @@ JobSubmitter::~JobSubmitter() {
 }
 
 string JobSubmitter::submit() {
+    int bringonline;
 
     // submit the transfer job (add it to the DB)
     db->submitPhysical (
@@ -251,7 +252,8 @@ string JobSubmitter::submit() {
             params.get(JobParameterHandler::CHECKSUM_METHOD),
             params.get(JobParameterHandler::REUSE),
             sourceSe,
-            destinationSe
+            destinationSe,
+	    bringonline
     	);
 
     db->submitHost(id);

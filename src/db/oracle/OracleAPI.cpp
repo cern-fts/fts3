@@ -228,7 +228,8 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " t_job.source_space_token, "
             " t_job.source_token_description,"
             " t_job.copy_pin_lifetime, "
-            " t_job.checksum_method "
+            " t_job.checksum_method, "
+	    " t_job.bring_online "	    
             " FROM t_job"
             " WHERE "
             " t_job.job_finished is NULL"
@@ -263,7 +264,8 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " t_job.source_space_token, "
             " t_job.source_token_description,"
             " t_job.copy_pin_lifetime, "
-            " t_job.checksum_method "
+            " t_job.checksum_method, "
+	    " t_job.bring_online "	    	    
             " FROM t_job"
             " WHERE "
             " t_job.job_finished is NULL"
@@ -348,6 +350,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
             tr_jobs->COPY_PIN_LIFETIME = r->getInt(20);
             tr_jobs->CHECKSUM_METHOD = r->getString(21);
+            tr_jobs->BRINGONLINE = r->getInt(22);	    
 
             //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
 	    if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0){
@@ -601,7 +604,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        const std::string & sourceSE, const std::string & destSe) {
+        const std::string & sourceSE, const std::string & destSe, int bringonline) {
 
 
     const std::string initial_state = "SUBMITTED";
@@ -613,7 +616,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
     const std::string tag_file_statement = "tag_file_statement";
     const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
-            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22)";
+            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE, bring_online) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23)";
     const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
     ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s_job_statement = NULL;
@@ -652,6 +655,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
             s_job_statement->setString(20, "Y"); //reuse session for this job
         s_job_statement->setString(21, sourceSE); //reuse session for this job
         s_job_statement->setString(22, destSe); //reuse session for this job    
+        s_job_statement->setInt(23, bringonline); //reuse session for this job    	
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id
@@ -1259,8 +1263,13 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     }
     if ((transfer_status.compare("ACTIVE") == 0)) {
         query << ", START_TIME=:" << ++index;
+        query << ", STAGING_FINISHED=:" << ++index;	
         tag.append("xx1");
     }
+    if ((transfer_status.compare("STAGING") == 0)) {
+        query << ", STAGING_START=:" << ++index;
+        tag.append("xx2");
+    }        
     query << ", PID=:" << ++index;
     query << ", FILESIZE=:" << ++index;
     query << ", TX_DURATION=:" << ++index;
@@ -1291,7 +1300,15 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
             time_t timed = time(NULL);
             ++index;
             s->setTimestamp(index, conv->toTimestamp(timed, conn->getEnv()));
+            s->setTimestamp(index, conv->toTimestamp(timed, conn->getEnv()));	    
         }
+        if ((transfer_status.compare("STAGING") == 0)) {
+            time_t timed = time(NULL);
+            ++index;
+            s->setTimestamp(index, conv->toTimestamp(timed, conn->getEnv()));
+        }	
+	
+	
         ++index;
         s->setInt(index, process_id);
         ++index;
@@ -1438,7 +1455,7 @@ bool OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id,
             if (updated != 0)
                 conn->commit();
         } else { //job not finished
-            if (status.compare("ACTIVE") == 0) {
+            if (status.compare("ACTIVE") == 0 || status.compare("STAGING") == 0) {
                 st->setSQL(updateJobNotFinished);
                 st->setString(1, status);
                 st->setString(2, job_id);
@@ -3107,7 +3124,7 @@ void OracleAPI::forceFailTransfers() {
             time_t lifetime = std::time(NULL);
 	    vmHostname = r->getString(6);
             diff = difftime(lifetime, start_time);
-            if (timeout != 0 && diff > (timeout + 2000)) {
+            if (timeout != 0 && diff > (timeout + 22000)) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;
                 std::stringstream ss;
                 ss << file_id;
