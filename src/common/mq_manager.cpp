@@ -92,12 +92,12 @@ bool QueueManager::receiveUpdater(struct message_updater* msg) {
 
         try {
             receive = mq_updater->try_receive(msg, sizeof (message_updater), recvd_size, priority);
-	    usleep(20000);
+	    usleep(1000);
         } catch (interprocess_exception &ex) {
-	    usleep(20000);
+	    usleep(1000);
             receive = false;
         } catch (...) {
-	    usleep(20000);
+	    usleep(1000);
             receive = false;
         }
  return receive;	  
@@ -130,12 +130,12 @@ bool QueueManager::receive(struct message* msg) {
 
         try {
             receive = mq_->try_receive(msg, sizeof (message), recvd_size, priority);
-	    usleep(20000);
+	    usleep(1000);
         } catch (interprocess_exception &ex) {
-	    usleep(20000);
+	    usleep(1000);
             receive = false;
         } catch (...) {
-	    usleep(20000);
+	    usleep(1000);
             receive = false;
         }
 	

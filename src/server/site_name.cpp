@@ -62,7 +62,7 @@ std::string  SiteName::getFromBDII(std::string& hostname){
 	
 	sitename = SD_getServiceSite(hostname.c_str(), &exception);
 	if (exception.status != SDStatus_SUCCESS){
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) <<  "BDII error:" << exception.reason << commit;
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) <<  "BDII error:" << exception.reason << " for " << hostname  << commit;
             SD_freeException(&exception);
 	}
 	if(sitename){
