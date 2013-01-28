@@ -265,7 +265,7 @@ void MySqlAPI::updateJObStatus(std::string jobId, const std::string status) {
 
 
 
-void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
+void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) {
     soci::session sql(connectionPool);
 
     try {
@@ -284,14 +284,18 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfer
 
             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti) {
                 TransferFiles const& tfile = *ti;
-                files.push_back(new TransferFiles(tfile));
+               	files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
             }
-
         }
     }
     catch (std::exception& e) {
-        for (std::vector<TransferFiles*>::iterator i = files.begin(); i != files.end(); ++i)
-            delete *i;
+    	for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); i++) {
+    		std::list<TransferFiles*>& l = i->second;
+    		for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); it++) {
+    			delete *it;
+    		}
+    		l.clear();
+    	}
         files.clear();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }

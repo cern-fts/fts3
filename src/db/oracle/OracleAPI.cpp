@@ -522,7 +522,7 @@ void OracleAPI::updateJObStatus(std::string jobId, const std::string status) {
     }
 }
 
-void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) {
+void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) {
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::const_iterator iter;
     std::string selecttag = "getByJobId";
@@ -569,7 +569,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::vector<Transfe
                 tr_files->CHECKSUM_METHOD = r->getString(10);
                 tr_files->SOURCE_SPACE_TOKEN = r->getString(11);
                 tr_files->DEST_SPACE_TOKEN = r->getString(12);
-                files.push_back(tr_files);
+                files[tr_files->VO_NAME].push_back(tr_files);
             }
             conn->destroyResultset(s, r);
 	    r=NULL;

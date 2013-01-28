@@ -25,6 +25,8 @@ limitations under the License. */
 #include "common/error.h"
 #include "process.h"
 #include <iostream>
+#include <map>
+#include <list>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -48,6 +50,7 @@ limitations under the License. */
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>  
 #include <sys/param.h>
+#include <boost/scoped_ptr.hpp>
 
 extern bool  stopThreads;
 
@@ -204,36 +207,53 @@ protected:
 	
         if (reuse == false) {
    	    bool manualConfigExists = false;
-	    std::string symbolicName("");	    
+	    std::string symbolicName("");
             if (!jobs2.empty()) {
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
-        	std::vector<TransferFiles*> files;
-		files.reserve(3000);
-        	std::vector<TransferFiles*>::const_iterator fileiter;		
-                DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
-                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-		if(stopThreads){
-		               /** cleanup resources */
-                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                    delete *iter2;
-                jobs2.clear();
-                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
-                    delete *fileiter;
-                files.clear();		
-			return;
-		}
+
+        	int emptyVoQueues = 0;
+        	std::map< std::string, std::list<TransferFiles*> > voQueues;
+            DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
+
+            while (voQueues.size() != emptyVoQueues) {
+
+            	std::map< std::string, std::list<TransferFiles*> >::iterator queueiter;
+            	for (queueiter = voQueues.begin(); queueiter != voQueues.end(); ++queueiter) {
+
+					if(stopThreads){
+						   /** cleanup resources */
+							for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+								delete *iter2;
+							jobs2.clear();
+							for (queueiter = voQueues.begin(); queueiter != voQueues.end(); ++queueiter) {
+								while (!queueiter->second.empty()) {
+									delete queueiter->second.front();
+									queueiter->second.pop_front();
+								}
+							}
+							voQueues.clear();
+						return;
+					}
 
                     int BufSize = 0;
                     int StreamsperFile = 0;
                     int Timeout = 0;
-		    std::stringstream internalParams;
-                    TransferFiles* temp = (TransferFiles*) *fileiter;
+                    std::stringstream internalParams;
+                    // serve the first file from the queue
+                    boost::scoped_ptr<TransferFiles> temp ((TransferFiles*) queueiter->second.front());
+                    // remove the file from the queue
+                    queueiter->second.pop_front();
+                    // if the queue is empty increment empty-queue counter
+                    if (queueiter->second.empty()) {
+                    	emptyVoQueues++;
+                    }
+
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);
 		    
 		    /*check if manual config exist for this pair and vo*/
-                    ConfigurationAssigner cfgAssigner(temp);
+                    ConfigurationAssigner cfgAssigner(temp.get());
                     manualConfigExists = cfgAssigner.assign();
 			
                     bool optimize = false;
@@ -249,7 +269,7 @@ protected:
                         opt_config = NULL;
                     }
   	    	    
-                    FileTransferScheduler scheduler(temp);
+                    FileTransferScheduler scheduler(temp.get());
                     if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
 		    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
 		    if(optimize && manualConfigExists==false){
@@ -257,23 +277,23 @@ protected:
 		    }else{
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
 		        ProtocolResolver resolver(temp->JOB_ID);
-		        protocolExists = resolver.resolve();			
+		        protocolExists = resolver.resolve();
 			if(protocolExists){
 				protocol.NOSTREAMS = resolver.NOSTREAMS;
 				protocol.NO_TX_ACTIVITY_TO = resolver.NO_TX_ACTIVITY_TO;
 				protocol.TCP_BUFFER_SIZE = resolver.TCP_BUFFER_SIZE;
 				protocol.URLCOPY_TX_TO = resolver.URLCOPY_TX_TO;
-			
+
 				if(protocol.NOSTREAMS >= 0)
 					internalParams << "nostreams:" << protocol.NOSTREAMS;
 				if(protocol.URLCOPY_TX_TO >= 0)
 					internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
-				if(protocol.TCP_BUFFER_SIZE >= 0)	
+				if(protocol.TCP_BUFFER_SIZE >= 0)
 					internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
 			}else{
-				internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;			
+				internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
 			}
-			DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(temp->JOB_ID, temp->FILE_ID, internalParams.str());			
+			DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(temp->JOB_ID, temp->FILE_ID, internalParams.str());
 		    }
 		    
                    proxy_file = get_proxy_cert(
@@ -402,14 +422,12 @@ protected:
                         params.clear();
                     }
                 }
+            }
 
                 /** cleanup resources */
                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
                     delete *iter2;
                 jobs2.clear();
-                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
-                    delete *fileiter;
-                files.clear();
             }
         } else { /*reuse session*/
             if (!jobs2.empty()) {
@@ -436,22 +454,27 @@ protected:
                 TransferFiles* tempUrl = NULL;
                 /*get the file for each job*/
        		std::vector<TransferJobs*>::const_iterator iter2;
-        	std::vector<TransferFiles*> files;
-		files.reserve(300);
-        	std::vector<TransferFiles*>::const_iterator fileiter;			
-                DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, files);
-		if(files.empty()){
+
+       	std::map< std::string, std::list<TransferFiles*> > voQueues;
+        std::list<TransferFiles*>::const_iterator queueiter;
+
+        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
+		if(voQueues.empty()){
      			 /** cleanup resources */
                 	for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
                     		delete *iter2;
                 	jobs2.clear();
 			return;
 		}
-                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
+
+		// since there will be just one VO pick it (TODO)
+		std::string vo = jobs2.front()->VO_NAME;
+
+		for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter) {
 		    if(stopThreads){
 			return;
 		    }
-                    TransferFiles* temp = (TransferFiles*) *fileiter;
+                    TransferFiles* temp = (TransferFiles*) *queueiter;
                     tempUrl = temp;
                     surl = temp->SOURCE_SURL;
                     durl = temp->DEST_SURL;
@@ -463,15 +486,15 @@ protected:
                     overwrite = temp->OVERWRITE;
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);
-                    source_space_token = temp->SOURCE_SPACE_TOKEN;                  
-		    dest_space_token = temp->DEST_SPACE_TOKEN;                    
+                    source_space_token = temp->SOURCE_SPACE_TOKEN;
+		    dest_space_token = temp->DEST_SPACE_TOKEN;
 
                     if (std::string(temp->CHECKSUM_METHOD).length() > 0) {
                         if (std::string(temp->CHECKSUM).length() > 0)
                             checksum = temp->CHECKSUM;
                     }
                     url = file_id + " " + surl + " " + durl + " " + checksum;
-                    urls.push_back(url);		    		    
+                    urls.push_back(url);
                 }
 
                 sourceSiteName = siteResolver.getSiteName(surl);
@@ -536,8 +559,8 @@ protected:
                         "");
 
                     /*set all to ready, special case for session reuse*/
-                    for (fileiter = files.begin(); fileiter != files.end(); ++fileiter) {
-                        TransferFiles* temp = (TransferFiles*) *fileiter;
+                    for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter) {
+                        TransferFiles* temp = (TransferFiles*) *queueiter;
                         DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
 			fileIds.insert(std::make_pair<int, std::string>(temp->FILE_ID,temp->JOB_ID));
                     }
@@ -646,9 +669,9 @@ protected:
                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
                     delete *iter2;
                 jobs2.clear();
-                for (fileiter = files.begin(); fileiter != files.end(); ++fileiter)
-                    delete *fileiter;
-                files.clear();
+                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                    delete *queueiter;
+                voQueues[vo].clear();
 		fileIds.clear();
                 
             }

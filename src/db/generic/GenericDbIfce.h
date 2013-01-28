@@ -31,6 +31,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <list>
 #include "JobStatus.h"
 #include "FileTransferStatus.h"
 #include "SePair.h"
@@ -100,7 +101,7 @@ public:
 
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
     
-    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files) = 0;
+    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) = 0;
    
     virtual void getSe(Se* &se, std::string seName) = 0;
    

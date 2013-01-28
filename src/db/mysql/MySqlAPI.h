@@ -54,7 +54,7 @@ public:
 
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
-    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::vector<TransferFiles*>& files);
+    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
