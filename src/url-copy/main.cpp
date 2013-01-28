@@ -220,6 +220,10 @@ void abnormalTermination(const std::string& classification, const std::string& m
     if (reuseFile.length() > 0)
         unlink(readFile.c_str());
     sleep(1);
+    
+    if(handle) // finish all transfer in a clean way
+	gfal2_cancel(handle);    
+    
     exit(1);
 }
 
@@ -261,8 +265,6 @@ void signalHandler(int signum) {
             propagated = true;
             errorMessage = "WARN Transfer " + g_job_id + " canceled by the user";
             logStream << fileManagement->timestamp() << errorMessage << '\n';
-	    if(handle) // finish all transfer in a clean way
-		gfal2_cancel(handle);
 
             abnormalTermination("CANCELED", errorMessage, "Abort");
         }
@@ -798,6 +800,8 @@ int main(int argc, char **argv) {
                     reasonClass = GENERAL_FAILURE;
                     errorPhase = TRANSFER;
                 }
+	       if(handle) // finish all transfer in a clean way
+			gfal2_cancel(handle);    		
                 goto stop;
             } else {
                 diff = difftime(std::time(NULL), start);
@@ -826,8 +830,11 @@ int main(int argc, char **argv) {
                         errorPhase = TRANSFER_FINALIZATION;
                     }
                     g_clear_error(&tmp_err);
-                    if (destStatRetry == 3)
+                    if (destStatRetry == 3){
+	       		if(handle) // finish all transfer in a clean way
+				gfal2_cancel(handle);    				    
                         goto stop;
+		    }
                 } else {
                     if (statbufdest.st_size <= 0) {
                         errorMessage = "Destination file size is 0";
@@ -835,8 +842,11 @@ int main(int argc, char **argv) {
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;
-                        if (destStatRetry == 3)
+                        if (destStatRetry == 3){
+	       		if(handle) // finish all transfer in a clean way
+				gfal2_cancel(handle);    					
                             goto stop;
+			}
                     }
                     log << fileManagement->timestamp() << "INFO Destination file size: " << statbufdest.st_size << '\n';
                     dest_size = statbufdest.st_size;
