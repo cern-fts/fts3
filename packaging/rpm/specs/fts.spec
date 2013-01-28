@@ -168,7 +168,7 @@ rm -rf %{buildroot}
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
 %attr(0755,root,root) %{_initddir}/fts-info-publisher
-%config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
+%config %{_sysconfdir}/logrotate.d/fts-server
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
