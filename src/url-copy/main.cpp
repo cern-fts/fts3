@@ -318,7 +318,7 @@ void event_logger(const gfalt_event_t e, gpointer udata)
 
     logger* log = static_cast<logger*>(udata);
 
-    if (log) {
+    if (log && debug) {
         (*log) << fileManagement->timestamp() << "DEBUG "
                << '[' << timestampStr << "] "
                << sideStr[e->side] << ' '
