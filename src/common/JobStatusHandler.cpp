@@ -39,6 +39,7 @@ const string JobStatusHandler::FTS3_STATUS_FINISHED = "FINISHED";
 const string JobStatusHandler::FTS3_STATUS_SUBMITTED = "SUBMITTED";
 const string JobStatusHandler::FTS3_STATUS_READY = "READY";
 const string JobStatusHandler::FTS3_STATUS_ACTIVE = "ACTIVE";
+const string JobStatusHandler::FTS3_STATUS_STAGING = "STAGING";
 
 JobStatusHandler::JobStatusHandler():
 		statusNameToId(map_list_of
@@ -49,7 +50,8 @@ JobStatusHandler::JobStatusHandler():
 			(FTS3_STATUS_ACTIVE, FTS3_STATUS_ACTIVE_ID)
 			(FTS3_STATUS_FINISHED, FTS3_STATUS_FINISHED_ID)
 			(FTS3_STATUS_READY, FTS3_STATUS_READY_ID)
-			(FTS3_STATUS_FAILED, FTS3_STATUS_FAILED_ID).to_container(statusNameToId)) {
+			(FTS3_STATUS_FAILED, FTS3_STATUS_FAILED_ID)
+			(FTS3_STATUS_STAGING, FTS3_STATUS_STAGING_ID).to_container(statusNameToId)){
 
 	// the constant map is initialized in initializer list
 }
