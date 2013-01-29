@@ -60,6 +60,16 @@ CliBase::~CliBase() {
 
 void CliBase::parse(int ac, char* av[]) {
 
+	// set the output parameters (verbose and json) before the acctual parsing happens
+	for (int i = 0; i < ac; i++) {
+		string str(av[i]);
+		if (str == "-v") {
+			msgPrinter.setVerbose(true);
+		} else if (str == "-j") {
+			msgPrinter.setJson(true);
+		}
+	}
+
 	toolname = av[0];
 
 	// add specific and hidden parameters to all parameters
