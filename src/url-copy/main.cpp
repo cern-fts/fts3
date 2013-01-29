@@ -651,6 +651,7 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO dont_ping_dest:" << dont_ping_dest << '\n'; //r
             log << fileManagement->timestamp() << "INFO disable_dir_check:" << disable_dir_check << '\n'; //s
             log << fileManagement->timestamp() << "INFO copy_pin_lifetime:" << copy_pin_lifetime << '\n'; //t
+            log << fileManagement->timestamp() << "INFO bringOnline:" << bringonline << '\n'; //t	    
             log << fileManagement->timestamp() << "INFO lan_connection:" << lan_connection << '\n'; //u
             log << fileManagement->timestamp() << "INFO fail_nearline:" << fail_nearline << '\n'; //v
             log << fileManagement->timestamp() << "INFO timeout_per_mb:" << timeout_per_mb << '\n'; //w
