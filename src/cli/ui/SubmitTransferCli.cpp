@@ -62,7 +62,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("dest-token,t", value<string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
 			("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
 			("compare-checksum,K", "Compare checksums between source and destination.")
-			("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "pin lifetime of the copy of the file (seconds)")
+			("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
 			("lan-connection", "use LAN as ConnectionType (default = WAN)")
 			("fail-nearline", "fail the transfer if the file is nearline")
 			("reuse,r", "enable session reuse for the transfer job")
