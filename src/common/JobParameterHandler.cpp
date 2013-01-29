@@ -14,6 +14,7 @@ const string JobParameterHandler::DELEGATIONID = "delegationid";
 const string JobParameterHandler::SPACETOKEN = "spacetoken";
 const string JobParameterHandler::SPACETOKEN_SOURCE = "source_spacetoken";
 const string JobParameterHandler::COPY_PIN_LIFETIME = "copy_pin_lifetime";
+const string JobParameterHandler::BRING_ONLINE = "bring_online";
 const string JobParameterHandler::LAN_CONNECTION = "lan_connection";
 const string JobParameterHandler::FAIL_NEARLINE = "fail_nearline";
 const string JobParameterHandler::OVERWRITEFLAG = "overwrite";

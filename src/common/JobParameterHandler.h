@@ -58,6 +58,7 @@ public:
 	static const string SPACETOKEN;
 	static const string SPACETOKEN_SOURCE;
 	static const string COPY_PIN_LIFETIME;
+	static const string BRING_ONLINE;
 	static const string LAN_CONNECTION;
 	static const string FAIL_NEARLINE;
 	static const string OVERWRITEFLAG;
