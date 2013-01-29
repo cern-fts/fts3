@@ -101,6 +101,10 @@ public:
 		return parameters.find(name) != parameters.end();
 	}
 
+	inline void set(string key, string value) {
+		parameters[key] = value;
+	}
+
 private:
 
 	/// maps parameter names into values
