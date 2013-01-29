@@ -1250,7 +1250,6 @@ void OracleAPI::deleteSe(std::string NAME) {
 
 bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double
         filesize, double duration) {
-    job_id = "";
     unsigned int index = 1;
     double throughput = 0;
     bool ok = true;
@@ -1272,17 +1271,16 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 	}
 	
         s1 = conn->createStatement(query1, tag1);
-        s1->setInt(index, atoi(file_id.c_str()));
-        s1->setString(2, job_id);
+        s1->setInt(1, atoi(file_id.c_str()));
+        s1->setString(2, job_id);		
         r1 = conn->createResultset(s1);
         if (r1->next()) {
-            isStagingState = std::string(r1->getString(1)).compare("STAGING")==0?true:false;
+            isStagingState = std::string(r1->getString(1)).compare("STAGING")==0? true: false;
         }
         conn->destroyResultset(s1, r1);
 	conn->destroyStatement(s1, tag1);
 	s1=NULL;
-	r1=NULL;	
-	
+	r1=NULL;			
 	
     query << "UPDATE t_file SET file_state=:" << 1 << ", REASON=:" << ++index;
     if ((transfer_status.compare("FINISHED") == 0) || (transfer_status.compare("FAILED") == 0) || (transfer_status.compare("CANCELED") == 0)) {
@@ -1301,8 +1299,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
         	query << ", STAGING_FINISHED=:" << ++index;    
         	tag.append("xx3");     
      }
-    }    
-     
+    }              
     query << ", PID=:" << ++index;
     query << ", FILESIZE=:" << ++index;
     query << ", TX_DURATION=:" << ++index;

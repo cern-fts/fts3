@@ -673,7 +673,10 @@ int main(int argc, char **argv) {
 		    goto stop;	
 		}
 	    }
-	    	    
+	    
+	    //staging finished without failure
+	    reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);	    
+	    
 	    //set to active
             reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
 	    

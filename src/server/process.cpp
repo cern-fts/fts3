@@ -332,6 +332,9 @@ int ExecuteProcess::execProcessShell() {
         copy = (char *) malloc(strlen(path) + 1);     
         strcpy(copy, path);
         token = strtok(copy, ":");
+	if(token){
+		pathV.push_back(std::string(token));
+	}
         while ( (token = strtok(0, ":")) != NULL) {
             pathV.push_back(std::string(token));
         }
