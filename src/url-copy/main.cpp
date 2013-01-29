@@ -582,22 +582,13 @@ int main(int argc, char **argv) {
         fileManagement->setJobId(job_id);
         g_file_id = strArray[0];
         g_job_id = job_id;
-
-        /*
-         if (bringOnline)
-                 get the time out
-                 issue bringonline
-                 wait for it to finish
-                 then set the process to ACTIVE
-         */
-
+       
         reporter.timeout = timeout;
         reporter.nostreams = nbstreams;
         reporter.buffersize = tcpbuffersize;
         reporter.source_se = fileManagement->getSourceHostname();
         reporter.dest_se = fileManagement->getDestHostname();
         fileManagement->generateLogFile();
-
 	
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
@@ -670,16 +661,15 @@ int main(int argc, char **argv) {
 	    
 	    if(bringonline >0 || copy_pin_lifetime>0 ){ //issue a bring online	    	
                 reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
-		if (gfal2_bring_online(handle,(strArray[1]).c_str(), &tmp_err) < 0) {
+		if (gfal2_bring_online(handle,(strArray[1]).c_str(), copy_pin_lifetime, bringonline, &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
                     const int errCode = tmp_err->code;
                     log << fileManagement->timestamp() << "ERROR Failed to stage file, errno:" << tempError << '\n';
-                    errorMessage = "Failed to get source file size: " + tempError;
+                    errorMessage = "Failed to stage file: " + tempError;
                     errorScope = SOURCE;
                     reasonClass = mapErrnoToString(errCode);
                     errorPhase = TRANSFER_PREPARATION;
-                    g_clear_error(&tmp_err);	
-		    sleep(100);		    
+                    g_clear_error(&tmp_err);			   	    
 		    goto stop;	
 		}
 	    }

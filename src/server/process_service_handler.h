@@ -212,7 +212,7 @@ protected:
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
 
-        	int emptyVoQueues = 0;
+        	unsigned int emptyVoQueues = 0;
         	std::map< std::string, std::list<TransferFiles*> > voQueues;
             DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
 
@@ -397,6 +397,16 @@ protected:
                             params.append(temp->DEST_SPACE_TOKEN);
                         }
 
+                        if (temp->PIN_LIFETIME > 0) {
+                            params.append(" -t ");
+                            params.append(to_string(temp->PIN_LIFETIME));
+                        }
+
+                        if (temp->BRINGONLINE > 0) {
+                            params.append(" -H ");
+                            params.append(to_string(temp->BRINGONLINE));
+                        }
+
 			std::string host = DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);	
 			bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
 			
@@ -447,6 +457,8 @@ protected:
                 std::string url = std::string("");
                 std::string surl = std::string("");
                 std::string durl = std::string("");
+		int pinLifetime = -1;
+		int bringOnline = -1;
                 int BufSize = 0;
                 int StreamsperFile = 0;
                 int Timeout = 0;
@@ -488,6 +500,8 @@ protected:
                     destin_hostname = extractHostname(temp->DEST_SURL);
                     source_space_token = temp->SOURCE_SPACE_TOKEN;
 		    dest_space_token = temp->DEST_SPACE_TOKEN;
+		    pinLifetime = temp->PIN_LIFETIME;
+		    bringOnline = temp->BRINGONLINE; 
 
                     if (std::string(temp->CHECKSUM_METHOD).length() > 0) {
                         if (std::string(temp->CHECKSUM).length() > 0)
@@ -635,6 +649,17 @@ protected:
                         params.append(" -j ");
                         params.append(dest_space_token);
                     }
+		    
+  			if (pinLifetime > 0) {
+                            params.append(" -t ");
+                            params.append(to_string(pinLifetime));
+                        }
+
+                        if (bringOnline > 0) {
+                            params.append(" -H ");
+                            params.append(to_string(bringOnline));
+                        }		    
+		    
                     
 		    std::string host = DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);	
 		    bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);		

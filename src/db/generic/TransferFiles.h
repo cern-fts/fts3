@@ -68,4 +68,5 @@ public:
  std::string SOURCE_SPACE_TOKEN; 
  std::string DEST_SPACE_TOKEN;
  int PIN_LIFETIME;  
+ int BRINGONLINE;  
 };

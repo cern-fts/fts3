@@ -103,12 +103,13 @@ static bool checkUrlCopy() {
     std::string p("");
     std::vector<std::string> pathV;
     std::vector<std::string>::iterator iter;
-    char *token;
+    char *token=NULL;
     const char *path = getenv("PATH");
     char *copy = (char *) malloc(strlen(path) + 1);
     strcpy(copy, path);
     token = strtok(copy, ":");
-
+    if(token)
+    	pathV.push_back(std::string(token));
     while ((token = strtok(0, ":")) != NULL) {
         pathV.push_back(std::string(token));
     }
