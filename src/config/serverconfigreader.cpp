@@ -106,6 +106,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "Set infosys"
         )
         (
+        	"MyOSG,m",
+        	po::value<std::string>( &(_vars["MyOSG"]) )->default_value("false"),
+        	"Set the MyOSG URL (or flase meaning MyOSG wont be used)"
+        )
+        (
             "InfoPublisher,P",
             po::value<std::string>( &(_vars["InfoPublisher"]) )->default_value("false"),
             "Set this VM to be the info provider for Glue2"
