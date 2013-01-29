@@ -31,6 +31,8 @@
 #include "common/logger.h"
 #include "common/error.h"
 
+#include "config/serverconfig.h"
+
 #include "ws/CGsiAdapter.h"
 #include "ws/delegation/GSoapDelegationHandler.h"
 
@@ -46,6 +48,7 @@
 #include <boost/assign.hpp>
 
 using namespace db;
+using namespace config;
 using namespace fts3::ws;
 using namespace boost;
 using namespace boost::assign;
@@ -54,6 +57,8 @@ using namespace boost::assign;
 const regex JobSubmitter::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
 const string JobSubmitter::myosg_path = "/var/lib/fts3/osg.xml";
+
+const string JobSubmitter::false_str = "false";
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
@@ -289,7 +294,8 @@ void JobSubmitter::checkSe(string se) {
 	// check if the SE is blacklisted
 	if (db->isSeBlacklisted(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
 
-	return;
+	// if we don't care about MyOSQ return
+	if (theServerConfig().get<string>("MyOSG") == false_str) return;
 
 	// load from local file which is update by a cron job
 	OsgParser osg (myosg_path);

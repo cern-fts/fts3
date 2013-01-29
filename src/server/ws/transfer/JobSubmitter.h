@@ -179,6 +179,8 @@ private:
 	///
 	static const regex fileUrlRegex;
 
+	static const string false_str;
+
 	/**
 	 *
 	 */
