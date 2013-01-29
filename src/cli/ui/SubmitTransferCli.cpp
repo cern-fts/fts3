@@ -62,7 +62,8 @@ SubmitTransferCli::SubmitTransferCli() {
 			("dest-token,t", value<string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
 			("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
 			("compare-checksum,K", "Compare checksums between source and destination.")
-			("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
+			("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
+			("bring-online", value<int>()->implicit_value(eight_hours)->default_value(-1), "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
 			("lan-connection", "use LAN as ConnectionType (default = WAN)")
 			("fail-nearline", "fail the transfer if the file is nearline")
 			("reuse,r", "enable session reuse for the transfer job")
@@ -316,6 +317,10 @@ map<string, string> SubmitTransferCli::getParams() {
 
 	if (vm.count("copy-pin-lifetime")) {
 		parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
+	}
+
+	if (vm.count("bring-online")) {
+		parameters[JobParameterHandler::BRING_ONLINE] = lexical_cast<string>(vm["bring-online"].as<int>());
 	}
 
 	if (vm.count("reuse")) {
