@@ -222,7 +222,6 @@ void JobSubmitter::init(tns3__TransferParams *jobParams) {
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Generated uuid " << id << commit;
 
     sourceSpaceTokenDescription = "";
-    copyPinLifeTime = 1;
 
     if (jobParams) {
     	params(jobParams->keys, jobParams->values);
