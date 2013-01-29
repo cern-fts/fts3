@@ -44,8 +44,10 @@ int main(int ac, char* av[]) {
 	try {
 		// create and initialize the command line utility
 		cli.reset (
-				getCli<SubmitTransferCli>(ac, av)
+				new SubmitTransferCli
 			);
+
+		cli->parse(ac, av);
 
 		// validate command line options, and return respective gSOAP context
 		optional<GSoapContextAdapter&> opt = cli->validate();
