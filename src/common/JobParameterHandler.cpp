@@ -23,8 +23,7 @@ const string JobParameterHandler::REUSE = "reuse";
 
 
 JobParameterHandler::JobParameterHandler() {
-	// set defaults
-	parameters[COPY_PIN_LIFETIME] = "1";
+
 }
 
 
