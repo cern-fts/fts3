@@ -236,6 +236,15 @@ JobSubmitter::~JobSubmitter() {
 
 string JobSubmitter::submit() {
 
+	// for backwards compatibility check if copy-pin-lifetime and bring-online were set properly
+	if (!params.isParamSet(JobParameterHandler::COPY_PIN_LIFETIME)) {
+		params.set(JobParameterHandler::COPY_PIN_LIFETIME, "-1");
+	}
+
+	if (!params.isParamSet(JobParameterHandler::BRING_ONLINE)) {
+		params.set(JobParameterHandler::BRING_ONLINE, "-1");
+	}
+
     // submit the transfer job (add it to the DB)
     db->submitPhysical (
     		id,
