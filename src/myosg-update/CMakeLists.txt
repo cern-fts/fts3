@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 2.6)
+
+set(fts_include_dir 
+    "${PROJECT_SOURCE_DIR}/src/"
+    "${CMAKE_BINARY_DIR}/src/"
+)
+
+include_directories (${fts_include_dir})
+include_directories (.)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/common/)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
+
+#find_package (GLIB2)
+#include_directories (${GLIB2_INCLUDE_DIRS})
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+#set(CMAKE_INCLUDE_CURRENT_DIR ON)
+set(fts_myosg_updater_SOURCES updater.cpp)
+
+add_executable(fts_myosg_updater ${fts_myosg_updater_SOURCES})
+add_dependencies(fts_myosg_updater fts_config)
+add_dependencies(fts_myosg_updater fts_common)
+target_link_libraries(fts_myosg_updater -lcurl)
+target_link_libraries(fts_myosg_updater -lfts_config)
+target_link_libraries(fts_myosg_updater -lfts_common)
+
+install(TARGETS         fts_myosg_updater 
+	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
+
+install(FILES         fts-myosg-updater
+        DESTINATION ${SYSCONF_INSTALL_DIR}/cron.daily
+	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ)			
+	
+install(FILES         fts-myosg-updater.initd
+        DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
+	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
+	RENAME fts-myosg-updater )
