@@ -28,6 +28,7 @@ BuildRequires:  gfal2-devel%{?_isa}
 BuildRequires:  voms-devel%{?_isa}
 BuildRequires:  python-devel%{?_isa}
 BuildRequires:  pugixml-devel%{?_isa}
+BuildRequires:  libcurl-devel%{?_isa}
 Requires(pre):  shadow-utils
 
 
@@ -116,6 +117,7 @@ exit 0
 /sbin/chkconfig --add fts-msg-cron
 /sbin/chkconfig --add fts-records-cleaner
 /sbin/chkconfig --add fts-info-publisher
+/sbin/chkconfig --add fts-myosg-updater
 exit 0
 
 %preun server
@@ -130,6 +132,8 @@ if [ $1 -eq 0 ] ; then
     /sbin/chkconfig --del fts-records-cleaner
     /sbin/service fts-info-publisher stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-info-publisher
+    /sbin/service fts-myosg-updater stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-myosg-updater
     if [ -f /dev/shm/fts3mqupdater ]; then rm -rf /dev/shm/fts3mqupdater; fi
     if [ -f /dev/shm/fts3mqmon ]; then rm -rf /dev/shm/fts3mqmon; fi
     if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi
@@ -142,7 +146,8 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
     /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :    
-    /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :        
+    /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :
+	/sbin/service fts-myosg-updater condrestart >/dev/null 2>&1 || :        
 fi
 exit 0
 
@@ -163,15 +168,18 @@ rm -rf %{buildroot}
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_cleaner
 %{_sbindir}/fts_info_publisher
+%{_sbindir}/fts_myosg_updater
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
 %attr(0755,root,root) %{_initddir}/fts-info-publisher
+%attr(0755,root,root) %{_initddir}/fts-myosg-updater
 %config %{_sysconfdir}/logrotate.d/fts-server
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
+%attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-myosg-updater
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %{_mandir}/man8/fts_server.8.gz
