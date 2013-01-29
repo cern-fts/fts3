@@ -569,6 +569,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                 tr_files->CHECKSUM_METHOD = r->getString(10);
                 tr_files->SOURCE_SPACE_TOKEN = r->getString(11);
                 tr_files->DEST_SPACE_TOKEN = r->getString(12);
+ 		tr_files->PIN_LIFETIME = r->getInt(13);
+ 		tr_files->BRINGONLINE = r->getInt(14);	
                 files[tr_files->VO_NAME].push_back(tr_files);
             }
             conn->destroyResultset(s, r);

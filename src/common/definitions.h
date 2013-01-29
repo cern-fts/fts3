@@ -73,7 +73,6 @@ public:
 
 struct message_updater {
 public:
-
     message_updater() {
         memset(job_id, 0, sizeof (job_id));
         file_id = 0;

@@ -18,13 +18,16 @@ limitations under the License. */
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/tokenizer.hpp>
+#include <boost/asio.hpp>
 
 using namespace std;
 
 Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), qm(NULL), msg_updater(NULL),qm_updater(NULL){
   try{
     qm = new QueueManager(false);
-    msg = new struct message;
+    msg = new struct message();
    }catch(...){
         /*try again before let it fail*/
 	     try{
@@ -37,7 +40,7 @@ Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), qm(NULL), msg_upda
    
   try{
     qm_updater = new QueueManager(true,false);
-    msg_updater = new struct message_updater;
+    msg_updater = new struct message_updater();
    }catch(...){
         /*try again before let it fail*/
 	     try{
@@ -140,7 +143,7 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
 void Reporter::constructMessageUpdater(std::string job_id, std::string file_id){
     try {
         strcpy(msg_updater->job_id, job_id.c_str());
-        msg_updater->file_id = atoi(file_id.c_str());        
+        msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);   
         msg_updater->process_id = (int) getpid();
 	msg_updater->timestamp = std::time(NULL);
 	if(qm_updater)
@@ -148,7 +151,7 @@ void Reporter::constructMessageUpdater(std::string job_id, std::string file_id){
     } catch (...) {
         //attempt to resend the message
         strcpy(msg_updater->job_id, job_id.c_str());
-        msg_updater->file_id = atoi(file_id.c_str());      
+        msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);      
         msg_updater->process_id = (int) getpid();
 	msg_updater->timestamp = std::time(NULL);
 	if(qm_updater)

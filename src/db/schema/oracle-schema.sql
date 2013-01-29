@@ -457,8 +457,8 @@ CREATE TABLE t_job (
 --
 -- pin lifetime of the copy of the file created after a successful srmPutDone
 -- or srmCopy operations, in seconds
-  ,copy_pin_lifetime INTEGER default NULL
-  ,bring_online INTEGER default NULL
+  ,copy_pin_lifetime NUMBER default NULL
+  ,bring_online NUMBER default NULL
 --
 -- use "LAN" as ConnectionType (FTS by default uses WAN). Default value is false.
   ,lan_connection CHAR(1) default NULL
