@@ -16,8 +16,7 @@
 
 lockfile=/var/lock/subsys/fts-myosg-updater
 
-[ -f $LOCKFILE ] && exit 0
-
-/usr/sbin/fts_myosg_updater
-
+if [ -f $lockfile ]; then
+	/usr/sbin/fts_myosg_updater
+fi
  
