@@ -18,28 +18,60 @@
  */
 
 /*
- * UuidGenerator.cpp
+ * UuidGenerator.h
  *
  *  Created on: Feb 17, 2012
  *      Author: simonm
  */
 
-#include "uuid_generator.h"
-#include <uuid/uuid.h>
+#ifndef UUIDGENERATOR_H_
+#define UUIDGENERATOR_H_
 
-using namespace fts3::ws;
+#include <string>
+using namespace std;
 
-string UuidGenerator::generateUUID() {
 
-	uuid_t id;
-	char c_str[37]={0};
+namespace fts3 { namespace common {
 
-	uuid_generate(id);
-	// different algorithms:
-	//uuid_generate_random(id);
-	//uuid_generate_time(id);
-	uuid_unparse(id, c_str);
+/**
+ * UuidGenerator is a static class encapsulating libuuid.
+ *
+ * Its main goal is the generate uuids.
+ */
+class UuidGenerator {
 
-	string str = c_str;
-	return str;
+public:
+
+	/**
+	 * Generates uuid
+	 *
+	 * @return uuid (string)
+	 */
+	static string generateUUID();
+
+	/**
+	 * Destructor.
+	 */
+	virtual ~UuidGenerator();
+
+private:
+	/**
+	 * Default constructor (private).
+	 */
+	UuidGenerator();
+
+	/**
+	 * Copy constructor (private).
+	 */
+	UuidGenerator (UuidGenerator const&);
+
+	/**
+	 * Copy assignment operator (private).
+	 */
+	UuidGenerator& operator=(UuidGenerator const&);
+};
+
 }
+}
+
+#endif /* UUIDGENERATOR_H_ */

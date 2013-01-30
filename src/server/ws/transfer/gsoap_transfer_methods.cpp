@@ -18,7 +18,6 @@
  */
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
-#include "uuid_generator.h"
 
 #include "db/generic/SingleDbInstance.h"
 #include "config/serverconfig.h"

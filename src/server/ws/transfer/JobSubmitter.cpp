@@ -25,7 +25,7 @@
 #include "JobSubmitter.h"
 #include "ws/config/Configuration.h"
 
-#include "uuid_generator.h"
+#include "common/uuid_generator.h"
 #include "db/generic/SingleDbInstance.h"
 
 #include "common/logger.h"

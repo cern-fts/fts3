@@ -27,6 +27,10 @@ include_directories (.)
 
 FILE(GLOB SSL_CPP "StaticSslLocking*")
 
+# Find libuuid
+find_package(LibUuid REQUIRED)
+include_directories(${LIBUUID_INCLUDE_DIRS})
+
 file(GLOB fts_common_sources "*.cpp")
 if (ORACLEBUILD STREQUAL "ON")
 list(REMOVE_ITEM fts_common_sources ${SSL_CPP})
@@ -39,6 +43,7 @@ target_link_libraries(fts_common ${Boost_LIBRARIES} )
 target_link_libraries(fts_common -lboost_regex-mt -lboost_iostreams-mt)
 if (ORACLEBUILD STREQUAL "OFF")
 target_link_libraries(fts_common -lssl)
+target_link_libraries(fts_common ${LIBUUID_LIBRARIES})
 endif ()
 
 

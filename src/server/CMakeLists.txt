@@ -77,12 +77,6 @@ ${PROJECT_BINARY_DIR}/src/server
                                                 SOVERSION ${VERSION_MAJOR}
                                                 CLEAN_DIRECT_OUTPUT 1)
 
-
-
-# Find libuuid
-find_package(LibUuid REQUIRED)
-include_directories(${LIBUUID_INCLUDE_DIRS})
-
 # Server lib
 file(GLOB fts_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*.cpp")
 list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
@@ -91,7 +85,6 @@ add_dependencies(fts_server_lib fts_server_gsoap_transfer)
 target_link_libraries(fts_server_lib 
 	${fts_libs} 
 	-lfts_server_gsoap_transfer 
-	${LIBUUID_LIBRARIES} 
 	-lboost_thread-mt 
 	-lboost_regex-mt 
 	-lis_ifce 
