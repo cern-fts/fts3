@@ -117,6 +117,9 @@ public:
 		return type;
 	}
 
+	/// the auto value of a share
+	static const string auto_value;
+
 private:
 
 	CfgType type;
@@ -155,9 +158,6 @@ private:
 	static const map< string, set <string> > initSePairCfgTokens();
 	/// initializes allowed JSON members for se group pair
 	static const map< string, set <string> > initGrPairCfgTokens();
-
-	/// the auto value of a share
-	static const string auto_value;
 };
 
 template <typename T>
