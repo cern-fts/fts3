@@ -31,7 +31,8 @@ int main(int argc, char** argv) {
 
 	theServerConfig().read(argc, argv);
 
-	// path to local the MyOSG XML file
+	// path to local the MyOSG XML file and a temporary file
+	const string myosg_path_part = "/var/lib/fts3/myosg.xml.part";
 	const string myosg_path = "/var/lib/fts3/myosg.xml";
 	// false string
 	const string false_str = "false";
@@ -46,10 +47,10 @@ int main(int argc, char** argv) {
 	// return code
 	CURLcode res;
 	// output file descriptor
-	FILE *fp = fopen(myosg_path.c_str(), "wb");
+	FILE *fp = fopen(myosg_path_part.c_str(), "wb");
 
 	if (!fp) {
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "failed to create/open file (" << myosg_path << ")" << commit;
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "failed to create/open file (" << myosg_path_part << ")" << commit;
 		return EXIT_FAILURE;
 	}
 
@@ -75,6 +76,14 @@ int main(int argc, char** argv) {
 	} else {
 		ret = EXIT_FAILURE;
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "failed to initialize curl context (curl_easy_init)" << commit;
+	}
+
+	if (ret == EXIT_SUCCESS) {
+		// if every thing went well rename the file
+		rename (myosg_path_part.c_str(), myosg_path.c_str());
+	} else if (ret == EXIT_FAILURE) {
+		// if there was an error remove the part file
+		remove (myosg_path_part.c_str());
 	}
 
     return ret;
