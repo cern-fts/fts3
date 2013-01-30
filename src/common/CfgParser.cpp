@@ -253,5 +253,23 @@ optional<string> CfgParser::get_opt(string path) {
 	return v;
 }
 
+bool CfgParser::isAuto(string path) {
+
+	string v;
+	try {
+
+		v = pt.get<string>(path);
+
+	} catch (ptree_bad_path& ex) {
+		// if the path is not correct throw en exception
+		throw Err_Custom("The " + path + " has to be specified!");
+	} catch (ptree_bad_data& ex) {
+		// if the type of the value is wrong throw an exception
+		throw Err_Custom("Wrong value type of " + path);
+	}
+
+	return v == auto_value;
+}
+
 }
 }

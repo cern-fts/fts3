@@ -104,6 +104,13 @@ public:
 	optional<string> get_opt(string path);
 
 	/**
+	 * Checks if the given property was set to 'auto'
+	 *
+	 * @return true if the property of interest was set to 'auto', false otherwise
+	 */
+	bool isAuto(string path);
+
+	/**
 	 *
 	 */
 	CfgType getCfgType() {
@@ -226,7 +233,7 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path) {
 	// accordingly to boost it should be empty if array syntax was used in JSON
 	string wrong = array.get_value<string>();
 	if (!wrong.empty()) {
-		throw string ("Wrong value: '" + wrong + "'");
+		throw Err_Custom("Wrong value: '" + wrong + "'");
 	}
 
 	ptree::iterator it;
