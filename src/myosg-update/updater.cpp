@@ -83,6 +83,9 @@ int main(int argc, char** argv) {
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "failed to initialize curl context (curl_easy_init)" << commit;
 	}
 
+	// close the part file
+	fclose (fp);
+
 	// check if the file has a valid XML syntax
 	try {
 		fstream in (myosg_path_part.c_str());
