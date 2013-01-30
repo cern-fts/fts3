@@ -8,10 +8,15 @@
 #include "common/logger.h"
 
 #include <string>
+#include <fstream>
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 using namespace std;
 using namespace fts3::common;
 using namespace fts3::config;
+using namespace boost::property_tree;
 
 /**
  * Function that writes the file down
@@ -76,6 +81,17 @@ int main(int argc, char** argv) {
 	} else {
 		ret = EXIT_FAILURE;
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "failed to initialize curl context (curl_easy_init)" << commit;
+	}
+
+	// check if the file has a valid XML syntax
+	try {
+		fstream in (myosg_path_part.c_str());
+		ptree pt;
+		// if the format is invalid an exception will be thrown
+		read_xml(in, pt);
+	} catch (xml_parser_error& ex) {
+		ret = EXIT_FAILURE;
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "XML syntax error: " << ex.what() << commit;
 	}
 
 	if (ret == EXIT_SUCCESS) {
