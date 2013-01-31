@@ -443,7 +443,13 @@ CREATE TABLE t_job (
   checksum_method          CHAR(1) DEFAULT NULL,
  --
  -- Specifies how many configurations were assigned to the transfer-job
-  configuration_count      INTEGER default NULL
+  configuration_count      INTEGER default NULL,
+--
+-- Bringonline timeout
+  bring_online INTEGER default NULL,
+--
+-- Job metadata
+  job_metadata VARCHAR(255)     
 );
   
   
@@ -550,6 +556,15 @@ CREATE TABLE t_file (
 --
 -- How many times should the transfer be retried 
   retry                 INTEGER DEFAULT 0,
+--
+-- File metadata
+  file_metadata   VARCHAR(255),
+--
+-- Staging start timestamp
+  staging_start   TIMESTAMP NULL DEFAULT NULL,  
+--
+-- Staging finish timestamp
+  staging_finished   TIMESTAMP NULL DEFAULT NULL,    
   
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
