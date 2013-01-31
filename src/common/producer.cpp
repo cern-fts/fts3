@@ -44,7 +44,9 @@ void mktempfile(const std::string& basename,
             std::string& tempname)
 {
    char* temp= (char *) "_XXXXXX";
-   mktemp(temp);
+   char *createTempFile = mktemp(temp);
+   if(createTempFile == NULL){
+   }
 
    tempname = basename;
    tempname.append(std::string(temp));
@@ -60,7 +62,9 @@ void runProducerMonitoring(const char* msg)
 	        getUniqueTempFileName(basename, tempname);
        		if ((fp = fopen(tempname.c_str(), "w")) != NULL)
        		{        					
-        		fwrite(msg, strlen(msg)+1, 1, fp); 
+        		size_t writesBytes = fwrite(msg, strlen(msg)+1, 1, fp); 
+			if(writesBytes==0 || errno != 0){
+			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
 			rename(tempname.c_str(), renamedFile.c_str());
@@ -77,7 +81,9 @@ void runProducerStatus(struct message msg){
 	        getUniqueTempFileName(basename, tempname);
        		if ((fp = fopen(tempname.c_str(), "w")) != NULL)
        		{        					
-        		fwrite(&msg, sizeof(msg), 1, fp); 
+        		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp); 
+			if(writesBytes==0 || errno != 0){
+			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
 			rename(tempname.c_str(), renamedFile.c_str());
@@ -92,7 +98,9 @@ void runProducerStall(struct message_updater msg){
 	        std::string tempname = basename + "_" + msg.job_id + "_" + boost::lexical_cast<string>( msg.file_id );
        		if ((fp = fopen(tempname.c_str(), "w+")) != NULL)
        		{        					
-        		fwrite(&msg, sizeof(msg), 1, fp); 
+        		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+			if(writesBytes==0 || errno != 0){
+			} 
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
 			rename(tempname.c_str(), renamedFile.c_str());

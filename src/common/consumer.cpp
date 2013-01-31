@@ -66,7 +66,9 @@ void runConsumerMonitoring(std::vector<std::string>& messages)
     for (unsigned int i = 0;i < files.size();i++) {      
 	FILE *fp = NULL;	
 	if ((fp = fopen(files[i].c_str(), "r")) != NULL){
-	  fread(msg, sizeof(msg), 1, fp);	  
+	  size_t readBytes = fread(msg, sizeof(msg), 1, fp);
+	  if(readBytes==0 || errno != 0){
+	  } 	  	  
 	  messages.push_back(std::string(msg));
 	  unlink(files[i].c_str());
 	  fclose(fp);
@@ -85,7 +87,9 @@ void runConsumerStatus(std::vector<struct message>& messages){
     for (unsigned int i = 0;i < files.size();i++) {      
 	FILE *fp = NULL;	
 	if ((fp = fopen(files[i].c_str(), "r")) != NULL){
-	  fread(&msg, sizeof(msg), 1, fp);	  
+	  size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
+	  if(readBytes==0 || errno != 0){
+	  } 	  	  	  	  
 	  messages.push_back(msg);	  
 	  unlink(files[i].c_str());
 	  fclose(fp);
@@ -104,7 +108,9 @@ void runConsumerStall(std::vector<struct message_updater>& messages){
     for (unsigned int i = 0;i < files.size();i++) {      
 	FILE *fp = NULL;	
 	if ((fp = fopen(files[i].c_str(), "r")) != NULL){
-	  fread(&msg, sizeof(msg), 1, fp);	  
+	  size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
+	  if(readBytes==0 || errno != 0){
+	  } 	  	  	  	  
 	  messages.push_back(msg);
 	  unlink(files[i].c_str());
 	  fclose(fp);
