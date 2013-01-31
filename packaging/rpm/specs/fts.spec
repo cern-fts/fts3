@@ -150,7 +150,7 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
     /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :    
     /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :
-	/sbin/service fts-myosg-updater condrestart >/dev/null 2>&1 || :        
+    /sbin/service fts-myosg-updater condrestart >/dev/null 2>&1 || :        
 fi
 exit 0
 
