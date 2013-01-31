@@ -108,20 +108,20 @@ protected:
 	    if(!alive)
 		continue;		    
 	    
-            std::map<int, std::string> pids;
-            ThreadSafeList::get_instance().checkExpiredMsg(pids);
-            if (!pids.empty()) {
-                bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(pids); /*max retry 3 times*/
+            std::vector<struct message_updater> messages;
+            ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
+            if (!messages.empty()) {
+                bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages); /*max retry 3 times*/
 		if(updated){
-                	ThreadSafeList::get_instance().deleteMsg(pids);
-                	pids.clear();
+                	ThreadSafeList::get_instance().deleteMsg(messages);
+                	messages.clear();
 		}
             }
 	    
 	    
 	    /*set to fail all old queued jobs which have exceeded max queue time*/
 	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
-            sleep(5);
+            sleep(30);
         }catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message updater thrown unhandled exception"));
             }            

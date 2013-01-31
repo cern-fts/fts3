@@ -641,7 +641,7 @@ void MySqlAPI::deleteSe(std::string NAME) {
 
 
 
-bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, std::string file_id, std::string transfer_status, std::string transfer_message,
+bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, int file_id, std::string transfer_status, std::string transfer_message,
                                         int process_id, double filesize, double duration) {
 
     bool ok = true;
@@ -701,7 +701,7 @@ bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, std::string file
 
 
 
-bool MySqlAPI::updateJobTransferStatus(std::string /*file_id*/, std::string job_id, const std::string status) {
+bool MySqlAPI::updateJobTransferStatus(int /*file_id*/, std::string job_id, const std::string status) {
     bool ok = true;
     soci::session sql(connectionPool);
 
@@ -1223,7 +1223,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
 
 
 
-bool MySqlAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
     bool ok = true;
     soci::session sql(connectionPool);
 
@@ -1513,14 +1513,12 @@ void MySqlAPI::forceFailTransfers() {
 
                 diff = difftime(lifetime, startTime);
                 if (timeout != 0 && diff > (timeout + 1000) && tHost == hostname) {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;
-                    std::stringstream ss;
-                    ss << fileId;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;                    
                     kill(pid, SIGUSR1);
-                    updateFileTransferStatus(jobId, ss.str(),
+                    updateFileTransferStatus(jobId, fileId,
                                              "FAILED", "Transfer has been forced-killed because it was stalled",
                                              pid, 0, 0);
-                    updateJobTransferStatus(ss.str(), jobId, "FAILED");
+                    updateJobTransferStatus(fileId, jobId, "FAILED");
                 }
 
             } while (stmt.fetch());
@@ -1596,7 +1594,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId) {
 
 
 
-void MySqlAPI::setPid(const std::string & jobId, const std::string & fileId, int pid) {
+void MySqlAPI::setPid(const std::string & jobId, int fileId, int pid) {
     soci::session sql(connectionPool);
 
     try {
@@ -1787,32 +1785,22 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
 
 
 
-bool MySqlAPI::retryFromDead(std::map<int, std::string>& pids) {
+bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     bool ok = true;
-    soci::session sql(connectionPool);
+    std::vector<struct message_updater>::const_iterator iter;
+    const std::string transfer_status = "FAILED";
+    const std::string transfer_message = "Transfer failed to respond within 360 secs, probably stalled";
+    const std::string status = "FAILED";
 
     try {
-        int fileId;
-        std::string jobId;
 
-        sql.begin();
-
-        soci::statement stmt = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED' "
-                                               "WHERE file_id = :fileId AND"
-                                               "      job_id = :jobId AND "
-                                               "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
-                                               soci::use(fileId), soci::use(jobId));
-        for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i) {
-            fileId = i->first;
-            jobId  = i->second;
-            stmt.execute(true);
+        for (iter = messages.begin(); iter != messages.end(); ++iter) {
+                updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);       
         }
-
-        sql.commit();
     }
     catch (std::exception& e) {
-        ok = false;
-        sql.rollback();
+        ok = false;       
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
     return ok;

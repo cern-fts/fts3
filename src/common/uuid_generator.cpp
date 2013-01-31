@@ -27,7 +27,6 @@
 #include "uuid_generator.h"
 #include <uuid/uuid.h>
 
-using namespace fts3::common;
 
 string UuidGenerator::generateUUID() {
 

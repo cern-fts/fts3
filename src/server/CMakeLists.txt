@@ -106,7 +106,7 @@ ${PROJECT_BINARY_DIR}/src/server
 # Server executable
 add_executable (fts_server main.cpp)
 add_dependencies(fts_server fts_server_lib)
-target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_config -lfts_common -lfts_db_generic -lfts_server_gsoap_transfer -lgsoap++ -lfts_ws_ifce_server -lfts_ws_ifce_client)
+target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lboost_filesystem-mt -lfts_proxy -lfts_config -lfts_common -lfts_db_generic -lfts_server_gsoap_transfer -lgsoap++ -lfts_ws_ifce_server -lfts_ws_ifce_client)
 
 # ------------------------------------------------------------------------
 # man pages

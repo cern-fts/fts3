@@ -473,6 +473,8 @@ CREATE TABLE t_job (
  --
  -- Specifies how many configurations were assigned to the transfer-job
   ,configuration_count INTEGER default NULL
+-- user provided metadata
+  ,job_metadata    VARCHAR2(255)    
   );
   
   
@@ -587,6 +589,12 @@ CREATE TABLE t_file (
   ,retry           NUMBER DEFAULT 0
   ,staging_start          TIMESTAMP WITH TIME ZONE DEFAULT NULL
   ,staging_finished       TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+-- user provided size of the file (bytes)
+  ,user_filesize         	INTEGER  
+--
+-- user provided metadata
+  ,file_metadata    VARCHAR2(255)  
 );
 --
 -- autoinc sequence on file_id

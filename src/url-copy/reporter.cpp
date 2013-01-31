@@ -21,47 +21,22 @@ limitations under the License. */
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include <boost/tokenizer.hpp>
 #include <boost/asio.hpp>
+#include "producer_consumer_common.h"
+#include <algorithm>
+#include <ctime>
 
 using namespace std;
 
-Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), qm(NULL), msg_updater(NULL),qm_updater(NULL){
-  try{
-    qm = new QueueManager(false);
-    msg = new struct message();
-   }catch(...){
-        /*try again before let it fail*/
-	     try{
-		qm = new QueueManager(false);
-		msg = new struct message;
-	      }catch(...){
-	   	/*no way to recover if an exception is thrown here, better let it fail and log the error*/	      
-	      }
-   }
-   
-  try{
-    qm_updater = new QueueManager(true,false);
-    msg_updater = new struct message_updater();
-   }catch(...){
-        /*try again before let it fail*/
-	     try{
-		qm_updater = new QueueManager(true, false);
-		msg_updater = new struct message_updater;
-	      }catch(...){
-	   	/*no way to recover if an exception is thrown here, better let it fail and log the error*/	      
-	      }
-   }   
-   
+Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), msg_updater(NULL) {
+	msg = new struct message();
+	msg_updater = new struct message_updater();
 }
 
 Reporter::~Reporter() {
     if (msg)
         delete msg;
-    if (qm)
-        delete qm;
     if (msg_updater)
-        delete msg_updater;
-    if (qm_updater)
-        delete qm_updater;	
+        delete msg_updater;	
 }
 
 std::string Reporter::ReplaceNonPrintableCharacters(string s) {
@@ -85,7 +60,7 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s) {
 void Reporter::constructMessage(string job_id, string file_id, string transfer_status, string transfer_message, double timeInSecs, double filesize) {
     try {
         strcpy(msg->job_id, job_id.c_str());
-        strcpy(msg->file_id, file_id.c_str());
+        msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
         strcpy(msg->transfer_status, transfer_status.c_str());
 	if(transfer_message.length() > 0 && transfer_message.length() >= 1023){
         	transfer_message = transfer_message.substr(0, 1023);
@@ -106,13 +81,12 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         msg->buffersize = buffersize;
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
-	if(qm){
-        	qm->send(msg);
-        }
+	msg->timestamp = std::clock();
+	runProducerStatus(*msg);      
     } catch (...) {
         //second attempt to resend the message
         strcpy(msg->job_id, job_id.c_str());
-        strcpy(msg->file_id, file_id.c_str());
+        msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
         strcpy(msg->transfer_status, transfer_status.c_str());
 	if(transfer_message.length() > 0 && transfer_message.length() >= 1023){
         	transfer_message = transfer_message.substr(0, 1023);
@@ -133,9 +107,8 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         msg->buffersize = buffersize;
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
-	if(qm){
-        	qm->send(msg);
-        }
+	msg->timestamp = std::clock();
+	runProducerStatus(*msg);        
     }
 }
 
@@ -145,17 +118,15 @@ void Reporter::constructMessageUpdater(std::string job_id, std::string file_id){
         strcpy(msg_updater->job_id, job_id.c_str());
         msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);   
         msg_updater->process_id = (int) getpid();
-	msg_updater->timestamp = std::time(NULL);
-	if(qm_updater)
-        	qm_updater->sendUpdater(msg_updater);
+	msg_updater->timestamp = std::clock();
+	runProducerStall(*msg_updater);
     } catch (...) {
         //attempt to resend the message
         strcpy(msg_updater->job_id, job_id.c_str());
         msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);      
         msg_updater->process_id = (int) getpid();
-	msg_updater->timestamp = std::time(NULL);
-	if(qm_updater)
-        	qm_updater->sendUpdater(msg_updater);
+	msg_updater->timestamp = std::clock();
+	runProducerStall(*msg_updater);
     }
 }
 

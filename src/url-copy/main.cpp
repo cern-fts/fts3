@@ -54,6 +54,7 @@ limitations under the License. */
 #include <exception>
 #include "StaticSslLocking.h"
 #include "monitoring/utility_routines.h"
+#include <ctime>
 
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -63,7 +64,8 @@ FileManagement* fileManagement = NULL;
 static Reporter reporter;
 static std::ofstream logStream;
 static transfer_completed tr_completed;
-static std::string g_file_id("");
+static std::string strArray[6];
+static std::string g_file_id("0");
 static std::string g_job_id("");
 static std::string errorScope("");
 static std::string errorPhase("");
@@ -73,10 +75,11 @@ static std::string readFile("");
 static std::string reuseFile("");
 double source_size = 0.0;
 double dest_size = 0.0;
+double userFilesize = -1;
 double diff = 0.0;
 std::time_t start;
 static uid_t pw_uid;
-static std::string file_id("");
+static std::string file_id("0");
 static std::string job_id(""); //a
 static std::string source_url(""); //b
 static std::string dest_url(""); //c
@@ -119,6 +122,8 @@ std::string timeout_to_string("");
 extern std::string stackTrace;
 gfalt_params_t params;
 gfal_context_t handle = NULL;
+static std::string file_Metadata("");
+static std::string job_Metadata(""); //a
 
 
 static int fexists(const char *filename) {
@@ -213,7 +218,10 @@ void abnormalTermination(const std::string& classification, const std::string& m
     reporter.timeout = timeout;
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
-    reporter.constructMessage(g_job_id, g_file_id, classification, errorMessage, diff, source_size);
+    if(strArray[0].length() > 0)
+    	reporter.constructMessage(g_job_id, strArray[0], classification, errorMessage, diff, source_size);
+    else
+    	reporter.constructMessage(g_job_id, g_file_id, classification, errorMessage, diff, source_size);    
     std::string moveFile = fileManagement->archive();
     if (moveFile.length() != 0) {
         logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
@@ -246,7 +254,10 @@ void taskTimer(int time) {
 
 void taskStatusUpdater(int time) {
     while (1) {
-        reporter.constructMessageUpdater(job_id, file_id);
+	if(strArray[0].length() > 0)
+        	reporter.constructMessageUpdater(job_id, strArray[0]);	
+	else
+        	reporter.constructMessageUpdater(job_id, file_id);
         boost::this_thread::sleep(boost::posix_time::seconds(time));
     }
 }
@@ -425,7 +436,13 @@ int main(int argc, char **argv) {
     gethostname(hostname, 1023);
 
     for (register int i(1); i < argc; ++i) {
-        std::string temp(argv[i]);
+        std::string temp(argv[i]);	
+        if (temp.compare("-K") == 0)
+            file_Metadata = std::string(argv[i + 1]);	    	
+        if (temp.compare("-J") == 0)
+            job_Metadata = std::string(argv[i + 1]);	    		    
+        if (temp.compare("-I") == 0)
+            userFilesize = boost::lexical_cast<double>(argv[i + 1]);	
         if (temp.compare("-H") == 0)
             bringonline = boost::lexical_cast<int>(argv[i + 1]);
         if (temp.compare("-G") == 0)
@@ -557,7 +574,7 @@ int main(int argc, char **argv) {
         abnormalTermination("FAILED", errorMessage, "Error");
     }
 
-    std::string strArray[4];
+
     for (register unsigned int ii = 0; ii < reuseOrNot; ii++) {
         errorScope = std::string("");
         reasonClass = std::string("");
@@ -573,6 +590,8 @@ int main(int argc, char **argv) {
             strArray[1] = source_url;
             strArray[2] = dest_url;
             strArray[3] = checksum_value;
+	    strArray[4] = userFilesize;
+	    strArray[5] = file_Metadata;
         }
 	
 	
@@ -658,8 +677,11 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
             log << fileManagement->timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
             log << fileManagement->timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
+	    log << fileManagement->timestamp() << "INFO User specified filesize:" << userFilesize << '\n'; //A
+	    log << fileManagement->timestamp() << "INFO File metadata:" << strArray[5] << '\n'; //A
+	    log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A
 	    
-	    
+	    	    
 	    if(bringonline >0 || copy_pin_lifetime>0 ){ //issue a bring online	    	
                 reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
 		if (gfal2_bring_online(handle,(strArray[1]).c_str(), copy_pin_lifetime, bringonline, &tmp_err) < 0) {
@@ -743,15 +765,26 @@ int main(int argc, char **argv) {
                         errorPhase = TRANSFER_PREPARATION;
                         if (sourceStatRetry == 3)
                             goto stop;
-                    }
-                    log << fileManagement->timestamp() << "INFO Source file size: " << statbufsrc.st_size << '\n';
-		    if(statbufsrc.st_size > 0)
-                    	source_size = statbufsrc.st_size;
-                    //conver longlong to string
-                    std::string size_to_string = to_string<long double > (source_size, std::dec);
-                    //set the value of file size to the message
-                    msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
-                    break;
+                    }else if(userFilesize != -1 &&  userFilesize != statbufsrc.st_size){
+		        std::stringstream error_;
+			error_ << "User specified source file size is " <<  userFilesize << " but stat returned " << statbufsrc.st_size;
+		        errorMessage = error_.str();
+                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                        errorScope = SOURCE;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_PREPARATION;
+                        if (sourceStatRetry == 3)
+                            goto stop;
+		    }else{
+                    	log << fileManagement->timestamp() << "INFO Source file size: " << statbufsrc.st_size << '\n';
+		    	if(statbufsrc.st_size > 0)
+                    		source_size = statbufsrc.st_size;
+                    	//conver longlong to string
+                    	std::string size_to_string = to_string<long double > (source_size, std::dec);
+                    	//set the value of file size to the message
+                    	msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
+                    	break;
+		    }
                 }
 		sleep(3); //give it some time to breath
             }
@@ -860,10 +893,21 @@ int main(int argc, char **argv) {
 				gfal2_cancel(handle);    					
                             goto stop;
 			}
-                    }
-                    log << fileManagement->timestamp() << "INFO Destination file size: " << statbufdest.st_size << '\n';
-                    dest_size = statbufdest.st_size;
-                    break;
+                    }else if(userFilesize != -1 &&  userFilesize != statbufdest.st_size){
+		        std::stringstream error_;
+			error_ << "User specified destination file size is " <<  userFilesize << " but stat returned " << statbufsrc.st_size;
+		        errorMessage = error_.str();
+                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                        errorScope = DESTINATION;
+                        reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        errorPhase = TRANSFER_FINALIZATION;
+                        if (destStatRetry == 3)
+                            goto stop;
+		    }else{
+                    	log << fileManagement->timestamp() << "INFO Destination file size: " << statbufdest.st_size << '\n';
+                    	dest_size = statbufdest.st_size;
+                    	break;
+		    }
                 }
 		sleep(3); //give it some time to breath
             }

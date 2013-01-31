@@ -17,7 +17,7 @@ limitations under the License. */
 #define THREADSAFELIST_H_
 
 #include <list>
-#include <map>
+#include <vector>
 #include <string>
 #include "definitions.h"
 #include "threadtraits.h"
@@ -37,9 +37,9 @@ public:
     std::list<struct message_updater> getList();
     void push_back(struct message_updater msg);
     void clear();
-    void updateMsg(struct message_updater *msg);
-    void checkExpiredMsg(std::map<int, std::string>& pids);
-    void deleteMsg(std::map<int, std::string>& pids);
+    void updateMsg(struct message_updater msg);
+    void checkExpiredMsg(std::vector<struct message_updater>& messages);
+    void deleteMsg(std::vector<struct message_updater>& messages);
     void removeFinishedTr(std::string job_id, int file_id);
 
 private:

@@ -40,6 +40,7 @@ limitations under the License. */
 #include <boost/algorithm/string.hpp>  
 #include "mq_manager.h"
 #include <boost/interprocess/ipc/message_queue.hpp>
+#include "producer_consumer_common.h"
 
 extern bool stopThreads;
 
@@ -80,12 +81,7 @@ public:
             const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
             ) :
-    TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc) {
-        try {
-            qm = new QueueManager(true, true);
-        } catch (interprocess_exception &ex) {
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "/dev/shm/fts3mqupdater " << ex.what() << commit;
-        }
+    TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc) {       
     }
 
     /* ---------------------------------------------------------------------- */
@@ -111,19 +107,31 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
+        
+        std::vector<struct message_updater> messages;
+	std::vector<struct message_updater>::const_iterator iter;
+    
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
             try {
-                struct message_updater msg;
-                bool hasMessage = qm->receiveUpdater(&msg);
-		if(hasMessage==false)
+	
+	        runConsumerStall(messages);
+		if(messages.empty()){
 			continue;
-                std::string job = std::string(msg.job_id).substr(0, 36);
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
-                        << "\nJob id: " << job
-                        << "\nFile id: " << msg.file_id
-                        << "\nPid: " << msg.process_id
-                        << "\nTimestamp: " << msg.timestamp << commit;	
-                ThreadSafeList::get_instance().updateMsg(&msg);
+		}else{
+			for (iter = messages.begin(); iter != messages.end(); ++iter){
+				std::string job = std::string((*iter).job_id).substr(0, 36);
+                		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
+                        		<< "\nJob id: " << job
+                        		<< "\nFile id: " << (*iter).file_id
+                        		<< "\nPid: " << (*iter).process_id
+                        		<< "\nTimestamp: " << (*iter).timestamp << commit;	
+                		ThreadSafeList::get_instance().updateMsg(*iter);
+			}						
+			messages.clear();
+		}
+				
+		sleep(10);		
+				
             } catch (interprocess_exception &ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
             } catch (Err& e) {

@@ -80,9 +80,9 @@ public:
 
     virtual void deleteSe(std::string NAME);
        
-    virtual bool updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);    
+    virtual bool updateFileTransferStatus(std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);    
     
-    virtual bool updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status);
+    virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status);
     
     virtual void updateJObStatus(std::string jobId, const std::string status);  
     
@@ -117,7 +117,7 @@ public:
         
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
     
-    virtual bool updateOptimizer(std::string file_id , double filesize, int timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
+    virtual bool updateOptimizer(int file_id , double filesize, int timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
     
     virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);    
     
@@ -135,7 +135,7 @@ public:
     
     virtual void forceFailTransfers();
     
-    virtual void setPid(const std::string & jobId, const std::string & fileId, int pid);
+    virtual void setPid(const std::string & jobId, int fileId, int pid);
     
     virtual void setPidV(int pid, std::map<int,std::string>& pids);        
     
@@ -149,7 +149,7 @@ public:
     
     virtual void forkFailedRevertStateV(std::map<int,std::string>& pids); 
     
-    virtual bool retryFromDead(std::map<int,std::string>& pids);
+    virtual bool retryFromDead(std::vector<struct message_updater>& messages);
     
     virtual void blacklistSe(std::string se, std::string msg, std::string adm_dn);
 

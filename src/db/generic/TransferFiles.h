@@ -69,4 +69,7 @@ public:
  std::string DEST_SPACE_TOKEN;
  int PIN_LIFETIME;  
  int BRINGONLINE;  
+ double USER_FILESIZE;
+ std::string FILE_METADATA;
+ std::string JOB_METADATA;
 };

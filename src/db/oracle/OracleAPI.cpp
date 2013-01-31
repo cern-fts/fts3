@@ -528,7 +528,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     std::string selecttag = "getByJobId";
     std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
             " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.checksum, t_job.CHECKSUM_METHOD, t_job.SOURCE_SPACE_TOKEN,"
-            " t_job.SPACE_TOKEN, t_job.copy_pin_lifetime, t_job.bring_online, t_file.file_state, t_file.logical_name, "
+            " t_job.SPACE_TOKEN, t_job.copy_pin_lifetime, t_job.bring_online, t_file.user_filesize, t_file.file_metadata, t_job.job_metadata, t_file.file_state, t_file.logical_name, "
             " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, "
             " t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
             " t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
@@ -570,7 +570,11 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                 tr_files->SOURCE_SPACE_TOKEN = r->getString(11);
                 tr_files->DEST_SPACE_TOKEN = r->getString(12);
  		tr_files->PIN_LIFETIME = r->getInt(13);
- 		tr_files->BRINGONLINE = r->getInt(14);	
+ 		tr_files->BRINGONLINE = r->getInt(14);
+		tr_files->USER_FILESIZE = r->getDouble(15);
+		tr_files->FILE_METADATA = r->getString(16);
+		tr_files->JOB_METADATA = r->getString(16);		
+			
                 files[tr_files->VO_NAME].push_back(tr_files);
             }
             conn->destroyResultset(s, r);
@@ -1250,7 +1254,7 @@ void OracleAPI::deleteSe(std::string NAME) {
 
 
 
-bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message, int process_id, double
+bool OracleAPI::updateFileTransferStatus(std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double
         filesize, double duration) {
     unsigned int index = 1;
     double throughput = 0;
@@ -1273,7 +1277,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 	}
 	
         s1 = conn->createStatement(query1, tag1);
-        s1->setInt(1, atoi(file_id.c_str()));
+        s1->setInt(1, file_id);
         s1->setString(2, job_id);		
         r1 = conn->createResultset(s1);
         if (r1->next()) {
@@ -1356,7 +1360,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
 		s->setDouble(index, 0);
 	}
         ++index;
-        s->setInt(index, atoi(file_id.c_str()));
+        s->setInt(index, file_id);
 	
         if(s->executeUpdate()!=0)
         	conn->commit();
@@ -1394,8 +1398,7 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, std::string file_id
     return ok;
 }
 
-bool OracleAPI::updateJobTransferStatus(std::string file_id, std::string job_id, const std::string status) {
-    file_id = "";
+bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::string status) {
     std::string reason = "One or more files failed. Please have a look at the details for more information";
     const std::string terminal1 = "FINISHED";
     const std::string terminal2 = "FAILED";
@@ -2547,7 +2550,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     }
 }
 
-bool OracleAPI::updateOptimizer(std::string, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+bool OracleAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
     const std::string tag1 = "updateOptimizer1";
     const std::string tag2 = "updateOptimizer2";
     double throughput = 0;
@@ -3159,13 +3162,11 @@ void OracleAPI::forceFailTransfers() {
 	    vmHostname = r->getString(6);
             diff = difftime(lifetime, start_time);
             if (timeout != 0 && diff > (timeout + 22000)) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;
-                std::stringstream ss;
-                ss << file_id;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;                
 		if(vmHostname.compare(std::string(hostname))==0)
                 	kill(pid, SIGUSR1);
-                updateFileTransferStatus(job_id, ss.str(), transfer_status, transfer_message, pid, 0, 0);
-                updateJobTransferStatus(ss.str(), job_id, status);
+                updateFileTransferStatus(job_id, file_id, transfer_status, transfer_message, pid, 0, 0);
+                updateJobTransferStatus(file_id, job_id, status);
             }
         }
         conn->destroyResultset(s, r);
@@ -3340,7 +3341,7 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId) {
     return ok;
 }
 
-void OracleAPI::setPid(const std::string & jobId, const std::string & fileId, int pid) {
+void OracleAPI::setPid(const std::string & jobId, int fileId, int pid) {
     const std::string tag = "setPid";
     std::string query = "update t_file set pid=:1 where job_id=:2 and file_id=:3";
     oracle::occi::Statement* s = NULL;
@@ -3353,7 +3354,7 @@ void OracleAPI::setPid(const std::string & jobId, const std::string & fileId, in
         s = conn->createStatement(query, tag);
         s->setInt(1, pid);
         s->setString(2, jobId);
-        s->setInt(3, atoi(fileId.c_str()));
+        s->setInt(3, fileId);
         if (s->executeUpdate() != 0)
             conn->commit();
         conn->destroyStatement(s, tag);
@@ -3707,47 +3708,25 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
     }
 }
 
-bool OracleAPI::retryFromDead(std::map<int, std::string>& pids) {
-    const std::string tag = "retryFromDead";
-    std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2 and file_state not in ('FINISHED','FAILED','CANCELED')";
-    oracle::occi::Statement* s = NULL;
-    std::map<int, std::string>::const_iterator iter;
-    unsigned int updated = 0;
+bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {  
+    std::vector<struct message_updater>::const_iterator iter;
     bool isUpdated = true;
-    ThreadTraits::LOCK_R lock(_mutex);
+    const std::string transfer_status = "FAILED";
+    const std::string transfer_message = "Transfer failed to respond within 360 secs, probably stalled";
+    const std::string status = "FAILED";
 
     try {
         if (false == conn->checkConn()){
  	    isUpdated  = false;
             return isUpdated;
 	}
-
-        s = conn->createStatement(query, tag);
-        for (iter = pids.begin(); iter != pids.end(); ++iter) {
-            s->setInt(1, (*iter).first);
-            s->setString(2, (*iter).second);
-            updated += s->executeUpdate();
+       
+        for (iter = messages.begin(); iter != messages.end(); ++iter) {
+                updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);       
         }
-        if (updated != 0)
-            conn->commit();
-        conn->destroyStatement(s, tag);
-        s = NULL;
-
-    } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
-            conn->rollback();
-            if (s)
-                conn->destroyStatement(s, tag);
-        }
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-	isUpdated = false;
-    }catch (...) {
-        if (conn) {
-            conn->rollback();
-            if (s)
-                conn->destroyStatement(s, tag);
-        }
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }catch (...) {       
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown oracle plug-in exception"));
 	isUpdated = false;
     }
     

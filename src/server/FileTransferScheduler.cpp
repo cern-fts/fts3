@@ -113,7 +113,7 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 			// set file status to failed
 			db->updateFileTransferStatus(
 					file->JOB_ID,
-					lexical_cast<string>(file->FILE_ID),
+					file->FILE_ID,
 					JobStatusHandler::FTS3_STATUS_FAILED,
 					msg,
 					0,
@@ -122,7 +122,7 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 				);
 			// set job states if necessary
 			db->updateJobTransferStatus(
-					lexical_cast<string>(file->FILE_ID),
+					file->FILE_ID,
 					file->JOB_ID,
 					JobStatusHandler::FTS3_STATUS_FAILED
 				);

@@ -31,7 +31,7 @@
 using namespace std;
 
 
-namespace fts3 { namespace common {
+\
 
 /**
  * UuidGenerator is a static class encapsulating libuuid.
@@ -71,7 +71,5 @@ private:
 	UuidGenerator& operator=(UuidGenerator const&);
 };
 
-}
-}
 
 #endif /* UUIDGENERATOR_H_ */

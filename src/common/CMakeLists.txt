@@ -37,10 +37,15 @@ list(REMOVE_ITEM fts_common_sources ${SSL_CPP})
 endif ()
 
 
+# Find libuuid
+find_package(LibUuid REQUIRED)
+include_directories(${LIBUUID_INCLUDE_DIRS})
+
+
 
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
-target_link_libraries(fts_common -lboost_regex-mt -lboost_iostreams-mt)
+target_link_libraries(fts_common -lboost_regex-mt -lboost_iostreams-mt 	${LIBUUID_LIBRARIES} )
 if (ORACLEBUILD STREQUAL "OFF")
 target_link_libraries(fts_common -lssl)
 target_link_libraries(fts_common ${LIBUUID_LIBRARIES})

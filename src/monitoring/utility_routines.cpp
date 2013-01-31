@@ -49,6 +49,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include "mq_manager.h"
+#include "producer_consumer_common.h"
 
 
 #define MILLI 36000000
@@ -717,18 +718,9 @@ bool caseInsCompare(const string& s1, const string& s2) {
 
 
 bool send_message(std::string & text)
-{   
-	bool msgSent = true;       
-	std::string path="/dev/shm/fts3mqmon";
-	QueueManager* qm = NULL;
-
-        if(0 == fexists(path.c_str())  && text.length() < 3000 ){
-		qm = new QueueManager(false, FTS3_MQ_NAME_MON, true);
-		qm->msg_send(text.c_str());
-	}
-	if(qm)	
-		delete qm;
-  return msgSent;	
+{   	     	
+	runProducerMonitoring(text.c_str());
+  	return true;	
 }
 
 

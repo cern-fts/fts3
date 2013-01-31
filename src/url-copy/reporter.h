@@ -20,7 +20,7 @@
 
 #include <iostream>
 #include <ctime> 
-#include "mq_manager.h"
+
 
 class Reporter {
 	
@@ -37,9 +37,6 @@ public:
         std::string ReplaceNonPrintableCharacters(std::string s);
 
 private:
-	struct message* msg;
-	QueueManager* qm;
+	struct message* msg;	
 	struct message_updater* msg_updater;
-	QueueManager* qm_updater;
-
 };

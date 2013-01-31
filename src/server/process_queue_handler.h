@@ -30,6 +30,7 @@ limitations under the License. */
 #include "mq_manager.h"
 #include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/scoped_ptr.hpp>
+#include "producer_consumer_common.h"
 
 extern bool stopThreads;
 
@@ -67,19 +68,6 @@ public:
     TRAITS::ActiveObjectType("ProcessQueueHandler", desc), qm(NULL) {
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
 
-        try {
-            qm = new QueueManager(true);
-        } catch (interprocess_exception &ex1) {
-            /*shared mem segment already exists, reuse it*/
-            try {
-                if (qm)
-                    delete qm;
-                qm = new QueueManager(false);
-            } catch (interprocess_exception &ex2) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex2.what()));
-            }
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "/dev/shm/fts3mq " << ex1.what() << commit;
-        }
     }
 
     /* ---------------------------------------------------------------------- */
@@ -105,15 +93,15 @@ public:
 	       
 	       int retry = DBSingleton::instance().getDBObjectInstance()->getRetry();
 	       if(retry != 0 && std::string(msg.transfer_status).compare("FAILED") == 0){
- 		       int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, atoi(std::string(msg.file_id).c_str()));
+ 		       int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
 		       if(retry == -1){ //unlimited times
-				DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, atoi(std::string(msg.file_id).c_str()));
-				DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, atoi(std::string(msg.file_id).c_str()));
+				DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
+				DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
 				return true;		       
 		       }else{	       		       
 			       if(retryTimes <= retry ){	
-					DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, atoi(std::string(msg.file_id).c_str()));
-					DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, atoi(std::string(msg.file_id).c_str()));
+					DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
+					DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
 					return true;			       					
 			       }
 		       }
@@ -123,7 +111,7 @@ public:
                     if (!(msg.nostreams == DEFAULT_NOSTREAMS && msg.buffersize == DEFAULT_BUFFSIZE && msg.timeout == DEFAULT_TIMEOUT)) {
                         updated = DBSingleton::instance().
                                 getDBObjectInstance()->
-                                updateOptimizer(std::string(msg.file_id), msg.filesize, msg.timeInSecs,
+                                updateOptimizer(msg.file_id, msg.filesize, msg.timeInSecs,
                                 static_cast<int> (msg.nostreams), static_cast<int> (msg.timeout),
                                 static_cast<int> (msg.buffersize), std::string(msg.source_se),
                                 std::string(msg.dest_se));
@@ -141,7 +129,7 @@ public:
                 if(updated == true){
                 updated = DBSingleton::instance().
                         getDBObjectInstance()->
-                        updateFileTransferStatus(job, std::string(msg.file_id), std::string(msg.transfer_status),
+                        updateFileTransferStatus(job, msg.file_id, std::string(msg.transfer_status),
                         std::string(msg.transfer_message), static_cast<int> (msg.process_id),
                         msg.filesize, msg.timeInSecs);
 			
@@ -149,12 +137,14 @@ public:
                 if(updated == true){		
                 updated = DBSingleton::instance().
                         getDBObjectInstance()->
-                        updateJobTransferStatus(std::string(msg.file_id), job, std::string(msg.transfer_status));
+                        updateJobTransferStatus(msg.file_id, job, std::string(msg.transfer_status));
 		}
 		
 		if(updated == true){		
-                if (std::string(msg.transfer_status).compare("ACTIVE") != 0)
-                    ThreadSafeList::get_instance().removeFinishedTr(job, atoi(std::string(msg.file_id).c_str()));
+                if (std::string(msg.transfer_status).compare("FINISHED") == 0 || 
+			std::string(msg.transfer_status).compare("FAILED") == 0 ||
+			std::string(msg.transfer_status).compare("CANCELED") == 0)
+                    ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
 		}
 		    
         return updated;		    
@@ -168,8 +158,10 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
 
-        while (stopThreads==false) { /*need to receive more than one messages at a time*/            
-	    struct message msg;
+        std::vector<struct message> messages;
+        std::vector<struct message>::const_iterator iter;
+	
+        while (stopThreads==false) { /*need to receive more than one messages at a time*/            	    
             try {
 	    
 	        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
@@ -184,32 +176,33 @@ protected:
 			queueMsgRecovery.clear();	
 		}
 	                    
-                bool hasMessage = qm->receive(&msg);
-		if(hasMessage==false)
-			continue;		
-			                
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << std::string(msg.job_id).substr(0, 36)
-                        << "\nFile id: " << msg.file_id
-                        << "\nPid: " << msg.process_id
-                        << "\nState: " << msg.transfer_status
-                        << "\nMessage: " << msg.transfer_message
-                        << "\nSource: " << msg.source_se
-                        << "\nDest: " << msg.dest_se << commit;
+        	runConsumerStatus(messages);
+		if(!messages.empty()){			
+		for (iter = messages.begin(); iter != messages.end(); ++iter){								
+      								                
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << std::string((*iter).job_id).substr(0, 36)
+                        << "\nFile id: " << (*iter).file_id
+                        << "\nPid: " << (*iter).process_id
+                        << "\nState: " << (*iter).transfer_status
+                        << "\nMessage: " << (*iter).transfer_message
+                        << "\nSource: " << (*iter).source_se
+                        << "\nDest: " << (*iter).dest_se << commit;
 
-		bool dbUpdated = updateDatabase(msg);
+		bool dbUpdated = updateDatabase((*iter));
 		if(!dbUpdated){			
-			queueMsgRecovery.push_back(msg);
+			queueMsgRecovery.push_back((*iter));
 		}
-
-            } catch (interprocess_exception &ex) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
-		queueMsgRecovery.push_back(msg);
+		
+		}
+		}	        								    
+		messages.clear();		
+		sleep(1);
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
-		queueMsgRecovery.push_back(msg);
+		//queueMsgRecovery.push_back(msg);
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown unhandled exception"));
-		queueMsgRecovery.push_back(msg);
+		//queueMsgRecovery.push_back(msg);
             }            
         }
     }

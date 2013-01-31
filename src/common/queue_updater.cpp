@@ -15,6 +15,7 @@ limitations under the License. */
 
 #include <iostream>
 #include <time.h>
+#include <ctime>
 #include "queue_updater.h"
 
 
@@ -40,37 +41,36 @@ void ThreadSafeList::clear() {
     m_list.clear();
 }
 
-void ThreadSafeList::checkExpiredMsg(std::map<int, std::string>& pids) {
+void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messages) {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator iter;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        if (difftime(time(NULL), iter->timestamp) > 360) {
-            pids.insert(std::make_pair<int, std::string > (iter->file_id, std::string(iter->job_id)));
+        if (difftime(std::clock(), iter->timestamp) > 360) {
+            messages.push_back(*iter);
         }
     }    
 }
 
-void ThreadSafeList::updateMsg(struct message_updater *msg) {
+void ThreadSafeList::updateMsg(struct message_updater msg) {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator iter;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        if (msg->file_id == iter->file_id &&
-                std::string(msg->job_id).compare(std::string(iter->job_id)) == 0 &&
-                msg->process_id == iter->process_id) {
-            iter->timestamp = msg->timestamp;
+        if (msg.file_id == iter->file_id &&
+                std::string(msg.job_id).compare(std::string(iter->job_id)) == 0 &&
+                msg.process_id == iter->process_id) {
+            iter->timestamp = msg.timestamp;
             break;
         }
     }    
 }
 
-void ThreadSafeList::deleteMsg(std::map<int, std::string>& pids) {
+void ThreadSafeList::deleteMsg(std::vector<struct message_updater>& messages) {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator i = m_list.begin();
-    for (std::map< int, std::string>::iterator iter = pids.begin(); iter != pids.end(); ++iter) {
+    for (std::vector<struct message_updater>::iterator iter = messages.begin(); iter != messages.end(); ++iter) {
         i = m_list.begin();
         while (i != m_list.end()) {
-            if (iter->first == i->file_id &&
-                    std::string(iter->second).compare(std::string(i->job_id)) == 0) {
+            if ( (*iter).file_id == i->file_id && std::string( (*iter).job_id).compare(std::string(i->job_id)) == 0) {
                 m_list.erase(i++);
             } else {
                 ++i;

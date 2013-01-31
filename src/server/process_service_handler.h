@@ -407,6 +407,21 @@ protected:
                             params.append(to_string(temp->BRINGONLINE));
                         }
 
+                        if (temp->USER_FILESIZE > 0) {
+                            params.append(" -I ");
+                            params.append(to_string(temp->USER_FILESIZE));
+                        }
+
+                        if (temp->FILE_METADATA.length() > 0) {
+                            params.append(" -K ");
+                            params.append(temp->FILE_METADATA);
+                        }
+
+                        if (temp->JOB_METADATA.length() > 0) {
+                            params.append(" -J ");
+                            params.append(temp->JOB_METADATA);
+                        }
+
 			std::string host = DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);	
 			bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
 			
@@ -418,7 +433,7 @@ protected:
                             if(-1 == pr->executeProcessShell() ){
 			    	DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
 			    }else{			        
-			    	DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, to_string(temp->FILE_ID), pr->getPid());
+			    	DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, temp->FILE_ID, pr->getPid());
 				struct message_updater msg;
 				strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
         			msg.file_id = temp->FILE_ID;
@@ -452,9 +467,9 @@ protected:
                 std::string overwrite = std::string("");
                 std::string source_space_token = std::string("");
                 std::string dest_space_token = std::string("");
-                std::string file_id = std::string("");
+                int file_id = 0;
                 std::string checksum = std::string("");
-                std::string url = std::string("");
+                std::stringstream url;
                 std::string surl = std::string("");
                 std::string durl = std::string("");
 		int pinLifetime = -1;
@@ -462,15 +477,19 @@ protected:
                 int BufSize = 0;
                 int StreamsperFile = 0;
                 int Timeout = 0;
+		double userFilesize = 0;
+		std::string jobMetadata("");
+		std::string fileMetadata("");		
 		    
                 TransferFiles* tempUrl = NULL;
                 /*get the file for each job*/
        		std::vector<TransferJobs*>::const_iterator iter2;
 
-       	std::map< std::string, std::list<TransferFiles*> > voQueues;
-        std::list<TransferFiles*>::const_iterator queueiter;
+       		std::map< std::string, std::list<TransferFiles*> > voQueues;
+        	std::list<TransferFiles*>::const_iterator queueiter;
 
-        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
+        	DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
+		
 		if(voQueues.empty()){
      			 /** cleanup resources */
                 	for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
@@ -494,7 +513,7 @@ protected:
                     vo_name = temp->VO_NAME;
                     cred_id = temp->CRED_ID;
                     dn = temp->DN;
-                    file_id = to_string(temp->FILE_ID);
+                    file_id = temp->FILE_ID;
                     overwrite = temp->OVERWRITE;
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);
@@ -502,13 +521,20 @@ protected:
 		    dest_space_token = temp->DEST_SPACE_TOKEN;
 		    pinLifetime = temp->PIN_LIFETIME;
 		    bringOnline = temp->BRINGONLINE; 
+		    userFilesize = temp->USER_FILESIZE; 
+		    jobMetadata = temp->JOB_METADATA;
+		    fileMetadata = temp->FILE_METADATA;
+		    
+		    if(fileMetadata.length() <= 0)
+		    	fileMetadata = "x";
 
                     if (std::string(temp->CHECKSUM_METHOD).length() > 0) {
                         if (std::string(temp->CHECKSUM).length() > 0)
                             checksum = temp->CHECKSUM;
                     }
-                    url = file_id + " " + surl + " " + durl + " " + checksum;
-                    urls.push_back(url);
+                    url << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata;
+                    urls.push_back(url.str());
+		    url.str("");
                 }
 
                 sourceSiteName = siteResolver.getSiteName(surl);
@@ -661,11 +687,21 @@ protected:
                         }		    
 		    
                     
+          		if (userFilesize > 0) {
+                            params.append(" -I ");
+                            params.append(to_string(userFilesize));
+                        }
+			
+		     if (jobMetadata.length() > 0) {
+                        params.append(" -K ");
+                        params.append(dest_space_token);
+                    }	 
+		    		    
 		    std::string host = DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);	
 		    bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);		
 			
    		    if(host.compare(ftsHostName)==0 && ready==true){		    		    		
-		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << params << commit;
+		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                     pr = new ExecuteProcess(cmd, params, 0);		    
                     if (pr) {		
 		             /*check if fork failed , check if execvp failed, */			   
@@ -710,7 +746,7 @@ protected:
 	jobs2.reserve(25);
 	static bool drainMode = false;
 	static long double counter = 0;
-	static unsigned int countReverted = 0;
+	//static unsigned int countReverted = 0;
 
         while (1) {	
 	   	if(stopThreads){
@@ -741,11 +777,11 @@ protected:
                             DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();
                             counter=0;
                     }
-                    countReverted++;
+                    /*countReverted++;
                     if(countReverted==100){
                             DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                             countReverted=0;
-                    }
+                    }*/
 
                     /*get jobs in submitted state*/
                     DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);

@@ -92,6 +92,9 @@ make %{?_smp_mflags}
 cd build
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_var}/lib/fts3
+mkdir -p %{buildroot}%{_var}/lib/fts3/monitoring
+mkdir -p %{buildroot}%{_var}/lib/fts3/status
+mkdir -p %{buildroot}%{_var}/lib/fts3/stalled
 mkdir -p %{buildroot}%{_var}/log/fts3
 make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
@@ -161,6 +164,9 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %dir %{_sysconfdir}/fts3
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3
+%dir %attr(0755,fts3,root) %{_var}/lib/fts3/monitoring
+%dir %attr(0755,fts3,root) %{_var}/lib/fts3/status
+%dir %attr(0755,fts3,root) %{_var}/lib/fts3/stalled
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
 %{_sbindir}/fts_msg_cron
 %{_sbindir}/fts_msg_bulk

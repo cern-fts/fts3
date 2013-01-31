@@ -18,7 +18,7 @@ limitations under the License. */
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
+#include <ctime>
 
 #define JOB_ID_LEN 36+1
 #define FILE_ID_LEN 36
@@ -39,7 +39,7 @@ public:
 
     message() {
         memset(job_id, 0, sizeof (job_id));
-        memset(file_id, 0, sizeof (file_id));
+        file_id = 0;
         memset(transfer_status, 0, sizeof (transfer_status));
         memset(transfer_message, 0, sizeof (transfer_message));
         process_id = 0;
@@ -50,12 +50,13 @@ public:
         buffersize = 0;
         memset(source_se, 0, sizeof (source_se));
         memset(dest_se, 0, sizeof (dest_se));
+	timestamp = std::clock();
     }
 
     ~message() {
     }
     char job_id[JOB_ID_LEN];
-    char file_id[FILE_ID_LEN];
+    int file_id;
     char transfer_status[TRANFER_STATUS_LEN];
     char transfer_message[TRANSFER_MESSAGE];
     pid_t process_id;
@@ -66,6 +67,7 @@ public:
     unsigned int buffersize;
     char source_se[SOURCE_SE_];
     char dest_se[DEST_SE_];
+    std::clock_t timestamp;
 
 
 
@@ -77,7 +79,7 @@ public:
         memset(job_id, 0, sizeof (job_id));
         file_id = 0;
         process_id = 0;
-        timestamp = time(NULL);
+        timestamp = std::clock();
     }
 
     ~message_updater() {
@@ -85,7 +87,7 @@ public:
     char job_id[JOB_ID_LEN];
     int file_id;
     pid_t process_id;
-    time_t timestamp;
+    std::clock_t timestamp;
 };
 
 

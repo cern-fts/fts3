@@ -35,6 +35,7 @@
 #include "concurrent_queue.h"
 #include "Logger.h"
 #include <vector>
+#include "producer_consumer_common.h"
 
 extern bool stopThreads;
 
@@ -45,25 +46,7 @@ void handler(int sig) {
     exit(0);
 }
 
-MsgPipe::MsgPipe(std::string qname) {
-     try {
-        qm = new QueueManager(true, qname, true);        
-    } catch (interprocess_exception &ex) {
-        /*shared mem segment already exists, reuse it*/
-	if(qm)
-		delete qm;       
-	try{
-		qm = new QueueManager(false, qname, true);                 
-	}
-	catch (interprocess_exception &ex) {
-		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
-	}	
-    }catch(...){
-        if(qm)
-                delete qm;
-	qm = new QueueManager(false, qname, true);
-    }    
-    
+MsgPipe::MsgPipe(std::string) { 
     //register sig handler to cleanup resources upon exiting
     signal(SIGFPE, handler);
     signal(SIGILL, handler);
@@ -83,16 +66,20 @@ MsgPipe::~MsgPipe() {
 
 void MsgPipe::run() {
    
+    std::vector<std::string> messages;
+    std::vector<std::string>::const_iterator iter;
+    
     while (stopThreads==false){
      try{
-        char tmpMsg[3000]={0};
-   	bool received = qm->msg_receive(tmpMsg);
-	if(received)
-		concurrent_queue::getInstance()->push(std::string(tmpMsg));					    
-      }
-     catch (interprocess_exception &ex) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
-        }
+        runConsumerMonitoring(messages);
+	if(!messages.empty()){
+		for (iter = messages.begin(); iter != messages.end(); ++iter){			
+			concurrent_queue::getInstance()->push(*iter);
+		}
+	messages.clear();
+	}	
+        sleep(1);							    
+      }   
      catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown exception"));
         }

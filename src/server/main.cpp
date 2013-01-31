@@ -35,8 +35,10 @@ limitations under the License. */
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "queue_updater.h"
-
 #include "config/FileMonitor.h"
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -128,6 +130,40 @@ static bool checkUrlCopy() {
     return false;
 }
 
+void checkInitDirs(){
+   
+   std::vector<fs::path> paths;   
+   vector<fs::path>::iterator iter;
+    try {
+   
+   paths.push_back(fs::path("/etc/fts3"));
+   paths.push_back(fs::path("/var/log/fts3"));   
+   paths.push_back(fs::path("/var/lib/fts3"));      
+   paths.push_back(fs::path("/var/lib/fts3/monitoring"));         
+   paths.push_back(fs::path("/var/lib/fts3/status")); 
+   paths.push_back(fs::path("/var/lib/fts3/stalled"));  
+   
+   for (iter = paths.begin(); iter != paths.end(); ++iter) {
+      if ( !fs::exists(*iter) || !fs::is_directory(*iter)){
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Directory " << *iter << " does not exist or is not owned by fts3 user" << commit;
+        	exit(1);          
+      }          
+   }      
+    }catch (const fs::filesystem_error& ex){
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+        exit(1);    
+    }catch (Err& e) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+        exit(1);
+    } catch (std::exception& ex) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+        exit(1);
+    } catch (...) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the filesystem required directories" << commit;
+        exit(1);
+    }
+}
+
 void myterminate() {
     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "myterminate() was called" << commit;
 }
@@ -155,6 +191,8 @@ int DoServer(int argc, char** argv) {
             std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
             exit(1);
         }
+	
+	checkInitDirs();
 
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
         std::string arguments("");
