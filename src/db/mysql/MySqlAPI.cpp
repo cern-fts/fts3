@@ -274,7 +274,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
 
             soci::rowset<TransferFiles> rs = (sql.prepare << "SELECT t_file.*, t_job.vo_name, t_job.overwrite_flag, "
                                                              "    t_job.user_dn, t_job.cred_id, t_job.checksum_method, "
-                                                             "    t_job.source_space_token, t_job.space_token "
+                                                             "    t_job.source_space_token, t_job.space_token, t_job.job_metadata "
                                                              "FROM t_file, t_job WHERE "
                                                              "    t_file.job_id = t_job.job_id AND "
                                                              "    t_file.job_finished IS NULL AND "
@@ -1793,7 +1793,6 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     const std::string status = "FAILED";
 
     try {
-
         for (iter = messages.begin(); iter != messages.end(); ++iter) {
                 updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
                 updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);       

@@ -108,11 +108,15 @@ namespace soci
             file.SOURCE_SPACE_TOKEN = v.get<std::string>("source_space_token");
             file.DEST_SPACE_TOKEN   = v.get<std::string>("space_token");
             file.REASON             = v.get<std::string>("reason", "");
+	    file.BRINGONLINE = v.get<int>("bring_online"); 	    
+	    file.FILE_METADATA = v.get<std::string>("file_metadata"); 
+	    file.JOB_METADATA = v.get<std::string>("job_metadata");    
+	    file.USER_FILESIZE = v.get<int>("user_filesize");       	    
 
             unsigned size = static_cast<unsigned>(v.get<int>("filesize", 0));
             std::ostringstream str;
             str << size;
-            file.FILESIZE = str.str();
+            file.FILESIZE = str.str();	                 
         }
     };
 
