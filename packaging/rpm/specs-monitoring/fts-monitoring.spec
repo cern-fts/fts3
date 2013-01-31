@@ -11,13 +11,13 @@ Group: Applications/Internet
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 
-Requires: cx_Oracle
-Requires: Django
-Requires: httpd
-Requires: mod_wsgi
-Requires: MySQL-python
-Requires: python
-#Requires: python-matplotlib
+Requires: cx_Oracle%{?_isa}
+Requires: Django%{?_isa}
+Requires: httpd%{?_isa}
+Requires: mod_wsgi%{?_isa}
+Requires: MySQL-python%{?_isa}
+Requires: python%{?_isa}
+Requires: python-matplotlib%{?_isa}
 
 Source0: %{name}-%{version}.tar.gz
 
