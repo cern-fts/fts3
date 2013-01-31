@@ -28,13 +28,13 @@
 
 #include <vector>
 
-#include <boost/tuple/tuple.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/scoped_ptr.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
 using namespace fts3::ws;
+using namespace fts3::common;
 using namespace boost::assign;
 
 ProtocolResolver::ProtocolResolver(string &job_id) :	db(DBSingleton::instance().getDBObjectInstance()) {
@@ -102,9 +102,9 @@ bool ProtocolResolver::isGr(string name) {
 	return db->checkGroupExists(name);
 }
 
-SeProtocolConfig* ProtocolResolver::getProtocolCfg(optional< pair<string, string> > link) {
+optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< pair<string, string> > link) {
 
-	if (!link) return NULL;
+	if (!link) return optional<protocol>();
 
 	string source = (*link).first;
 	string destination = (*link).second;
@@ -113,44 +113,59 @@ SeProtocolConfig* ProtocolResolver::getProtocolCfg(optional< pair<string, string
 			db->getLinkConfig(source, destination)
 		);
 
-	SeProtocolConfig* protocol = new SeProtocolConfig;
-	protocol->NOSTREAMS = cfg->NOSTREAMS;
-	protocol->NO_TX_ACTIVITY_TO = cfg->NO_TX_ACTIVITY_TO;
-	protocol->TCP_BUFFER_SIZE = cfg->TCP_BUFFER_SIZE;
-	protocol->URLCOPY_TX_TO = cfg->URLCOPY_TX_TO;
+	protocol ret;
 
-	return protocol;
+	get<AUTO_PROTOCOL>(ret) = cfg->auto_protocol == Configuration::on;
+	get<NOSTREAMS>(ret) = cfg->NOSTREAMS;
+	get<NO_TX_ACTIVITY_TO>(ret) = cfg->NO_TX_ACTIVITY_TO;
+	get<TCP_BUFFER_SIZE>(ret) = cfg->TCP_BUFFER_SIZE;
+	get<URLCOPY_TX_TO>(ret) = cfg->URLCOPY_TX_TO;
+
+	return ret;
 }
 
-SeProtocolConfig* ProtocolResolver::merge(SeProtocolConfig* source_ptr, SeProtocolConfig* destination_ptr) {
+optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination) {
 
-	if (!source_ptr) return destination_ptr;
-	if (!destination_ptr) return source_ptr;
+	if (!source) return destination;
+	if (!destination) return source;
 
-	scoped_ptr<SeProtocolConfig> source (source_ptr);
-	scoped_ptr<SeProtocolConfig> destination (destination_ptr);
+	protocol ret;
 
-	SeProtocolConfig* ret = new SeProtocolConfig;
+	get<AUTO_PROTOCOL>(ret) = get<AUTO_PROTOCOL>(*source) && get<AUTO_PROTOCOL>(*destination);
 
-	ret->NOSTREAMS =
-			source->NOSTREAMS < destination->NOSTREAMS ?
-			source->NOSTREAMS : destination->NOSTREAMS
-			;
+	// we care about the parameters only if the auto tuning is not enabled
+	if (!get<AUTO_PROTOCOL>(ret)) {
 
-	ret->NO_TX_ACTIVITY_TO =
-			source->NO_TX_ACTIVITY_TO < destination->NO_TX_ACTIVITY_TO ?
-			source->NO_TX_ACTIVITY_TO : destination->NO_TX_ACTIVITY_TO
-			;
+		// for sure both source and destination were not set to auto!
 
-	ret->TCP_BUFFER_SIZE =
-			source->TCP_BUFFER_SIZE < destination->TCP_BUFFER_SIZE ?
-			source->TCP_BUFFER_SIZE : destination->TCP_BUFFER_SIZE
-			;
+		// if the source is set to auto return the destination
+		if (get<AUTO_PROTOCOL>(*source)) return destination;
 
-	ret->URLCOPY_TX_TO =
-			source->URLCOPY_TX_TO < destination->URLCOPY_TX_TO ?
-			source->URLCOPY_TX_TO : destination->URLCOPY_TX_TO
-			;
+		// if the destination is set to auto return the source
+		if (get<AUTO_PROTOCOL>(*destination)) return source;
+
+		// neither the source or the destination were set to auto merge the protocol parameters
+
+		get<NOSTREAMS>(ret) =
+				get<NOSTREAMS>(*source) < get<NOSTREAMS>(*destination) ?
+				get<NOSTREAMS>(*source) : get<NOSTREAMS>(*destination)
+				;
+
+		get<NO_TX_ACTIVITY_TO>(ret) =
+				get<NO_TX_ACTIVITY_TO>(*source) < get<NO_TX_ACTIVITY_TO>(*destination) ?
+				get<NO_TX_ACTIVITY_TO>(*source) : get<NO_TX_ACTIVITY_TO>(*destination)
+				;
+
+		get<TCP_BUFFER_SIZE>(ret) =
+				get<TCP_BUFFER_SIZE>(*source) < get<TCP_BUFFER_SIZE>(*destination) ?
+				get<TCP_BUFFER_SIZE>(*source) : get<TCP_BUFFER_SIZE>(*destination)
+				;
+
+		get<URLCOPY_TX_TO>(ret) =
+				get<URLCOPY_TX_TO>(*source) < get<URLCOPY_TX_TO>(*destination) ?
+				get<URLCOPY_TX_TO>(*source) : get<URLCOPY_TX_TO>(*destination)
+				;
+	}
 
 	return ret;
 }
@@ -169,30 +184,13 @@ optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l) {
 bool ProtocolResolver::resolve() {
 
 	// check if there's a SE pair configuration
-	SeProtocolConfig* ret = NULL;
-		
-	ret = getProtocolCfg(link[SE_PAIR]);
+	prot = getProtocolCfg(link[SE_PAIR]);
 	
-	if (ret){
-        	NOSTREAMS = ret->NOSTREAMS;
-		NO_TX_ACTIVITY_TO = ret->NO_TX_ACTIVITY_TO;
-		TCP_BUFFER_SIZE = ret->TCP_BUFFER_SIZE;
-		URLCOPY_TX_TO = ret->URLCOPY_TX_TO;			
-		delete ret;
-		return true;
-	}
+	if (prot.is_initialized()) return true;
 
 	// check if there is a SE group pair configuration
-	ret = getProtocolCfg(link[GROUP_PAIR]);
-	if (ret){
-        	NOSTREAMS = ret->NOSTREAMS;
-		NO_TX_ACTIVITY_TO = ret->NO_TX_ACTIVITY_TO;
-		TCP_BUFFER_SIZE = ret->TCP_BUFFER_SIZE;
-		URLCOPY_TX_TO = ret->URLCOPY_TX_TO;			
-		delete ret;
-		return true;
-	}
-
+	prot = getProtocolCfg(link[GROUP_PAIR]);
+	if (prot.is_initialized()) return true;
 
 	// get the first existing standalone source link from the list
 	optional< pair<string, string> > source_link = getFirst(
@@ -204,23 +202,32 @@ bool ProtocolResolver::resolve() {
 		);
 
 	// merge the configuration of the most specific standlone source and destination links
-	ret = merge(
+	prot = merge(
 			getProtocolCfg(source_link),
 			getProtocolCfg(destination_link)
 		);
 
-	if(ret){
-        	NOSTREAMS = ret->NOSTREAMS;
-		NO_TX_ACTIVITY_TO = ret->NO_TX_ACTIVITY_TO;
-		TCP_BUFFER_SIZE = ret->TCP_BUFFER_SIZE;
-		URLCOPY_TX_TO = ret->URLCOPY_TX_TO;			
-		delete ret;
-		return true;
-	}
-	
-	if(ret)
-		delete ret;
-	return false;
+	return prot.is_initialized();
+}
+
+bool ProtocolResolver::isAuto() {
+	return get<AUTO_PROTOCOL>(*prot);
+}
+
+int ProtocolResolver::getNoStreams() {
+	return get<NOSTREAMS>(*prot);
+}
+
+int ProtocolResolver::getNoTxActiveTo() {
+	return get<NO_TX_ACTIVITY_TO>(*prot);
+}
+
+int ProtocolResolver::getTcpBufferSize() {
+	return get<TCP_BUFFER_SIZE>(*prot);
+}
+
+int ProtocolResolver::getUrlCopyTxTo() {
+	return get<URLCOPY_TX_TO>(*prot);
 }
 
 FTS3_SERVER_NAMESPACE_END

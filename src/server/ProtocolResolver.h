@@ -34,6 +34,7 @@
 #include <utility>
 
 #include <boost/optional.hpp>
+#include <boost/tuple/tuple.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -45,6 +46,16 @@ using namespace boost;
  * The class aims to resolve the protocol parameters for a given transfer job.
  */
 class ProtocolResolver {
+
+	/**
+	 * protocol data:
+	 * - auto protocol (true means that auto was used)
+	 * - number of streams
+	 * - no activity timeout
+	 * - TCP buffer size
+	 * - url-copy timeout
+	 */
+	typedef tuple<bool, int, int, int, int> protocol;
 
 	/**
 	 * The link type
@@ -68,6 +79,17 @@ class ProtocolResolver {
 		SOURCE = 0,
 		DESTINATION,
 		VO
+	};
+
+	/**
+	 * A tuple with all the information about a protocol
+	 */
+	enum {
+		AUTO_PROTOCOL = 0,
+		NOSTREAMS,
+		NO_TX_ACTIVITY_TO,
+		TCP_BUFFER_SIZE,
+		URLCOPY_TX_TO
 	};
 
 public:
@@ -94,10 +116,41 @@ public:
 	 */
 	bool resolve();
 	
-        int NOSTREAMS;
-	int NO_TX_ACTIVITY_TO;
-	int TCP_BUFFER_SIZE;
-	int URLCOPY_TX_TO;	
+	/**
+	 * checks if the configuration says to use auto tuning
+	 *
+	 * @return true if auto tuning should be used, false otherwise
+	 */
+	bool isAuto();
+
+	/**
+	 * gets the number of streams that should be used
+	 *
+	 * @return number of streams
+	 */
+	int getNoStreams();
+
+	/**
+	 * gets no activity timeout
+	 *
+	 * @return no activity timeout
+	 */
+	int getNoTxActiveTo();
+
+	/**
+	 * gets TCP buffer size
+	 *
+	 * @return TCP buffer size
+	 */
+	int getTcpBufferSize();
+
+	/**
+	 * gets url-copy timeout
+	 *
+	 * @return url-copy timeout
+	 */
+	int getUrlCopyTxTo();
+
 
 private:
 
@@ -124,9 +177,9 @@ private:
 	 *
 	 * @param link - source and destination pair
 	 *
-	 * @return an object containing protocol parameters (the memory has to be released by the user)
+	 * @return an object containing protocol parameters
 	 */
-	SeProtocolConfig* getProtocolCfg(optional< pair<string, string> > link);
+	optional<protocol> getProtocolCfg(optional< pair<string, string> > link);
 
 	/**
 	 * Merges two sets of protocol parameters.
@@ -136,7 +189,7 @@ private:
 	 *
 	 * @return an object containing protocol parameters (the memory has to be released by the user)
 	 */
-	SeProtocolConfig* merge(SeProtocolConfig* source_ptr, SeProtocolConfig* destination_ptr);
+	optional<protocol> merge(optional<protocol> source, optional<protocol> destination);
 
 	/// DB singleton instance
 	GenericDbIfce* db;
@@ -144,6 +197,8 @@ private:
 	/// array containing respective source-destination pairs (corresponds to the LinkType enumeration)
 	optional< pair<string, string> > link[8];
 
+	/// stores the protocol parameters that have been resolved
+	optional<protocol> prot;
 };
 
 FTS3_SERVER_NAMESPACE_END

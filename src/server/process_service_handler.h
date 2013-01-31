@@ -279,10 +279,15 @@ protected:
 		        ProtocolResolver resolver(temp->JOB_ID);
 		        protocolExists = resolver.resolve();
 			if(protocolExists){
-				protocol.NOSTREAMS = resolver.NOSTREAMS;
-				protocol.NO_TX_ACTIVITY_TO = resolver.NO_TX_ACTIVITY_TO;
-				protocol.TCP_BUFFER_SIZE = resolver.TCP_BUFFER_SIZE;
-				protocol.URLCOPY_TX_TO = resolver.URLCOPY_TX_TO;
+
+				if (resolver.isAuto()) {
+					// TODO do protocol auto tuning
+				}
+
+				protocol.NOSTREAMS = resolver.getNoStreams();
+				protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
+				protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
+				protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
 
 				if(protocol.NOSTREAMS >= 0)
 					internalParams << "nostreams:" << protocol.NOSTREAMS;
@@ -571,10 +576,15 @@ protected:
 		        ProtocolResolver resolver(job_id);
 		        protocolExists =  resolver.resolve();
 				if(protocolExists){
-				protocol.NOSTREAMS = resolver.NOSTREAMS;
-				protocol.NO_TX_ACTIVITY_TO = resolver.NO_TX_ACTIVITY_TO;
-				protocol.TCP_BUFFER_SIZE = resolver.TCP_BUFFER_SIZE;
-				protocol.URLCOPY_TX_TO = resolver.URLCOPY_TX_TO;
+
+					if (resolver.isAuto()) {
+						// TODO do protocol auto tuning
+					}
+
+					protocol.NOSTREAMS = resolver.getNoStreams();
+					protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
+					protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
+					protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
 				
 					if(protocol.NOSTREAMS >= 0)
 						internalParams << "nostreams:" << protocol.NOSTREAMS;
