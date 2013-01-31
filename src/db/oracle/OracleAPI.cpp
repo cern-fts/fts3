@@ -4327,8 +4327,9 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
     		"	NOSTREAMS,"
     		"	tcp_buffer_size,"
     		"	URLCOPY_TX_TO,"
-    		"	no_tx_activity_to"
-    		") values(:1,:2,:3,:4,:5,:6,:7,:8)";
+    		"	no_tx_activity_to,"
+    		"	auto_protocol"
+    		") values(:1,:2,:3,:4,:5,:6,:7,:8,:9)";
     ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s = NULL;
     try {
@@ -4345,6 +4346,7 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
         s->setInt(6, cfg->TCP_BUFFER_SIZE);
         s->setInt(7, cfg->URLCOPY_TX_TO);
         s->setInt(8, cfg->NO_TX_ACTIVITY_TO);
+        s->setString(9, cfg->auto_protocol);
         if (s->executeUpdate() != 0)
             conn->commit();
         conn->destroyStatement(s, tag);
@@ -4372,8 +4374,8 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
     std::string tag = "updateLinkConfig";
     std::string query =
     		"update t_link_config "
-    		"set state=:1,symbolicName=:2,NOSTREAMS=:3,tcp_buffer_size=:4,URLCOPY_TX_TO=:5,no_tx_activity_to=:6 "
-    		"where source=:7 and destination=:8";
+    		"set state=:1,symbolicName=:2,NOSTREAMS=:3,tcp_buffer_size=:4,URLCOPY_TX_TO=:5,no_tx_activity_to=:6, auto_protocol=:7 "
+    		"where source=:8 and destination=:9";
     oracle::occi::Statement* s = NULL;
 
     ThreadTraits::LOCK_R lock(_mutex);
@@ -4389,8 +4391,9 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
         s->setInt(4, cfg->TCP_BUFFER_SIZE);
         s->setInt(5, cfg->URLCOPY_TX_TO);
         s->setInt(6, cfg->NO_TX_ACTIVITY_TO);
-        s->setString(7, cfg->source);
-        s->setString(8, cfg->destination);
+        s->setString(7, cfg->auto_protocol);
+        s->setString(8, cfg->source);
+        s->setString(9, cfg->destination);
         s->executeUpdate();
         conn->commit();
         conn->destroyStatement(s, tag);
@@ -4450,7 +4453,7 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
 LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination) {
     std::string tag = "getLinkConfig";
     std::string query =
-    		"select source,destination,state,symbolicName,nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to "
+    		"select source, destination, state, symbolicName, nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_protocol "
     		"from t_link_config where source=:1 and destination=:2";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -4476,6 +4479,7 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
             cfg->TCP_BUFFER_SIZE = r->getInt(6);
             cfg->URLCOPY_TX_TO = r->getInt(7);
             cfg->NO_TX_ACTIVITY_TO = r->getInt(8);
+            cfg->auto_protocol = r->getString(9);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag);

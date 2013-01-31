@@ -25,6 +25,8 @@ public:
     int TCP_BUFFER_SIZE;
     int URLCOPY_TX_TO;
     int NO_TX_ACTIVITY_TO;
+
+    std::string auto_protocol;
 };
 
 #endif /* LINKCONFIG_H_ */

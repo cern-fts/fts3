@@ -258,6 +258,7 @@ namespace soci
             lnk.TCP_BUFFER_SIZE   = v.get<int>("tcp_buffer_size");
             lnk.URLCOPY_TX_TO     = v.get<int>("urlcopy_tx_to");
             lnk.NO_TX_ACTIVITY_TO = v.get<int>("no_tx_activity_to");
+            lnk.auto_protocol     = v.get<std::string>("auto_protocol");
         }
     };
 }

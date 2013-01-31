@@ -110,12 +110,12 @@ private:
 	/// inbound share
 	map<string, int> in_share;
 	/// inbound protocol
-	map<string, int> in_protocol;
+	optional< map<string, int> > in_protocol;
 
 	/// outbound share
 	map<string, int> out_share;
 	/// outbound protocol
-	map<string, int> out_protocol;
+	optional< map<string, int> > out_protocol;
 };
 
 } /* namespace common */

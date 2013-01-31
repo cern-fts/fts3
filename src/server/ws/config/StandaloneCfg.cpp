@@ -32,10 +32,14 @@ namespace ws {
 StandaloneCfg::StandaloneCfg(string dn, CfgParser& parser) : Configuration(dn) {
 
 	active = parser.get<bool>("active");
+
 	in_share = parser.get< map<string, int> >("in.share");
-	in_protocol = parser.get< map<string, int> >("in.protocol");
+	if (!parser.isAuto("in.protocol"))
+		in_protocol = parser.get< map<string, int> >("in.protocol");
+
 	out_share = parser.get< map<string, int> >("out.share");
-	out_protocol = parser.get< map<string, int> >("out.protocol");
+	if (!parser.isAuto("out.protocol"))
+		out_protocol = parser.get< map<string, int> >("out.protocol");
 }
 
 StandaloneCfg::~StandaloneCfg() {

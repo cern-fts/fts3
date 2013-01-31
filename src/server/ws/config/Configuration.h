@@ -117,6 +117,8 @@ public:
 	static const string off;
 	/// the public share
 	static const string pub;
+	/// value of a share pointing that auto should be used
+	static const int auto_share = -1;
 
 protected:
 
@@ -132,7 +134,16 @@ protected:
 	 * @param params - the parameters to be converted to JSON
 	 * @return string containing the JSON configuration
 	 */
-	static string json(map<string, int> params);
+	static string json(map<string, int>& params);
+
+	/**
+	 * Converts a STL map to JSON configuration string,
+	 * 	if the optional is not initialized "auto" value is used
+	 *
+	 * @param params - the parameters to be converted to JSON
+	 * @return string containing the JSON configuration
+	 */
+	static string json(optional< map<string, int> >& params);
 
 	/**
 	 * Converts a STL vector to JSON configuration string
@@ -140,17 +151,18 @@ protected:
 	 * @param members - the vector members to be converted to JSON
 	 * @return string containing the JSON configuration
 	 */
-	static string json(vector<string> members);
+	static string json(vector<string>& members);
 
 	/**
-	 * Gets a map containing the protocol parameter names and the respective values
+	 * Gets a map containing the protocol parameter names and the respective values.
+	 *	If auto-protocol has been used an uninitialized optional is returned.
 	 *
 	 * @param source - the source (SE, SE group or 'any')
 	 * @param destination - the destination (SE, SE group or 'any')
 	 *
 	 * @return map with protocol parameter names and their values
 	 */
-	map<string, int> getProtocolMap(string source, string destination);
+	optional< map<string, int> > getProtocolMap(string source, string destination);
 
 	/**
 	 * Gets a map containing the protocol parameter names and the respective values
@@ -159,10 +171,11 @@ protected:
 	 *
 	 * @return map with protocol parameter names and their values
 	 */
-	map<string, int> getProtocolMap(LinkConfig* cfg);
+	optional< map<string, int> > getProtocolMap(LinkConfig* cfg);
 
 	/**
-	 * Gets a map containing the VO names and the respective share value (for the given source-destination pair)
+	 * Gets a map containing the VO names and the respective share value (for the given source-destination pair).
+	 *	If auto-protocol has been used an uninitialized optional is returned.
 	 *
 	 * @param source - the source (SE, SE group or 'any')
 	 * @param destination - the destination (SE, SE group or 'any')
@@ -211,7 +224,7 @@ protected:
 	 * @param symbolic_name - the symbolic name describing the link
 	 * @param protocol - the protocol parameters and the rrespective values
 	 */
-	void addLinkCfg(string source, string destination, bool active, string symbolic_name, map<string, int>& protocol);
+	void addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol);
 
 	/**
 	 * Adds a share configuration to the DB.

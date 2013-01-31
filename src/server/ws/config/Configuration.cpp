@@ -72,19 +72,16 @@ Configuration::Configuration(string dn) :
 Configuration::~Configuration() {
 
 	if (deleteCount)
-//		db->auditConfiguration(dn, all, "delete (x" + lexical_cast<string>(deleteCount) + ")");
 		db->auditConfiguration(dn, all, "delete");
 
 	if (insertCount)
-//		db->auditConfiguration(dn, all, "insert (x" + lexical_cast<string>(insertCount) + ")");
 		db->auditConfiguration(dn, all, "insert");
 
 	if (updateCount)
-//		db->auditConfiguration(dn, all, "update (x" + lexical_cast<string>(updateCount) + ")");
 		db->auditConfiguration(dn, all, "update");
 }
 
-string Configuration::json(map<string, int> params) {
+string Configuration::json(map<string, int>& params) {
 
 	stringstream ss;
 
@@ -92,7 +89,13 @@ string Configuration::json(map<string, int> params) {
 
 	map<string, int>::iterator it;
 	for (it = params.begin(); it != params.end();) {
-		ss << "{\"" << it->first << "\":" << it->second << "}";
+		if (it->second == auto_share) {
+			// it is auto
+			ss << "{\"" << it->first << "\":\"" << CfgParser::auto_value << "\"}";
+		} else {
+			// it is a normal value
+			ss << "{\"" << it->first << "\":" << it->second << "}";
+		}
 		it++;
 		if (it != params.end()) ss << ",";
 	}
@@ -102,7 +105,19 @@ string Configuration::json(map<string, int> params) {
 	return ss.str();
 }
 
-string Configuration::json(vector<string> members) {
+string Configuration::json(optional< map<string, int> >& params) {
+
+	stringstream ss;
+
+	if (!params.is_initialized()) {
+		ss << "\"" << CfgParser::auto_value << "\"";
+		return ss.str();
+	}
+
+	return json(params.get());
+}
+
+string Configuration::json(vector<string>& members) {
 
 	stringstream ss;
 
@@ -168,7 +183,7 @@ void Configuration::checkGroup(string group) {
 	}
 }
 
-void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, map<string, int>& protocol) {
+void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol) {
 
 	scoped_ptr< pair<string, string> > p (
 			db->getSourceAndDestination(symbolic_name)
@@ -194,16 +209,26 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 	cfg->state = active ? on : off;
 	cfg->symbolic_name = symbolic_name;
 
-	int value = protocol[Protocol::NOSTREAMS];
-	cfg->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
+	if (protocol.is_initialized()) {
 
-	value = protocol[Protocol::TCP_BUFFER_SIZE];
-	cfg->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
+		int value = protocol.get()[Protocol::NOSTREAMS];
+		cfg->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
 
-	value = protocol[Protocol::URLCOPY_TX_TO];
-	cfg->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
+		value = protocol.get()[Protocol::TCP_BUFFER_SIZE];
+		cfg->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
 
-//	cfg->NO_TX_ACTIVITY_TO = protocol[Protocol::NO_TX_ACTIVITY_TO];
+		value = protocol.get()[Protocol::URLCOPY_TX_TO];
+		cfg->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
+
+		cfg->auto_protocol = off;
+
+	} else {
+
+		cfg->NOSTREAMS = 0;
+		cfg->TCP_BUFFER_SIZE = 0;
+		cfg->URLCOPY_TX_TO = 0;
+		cfg->auto_protocol = on;
+	}
 
 	if (update) {
 		db->updateLinkConfig(cfg.get());
@@ -253,16 +278,18 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
 	}
 }
 
-map<string, int> Configuration::getProtocolMap(string source, string destination) {
+optional< map<string, int> > Configuration::getProtocolMap(string source, string destination) {
 
 	scoped_ptr<LinkConfig> cfg (
 			db->getLinkConfig(source, destination)
 		);
 
+	if (cfg->auto_protocol == on) return optional< map<string, int> >();
+
 	return getProtocolMap(cfg.get());
 }
 
-map<string, int> Configuration::getProtocolMap(LinkConfig* cfg) {
+optional< map<string, int> > Configuration::getProtocolMap(LinkConfig* cfg) {
 
 	map<string, int> ret;
 	ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;

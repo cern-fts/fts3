@@ -103,7 +103,7 @@ private:
 	/// the share
 	map<string, int> share;
 	/// the protocol parameters
-	map<string, int> protocol;
+	optional< map<string, int> > protocol;
 };
 
 } /* namespace ws */
