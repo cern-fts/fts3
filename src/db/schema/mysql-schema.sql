@@ -564,7 +564,10 @@ CREATE TABLE t_file (
   staging_start   TIMESTAMP NULL DEFAULT NULL,  
 --
 -- Staging finish timestamp
-  staging_finished   TIMESTAMP NULL DEFAULT NULL,    
+  staging_finished   TIMESTAMP NULL DEFAULT NULL,  
+  
+-- user provided size of the file (bytes)
+  user_filesize         	INTEGER,
   
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
