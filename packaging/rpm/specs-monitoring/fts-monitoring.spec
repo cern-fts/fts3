@@ -19,6 +19,10 @@ Requires: MySQL-python%{?_isa}
 Requires: python%{?_isa}
 Requires: python-matplotlib%{?_isa}
 
+# The source for this package was pulled from upstream's vcs.  Use the
+# following commands to generate the tarball:
+#  svn export http://svnweb.cern.ch/guest/fts3/trunk
+#  tar -czvf fts-monitoring-0.0.1-60.tar.gz fts-monitoring-00160
 Source0: %{name}-%{version}.tar.gz
 
 %description

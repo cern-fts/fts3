@@ -7,7 +7,11 @@ Release: 60%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
 License: ASL 2.0
-URL: https://svnweb.cern.ch/trac/fts3/wiki 
+URL: https://svnweb.cern.ch/trac/fts3/wiki
+# The source for this package was pulled from upstream's vcs.  Use the
+# following commands to generate the tarball:
+#  svn export http://svnweb.cern.ch/guest/fts3/trunk
+#  tar -czvf fts-oracle-0.0.1-60.tar.gz fts-oracle-00160
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
