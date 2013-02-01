@@ -556,6 +556,11 @@ CREATE TABLE t_file (
 --
 -- How many times should the transfer be retried 
   retry                 INTEGER DEFAULT 0,
+  
+--
+-- user provided size of the file (bytes)
+  user_filesize  BIGINT,  
+  
 --
 -- File metadata
   file_metadata   VARCHAR(255),
