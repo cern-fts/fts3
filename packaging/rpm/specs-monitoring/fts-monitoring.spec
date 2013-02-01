@@ -12,7 +12,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch: noarch
 
 Requires: cx_Oracle%{?_isa}
-Requires: Django%{?_isa}
+Requires: Django.noarch
 Requires: httpd%{?_isa}
 Requires: mod_wsgi%{?_isa}
 Requires: MySQL-python%{?_isa}
