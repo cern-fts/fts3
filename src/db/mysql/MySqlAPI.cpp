@@ -1118,7 +1118,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
 
     try {
         std::string query;
-        if (vos.empty()) {
+        if (vos == "*") {
             query = "SELECT t_job.* FROM t_job WHERE "
                     "    t_job.job_finished IS NULL AND "
                     "    t_job.cancel_job IS NULL AND "
