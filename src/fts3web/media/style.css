@@ -10,7 +10,7 @@ a:visited {
 body {
   background: white;
   font-family: "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",sans-serif;
-  font-size: 12pt;
+  font-size: 11pt;
   padding: 0;
   padding-bottom: 2em;
   margin: auto;
@@ -178,7 +178,7 @@ tr.even {
 
 /* States */
 td.SUBMITTED {
-  background: #FFFFAA;
+  background: #FFFFAB;
 }
 
 td.READY {
@@ -203,6 +203,10 @@ td.FINISHEDDIRTY {
 
 td.CANCELED {
   background: #FF7777;
+}
+
+td.STAGING {
+  background: #5959FF;
 }
 
 /* Job list */

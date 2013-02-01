@@ -28,6 +28,7 @@
     <thead>
       <tr>
         <th>FILE ID</th>
+        <th>TRANSFER HOST</th>
         <th>SOURCE URL</th>
         <th>DEST URL</th>
         <th>FILE STATE</th>
@@ -35,7 +36,7 @@
         <th>THROUGHPUT</th>
         <th>START TIME</th>
         <th>FINISH TIME</th>
-        <th>TRANSFER HOST</th>
+        <th>METADATA</th>
       </tr>
     </thead>
     <tbody>
@@ -45,6 +46,7 @@
             <img alt="[+]" src="{{ STATIC_URL }}plus.gif"  title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
             {{ t.file_id }}
           </td>
+          <td>{{ t.transferHost }}</td>
           <td>{{ t.source_surl }}</td>
           <td>{{ t.dest_surl }}</td>
           <td class="{{ t.file_state }}">{{ t.file_state }}</td>
@@ -52,16 +54,19 @@
           <td>{{ t.throughput }} MiB/sec</td>
           <td>{{ t.start_time }}</td>
           <td>{{ t.finish_time }}</td>
-          <td>{{ t.transferHost }}</td>
+          <td>{{ t.file_metadata }}</td>
         </tr>
         <tr class="details" id="{{t.file_id}}">
-          <td colspan="9">
+          <td colspan="10">
             <ul>
               <li><b>Attempts:</b> {{ t.retry }}</li>
               <li><b>Duration:</b> {{ t.tx_duration }} seconds</li>
               <li><b>Checksum:</b> {{ t.checksum }}</li>
               <li><b>Configuration: </b> {{ t.symbolicName }}</li>
               <li><b>Parameters:</b> {{ t.internal_file_params }}</li>
+              {% if t.staging_start %}
+                <li><b>Staging:</b> {{ t.staging_start}} until {{ t.staging_finished }}</li>
+              {% endif %}
               {% if t.reason %}
                 <li><b>Reason:</b> {{ t.reason }}</li>
               {% endif %}

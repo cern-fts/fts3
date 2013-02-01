@@ -24,6 +24,7 @@
   <thead>
     <tr>
       <th>JOB ID</th>
+      <th>SUBMISSION HOST</th>
       <th>SUBMIT TIME</th>
       <th>JOB STATE</th>
       <th>VO</th>
@@ -31,7 +32,7 @@
       <th>DEST SE</th>
       <th>SOURCE SPACE TOKEN</th>
       <th>DEST SPACE TOKEN</th>
-      <th>SUBMISSION HOST</th>
+      <th>METADATA</th>
     </tr>
   </thead>
   <tbody>
@@ -41,6 +42,7 @@
           <img src="{{ STATIC_URL }}plus.gif" title="Show details" onclick="$('#{{j.job_id}}').toggle()"/>
           <a href="{% url ftsmon.views.jobDetails j.job_id %}"> {{j.job_id }} </a>
         </td>
+        <td>{{ j.submitHost }}</td>
         <td>{{ j.submit_time }}</td>
         <td class="{{ j.job_state }}">{{ j.job_state }}</td>
         <td>{{ j.vo_name }}</td>
@@ -48,10 +50,10 @@
         <td>{{ j.dest_se }}</td>
         <td>{{ j.source_space_token }}</td>
         <td>{{ j.space_token }}</td>
-        <td>{{ j.submitHost }}</td>
+        <td>{{ j.job_metadata }} </td>
       </tr>
       <tr class="details" id="{{j.job_id}}">
-        <td colspan="9">
+        <td colspan="10">
           <ul>
             <li><b>Priority:</b> {{ j.priority }}</li>
             <li><b>Finish time:</b> {{ j.finish_time }}</li>
