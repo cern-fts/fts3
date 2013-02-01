@@ -1534,27 +1534,46 @@ void MySqlAPI::forceFailTransfers() {
     soci::session sql(connectionPool);
 
     try {
-        std::string jobId, params, tHost;
+        std::string jobId, params, tHost,reuse;
         int fileId, pid, timeout;
         struct tm startTimeSt;
         time_t lifetime = time(NULL);
         time_t startTime;
         double diff;
 
-        soci::statement stmt = (sql.prepare << "SELECT job_id, file_id, start_time, pid, internal_file_params, "
-                                               "       transferHost "
-                                               "FROM t_file "
-                                               "WHERE file_state in ('ACTIVE','READY') AND pid IS NOT NULL",
-                                               soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
-                                               soci::into(pid), soci::into(params), soci::into(tHost));
+        soci::statement stmt = (
+        		sql.prepare <<
+        					" SELECT t_file.job_id, t_file.file_id, t_file.start_time, t_file.pid, t_file.internal_file_params, "
+                            "       t_file.transferHost, t_job.resuse_job "
+                            " FROM t_file, t_job "
+                            " WHERE t_job.job_id = t_file.job_id AND t_file.file_state in ('ACTIVE','READY') AND pid IS NOT NULL",
+                            soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
+                            soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse)
+        	);
+
+
 
         if (stmt.execute(true)) {
+
+
+        	int terminateTime = timeout + 1000;
+
+        	if (reuse == "Y") {
+
+        		int count = 0;
+				soci::rowset<soci::row> rs = (
+						sql.prepare << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count)
+					);
+
+				terminateTime *= count;
+        	}
+
             do {
                 startTime = mktime(&startTimeSt);
                 timeout = extractTimeout(params);
 
                 diff = difftime(lifetime, startTime);
-                if (timeout != 0 && diff > (timeout + 1000) && tHost == hostname) {
+                if (timeout != 0 && diff > terminateTime && tHost == hostname) {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;                    
                     kill(pid, SIGUSR1);
                     updateFileTransferStatus(jobId, fileId,
