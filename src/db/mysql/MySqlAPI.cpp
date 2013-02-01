@@ -1561,9 +1561,8 @@ void MySqlAPI::forceFailTransfers() {
         	if (reuse == "Y") {
 
         		int count = 0;
-				soci::rowset<soci::row> rs = (
-						sql.prepare << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count)
-					);
+
+				sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
 
 				terminateTime *= count;
         	}
