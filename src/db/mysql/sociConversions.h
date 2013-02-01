@@ -75,6 +75,7 @@ namespace soci
             job.SOURCE_SPACE_TOKEN = v.get<std::string>("source_space_token", "");
             job.SOURCE_TOKEN_DESCRIPTION = v.get<std::string>("source_token_description", "");
             job.COPY_PIN_LIFETIME  = v.get<int>("copy_pin_lifetime");
+            job.BRINGONLINE 	= v.get<int>("bring_online");
             job.CHECKSUM_METHOD    = v.get<std::string>("checksum_method");
             aux_tm = v.get<struct tm>("submit_time");
             job.SUBMIT_TIME = timegm(&aux_tm);
