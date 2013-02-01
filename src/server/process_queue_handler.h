@@ -145,6 +145,7 @@ public:
                 if (std::string(msg.transfer_status).compare("FINISHED") == 0 || 
 			std::string(msg.transfer_status).compare("FAILED") == 0 ||
 			std::string(msg.transfer_status).compare("CANCELED") == 0)
+		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing job from monitoring list " << job << " " << msg.file_id << commit;
                     ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
 		}
 		    

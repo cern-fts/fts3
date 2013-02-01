@@ -3128,18 +3128,26 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
 /* REUSE CASE*/
 void OracleAPI::forceFailTransfers() {
     std::string tag = "forceFailTransfers";
+    std::string tag1 = "forceFailTransfers1";
     char hostname[MAXHOSTNAMELEN];
     gethostname(hostname, MAXHOSTNAMELEN);    
     std::string vmHostname("");
-    std::string query = "select job_id, file_id, START_TIME ,PID, INTERNAL_FILE_PARAMS, TRANSFERHOST from t_file where file_state in ('ACTIVE','READY') and pid is not null";
+    std::string query = " select t_file.job_id, t_file.file_id, t_file.START_TIME ,t_file.PID, t_file.INTERNAL_FILE_PARAMS, t_file.TRANSFERHOST, t_job.REUSE_JOB from t_file, t_job "
+    			" where t_job.job_id=t_file.job_id and t_file.file_state in ('ACTIVE','READY') and t_file.pid is not null";
+    std::string query1 = "select count(*) from t_file where job_id=:1";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;    
     std::string job_id("");
     int file_id = 0;
     time_t start_time;
     int pid = 0;
     std::string internalParams("");
     int timeout = 0;
+    int terminateTime = 0;
+    int countFiles = 0;
+    std::string reuseFlag("");
     const std::string transfer_status = "FAILED";
     const std::string transfer_message = "Transfer has been forced-killed because it was stalled";
     const std::string status = "FAILED";
@@ -3158,10 +3166,27 @@ void OracleAPI::forceFailTransfers() {
             pid = r->getInt(4);
             internalParams = r->getString(5);
             timeout = extractTimeout(internalParams);
+	    timeout = 20;
             time_t lifetime = std::time(NULL);
 	    vmHostname = r->getString(6);
-            diff = difftime(lifetime, start_time);
-            if (timeout != 0 && diff > (timeout + 1000)) {
+	    reuseFlag = r->getString(7);
+	    if (reuseFlag.compare("Y") == 0) {
+            	        s1 = conn->createStatement(query1, tag1);
+			s1->setString(1,job_id);
+        		r1 = conn->createResultset(s1);
+			if(r1->next()){
+				countFiles = r1->getInt(1);
+			}
+			conn->destroyResultset(s1, r1);
+        		conn->destroyStatement(s1, tag1);
+        		s1 = NULL;
+        		r1 = NULL;
+		terminateTime = (timeout + 1000)*countFiles;					
+	    }else{
+	    	terminateTime = (timeout + 1000);
+	    }
+	    diff = difftime(lifetime, start_time);
+            if (timeout != 0 && diff > terminateTime) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;                
 		if(vmHostname.compare(std::string(hostname))==0)
                 	kill(pid, SIGUSR1);
@@ -3182,6 +3207,10 @@ void OracleAPI::forceFailTransfers() {
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag);
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1);		
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
@@ -3192,6 +3221,10 @@ void OracleAPI::forceFailTransfers() {
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag);
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1);				
         }
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -3714,20 +3747,52 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     const std::string transfer_status = "FAILED";
     const std::string transfer_message = "Transfer failed to respond within 360 secs, probably stalled";
     const std::string status = "FAILED";
-
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL; 
+    std::string query = "select count(*) from t_file where job_id=:1 and file_id=:2 and file_state in ('STAGING','ACTIVE')";  
+    const std::string tag = "retryFormDead";
     try {
         if (false == conn->checkConn()){
  	    isUpdated  = false;
             return isUpdated;
 	}
        
+        s = conn->createStatement(query, tag);
+	
         for (iter = messages.begin(); iter != messages.end(); ++iter) {
-                updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
-                updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);       
+	      	s->setString(1, (*iter).job_id);
+        	s->setInt(2, (*iter).file_id);
+		r = conn->createResultset(s);
+		if(r->next()){
+                	updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                	updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);  
+		}
+		conn->destroyResultset(s, r);     
         }
-    }catch (...) {       
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown oracle plug-in exception"));
-	isUpdated = false;
+	
+	conn->destroyStatement(s, tag);
+    }catch (oracle::occi::SQLException const &e) {
+        isUpdated = false;
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+        isUpdated = false;    
+        if (conn) {
+            conn->rollback();
+
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag);
+       	}
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     
     return isUpdated;

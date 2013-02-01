@@ -44,8 +44,9 @@ void ThreadSafeList::clear() {
 void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messages) {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator iter;
-    for (iter = m_list.begin(); iter != m_list.end(); ++iter) {
-        if (difftime(std::clock(), iter->timestamp) > 360) {
+    for (iter = m_list.begin(); iter != m_list.end(); ++iter) {        
+        const double n_seconds = std::difftime(std::clock(), iter->timestamp) / CLOCKS_PER_SEC;    	
+        if (n_seconds > 40) {
             messages.push_back(*iter);
         }
     }    
