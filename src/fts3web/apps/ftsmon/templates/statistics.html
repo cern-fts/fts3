@@ -20,7 +20,7 @@ Statistics
     
     <div id="overview">
       <img style="float: right"
-           src="{% url ftsmon.views.pie %}?t=Overview&l=Failed,Finished,Canceled,Queued,Active&v={{overall.failed}},{{overall.finished}},{{overall.canceled}},{{overall.queued}},{{overall.active}}&c=r,g,y,b,m"/>
+           src="{% url ftsmon.views.pie %}?t=Overview&l=Failed,Finished,Canceled,Queued,Active,Staging&v={{overall.failed}},{{overall.finished}},{{overall.canceled}},{{overall.queued}},{{overall.active}},{{overall.staging}}&c=r,g,y,b,m,c"/>
       <ul>
         <li>
           <em>Total transfers queued:</em>
@@ -29,7 +29,8 @@ Statistics
         <li>
           <em>Total transfers active:</em>
           <span class="ready">{{ overall.ready }} Ready</span>,
-          <span class="active">{{ overall.active }} Active</span>
+          <span class="active">{{ overall.active }} Active</span>,
+          <span class="staging">{{ overall.staging }} Staging</span>
         </li>
         <li>
           <em>Total transfers succeeded:</em>

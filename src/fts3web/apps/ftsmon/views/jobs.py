@@ -113,3 +113,26 @@ def jobDetails(httpRequest, jobId):
                    'request': httpRequest})
 
 
+
+def staging(httpRequest):
+  transfers = File.objects.filter(file_state = 'STAGING')
+  transfers = transfers.order_by('-job__submit_time', '-file_id')
+    
+  # Paginate
+  paginator = Paginator(transfers, 50)
+  try:
+    if 'page' in httpRequest.GET:
+      transfers = paginator.page(httpRequest.GET.get('page'))
+    else:
+      transfers = paginator.page(1)
+  except PageNotAnInteger:
+      transfers = paginator.page(1)
+  except EmptyPage:
+    transfers = paginator.page(paginator.num_pages)
+  
+  return render(httpRequest, 'staging.html',
+                {'transfers': transfers,
+                 'paginator': paginator,
+                 'request': httpRequest})
+
+

@@ -15,8 +15,8 @@ def statistics(httpRequest):
     statsDict = {}
     statsDict['request'] = httpRequest
     
-    STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED']
-    ACTIVE_STATES = ['SUBMITTED', 'READY', 'ACTIVE']
+    STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
+    ACTIVE_STATES = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
     
     # Overall
     overall = {}
