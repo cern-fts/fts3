@@ -274,7 +274,8 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
 
             soci::rowset<TransferFiles> rs = (sql.prepare << "SELECT t_file.*, t_job.vo_name, t_job.overwrite_flag, "
                                                              "    t_job.user_dn, t_job.cred_id, t_job.checksum_method, "
-                                                             "    t_job.source_space_token, t_job.space_token, t_job.job_metadata "
+                                                             "    t_job.source_space_token, t_job.space_token, t_job.job_metadata, "
+                                                             "    t_job.bring_online, t_job.job_metadata "
                                                              "FROM t_file, t_job WHERE "
                                                              "    t_file.job_id = t_job.job_id AND "
                                                              "    t_file.job_finished IS NULL AND "
@@ -327,7 +328,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_ch
                "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
                "                   copy_pin_lifetime, lan_connection, fail_nearline, checksum_method, "
-               "                   reuse_job, source_se, dest_se)                                     "
+               "                   reuse_job, source_se, dest_se, bring_online)                                     "
                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
                "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,                  "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
