@@ -75,7 +75,7 @@ static std::string readFile("");
 static std::string reuseFile("");
 double source_size = 0.0;
 double dest_size = 0.0;
-double userFilesize = -1;
+double userFilesize = 0;
 double diff = 0.0;
 std::time_t start;
 static uid_t pw_uid;
@@ -517,6 +517,10 @@ int main(int argc, char **argv) {
     
         g_file_id = file_id;
         g_job_id = job_id;
+	
+	
+    /*TODO: until we find a way to calculate RTT(perfsonar) accurately, OS tcp auto-tuning does a better job*/
+    tcpbuffersize = DEFAULT_BUFFSIZE;
     
     
     CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
@@ -765,7 +769,7 @@ int main(int argc, char **argv) {
                         errorPhase = TRANSFER_PREPARATION;
                         if (sourceStatRetry == 3)
                             goto stop;
-                    }else if(userFilesize != -1 &&  userFilesize != statbufsrc.st_size){
+                    }else if(userFilesize != 0 &&  userFilesize != statbufsrc.st_size){
 		        std::stringstream error_;
 			error_ << "User specified source file size is " <<  userFilesize << " but stat returned " << statbufsrc.st_size;
 		        errorMessage = error_.str();

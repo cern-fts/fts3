@@ -12,8 +12,10 @@
 #include "definitions.h"
 #include <algorithm>
 #include <ctime>
+#include "logger.h"
 
 using namespace std;
+using namespace FTS3_COMMON_NAMESPACE;
 
 struct sort_functor_updater
 {
@@ -39,7 +41,7 @@ int getDir (string dir, vector<string> &files)
     struct dirent *dirp=NULL;
     struct stat st;
     if((dp  = opendir(dir.c_str())) == NULL) {
-        cout << "Error(" << errno << ") opening " << dir << endl;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Error opening dir: " << strerror(errno) << commit;
         return errno;
     }
 

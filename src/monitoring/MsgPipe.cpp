@@ -76,7 +76,7 @@ void MsgPipe::run() {
     while (stopThreads==false){
      try{
 	/*blocking call, avoid busy-wating loop*/
-        length = read( fd, buffer, BUF_LEN );		     
+        length = read( fd, buffer, BUF_LEN );			     
         runConsumerMonitoring(messages);
 	if(!messages.empty()){
 		for (iter = messages.begin(); iter != messages.end(); ++iter){			

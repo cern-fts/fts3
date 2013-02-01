@@ -3131,7 +3131,7 @@ void OracleAPI::forceFailTransfers() {
     char hostname[MAXHOSTNAMELEN];
     gethostname(hostname, MAXHOSTNAMELEN);    
     std::string vmHostname("");
-    std::string query = "select job_id, file_id, START_TIME ,PID, INTERNAL_FILE_PARAMS, TRANSFERHOST from t_file where file_state='ACTIVE' and pid is not null";
+    std::string query = "select job_id, file_id, START_TIME ,PID, INTERNAL_FILE_PARAMS, TRANSFERHOST from t_file where file_state in ('ACTIVE','READY') and pid is not null";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     std::string job_id("");
@@ -3161,7 +3161,7 @@ void OracleAPI::forceFailTransfers() {
             time_t lifetime = std::time(NULL);
 	    vmHostname = r->getString(6);
             diff = difftime(lifetime, start_time);
-            if (timeout != 0 && diff > (timeout + 22000)) {
+            if (timeout != 0 && diff > (timeout + 1000)) {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;                
 		if(vmHostname.compare(std::string(hostname))==0)
                 	kill(pid, SIGUSR1);

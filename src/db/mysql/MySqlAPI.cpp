@@ -1503,7 +1503,7 @@ void MySqlAPI::forceFailTransfers() {
         soci::statement stmt = (sql.prepare << "SELECT job_id, file_id, start_time, pid, internal_file_params, "
                                                "       transferHost "
                                                "FROM t_file "
-                                               "WHERE file_state = 'ACTIVE' AND pid IS NOT NULL",
+                                               "WHERE file_state in ('ACTIVE','READY') AND pid IS NOT NULL",
                                                soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
                                                soci::into(pid), soci::into(params), soci::into(tHost));
 

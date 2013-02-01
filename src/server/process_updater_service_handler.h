@@ -123,6 +123,9 @@ protected:
 	    
 	    	/*blocking call, avoid busy-wating loop*/
 	        length = read( fd, buffer, BUF_LEN );	
+		if(length==-1){
+			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read inotify: " << strerror(errno) << commit;	
+		}
 	
 	        runConsumerStall(messages);
 		if(messages.empty()){
