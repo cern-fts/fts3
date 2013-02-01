@@ -126,9 +126,9 @@ public:
 		allowedVOs = allowedVOs.substr(0, allowedVOs.size()-1);
 		allowedVOs+=")";
 		boost::algorithm::to_lower(allowedVOs);
+	}else{
+		allowedVOs = voNameList[0];
 	}
-	
-	
     }
 
     /* ---------------------------------------------------------------------- */

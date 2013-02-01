@@ -193,6 +193,9 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     std::multimap<std::string, std::string> sePairs;
     std::vector<std::string> distinctVOS;
     std::vector<std::string>::const_iterator iter2;
+    bool allVos = vos.compare("*")==0? true: false;
+    
+    
     std::string bring_distinct_vo = " SELECT distinct t_job.vo_name  FROM t_job "
     				 " WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
 				 " AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
@@ -205,8 +208,8 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 				 " AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') and t_job.vo_name=:1 and "
 				 " exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND "
 				 " t_file.file_state = 'SUBMITTED')";
-    
-    if(vos.length()==0){
+				     
+    if(allVos){
     query_stmt = "SELECT /* FIRST_ROWS(15) */"
             " t_job.job_id, "
             " t_job.job_state, "
@@ -321,8 +324,10 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 	s->setPrefetchRowCount(1000);
 	
 	
-     for (iter2 = distinctVOS.begin(); iter2 != distinctVOS.end(); ++iter2) {	
-	s->setString(3, *iter2);	
+     for (iter2 = distinctVOS.begin(); iter2 != distinctVOS.end(); ++iter2) {
+       if(allVos){	
+		s->setString(3, *iter2);	
+       }
        for ( std::multimap< std::string, std::string>::const_iterator iter = sePairs.begin(); iter != sePairs.end(); ++iter ){
 	s->setString(1,iter->first);	
 	s->setString(2,iter->second);		
@@ -2157,8 +2162,9 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
     TransferJobs* tr_jobs = NULL;
     std::string tag = "getSubmittedJobsReuse";
     std::string query_stmt("");
+    bool allVos = vos.compare("*")==0? true: false;
 
-    if (vos.length() == 0) {
+    if (allVos) {
         query_stmt = "SELECT /* FIRST_ROWS(1) */ "
                 " t_job.job_id, "
                 " t_job.job_state, "
