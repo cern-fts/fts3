@@ -65,17 +65,18 @@ public:
             const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
             ) :
-    TRAITS::ActiveObjectType("ProcessQueueHandler", desc), qm(NULL) {
+    TRAITS::ActiveObjectType("ProcessQueueHandler", desc) {
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-
+	fd = inotify_init();
+	wd = inotify_add_watch( fd, STATUS_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );	    
     }
 
     /* ---------------------------------------------------------------------- */
 
     /** Destructor */
     virtual ~ProcessQueueHandler() {
-        if (qm)
-            delete qm;
+    	( void ) inotify_rm_watch( fd, wd );
+  	( void ) close( fd );        
     }
 
     /* ---------------------------------------------------------------------- */
@@ -152,8 +153,12 @@ public:
 
 protected:
 
-    QueueManager* qm;
     std::vector<struct message> queueMsgRecovery;
+    int length;
+    int i;
+    int fd;
+    int wd;
+    char buffer[BUF_LEN];    
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
@@ -163,6 +168,9 @@ protected:
 	
         while (stopThreads==false) { /*need to receive more than one messages at a time*/            	    
             try {
+		
+		/*blocking call, avoid busy-wating loop*/
+	        length = read( fd, buffer, BUF_LEN );
 	    
 	        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
 		if(!alive)
@@ -196,13 +204,14 @@ protected:
 		}
 		}	        								    
 		messages.clear();		
-		sleep(1);
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
-		//queueMsgRecovery.push_back(msg);
+		for (iter = messages.begin(); iter != messages.end(); ++iter)
+			queueMsgRecovery.push_back(*iter);
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown unhandled exception"));
-		//queueMsgRecovery.push_back(msg);
+		for (iter = messages.begin(); iter != messages.end(); ++iter)
+			queueMsgRecovery.push_back(*iter);
             }            
         }
     }

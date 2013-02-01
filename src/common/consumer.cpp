@@ -58,7 +58,7 @@ int getDir (string dir, vector<string> &files)
 
 void runConsumerMonitoring(std::vector<std::string>& messages)
 {
-    string dir = string("/var/lib/fts3/monitoring");
+    string dir = string(MONITORING_DIR);
     vector<string> files = vector<string>();
     char msg[3000]={0};
     
@@ -79,7 +79,7 @@ void runConsumerMonitoring(std::vector<std::string>& messages)
 
 
 void runConsumerStatus(std::vector<struct message>& messages){
-    string dir = string("/var/lib/fts3/status");
+    string dir = string(STATUS_DIR);
     vector<string> files = vector<string>();
     struct message msg;
     
@@ -100,7 +100,7 @@ void runConsumerStatus(std::vector<struct message>& messages){
 }
 
 void runConsumerStall(std::vector<struct message_updater>& messages){
-    string dir = string("/var/lib/fts3/stalled");
+    string dir = string(STALLED_DIR);
     vector<string> files = vector<string>();
     struct message_updater msg;
     

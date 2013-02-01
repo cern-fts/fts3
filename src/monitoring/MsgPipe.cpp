@@ -35,7 +35,7 @@
 #include "concurrent_queue.h"
 #include "Logger.h"
 #include <vector>
-#include "producer_consumer_common.h"
+
 
 extern bool stopThreads;
 
@@ -56,11 +56,15 @@ MsgPipe::MsgPipe(std::string) {
     signal(SIGTERM, handler);
     signal(SIGINT, handler);
     signal(SIGQUIT, handler);
-
+    
+    fd = inotify_init();
+    wd = inotify_add_watch( fd, MONITORING_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );    
 }
 
 MsgPipe::~MsgPipe() {
     cleanup();
+    ( void ) inotify_rm_watch( fd, wd );
+    ( void ) close( fd );     
 }
 
 
@@ -71,6 +75,8 @@ void MsgPipe::run() {
     
     while (stopThreads==false){
      try{
+	/*blocking call, avoid busy-wating loop*/
+        length = read( fd, buffer, BUF_LEN );		     
         runConsumerMonitoring(messages);
 	if(!messages.empty()){
 		for (iter = messages.begin(); iter != messages.end(); ++iter){			

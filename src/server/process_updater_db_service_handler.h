@@ -97,13 +97,8 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-        while (1) { /*need to receive more than one messages at a time*/
+        while (stopThreads==false) { /*need to receive more than one messages at a time*/
 	 try{
-            if (stopThreads) {
-                ThreadSafeList::get_instance().clear();
-                return;
-            }
-	    
             bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
 	    if(!alive)
 		continue;		    
@@ -121,7 +116,7 @@ protected:
 	    
 	    /*set to fail all old queued jobs which have exceeded max queue time*/
 	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
-            sleep(30);
+            sleep(10);
         }catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message updater thrown unhandled exception"));
             }            

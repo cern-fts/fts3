@@ -81,15 +81,18 @@ public:
             const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
             ) :
-    TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc) {       
+    TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc) { 
+    
+	fd = inotify_init();
+	wd = inotify_add_watch( fd, STALLED_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );          
     }
 
     /* ---------------------------------------------------------------------- */
 
     /** Destructor */
     virtual ~ProcessUpdaterServiceHandler() {
-        if (qm)
-            delete qm;
+        ( void ) inotify_rm_watch( fd, wd );
+  	( void ) close( fd );    
     }
 
     /* ---------------------------------------------------------------------- */
@@ -103,7 +106,11 @@ public:
     }
 
 protected:
-    QueueManager* qm;
+    int length;
+    int i;
+    int fd;
+    int wd;
+    char buffer[BUF_LEN];  
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
@@ -113,6 +120,9 @@ protected:
     
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
             try {
+	    
+	    	/*blocking call, avoid busy-wating loop*/
+	        length = read( fd, buffer, BUF_LEN );	
 	
 	        runConsumerStall(messages);
 		if(messages.empty()){
@@ -129,9 +139,6 @@ protected:
 			}						
 			messages.clear();
 		}
-				
-		sleep(10);		
-				
             } catch (interprocess_exception &ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
             } catch (Err& e) {

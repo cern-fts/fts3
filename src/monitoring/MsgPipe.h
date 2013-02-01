@@ -44,10 +44,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "mq_manager.h"
-#include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/scoped_ptr.hpp>
 #include "common/logger.h"
 #include "common/error.h"
+#include "producer_consumer_common.h"
 
 using namespace activemq;
 using namespace activemq::core;
@@ -64,7 +64,11 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 class MsgPipe : public Runnable {
 private: 
-  QueueManager* qm;
+    int length;
+    int i;
+    int fd;
+    int wd;
+    char buffer[BUF_LEN];    
 
 public:
    MsgPipe(std::string qname);

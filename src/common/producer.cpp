@@ -56,7 +56,7 @@ void mktempfile(const std::string& basename,
 void runProducerMonitoring(const char* msg)
 {
 		FILE *fp=NULL; 
-		std::string basename("/var/lib/fts3/monitoring/");
+		std::string basename(MONITORING_DIR);
 	        std::string tempname;
 
 	        getUniqueTempFileName(basename, tempname);
@@ -75,7 +75,7 @@ void runProducerMonitoring(const char* msg)
 
 void runProducerStatus(struct message msg){
 		FILE *fp=NULL; 
-		std::string basename("/var/lib/fts3/status/");
+		std::string basename(STATUS_DIR);
 	        std::string tempname;
 
 	        getUniqueTempFileName(basename, tempname);
@@ -94,7 +94,7 @@ void runProducerStatus(struct message msg){
 
 void runProducerStall(struct message_updater msg){
 		FILE *fp=NULL; 
-		std::string basename("/var/lib/fts3/stalled/");
+		std::string basename(STALLED_DIR);
 	        std::string tempname = basename + "_" + msg.job_id + "_" + boost::lexical_cast<string>( msg.file_id );
        		if ((fp = fopen(tempname.c_str(), "w+")) != NULL)
        		{        					
