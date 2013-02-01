@@ -783,7 +783,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*file_id*/, std::string job_id, cons
         }
         // Job not finished yet
         else {
-            if (status == "ACTIVE") {
+            if (status == "ACTIVE" || status == "STAGING") {
                 sql << "UPDATE t_job "
                        "SET job_state = :state "
                        "WHERE job_id = :jobId AND"
