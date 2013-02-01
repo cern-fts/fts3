@@ -47,7 +47,7 @@ class Job(models.Model):
         db_table = 't_job'
         
     def isFinished(self):
-        return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE']
+        return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 
 
 

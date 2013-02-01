@@ -8,7 +8,7 @@ from ftsmon import forms
 from fts3.models import Job, File, ConfigAudit
 
 
-def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE'],
+def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING'],
              additionalTitle = None):
     
     # If jobId is in the request, redirect directly
