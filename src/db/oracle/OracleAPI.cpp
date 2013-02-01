@@ -193,8 +193,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     std::multimap<std::string, std::string> sePairs;
     std::vector<std::string> distinctVOS;
     std::vector<std::string>::const_iterator iter2;
-    bool allVos = vos.compare("*")==0? true: false;
-    
     
     std::string bring_distinct_vo =
     		" SELECT distinct t_job.vo_name  FROM t_job "
