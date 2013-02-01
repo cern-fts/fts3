@@ -535,7 +535,7 @@ CREATE TABLE t_file (
   finish_time       TIMESTAMP NULL DEFAULT NULL,
 --
 -- the timestamp when the file is in a terminal state
-  start_time        TIMESTAMP,  
+  start_time        TIMESTAMP NULL DEFAULT NULL,  
 --
 -- internal file parameters for storing information between retry attempts
   internal_file_params  VARCHAR(255),
@@ -570,9 +570,6 @@ CREATE TABLE t_file (
 --
 -- Staging finish timestamp
   staging_finished   TIMESTAMP NULL DEFAULT NULL,  
-  
--- user provided size of the file (bytes)
-  user_filesize         	INTEGER,
   
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
