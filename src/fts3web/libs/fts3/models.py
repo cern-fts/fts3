@@ -40,6 +40,8 @@ class Job(models.Model):
     lan_connection  = models.CharField(max_length = 1)
     fail_nearline   = models.CharField(max_length = 1)
     checksum_method = models.CharField(max_length = 1)
+    bring_online    = models.IntegerField()
+    job_metadata    = models.CharField(max_length = 255)
     
     class Meta:
         db_table = 't_job'
@@ -77,6 +79,10 @@ class File(models.Model):
     tx_duration  = models.FloatField()
     throughput   = models.FloatField()
     retry        = models.IntegerField()
+    file_metadata    = models.CharField(max_length = 255)
+    user_filesize    = models.BigIntegerField()
+    staging_start    = models.DateTimeField()
+    staging_finished = models.DateTimeField()
     
     class Meta:
         db_table = 't_file'
