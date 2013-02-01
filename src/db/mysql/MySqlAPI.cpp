@@ -642,7 +642,7 @@ void MySqlAPI::deleteSe(std::string NAME) {
 
 
 
-bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, int file_id, std::string transfer_status, std::string transfer_message,
+bool MySqlAPI::updateFileTransferStatus(std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                         int process_id, double filesize, double duration) {
 
     bool ok = true;
@@ -652,6 +652,23 @@ bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, int file_id, std
         double throughput;
 
         sql.begin();
+
+        bool staging = false;
+
+        // query for the file state in DB
+        soci::rowset<soci::row> rs = (
+        		sql.prepare << "SELECT file_state FROM t_file WHERE file_id=:fileId and job_id=:jobId",
+                soci::use(file_id),
+                soci::use(job_id)
+        	);
+
+        // check if the state is SATGING, there should be just one row
+        soci::rowset<soci::row>::const_iterator it = rs.begin();
+        if (it != rs.end()) {
+        	 soci::row const& r = *it;
+        	 std::string st = r.get<std::string>("file_state");
+        	 staging = st == "STAGING";
+        }
 
         soci::statement stmt(sql);
         std::ostringstream query;
@@ -668,6 +685,14 @@ bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, int file_id, std
             query << ", START_TIME = UTC_TIMESTAMP()";
         }
 
+        if (transfer_status == "STAGING") {
+        	if (staging) {
+        		query << ", STAGING_FINISHED = UTC_TIMESTAMP()";
+        	} else {
+        		query << ", STAGING_START = UTC_TIMESTAMP()";
+        	}
+        }
+
         if (filesize > 0 && duration > 0 && transfer_status == "FINISHED") {
             throughput = convertBtoM(filesize, duration);
         }
@@ -679,7 +704,7 @@ bool MySqlAPI::updateFileTransferStatus(std::string /*job_id*/, int file_id, std
         }
 
         query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput "
-                 "WHERE file_id = :fileId AND file_state IN ('READY', 'ACTIVE')";
+                 "WHERE file_id = :fileId AND file_state NOT IN ('FAILED', 'FINISHED', 'CANCELED')";
         stmt.exchange(soci::use(process_id, "pid"));
         stmt.exchange(soci::use(filesize, "filesize"));
         stmt.exchange(soci::use(duration, "duration"));
