@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load filesize %}
 
+{% block title %}
+Job {{ transferJob.job_id }}
+{% endblock %}
+
 {% block refresh %}
   {% if not transferJob.isFinished %}
     {% include "refresh.html" %}
