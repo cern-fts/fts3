@@ -29,7 +29,9 @@ using namespace std;
 
 Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), msg_updater(NULL) {
 	msg = new struct message();
+	//memset(msg, 0, sizeof(message));	
 	msg_updater = new struct message_updater();
+	//memset(msg_updater, 0, sizeof(message_updater));
 }
 
 Reporter::~Reporter() {

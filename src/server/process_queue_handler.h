@@ -65,18 +65,34 @@ public:
             const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
             ) :
-    TRAITS::ActiveObjectType("ProcessQueueHandler", desc) {
+    TRAITS::ActiveObjectType("ProcessQueueHandler", desc), inotifyInit(true) {
+    
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
+	
+	
 	fd = inotify_init();
-	wd = inotify_add_watch( fd, STATUS_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );	    
+	if(fd == -1){
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to init inotify: " << strerror(errno) << commit;
+		inotifyInit = false;
+	}
+	
+	if(inotifyInit){
+		wd = inotify_add_watch( fd, STATUS_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );
+		if(fd == -1){
+			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to inotify_add_watch inotify: " << strerror(errno) << commit;
+			inotifyInit = false;
+		}				
+	}    
     }
 
     /* ---------------------------------------------------------------------- */
 
     /** Destructor */
     virtual ~ProcessQueueHandler() {
-    	( void ) inotify_rm_watch( fd, wd );
-  	( void ) close( fd );        
+    	if(inotifyInit){
+    		( void ) inotify_rm_watch( fd, wd );
+  		( void ) close( fd );        
+	}
     }
 
     /* ---------------------------------------------------------------------- */
@@ -160,6 +176,7 @@ protected:
     int fd;
     int wd;
     char buffer[BUF_LEN];    
+    bool inotifyInit;
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
@@ -170,11 +187,15 @@ protected:
         while (stopThreads==false) { /*need to receive more than one messages at a time*/            	    
             try {
 		
-		/*blocking call, avoid busy-wating loop*/
-	        length = read( fd, buffer, BUF_LEN );
-		if(length==-1){
+	    if(inotifyInit){
+	    	/*blocking call, avoid busy-wating loop*/				
+	        length = read( fd, buffer, BUF_LEN );	
+		if(length == -1){
 			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read inotify: " << strerror(errno) << commit;	
 		}
+	    }else{
+	    	sleep(1);
+	    }
 	    
 	        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
 		if(!alive)

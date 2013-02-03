@@ -46,7 +46,7 @@ void handler(int sig) {
     exit(0);
 }
 
-MsgPipe::MsgPipe(std::string) { 
+MsgPipe::MsgPipe(std::string): inotifyInit(true) { 
     //register sig handler to cleanup resources upon exiting
     signal(SIGFPE, handler);
     signal(SIGILL, handler);
@@ -56,15 +56,29 @@ MsgPipe::MsgPipe(std::string) {
     signal(SIGTERM, handler);
     signal(SIGINT, handler);
     signal(SIGQUIT, handler);
-    
-    fd = inotify_init();
-    wd = inotify_add_watch( fd, MONITORING_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );    
+
+	fd = inotify_init();
+	if(fd == -1){
+		errorMessage = "Failed to init inotify: " + std::string(strerror(errno));
+		logger::writeLog(errorMessage);
+		inotifyInit = false;
+	}
+	
+	if(inotifyInit){
+		wd = inotify_add_watch( fd, MONITORING_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );
+		if(fd == -1){
+			errorMessage = "Failed to inotify_add_watch inotify: " + std::string(strerror(errno));
+			logger::writeLog(errorMessage);
+			inotifyInit = false;
+		}				
+	}       
 }
 
 MsgPipe::~MsgPipe() {
-    cleanup();
-    ( void ) inotify_rm_watch( fd, wd );
-    ( void ) close( fd );     
+    if(inotifyInit){
+    	( void ) inotify_rm_watch( fd, wd );
+    	( void ) close( fd );     
+    }
 }
 
 
@@ -75,8 +89,18 @@ void MsgPipe::run() {
     
     while (stopThreads==false){
      try{
-	/*blocking call, avoid busy-wating loop*/
-        length = read( fd, buffer, BUF_LEN );			     
+     
+	    if(inotifyInit){
+	    	/*blocking call, avoid busy-wating loop*/				
+	        length = read( fd, buffer, BUF_LEN );	
+		if(length == -1){
+			errorMessage = "Failed to read inotify: " + std::string(strerror(errno));
+			logger::writeLog(errorMessage);	
+		}
+	    }else{
+	    	sleep(1);
+	    }     
+				     
         runConsumerMonitoring(messages);
 	if(!messages.empty()){
 		for (iter = messages.begin(); iter != messages.end(); ++iter){			
@@ -87,7 +111,8 @@ void MsgPipe::run() {
         sleep(1);							    
       }   
      catch (...) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown exception"));
+               errorMessage = "Exception thrown in msg pipe";
+	       logger::writeLog(errorMessage);
         }
     }
 }

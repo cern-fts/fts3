@@ -68,7 +68,9 @@ private:
     int i;
     int fd;
     int wd;
-    char buffer[BUF_LEN];    
+    char buffer[BUF_LEN];
+    bool inotifyInit;
+    std::string errorMessage;
 
 public:
    MsgPipe(std::string qname);

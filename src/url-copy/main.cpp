@@ -896,7 +896,7 @@ int main(int argc, char **argv) {
 				gfal2_cancel(handle);    					
                             goto stop;
 			}
-                    }else if(userFilesize != -1 &&  userFilesize != statbufdest.st_size){
+                    }else if(userFilesize != 0 &&  userFilesize != statbufdest.st_size){
 		        std::stringstream error_;
 			error_ << "User specified destination file size is " <<  userFilesize << " but stat returned " << statbufsrc.st_size;
 		        errorMessage = error_.str();
