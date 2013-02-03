@@ -23,8 +23,8 @@ set(fts_db_generic_SOURCES SingleDbInstance.cpp DynamicLibraryManager.cpp Dynami
 
 add_library(fts_db_generic SHARED ${fts_db_generic_SOURCES})
 add_dependencies(fts_db_generic fts_config fts_common)
-target_link_libraries(fts_db_generic -ldl)
-target_link_libraries(fts_db_generic -lpthread)
+target_link_libraries(fts_db_generic ${CMAKE_DL_LIBS})
+target_link_libraries(fts_db_generic ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(fts_db_generic -lfts_common -lfts_config)
 set_target_properties(fts_db_generic            PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/db/generic

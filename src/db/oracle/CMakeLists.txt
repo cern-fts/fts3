@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
 include_directories (BEFORE ../generic)
-include_directories (/usr/include/openssl/)
+#include_directories (/usr/include/openssl/)
 include_directories (BEFORE ../../common)
 include_directories (.)
 
@@ -15,7 +15,7 @@ add_library(fts_db_oracle SHARED ${fts_db_oracle_SOURCES})
 add_dependencies(fts_db_oracle fts_common)
 target_link_libraries(fts_db_oracle ${OCCI_LIBRARY} )
 target_link_libraries(fts_db_oracle ${CLNTSH_LIBRARY} )
-target_link_libraries(fts_db_oracle -lpthread)
+target_link_libraries(fts_db_oracle ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(fts_db_oracle fts_common)
 set_target_properties(fts_db_oracle             PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/db/oracle

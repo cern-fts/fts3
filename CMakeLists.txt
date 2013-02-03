@@ -93,7 +93,8 @@ endif ()
 
 
 find_package(Boost)
-
+find_package(Threads)
+find_package(OpenSSL)
 
 add_subdirectory(test)
 add_subdirectory(src)

@@ -21,7 +21,10 @@ set(fts_include_dir
 	"${CMAKE_BINARY_DIR}/src/"
 )
 
-include_directories (/usr/include/openssl)
+#include_directories (/usr/include/openssl)
+if (ORACLEBUILD STREQUAL "OFF")
+include_directories(${OPENSSL_INCLUDE_DIR})
+endif ()
 include_directories (${fts_include_dir})
 include_directories (.)
 
@@ -47,7 +50,7 @@ add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
 target_link_libraries(fts_common -lboost_regex-mt -lboost_iostreams-mt 	${LIBUUID_LIBRARIES} )
 if (ORACLEBUILD STREQUAL "OFF")
-target_link_libraries(fts_common -lssl)
+target_link_libraries(fts_common ${OPENSSL_LIBRARIES})
 target_link_libraries(fts_common ${LIBUUID_LIBRARIES})
 endif ()
 
