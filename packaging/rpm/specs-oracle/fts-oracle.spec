@@ -21,6 +21,7 @@ BuildRequires:  glib2-devel%{?_isa}
 BuildRequires:  python-devel%{?_isa}
 BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
+BuildRequires:  openldap-devel%{?_isa}
 Requires(pre):  shadow-utils
 Requires: fts-libs = %{version}-%{release}
 Requires:  oracle-instantclient-basic%{?_isa}
