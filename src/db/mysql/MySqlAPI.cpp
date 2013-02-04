@@ -1555,21 +1555,20 @@ void MySqlAPI::forceFailTransfers() {
 
         if (stmt.execute(true)) {
 
-
-        	int terminateTime = timeout + 1000;
-
-        	if (reuse == "Y") {
-
-        		int count = 0;
-
-				sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
-
-				terminateTime *= count;
-        	}
-
             do {
                 startTime = mktime(&startTimeSt);
                 timeout = extractTimeout(params);
+
+            	int terminateTime = timeout + 1000;
+
+            	if (reuse == "Y") {
+
+            		int count = 0;
+
+    				sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
+
+    				terminateTime *= count;
+            	}
 
                 diff = difftime(lifetime, startTime);
                 if (timeout != 0 && diff > terminateTime && tHost == hostname) {
