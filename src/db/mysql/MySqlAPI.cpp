@@ -1540,15 +1540,16 @@ void MySqlAPI::forceFailTransfers() {
         time_t lifetime = time(NULL);
         time_t startTime;
         double diff;
+	soci::indicator isNull;
 
         soci::statement stmt = (
         		sql.prepare <<
-        					" SELECT t_file.job_id, t_file.file_id, t_file.start_time, t_file.pid, t_file.internal_file_params, "
-                            "       t_file.transferHost, t_job.reuse_job "
+        		    " SELECT t_file.job_id, t_file.file_id, t_file.start_time, t_file.pid, t_file.internal_file_params, "
+                            " t_file.transferHost, t_job.reuse_job "
                             " FROM t_file, t_job "
                             " WHERE t_job.job_id = t_file.job_id AND t_file.file_state in ('ACTIVE','READY') AND pid IS NOT NULL",
                             soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
-                            soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse)
+                            soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
         	);
 
 
@@ -1561,13 +1562,13 @@ void MySqlAPI::forceFailTransfers() {
 
             	int terminateTime = timeout + 1000;
 
-            	if (reuse == "Y") {
+            	if (isNull != soci::i_null && reuse == "Y") {
 
             		int count = 0;
 
     				sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
-
-    				terminateTime *= count;
+				if(count > 0)
+    					terminateTime *= count;
             	}
 
                 diff = difftime(lifetime, startTime);
