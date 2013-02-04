@@ -1846,6 +1846,8 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
 
 
 bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
+	soci::session sql(connectionPool);
+
     bool ok = true;
     std::vector<struct message_updater>::const_iterator iter;
     const std::string transfer_status = "FAILED";
@@ -1854,8 +1856,24 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
 
     try {
         for (iter = messages.begin(); iter != messages.end(); ++iter) {
-                updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
-                updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);       
+
+        	int count = 0;
+
+        	sql <<
+        			" SELECT COUNT(*) "
+        			" FROM t_file "
+        			" WHERE job_id = :jobId "
+        			"		AND file_id = :fileId "
+        			"		AND file_state in ('STAGING','ACTIVE')",
+        			soci::use(std::string(iter->job_id)),
+        			soci::use(iter->file_id),
+        			soci::into(count)
+        			;
+
+        	if (count > 0) {
+				updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+				updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);
+        	}
         }
     }
     catch (std::exception& e) {
