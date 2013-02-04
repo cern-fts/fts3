@@ -3722,7 +3722,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     const std::string status = "FAILED";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL; 
-    std::string query = "select count(*) from t_file where job_id=:1 and file_id=:2 and file_state in ('STAGING','ACTIVE')";  
+    std::string query = "select file_id from t_file where job_id=:1 and file_id=:2 and file_state in ('STAGING','ACTIVE')";  
     const std::string tag = "retryFormDead";
     try {
         if (false == conn->checkConn()){

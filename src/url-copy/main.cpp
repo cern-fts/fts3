@@ -55,6 +55,7 @@ limitations under the License. */
 #include "StaticSslLocking.h"
 #include "monitoring/utility_routines.h"
 #include <ctime>
+#include "name_to_uid.h"
 
 
 using namespace FTS3_COMMON_NAMESPACE;
@@ -364,25 +365,6 @@ void event_logger(const gfalt_event_t e, gpointer udata)
         msg->set_time_spent_in_srm_finalization_end(&tr_completed, timestampStr);
 }
 
-
-/*courtesy of:
-"Setuid Demystified" by Hao Chen, David Wagner, and Drew Dean: http://www.cs.berkeley.edu/~daw/papers/setuid-usenix02.pdf
- */
-uid_t name_to_uid(char const *name) {
-    if (!name)
-        return static_cast<uid_t> (-1);
-    long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (buflen == -1)
-        return static_cast<uid_t> (-1);
-    // requires c99
-    char buf[buflen];
-    struct passwd pwbuf, *pwbufp;
-    if (0 != getpwnam_r(name, &pwbuf, buf, static_cast<size_t> (buflen), &pwbufp)
-            || !pwbufp)
-        return static_cast<uid_t> (-1);
-    return pwbufp->pw_uid;
-}
-
 static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpointer) {
     if (message) {
         logStream << fileManagement->timestamp() << "DEBUG " << message << '\n';
@@ -393,8 +375,7 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 __attribute__((constructor)) void begin (void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
-    char user[ ] = "fts3";
-    pw_uid = name_to_uid(user);
+    pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
     

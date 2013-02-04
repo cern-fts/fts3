@@ -51,6 +51,8 @@ limitations under the License. */
 #include <boost/algorithm/string.hpp>  
 #include <sys/param.h>
 #include <boost/scoped_ptr.hpp>
+#include "name_to_uid.h"
+
 
 extern bool  stopThreads;
 
@@ -62,20 +64,6 @@ using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
 
 
-uid_t name_to_uid(char const *name) {
-    if (!name)
-        return static_cast<uid_t>(-1);
-    long const buflen = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (buflen == -1)
-        return static_cast<uid_t>(-1);
-
-    char buf[buflen];
-    struct passwd pwbuf, *pwbufp;
-    if (0 != getpwnam_r(name, &pwbuf, buf, static_cast<size_t>(buflen), &pwbufp)
-            || !pwbufp)
-        return static_cast<uid_t>(-1);
-    return pwbufp->pw_uid;
-}
 
 template <class T>
 inline std::string to_string(const T& t) {
@@ -324,10 +312,9 @@ protected:
                             params.append(" -proxy ");
                             params.append(proxy_file);
                             /*make sure proxy is readable    */
-                            chmod(proxy_file.c_str(), (mode_t) 0600); //S_IRUSR|S_IRGRP|S_IROTH
-                            char user[ ] = "fts3";
+                            chmod(proxy_file.c_str(), (mode_t) 0600); //S_IRUSR|S_IRGRP|S_IROTH                            
                             uid_t pw_uid;
-                            pw_uid = name_to_uid(user);
+                            pw_uid = name_to_uid();
                             int checkChown = chown(proxy_file.c_str(), pw_uid, getgid());
 			    if(checkChown!=0){
 			    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << proxy_file << commit;
@@ -625,9 +612,8 @@ protected:
                         params.append(proxy_file);
                         /*make sure proxy is readable    */
                         chmod(proxy_file.c_str(), (mode_t) 0600);
-                        char user[ ] = "fts3";
                         uid_t pw_uid;
-                        pw_uid = name_to_uid(user);
+                        pw_uid = name_to_uid();
                         int checkChown = chown(proxy_file.c_str(), pw_uid, getgid());
  			if(checkChown!=0){
 			    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << proxy_file << commit;

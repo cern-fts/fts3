@@ -37,6 +37,7 @@ limitations under the License. */
 #include "queue_updater.h"
 #include "config/FileMonitor.h"
 #include <boost/filesystem.hpp>
+#include "name_to_uid.h"
 
 namespace fs = boost::filesystem;
 
@@ -49,6 +50,8 @@ bool stopThreads = false;
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
+
+
 static int fexists(const char *filename) {
     struct stat buffer;
     if (stat(filename, &buffer) == 0) return 0;
@@ -145,8 +148,18 @@ void checkInitDirs(){
    
    for (iter = paths.begin(); iter != paths.end(); ++iter) {
       if ( !fs::exists(*iter) || !fs::is_directory(*iter)){
-        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Directory " << *iter << " does not exist or is not owned by fts3 user" << commit;
-        	exit(1);          
+	        if(fs::create_directory(*iter)){
+			uid_t pw_uid;
+                        pw_uid = name_to_uid();
+			std::string path = (*iter).string();
+                        int checkChown = chown(path.c_str(), pw_uid, getgid());
+			if(checkChown!=0){
+				FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for " << *iter << commit;
+			}
+		}else{
+        		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Directory " << *iter << " does not exist or is not owned by fts3 user" << commit;
+        		exit(1);          		
+		}
       }          
    }      
     }catch (const fs::filesystem_error& ex){
