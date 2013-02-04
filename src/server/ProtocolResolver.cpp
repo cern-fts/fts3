@@ -26,6 +26,8 @@
 
 #include "ws/config/Configuration.h"
 
+#include "common/OptimizerSample.h"
+
 #include <vector>
 
 #include <boost/assign/list_of.hpp>
@@ -37,7 +39,7 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(string &job_id) :	db(DBSingleton::instance().getDBObjectInstance()) {
+ProtocolResolver::ProtocolResolver(string &job_id) : db(DBSingleton::instance().getDBObjectInstance()), job_id(job_id) {
 
 	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(job_id);
 	vector< tuple<string, string, string> >::iterator it;
@@ -207,7 +209,28 @@ bool ProtocolResolver::resolve() {
 			getProtocolCfg(destination_link)
 		);
 
+	if (isAuto()) {
+		autotune();
+	}
+
 	return prot.is_initialized();
+}
+
+void ProtocolResolver::autotune() {
+
+	scoped_ptr<TransferJobs> ptr (
+			db->getTransferJob(job_id)
+		);
+
+	string source = ptr->SOURCE_SE;
+	string destination = ptr->DEST_SE;
+
+	OptimizerSample opt_config;
+    DBSingleton::instance().getDBObjectInstance()->initOptimizer(source, destination, 0);
+    DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
+    get<TCP_BUFFER_SIZE>(*prot) = opt_config.getBufSize();
+    get<NOSTREAMS>(*prot) = opt_config.getStreamsperFile();
+    get<URLCOPY_TX_TO>(*prot) = opt_config.getTimeout();
 }
 
 bool ProtocolResolver::isAuto() {

@@ -246,9 +246,9 @@ protected:
 			
                     bool optimize = false;
                     if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {		    	
-		        optimize = true;
+                    	optimize = true;
                         opt_config = new OptimizerSample();
-			DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
+                        DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
                         DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                         BufSize = opt_config->getBufSize();
                         StreamsperFile = opt_config->getStreamsperFile();
@@ -259,45 +259,59 @@ protected:
   	    	    
                     FileTransferScheduler scheduler(temp.get());
                     if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
-		    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
-		    if(optimize && manualConfigExists==false){
-		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-		    }else{
-		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
-		        ProtocolResolver resolver(temp->JOB_ID);
-		        protocolExists = resolver.resolve();
-			if(protocolExists){
+                    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
+                    	if (optimize && manualConfigExists==false){
+                    		DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID,temp->FILE_ID,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+                    	} else {
+							FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
+							ProtocolResolver resolver(temp->JOB_ID);
+							protocolExists = resolver.resolve();
+							if (protocolExists) {
 
-				if (resolver.isAuto()) {
-					// TODO do protocol auto tuning
-				}
+								protocol.NOSTREAMS = resolver.getNoStreams();
+								protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
+								protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
+								protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
 
-				protocol.NOSTREAMS = resolver.getNoStreams();
-				protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
-				protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
-				protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
+								if(protocol.NOSTREAMS >= 0)
+									internalParams << "nostreams:" << protocol.NOSTREAMS;
+								if(protocol.URLCOPY_TX_TO >= 0)
+									internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
+								if(protocol.TCP_BUFFER_SIZE >= 0)
+									internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
+							} else {
+								internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
+							}
 
-				if(protocol.NOSTREAMS >= 0)
-					internalParams << "nostreams:" << protocol.NOSTREAMS;
-				if(protocol.URLCOPY_TX_TO >= 0)
-					internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
-				if(protocol.TCP_BUFFER_SIZE >= 0)
-					internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
-			}else{
-				internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
-			}
-			DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(temp->JOB_ID, temp->FILE_ID, internalParams.str());
-		    }
+							if (resolver.isAuto()) {
+								DBSingleton::instance().getDBObjectInstance()->setAllowed(
+										temp->JOB_ID,
+										temp->FILE_ID,
+										source_hostname,
+										destin_hostname,
+										resolver.getNoStreams(),
+										resolver.getNoTxActiveTo(),
+										resolver.getTcpBufferSize()
+									);
+							} else {
+								DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(
+										temp->JOB_ID,
+										temp->FILE_ID,
+										internalParams.str()
+									);
+							}
+						}
 		    
-                   proxy_file = get_proxy_cert(
-                            temp->DN, // user_dn
-                            temp->CRED_ID, // user_cred
-                            temp->VO_NAME, // vo_name
-                            "",
-                            "", // assoc_service
-                            "", // assoc_service_type
-                            false,
-                            "");
+					   proxy_file = get_proxy_cert(
+								temp->DN, // user_dn
+								temp->CRED_ID, // user_cred
+								temp->VO_NAME, // vo_name
+								"",
+								"", // assoc_service
+								"", // assoc_service_type
+								false,
+								""
+						   );
 		   	
                         sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
                         destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
@@ -538,35 +552,31 @@ protected:
                 ConfigurationAssigner cfgAssigner(tempUrl);
                 manualConfigExists = cfgAssigner.assign();
 
-		bool optimize = false;
-               
-                if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {
-		    optimize = true;
-                    opt_config = new OptimizerSample();
-   		    DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
-                    DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                    BufSize = opt_config->getBufSize();
-                    StreamsperFile = opt_config->getStreamsperFile();
-                    Timeout = opt_config->getTimeout();
-                    delete opt_config;
-                    opt_config = NULL;
-                }
+			bool optimize = false;
+
+			if (enableOptimization.compare("true") == 0 && manualConfigExists==false) {
+				optimize = true;
+				opt_config = new OptimizerSample();
+				DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
+				DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+				BufSize = opt_config->getBufSize();
+				StreamsperFile = opt_config->getStreamsperFile();
+				Timeout = opt_config->getTimeout();
+				delete opt_config;
+				opt_config = NULL;
+			}
 		
 
-                FileTransferScheduler scheduler(tempUrl);
-                if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
- 		    std::stringstream internalParams;
-		    if (optimize && manualConfigExists==false) {
-		    	DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-		    } else {
-		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
-		        ProtocolResolver resolver(job_id);
-		        protocolExists =  resolver.resolve();
-				if(protocolExists){
-
-					if (resolver.isAuto()) {
-						// TODO do protocol auto tuning
-					}
+			FileTransferScheduler scheduler(tempUrl);
+			if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
+				std::stringstream internalParams;
+				if (optimize && manualConfigExists==false) {
+					DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1,source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+				} else {
+					FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
+					ProtocolResolver resolver(job_id);
+					protocolExists =  resolver.resolve();
+					if(protocolExists){
 
 					protocol.NOSTREAMS = resolver.getNoStreams();
 					protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
@@ -579,11 +589,28 @@ protected:
 						internalParams << ",timeout:"<< protocol.URLCOPY_TX_TO;
 					if(protocol.TCP_BUFFER_SIZE >= 0)
 						internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
-				}else{
-					internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
+					}else{
+						internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:"<< DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
+					}
+
+					if (resolver.isAuto()) {
+						DBSingleton::instance().getDBObjectInstance()->setAllowed(
+								job_id,
+								-1,
+								source_hostname,
+								destin_hostname,
+								resolver.getNoStreams(),
+								resolver.getNoTxActiveTo(),
+								resolver.getTcpBufferSize()
+							);
+					} else {
+						DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(
+								job_id,
+								0,
+								internalParams.str()
+							);
+					}
 				}
-				DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(job_id, 0, internalParams.str());
-		    }		    
 
                 proxy_file = get_proxy_cert(
                         dn, // user_dn

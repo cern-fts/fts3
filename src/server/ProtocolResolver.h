@@ -115,7 +115,7 @@ public:
 	 * @return an object containing protocol parameters (the memory has to be released by the user)
 	 */
 	bool resolve();
-	
+
 	/**
 	 * checks if the configuration says to use auto tuning
 	 *
@@ -191,6 +191,14 @@ private:
 	 */
 	optional<protocol> merge(optional<protocol> source, optional<protocol> destination);
 
+	/**
+	 * Does the auto tuning in case the protocol was set to 'auto'
+	 *
+	 * @param source - the source hostname
+	 * @param destination - the destination hostname
+	 */
+	void autotune();
+
 	/// DB singleton instance
 	GenericDbIfce* db;
 
@@ -199,6 +207,9 @@ private:
 
 	/// stores the protocol parameters that have been resolved
 	optional<protocol> prot;
+
+	// the transfer job ID
+	string& job_id;
 };
 
 FTS3_SERVER_NAMESPACE_END
