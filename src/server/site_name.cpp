@@ -5,18 +5,14 @@
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-bool SiteName::connected = false;
-
 SiteName::SiteName(): siteName(""), infosys(""), pPath(NULL), bdiiUsed(false){	
-	if(!connected){
   	pPath = getenv ("LCG_GFAL_INFOSYS");
   	if (pPath!=NULL){
 		infosys = std::string(pPath);
-		if(infosys.compare("false")!=0){
-			connected = BdiiBrowser::getInstance().connect(infosys);
+		if(infosys.compare("false")!=0){			
+			BdiiBrowser::getInstance().connect(infosys);
 			bdiiUsed = true;	
 		}
-	}
 	}
 }
 

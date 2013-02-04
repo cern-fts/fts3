@@ -38,5 +38,4 @@ private:
 	std::string infosys;
 	char * pPath;
 	bool bdiiUsed;
-	static bool connected;
 };

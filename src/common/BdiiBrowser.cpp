@@ -202,7 +202,7 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 
 	if (!inuse) return list< map<string, R> >();
 
-	if (!isValid()) reconnect();
+	//if (!isValid()) reconnect();
 
     int rc = 0;
     LDAPMessage *reply = 0;
@@ -286,10 +286,9 @@ bool BdiiBrowser::getSeStatus(string se) {
 string BdiiBrowser::getSiteName(string se) {
 
 	map<string, string>::iterator it = seToSite.find(se);
-	if (it != seToSite.end()) {		
+	if (it != seToSite.end()) {
 		return it->second;
 	}
-	
 	list< map<string, list<string> > > rs = browse< list<string> >(GLUE1, FIND_SE_SITE(se), FIND_SE_SITE_ATTR);
 
 	if (rs.empty()) return string();
