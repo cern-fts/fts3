@@ -65,7 +65,7 @@ public:
 
 private:
 
-	void reconnect();
+	bool reconnect();
 	bool isValid();
 
 	// if we want all available attributes we leave attr = 0
@@ -119,8 +119,9 @@ private:
 
 	static const string false_str;
 	bool inuse;
+	int max_reconnect;
 
-	BdiiBrowser() : querying(0) {}
+	BdiiBrowser() : querying(0), max_reconnect(3) {}
 	BdiiBrowser(BdiiBrowser const&);
 	BdiiBrowser& operator=(BdiiBrowser const&);
 };

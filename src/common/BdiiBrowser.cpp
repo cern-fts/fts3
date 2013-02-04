@@ -103,7 +103,7 @@ bool BdiiBrowser::connect(string infosys, time_t sec) {
 	int ret = 0;
     ret = ldap_initialize(&ld, url.c_str());
     if (ret != LDAP_SUCCESS) {
-    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << " " << infosys << commit;
     	return false;
     }
 
@@ -119,7 +119,7 @@ bool BdiiBrowser::connect(string infosys, time_t sec) {
 
     ret = ldap_sasl_bind_s(ld, 0, LDAP_SASL_SIMPLE, &cred, 0, 0, 0);
     if (ret != LDAP_SUCCESS) {
-    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << " " << infosys << commit;
     	return false;
     }
     
@@ -206,10 +206,10 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 	if (!isValid()) {
 
 		bool reconnected = false;
-		int reconnect_count = 0;
+		int reconnect_count = 0;		
 
 		// try to reconnect 3 times
-		for (int reconnect_count = 0; reconnect_count < max_reconnect; reconnect_count++) {
+		for (reconnect_count = 0; reconnect_count < max_reconnect; reconnect_count++) {
 			reconnected = reconnect();
 			if (reconnected) break;
 		}
