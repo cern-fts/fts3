@@ -158,14 +158,16 @@ void BdiiBrowser::notifyReconnector() {
 	qv.notify_one();
 }
 
-void BdiiBrowser::reconnect() {
+bool BdiiBrowser::reconnect() {
 
 	waitIfBrowsing();
 
 	disconnect();
-	connect(infosys, timeout.tv_sec);
+	bool ret = connect(infosys, timeout.tv_sec);
 
 	notifyBrowsers();
+
+	return ret;
 }
 
 bool BdiiBrowser::isValid() {	
@@ -201,7 +203,23 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 
 	if (!inuse) return list< map<string, R> >();
 
-	if (!isValid()) reconnect();
+	if (!isValid()) {
+
+		bool reconnected = false;
+		int reconnect_count = 0;
+
+		// try to reconnect 3 times
+		for (int reconnect_count = 0; reconnect_count < max_reconnect; reconnect_count++) {
+			reconnected = reconnect();
+			if (reconnected) break;
+		}
+
+		// if it has not been possible to reconnect ...
+		if (!reconnected) {
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: it has not been possible to reconnect to the BDII" << commit;
+			return list< map<string, R> >();
+		}
+	}
 
     int rc = 0;
     LDAPMessage *reply = 0;
