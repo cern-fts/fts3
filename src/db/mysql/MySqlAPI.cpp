@@ -1856,20 +1856,15 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     try {
         for (iter = messages.begin(); iter != messages.end(); ++iter) {
 
-        	int count = 0;
+            soci::rowset<int> rs = (
+            		sql.prepare <<
+            			" SELECT file_id FROM t_file "
+        				" WHERE job_id = :jobId AND file_id = :fileId AND file_state in ('STAGING','ACTIVE') ",
+        				soci::use(std::string(iter->job_id)),
+        				soci::use(iter->file_id)
+            	);
 
-        	sql <<
-        			" SELECT COUNT(*) "
-        			" FROM t_file "
-        			" WHERE job_id = :jobId "
-        			"		AND file_id = :fileId "
-        			"		AND file_state in ('STAGING','ACTIVE')",
-        			soci::use(std::string(iter->job_id)),
-        			soci::use(iter->file_id),
-        			soci::into(count)
-        			;
-
-        	if (count > 0) {
+        	if (rs.begin() != rs.end()) {
 				updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
 				updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);
         	}
