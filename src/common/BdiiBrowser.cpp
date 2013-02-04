@@ -202,7 +202,7 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 
 	if (!inuse) return list< map<string, R> >();
 
-	//if (!isValid()) reconnect();
+	if (!isValid()) reconnect();
 
     int rc = 0;
     LDAPMessage *reply = 0;
