@@ -133,6 +133,12 @@ static int fexists(const char *filename) {
     return -1;
 }
 
+static bool isSrmUrl(const std::string & url) {
+    if (url.compare(0, 6, "srm://") == 0)
+        return true;
+
+    return false;
+}
 
 static std::string srmVersion(const std::string & url) {
     if (url.compare(0, 6, "srm://") == 0)
@@ -666,7 +672,7 @@ int main(int argc, char **argv) {
 	    log << fileManagement->timestamp() << "INFO File metadata:" << strArray[5] << '\n'; //A
 	    log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A	    	
 	    	    	    		    
-	    if(bringonline >0 || copy_pin_lifetime>0 ){ //issue a bring online	    	
+	    if( (bringonline >0 || copy_pin_lifetime>0) && isSrmUrl(strArray[0]) ){ //issue a bring online	    	
                 reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
 		if (gfal2_bring_online(handle,(strArray[1]).c_str(), copy_pin_lifetime, bringonline, &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
@@ -726,7 +732,10 @@ int main(int argc, char **argv) {
                 gfalt_set_dst_spacetoken(params, dest_token_desc.c_str(), NULL);
 
             gfalt_set_create_parent_dir(params, TRUE, NULL);
-
+	    
+	    //get checksum timeout from gfal2
+	    int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);	   
+            msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string>(checksumTimeout));	    
 
             for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++) {
                 if (gfal2_stat(handle,(strArray[1]).c_str(), &statbufsrc, &tmp_err) < 0) {
@@ -795,8 +804,6 @@ int main(int argc, char **argv) {
             gfalt_set_nbstreams(params, nbstreams, NULL);
             gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
             gfalt_set_monitor_callback(params, &call_perf, NULL);
-
-            msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, timeout_to_string.c_str());
 
             //calculate tr time in seconds
             start = std::time(NULL);

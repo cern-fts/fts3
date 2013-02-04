@@ -300,7 +300,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                              "ORDER BY t_file.file_id DESC", soci::use(jobId));
 
             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti) {
-                TransferFiles const& tfile = *ti;
+                TransferFiles const& tfile = *ti;		
                	files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
             }
         }

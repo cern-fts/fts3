@@ -386,8 +386,8 @@ protected:
                         }
                         if (std::string(temp->DEST_SPACE_TOKEN).length() > 0) {
                             params.append(" -j ");
-                            params.append(temp->DEST_SPACE_TOKEN);
-                        }
+                            params.append(temp->DEST_SPACE_TOKEN);			    
+                        }			
 			
                         if (temp->PIN_LIFETIME > 0) {
                             params.append(" -t ");
