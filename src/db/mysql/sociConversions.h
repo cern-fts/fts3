@@ -110,6 +110,7 @@ namespace soci
             file.DEST_SPACE_TOKEN   = v.get<std::string>("space_token");
             file.REASON             = v.get<std::string>("reason", "");
             file.BRINGONLINE   = v.get<int>("bring_online");
+            file.PIN_LIFETIME  = v.get<int>("copy_pin_lifetime");
             file.FILE_METADATA = v.get<std::string>("file_metadata", "");
             file.JOB_METADATA  = v.get<std::string>("job_metadata", "");
             file.USER_FILESIZE = v.get<int>("user_filesize", 0);
