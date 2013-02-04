@@ -193,7 +193,6 @@ bool BdiiBrowser::isValid() {
 	    return true;
 	}
 
-	notifyReconnector();
 	return false;
 }
 
