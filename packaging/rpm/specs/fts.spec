@@ -18,7 +18,11 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:  cmake
 BuildRequires:  apr-devel%{?_isa}
 BuildRequires:  apr-util-devel%{?_isa}
+%if 0%{?el5}
+BuildRequires:  activemq-cpp-library%{?_isa}
+%else
 BuildRequires:  activemq-cpp-devel%{?_isa}
+%endif
 BuildRequires:  gsoap-devel%{?_isa}
 BuildRequires:  doxygen%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
