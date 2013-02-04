@@ -21,7 +21,9 @@
 #include <iostream>
 #include <ctime> 
 #include <map>
-#include "ServiceDiscoveryIfce.h"
+#include "BdiiBrowser.h"
+
+using namespace fts3::common;
 
 class SiteName {
 	
@@ -33,7 +35,8 @@ public:
 
 private:
 	std::string siteName;
-	std::string getFromBDII(std::string& hostname);
-	std::map<std::string, std::string> sdStore;
-	SDException exception;	
+	std::string infosys;
+	char * pPath;
+	bool bdiiUsed;
+	static bool connected;
 };

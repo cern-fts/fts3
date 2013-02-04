@@ -28,7 +28,7 @@
 #include <sstream>
 
 namespace fts3 {
-namespace ws {
+namespace common {
 
 // TODO reorganize + do queries for glue2
 
@@ -54,6 +54,10 @@ const string BdiiBrowser::false_str = "false";
 #define QUERY_VO_PRE  "(|" QUERY_VO_ANY
 #define QUERY_VO      "(" ATTR_VO "=%s)"
 #define QUERY_VO_POST ")"
+
+static int keepalive_idle = 120;
+static int keepalive_probes = 3;
+static int keepalive_interval = 60;
 
 // "(| (%sAccessControlBaseRule=VO:%s) (%sAccessControlBaseRule=%s) (%sAccessControlRule=%s)"
 
@@ -82,14 +86,17 @@ BdiiBrowser::~BdiiBrowser() {
     disconnect();
 }
 
-void BdiiBrowser::connect(string infosys, time_t sec) {
+bool BdiiBrowser::connect(string infosys, time_t sec) {
 
 	this->infosys = infosys;
 	inuse = infosys != false_str;
-	if (!inuse) return;
+	if (!inuse) return false;
 
 	timeout.tv_sec = sec;
 	timeout.tv_usec = 0;
+	
+	search_timeout.tv_sec = (sec*2);
+	search_timeout.tv_usec = 0;	
 
 	url = "ldap://" + infosys;
 
@@ -97,10 +104,14 @@ void BdiiBrowser::connect(string infosys, time_t sec) {
     ret = ldap_initialize(&ld, url.c_str());
     if (ret != LDAP_SUCCESS) {
     	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
-    	return;
+    	return false;
     }
 
+    ldap_set_option(ld, LDAP_OPT_TIMEOUT, &search_timeout);
     ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout);
+    ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_IDLE,(void *) &(keepalive_idle));
+    ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_PROBES,(void *) &(keepalive_probes));
+    ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_INTERVAL, (void *) &(keepalive_interval));       
 
     berval cred;
     cred.bv_val = 0;
@@ -109,8 +120,10 @@ void BdiiBrowser::connect(string infosys, time_t sec) {
     ret = ldap_sasl_bind_s(ld, 0, LDAP_SASL_SIMPLE, &cred, 0, 0, 0);
     if (ret != LDAP_SUCCESS) {
     	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << commit;
-    	return;
+    	return false;
     }
+    
+    return true;
 }
 
 void BdiiBrowser::disconnect() {
@@ -155,8 +168,7 @@ void BdiiBrowser::reconnect() {
 	notifyBrowsers();
 }
 
-bool BdiiBrowser::isValid() {
-
+bool BdiiBrowser::isValid() {	
 	LDAPMessage *result = 0;
 
 	waitIfReconnecting();
@@ -173,7 +185,7 @@ bool BdiiBrowser::isValid() {
 		if (result) ldap_msgfree(result);
 
 	} else {
-		// we only free the memmory if rc > 0 because of a bug in thread-safe version of LDAP lib
+		// we only free the memory if rc > 0 because of a bug in thread-safe version of LDAP lib
 	    if (result && rc > 0) {
 	    	ldap_msgfree(result);
 	    }
@@ -274,10 +286,10 @@ bool BdiiBrowser::getSeStatus(string se) {
 string BdiiBrowser::getSiteName(string se) {
 
 	map<string, string>::iterator it = seToSite.find(se);
-	if (it != seToSite.end()) {
+	if (it != seToSite.end()) {		
 		return it->second;
 	}
-
+	
 	list< map<string, list<string> > > rs = browse< list<string> >(GLUE1, FIND_SE_SITE(se), FIND_SE_SITE_ATTR);
 
 	if (rs.empty()) return string();
@@ -318,5 +330,5 @@ list<string> BdiiBrowser::parseBdiiEntryAttribute< list<string> >(berval **value
 	return ret;
 }
 
-} /* namespace ws */
+} /* namespace common */
 } /* namespace fts3 */

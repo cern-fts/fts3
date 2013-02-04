@@ -52,7 +52,6 @@ set(fts_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/VersionResolver.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/LogFileStreamer.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/OsgParser.cpp"
-    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/BdiiBrowser.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/gsoap_deleg_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/GSoapDelegationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/config/gsoap_config_methods.cpp"
@@ -87,8 +86,6 @@ target_link_libraries(fts_server_lib
 	-lfts_server_gsoap_transfer 
 	-lboost_thread-mt 
 	-lboost_regex-mt 
-	-lis_ifce 
-	-lldap_r
 	-lglib-2.0 
 	-lgridsite
 	-lcgsi_plugin_voms_cpp

@@ -3,10 +3,21 @@
 #include "logger.h"
 #include "error.h"
 
-
 using namespace FTS3_COMMON_NAMESPACE;
 
-SiteName::SiteName(){
+bool SiteName::connected = false;
+
+SiteName::SiteName(): siteName(""), infosys(""), pPath(NULL), bdiiUsed(false){	
+	if(!connected){
+  	pPath = getenv ("LCG_GFAL_INFOSYS");
+  	if (pPath!=NULL){
+		infosys = std::string(pPath);
+		if(infosys.compare("false")!=0){
+			connected = BdiiBrowser::getInstance().connect(infosys);
+			bdiiUsed = true;	
+		}
+	}
+	}
 }
 
 SiteName::~SiteName(){
@@ -14,6 +25,8 @@ SiteName::~SiteName(){
 
 
 std::string SiteName::getSiteName(std::string& hostname){
+
+  if(bdiiUsed){
     std::string bdiiHost("");
     char *base_scheme = NULL;
     char *base_host = NULL;
@@ -21,57 +34,19 @@ std::string SiteName::getSiteName(std::string& hostname){
     int base_port = 0;
     parse_url(hostname.c_str(), &base_scheme, &base_host, &base_port, &base_path);
     if(base_host)
-    	bdiiHost = std::string(base_host);
+    	bdiiHost = std::string(base_host);   
 	
    if(base_scheme)
    	free(base_scheme);
    if(base_host)
    	free(base_host);
    if(base_path)
-   	free(base_path);			
-	
-  if( ((int) sdStore.size()) > 5000)
-    	sdStore.clear();
-	
-    std::map <std::string, std::string> ::const_iterator iter = sdStore.find(bdiiHost);
-    if (iter != sdStore.end()) {
-        siteName = iter->second;
-    } else {
-        siteName = getFromBDII(bdiiHost);
-	if(siteName.length() > 0)
-		sdStore.insert(std::make_pair(bdiiHost, siteName));   
+   	free(base_path);
+	    		
+     siteName = BdiiBrowser::getInstance().getSiteName(bdiiHost);	
+ 
     }
-    
     return  siteName;    
-}
-
-
-std::string  SiteName::getFromBDII(std::string& hostname){
-	std::string site("");
-        char* sitename = NULL;
-	
-	char const* tmp = getenv( "LCG_GFAL_INFOSYS" );
-	if ( tmp == NULL ) {
-		return std::string("");
-	} else {
-    		std::string s( tmp );
-		if(s.compare("false") == 0)
-			return std::string("");
-	}
-	
-	
-	sitename = SD_getServiceSite(hostname.c_str(), &exception);
-	if (exception.status != SDStatus_SUCCESS){
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) <<  "BDII error:" << exception.reason << " for " << hostname  << commit;
-            SD_freeException(&exception);
-	}
-	if(sitename){
-		site =  std::string(sitename);	    
-		free(sitename);
-		return site;	
-	}
-
-	return std::string("");		
 }
 
 

@@ -39,7 +39,7 @@
 #include <boost/thread.hpp>
 
 namespace fts3 {
-namespace ws {
+namespace common {
 
 using namespace std;
 using namespace boost;
@@ -53,7 +53,7 @@ public:
 
 	virtual ~BdiiBrowser();
 
-	void connect(string infosys, time_t sec = 60);
+	bool connect(string infosys, time_t sec = 60);
 	void disconnect();
 
 	bool isVoAllowed(string se, string vo);
@@ -87,6 +87,7 @@ private:
 
 	LDAP *ld;
 	timeval timeout;
+	timeval search_timeout;
 	string infosys;
 	string url;
 

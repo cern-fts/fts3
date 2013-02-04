@@ -278,7 +278,7 @@ int DoServer(int argc, char** argv) {
         ThreadSafeList::get_instance();
 
         std::string infosys = theServerConfig().get<std::string > ("Infosys");
-        if (infosys.length() > 0) {
+        if (infosys.compare("false") != 0) {
             /*only bdii to be used, not the cache file*/
             setenv("GLITE_SD_PLUGIN", "bdii", 1);
             setenv("LCG_GFAL_INFOSYS", infosys.c_str(), 1);

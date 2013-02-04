@@ -37,7 +37,7 @@
 #include "ws/delegation/GSoapDelegationHandler.h"
 
 #include "ws/transfer/OsgParser.h"
-#include "ws/transfer/BdiiBrowser.h"
+
 
 #include <boost/lexical_cast.hpp>
 
