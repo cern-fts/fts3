@@ -133,6 +133,11 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 	return SOAP_OK;
 }
 
+int fts3::impltns__transferSubmit4(struct soap* ctx, tns3__TransferJob3 *job, impltns__transferSubmit4Response &resp) {
+
+	return SOAP_OK;
+}
+
 /// Web service operation 'listRequests' (returns error code or SOAP_OK)
 int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *_inGivenStates, struct impltns__listRequestsResponse &_param_7) {
 

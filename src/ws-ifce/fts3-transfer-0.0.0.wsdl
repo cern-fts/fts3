@@ -103,6 +103,26 @@
      <element name="credential" nillable="true" type="xsd:string"/>
     </sequence>
    </complexType>
+
+
+   
+   <complexType name="TransferJobElement3">
+    <sequence>
+     <element name="source" nillable="true" type="xsd:string"/>
+     <element name="dest" nillable="true" type="xsd:string"/>
+     <element name="checksum" nillable="true" minOccurs="0" type="xsd:string"/>
+     <element name="filesize" nillable="true" minOccurs="0" type="xsd:int"/>
+     <element name="metadata" nillable="true" minOccurs="0" type="xsd:string"/>
+    </sequence>
+   </complexType>
+   
+   <complexType name="TransferJob3">
+    <sequence>
+     <element maxOccurs="unbounded" name="transferJobElements" nillable="true" type="tns3:TransferJobElement3"/>
+     <element name="jobParams" nillable="true" type="tns3:TransferParams"/>
+     <element name="credential" nillable="true" type="xsd:string"/>
+    </sequence>
+   </complexType>
    
    <complexType name="JobStatus">
     <sequence>
@@ -349,6 +369,24 @@
       <part name="key" type="xsd:string"/>
 
    </message>
+   
+   <message name="transferSubmitRequest">
+
+      <part name="job" type="tns3:TransferJob"/>
+
+   </message>
+   
+   <message name="transferSubmitResponse">
+
+      <part name="transferSubmitReturn" type="xsd:string"/>
+
+   </message>
+
+   <message name="transferSubmit2Request">
+
+      <part name="job" type="tns3:TransferJob"/>
+
+   </message>
 
    <message name="transferSubmit2Response">
 
@@ -356,15 +394,27 @@
 
    </message>
 
+   <message name="transferSubmit3Request">
+
+      <part name="job" type="tns3:TransferJob2"/>
+
+   </message>
+   
    <message name="transferSubmit3Response">
 
       <part name="transferSubmit3Return" type="xsd:string"/>
 
    </message>
 
-   <message name="transferSubmit2Request">
+   <message name="transferSubmit4Request">
 
-      <part name="job" type="tns3:TransferJob"/>
+      <part name="job" type="tns3:TransferJob3"/>
+
+   </message>
+   
+   <message name="transferSubmit4Response">
+
+      <part name="transferSubmit4Return" type="xsd:string"/>
 
    </message>
 
@@ -377,12 +427,6 @@
    <message name="getRolesOfResponse">
 
       <part name="getRolesOfReturn" type="tns3:Roles"/>
-
-   </message>
-
-   <message name="transferSubmitRequest">
-
-      <part name="job" type="tns3:TransferJob"/>
 
    </message>
 
@@ -404,12 +448,6 @@
    </message>
 
    <message name="cancelResponse">
-
-   </message>
-
-   <message name="transferSubmitResponse">
-
-      <part name="transferSubmitReturn" type="xsd:string"/>
 
    </message>
 
@@ -516,12 +554,6 @@
       <part name="offset" type="xsd:int"/>
 
       <part name="limit" type="xsd:int"/>
-
-   </message>
-
-   <message name="transferSubmit3Request">
-
-      <part name="job" type="tns3:TransferJob2"/>
 
    </message>
 
@@ -643,6 +675,22 @@
          <input message="impl:transferSubmit3Request" name="transferSubmit3Request"/>
 
          <output message="impl:transferSubmit3Response" name="transferSubmit3Response"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+
+      </operation>
+      
+      <operation name="transferSubmit4" parameterOrder="job">
+
+         <input message="impl:transferSubmit4Request" name="transferSubmit4Request"/>
+
+         <output message="impl:transferSubmit4Response" name="transferSubmit4Response"/>
 
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
 
@@ -1057,6 +1105,48 @@
          </input>
 
          <output name="transferSubmit3Response">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+            <operation name="transferSubmit4">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="transferSubmit4Request">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="transferSubmit4Response">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 
