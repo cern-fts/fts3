@@ -671,8 +671,8 @@ int main(int argc, char **argv) {
 	    log << fileManagement->timestamp() << "INFO User specified filesize:" << userFilesize << '\n'; //A
 	    log << fileManagement->timestamp() << "INFO File metadata:" << strArray[5] << '\n'; //A
 	    log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A	    	
-	    	    	    		    
-	    if( (bringonline >0 || copy_pin_lifetime>0) && isSrmUrl(strArray[0]) ){ //issue a bring online	    	
+	    
+	    if( (bringonline >0 || copy_pin_lifetime>0) && isSrmUrl(strArray[1]) ){ //issue a bring online	    	
                 reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
 		if (gfal2_bring_online(handle,(strArray[1]).c_str(), copy_pin_lifetime, bringonline, &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
