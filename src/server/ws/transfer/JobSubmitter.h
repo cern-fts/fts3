@@ -89,6 +89,15 @@ public:
 	JobSubmitter(soap* soap, tns3__TransferJob2 *job);
 
 	/**
+	 * Constructor - creates a submitter object that should be used
+	 * by submitTransfer4 requests
+	 *
+	 * @param soap - the soap object that is serving the given request
+	 * @param job - the job that has to be submitted
+	 */
+	JobSubmitter(soap* ctx, tns3__TransferJob3 *job);
+
+	/**
 	 * Destructor
 	 */
 	virtual ~JobSubmitter();
@@ -139,7 +148,7 @@ private:
 	 * the job elements that have to be submitted (each job is a tuple of source,
 	 * destination, and optionally checksum)
 	 */
-	vector<src_dest_checksum_tupple> jobs;
+	vector<job_element_tupple> jobs;
 
 	/**
 	 * The common initialization for both parameterized constructors

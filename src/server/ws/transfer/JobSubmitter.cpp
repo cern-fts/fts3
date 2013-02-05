@@ -129,7 +129,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     	if (!checkProtocol(dest)) throw Err_Custom("Destination protocol not supported (" + dest + ")");
     	if (!checkProtocol(src) && !checkIfLfn(src)) throw Err_Custom("Source protocol not supported (" + src + ")");
 
-    	src_dest_checksum_tupple tupple;
+    	job_element_tupple tupple;
     	tupple.source = src;
     	tupple.destination = dest;
         
@@ -205,7 +205,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     	if (!checkProtocol(src) && !checkIfLfn(src)) {
     		throw Err_Custom("Source protocol is not supported for file: " + src);
     	}
-    	src_dest_checksum_tupple tupple;
+    	job_element_tupple tupple;
     	tupple.source = src;
     	tupple.destination = dest;
         if((*it)->checksum)
@@ -214,6 +214,79 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     	jobs.push_back(tupple);
     }
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+}
+
+JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
+				db (DBSingleton::instance().getDBObjectInstance()) {
+
+	GSoapDelegationHandler handler (ctx);
+	delegationId = handler.makeDelegationId();
+
+	CGsiAdapter cgsi (ctx);
+	vo = cgsi.getClientVo();
+	dn = cgsi.getClientDn();
+
+	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is submitting a transfer job" << commit;
+
+	if (db->isDnBlacklisted(dn)) {
+		throw Err_Custom("The DN: " + dn + " is blacklisted!");
+	}
+
+	// check weather the job is well specified
+	if (job == 0 || job->transferJobElements.empty()) {
+		throw Err_Custom("The job was not defined");
+	}
+
+	// do the common initialization
+	init(job->jobParams);
+
+	if (!job->transferJobElements.empty()) {
+			string src = (*job->transferJobElements.begin())->source;
+			string dest = (*job->transferJobElements.begin())->dest;
+
+			sourceSe = fileUrlToSeName(src);
+			if(sourceSe.empty()){
+				string errMsg = "Can't extract hostname from url " + src;
+				throw Err_Custom(errMsg);
+			}
+			if (db->isSeBlacklisted(sourceSe)) {
+				throw Err_Custom("The source SE: " + sourceSe + " is blacklisted!");
+			}
+
+			destinationSe = fileUrlToSeName(dest);
+			if(destinationSe.empty()){
+				std::string errMsg = "Can't extract hostname from url " + dest;
+				throw Err_Custom(errMsg);
+			}
+			if (db->isSeBlacklisted(destinationSe)) {
+				throw Err_Custom("The destination SE: " + destinationSe + " is blacklisted!");
+			}
+	}
+
+
+	// extract the job elements from tns3__TransferJob2 object and put them into a vector
+	vector<tns3__TransferJobElement3 * >::iterator it;
+	for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
+
+		string src = (*it)->source, dest = (*it)->dest;
+
+		// check weather the destination file is supported
+		if (!checkProtocol(dest)) {
+			throw Err_Custom("Destination protocol is not supported for file: " + dest);
+		}
+		// check weather the source file is supported
+		if (!checkProtocol(src) && !checkIfLfn(src)) {
+			throw Err_Custom("Source protocol is not supported for file: " + src);
+		}
+		job_element_tupple tupple;
+		tupple.source = src;
+		tupple.destination = dest;
+		if((*it)->checksum)
+			tupple.checksum = *(*it)->checksum;
+
+		jobs.push_back(tupple);
+	}
+	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
 
 void JobSubmitter::init(tns3__TransferParams *jobParams) {
@@ -265,7 +338,8 @@ string JobSubmitter::submit() {
             params.get(JobParameterHandler::REUSE),
             sourceSe,
             destinationSe,
-            params.get<int>(JobParameterHandler::BRING_ONLINE)
+            params.get<int>(JobParameterHandler::BRING_ONLINE),
+            string()
     	);
 
     db->submitHost(id);

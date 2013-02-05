@@ -135,6 +135,23 @@ int fts3::impltns__transferSubmit3(soap *soap, tns3__TransferJob2 *_job, struct 
 
 int fts3::impltns__transferSubmit4(struct soap* ctx, tns3__TransferJob3 *job, impltns__transferSubmit4Response &resp) {
 
+	try {
+		AuthorizationManager::getInstance().authorize(
+				ctx,
+				AuthorizationManager::DELEG,
+				AuthorizationManager::dummy
+			);
+
+		JobSubmitter submitter (ctx, job);
+		resp._transferSubmit4Return = submitter.submit();
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(ctx, ex.what(), "TransferException");
+		return SOAP_FAULT;
+	}
+
 	return SOAP_OK;
 }
 
