@@ -119,11 +119,12 @@ private:
 
 	static const string false_str;
 	bool inuse;
-	int max_reconnect;
 
-	BdiiBrowser() : querying(0), max_reconnect(3) {}
+	BdiiBrowser() : querying(0) {}
 	BdiiBrowser(BdiiBrowser const&);
 	BdiiBrowser& operator=(BdiiBrowser const&);
+
+	static const int max_reconnect = 3;
 };
 
 
