@@ -68,8 +68,8 @@ SubmitTransferCli::SubmitTransferCli() {
 			("fail-nearline", "fail the transfer if the file is nearline")
 			("reuse,r", "enable session reuse for the transfer job")
 			("job-metadata", value<string>(), "transfer-job metadata")
-			("file-metadata", value<string>(), "file metadata (can be only specified if the job contains a single file)")
-			("file-size", value<int>(), "file size (can be only specified if the job contains a single file)")
+			("file-metadata", value<string>(), "file metadata")
+			("file-size", value<int>(), "file size (in Bytes)")
 			;
 
 	// add hidden options

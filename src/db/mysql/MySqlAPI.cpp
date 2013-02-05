@@ -344,17 +344,17 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
                "                   copy_pin_lifetime, lan_connection, fail_nearline, checksum_method, "
-               "                   reuse_job, source_se, dest_se, bring_online)                                     "
+               "                   reuse_job, source_se, dest_se, bring_online, job_metadata)                                     "
                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
                "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,                  "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
                "        :copyPinLifetime, :lanConnection, :failNearline, :checksumMethod,             "
-               "        :reuseJob, :sourceSE, :destSE, :bring_online)",
+               "        :reuseJob, :sourceSE, :destSE, :bring_online, :job_metadata)",
                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
                soci::use(voName), soci::use(params), soci::use(currenthost), soci::use(delegationID),
                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                soci::use(copyPinLifeTime), soci::use(lanConnection), soci::use(failNearLine), soci::use(checksumMethod),
-               soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe), soci::use(bring_online);
+               soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe), soci::use(bring_online), soci::use(metadata);
 
         // Insert src/dest pair
         std::string sourceSurl, destSurl, checksum, metadata;

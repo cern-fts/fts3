@@ -594,7 +594,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     const std::string tag_file_statement = "tag_file_statement";
     const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
-            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE, bring_online) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23)";
+            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE, bring_online, job_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23, :24)";
     const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum,user_filesize,file_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7)";
     ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s_job_statement = NULL;
@@ -633,7 +633,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_job_statement->setString(20, "Y"); //reuse session for this job
         s_job_statement->setString(21, sourceSE); //reuse session for this job
         s_job_statement->setString(22, destSe); //reuse session for this job    
-        s_job_statement->setInt(23, bringonline); //reuse session for this job    	
+        s_job_statement->setInt(23, bringonline); //reuse session for this job
+        s_job_statement->setString(24, metadata); // job metadata
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id
