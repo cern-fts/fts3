@@ -267,6 +267,16 @@ bool SubmitTransferCli::performChecks() {
 		return false;
 	}
 
+	if (vm.count("file-size") && vm.count("file")) {
+		printer().error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
+		return false;
+	}
+
+	if (vm.count("file-metadata") && vm.count("file")) {
+		printer().error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
+		return false;
+	}
+
     return true;
 }
 
