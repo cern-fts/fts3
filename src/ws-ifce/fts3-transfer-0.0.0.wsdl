@@ -108,8 +108,8 @@
    
    <complexType name="TransferJobElement3">
     <sequence>
-     <element name="source" nillable="true" type="xsd:string"/>
-     <element name="dest" nillable="true" type="xsd:string"/>
+     <element name="source" minOccurs="1" maxOccurs="1" type="xsd:string"/>
+     <element name="dest" minOccurs="1" maxOccurs="1" type="xsd:string"/>
      <element name="checksum" nillable="true" minOccurs="0" type="xsd:string"/>
      <element name="filesize" nillable="true" minOccurs="0" type="xsd:int"/>
      <element name="metadata" nillable="true" minOccurs="0" type="xsd:string"/>
@@ -118,9 +118,8 @@
    
    <complexType name="TransferJob3">
     <sequence>
-     <element maxOccurs="unbounded" name="transferJobElements" nillable="true" type="tns3:TransferJobElement3"/>
-     <element name="jobParams" nillable="true" type="tns3:TransferParams"/>
-     <element name="credential" nillable="true" type="xsd:string"/>
+     <element name="transferJobElements" minOccurs="1" maxOccurs="unbounded" type="tns3:TransferJobElement3"/>
+     <element name="jobParams"  minOccurs="1" maxOccurs="1" type="tns3:TransferParams"/>
     </sequence>
    </complexType>
    
