@@ -577,7 +577,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     }
 }
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
+void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> job_elements, const std::string & paramFTP,
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
@@ -595,7 +595,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
             " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE, bring_online) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23)";
-    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) VALUES (:1,:2,:3,:4,:5)";
+    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum,user_filesize,file_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7)";
     ThreadTraits::LOCK_R lock(_mutex);
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
@@ -640,12 +640,14 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         std::vector<job_element_tupple>::const_iterator iter;
         s_file_statement = conn->createStatement(file_statement, tag_file_statement);		
         
-	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
+	for (iter = job_elements.begin(); iter != job_elements.end(); ++iter) {
             s_file_statement->setString(1, jobId);
             s_file_statement->setString(2, initial_state);
             s_file_statement->setString(3, iter->source);
             s_file_statement->setString(4, iter->destination);
             s_file_statement->setString(5, iter->checksum);
+            s_file_statement->setInt(6, iter->filesize);
+            s_file_statement->setString(7, iter->metadata);
             s_file_statement->executeUpdate();
         }
         conn->commit();

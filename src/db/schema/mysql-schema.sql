@@ -559,7 +559,7 @@ CREATE TABLE t_file (
   
 --
 -- user provided size of the file (bytes)
-  user_filesize  BIGINT,  
+  user_filesize  INTEGER,  
   
 --
 -- File metadata

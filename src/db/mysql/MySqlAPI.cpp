@@ -357,16 +357,27 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe), soci::use(bring_online);
 
         // Insert src/dest pair
-        std::string sourceSurl, destSurl, checksum;
-        soci::statement pairStmt = (sql.prepare << "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum) "
-                                                    "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum)",
-                                                    soci::use(jobId), soci::use(initialState), soci::use(sourceSurl),
-                                                    soci::use(destSurl), soci::use(checksum));
+        std::string sourceSurl, destSurl, checksum, metadata;
+        int filesize;
+        soci::statement pairStmt = (
+        		sql.prepare <<
+        		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata) "
+                "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata)",
+                soci::use(jobId),
+                soci::use(initialState),
+                soci::use(sourceSurl),
+                soci::use(destSurl),
+                soci::use(checksum),
+                soci::use(filesize),
+                soci::use(metadata)
+        	);
         std::vector<job_element_tupple>::const_iterator iter;
         for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
             sourceSurl = iter->source;
             destSurl   = iter->destination;
             checksum   = iter->checksum;
+            filesize   = iter->filesize;
+            metadata   = iter->metadata;
             pairStmt.execute();
         }
 
