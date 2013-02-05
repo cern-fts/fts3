@@ -365,7 +365,7 @@ map<string, string> SubmitTransferCli::getParams() {
 	}
 
 	if (vm.count("job-metadata")) {
-		parameters[JobParameterHandler::JOB_METADATA];
+		parameters[JobParameterHandler::JOB_METADATA] = vm["job-metadata"].as<string>();
 	}
 
 	return parameters;
