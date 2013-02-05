@@ -27,15 +27,14 @@ limitations under the License. */
 #include <string>
 #include <vector>
 #include <sstream>
-#include "mq_manager.h"
-#include <boost/interprocess/ipc/message_queue.hpp>
 #include <boost/scoped_ptr.hpp>
 #include "producer_consumer_common.h"
+#include <boost/filesystem.hpp>
 
 extern bool stopThreads;
 
+namespace fs = boost::filesystem;
 
-using namespace boost::interprocess;
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -65,34 +64,15 @@ public:
             const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
             ) :
-    TRAITS::ActiveObjectType("ProcessQueueHandler", desc), inotifyInit(true) {
+    TRAITS::ActiveObjectType("ProcessQueueHandler", desc) {
     
-        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-	
-	
-	fd = inotify_init();
-	if(fd == -1){
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to init inotify: " << strerror(errno) << commit;
-		inotifyInit = false;
-	}
-	
-	if(inotifyInit){
-		wd = inotify_add_watch( fd, STATUS_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );
-		if(fd == -1){
-			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to inotify_add_watch inotify: " << strerror(errno) << commit;
-			inotifyInit = false;
-		}				
-	}    
+        enableOptimization = theServerConfig().get<std::string > ("Optimizer");		
     }
 
     /* ---------------------------------------------------------------------- */
 
     /** Destructor */
     virtual ~ProcessQueueHandler() {
-    	if(inotifyInit){
-    		( void ) inotify_rm_watch( fd, wd );
-  		( void ) close( fd );        
-	}
     }
 
     /* ---------------------------------------------------------------------- */
@@ -171,12 +151,6 @@ public:
 protected:
 
     std::vector<struct message> queueMsgRecovery;
-    int length;
-    int i;
-    int fd;
-    int wd;
-    char buffer[BUF_LEN];    
-    bool inotifyInit;
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
@@ -187,19 +161,16 @@ protected:
         while (stopThreads==false) { /*need to receive more than one messages at a time*/            	    
             try {
 		
-	    if(inotifyInit){
-	    	/*blocking call, avoid busy-wating loop*/				
-	        length = read( fd, buffer, BUF_LEN );	
-		if(length == -1){
-			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read inotify: " << strerror(errno) << commit;	
+	        if(fs::is_empty(fs::path(STATUS_DIR))){
+			sleep(1);
+			continue;
 		}
-	    }else{
-	    	sleep(1);
-	    }
 	    
 	        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
-		if(!alive)
+		if(!alive){
+			sleep(1);
 			continue;
+		}
 			
                 if(!queueMsgRecovery.empty()){			
 			std::vector<struct message>::const_iterator iter;
@@ -228,7 +199,10 @@ protected:
 		
 		}
 		}	        								    
-		messages.clear();		
+		messages.clear();
+		sleep(1);		
+            } catch (const fs::filesystem_error& ex) {
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
 		for (iter = messages.begin(); iter != messages.end(); ++iter)

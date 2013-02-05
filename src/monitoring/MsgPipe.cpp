@@ -35,9 +35,11 @@
 #include "concurrent_queue.h"
 #include "Logger.h"
 #include <vector>
-
+#include <boost/filesystem.hpp>
 
 extern bool stopThreads;
+
+namespace fs = boost::filesystem;
 
 void handler(int sig) {
     sig = 0;
@@ -46,7 +48,7 @@ void handler(int sig) {
     exit(0);
 }
 
-MsgPipe::MsgPipe(std::string): inotifyInit(true) { 
+MsgPipe::MsgPipe(std::string){ 
     //register sig handler to cleanup resources upon exiting
     signal(SIGFPE, handler);
     signal(SIGILL, handler);
@@ -55,30 +57,10 @@ MsgPipe::MsgPipe(std::string): inotifyInit(true) {
     signal(SIGABRT, handler);
     signal(SIGTERM, handler);
     signal(SIGINT, handler);
-    signal(SIGQUIT, handler);
-
-	fd = inotify_init();
-	if(fd == -1){
-		errorMessage = "Failed to init inotify: " + std::string(strerror(errno));
-		logger::writeLog(errorMessage);
-		inotifyInit = false;
-	}
-	
-	if(inotifyInit){
-		wd = inotify_add_watch( fd, MONITORING_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );
-		if(fd == -1){
-			errorMessage = "Failed to inotify_add_watch inotify: " + std::string(strerror(errno));
-			logger::writeLog(errorMessage);
-			inotifyInit = false;
-		}				
-	}       
+    signal(SIGQUIT, handler);	 
 }
 
-MsgPipe::~MsgPipe() {
-    if(inotifyInit){
-    	( void ) inotify_rm_watch( fd, wd );
-    	( void ) close( fd );     
-    }
+MsgPipe::~MsgPipe() {   
 }
 
 
@@ -90,16 +72,10 @@ void MsgPipe::run() {
     while (stopThreads==false){
      try{
      
-	    if(inotifyInit){
-	    	/*blocking call, avoid busy-wating loop*/				
-	        length = read( fd, buffer, BUF_LEN );	
-		if(length == -1){
-			errorMessage = "Failed to read inotify: " + std::string(strerror(errno));
-			logger::writeLog(errorMessage);	
-		}
-	    }else{
-	    	sleep(1);
-	    }     
+	if(fs::is_empty(fs::path(MONITORING_DIR))){
+			sleep(1);
+			continue;
+	}        	   
 				     
         runConsumerMonitoring(messages);
 	if(!messages.empty()){
@@ -110,8 +86,9 @@ void MsgPipe::run() {
 	messages.clear();
 	}	
         sleep(1);							    
-      }   
-     catch (...) {
+      } catch (const fs::filesystem_error& ex) {
+	       logger::writeLog(ex.what());		
+      } catch (...) {
                errorMessage = "Exception thrown in msg pipe";
 	       logger::writeLog(errorMessage);
         }

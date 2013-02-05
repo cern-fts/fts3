@@ -63,13 +63,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 
 class MsgPipe : public Runnable {
-private: 
-    int length;
-    int i;
-    int fd;
-    int wd;
-    char buffer[BUF_LEN];
-    bool inotifyInit;
+private:    
     std::string errorMessage;
 
 public:

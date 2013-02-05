@@ -48,7 +48,7 @@ include_directories(${LIBUUID_INCLUDE_DIRS})
 
 add_library(fts_common SHARED ${fts_common_sources})
 target_link_libraries(fts_common ${Boost_LIBRARIES} )
-target_link_libraries(fts_common -lldap_r -lboost_regex-mt -lboost_iostreams-mt -lboost_thread-mt ${LIBUUID_LIBRARIES} )
+target_link_libraries(fts_common -lldap_r -lboost_regex-mt -lboost_iostreams-mt -lboost_system-mt -lboost_thread-mt ${LIBUUID_LIBRARIES} )
 if (ORACLEBUILD STREQUAL "OFF")
 target_link_libraries(fts_common ${OPENSSL_LIBRARIES})
 target_link_libraries(fts_common ${LIBUUID_LIBRARIES})

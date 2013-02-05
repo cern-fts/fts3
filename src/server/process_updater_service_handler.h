@@ -38,18 +38,18 @@ limitations under the License. */
 #include "definitions.h"
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>  
-#include "mq_manager.h"
-#include <boost/interprocess/ipc/message_queue.hpp>
 #include "producer_consumer_common.h"
+#include <boost/filesystem.hpp>
 
 extern bool stopThreads;
+
+namespace fs = boost::filesystem;
 
 FTS3_SERVER_NAMESPACE_START
 using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
-using namespace boost::interprocess;
 
 template <class T>
 inline std::string to_stringT(const T& t) {
@@ -81,31 +81,14 @@ public:
             const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
             ) :
-    TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc), inotifyInit(true) { 
+    TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc) { 
     
-	fd = inotify_init();
-	if(fd == -1){
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to init inotify: " << strerror(errno) << commit;
-		inotifyInit = false;
-	}
-	
-	if(inotifyInit){
-		wd = inotify_add_watch( fd, STALLED_DIR, IN_MODIFY | IN_CREATE | IN_DELETE );
-		if(fd == -1){
-			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to inotify_add_watch inotify: " << strerror(errno) << commit;
-			inotifyInit = false;
-		}				
-	}
     }
 
     /* ---------------------------------------------------------------------- */
 
     /** Destructor */
     virtual ~ProcessUpdaterServiceHandler() {
-    	if(inotifyInit){
-        	( void ) inotify_rm_watch( fd, wd );
-  		( void ) close( fd );    
-	}
     }
 
     /* ---------------------------------------------------------------------- */
@@ -119,12 +102,6 @@ public:
     }
 
 protected:
-    int length;
-    int i;
-    int fd;
-    int wd;
-    char buffer[BUF_LEN];  
-    bool inotifyInit;
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
@@ -135,18 +112,14 @@ protected:
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
             try {
 	    
-	    if(inotifyInit){
-	    	/*blocking call, avoid busy-wating loop*/				
-	        length = read( fd, buffer, BUF_LEN );	
-		if(length == -1){
-			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read inotify: " << strerror(errno) << commit;	
+	      if(fs::is_empty(fs::path(STALLED_DIR))){
+			sleep(1);
+			continue;
 		}
-	    }else{
-	    	sleep(10);
-	    }
 	    
 	        runConsumerStall(messages);
 		if(messages.empty()){
+			sleep(1);		
 			continue;
 		}else{
 			for (iter = messages.begin(); iter != messages.end(); ++iter){
@@ -160,7 +133,8 @@ protected:
 			}						
 			messages.clear();
 		}
-            } catch (interprocess_exception &ex) {
+	      sleep(1);
+            } catch (const fs::filesystem_error& ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);

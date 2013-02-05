@@ -37,6 +37,7 @@ target_link_libraries(fts_db_cleaner ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(fts_db_cleaner -lfts_db_generic)
 target_link_libraries(fts_db_cleaner -lfts_config)
 target_link_libraries(fts_db_cleaner -lfts_common)
+target_link_libraries(fts_db_cleaner -lboost_system-mt)
 
 install(TARGETS         fts_db_cleaner 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
