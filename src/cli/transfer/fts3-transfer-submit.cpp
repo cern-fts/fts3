@@ -71,8 +71,8 @@ int main(int ac, char* av[]) {
 			// submit the job
 			jobId = ctx.transferSubmit (
 					cli->getJobElements(),
-					cli->getParams(),
-					cli->useCheckSum()
+					cli->getParams()/*,
+					cli->useCheckSum()*/
 				);
 //
 //		} else {

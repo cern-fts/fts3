@@ -17,12 +17,14 @@ namespace fts3 { namespace cli {
 using namespace std;
 using namespace boost;
 
-typedef tuple< string, string, optional<string> > JobElement;
+typedef tuple< string, string, optional<string>, optional<int>, optional<string> > JobElement;
 
-enum {
+enum ElementMember{
 	SOURCE,
 	DESTINATION,
-	CHECKSUM
+	CHECKSUM,
+	FILE_SIZE,
+	FILE_METADATA
 };
 
 struct JobStatus {

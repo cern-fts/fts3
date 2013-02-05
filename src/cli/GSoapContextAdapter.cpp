@@ -107,102 +107,85 @@ void GSoapContextAdapter::init() {
 	}
 }
 
-string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters, bool checksum) {
+string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters) {
 
 	if (elements.empty()) {
     	throw string ("No transfer job has been specified.");
 	}
 
-	if (checksum) {
-		// with checksum
-		// the transfer job
-		tns3__TransferJob2 job;
+	// the transfer job
+	tns3__TransferJob3 job;
 
-		tns3__TransferJobElement2* element;
-		vector<JobElement>::iterator e_it;
+	// the job's elements
+	tns3__TransferJobElement3* element;
 
-		// iterate over the internal vector containing Task (job elements)
-		for (e_it = elements.begin(); e_it < elements.end(); e_it++) {
+	// iterate over the internal vector containing job elements
+	vector<JobElement>::iterator e_it;
+	for (e_it = elements.begin(); e_it < elements.end(); e_it++) {
 
-			soap* s = ctx;
-			soap_new_tns3__TransferJobElement2(s, -1);
+		const string& source = get<SOURCE>(*e_it);
+		const string& destination = get<DESTINATION>(*e_it);
+		const optional<string>& checksum = get<CHECKSUM>(*e_it);
+		const optional<int>& filesize = get<FILE_SIZE>(*e_it);
+		const optional<string>& metadata = get<FILE_METADATA>(*e_it);
 
-			// create the job element, and set the source, destination and checksum values
-			element = soap_new_tns3__TransferJobElement2(ctx, -1);
-			element->source = soap_new_std__string(ctx, -1);
-			element->dest = soap_new_std__string(ctx, -1);
+		// create the job element, and set the source, destination and checksum values
+		element = soap_new_tns3__TransferJobElement3(ctx, -1);
+
+		// set the required fields (source and destination)
+		element->source = source;
+		element->dest = destination;
+
+		// set the optional fields:
+
+		// the checksum
+		if (checksum) {
 			element->checksum = soap_new_std__string(ctx, -1);
-
-			*element->source = get<SOURCE>(*e_it);
-			*element->dest = get<DESTINATION>(*e_it);
-
-			optional<string> checksum = get<CHECKSUM>(*e_it);
-			if (checksum) {
-				string checksum_str = *checksum;
-				string::size_type colon = checksum_str.find(":");
-				if (colon == string::npos || colon == 0 || colon == checksum_str.size() - 1) {
-					throw string("Checksum format is not valid (ALGORITHM:1234af).");
-				}
-				*element->checksum = checksum_str;
-			} else {
-				// the user may specify some files with checksum and some without so it's OK
+			// check checksum format
+			string checksum_str = *checksum;
+			string::size_type colon = checksum_str.find(":");
+			if (colon == string::npos || colon == 0 || colon == checksum_str.size() - 1) {
+				throw string("Checksum format is not valid (ALGORITHM:1234af).");
 			}
-
-			// push the element into the result vector
-			job.transferJobElements.push_back(element);
+			*element->checksum = checksum_str;
+		} else {
+			element->checksum = 0;
 		}
 
-		job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
-		map<string, string>::iterator p_it;
-
-		for (p_it = parameters.begin(); p_it != parameters.end(); p_it++) {
-			job.jobParams->keys.push_back(p_it->first);
-			job.jobParams->values.push_back(p_it->second);
+		// the file size
+		if (filesize) {
+			element->filesize = (int*) soap_malloc(ctx, sizeof(int));
+			*element->filesize = *filesize;
+		} else {
+			element->filesize = 0;
 		}
 
-		impltns__transferSubmit3Response resp;
-		if (soap_call_impltns__transferSubmit3(ctx, endpoint.c_str(), 0, &job, resp))
-			handleSoapFault("Failed to submit transfer: transferSubmit3.");
-
-		return resp._transferSubmit3Return;
-
-	} else {
-		// without checksum
-		// the transfer job
-		tns3__TransferJob job;
-
-		tns3__TransferJobElement* element;
-		vector<JobElement>::iterator e_it;
-
-		// iterate over the internal vector containing Task (job elements)
-		for (e_it = elements.begin(); e_it < elements.end(); e_it++) {
-
-			// create the job element, and set the source, destination and checksum values
-			element = soap_new_tns3__TransferJobElement(ctx, -1);
-			element->source = soap_new_std__string(ctx, -1);
-			element->dest = soap_new_std__string(ctx, -1);
-
-			*element->source = get<SOURCE>(*e_it);
-			*element->dest = get<DESTINATION>(*e_it);
-
-			// push the element into the result vector
-			job.transferJobElements.push_back(element);
+		// the file metadata
+		if (metadata) {
+			element->metadata = soap_new_std__string(ctx, -1);
+			*element->metadata = *metadata;
+		} else {
+			element->metadata = 0;
 		}
 
-		job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
-		map<string, string>::iterator p_it;
-
-		for (p_it = parameters.begin(); p_it != parameters.end(); p_it++) {
-			job.jobParams->keys.push_back(p_it->first);
-			job.jobParams->values.push_back(p_it->second);
-		}
-
-		impltns__transferSubmit2Response resp;
-		if (soap_call_impltns__transferSubmit2(ctx, endpoint.c_str(), 0, &job, resp))
-			handleSoapFault("Failed to submit transfer: transferSubmit2.");
-
-		return resp._transferSubmit2Return;
+		// push the element into the result vector
+		job.transferJobElements.push_back(element);
 	}
+
+
+	job.jobParams = soap_new_tns3__TransferParams(ctx, -1);
+	map<string, string>::iterator p_it;
+
+	for (p_it = parameters.begin(); p_it != parameters.end(); p_it++) {
+		job.jobParams->keys.push_back(p_it->first);
+		job.jobParams->values.push_back(p_it->second);
+	}
+
+	impltns__transferSubmit4Response resp;
+	if (soap_call_impltns__transferSubmit4(ctx, endpoint.c_str(), 0, &job, resp))
+		handleSoapFault("Failed to submit transfer: transferSubmit3.");
+
+	return resp._transferSubmit4Return;
 }
 
 string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters, string password) {

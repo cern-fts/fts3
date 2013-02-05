@@ -31,6 +31,8 @@
 
 #include <vector>
 
+#include <boost/optional.hpp>
+
 using namespace std;
 using namespace boost;
 
@@ -175,6 +177,13 @@ public:
 	vector<JobElement> getJobElements();
 
 	/**
+	 * Gets job's metadata
+	 *
+	 * @return job's metadata if there were some, an uninitialized optional otherwise
+	 */
+	optional<string> getMetadata();
+
+	/**
 	 * Gets the value of delegation flag.
 	 *
 	 * @return true if the proxy certificate should be delegated
@@ -198,6 +207,10 @@ public:
 	 * @return true if the -b option has been used
 	 */
 	bool isBlocking();
+
+
+	int recognizeParameter(string str);
+
 
 protected:
 

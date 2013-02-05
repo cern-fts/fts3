@@ -46,7 +46,7 @@ PythonApi::~PythonApi() {
 }
 
 py::str PythonApi::submit(Job job) {
-	return ctx.transferSubmit(job.getJobElementsCpp(), job.getJobParametersCpp(), job.useChecksumCpp()).c_str();
+	return ctx.transferSubmit(job.getJobElementsCpp(), job.getJobParametersCpp()/*, job.useChecksumCpp()*/).c_str();
 }
 
 void PythonApi::cancel(py::str id) {

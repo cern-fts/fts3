@@ -67,6 +67,9 @@ SubmitTransferCli::SubmitTransferCli() {
 			("lan-connection", "use LAN as ConnectionType (default = WAN)")
 			("fail-nearline", "fail the transfer if the file is nearline")
 			("reuse,r", "enable session reuse for the transfer job")
+			("job-metadata", value<string>(), "transfer-job metadata")
+			("file-metadata", value<string>(), "file metadata (can be only specified if the job contains a single file)")
+			("file-size", value<int>(), "file size (can be only specified if the job contains a single file)")
 			;
 
 	// add hidden options
@@ -123,6 +126,15 @@ long SubmitTransferCli::getExpirationTime() {
 		return vm["expire"].as<long>();
 	}
 	return 0;
+}
+
+
+optional<string> SubmitTransferCli::getMetadata() {
+
+	if (vm.count("job-metadata")) {
+		return vm["job-metadata"].as<string>();
+	}
+	return optional<string>();
 }
 
 
@@ -183,6 +195,9 @@ bool SubmitTransferCli::createJobElements() {
    				}
     			checksum = true;
     		}
+
+    		// the fourth part should be the filesize
+
         	elements.push_back(e);
 
     	} while (!ifs.eof());
@@ -199,10 +214,22 @@ bool SubmitTransferCli::createJobElements() {
 			this->checksum = true;
     	}
 
+    	// check if size of the file has been specified
+    	optional<int> filesize;
+    	if (vm.count("file-size")) {
+    		filesize = vm["file-size"].as<int>();
+    	}
+
+    	// check if there are some file metadata
+    	optional<string> file_metadata;
+    	if (vm.count("file-metadata")) {
+    		file_metadata = vm["file-metadata"].as<string>();
+    	}
+
     	// then if the source and destination have been given create a Task
     	if (!getSource().empty() && !getDestination().empty()) {
     		elements.push_back (
-    				JobElement (getSource(), getDestination(), checksum)
+    				JobElement (getSource(), getDestination(), checksum, filesize, file_metadata)
     			);
     	}
     }
