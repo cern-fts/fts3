@@ -364,6 +364,10 @@ map<string, string> SubmitTransferCli::getParams() {
 		parameters[JobParameterHandler::REUSE] = "Y";
 	}
 
+	if (vm.count("job-metadata")) {
+		parameters[JobParameterHandler::JOB_METADATA];
+	}
+
 	return parameters;
 }
 
