@@ -64,7 +64,7 @@ public:
 	static const string OVERWRITEFLAG;
 	static const string CHECKSUM_METHOD;
 	static const string REUSE;
-	static const string JOB_METADATA
+	static const string JOB_METADATA;
 	///@}
 
 	/**
