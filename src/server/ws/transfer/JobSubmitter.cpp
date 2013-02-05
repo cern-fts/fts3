@@ -340,7 +340,7 @@ string JobSubmitter::submit() {
             sourceSe,
             destinationSe,
             params.get<int>(JobParameterHandler::BRING_ONLINE),
-            string()
+            params.get<string>(JobParameterHandler::JOB_METADATA)
     	);
 
     db->submitHost(id);
