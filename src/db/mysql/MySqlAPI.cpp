@@ -320,12 +320,12 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
 
 
 
-void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
+void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        const std::string & sourceSE, const std::string & destSe, int bring_online) {
+        const std::string & sourceSE, const std::string & destSe, int bring_online, std::string metadata) {
 
     const std::string currenthost = hostname;
     const std::string initialState = "SUBMITTED";
@@ -362,7 +362,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_ch
                                                     "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum)",
                                                     soci::use(jobId), soci::use(initialState), soci::use(sourceSurl),
                                                     soci::use(destSurl), soci::use(checksum));
-        std::vector<src_dest_checksum_tupple>::const_iterator iter;
+        std::vector<job_element_tupple>::const_iterator iter;
         for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
             sourceSurl = iter->source;
             destSurl   = iter->destination;

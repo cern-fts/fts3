@@ -37,12 +37,12 @@ public:
 /**
  * Submit a transfer request to be stored in the database
  **/ 
-    virtual void submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
+    virtual void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
                                 const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                 const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
                                 const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
                                 const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                                const std::string & sourceSE, const std::string & destSe, int bringonline);
+                                const std::string & sourceSE, const std::string & destSe, int bringonline, std::string metadata);
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
 

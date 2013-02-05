@@ -577,12 +577,12 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     }
 }
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_checksum_tupple> src_dest_pair, const std::string & paramFTP,
+void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        const std::string & sourceSE, const std::string & destSe, int bringonline) {
+        const std::string & sourceSE, const std::string & destSe, int bringonline, std::string metadata) {
 
 
     const std::string initial_state = "SUBMITTED";
@@ -637,7 +637,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<src_dest_c
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id
-        std::vector<src_dest_checksum_tupple>::const_iterator iter;
+        std::vector<job_element_tupple>::const_iterator iter;
         s_file_statement = conn->createStatement(file_statement, tag_file_statement);		
         
 	for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
