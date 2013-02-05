@@ -278,12 +278,13 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		if (!checkProtocol(src) && !checkIfLfn(src)) {
 			throw Err_Custom("Source protocol is not supported for file: " + src);
 		}
+		// prepare the job element and add it to the job
 		job_element_tupple tupple;
 		tupple.source = src;
 		tupple.destination = dest;
-		if((*it)->checksum)
-			tupple.checksum = *(*it)->checksum;
-
+		tupple.checksum = (*it)->checksum ? *(*it)->checksum : string();
+		tupple.filesize = (*it)->filesize ? *(*it)->filesize : 0;
+		tupple.metadata = (*it)->metadata ? *(*it)->metadata : string();
 		jobs.push_back(tupple);
 	}
 	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
