@@ -117,7 +117,7 @@ bool BdiiBrowser::connect(string infosys, time_t sec) {
     }
 
     // set the keep alive if it has been set to 'true' in the fts3config file
-//    if (theServerConfig().get<bool>("BDIIKeepAlive")) {
+    if (theServerConfig().get<bool>("BDIIKeepAlive")) {
 
     	int val = keepalive_idle;
 		if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_IDLE,(void *) &val) != LDAP_OPT_SUCCESS) {
@@ -133,7 +133,7 @@ bool BdiiBrowser::connect(string infosys, time_t sec) {
 		if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_INTERVAL, (void *) &val) != LDAP_OPT_SUCCESS) {
 			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_INTERVAL): " << ldap_err2string(ret) << " " << infosys << commit;
 		}
-//    }
+    }
 
     berval cred;
     cred.bv_val = 0;
