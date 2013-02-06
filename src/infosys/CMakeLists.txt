@@ -28,7 +28,7 @@ file(GLOB fts_infosys_sources "*.cpp")
 
 add_library(fts_infosys SHARED ${fts_infosys_sources})
 target_link_libraries(fts_infosys ${Boost_LIBRARIES} )
-target_link_libraries(fts_infosys -lldap_r -lboost_regex-mt -lboost_iostreams-mt -lboost_system-mt -lboost_thread-mt ${LIBUUID_LIBRARIES} )
+target_link_libraries(fts_infosys -lldap_r 	-lpugixml -lboost_thread-mt)
 
 
 set_target_properties(fts_infosys             PROPERTIES

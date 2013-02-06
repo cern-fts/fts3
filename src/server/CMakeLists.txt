@@ -89,7 +89,6 @@ target_link_libraries(fts_server_lib
 	-lglib-2.0 
 	-lgridsite
 	-lcgsi_plugin_voms_cpp
-	-lpugixml
 )
 set_target_properties(fts_server_lib            PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
