@@ -3734,7 +3734,6 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {
 	}
        
         s = conn->createStatement(query, tag);
-	
         for (iter = messages.begin(); iter != messages.end(); ++iter) {
 	      	s->setString(1, (*iter).job_id);
         	s->setInt(2, (*iter).file_id);

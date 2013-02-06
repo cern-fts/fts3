@@ -21,6 +21,7 @@ limitations under the License. */
 #include <string>
 #include "definitions.h"
 #include "threadtraits.h"
+#include "producer_consumer_common.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -32,7 +33,7 @@ public:
         return instance;
     }
     ThreadSafeList();
-    virtual ~ThreadSafeList();
+    ~ThreadSafeList();
 
     std::list<struct message_updater> getList();
     void push_back(struct message_updater msg);

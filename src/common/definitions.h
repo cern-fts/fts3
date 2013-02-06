@@ -19,6 +19,7 @@ limitations under the License. */
 #include <string.h>
 #include <time.h>
 #include <ctime>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 #define JOB_ID_LEN 36+1
 #define FILE_ID_LEN 36
@@ -49,8 +50,7 @@ public:
         timeout = 3600;
         buffersize = 0;
         memset(source_se, 0, sizeof (source_se));
-        memset(dest_se, 0, sizeof (dest_se));
-	timestamp = std::clock();
+        memset(dest_se, 0, sizeof (dest_se));	
     }
 
     ~message() {
@@ -67,7 +67,7 @@ public:
     unsigned int buffersize;
     char source_se[SOURCE_SE_];
     char dest_se[DEST_SE_];
-    std::clock_t timestamp;
+    boost::posix_time::time_duration::tick_type timestamp;
 
 
 
@@ -78,8 +78,7 @@ public:
     message_updater() {
         memset(job_id, 0, sizeof (job_id));
         file_id = 0;
-        process_id = 0;
-        timestamp = std::clock();
+        process_id = 0;       
     }
 
     ~message_updater() {
@@ -87,7 +86,7 @@ public:
     char job_id[JOB_ID_LEN];
     int file_id;
     pid_t process_id;
-    std::clock_t timestamp;
+    boost::posix_time::time_duration::tick_type timestamp;
 };
 
 

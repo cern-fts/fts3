@@ -52,6 +52,7 @@ limitations under the License. */
 #include <sys/param.h>
 #include <boost/scoped_ptr.hpp>
 #include "name_to_uid.h"
+#include "producer_consumer_common.h"
 
 
 extern bool  stopThreads;
@@ -444,7 +445,7 @@ protected:
 				strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
         			msg.file_id = temp->FILE_ID;
 				msg.process_id = (int) pr->getPid();
-				msg.timestamp = std::time(NULL);
+				msg.timestamp = milliseconds_since_epoch();
 				ThreadSafeList::get_instance().push_back(msg);
 			    }
 			    delete pr;

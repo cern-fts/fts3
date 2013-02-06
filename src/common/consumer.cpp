@@ -34,6 +34,16 @@ struct sort_functor_status
 };
 
 
+boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
+{
+    using boost::gregorian::date;
+    using boost::posix_time::ptime;
+    using boost::posix_time::microsec_clock;
+
+    static ptime const epoch(date(1970, 1, 1));
+    return (microsec_clock::universal_time() - epoch).total_milliseconds();
+}
+
 
 int getDir (string dir, vector<string> &files)
 {

@@ -1875,7 +1875,6 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
         				soci::use(std::string(iter->job_id)),
         				soci::use(iter->file_id)
             	);
-
         	if (rs.begin() != rs.end()) {
 				updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
 				updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);

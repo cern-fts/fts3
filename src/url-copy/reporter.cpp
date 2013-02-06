@@ -28,10 +28,8 @@ limitations under the License. */
 using namespace std;
 
 Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), msg_updater(NULL) {
-	msg = new struct message();
-	//memset(msg, 0, sizeof(message));	
-	msg_updater = new struct message_updater();
-	//memset(msg_updater, 0, sizeof(message_updater));
+	msg = new struct message();	
+	msg_updater = new struct message_updater();	
 }
 
 Reporter::~Reporter() {
@@ -83,7 +81,7 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         msg->buffersize = buffersize;
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
-	//msg->timestamp = std::clock();
+	msg->timestamp = milliseconds_since_epoch();
 	runProducerStatus(*msg);      
     } catch (...) {
         //second attempt to resend the message
@@ -109,7 +107,7 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         msg->buffersize = buffersize;
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
-	//msg->timestamp = std::clock();
+	msg->timestamp = milliseconds_since_epoch();
 	runProducerStatus(*msg);        
     }
 }
@@ -120,14 +118,14 @@ void Reporter::constructMessageUpdater(std::string job_id, std::string file_id){
         strcpy(msg_updater->job_id, job_id.c_str());
         msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);   
         msg_updater->process_id = (int) getpid();
-	//msg_updater->timestamp = std::clock();
+	msg_updater->timestamp = milliseconds_since_epoch();
 	runProducerStall(*msg_updater);
     } catch (...) {
         //attempt to resend the message
         strcpy(msg_updater->job_id, job_id.c_str());
         msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);      
         msg_updater->process_id = (int) getpid();
-	//msg_updater->timestamp = std::clock();
+	msg_updater->timestamp = milliseconds_since_epoch();
 	runProducerStall(*msg_updater);
     }
 }

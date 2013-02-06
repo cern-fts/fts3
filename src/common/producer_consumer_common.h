@@ -43,3 +43,5 @@ void runProducerStatus(struct message msg);
 void runConsumerStall(std::vector<struct message_updater>& messages);
 
 void runProducerStall(struct message_updater msg);
+
+boost::posix_time::time_duration::tick_type milliseconds_since_epoch();

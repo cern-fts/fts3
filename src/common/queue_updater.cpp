@@ -33,7 +33,7 @@ std::list<struct message_updater> ThreadSafeList::getList() {
 
 void ThreadSafeList::push_back(struct message_updater msg) {
     ThreadTraits::LOCK_R lock(_mutex);
-    m_list.push_back(msg);;
+    m_list.push_back(msg);
 }
 
 void ThreadSafeList::clear() {
@@ -44,11 +44,16 @@ void ThreadSafeList::clear() {
 void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messages) {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator iter;
+    boost::posix_time::time_duration::tick_type timestamp1;
+    boost::posix_time::time_duration::tick_type timestamp2;  
+    int n_seconds = 0;  
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {        
-        const double n_seconds = std::difftime(std::clock(), iter->timestamp) / CLOCKS_PER_SEC;    	
-        if (n_seconds > 40) {
+    	timestamp1 = milliseconds_since_epoch();
+    	timestamp2 = iter->timestamp;	
+        n_seconds =  timestamp1  - timestamp2;
+        if (n_seconds > 300000) {
             messages.push_back(*iter);
-        }
+        }	
     }    
 }
 

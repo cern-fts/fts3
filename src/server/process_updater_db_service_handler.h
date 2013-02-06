@@ -103,8 +103,9 @@ protected:
 	    if(!alive)
 		continue;		    
 	    
-            std::vector<struct message_updater> messages;
+            std::vector<struct message_updater> messages;	    
             ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
+
             if (!messages.empty()) {
                 bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages);
 		if(updated){
