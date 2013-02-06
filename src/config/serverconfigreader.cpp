@@ -106,6 +106,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "Set infosys"
         )
         (
+            "BDIIKeepAlive,r",
+            po::value<std::string>( &(_vars["BDIIKeepAlive"]) )->default_value("true"),
+            "Sets the keep alive property of the BDII"
+        )
+        (
         	"MyOSG,m",
         	po::value<std::string>( &(_vars["MyOSG"]) )->default_value("false"),
         	"Set the MyOSG URL (or flase meaning MyOSG wont be used)"

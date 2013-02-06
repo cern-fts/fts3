@@ -23,12 +23,17 @@
  */
 
 #include "BdiiBrowser.h"
-#include "logger.h"
+
+#include "common/logger.h"
+
+#include "config/serverconfig.h"
 
 #include <sstream>
 
 namespace fts3 {
-namespace common {
+namespace infosys {
+
+using namespace config;
 
 // TODO reorganize + do queries for glue2
 
@@ -54,10 +59,6 @@ const string BdiiBrowser::false_str = "false";
 #define QUERY_VO_PRE  "(|" QUERY_VO_ANY
 #define QUERY_VO      "(" ATTR_VO "=%s)"
 #define QUERY_VO_POST ")"
-
-static int keepalive_idle = 120;
-static int keepalive_probes = 3;
-static int keepalive_interval = 60;
 
 // "(| (%sAccessControlBaseRule=VO:%s) (%sAccessControlBaseRule=%s) (%sAccessControlRule=%s)"
 
@@ -107,11 +108,32 @@ bool BdiiBrowser::connect(string infosys, time_t sec) {
     	return false;
     }
 
-    ldap_set_option(ld, LDAP_OPT_TIMEOUT, &search_timeout);
-    ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout);
-    ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_IDLE,(void *) &(keepalive_idle));
-    ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_PROBES,(void *) &(keepalive_probes));
-    ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_INTERVAL, (void *) &(keepalive_interval));       
+    if (ldap_set_option(ld, LDAP_OPT_TIMEOUT, &search_timeout) != LDAP_OPT_SUCCESS) {
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_TIMEOUT): " << ldap_err2string(ret) << " " << infosys << commit;
+    }
+
+    if (ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &timeout) != LDAP_OPT_SUCCESS) {
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_NETWORK_TIMEOUT): " << ldap_err2string(ret) << " " << infosys << commit;
+    }
+
+    // set the keep alive if it has been set to 'true' in the fts3config file
+//    if (theServerConfig().get<bool>("BDIIKeepAlive")) {
+
+    	int val = keepalive_idle;
+		if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_IDLE,(void *) &val) != LDAP_OPT_SUCCESS) {
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_IDLE): " << ldap_err2string(ret) << " " << infosys << commit;
+		}
+
+		val = keepalive_probes;
+		if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_PROBES,(void *) &val) != LDAP_OPT_SUCCESS) {
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_PROBES): " << ldap_err2string(ret) << " " << infosys << commit;
+		}
+
+		val = keepalive_interval;
+		if (ldap_set_option(ld, LDAP_OPT_X_KEEPALIVE_INTERVAL, (void *) &val) != LDAP_OPT_SUCCESS) {
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP set option failed (LDAP_OPT_X_KEEPALIVE_INTERVAL): " << ldap_err2string(ret) << " " << infosys << commit;
+		}
+//    }
 
     berval cred;
     cred.bv_val = 0;

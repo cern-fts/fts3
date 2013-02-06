@@ -39,7 +39,7 @@
 #include <boost/thread.hpp>
 
 namespace fts3 {
-namespace common {
+namespace infosys {
 
 using namespace std;
 using namespace boost;
@@ -125,9 +125,14 @@ private:
 	BdiiBrowser& operator=(BdiiBrowser const&);
 
 	static const int max_reconnect = 3;
+
+	static const int max_reconnect2 = 3;
+
+	static const int keepalive_idle = 120;
+	static const int keepalive_probes = 3;
+	static const int keepalive_interval = 60;
 };
 
-
-} /* namespace ws */
 } /* namespace fts3 */
+} /* namespace infosys */
 #endif /* BDIIBROWSER_H_ */

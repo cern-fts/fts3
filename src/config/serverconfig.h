@@ -26,6 +26,7 @@ limitations under the License. */
 #include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/thread.hpp>
+#include <boost/algorithm/string.hpp>
 
 
 FTS3_CONFIG_NAMESPACE_START
@@ -180,6 +181,20 @@ RET ServerConfig::get (const std::string& aVariable /**< A config variable name.
 	notifyReaders();
 
 	return boost::lexical_cast<RET>(str);
+}
+
+template <>
+inline bool ServerConfig::get<bool> (const std::string& aVariable /**< A config variable name. */) {
+
+	waitIfReading();
+	std::string str = _get_str(aVariable);
+	notifyReaders();
+
+	boost::to_lower(str);
+
+	if (str == "true") return true;
+	else if (str == "false") return false;
+	else throw bad_cast();
 }
 
 template <>

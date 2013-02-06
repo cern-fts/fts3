@@ -29,7 +29,7 @@
 #include <string>
 #include <boost/optional.hpp>
 
-namespace fts3 { namespace ws {
+namespace fts3 { namespace infosys {
 
 using namespace std;
 using namespace boost;

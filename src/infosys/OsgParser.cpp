@@ -24,7 +24,7 @@
 
 #include "OsgParser.h"
 
-namespace fts3 { namespace ws {
+namespace fts3 { namespace infosys {
 
 
 const string OsgParser::NAME_PROPERTY = "Name";

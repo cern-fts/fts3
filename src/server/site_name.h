@@ -21,9 +21,10 @@
 #include <iostream>
 #include <ctime> 
 #include <map>
-#include "BdiiBrowser.h"
+#include "infosys/BdiiBrowser.h"
 
 using namespace fts3::common;
+using namespace fts3::infosys;
 
 class SiteName {
 	

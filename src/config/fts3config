@@ -7,6 +7,7 @@ DbConnectString=
 Alias=
 TransferLogDirectory=/var/log/fts3
 Infosys=lcg-bdii.cern.ch:2170
+BDIIKeepAlive=true
 Optimizer=true
 HttpKeepAlive=true
 AuthorizedVO=*
