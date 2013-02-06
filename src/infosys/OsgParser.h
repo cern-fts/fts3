@@ -35,10 +35,12 @@ using namespace std;
 using namespace boost;
 using namespace pugi;
 
+// TODO make it a singleton (???)
+
 class OsgParser {
 
 public:
-	OsgParser(string path);
+	OsgParser(string path = myosg_path);
 	virtual ~OsgParser();
 
 	string getName(string fqdn);
@@ -61,6 +63,9 @@ private:
 
 	static string xpath_fqdn(string fqdn);
 	static string xpath_fqdn_alias(string alias);
+
+	/// default path to MyOSG file
+	static const string myosg_path;
 };
 
 } /* namespace cli */

@@ -324,10 +324,6 @@ bool BdiiBrowser::getSeStatus(string se) {
 
 string BdiiBrowser::getSiteName(string se) {
 
-	map<string, string>::iterator it = seToSite.find(se);
-	if (it != seToSite.end()) {
-		return it->second;
-	}
 	list< map<string, list<string> > > rs = browse< list<string> >(GLUE1, FIND_SE_SITE(se), FIND_SE_SITE_ATTR);
 
 	if (rs.empty()) return string();
@@ -338,9 +334,6 @@ string BdiiBrowser::getSiteName(string se) {
 	if (site.empty()) {
 		site = rs.front()[ATTR_HOSTINGORG].front();
 	}
-
-	seToSite[se] = site;
-	if(seToSite.size() > 5000) seToSite.clear();
 
 	return site;
 }

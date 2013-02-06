@@ -57,8 +57,6 @@ using namespace boost::assign;
 
 const regex JobSubmitter::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
-const string JobSubmitter::myosg_path = "/var/lib/fts3/osg.xml";
-
 const string JobSubmitter::false_str = "false";
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
@@ -382,7 +380,7 @@ void JobSubmitter::checkSe(string se) {
 	if (theServerConfig().get<string>("MyOSG") == false_str) return;
 
 	// load from local file which is update by a cron job
-	OsgParser osg (myosg_path);
+	OsgParser osg;
 	// check in the OSG if the SE is 'active'
 	optional<bool> state = osg.isActive(se);
 	if (state.is_initialized() && !(*state)) throw Err_Custom("The SE: " + se + " is not active in the OSG!");

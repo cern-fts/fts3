@@ -112,9 +112,6 @@ private:
 	/// DB instance
 	GenericDbIfce* db;
 
-	///
-	static const string myosg_path;
-
 	/**
 	 * Default constructor.
 	 *

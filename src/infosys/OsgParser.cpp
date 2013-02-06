@@ -33,6 +33,9 @@ const string OsgParser::DISABLE_PROPERTY = "Disable";
 
 const string OsgParser::STR_TRUE = "True";
 
+
+const string OsgParser::myosg_path = "/var/lib/fts3/osg.xml";
+
 OsgParser::OsgParser(string path) {
 
 	doc.load_file(path.c_str());

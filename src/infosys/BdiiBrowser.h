@@ -83,8 +83,6 @@ private:
 
 	string parseForeingKey(list<string> values, const char *attr);
 
-	map<string, string> seToSite;
-
 	LDAP *ld;
 	timeval timeout;
 	timeval search_timeout;
