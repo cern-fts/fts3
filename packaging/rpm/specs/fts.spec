@@ -230,6 +230,7 @@ rm -rf %{buildroot}
 %{python_sitearch}/fts/libftspython.so*
 %{_libdir}/libfts_common.so.*
 %{_libdir}/libfts_config.so.*
+%{_libdir}/libfts_infosys.so.*
 %{_libdir}/libfts_db_generic.so.*
 %{_libdir}/libfts_msg_ifce.so.*
 %{_libdir}/libfts_proxy.so.*
@@ -248,6 +249,7 @@ rm -rf %{buildroot}
 %{python_sitearch}/fts/libftspython.so
 %{_libdir}/libfts_common.so
 %{_libdir}/libfts_config.so
+%{_libdir}/libfts_infosys.so
 %{_libdir}/libfts_db_generic.so
 %{_libdir}/libfts_msg_ifce.so
 %{_libdir}/libfts_proxy.so
