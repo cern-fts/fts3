@@ -101,7 +101,7 @@ protected:
         }
 
         bool isNoDaemon = _vm.count ("no-daemon");
-        _vars["no-daemon"] = boost::lexical_cast<std::string>(isNoDaemon);
+        _vars["no-daemon"] = isNoDaemon ? "true" : "false";
 
         DEPENDENCIES::processVariables(*this);
     }

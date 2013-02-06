@@ -190,8 +190,6 @@ inline bool ServerConfig::get<bool> (const std::string& aVariable /**< A config 
 	std::string str = _get_str(aVariable);
 	notifyReaders();
 
-	return boost::lexical_cast<bool>(str);
-
 	boost::to_lower(str);
 
 	if (str == "true") return true;
