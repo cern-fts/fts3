@@ -49,34 +49,88 @@ using namespace boost;
 using namespace common;
 using namespace config;
 
+/**
+ * BdiiBrowser class is responsible for browsing BDII.
+ *
+ * It has a singleton access, the BDII should be queried using 'browse' method.
+ *
+ * @see ThreadSafeInstanceHolder
+ */
 class BdiiBrowser: public ThreadSafeInstanceHolder<BdiiBrowser> {
 
 	friend class ThreadSafeInstanceHolder<BdiiBrowser>;
 
 public:
 
+	/// object class
 	static const char* ATTR_OC;
 
+	/// glue1 base
 	static const string GLUE1;
+	/// glue2 base
 	static const string GLUE2;
 
+	/// the object class for glue2
 	static const char* CLASS_SERVICE_GLUE2;
+	/// the object class for glue1
 	static const char* CLASS_SERVICE_GLUE1;
 
+	/// destructor
 	virtual ~BdiiBrowser();
 
+	/**
+	 * Checks if given VO is allowed for the given SE
+	 *
+	 * @param se - SE name
+	 * @param vo - VO name
+	 *
+	 * @return true if the VO is allowed, flase otherwise
+	 */
 	bool isVoAllowed(string se, string vo);
+
+	/**
+	 * Checks if the SE status allows for submitting a transfer
+	 *
+	 * @param se - SE name
+	 *
+	 * @return true if yes, otherwise false
+	 */
 	bool getSeStatus(string se);
 
 	// if we want all available attributes we leave attr = 0
+	/**
+	 * Allows to browse the BDII
+	 *
+	 * Each time a browse action is taken the fts3config file is check for the right BDII endpoint
+	 *
+	 * @param base - either GLUE1 or GLUE2
+	 * @param query - the filter you want to apply
+	 * @param attr - the attributes you are querying for (by default 0, meaning you are interested in all attributes)
+	 *
+	 * @return the result set containing all the outcomes
+	 */
 	template<typename R>
 	list< map<string, R> > browse(string base, string query, const char **attr = 0);
 
+	/**
+	 * Looks for attribute names in a foreign key
+	 *
+	 * @param values the values returned for the given foreign key
+	 * @param attr - the attributes you are querying for
+	 */
 	static string parseForeingKey(list<string> values, const char *attr);
 
 private:
 
-	bool connect(string infosys = string(), time_t sec = 60);
+	/**
+	 * Connects to the BDII
+	 *
+	 * @param infosys - the BDII endpoint
+	 * @param sec - connection timeout in secounds (by default 60)
+	 *
+	 * @return true is connection was successful, otherwise false
+	 */
+	bool connect(string infosys, time_t sec = 60);
 	bool reconnect();
 	void disconnect();
 	bool isValid();

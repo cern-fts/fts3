@@ -104,11 +104,13 @@ string SiteNameRetriever::getFromBdii(string se) {
 string SiteNameRetriever::getSiteName(string se) {
 	// lock the cache
 	mutex::scoped_lock lock(m);
+
 	// check if the se is in cache
 	map<string, string>::iterator it = seToSite.find(se);
 	if (it != seToSite.end()) {
 		return it->second;
 	}
+
 	// check in BDII
 	string site = getFromBdii(se);
 	if (!site.empty()) {
@@ -118,6 +120,7 @@ string SiteNameRetriever::getSiteName(string se) {
 		if(seToSite.size() > 5000) seToSite.clear();
 		return site;
 	}
+
 	// check in MyOSG
 	site = OsgParser::getInstance().getSiteName(se);
 
