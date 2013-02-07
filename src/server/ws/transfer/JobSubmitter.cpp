@@ -175,18 +175,14 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
         			std::string errMsg = "Can't extract hostname from url " + *src;
         			throw Err_Custom(errMsg);
         		}
-        		if (db->isSeBlacklisted(sourceSe)) {
-        			throw Err_Custom("The source SE: " + sourceSe + " is blacklisted!");
-        		}
+        		checkSe(sourceSe);
 
         		destinationSe = fileUrlToSeName(*dest);
         		if(destinationSe.empty()){
         			std::string errMsg = "Can't extract hostname from url " + *dest;
         			throw Err_Custom(errMsg);
         		}
-        		if (db->isSeBlacklisted(destinationSe)) {
-        			throw Err_Custom("The destination SE: " + destinationSe + " is blacklisted!");
-        		}
+        		checkSe(destinationSe);
         }
 
 
@@ -248,18 +244,14 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 				string errMsg = "Can't extract hostname from url " + src;
 				throw Err_Custom(errMsg);
 			}
-			if (db->isSeBlacklisted(sourceSe)) {
-				throw Err_Custom("The source SE: " + sourceSe + " is blacklisted!");
-			}
+			checkSe(sourceSe);
 
 			destinationSe = fileUrlToSeName(dest);
 			if(destinationSe.empty()){
 				std::string errMsg = "Can't extract hostname from url " + dest;
 				throw Err_Custom(errMsg);
 			}
-			if (db->isSeBlacklisted(destinationSe)) {
-				throw Err_Custom("The destination SE: " + destinationSe + " is blacklisted!");
-			}
+			checkSe(destinationSe);
 	}
 
 
