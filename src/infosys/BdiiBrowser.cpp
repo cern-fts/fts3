@@ -35,30 +35,31 @@ namespace infosys {
 
 using namespace config;
 
-// TODO reorganize + do queries for glue2
-
 const string BdiiBrowser::GLUE1 = "o=grid";
 const string BdiiBrowser::GLUE2 = "o=glue";
 
 const char* BdiiBrowser::ATTR_STATUS = "GlueSEStatus";
-const char* BdiiBrowser::ATTR_OC = "objectClass";
-const char* BdiiBrowser::ATTR_NAME = "GlueServiceUniqueID";
-const char* BdiiBrowser::ATTR_URI = "GlueServiceURI";
 const char* BdiiBrowser::ATTR_SE = "GlueSEUniqueID";
-const char* BdiiBrowser::ATTR_LINK = "GlueForeignKey";
-const char* BdiiBrowser::ATTR_SITE = "GlueSiteUniqueID";
-const char* BdiiBrowser::ATTR_HOSTINGORG = "GlueServiceHostingOrganization";
 
-const char* BdiiBrowser::CLASS_SERVICE = "GlueService";
+// common for both GLUE1 and GLUE2
+const char* BdiiBrowser::ATTR_OC = "objectClass";
+
+const char* BdiiBrowser::ATTR_GLUE1_SERVICE = "GlueServiceUniqueID";
+const char* BdiiBrowser::ATTR_GLUE1_SERVICE_URI = "GlueServiceURI";
+
+
+const char* BdiiBrowser::ATTR_GLUE1_LINK = "GlueForeignKey";
+const char* BdiiBrowser::ATTR_GLUE1_SITE = "GlueSiteUniqueID";
+const char* BdiiBrowser::ATTR_GLUE1_HOSTINGORG = "GlueServiceHostingOrganization";
+
+const char* BdiiBrowser::ATTR_GLUE2_SERVICE = "GLUE2ServiceID";
+const char* BdiiBrowser::ATTR_GLUE2_SITE = "GLUE2ServiceAdminDomainForeignKey";
+
+
+const char* BdiiBrowser::CLASS_SERVICE_GLUE2 = "GLUE2Service";
+const char* BdiiBrowser::CLASS_SERVICE_GLUE1 = "GlueService";
 
 const string BdiiBrowser::false_str = "false";
-
-/* Query expressing "No VO attribute" */
-#define QUERY_VO_ANY "(!(" ATTR_VO "=*))"
-
-#define QUERY_VO_PRE  "(|" QUERY_VO_ANY
-#define QUERY_VO      "(" ATTR_VO "=%s)"
-#define QUERY_VO_POST ")"
 
 // "(| (%sAccessControlBaseRule=VO:%s) (%sAccessControlBaseRule=%s) (%sAccessControlRule=%s)"
 
@@ -70,16 +71,28 @@ const string BdiiBrowser::FIND_SE_STATUS(string se) {
 }
 const char* BdiiBrowser::FIND_SE_STATUS_ATTR[] = {BdiiBrowser::ATTR_STATUS, 0};
 
-const string BdiiBrowser::FIND_SE_SITE(string se) {
+
+const string BdiiBrowser::FIND_SE_SITE_GLUE2(string se) {
 	stringstream ss;
 	ss << "(&";
-	ss << "(" << BdiiBrowser::ATTR_OC << "=" << CLASS_SERVICE << ")";
-	ss << "(|(" << ATTR_NAME << "=*" << se << "*)";
-	ss << "(" << ATTR_URI << "=*" << se << "*))";
+	ss << "(" << BdiiBrowser::ATTR_OC << "=" << CLASS_SERVICE_GLUE2 << ")";
+	ss << "(" << ATTR_GLUE2_SERVICE << "=*" << se << "*)";
+	ss << ")";
+
+	return ss.str();
+}
+const char* BdiiBrowser::FIND_SE_SITE_ATTR_GLUE2[] = {BdiiBrowser::ATTR_GLUE2_SITE, 0};
+
+const string BdiiBrowser::FIND_SE_SITE_GLUE1(string se) {
+	stringstream ss;
+	ss << "(&";
+	ss << "(" << BdiiBrowser::ATTR_OC << "=" << CLASS_SERVICE_GLUE1 << ")";
+	ss << "(|(" << ATTR_GLUE1_SERVICE << "=*" << se << "*)";
+	ss << "(" << ATTR_GLUE1_SERVICE_URI << "=*" << se << "*))";
 	ss << ")";
 	return ss.str();
 }
-const char* BdiiBrowser::FIND_SE_SITE_ATTR[] = {BdiiBrowser::ATTR_LINK, BdiiBrowser::ATTR_HOSTINGORG, 0};
+const char* BdiiBrowser::FIND_SE_SITE_ATTR_GLUE1[] = {BdiiBrowser::ATTR_GLUE1_LINK, BdiiBrowser::ATTR_GLUE1_HOSTINGORG, 0};
 
 BdiiBrowser::~BdiiBrowser() {
 
@@ -336,15 +349,26 @@ bool BdiiBrowser::getSeStatus(string se) {
 
 string BdiiBrowser::getSiteName(string se) {
 
-	list< map<string, list<string> > > rs = browse< list<string> >(GLUE1, FIND_SE_SITE(se), FIND_SE_SITE_ATTR);
+	// first check glue2
+	list< map<string, list<string> > > rs = browse< list<string> >(GLUE2, FIND_SE_SITE_GLUE2(se), FIND_SE_SITE_ATTR_GLUE2);
+
+	if (!rs.empty()) {
+		if (!rs.front()[ATTR_GLUE2_SITE].empty()) {
+			string str =  rs.front()[ATTR_GLUE2_SITE].front();
+			return str;
+		}
+	}
+
+	// then check glue1
+	rs = browse< list<string> >(GLUE1, FIND_SE_SITE_GLUE1(se), FIND_SE_SITE_ATTR_GLUE1);
 
 	if (rs.empty()) return string();
 
-	list<string> values = rs.front()[ATTR_LINK];
-	string site = parseForeingKey(values, ATTR_SITE);
+	list<string> values = rs.front()[ATTR_GLUE1_LINK];
+	string site = parseForeingKey(values, ATTR_GLUE1_SITE);
 
-	if (site.empty() && !rs.front()[ATTR_HOSTINGORG].empty()) {
-		site = rs.front()[ATTR_HOSTINGORG].front();
+	if (site.empty() && !rs.front()[ATTR_GLUE1_HOSTINGORG].empty()) {
+		site = rs.front()[ATTR_GLUE1_HOSTINGORG].front();
 	}
 
 	return site;

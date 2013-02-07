@@ -47,7 +47,7 @@ public:
 
 	virtual ~OsgParser();
 
-	string getName(string fqdn);
+	string getSiteName(string fqdn);
 	optional<bool> isActive(string fqdn);
 	optional<bool> isDisabled(string fqdn);
 

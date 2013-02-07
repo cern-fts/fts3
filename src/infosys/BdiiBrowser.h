@@ -98,21 +98,28 @@ private:
 	void notifyReconnector();
 
 	static const char* ATTR_OC;
-	static const char* ATTR_NAME;
-	static const char* ATTR_URI;
+	static const char* ATTR_GLUE1_SERVICE;
+	static const char* ATTR_GLUE1_SERVICE_URI;
 	static const char* ATTR_STATUS;
 	static const char* ATTR_SE;
-	static const char* ATTR_LINK;
-	static const char* ATTR_SITE;
-	static const char* ATTR_HOSTINGORG;
+	static const char* ATTR_GLUE1_LINK;
+	static const char* ATTR_GLUE1_SITE;
+	static const char* ATTR_GLUE1_HOSTINGORG;
 
-	static const char* CLASS_SERVICE;
+	static const char* ATTR_GLUE2_SERVICE;
+	static const char* ATTR_GLUE2_SITE;
+
+	static const char* CLASS_SERVICE_GLUE2;
+	static const char* CLASS_SERVICE_GLUE1;
 
 	static const string FIND_SE_STATUS(string se);
 	static const char* FIND_SE_STATUS_ATTR[];
 
-	static const string FIND_SE_SITE(string se);
-	static const char* FIND_SE_SITE_ATTR[];
+	static const string FIND_SE_SITE_GLUE2(string se);
+	static const char* FIND_SE_SITE_ATTR_GLUE2[];
+
+	static const string FIND_SE_SITE_GLUE1(string se);
+	static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
 	static const string false_str;
 	bool connected;

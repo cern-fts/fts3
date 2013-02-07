@@ -53,7 +53,7 @@ string SiteNameRetriever::getSiteName(string se) {
 		return site;
 	}
 	// check in MyOSG
-	site = myosg.getName(se);
+	site = myosg.getSiteName(se);
 	if (!site.empty()) {
 		// save in cache
 		seToSite[se] = site;

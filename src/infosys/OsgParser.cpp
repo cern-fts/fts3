@@ -64,7 +64,7 @@ string OsgParser::get(string fqdn, string property) {
     return node.node().child_value(property.c_str());
 }
 
-string OsgParser::getName(string fqdn) {
+string OsgParser::getSiteName(string fqdn) {
 
 	return get(fqdn, NAME_PROPERTY);
 }
