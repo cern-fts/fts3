@@ -25,7 +25,10 @@
 #ifndef BDIIBROWSER_H_
 #define BDIIBROWSER_H_
 
+#include "common/logger.h"
 #include "common/ThreadSafeInstanceHolder.h"
+
+#include "config/serverconfig.h"
 
 #include <ldap.h>
 
@@ -44,6 +47,7 @@ namespace infosys {
 using namespace std;
 using namespace boost;
 using namespace common;
+using namespace config;
 
 class BdiiBrowser: public ThreadSafeInstanceHolder<BdiiBrowser> {
 
@@ -51,14 +55,24 @@ class BdiiBrowser: public ThreadSafeInstanceHolder<BdiiBrowser> {
 
 public:
 
+	static const char* ATTR_OC;
+
+	static const string GLUE1;
+	static const string GLUE2;
+
+	static const char* CLASS_SERVICE_GLUE2;
+	static const char* CLASS_SERVICE_GLUE1;
+
 	virtual ~BdiiBrowser();
 
 	bool isVoAllowed(string se, string vo);
 	bool getSeStatus(string se);
-	string getSiteName (string se);
 
-	static const string GLUE1;
-	static const string GLUE2;
+	// if we want all available attributes we leave attr = 0
+	template<typename R>
+	list< map<string, R> > browse(string base, string query, const char **attr = 0);
+
+	static string parseForeingKey(list<string> values, const char *attr);
 
 private:
 
@@ -66,10 +80,6 @@ private:
 	bool reconnect();
 	void disconnect();
 	bool isValid();
-
-	// if we want all available attributes we leave attr = 0
-	template<typename R>
-	list< map<string, R> > browse(string base, string query, const char **attr = 0);
 
 	template<typename R>
 	list< map<string, R> > parseBdiiResponse(LDAPMessage *reply);
@@ -80,7 +90,7 @@ private:
 	template<typename R>
 	R parseBdiiEntryAttribute(berval **value);
 
-	string parseForeingKey(list<string> values, const char *attr);
+
 
 	LDAP *ld;
 	timeval timeout;
@@ -97,29 +107,12 @@ private:
 	void waitIfReconnecting();
 	void notifyReconnector();
 
-	static const char* ATTR_OC;
-	static const char* ATTR_GLUE1_SERVICE;
-	static const char* ATTR_GLUE1_SERVICE_URI;
+	// not used for now
 	static const char* ATTR_STATUS;
 	static const char* ATTR_SE;
-	static const char* ATTR_GLUE1_LINK;
-	static const char* ATTR_GLUE1_SITE;
-	static const char* ATTR_GLUE1_HOSTINGORG;
-
-	static const char* ATTR_GLUE2_SERVICE;
-	static const char* ATTR_GLUE2_SITE;
-
-	static const char* CLASS_SERVICE_GLUE2;
-	static const char* CLASS_SERVICE_GLUE1;
 
 	static const string FIND_SE_STATUS(string se);
 	static const char* FIND_SE_STATUS_ATTR[];
-
-	static const string FIND_SE_SITE_GLUE2(string se);
-	static const char* FIND_SE_SITE_ATTR_GLUE2[];
-
-	static const string FIND_SE_SITE_GLUE1(string se);
-	static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
 	static const string false_str;
 	bool connected;
@@ -136,6 +129,105 @@ private:
 	static const int keepalive_probes = 3;
 	static const int keepalive_interval = 60;
 };
+
+template<typename R>
+list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr) {
+
+	// check in the config file if the BDII is in use, if not return an empty result set
+	if (!theServerConfig().get<bool>("Infosys")) return list< map<string, R> >();
+
+	// check if the connection is valied
+	if (!isValid()) {
+
+		bool reconnected = false;
+		int reconnect_count = 0;
+
+		// try to reconnect 3 times
+		for (reconnect_count = 0; reconnect_count < max_reconnect; reconnect_count++) {
+			reconnected = reconnect();
+			if (reconnected) break;
+		}
+
+		// if it has not been possible to reconnect return an empty result set
+		if (!reconnected) {
+			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: it has not been possible to reconnect to the BDII" << commit;
+			return list< map<string, R> >();
+		}
+	}
+
+    int rc = 0;
+    LDAPMessage *reply = 0;
+
+    waitIfReconnecting();
+    rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
+    notifyReconnector();
+
+	if (rc != LDAP_SUCCESS) {
+		if (reply && rc > 0) ldap_msgfree(reply);
+    	FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(rc) << commit;
+    	return list< map<string, R> > ();
+	}
+
+	list< map<string, R> > ret = parseBdiiResponse<R>(reply);
+	if (reply) ldap_msgfree(reply);
+
+	return ret;
+}
+
+template<typename R>
+list< map<string, R> > BdiiBrowser::parseBdiiResponse(LDAPMessage *reply) {
+
+	list< map<string, R> > ret;
+    for (LDAPMessage *entry = ldap_first_entry(ld, reply); entry != 0; entry = ldap_next_entry(ld, entry)) {
+
+    	ret.push_back(
+    				parseBdiiSingleEntry<R>(entry)
+    			);
+	}
+
+	return ret;
+}
+
+template<typename R>
+map<string, R> BdiiBrowser::parseBdiiSingleEntry(LDAPMessage *entry) {
+
+	BerElement *berptr = 0;
+	char* attr = 0;
+	map<string, R> m_entry;
+
+	for (attr = ldap_first_attribute(ld, entry, &berptr); attr != 0; attr = ldap_next_attribute(ld, entry, berptr)) {
+
+		berval **value = ldap_get_values_len(ld, entry, attr);
+		R val = parseBdiiEntryAttribute<R>(value);
+		ldap_value_free_len(value);
+
+		if (!val.empty()) {
+			m_entry[attr] = val;
+		}
+    	ldap_memfree(attr);
+	}
+
+	if (berptr) ber_free(berptr, 0);
+
+	return m_entry;
+}
+
+template<>
+inline string BdiiBrowser::parseBdiiEntryAttribute<string>(berval **value) {
+
+	if (value && value[0] && value[0]->bv_val) return value[0]->bv_val;
+	return string();
+}
+
+template<>
+inline list<string> BdiiBrowser::parseBdiiEntryAttribute< list<string> >(berval **value) {
+
+	list<string> ret;
+	for (int i = 0; value && value[i] && value[i]->bv_val; i++) {
+		ret.push_back(value[i]->bv_val);
+	}
+	return ret;
+}
 
 } /* namespace fts3 */
 } /* namespace infosys */

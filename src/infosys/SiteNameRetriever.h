@@ -43,19 +43,41 @@ using namespace boost;
 
 class SiteNameRetriever: public ThreadSafeInstanceHolder<SiteNameRetriever>   {
 
+	friend class ThreadSafeInstanceHolder<SiteNameRetriever>;
+
 public:
-	SiteNameRetriever();
+
 	virtual ~SiteNameRetriever();
 
 	string getSiteName(string se);
 
 private:
 
+	SiteNameRetriever() {};
+	SiteNameRetriever(SiteNameRetriever const&);
+	SiteNameRetriever& operator=(SiteNameRetriever const&);
+
+	// glue1 attributes
+	static const char* ATTR_GLUE1_SERVICE;
+	static const char* ATTR_GLUE1_SERVICE_URI;
+	static const char* ATTR_GLUE1_LINK;
+	static const char* ATTR_GLUE1_SITE;
+	static const char* ATTR_GLUE1_HOSTINGORG;
+
+	// glue2 attribute
+	static const char* ATTR_GLUE2_SERVICE;
+	static const char* ATTR_GLUE2_SITE;
+
+	static const string FIND_SE_SITE_GLUE2(string se);
+	static const char* FIND_SE_SITE_ATTR_GLUE2[];
+
+	static const string FIND_SE_SITE_GLUE1(string se);
+	static const char* FIND_SE_SITE_ATTR_GLUE1[];
+
+	string getFromBdii(string se);
+
 	mutex m;
 	map<string, string> seToSite;
-
-	BdiiBrowser& bdii;
-	OsgParser& myosg;
 };
 
 } /* namespace infosys */

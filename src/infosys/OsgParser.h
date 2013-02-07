@@ -39,6 +39,9 @@ using namespace pugi;
 
 using namespace fts3::common;
 
+/**
+ *
+ */
 class OsgParser : public ThreadSafeInstanceHolder<OsgParser> {
 
 	friend class ThreadSafeInstanceHolder<OsgParser>;
