@@ -369,7 +369,7 @@ void JobSubmitter::checkSe(string se) {
 	if (db->isSeBlacklisted(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
 
 	// if we don't care about MyOSQ return
-	if (theServerConfig().get<string>("MyOSG") == false_str) return;
+	if (!theServerConfig().get<bool>("MyOSG")) return;
 
 	// load from local file which is update by a cron job
 	OsgParser& osg = OsgParser::getInstance();
