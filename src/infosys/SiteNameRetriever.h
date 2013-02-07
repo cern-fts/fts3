@@ -29,7 +29,6 @@
 #include <string>
 
 #include <boost/thread.hpp>
-#include <boost/optional.hpp>
 
 #include "BdiiBrowser.h"
 #include "OsgParser.h"
@@ -48,7 +47,7 @@ public:
 	SiteNameRetriever();
 	virtual ~SiteNameRetriever();
 
-	optional<string> getSiteName(string se);
+	string getSiteName(string se);
 
 private:
 

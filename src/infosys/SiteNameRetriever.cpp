@@ -29,14 +29,13 @@ namespace infosys {
 
 SiteNameRetriever::SiteNameRetriever() : bdii(BdiiBrowser::getInstance()), myosg(OsgParser::getInstance()){
 
-
 }
 
 SiteNameRetriever::~SiteNameRetriever() {
 
 }
 
-optional<string> SiteNameRetriever::getSiteName(string se) {
+string SiteNameRetriever::getSiteName(string se) {
 	// lock the cache
 	mutex::scoped_lock lock(m);
 	// check if the se is in cache
@@ -63,7 +62,7 @@ optional<string> SiteNameRetriever::getSiteName(string se) {
 		return site;
 	}
 	// if nothing was found in BDII and MyOSD return an uninitialized optional
-	return optional<string>();
+	return string();
 }
 
 } /* namespace infosys */

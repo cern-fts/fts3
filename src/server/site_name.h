@@ -23,20 +23,10 @@
 #include <map>
 #include "infosys/BdiiBrowser.h"
 
-using namespace fts3::common;
-using namespace fts3::infosys;
-
 class SiteName {
 	
 public:
 	SiteName();
 	~SiteName();
 	std::string getSiteName(std::string& siteName);
-
-
-private:
-	std::string siteName;
-	std::string infosys;
-	char * pPath;
-	bool bdiiUsed;
 };

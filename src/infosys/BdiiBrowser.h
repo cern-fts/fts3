@@ -53,9 +53,6 @@ public:
 
 	virtual ~BdiiBrowser();
 
-	bool connect(string infosys, time_t sec = 60);
-	void disconnect();
-
 	bool isVoAllowed(string se, string vo);
 	bool getSeStatus(string se);
 	string getSiteName (string se);
@@ -65,7 +62,9 @@ public:
 
 private:
 
+	bool connect(string infosys = string(), time_t sec = 60);
 	bool reconnect();
+	void disconnect();
 	bool isValid();
 
 	// if we want all available attributes we leave attr = 0
@@ -86,8 +85,8 @@ private:
 	LDAP *ld;
 	timeval timeout;
 	timeval search_timeout;
-	string infosys;
 	string url;
+	string infosys;
 
 	int querying;
 	mutex qm;
@@ -116,9 +115,9 @@ private:
 	static const char* FIND_SE_SITE_ATTR[];
 
 	static const string false_str;
-	bool inuse;
+	bool connected;
 
-	BdiiBrowser() : querying(0) {}
+	BdiiBrowser() : querying(0), connected(false) {};
 	BdiiBrowser(BdiiBrowser const&);
 	BdiiBrowser& operator=(BdiiBrowser const&);
 

@@ -24,7 +24,11 @@
 
 #include "OsgParser.h"
 
+#include "config/serverconfig.h"
+
 namespace fts3 { namespace infosys {
+
+using namespace config;
 
 
 const string OsgParser::NAME_PROPERTY = "Name";
@@ -46,6 +50,8 @@ OsgParser::~OsgParser() {
 }
 
 string OsgParser::get(string fqdn, string property) {
+
+	if (!theServerConfig().get<bool>("MyOSG")) return string();
 
 	// look for the resource name (assume that the user has provided a fqdn)
     xpath_node node = doc.select_single_node(xpath_fqdn(fqdn).c_str());

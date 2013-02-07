@@ -81,7 +81,6 @@ const string BdiiBrowser::FIND_SE_SITE(string se) {
 }
 const char* BdiiBrowser::FIND_SE_SITE_ATTR[] = {BdiiBrowser::ATTR_LINK, BdiiBrowser::ATTR_HOSTINGORG, 0};
 
-
 BdiiBrowser::~BdiiBrowser() {
 
     disconnect();
@@ -89,14 +88,15 @@ BdiiBrowser::~BdiiBrowser() {
 
 bool BdiiBrowser::connect(string infosys, time_t sec) {
 
+	// make sure that the infosys string is not 'false'
+	if (infosys == false_str) return false;
+
 	this->infosys = infosys;
-	inuse = infosys != false_str;
-	if (!inuse) return false;
 
 	timeout.tv_sec = sec;
 	timeout.tv_usec = 0;
 	
-	search_timeout.tv_sec = (sec*2);
+	search_timeout.tv_sec = sec * 2;
 	search_timeout.tv_usec = 0;	
 
 	url = "ldap://" + infosys;
@@ -145,6 +145,8 @@ bool BdiiBrowser::connect(string infosys, time_t sec) {
     	return false;
     }
     
+    connected = true;
+
     return true;
 }
 
@@ -154,6 +156,8 @@ void BdiiBrowser::disconnect() {
         ldap_unbind_ext_s(ld, 0, 0);
         ld = 0;
     }
+
+    connected = false;
 }
 
 void BdiiBrowser::waitIfBrowsing() {
@@ -184,8 +188,8 @@ bool BdiiBrowser::reconnect() {
 
 	waitIfBrowsing();
 
-	disconnect();
-	bool ret = connect(infosys, timeout.tv_sec);
+	if (connected) disconnect();
+	bool ret = connect(theServerConfig().get<string>("Infosys"));
 
 	notifyBrowsers();
 
@@ -193,6 +197,12 @@ bool BdiiBrowser::reconnect() {
 }
 
 bool BdiiBrowser::isValid() {	
+
+	// if we are not connected the connection is not valid
+	if (!connected) return false;
+	// if the bdii host have changed it is also not valid
+	if (theServerConfig().get<string>("Infosys") != this->infosys) return false;
+
 	LDAPMessage *result = 0;
 
 	waitIfReconnecting();
@@ -223,8 +233,10 @@ bool BdiiBrowser::isValid() {
 template<typename R>
 list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr) {
 
-	if (!inuse) return list< map<string, R> >();
+	// check in the config file if the BDII is in use, if not return an empty result set
+	if (!theServerConfig().get<bool>("Infosys")) return list< map<string, R> >();
 
+	// check if the connection is valied
 	if (!isValid()) {
 
 		bool reconnected = false;
@@ -236,7 +248,7 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 			if (reconnected) break;
 		}
 
-		// if it has not been possible to reconnect ...
+		// if it has not been possible to reconnect return an empty result set
 		if (!reconnected) {
 			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: it has not been possible to reconnect to the BDII" << commit;
 			return list< map<string, R> >();
@@ -331,7 +343,7 @@ string BdiiBrowser::getSiteName(string se) {
 	list<string> values = rs.front()[ATTR_LINK];
 	string site = parseForeingKey(values, ATTR_SITE);
 
-	if (site.empty()) {
+	if (site.empty() && !rs.front()[ATTR_HOSTINGORG].empty()) {
 		site = rs.front()[ATTR_HOSTINGORG].front();
 	}
 
