@@ -380,7 +380,7 @@ void JobSubmitter::checkSe(string se) {
 	if (theServerConfig().get<string>("MyOSG") == false_str) return;
 
 	// load from local file which is update by a cron job
-	OsgParser osg;
+	OsgParser& osg = OsgParser::getInstance();
 	// check in the OSG if the SE is 'active'
 	optional<bool> state = osg.isActive(se);
 	if (state.is_initialized() && !(*state)) throw Err_Custom("The SE: " + se + " is not active in the OSG!");

@@ -25,6 +25,8 @@
 #ifndef OSGPARSER_H_
 #define OSGPARSER_H_
 
+#include "common/ThreadSafeInstanceHolder.h"
+
 #include <pugixml.hpp>
 #include <string>
 #include <boost/optional.hpp>
@@ -35,21 +37,25 @@ using namespace std;
 using namespace boost;
 using namespace pugi;
 
-// TODO make it a singleton (???)
+using namespace fts3::common;
 
-class OsgParser {
+class OsgParser : public ThreadSafeInstanceHolder<OsgParser> {
+
+	friend class ThreadSafeInstanceHolder<OsgParser>;
 
 public:
-	OsgParser(string path = myosg_path);
+
 	virtual ~OsgParser();
 
 	string getName(string fqdn);
-
 	optional<bool> isActive(string fqdn);
-
 	optional<bool> isDisabled(string fqdn);
 
 private:
+
+	OsgParser(string path = myosg_path);
+	OsgParser(OsgParser const&);
+	OsgParser& operator=(OsgParser const&);
 
 	string get(string fqdn, string property);
 
