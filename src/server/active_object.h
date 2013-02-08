@@ -88,16 +88,7 @@ public:
     {}
     
     /* ------------------------------------------------------------------ */
-
-	void waitUntilRunning()
-	{
-	FTS3_COMMON_MONITOR_START_CRITICAL
-		while (_runningMethods > 0) 
-        {
-            _notRunning.wait(FTS3_COMMON_MONITOR_LOCK);
-        }
-	FTS3_COMMON_MONITOR_END_CRITICAL
-	}
+	
 
 protected:
     

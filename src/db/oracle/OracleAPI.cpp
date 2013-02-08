@@ -6366,7 +6366,7 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getAllPairCfgs() {
 // the class factories
 
 extern "C" GenericDbIfce* create() {
-    return new OracleAPI;
+    return new OracleAPI();
 }
 
 extern "C" void destroy(GenericDbIfce* p) {
@@ -6375,7 +6375,7 @@ extern "C" void destroy(GenericDbIfce* p) {
 }
 
 extern "C" MonitoringDbIfce* create_monitoring() {
-    return new OracleMonitoring;
+    return new OracleMonitoring();
 }
 
 extern "C" void destroy_monitoring(MonitoringDbIfce* p) {

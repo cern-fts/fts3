@@ -127,9 +127,7 @@ public:
     /// Switch logging on. Log messages will be displayed.
 	GenericLogger& setLogOn()
     {
-    //ThreadTraits::LOCK_R lock(_mutex);
 	    _isLogOn = true;
-        //Traits::openLog();
 	    return *this;
     }
 
@@ -138,9 +136,7 @@ public:
     /// Switch log messages off. No log messages are displayed.
     GenericLogger& setLogOff()
     {
-    //ThreadTraits::LOCK_R lock(_mutex);
 	    _isLogOn = false;
-        //Traits::closeLog();
 	    return *this;
     }
 
@@ -149,7 +145,7 @@ public:
     /// Commits (writes) the actual log line.
 	void _commit()
     {
-    ThreadTraits::LOCK_R lock(_mutex);
+        ThreadTraits::LOCK_R lock(_mutex);
         if ( ! _logLine.str().empty())
         {
 	   fprintf(stderr, "%s\n",_logLine.str().c_str());
@@ -176,7 +172,6 @@ public:
     )
     {
 	    commit(*this);
-    ThreadTraits::LOCK_R lock(_mutex);
 	    _actLogLevel = LOGLEVEL;
         _logLine << logLevelStringRepresentation(_actLogLevel) << timestamp() << _separator();
         bool isDebug = (Traits::ERR == _actLogLevel);
@@ -208,7 +203,6 @@ public:
     template <typename T>
     GenericLogger& operator << (const T& aSrc)
     {
-    ThreadTraits::LOCK_R lock(_mutex);
 	    if (_isLogOn)
         {
 		    _logLine << aSrc;

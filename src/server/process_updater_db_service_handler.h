@@ -101,7 +101,7 @@ protected:
 	 try{
             bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
 	    if(!alive){
-	        sleep(1);
+	        sleep(10);
 		continue;		    
 	    }
 	    
@@ -121,7 +121,7 @@ protected:
 	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
             sleep(10);
         }catch (...) {
-	        sleep(1);	
+	        sleep(10);	
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message updater thrown unhandled exception"));
             }            
     }

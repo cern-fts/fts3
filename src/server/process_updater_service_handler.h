@@ -113,13 +113,13 @@ protected:
             try {
 	    
 	      if(fs::is_empty(fs::path(STALLED_DIR))){
-			sleep(1);
+			sleep(10);
 			continue;
 		}
 	    
 	        runConsumerStall(messages);
 		if(messages.empty()){
-			sleep(1);		
+			sleep(10);		
 			continue;
 		}else{
 			for (iter = messages.begin(); iter != messages.end(); ++iter){
@@ -133,13 +133,16 @@ protected:
 			}						
 			messages.clear();
 		}
-	      sleep(1);
+	      sleep(10);
             } catch (const fs::filesystem_error& ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+	      sleep(10);		
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
+	      sleep(10);		
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
+	      sleep(10);		
             }            
         }
     }

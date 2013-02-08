@@ -80,7 +80,6 @@ void MsgPipe::run() {
         runConsumerMonitoring(messages);
 	if(!messages.empty()){
 		for (iter = messages.begin(); iter != messages.end(); ++iter){			
-			std::cout << *iter << std::endl;
 			concurrent_queue::getInstance()->push(*iter);
 		}
 	messages.clear();

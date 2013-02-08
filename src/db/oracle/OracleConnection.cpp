@@ -39,7 +39,6 @@ int taf_callback(Environment*, Connection*, void*, Connection::FailOverType foTy
 OracleConnection::OracleConnection(const std::string username,const  std::string password, const std::string connectString) : env(NULL), scPool(NULL), username_(username),
 password_(password), connectString_(connectString) {
 
-
     try {
         env = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::THREADED_MUTEXED);
         if (env) {
@@ -54,6 +53,12 @@ password_(password), connectString_(connectString) {
     } catch (...) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown oracle exception"));
     }
+}
+
+OracleConnection::~OracleConnection(){
+    // Destroy the connection pool  
+    env->terminateStatelessConnectionPool (scPool);      
+    oracle::occi::Environment::terminateEnvironment (env);  
 }
 
 oracle::occi::Connection* OracleConnection::getPooledConnection() {
