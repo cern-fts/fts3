@@ -61,7 +61,7 @@ void Worker::_doWork()
 	}
 	}
 	}catch(...){
-		throw;
+		//throw;
 	}
 
 }

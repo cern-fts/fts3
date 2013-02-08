@@ -136,10 +136,11 @@ void ServerConfig::read
 {
     _read<ServerConfigReader> (argc, argv);
 
-    if (monitor)
+     //TODO, enable it later
+    /*if (monitor)
 		cfgmonitor.start(
 				get<std::string>("configfile")
-			);
+			);*/
 }
 
 /* ---------------------------------------------------------------------- */

@@ -32,7 +32,6 @@ GSoapRequestHandler::~GSoapRequestHandler() {
 }
 
 void GSoapRequestHandler::handle() {
-    //ThreadTraits::LOCK_R lock(acceptor._mutex);
     if(ctx)
     	fts3_serve(ctx);
 }

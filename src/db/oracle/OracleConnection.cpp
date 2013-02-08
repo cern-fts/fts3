@@ -98,11 +98,11 @@ oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std:
         // Check if the statement is already cached
         if (true == conn->isCached("", tag)) {
             s = conn->createStatement("", tag);
-            s->setAutoCommit(false);
+            s->setAutoCommit(true);
             return s;
         } else {
             s = conn->createStatement(sql, tag);
-            s->setAutoCommit(false);
+            s->setAutoCommit(true);
             return s;
         }
 
@@ -137,8 +137,8 @@ void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string 
 }
 
 void OracleConnection::commit(oracle::occi::Connection* conn) {
-    if (conn)
-        conn->commit();
+    //if (conn)
+        //conn->commit();
 
 }
 
