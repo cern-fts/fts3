@@ -18,7 +18,7 @@
 /**
  * @file OracleMonitoring.h
  * @brief Oracle implementation of the monitoring API
- * @author Alejandro Álvarez Ayllón
+ * @author Alejandro Alvarez Ayll
  * @date 18/10/2012
  *
  **/
@@ -83,7 +83,5 @@ public:
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;
-    mutable ThreadTraits::MUTEX_R _mutex;
-
     oracle::occi::Timestamp notBefore;
 };

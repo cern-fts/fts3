@@ -4,15 +4,9 @@
 #include "OracleTypeConversions.h"
 
 
-inline void checkConn(OracleConnection* conn) {
-    if (!conn)
-        throw Err_System("Connection not initialized: Probably forgot to call 'init'");
-}
-
 
 OracleMonitoring::OracleMonitoring(): conn(NULL), conv(NULL) {
 }
-
 
 
 OracleMonitoring::~OracleMonitoring()
@@ -20,7 +14,6 @@ OracleMonitoring::~OracleMonitoring()
     if (conn) delete conn;
     if (conv) delete conv;
 }
-
 
 
 void OracleMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString) {
@@ -46,20 +39,23 @@ void OracleMonitoring::getVONames(std::vector<std::string>& vos) {
     const std::string query = "SELECT DISTINCT(VO_NAME)\
                                FROM T_JOB\
                                WHERE SUBMIT_TIME > :notBefore";
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
+			       
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    			       
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setTimestamp(1, notBefore);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
 
     while (r->next()) {
         vos.push_back(r->getString(1));
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }
 
 
@@ -70,15 +66,15 @@ void OracleMonitoring::getSourceAndDestSEForVO(const std::string& vo,
     const std::string query = "SELECT DISTINCT SOURCE_SE, DEST_SE\
                                FROM T_JOB\
                                WHERE VO_NAME = :vo AND SUBMIT_TIME > :notBefore";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setString(1, vo);
     s->setTimestamp(2, notBefore);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
 
     while (r->next()) {
         SourceAndDestSE pair;
@@ -88,7 +84,8 @@ void OracleMonitoring::getSourceAndDestSEForVO(const std::string& vo,
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }
 
 
@@ -101,24 +98,25 @@ unsigned OracleMonitoring::numberOfJobsInState(const SourceAndDestSE& pair,
                                      SOURCE_SE = :source AND\
                                      DEST_SE   = :dest AND\
                                      SUBMIT_TIME > :notBefore";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setString(1, state);
     s->setString(2, pair.sourceStorageElement);
     s->setString(3, pair.destinationStorageElement);
     s->setTimestamp(4, notBefore);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
 
     unsigned count = 0;
     if (r->next())
         count = r->getNumber(1);
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 
     return count;
 }
@@ -132,15 +130,15 @@ void OracleMonitoring::getConfigAudit(const std::string& actionLike,
                                FROM T_CONFIG_AUDIT\
                                WHERE ACTION LIKE :like AND\
                                      WHEN > :notBefore";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setString(1, actionLike);
     s->setTimestamp(2, notBefore);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     while (r->next()) {
         ConfigAudit item;
         item.when = conv->toTimeT(s->getTimestamp(1));
@@ -151,7 +149,8 @@ void OracleMonitoring::getConfigAudit(const std::string& actionLike,
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }
 
 
@@ -165,14 +164,14 @@ void OracleMonitoring::getTransferFiles(const std::string& jobId,
                                FROM T_FILE\
                                WHERE JOB_ID = :jobId\
                                ORDER BY SYS_EXTRACT_UTC(t_file.start_time)";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setString(1, jobId);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     while (r->next()) {
         TransferFiles tf;
         tf.INTERNAL_FILE_PARAMS = r->getString(1);
@@ -191,7 +190,8 @@ void OracleMonitoring::getTransferFiles(const std::string& jobId,
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }
 
 
@@ -203,14 +203,14 @@ void OracleMonitoring::getJob(const std::string& jobId, TransferJobs& job) {
                                      SOURCE_SPACE_TOKEN, SPACE_TOKEN\
                                FROM T_JOB\
                                WHERE JOB_ID = :jobId";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setString(1, jobId);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     if (r->next()) {
         job.USER_DN = r->getString(1);
         job.JOB_ID = r->getString(2);
@@ -224,7 +224,8 @@ void OracleMonitoring::getJob(const std::string& jobId, TransferJobs& job) {
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }
 
 
@@ -235,6 +236,8 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
     std::ostringstream tag;
     std::ostringstream query;
     size_t i, j;
+    oracle::occi::Connection* pooledConnection = NULL; 
+    pooledConnection = conn->getPooledConnection();       
 
     tag << "filterJobs" << inVos.size() << "-" << inStates.size();
 
@@ -259,17 +262,16 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
 
     query << " ORDER BY SUBMIT_TIME DESC, FINISH_TIME DESC, JOB_ID DESC";
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str());
+
+    oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str(), pooledConnection);
     s->setTimestamp(1, notBefore);
     for (i = 0; i < inVos.size(); ++i)
         s->setString(i + 2, inVos[i]);
     for (j = 0; j < inStates.size(); ++j)
         s->setString(i + j + 2, inStates[j]);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     while (r->next()) {
         TransferJobs job;
         job.USER_DN = r->getString(1);
@@ -286,7 +288,8 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag.str());
+    conn->destroyStatement(s, tag.str(), pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }
 
 
@@ -296,6 +299,8 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     std::ostringstream tag;
     std::ostringstream query;
     size_t i;
+    oracle::occi::Connection* pooledConnection = NULL;  
+    pooledConnection = conn->getPooledConnection();      
 
     if (state.size() == 0)
         return 0;
@@ -312,10 +317,9 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     if (!vo.empty())
         query << " AND T_JOB.VO_NAME = :vo";
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str());
+
+    oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str(), pooledConnection);
     s->setTimestamp(1, notBefore);
 
     for (i = 0; i < state.size(); ++i)
@@ -324,13 +328,14 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     if (!vo.empty())
         s->setString(i + 2, vo);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     unsigned count = 0;
     if (r->next())
         count = r->getNumber(1);
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag.str());
+    conn->destroyStatement(s, tag.str(), pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 
     return count;
 }
@@ -344,6 +349,8 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     std::ostringstream tag;
     std::ostringstream query;
     size_t i;
+    oracle::occi::Connection* pooledConnection = NULL; 
+    pooledConnection = conn->getPooledConnection();       
 
     if (state.size() == 0)
         return 0;
@@ -361,10 +368,9 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     if (!vo.empty())
         query << "AND T_JOB.VO_NAME = :vo";
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str());
+
+    oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str(), pooledConnection);
     s->setTimestamp(1, notBefore);
 
     for (i = 0; i < state.size(); ++i)
@@ -376,13 +382,14 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     if (!vo.empty())
         s->setString(i + 4, vo);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     unsigned count = 0;
     if (r->next())
         count = r->getNumber(1);
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag.str());
+    conn->destroyStatement(s, tag.str(), pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 
     return count;
 }
@@ -397,14 +404,14 @@ void OracleMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons)
                                      FINISH_TIME > :notBefore\
                                GROUP BY REASON\
                                ORDER BY REASON ASC";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setTimestamp(1, notBefore);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     while (r->next()) {
         ReasonOccurrences reason;
         reason.count = r->getNumber(1);
@@ -413,7 +420,7 @@ void OracleMonitoring::getUniqueReasons(std::vector<ReasonOccurrences>& reasons)
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
 }
 
 
@@ -426,22 +433,23 @@ unsigned OracleMonitoring::averageDurationPerSePair(const SourceAndDestSE& pair)
                                      FINISH_TIME > :notBefore AND\
                                      SOURCE_SURL LIKE CONCAT('%', :source, '%') AND\
                                      DEST_SURL LIKE CONCAT('%', :dest, '%')";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();    
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setTimestamp(1, notBefore);
     s->setString(2, pair.sourceStorageElement);
     s->setString(3, pair.destinationStorageElement);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     unsigned duration = 0;
     if (r->next())
         duration = r->getNumber(0);
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 
     return duration;
 }
@@ -457,14 +465,14 @@ void OracleMonitoring::averageThroughputPerSePair(std::vector<SePairThroughput>&
                                      T_FILE.JOB_ID = T_JOB.JOB_ID AND\
                                      T_JOB.SUBMIT_TIME > :notBefore\
                                GROUP BY T_JOB.SOURCE_SE, T_JOB.DEST_SE";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();        
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setTimestamp(1, notBefore);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     while (r->next()) {
         SePairThroughput pairThroughput;
         pairThroughput.storageElements.sourceStorageElement = r->getString(1);
@@ -476,7 +484,8 @@ void OracleMonitoring::averageThroughputPerSePair(std::vector<SePairThroughput>&
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }
 
 
@@ -487,14 +496,14 @@ void OracleMonitoring::getJobVOAndSites(const std::string& jobId, JobVOAndSites&
                                FROM T_JOB, T_CHANNEL\
                                WHERE T_CHANNEL.CHANNEL_NAME = T_JOB.CHANNEL_NAME AND\
                                      T_JOB.JOB_ID = :jobId";
+    oracle::occi::Connection* pooledConnection = NULL;
+    pooledConnection = conn->getPooledConnection();        
 
-    checkConn(conn);
-    ThreadTraits::LOCK_R lock(_mutex);
 
-    oracle::occi::Statement* s = conn->createStatement(query, tag);
+    oracle::occi::Statement* s = conn->createStatement(query, tag, pooledConnection);
     s->setString(1, jobId);
 
-    oracle::occi::ResultSet* r = conn->createResultset(s);
+    oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     if (r->next()) {
         voAndSites.vo = r->getString(1);
         voAndSites.sourceSite = r->getString(2);
@@ -502,5 +511,6 @@ void OracleMonitoring::getJobVOAndSites(const std::string& jobId, JobVOAndSites&
     }
 
     conn->destroyResultset(s, r);
-    conn->destroyStatement(s, tag);
+    conn->destroyStatement(s, tag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);                    
 }

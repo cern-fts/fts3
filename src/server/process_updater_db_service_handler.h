@@ -100,8 +100,10 @@ protected:
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
 	 try{
             bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
-	    if(!alive)
+	    if(!alive){
+	        sleep(1);
 		continue;		    
+	    }
 	    
             std::vector<struct message_updater> messages;	    
             ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
@@ -119,6 +121,7 @@ protected:
 	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
             sleep(10);
         }catch (...) {
+	        sleep(1);	
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message updater thrown unhandled exception"));
             }            
     }

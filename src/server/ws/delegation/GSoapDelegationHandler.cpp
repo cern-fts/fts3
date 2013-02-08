@@ -48,6 +48,7 @@ static void cipherRemove(const EVP_CIPHER *c, const char *from, const char *to, 
 
 
 void GSoapDelegationHandler::init() {
+    setenv("GLOBUS_THREAD_MODEL","pthread",1); //reset it
     CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
     SSL_library_init(); // Initialize OpenSSL's SSL libraries
     SSL_load_error_strings(); // Load SSL error strings

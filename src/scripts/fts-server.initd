@@ -28,6 +28,7 @@ prog=$(basename $exec)
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
 lockfile=/var/lock/subsys/fts-server
+export GLOBUS_THREAD_MODEL=pthread
 
 start() {
     echo -n $"Starting $prog: "
@@ -35,7 +36,8 @@ start() {
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure   
-    fts_server    
+    # start 15 threads in the pool
+    fts_server -t 15   
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile

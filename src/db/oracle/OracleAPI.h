@@ -33,7 +33,6 @@
 #include "pointers.h"
 #include "OptimizerSample.h"
 
-using namespace FTS3_COMMON_NAMESPACE;
 
 class OracleAPI : public GenericDbIfce {
 public:
@@ -248,5 +247,5 @@ private:
 	OracleTypeConversions *conv;
 	bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
 	OptimizerSample optimizerObject;
-	mutable ThreadTraits::MUTEX_R _mutex;
+	std::string ftsHostName;
 };

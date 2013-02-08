@@ -27,7 +27,7 @@
 
 #include <ctime>
 #include <string>
-#include "occi.h"
+#include <occi.h>
 
 typedef long long longlong;
 

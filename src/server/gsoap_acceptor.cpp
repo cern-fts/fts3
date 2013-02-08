@@ -102,7 +102,7 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 }
 
 GSoapAcceptor::~GSoapAcceptor() {
-	ThreadTraits::LOCK_R lock(_mutex);
+	//ThreadTraits::LOCK_R lock(_mutex);
 	soap* tmp=NULL;
 	while (!recycle.empty()) {
 		tmp = recycle.front();
@@ -146,7 +146,7 @@ boost::shared_ptr<GSoapRequestHandler> GSoapAcceptor::accept() {
 }
 
 soap* GSoapAcceptor::getSoapContext() {	
-    ThreadTraits::LOCK_R lock(_mutex);
+    //ThreadTraits::LOCK_R lock(_mutex);
 	if (!recycle.empty()) {
 		soap* ctx = recycle.front();
 		recycle.pop();
@@ -162,7 +162,7 @@ void GSoapAcceptor::recycleSoapContext(soap* ctx) {
 	if(stopThreads) 
 		return; 
 
-    ThreadTraits::LOCK_R lock(_mutex);
+    //ThreadTraits::LOCK_R lock(_mutex);
 	if(ctx){		
 		soap_destroy(ctx);
 		soap_end(ctx);

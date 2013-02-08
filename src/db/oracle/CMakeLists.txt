@@ -2,14 +2,13 @@ cmake_minimum_required(VERSION 2.6)
 
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
 include_directories (BEFORE ../generic)
-#include_directories (/usr/include/openssl/)
 include_directories (BEFORE ../../common)
 include_directories (.)
 
 
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(fts_db_oracle_SOURCES OracleAPI.cpp OracleConnection.cpp OracleTypeConversions.cpp OracleMonitoring.cpp)
+set(fts_db_oracle_SOURCES OracleConnection.cpp OracleAPI.cpp OracleTypeConversions.cpp OracleMonitoring.cpp)
 
 add_library(fts_db_oracle SHARED ${fts_db_oracle_SOURCES})
 add_dependencies(fts_db_oracle fts_common)

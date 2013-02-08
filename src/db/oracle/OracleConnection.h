@@ -27,6 +27,11 @@
 
 #include <iostream>
 #include <occi.h>
+#include "logger.h"
+#include "error.h"
+
+using namespace FTS3_COMMON_NAMESPACE;
+using namespace oracle::occi;
 
 /**
  * OracleConnection class declaration
@@ -39,13 +44,12 @@ public:
  * OracleConnection class ctr with parameters
  **/
 
-    OracleConnection(std::string username, std::string password, std::string connectString);
+    OracleConnection(const std::string username,const  std::string password, const std::string connectString);
 
 /**
  * OracleConnection class ctr
  **/
-    OracleConnection() {
-    }
+    OracleConnection() {}
     
 /**
  * OracleConnection class dctr
@@ -56,12 +60,12 @@ public:
 /**
  * OracleConnection get resultset
  **/
-    oracle::occi::ResultSet* createResultset(oracle::occi::Statement* s);
+    oracle::occi::ResultSet* createResultset(oracle::occi::Statement* s,oracle::occi::Connection* conn);
     
 /**
  * OracleConnection create a statement
  **/    
-    oracle::occi::Statement* createStatement(std::string sql, std::string tag);
+    oracle::occi::Statement* createStatement(std::string sql, std::string tag,oracle::occi::Connection* conn);
 
 /**
  * OracleConnection destroy a resultset
@@ -71,38 +75,33 @@ public:
 /**
  * OracleConnection destroy a statement
  **/        
-    void destroyStatement(oracle::occi::Statement* s, std::string tag);
+    void destroyStatement(oracle::occi::Statement* s, std::string tag,oracle::occi::Connection* conn);
     
 /**
  * OracleConnection commit row in the database
  **/        
-    void commit();
+    void commit(oracle::occi::Connection* conn);
     
 /**
  * OracleConnection rollback in case of an error
  **/        
-    void rollback();
+    void rollback(oracle::occi::Connection* conn);
+              
+    oracle::occi::Connection *getPooledConnection(); 
+    
+    void releasePooledConnection(oracle::occi::Connection *conn); 
     
 /**
  * OracleConnection return the environment used in oracle
  **/        
-    oracle::occi::Environment* getEnv(){
+    inline oracle::occi::Environment* getEnv(){
     	return env;
-	}
-    
-    void initConn();    
-    
-    void destroyConn();        
-    
-    bool isAlive();
-    
-    bool checkConn();           
+	}	            
 
 private:
     oracle::occi::Environment* env;
-    oracle::occi::Connection* conn;
+    oracle::occi::StatelessConnectionPool *scPool;     
     std::string username_;
     std::string password_;
     std::string connectString_;
-
 };
