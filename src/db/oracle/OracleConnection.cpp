@@ -1,8 +1,7 @@
 #include "OracleConnection.h"
 
 
-
-int taf_callback(Environment*, Connection*, void*, Connection::FailOverType foType, Connection::FailOverEventType foEvent) {
+int taf_callback(Environment*, Connection*, void*, Connection::FailOverType foType, Connection::FailOverEventType foEvent) {    
     switch (foEvent) {
         case Connection::FO_END:
             break;

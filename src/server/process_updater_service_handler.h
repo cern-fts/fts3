@@ -102,24 +102,33 @@ public:
     }
 
 protected:
+    std::vector<struct message_updater> queueMsgRecovery;
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
         
         std::vector<struct message_updater> messages;
 	std::vector<struct message_updater>::const_iterator iter;
+	std::vector<struct message_updater>::const_iterator iter_restore;
     
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
             try {
 	    
 	      if(fs::is_empty(fs::path(STALLED_DIR))){
-			sleep(10);
+			sleep(1);
 			continue;
 		}
+		
+                if(!queueMsgRecovery.empty()){						
+			for (iter_restore = queueMsgRecovery.begin(); iter_restore != queueMsgRecovery.end(); ++iter_restore) {
+				ThreadSafeList::get_instance().updateMsg(*iter_restore);
+			}			
+			queueMsgRecovery.clear();	
+		}		
 	    
 	        runConsumerStall(messages);
 		if(messages.empty()){
-			sleep(10);		
+			sleep(1);		
 			continue;
 		}else{
 			for (iter = messages.begin(); iter != messages.end(); ++iter){
@@ -133,16 +142,22 @@ protected:
 			}						
 			messages.clear();
 		}
-	      sleep(10);
+	      sleep(1);
             } catch (const fs::filesystem_error& ex) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
-	      sleep(10);		
+		for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
+			queueMsgRecovery.push_back(*iter_restore);		
+	      sleep(1);		
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
-	      sleep(10);		
+		for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
+			queueMsgRecovery.push_back(*iter_restore);		
+	      sleep(1);		
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
-	      sleep(10);		
+		for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
+			queueMsgRecovery.push_back(*iter_restore);		
+	      sleep(1);		
             }            
         }
     }

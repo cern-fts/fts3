@@ -1550,23 +1550,23 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
         conn->destroyStatement(st2, cancelFTag, pooledConnection);
         st2 = NULL;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (st1)
                 conn->destroyStatement(st1, cancelJTag, pooledConnection);
             if (st2)
                 conn->destroyStatement(st2, cancelFTag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (st1)
                 conn->destroyStatement(st1, cancelJTag, pooledConnection);
             if (st2)
                 conn->destroyStatement(st2, cancelFTag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);            
@@ -1608,7 +1608,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
         conn->destroyStatement(s1, tag1, pooledConnection);
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (r && s)
                 conn->destroyResultset(s, r);
@@ -1616,11 +1616,11 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
                 conn->destroyStatement(s, tag, pooledConnection);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (r && s)
                 conn->destroyResultset(s, r);
@@ -1628,7 +1628,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs) {
                 conn->destroyStatement(s, tag, pooledConnection);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);            
@@ -1671,24 +1671,24 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
         s = NULL;
         s1 = NULL;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom(e.what());
 
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom("Unknown exception");
 
@@ -1720,19 +1720,19 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
         conn->destroyStatement(s, tag, pooledConnection);
         s = NULL;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom(e.what());
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom("Unknown exception");
     }
@@ -1770,24 +1770,24 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag, pooledConnection);        
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (r && s)
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     conn->releasePooledConnection(pooledConnection);            
         return cred;
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (r && s)
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     conn->releasePooledConnection(pooledConnection);            
         return cred;
@@ -1816,19 +1816,19 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
         conn->destroyStatement(s, tag, pooledConnection);
         s = NULL;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            
         throw Err_Custom(e.what());
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            
         throw Err_Custom("Unknown exception");
     }
@@ -1873,23 +1873,23 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
         s1 = NULL;
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom(e.what());
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom("Unknown exception");
     }
@@ -1920,20 +1920,20 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
         conn->destroyStatement(s, tag, pooledConnection);
         s = NULL;
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom(e.what());
 
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);            	
         throw Err_Custom("Unknown exception");
 
@@ -1972,24 +1972,24 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag, pooledConnection);       
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s && r)
             	conn->destroyResultset(s, r);
             if (s)
             	conn->destroyStatement(s, tag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     conn->releasePooledConnection(pooledConnection);            
         return cred;
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
             if (s && r)
             	conn->destroyResultset(s, r);
             if (s)
             	conn->destroyStatement(s, tag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     conn->releasePooledConnection(pooledConnection);            
         return cred;
@@ -2345,196 +2345,160 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
     conn->releasePooledConnection(pooledConnection);                
 }
 
-/*custom optimization stuff*/
 
 void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) {
-    const std::string tag = "fetchOptimizationConfig2XXX";
-    const std::string tag1 = "fetchOptimizationConfig2YYY";
-    const std::string tag2 = "fetchOptimizationConfig2YYYXXX";
-    const std::string tag3 = "fetchOptimizationConfig2ZZZZ";
-    const std::string tagMid = "midRangeTimeout";
-    int foundNoThrouput = 0;
-    int foundNoRecords = 0;
-    int timeoutRecords = 0;
+    const std::string tag1 = "fetchOptimizationConfig2XXX";
+    const std::string tag2 = "fetchOptimizationConfig2YYY";
+    const std::string tag3 = "fetchOptimizationConfig2YYYXXX";
+    const std::string tag4 = "fetchOptimizationConfig2ZZZZ";
+    int current_active_count = 0;
+    int check_if_more_samples_exist_count = 0;
+ 
+    //TODO: check for the last 30min or last 5 transfers, add the average throughput into the picture of the last 30 mincount(*)
+			
+    std::string check_if_more_samples_exist = "  SELECT count(*) "
+            				      " FROM t_optimize WHERE  "
+            				      " throughput is NULL and source_se = :1 and dest_se=:2 and file_id=0 ";
+					      			
+    std::string current_active = " select count(*) from t_file,t_job where file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2";   
 
-    std::string query_stmt_throuput = " select /* FIRST_ROWS(1) */ nostreams, timeout, buffer "
-            " from "
-            " (select throughput, active, nostreams, timeout, buffer "
-            " from t_optimize "
-            " where "
-            " source_se = :1 and dest_se=:2 "
-            " order by abs(((select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' "
-            " and  t_job.job_id = t_file.job_id and t_job.source_se=:3 and "
-            " t_job.dest_se=:4))-active), abs(500-throughput) desc) where rownum=1 ";
+    std::string pick_next_sample = " SELECT nostreams, timeout, buffer "
+            			   "  FROM t_optimize WHERE  "
+            			   "  source_se = :1 and dest_se=:2 "
+            			   "  and throughput is NULL and file_id=0 order by nostreams asc, timeout asc, buffer asc ";					          
+				
+    std::string try_optimize =  " select throughput, active, nostreams, timeout, buffer from (select throughput, active, nostreams, timeout, buffer "
+    				" from t_optimize where source_se=:1 and dest_se=:2 and throughput is not null order by  abs(active-:3), throughput desc) "
+				" sub where rownum < 2 ";
+				
 
-    std::string query_stmt_throuput2 = " SELECT  nostreams, timeout, buffer "
-            "  FROM t_optimize WHERE  "
-            "  source_se = :1 and dest_se=:2 "
-            "  and throughput is NULL and file_id=0 and rownum=1 ";
-
-    std::string query_stmt_throuput1 = "  SELECT count(*) "
-            " FROM t_optimize WHERE  "
-            " throughput is NULL and source_se = :1 and dest_se=:2 and file_id=0 ";
-
-    std::string query_stmt_throuput3 = " select count(*) from t_optimize where source_se = :1 and dest_se=:2";
-
-    std::string midRangeTimeout = " select count(*) from t_file,t_job where "
-            " t_job.job_id=t_file.job_id and t_file.file_state='FAILED' "
-            " and t_file.reason like '%operation timeout%' and t_job.source_se=:1 "
-            " and t_job.dest_se=:2 and rownum<=3 "
-            " and (t_file.finish_time > (CURRENT_TIMESTAMP - interval '30' minute)) "
-            " order by  SYS_EXTRACT_UTC(t_file.finish_time) desc";
-
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Statement* sMid = NULL;
-    oracle::occi::ResultSet* rMid = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::ResultSet* r2 = NULL;
+    oracle::occi::Statement* s3 = NULL;
+    oracle::occi::ResultSet* r3 = NULL;
+    oracle::occi::Statement* s4 = NULL;
+    oracle::occi::ResultSet* r4 = NULL;    
     oracle::occi::Connection* pooledConnection = NULL;        
     
-
     try {
 	pooledConnection = conn->getPooledConnection();
         if (!pooledConnection)
             return;
-
-        /*check the last 3 records between src/dest which failed with timeout*/
-        sMid = conn->createStatement(midRangeTimeout, tagMid, pooledConnection);
-        sMid->setString(1, source_hostname);
-        sMid->setString(2, destin_hostname);
-        rMid = conn->createResultset(sMid, pooledConnection);
-        if (rMid->next()) {
-            timeoutRecords = rMid->getInt(1);
+   	
+        //check if more samples exist for this pair to be selected
+        s2 = conn->createStatement(check_if_more_samples_exist, tag2, pooledConnection);
+        s2->setString(1, source_hostname);
+        s2->setString(2, destin_hostname);
+        r2 = conn->createResultset(s2, pooledConnection);
+        if (r2->next()) {
+            check_if_more_samples_exist_count = r2->getInt(1);
         }
-        conn->destroyResultset(sMid, rMid);
-        conn->destroyStatement(sMid, tagMid, pooledConnection);
-        sMid = NULL;
-        rMid = NULL;
-
-        s3 = conn->createStatement(query_stmt_throuput3, tag3, pooledConnection);
-        s3->setString(1, source_hostname);
-        s3->setString(2, destin_hostname);
-        r3 = conn->createResultset(s3, pooledConnection);
-        if (r3->next()) {
-            foundNoRecords = r3->getInt(1);
-        }
-        conn->destroyResultset(s3, r3);
-        conn->destroyStatement(s3, tag3, pooledConnection);
-        s3 = NULL;
-        r3 = NULL;
-
-        s1 = conn->createStatement(query_stmt_throuput1, tag1, pooledConnection);
-        s1->setString(1, source_hostname);
-        s1->setString(2, destin_hostname);
-        r1 = conn->createResultset(s1, pooledConnection);
-        if (r1->next()) {
-            foundNoThrouput = r1->getInt(1);
-        }
-        conn->destroyResultset(s1, r1);
-        conn->destroyStatement(s1, tag1, pooledConnection);
-        s1 = NULL;
-        r1 = NULL;
-
-
-        if (foundNoRecords > 0 && foundNoThrouput == 0) { //ALL records for this SE/DEST are having throughput
-            s = conn->createStatement(query_stmt_throuput, tag, pooledConnection);
-            s->setString(1, source_hostname);
-            s->setString(2, destin_hostname);
-            s->setString(3, source_hostname);
-            s->setString(4, destin_hostname);
-            //s->setPrefetchRowCount(1);
-            r = conn->createResultset(s, pooledConnection);
-            if (r->next()) {
-                ops->streamsperfile = r->getInt(1);
-                ops->timeout = r->getInt(2);
-                ops->bufsize = r->getInt(3);
-                ops->file_id = 1;
-            } else {
-                if (timeoutRecords == 0) {
-                    ops->streamsperfile = DEFAULT_NOSTREAMS;
-                    ops->timeout = DEFAULT_TIMEOUT;
-                    ops->bufsize = DEFAULT_BUFFSIZE;
-                    ops->file_id = 0;
-                } else {
-                    ops->streamsperfile = DEFAULT_NOSTREAMS;
-                    ops->timeout = MID_TIMEOUT;
-                    ops->bufsize = DEFAULT_BUFFSIZE;
-                    ops->file_id = 0;
-                }
-            }
-            conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
-            r = NULL;
-        } else if (foundNoRecords > 0 && foundNoThrouput > 0) { //found records in the DB but are some without throughput 
-            s = conn->createStatement(query_stmt_throuput2, tag2, pooledConnection);
-            s->setString(1, source_hostname);
-            s->setString(2, destin_hostname);
-            //s->setPrefetchRowCount(1);
-            r = conn->createResultset(s, pooledConnection);
-            if (r->next()) {
-                ops->streamsperfile = r->getInt(1);
-                ops->timeout = r->getInt(2);
-                ops->bufsize = r->getInt(3);
-                ops->file_id = 1; //sampled, not being picked again              
-            } else {
-                if (timeoutRecords == 0) {
-                    ops->streamsperfile = DEFAULT_NOSTREAMS;
-                    ops->timeout = DEFAULT_TIMEOUT;
-                    ops->bufsize = DEFAULT_BUFFSIZE;
-                    ops->file_id = 0;
-                } else {
-                    ops->streamsperfile = DEFAULT_NOSTREAMS;
-                    ops->timeout = MID_TIMEOUT;
-                    ops->bufsize = DEFAULT_BUFFSIZE;
-                    ops->file_id = 0;
-                }
-            }
-            conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag2, pooledConnection);
-            s = NULL;
-            r = NULL;
-
-        } else {
-            if (timeoutRecords == 0) {
-                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                ops->timeout = DEFAULT_TIMEOUT;
-                ops->bufsize = DEFAULT_BUFFSIZE;
-                ops->file_id = 0;
-            } else {
-                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                ops->timeout = MID_TIMEOUT;
-                ops->bufsize = DEFAULT_BUFFSIZE;
-                ops->file_id = 0;
-            }
-        }
-
+        conn->destroyResultset(s2, r2);
+        conn->destroyStatement(s2, tag2, pooledConnection);
+        s2 = NULL;
+        r2 = NULL;
+	
+	std::cout << "check_if_more_samples_exist_count = " << check_if_more_samples_exist_count << std::endl; 
+	std::cout << std::endl;
+	//check if more samples are available
+	if(check_if_more_samples_exist_count > 0){
+	        //select next sample
+        	s3 = conn->createStatement(pick_next_sample, tag3, pooledConnection);
+	        s3->setString(1, source_hostname);
+	        s3->setString(2, destin_hostname);
+	        r3 = conn->createResultset(s3, pooledConnection);
+	        if (r3->next()) {
+			ops->streamsperfile = r3->getInt(1);	   
+			ops->timeout = r3->getInt(2);
+			ops->bufsize = r3->getInt(3);
+			ops->file_id = 1;	
+				std::cout << "select next sample = "  << std::endl;
+				std::cout << ops->streamsperfile  << std::endl; 					 	
+				std::cout << ops->timeout  << std::endl; 					 					
+				std::cout << ops->bufsize  << std::endl; 	
+		 		std::cout << std::endl;								
+        	}else{ //nothing found, this is weird, set to defaults then
+			std::cout << "nothing found, this is weird, set to defaults then" << std::endl;	
+			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
+			ops->timeout = DEFAULT_TIMEOUT;
+			ops->bufsize = DEFAULT_BUFFSIZE;
+			ops->file_id = 0;				
+		}
+	        conn->destroyResultset(s3, r3);
+        	conn->destroyStatement(s3, tag3, pooledConnection);
+	        s3 = NULL;
+        	r3 = NULL;				
+	}else{ //no more samples, try to optimize
+		std::cout << "no more samples, try to optimize" << std::endl;
+	        //get current active from t_file
+        	s1 = conn->createStatement(current_active, tag1, pooledConnection);
+        	s1->setString(1, source_hostname);
+        	s1->setString(2, destin_hostname);
+        	r1 = conn->createResultset(s1, pooledConnection);
+        	if (r1->next()) {
+            		current_active_count = r1->getInt(1);
+        	}
+        	conn->destroyResultset(s1, r1);
+        	conn->destroyStatement(s1, tag1, pooledConnection);
+        	s1 = NULL;
+        	r1 = NULL;
+		std::cout << "current active from t_file = " << current_active_count << std::endl;
+		
+		
+		//try to optimize
+       		s4 = conn->createStatement(try_optimize, tag4, pooledConnection);
+        	s4->setString(1, source_hostname);
+        	s4->setString(2, destin_hostname);				
+		s4->setInt(3, current_active_count);		
+        	r4 = conn->createResultset(s4, pooledConnection);
+        	if (r4->next()) {
+			ops->streamsperfile = r4->getInt(3);	   
+			ops->timeout = r4->getInt(4);
+			ops->bufsize = r4->getInt(5);
+			ops->file_id = 1;
+				std::cout << "Optimizer = "  << std::endl;
+				std::cout << ops->streamsperfile  << std::endl; 					 	
+				std::cout << ops->timeout  << std::endl; 					 					
+				std::cout << ops->bufsize  << std::endl; 	
+		 		std::cout << std::endl;							
+        	}else{ //nothing found, use decent defaults
+			std::cout << "nothing found, use decent defaults" << std::endl;	
+			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
+			ops->timeout = DEFAULT_TIMEOUT;
+			ops->bufsize = DEFAULT_BUFFSIZE;
+			ops->file_id = 0;				
+		}
+        	conn->destroyResultset(s4, r4);
+        	conn->destroyStatement(s4, tag4, pooledConnection);
+        	s4 = NULL;
+        	r4 = NULL;				
+	}	
     } catch (oracle::occi::SQLException const &e) {
 
             conn->rollback(pooledConnection);
-
-            if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
 
             if (s1 && r1)
                 conn->destroyResultset(s1, r1);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
+		
+            if (s2 && r2)
+                conn->destroyResultset(s2, r2);
+            if (s2)
+                conn->destroyStatement(s2, tag2, pooledConnection);		
+		
+            if (s3 && r3)
+                conn->destroyResultset(s3, r3);
+            if (s3)
+                conn->destroyStatement(s3, tag3, pooledConnection);		
+		
+            if (s4 && r4)
+                conn->destroyResultset(s4, r4);
+            if (s4)
+                conn->destroyStatement(s4, tag4, pooledConnection);		
 
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag2, pooledConnection);
-
-            if (sMid && rMid)
-                conn->destroyResultset(sMid, rMid);
-            if (sMid)
-                conn->destroyStatement(sMid, tagMid, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
@@ -2542,25 +2506,26 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 
             conn->rollback(pooledConnection);
 
-            if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
-
             if (s1 && r1)
                 conn->destroyResultset(s1, r1);
             if (s1)
                 conn->destroyStatement(s1, tag1, pooledConnection);
+		
+            if (s2 && r2)
+                conn->destroyResultset(s2, r2);
+            if (s2)
+                conn->destroyStatement(s2, tag2, pooledConnection);		
+		
+            if (s3 && r3)
+                conn->destroyResultset(s3, r3);
+            if (s3)
+                conn->destroyStatement(s3, tag3, pooledConnection);		
+		
+            if (s4 && r4)
+                conn->destroyResultset(s4, r4);
+            if (s4)
+                conn->destroyStatement(s4, tag4, pooledConnection);		
 
-            if (s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag2, pooledConnection);
-
-            if (sMid && rMid)
-                conn->destroyResultset(sMid, rMid);
-            if (sMid)
-                conn->destroyStatement(sMid, tagMid, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -3201,9 +3166,9 @@ void OracleAPI::forceFailTransfers() {
         		conn->destroyStatement(s1, tag1, pooledConnection);
         		s1 = NULL;
         		r1 = NULL;
-		terminateTime = (timeout + 1000)*countFiles;					
+		terminateTime = (timeout + 1500)*countFiles;					
 	    }else{
-	    	terminateTime = (timeout + 1000);
+	    	terminateTime = (timeout + 1500);
 	    }
 	    diff = difftime(lifetime, start_time);
             if (timeout != 0 && diff > terminateTime) {
@@ -3959,24 +3924,24 @@ void OracleAPI::unblacklistSe(std::string se) {
         conn->destroyStatement(s, tag, pooledConnection);
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
 
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
 
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);                    
@@ -4253,14 +4218,13 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
 
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     } catch (...) {
@@ -4302,25 +4266,24 @@ std::string OracleAPI::getGroupForSe(const std::string se) {
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
 
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     } catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
 
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -4351,18 +4314,18 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
         conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);                    
@@ -4390,19 +4353,18 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
         conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
           	if(s)
           		conn->destroyStatement(s, tag, pooledConnection);
-        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
           	if(s)
           		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -4447,19 +4409,19 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
         conn->destroyStatement(s, tag, pooledConnection);
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
 conn->releasePooledConnection(pooledConnection);
 		throw Err_Custom(e.what());
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
 conn->releasePooledConnection(pooledConnection);
 		throw Err_Custom("Unknown exception");
     }
@@ -4495,19 +4457,19 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
         conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                	
         throw Err_Custom(e.what());
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                	
         throw Err_Custom("Unknown exception");
     }
@@ -4533,19 +4495,19 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
         conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom(e.what());
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom("Unknown exception");
     }
@@ -4588,23 +4550,22 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
         conn->destroyStatement(s, tag, pooledConnection);
 
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -4641,23 +4602,23 @@ bool OracleAPI::isThereLinkConfig(std::string source, std::string destination) {
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                	
         throw Err_Custom(e.what());
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                	
         throw Err_Custom("Unknown exception");
     }
@@ -4694,23 +4655,23 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
         conn->destroyStatement(s, tag, pooledConnection);
       
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom(e.what());
     } catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom("Unknown exception");
     }
@@ -4746,23 +4707,23 @@ bool OracleAPI::isGrInPair(std::string group) {
         conn->destroyStatement(s, tag, pooledConnection);
 
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom(e.what());
     }   catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom("Unknown exception");
     }
@@ -4799,19 +4760,19 @@ void OracleAPI::addShareConfig(ShareConfig* cfg) {
         conn->destroyStatement(s, tag, pooledConnection);
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                	
         throw Err_Custom(e.what());
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                	
         throw Err_Custom("Unknown exception");
     }
@@ -4841,19 +4802,19 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg) {
 		conn->commit(pooledConnection);
 		conn->destroyStatement(s, tag, pooledConnection);
 	}  catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
 		throw Err_Custom(e.what());
 	}catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
 		throw Err_Custom("Unknown exception");
 	}
@@ -4880,19 +4841,19 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
         conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom(e.what());
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom("Unknown exception");
     }
@@ -4918,19 +4879,19 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination) {
         conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom(e.what());
     }   catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom("Unknown exception");
     }
@@ -4969,23 +4930,21 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
         conn->destroyStatement(s, tag, pooledConnection);
         
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5025,23 +4984,23 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
         conn->destroyStatement(s, tag, pooledConnection);
         
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom(e.what());
     }  catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
+
     conn->releasePooledConnection(pooledConnection);                
         throw Err_Custom("Unknown exception");
     }
@@ -5068,19 +5027,17 @@ void OracleAPI::submitHost(const std::string & jobId) {
         conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
     }    catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     } catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-        }
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5110,23 +5067,21 @@ std::string OracleAPI::transferHost(int fileId) {
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag, pooledConnection);
     }catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5163,22 +5118,22 @@ bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds) {
         conn->destroyStatement(s, tag, pooledConnection);
         s = NULL;       
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);                    
@@ -5210,22 +5165,22 @@ std::string OracleAPI::transferHostV(std::map<int, std::string>& fileIds) {
         s = NULL;
 
     } catch (oracle::occi::SQLException const &e) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);                    
@@ -5260,24 +5215,23 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member) {
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
+
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5314,19 +5268,19 @@ void OracleAPI::addJobShareConfig(std::string job_id, std::string source, std::s
 	        conn->destroyStatement(s, tag, pooledConnection);
 
 	    } catch (oracle::occi::SQLException const &e) {
-	        if (conn) {
+
 	            conn->rollback(pooledConnection);
 	        	if(s)
 	        		conn->destroyStatement(s, tag, pooledConnection);
-	        }
+
     conn->releasePooledConnection(pooledConnection);                		
 	        throw Err_Custom(e.what());
 	    }catch (...) {
-	        if (conn) {
+
 	            conn->rollback(pooledConnection);
 	        	if(s)
 	        		conn->destroyStatement(s, tag, pooledConnection);
-	        }
+
     conn->releasePooledConnection(pooledConnection);                		
 	        throw Err_Custom("Unknown exception");
 	    }
@@ -5401,24 +5355,21 @@ std::vector< boost::tuple<std::string, std::string, std::string> > OracleAPI::ge
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5455,24 +5406,20 @@ unsigned int OracleAPI::countJobShareConfig(std::string job_id) {
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5520,24 +5467,21 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
+
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5586,24 +5530,20 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5652,24 +5592,20 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5711,24 +5647,20 @@ boost::optional<unsigned int> OracleAPI::getJobConfigCount(std::string job_id) {
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5849,24 +5781,20 @@ int OracleAPI::getRetry(){
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -5985,24 +5913,20 @@ int OracleAPI::getRetryTimes(const std::string & jobId, int fileId){
 
     } catch (oracle::occi::SQLException const &e) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
-        if (conn) {
             conn->rollback(pooledConnection);
         	if(s && r)
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
-       	}
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
