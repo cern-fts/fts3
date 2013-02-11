@@ -26,7 +26,11 @@ BuildRequires:  activemq-cpp-devel%{?_isa}
 BuildRequires:  openldap-devel%{?_isa}
 BuildRequires:  gsoap-devel%{?_isa}
 BuildRequires:  doxygen%{?_isa}
-BuildRequires:  libuuid-devel%{?_isa}
+%if 0%{?el5}
+BuildRequires:		e2fsprogs-devel%{?_isa}
+%else
+BuildRequires:		libuuid-devel%{?_isa}
+%endif
 BuildRequires:  boost-devel%{?_isa}
 BuildRequires:  globus-gsi-credential-devel%{?_isa}
 BuildRequires:  CGSI-gSOAP-devel%{?_isa}
