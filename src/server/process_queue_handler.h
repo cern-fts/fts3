@@ -157,6 +157,7 @@ protected:
 
         std::vector<struct message> messages;
         std::vector<struct message>::const_iterator iter;
+	messages.reserve(500);
 	
         while (stopThreads==false) { /*need to receive more than one messages at a time*/            	    
             try {
@@ -202,15 +203,15 @@ protected:
 		messages.clear();
 		sleep(1);		
             } catch (const fs::filesystem_error& ex) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));		
             } catch (Err& e) {
                 FTS3_COMMON_EXCEPTION_THROW(e);
 		for (iter = messages.begin(); iter != messages.end(); ++iter)
-			queueMsgRecovery.push_back(*iter);
+			queueMsgRecovery.push_back(*iter);		
             } catch (...) {
                 FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown unhandled exception"));
 		for (iter = messages.begin(); iter != messages.end(); ++iter)
-			queueMsgRecovery.push_back(*iter);
+			queueMsgRecovery.push_back(*iter);					
             }            
         }
     }

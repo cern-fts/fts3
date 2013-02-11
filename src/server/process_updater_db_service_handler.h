@@ -97,6 +97,9 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
+        std::vector<struct message_updater> messages;
+	messages.reserve(500);
+    
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
 	 try{
             bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
@@ -105,7 +108,6 @@ protected:
 		continue;		    
 	    }
 	    
-            std::vector<struct message_updater> messages;	    
             ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
 
             if (!messages.empty()) {
@@ -119,6 +121,7 @@ protected:
 	    
 	    /*set to fail all old queued jobs which have exceeded max queue time*/
 	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
+	    messages.clear();
             sleep(10);
         }catch (...) {
 	        sleep(10);	

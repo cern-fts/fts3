@@ -767,7 +767,7 @@ protected:
     void executeTransfer_a() {
         std::vector<int> requestIDs;
         std::vector<TransferJobs*> jobs2;
-	jobs2.reserve(25);
+	jobs2.reserve(200);
 	static bool drainMode = false;
 	static long double counter = 0;
 	//static unsigned int countReverted = 0;
@@ -775,7 +775,7 @@ protected:
         while (1) {	
 	   	if(stopThreads){
 		if (!jobs2.empty()) {
-                    std::vector<TransferJobs*>::iterator iter2;
+                    std::vector<TransferJobs*>::const_iterator iter2;
                     for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
                         delete *iter2;
                     jobs2.clear();
@@ -823,6 +823,13 @@ protected:
                     DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
                     if (!jobs2.empty())
                         executeUrlcopy(jobs2, true);
+			
+                    if (!jobs2.empty()) {
+                    	std::vector<TransferJobs*>::const_iterator iter2;
+                    	for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                        	delete *iter2;
+                    	jobs2.clear();
+                    }			
                 } catch (Err& e) {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                     throw;
@@ -830,13 +837,13 @@ protected:
 
             } catch (...) {
                 if (!jobs2.empty()) {
-                    std::vector<TransferJobs*>::iterator iter2;
+                    std::vector<TransferJobs*>::const_iterator iter2;
                     for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
                         delete *iter2;
                     jobs2.clear();
                 }
             }
-            usleep(20000);
+            usleep(10000);
         } /*end while*/
    }
 

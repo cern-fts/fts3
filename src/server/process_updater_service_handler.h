@@ -110,6 +110,7 @@ protected:
         std::vector<struct message_updater> messages;
 	std::vector<struct message_updater>::const_iterator iter;
 	std::vector<struct message_updater>::const_iterator iter_restore;
+	messages.reserve(500);
     
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
             try {

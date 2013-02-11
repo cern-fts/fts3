@@ -2400,8 +2400,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
         s2 = NULL;
         r2 = NULL;
 	
-	std::cout << "check_if_more_samples_exist_count = " << check_if_more_samples_exist_count << std::endl; 
-	std::cout << std::endl;
 	//check if more samples are available
 	if(check_if_more_samples_exist_count > 0){
 	        //select next sample
@@ -2413,14 +2411,8 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 			ops->streamsperfile = r3->getInt(1);	   
 			ops->timeout = r3->getInt(2);
 			ops->bufsize = r3->getInt(3);
-			ops->file_id = 1;	
-				std::cout << "select next sample = "  << std::endl;
-				std::cout << ops->streamsperfile  << std::endl; 					 	
-				std::cout << ops->timeout  << std::endl; 					 					
-				std::cout << ops->bufsize  << std::endl; 	
-		 		std::cout << std::endl;								
+			ops->file_id = 1;				
         	}else{ //nothing found, this is weird, set to defaults then
-			std::cout << "nothing found, this is weird, set to defaults then" << std::endl;	
 			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
 			ops->timeout = DEFAULT_TIMEOUT;
 			ops->bufsize = DEFAULT_BUFFSIZE;
@@ -2431,7 +2423,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 	        s3 = NULL;
         	r3 = NULL;				
 	}else{ //no more samples, try to optimize
-		std::cout << "no more samples, try to optimize" << std::endl;
 	        //get current active from t_file
         	s1 = conn->createStatement(current_active, tag1, pooledConnection);
         	s1->setString(1, source_hostname);
@@ -2443,9 +2434,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
         	conn->destroyResultset(s1, r1);
         	conn->destroyStatement(s1, tag1, pooledConnection);
         	s1 = NULL;
-        	r1 = NULL;
-		std::cout << "current active from t_file = " << current_active_count << std::endl;
-		
+        	r1 = NULL;		
 		
 		//try to optimize
        		s4 = conn->createStatement(try_optimize, tag4, pooledConnection);
@@ -2457,14 +2446,8 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 			ops->streamsperfile = r4->getInt(3);	   
 			ops->timeout = r4->getInt(4);
 			ops->bufsize = r4->getInt(5);
-			ops->file_id = 1;
-				std::cout << "Optimizer = "  << std::endl;
-				std::cout << ops->streamsperfile  << std::endl; 					 	
-				std::cout << ops->timeout  << std::endl; 					 					
-				std::cout << ops->bufsize  << std::endl; 	
-		 		std::cout << std::endl;							
+			ops->file_id = 1;			
         	}else{ //nothing found, use decent defaults
-			std::cout << "nothing found, use decent defaults" << std::endl;	
 			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
 			ops->timeout = DEFAULT_TIMEOUT;
 			ops->bufsize = DEFAULT_BUFFSIZE;
