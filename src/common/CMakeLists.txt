@@ -21,7 +21,6 @@ set(fts_include_dir
 	"${CMAKE_BINARY_DIR}/src/"
 )
 
-#include_directories (/usr/include/openssl)
 if (ORACLEBUILD STREQUAL "OFF")
 include_directories(${OPENSSL_INCLUDE_DIR})
 endif ()

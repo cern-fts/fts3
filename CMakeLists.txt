@@ -41,6 +41,10 @@ set(VERSION_MINOR 0)
 set(VERSION_PATCH 1)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
+FILE(WRITE ${PROJECT_SOURCE_DIR}/src/common/version.h
+"\#define VERSION \"@VERSION_STRING@\"\n"
+)
+
 option(ORACLEBUILD "Build oracle plug-in" OFF)
 option(MYSQLBUILD "Build for EPEL" OFF)
 option(MAINBUILD "Build fts" OFF)

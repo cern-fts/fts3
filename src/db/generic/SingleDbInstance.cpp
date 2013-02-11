@@ -3,6 +3,7 @@
 #include "logger.h"
 #include "error.h"
 #include "config/serverconfig.h"
+#include "version.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
     #include "unittest/testsuite.h"
@@ -21,10 +22,13 @@ ThreadTraits::MUTEX DBSingleton::_mutex;
 DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL) {
 
     std::string dbType = theServerConfig().get<std::string>("DbType");
+    std::string versionFTS(VERSION);
 
     libraryFileName = "libfts_db_";
     libraryFileName += dbType;
     libraryFileName += ".so";
+    libraryFileName += ".";
+    libraryFileName += versionFTS;
 
     dlm = new DynamicLibraryManager(libraryFileName);
     if (dlm && dlm->isLibraryLoaded()) {
