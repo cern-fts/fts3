@@ -27,9 +27,9 @@ BuildRequires:  openldap-devel%{?_isa}
 BuildRequires:  gsoap-devel%{?_isa}
 BuildRequires:  doxygen%{?_isa}
 %if 0%{?el5}
-BuildRequires:		e2fsprogs-devel%{?_isa}
+BuildRequires:  e2fsprogs-devel%{?_isa}
 %else
-BuildRequires:		libuuid-devel%{?_isa}
+BuildRequires:  libuuid-devel%{?_isa}
 %endif
 BuildRequires:  boost-devel%{?_isa}
 BuildRequires:  globus-gsi-credential-devel%{?_isa}
@@ -245,6 +245,7 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_ws_ifce_server.so.*
 %{_libdir}/libfts_delegation_api_simple.so.*
 %{_libdir}/libfts_delegation_api_cpp.so.*
+%{_docdir}/fts3/README
 
 %files devel
 %defattr(-,root,root,-)
@@ -264,6 +265,7 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_ws_ifce_server.so
 %{_libdir}/libfts_delegation_api_simple.so
 %{_libdir}/libfts_delegation_api_cpp.so
+%{_docdir}/fts3/README
 
 
 %changelog

@@ -135,7 +135,7 @@ void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string 
     s = NULL;
 }
 
-void OracleConnection::commit(oracle::occi::Connection* conn) {
+void OracleConnection::commit(oracle::occi::Connection*) {
     //if (conn)
         //conn->commit();
 

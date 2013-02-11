@@ -131,7 +131,7 @@ void ServerConfig::read
 (
     int argc,
     char** argv,
-    bool monitor
+    bool
 )
 {
     _read<ServerConfigReader> (argc, argv);

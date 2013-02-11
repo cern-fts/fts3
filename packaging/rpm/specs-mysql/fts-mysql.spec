@@ -66,10 +66,12 @@ rm -rf %{buildroot}
 %doc %{_docdir}/fts3/mysql-schema.sql
 %doc %{_docdir}/fts3/mysql-drop.sql
 %doc %{_docdir}/fts3/mysql-truncate.sql
+%{_docdir}/fts3/README
 
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/libfts_db_mysql.so
+%{_docdir}/fts3/README
 
 
 %changelog
