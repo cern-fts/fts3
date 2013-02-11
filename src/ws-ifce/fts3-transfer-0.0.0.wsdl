@@ -20,16 +20,6 @@
     </sequence>
    </complexType>
   
-   <complexType name="PlacementJob">
-    <sequence>
-     <element maxOccurs="unbounded" name="logicalFiles" nillable="true" type="xsd:string"/>
-     <element name="sourceSE" nillable="true" type="xsd:string"/>
-     <element name="destSE" nillable="true" type="xsd:string"/>
-     <element name="jobParams" nillable="true" type="tns3:TransferParams"/>
-     <element name="credential" nillable="true" type="xsd:string"/>
-    </sequence>
-   </complexType>
-  
    <element name="TransferExceptionElement" type="tns3:TransferException"/>
    <complexType name="TransferException">
     <sequence>
@@ -108,9 +98,9 @@
    
    <complexType name="TransferJobElement3">
     <sequence>
-     <element name="source" minOccurs="1" maxOccurs="1" type="xsd:string"/>
-     <element name="dest" minOccurs="1" maxOccurs="1" type="xsd:string"/>
-     <element name="checksum" nillable="true" minOccurs="0" type="xsd:string"/>
+     <element name="source" minOccurs="1" maxOccurs="unbounded" type="xsd:string"/>
+     <element name="dest" minOccurs="1" maxOccurs="unbounded" type="xsd:string"/>
+     <element name="checksum" nillable="true" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
      <element name="filesize" nillable="true" minOccurs="0" type="xsd:int"/>
      <element name="metadata" nillable="true" minOccurs="0" type="xsd:string"/>
     </sequence>

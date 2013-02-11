@@ -9,6 +9,7 @@
 #define TRANSFERJOB_H_
 
 #include <string>
+#include <vector>
 #include <boost/optional/optional.hpp>
 #include <boost/tuple/tuple.hpp>
 
@@ -26,6 +27,44 @@ enum ElementMember{
 	FILE_SIZE,
 	FILE_METADATA
 };
+
+/**
+ * Job element (single file)
+ */
+struct File {
+
+	File () {}
+
+	File (
+			vector<string> s,
+			vector<string> d,
+			 vector<string> c = vector<string>(),
+			optional<int> fs = optional<int>(),
+			optional<string> m = optional<string>(),
+			optional<string> ss = optional<string>()) {
+
+		sources = s;
+		destinations = d;
+		checksums = c;
+		file_size = fs;
+		metadata = m;
+		selection_strategy = ss;
+	}
+
+	/// the source files (replicas)
+	vector<string> sources;
+	/// the destination files (the same SE different protocols)
+	vector<string> destinations;
+	/// source selection strategy
+	optional<string> selection_strategy;
+	/// checksum (multiple checksums in case of protocols that don't support adler32)
+	vector<string> checksums;
+	/// file size
+	optional<long> file_size;
+	/// metadata
+	optional<string> metadata;
+};
+
 
 struct JobStatus {
 

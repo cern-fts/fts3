@@ -86,6 +86,7 @@ set(fts_cli_common_sources
     GSoapContextAdapter.cpp
     ProxyCertificateDelegator.cpp
     MsgPrinter.cpp
+    BulkSubmissionParser.cpp
 )
 
 add_library(fts_cli_common SHARED ${fts_cli_common_sources})

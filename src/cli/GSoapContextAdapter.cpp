@@ -107,9 +107,9 @@ void GSoapContextAdapter::init() {
 	}
 }
 
-string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<string, string> parameters) {
+string GSoapContextAdapter::transferSubmit (vector<File> files, map<string, string> parameters) {
 
-	if (elements.empty()) {
+	if (files.empty()) {
     	throw string ("No transfer job has been specified.");
 	}
 
@@ -120,50 +120,42 @@ string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<str
 	tns3__TransferJobElement3* element;
 
 	// iterate over the internal vector containing job elements
-	vector<JobElement>::iterator e_it;
-	for (e_it = elements.begin(); e_it < elements.end(); e_it++) {
-
-		const string& source = get<SOURCE>(*e_it);
-		const string& destination = get<DESTINATION>(*e_it);
-		const optional<string>& checksum = get<CHECKSUM>(*e_it);
-		const optional<int>& filesize = get<FILE_SIZE>(*e_it);
-		const optional<string>& metadata = get<FILE_METADATA>(*e_it);
+	vector<File>::iterator f_it;
+	for (f_it = files.begin(); f_it < files.end(); f_it++) {
 
 		// create the job element, and set the source, destination and checksum values
 		element = soap_new_tns3__TransferJobElement3(ctx, -1);
 
 		// set the required fields (source and destination)
-		element->source = source;
-		element->dest = destination;
+		element->source = f_it->sources;
+		element->dest = f_it->destinations;
 
 		// set the optional fields:
 
 		// the checksum
-		if (checksum) {
-			element->checksum = soap_new_std__string(ctx, -1);
-			// check checksum format
-			string checksum_str = *checksum;
+		// check checksum format
+		vector<string>::iterator ch_it;
+		for (ch_it = f_it->checksums.begin(); ch_it != f_it->checksums.end(); ch_it++) {
+			string checksum_str = *ch_it;
 			string::size_type colon = checksum_str.find(":");
 			if (colon == string::npos || colon == 0 || colon == checksum_str.size() - 1) {
 				throw string("Checksum format is not valid (ALGORITHM:1234af).");
 			}
-			*element->checksum = checksum_str;
-		} else {
-			element->checksum = 0;
 		}
+		element->checksum = f_it->checksums;
 
 		// the file size
-		if (filesize) {
+		if (f_it->file_size) {
 			element->filesize = (int*) soap_malloc(ctx, sizeof(int));
-			*element->filesize = *filesize;
+			*element->filesize = *f_it->file_size;
 		} else {
 			element->filesize = 0;
 		}
 
 		// the file metadata
-		if (metadata) {
+		if (f_it->metadata) {
 			element->metadata = soap_new_std__string(ctx, -1);
-			*element->metadata = *metadata;
+			*element->metadata = *f_it->metadata;
 		} else {
 			element->metadata = 0;
 		}

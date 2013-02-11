@@ -50,7 +50,7 @@ public:
 
 	virtual ~Job();
 
-	std::vector<JobElement> getJobElementsCpp();
+	std::vector<File> getFilesCpp();
 	std::map<std::string, std::string> getJobParametersCpp();
 	bool useChecksumCpp();
 
@@ -93,7 +93,7 @@ private:
 	void add(py::tuple file);
 
 	///
-	std::vector<JobElement> elements;
+	std::vector<File> elements;
 	///
 	std::map<std::string, std::string> parameters;
 	///

@@ -166,15 +166,15 @@ public:
 	map<string, string> getParams();
 
 	/**
-	 * Gets a vector containing job elements.
+	 * Gets a vector containing job elements (files).
 	 *
 	 * The returned vector is created based on the internal vector created using 'createJobElements()'.
 	 *
-	 * @return vector of JobElements
+	 * @return vector of Files
 	 *
 	 * @see SubmitTransferCli::createJobElements()
 	 */
-	vector<JobElement> getJobElements();
+	vector<File> getFiles();
 
 	/**
 	 * Gets job's metadata
@@ -255,7 +255,7 @@ private:
 	/**
 	 * transfer job elements (files)
 	 */
-	vector<JobElement> elements;
+	vector<File> files;
 
 };
 

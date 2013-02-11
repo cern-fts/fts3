@@ -131,6 +131,10 @@ private:
 	 * @return true is connection was successful, otherwise false
 	 */
 	bool connect(string infosys, time_t sec = 60);
+
+	/**
+	 *
+	 */
 	bool reconnect();
 	void disconnect();
 	bool isValid();

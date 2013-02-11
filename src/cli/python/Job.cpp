@@ -55,7 +55,7 @@ Job::Job(py::list files) : checksum(false), expiration(0) {
 Job::~Job() {
 }
 
-std::vector<JobElement> Job::getJobElementsCpp() {
+std::vector<File> Job::getFilesCpp() {
 	return elements;
 }
 
@@ -71,20 +71,20 @@ py::list Job::files() {
 
 	py::list ret;
 
-	std::vector<JobElement>::iterator it;
-	for (it = elements.begin(); it != elements.end(); it++) {
-
-		py::list seq;
-		seq.append(boost::get<SOURCE>(*it).c_str());
-		seq.append(boost::get<DESTINATION>(*it).c_str());
-
-		if (boost::get<CHECKSUM>(*it).is_initialized()) {
-			seq.append(boost::get<CHECKSUM>(*it).get().c_str());
-		}
-
-		py::tuple e(seq);
-		ret.append(e);
-	}
+//	std::vector<File>::iterator it;
+//	for (it = elements.begin(); it != elements.end(); it++) {
+//
+//		py::list seq;
+//		seq.append(boost::get<SOURCE>(*it).c_str());
+//		seq.append(boost::get<DESTINATION>(*it).c_str());
+//
+//		if (boost::get<CHECKSUM>(*it).is_initialized()) {
+//			seq.append(boost::get<CHECKSUM>(*it).get().c_str());
+//		}
+//
+//		py::tuple e(seq);
+//		ret.append(e);
+//	}
 
 	return ret;
 }
@@ -212,25 +212,25 @@ py::object Job::sessionReuse() {
 }
 
 void Job::add(py::tuple file) {
-	// check tuple size
-	int size = py::len(file);
-	// check if its right
-	if (size < 2) throw std::string("Both source and destination has to be defined!");
-	if (size > 3) throw std::string("Too many parameters!");
-	// prepare the job element
-	JobElement e;
-	boost::get<SOURCE>(e) = py::extract<std::string>(file[0]);
-	boost::get<DESTINATION>(e) = py::extract<std::string>(file[1]);
-	// handle checksum
-	if (size == 3) {
-		std::string tmp = py::extract<std::string>(file[2]);
-		if (wrongChecksumFormat(tmp)) throw std::string("checksum format is not valid (ALGORITHM:1234af)");
-		boost::get<CHECKSUM>(e) = tmp;
-	}
-	// if at least one file transfer uses checksum set it to true
-	checksum |= boost::get<CHECKSUM>(e).is_initialized();
-	// add the element
-	elements.push_back(e);
+//	// check tuple size
+//	int size = py::len(file);
+//	// check if its right
+//	if (size < 2) throw std::string("Both source and destination has to be defined!");
+//	if (size > 3) throw std::string("Too many parameters!");
+//	// prepare the job element
+//	JobElement e;
+//	boost::get<SOURCE>(e) = py::extract<std::string>(file[0]);
+//	boost::get<DESTINATION>(e) = py::extract<std::string>(file[1]);
+//	// handle checksum
+//	if (size == 3) {
+//		std::string tmp = py::extract<std::string>(file[2]);
+//		if (wrongChecksumFormat(tmp)) throw std::string("checksum format is not valid (ALGORITHM:1234af)");
+//		boost::get<CHECKSUM>(e) = tmp;
+//	}
+//	// if at least one file transfer uses checksum set it to true
+//	checksum |= boost::get<CHECKSUM>(e).is_initialized();
+//	// add the element
+//	elements.push_back(e);
 }
 
 bool Job::wrongChecksumFormat(std::string checksum) {

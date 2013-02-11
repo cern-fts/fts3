@@ -21,10 +21,12 @@
  * SubmitTransferCli.cpp
  *
  *  Created on: Feb 2, 2012
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #include "SubmitTransferCli.h"
+#include "BulkSubmissionParser.h"
+
 #include "common/JobParameterHandler.h"
 
 #include <iostream>
@@ -34,9 +36,11 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/assign.hpp>
 
 using namespace boost::algorithm;
 using namespace boost;
+using namespace boost::assign;
 using namespace fts3::cli;
 using namespace fts3::common;
 
@@ -70,6 +74,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("job-metadata", value<string>(), "transfer-job metadata")
 			("file-metadata", value<string>(), "file metadata")
 			("file-size", value<int>(), "file size (in Bytes)")
+			("new-bulk-format", "New JSON format for bulk submission will be used")
 			;
 
 	// add hidden options
@@ -144,63 +149,72 @@ bool SubmitTransferCli::createJobElements() {
 	ifstream ifs(bulk_file.c_str());
     if (ifs) {
 
-    	// Parse the file
-    	int lineCount = 0;
-    	string line;
-    	// define the seperator characters (space) for tokenizing each line
-    	char_separator<char> sep(" ");
-    	// read and parse the lines one by one
-    	do {
-    		lineCount++;
-    		getline(ifs, line);
+    	if (vm.count("new-bulk-format")) {
 
-    		// split the line into tokens
-    		tokenizer< char_separator<char> > tokens(line, sep);
-    		tokenizer< char_separator<char> >::iterator it;
+    		BulkSubmissionParser bulk(ifs);
+			files = bulk.getFiles();
 
-    		// we are expecting up to 3 elements in each line
-    		// source, destination and optionally the checksum
-    		JobElement e;
+    	} else {
 
-    		// the first part should be the source
-    		it = tokens.begin();
-    		if (it != tokens.end())
-    			get<SOURCE>(e) = *it;
-    		else
-    			// if the line was empty continue
-    			continue;
+			// Parse the file
+			int lineCount = 0;
+			string line;
+			// define the seperator characters (space) for tokenizing each line
+			char_separator<char> sep(" ");
+			// read and parse the lines one by one
+			do {
+				lineCount++;
+				getline(ifs, line);
 
-    		// the second part should be the destination
-    		it++;
-    		if (it != tokens.end())
-    			get<DESTINATION>(e) = *it;
-    		else {
-    			// only one element is still not enough to define a job
-    			printer().bulk_submission_error(lineCount, "destination is missing");
-    			continue;
-    		}
+				// split the line into tokens
+				tokenizer< char_separator<char> > tokens(line, sep);
+				tokenizer< char_separator<char> >::iterator it;
 
-    		// the third part should be the checksum (but its optional)
-    		it++;
-    		if (it != tokens.end())
-    			get<CHECKSUM>(e) = *it;
+				// we are expecting up to 3 elements in each line
+				// source, destination and optionally the checksum
+				File file;
 
-    		// if the checksum algorithm has been given check if the
-    		// format is correct (ALGORITHM:1234af)
-    		if (get<CHECKSUM>(e)) {
-    			string::size_type colon = (*get<CHECKSUM>(e)).find(":");
-   				if (colon == string::npos || colon == 0 || colon == (*get<CHECKSUM>(e)).size() - 1) {
-   					printer().bulk_submission_error(lineCount, "checksum format is not valid (ALGORITHM:1234af)");
-   					continue;
-   				}
-    			checksum = true;
-    		}
+				// the first part should be the source
+				it = tokens.begin();
+				if (it != tokens.end())
+					file.sources.push_back(*it);
+				else
+					// if the line was empty continue
+					continue;
 
-    		// the fourth part should be the filesize
+				// the second part should be the destination
+				it++;
+				if (it != tokens.end())
+					file.destinations.push_back(*it);
+				else {
+					// only one element is still not enough to define a job
+					printer().bulk_submission_error(lineCount, "destination is missing");
+					continue;
+				}
 
-        	elements.push_back(e);
+				// the third part should be the checksum (but its optional)
+				it++;
+				if (it != tokens.end()) {
 
-    	} while (!ifs.eof());
+					string checksum_str = *it;
+
+					// if the checksum algorithm has been given check if the
+					// format is correct (ALGORITHM:1234af)
+					string::size_type colon = checksum_str.find(":");
+					if (colon == string::npos || colon == 0 || colon == checksum_str.size() - 1) {
+						printer().bulk_submission_error(lineCount, "checksum format is not valid (ALGORITHM:1234af)");
+						continue;
+					}
+
+					checksum = true;
+					file.checksums.push_back(checksum_str);
+				}
+
+				files.push_back(file);
+
+			} while (!ifs.eof());
+
+    	}
 
     } else {
 
@@ -208,9 +222,9 @@ bool SubmitTransferCli::createJobElements() {
 
     	// first, if the checksum algorithm has been given check if the
     	// format is correct (ALGORITHM:1234af)
-    	optional<string> checksum;
+    	vector<string> checksums;
     	if (vm.count("checksum")) {
-			checksum = vm["checksum"].as<string>();
+    		checksums.push_back(vm["checksum"].as<string>());
 			this->checksum = true;
     	}
 
@@ -228,8 +242,9 @@ bool SubmitTransferCli::createJobElements() {
 
     	// then if the source and destination have been given create a Task
     	if (!getSource().empty() && !getDestination().empty()) {
-    		elements.push_back (
-    				JobElement (getSource(), getDestination(), checksum, filesize, file_metadata)
+
+    		files.push_back (
+    				File (list_of(getSource()), list_of(getDestination()), checksums)
     			);
     	}
     }
@@ -237,9 +252,9 @@ bool SubmitTransferCli::createJobElements() {
     return true;
 }
 
-vector<JobElement> SubmitTransferCli::getJobElements() {
+vector<File> SubmitTransferCli::getFiles() {
 
-	return elements;
+	return files;
 }
 
 bool SubmitTransferCli::performChecks() {

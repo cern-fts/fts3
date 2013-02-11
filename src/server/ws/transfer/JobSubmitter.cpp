@@ -236,8 +236,22 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 	init(job->jobParams);
 
 	if (!job->transferJobElements.empty()) {
-			string src = (*job->transferJobElements.begin())->source;
-			string dest = (*job->transferJobElements.begin())->dest;
+
+		string src =
+					job->transferJobElements.front()->source.empty()
+					?
+					string()
+					:
+					job->transferJobElements.front()->source.front()
+					;
+
+			string dest =
+					job->transferJobElements.front()->dest.empty()
+					?
+					string()
+					:
+					job->transferJobElements.front()->dest.front()
+					;
 
 			sourceSe = fileUrlToSeName(src);
 			if(sourceSe.empty()){
@@ -259,7 +273,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 	vector<tns3__TransferJobElement3 * >::iterator it;
 	for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
 
-		string src = (*it)->source, dest = (*it)->dest;
+		string src = (*it)->source.empty() ? string() : (*it)->source.front();
+		string dest = (*it)->dest.empty() ? string() : (*it)->dest.front();
 
 		// check weather the destination file is supported
 		if (!checkProtocol(dest)) {
@@ -273,7 +288,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		job_element_tupple tupple;
 		tupple.source = src;
 		tupple.destination = dest;
-		tupple.checksum = (*it)->checksum ? *(*it)->checksum : string();
+		tupple.checksum = (*it)->checksum.empty() ? string() : (*it)->checksum.front();
 		tupple.filesize = (*it)->filesize ? *(*it)->filesize : 0;
 		tupple.metadata = (*it)->metadata ? *(*it)->metadata : string();
 		jobs.push_back(tupple);
