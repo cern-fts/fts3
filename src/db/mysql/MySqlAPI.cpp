@@ -1571,7 +1571,7 @@ void MySqlAPI::forceFailTransfers() {
                 startTime = mktime(&startTimeSt);
                 timeout = extractTimeout(params);
 
-            	int terminateTime = timeout + 1000;
+            	int terminateTime = timeout + 1500;
 
             	if (isNull != soci::i_null && reuse == "Y") {
 
