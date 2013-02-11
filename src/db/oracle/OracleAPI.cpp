@@ -3115,7 +3115,7 @@ void OracleAPI::forceFailTransfers() {
     std::string tag1 = "forceFailTransfers1";
 
     std::string query = " select t_file.job_id, t_file.file_id, t_file.START_TIME ,t_file.PID, t_file.INTERNAL_FILE_PARAMS, t_file.TRANSFERHOST, t_job.REUSE_JOB from t_file, t_job "
-    			" where t_job.job_id=t_file.job_id and t_file.file_state in ('ACTIVE','READY') and t_file.pid is not null";
+    			" where t_job.job_id=t_file.job_id and t_file.file_state='READY' and t_file.pid is not null";
     std::string query1 = "select count(*) from t_file where job_id=:1";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;

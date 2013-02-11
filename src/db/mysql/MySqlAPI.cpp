@@ -1558,7 +1558,7 @@ void MySqlAPI::forceFailTransfers() {
         		    " SELECT t_file.job_id, t_file.file_id, t_file.start_time, t_file.pid, t_file.internal_file_params, "
                             " t_file.transferHost, t_job.reuse_job "
                             " FROM t_file, t_job "
-                            " WHERE t_job.job_id = t_file.job_id AND t_file.file_state in ('ACTIVE','READY') AND pid IS NOT NULL",
+                            " WHERE t_job.job_id = t_file.job_id AND t_file.file_state='READY' AND pid IS NOT NULL",
                             soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
                             soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
         	);
