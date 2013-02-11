@@ -102,11 +102,13 @@ protected:
     
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
 	 try{
+	    /*
             bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
 	    if(!alive){
 	        sleep(10);
 		continue;		    
 	    }
+	    */
 	    
             ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
 

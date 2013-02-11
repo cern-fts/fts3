@@ -766,11 +766,11 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
         std::vector<int> requestIDs;
+	requestIDs.reserve(200);
         std::vector<TransferJobs*> jobs2;
-	jobs2.reserve(200);
+	jobs2.reserve(300);
 	static bool drainMode = false;
 	static long double counter = 0;
-	//static unsigned int countReverted = 0;
 
         while (1) {	
 	   	if(stopThreads){
@@ -796,24 +796,21 @@ protected:
 
                 try {
 		/*force fail to stall transfers*/		
-		counter++;
-                    if(counter == 1000){
+		    counter++;
+                    if(counter == 2000){
                             DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();
                             counter=0;
                     }
-                    /*countReverted++;
-                    if(countReverted==100){
-                            DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
-                            countReverted=0;
-                    }*/
-
+                  
                     /*get jobs in submitted state*/
                     DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
+		    
                     /*also get jobs which have been canceled by the client*/
                     DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                    if (requestIDs.size() > 0) /*if canceled jobs found and transfer already started, kill them*/
+                    if (!requestIDs.empty()){ /*if canceled jobs found and transfer already started, kill them*/
                         killRunninfJob(requestIDs);
-                    requestIDs.clear(); /*clean the list*/
+                        requestIDs.clear(); /*clean the list*/
+		    }
 
                     if (!jobs2.empty())
                         executeUrlcopy(jobs2, false);
