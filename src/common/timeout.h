@@ -17,7 +17,6 @@ limitations under the License. */
 
 #include "common_dev.h"
 #include "timetraits.h"
-#include "threadtraits.h"
 #include <limits>
 #include <sys/time.h>
 
@@ -60,7 +59,7 @@ public:
 	 * It is the absolute time when the timeout should occur. The Boost library requires this
 	 * representation. 
 	 */
-	TimeTraits::TIME getXtime() const { ThreadTraits::LOCK lock(_mutex);  return _xt; }
+	TimeTraits::TIME getXtime() const {  return _xt; }
 	
 	/** Return the second part of the timeout, as given in the constructor */
 	int sec() const { return _s; }
@@ -95,7 +94,6 @@ private:
     int _ns; /**< nanosecond part of the timeout */
     TimeTraits::TIME _xt; /**< absolut time of timeout (the @see actualize() method sets it) */
     mutable timeval _tval;
-    mutable ThreadTraits::MUTEX _mutex;
 };
 
 /** Class representing infinite timeout (timeout never occurs...) */

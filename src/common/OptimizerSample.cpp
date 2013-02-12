@@ -17,7 +17,7 @@
 
 #include "OptimizerSample.h"
 
-OptimizerSample::OptimizerSample() {
+OptimizerSample::OptimizerSample() {	
 }
 
 OptimizerSample::~OptimizerSample() {

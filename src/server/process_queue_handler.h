@@ -66,7 +66,8 @@ public:
             ) :
     TRAITS::ActiveObjectType("ProcessQueueHandler", desc) {
     
-        enableOptimization = theServerConfig().get<std::string > ("Optimizer");		
+        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
+	messages.reserve(500);		
     }
 
     /* ---------------------------------------------------------------------- */
@@ -151,14 +152,11 @@ public:
 protected:
 
     std::vector<struct message> queueMsgRecovery;
+    std::vector<struct message> messages;
+    std::vector<struct message>::const_iterator iter;
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-
-        std::vector<struct message> messages;
-        std::vector<struct message>::const_iterator iter;
-	messages.reserve(500);
-	
         while (stopThreads==false) { /*need to receive more than one messages at a time*/            	    
             try {
 		

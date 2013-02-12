@@ -75,6 +75,7 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessUpdaterDBServiceHandler", desc) {
+    	messages.reserve(500);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -94,21 +95,12 @@ public:
     }
 
 protected:
+     std::vector<struct message_updater> messages;
 
     /* ---------------------------------------------------------------------- */
-    void executeTransfer_a() {
-        std::vector<struct message_updater> messages;
-	messages.reserve(500);
-    
+    void executeTransfer_a() {           
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
-	 try{
-	    /*
-            bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
-	    if(!alive){
-	        sleep(10);
-		continue;		    
-	    }
-	    */
+	 try{	   
 	    
             ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
 
@@ -119,8 +111,7 @@ protected:
                 	messages.clear();
 		}
             }
-	    
-	    
+	    	    
 	    /*set to fail all old queued jobs which have exceeded max queue time*/
 	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
 	    messages.clear();

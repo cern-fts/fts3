@@ -98,6 +98,9 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessServiceHandler", desc) {
+    	requestIDs.reserve(200);
+	jobs2.reserve(300);    
+	
 	enableOptimization = theServerConfig().get<std::string > ("Optimizer");
 	char hostname[MAXHOSTNAMELEN];
         gethostname(hostname, MAXHOSTNAMELEN);
@@ -140,6 +143,8 @@ protected:
     SiteName siteResolver;
     std::string ftsHostName;
     std::string allowedVOs;
+    std::vector<int> requestIDs;
+    std::vector<TransferJobs*> jobs2;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
         std::vector<int>::const_iterator iter;
@@ -764,11 +769,7 @@ protected:
     }
 
     /* ---------------------------------------------------------------------- */
-    void executeTransfer_a() {
-        std::vector<int> requestIDs;
-	requestIDs.reserve(200);
-        std::vector<TransferJobs*> jobs2;
-	jobs2.reserve(300);
+    void executeTransfer_a() {       
 	static bool drainMode = false;
 	static long double counter = 0;
 
