@@ -1189,87 +1189,99 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     soci::session sql(connectionPool);
 
     try {
-        unsigned numberOfTimeouts;
-        unsigned numberOfRecords;
-        unsigned numberOfNullThroughput;
-        bool loadDefaults = false;
 
-        // check the last records between src/dest which failed with timeout
-        sql << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-               "    t_job.job_id = t_file.job_id AND t_file.file_state = 'FAILED' AND "
-               "    t_file.reason LIKE '%operation timeout%' AND "
-               "    t_job.source_se = :source AND t_job.dest_se = :dest AND"
-               "    t_file.finish_time > (CURRENT_TIMESTAMP - interval '30' minute) "
-               "ORDER BY t_file.finish_time DESC",
-               soci::use(source_hostname), soci::use(destin_hostname),
-               soci::into(numberOfTimeouts);
+    	int numberOfSamples;
 
-        sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
-                soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(numberOfRecords);
+    	sql <<
+			" SELECT count(*) "
+			" FROM t_optimize "
+			" WHERE throughput is NULL "
+			"	AND source_se = :source "
+			"	AND dest_se=:destination "
+			"	AND file_id=0 ",
+			soci::use(source_hostname),
+			soci::use(destin_hostname),
+			soci::into(numberOfSamples);
 
-        sql << " SELECT COUNT(*) FROM t_optimize WHERE "
-               "     throughput is NULL AND "
-               "     source_se = :source AND dest_se = :dest AND "
-               "     file_id = 0",
-               soci::use(source_hostname), soci::use(destin_hostname),
-               soci::into(numberOfNullThroughput);
+    	if (numberOfSamples > 0) {
 
+        	soci::rowset<soci::row> rs = (
+        			sql.prepare <<	" SELECT nostreams, timeout, buffer "
+        							" FROM t_optimize "
+        			                " WHERE source_se = :source AND dest_se = :dest "
+        							" ORDER BY nostreams ASC, timeout ASC, buffer ASC "
+        			                " LIMIT 1",
+        			                soci::use(source_hostname),
+        			                soci::use(destin_hostname)
+        		);
 
-        if (numberOfRecords > 0 && numberOfNullThroughput == 0) { //ALL records for this SE/DEST are having throughput
-            unsigned numberOfActivesBetween;
-            sql << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-                   "    t_file.file_state = 'ACTIVE' AND t_job.job_id = t_file.job_id AND "
-                   "    t_job.source_se = :source AND t_job.dest_se = :dest",
-                   soci::use(source_hostname), soci::use(destin_hostname),
-                   soci::into(numberOfActivesBetween);
+        	soci::rowset<soci::row>::iterator r = rs.begin();
 
-            sql << "SELECT nostreams, timeout, buffer FROM t_optimize "
-                   "WHERE source_se = :source and dest_se = :dest "
-                   "ORDER BY ABS(:nActives - active), ABS(500 - throughput) DESC "
-                   "LIMIT 1",
-                    soci::use(source_hostname), soci::use(destin_hostname), soci::use(numberOfActivesBetween),
-                    soci::into(ops->streamsperfile), soci::into(ops->timeout), soci::into(ops->bufsize);
+        	if (r != rs.end()) {
+        		// we are expecting just one row (LIMIT 1)
+    			ops->streamsperfile = r->get<int>("nostreams");
+    			ops->timeout = r->get<int>("timeout");
+    			ops->bufsize = r->get<int>("buffer");
+    			ops->file_id = 1;
 
-            if (sql.got_data())
-                ops->file_id = 1;
-            else
-                loadDefaults = true;
-        }
-        else if (numberOfRecords > 0 && numberOfNullThroughput > 0) { //found records in the DB but are some without throughput
-            sql << "SELECT nostreams, timeout, buffer FROM t_optimize "
-                   "WHERE source_se = :source AND dest_se = :dest AND "
-                   "      throughput IS NULL AND file_id = 0 "
-                   "LIMIT 1",
-                   soci::use(source_hostname), soci::use(destin_hostname),
-                   soci::into(ops->streamsperfile), soci::into(ops->timeout), soci::into(ops->bufsize);
+        	} else {
+        		// or now row at all
+    			ops->streamsperfile = DEFAULT_NOSTREAMS;
+    			ops->timeout = DEFAULT_TIMEOUT;
+    			ops->bufsize = DEFAULT_BUFFSIZE;
+    			ops->file_id = 0;
+        	}
 
-            if (sql.got_data())
-                ops->file_id = 1;
-            else
-                loadDefaults = true;
-        }
-        else {
-            loadDefaults = true;
-        }
+    	} else {
 
-        // If not found, set default values
-        if (loadDefaults) {
-            if (numberOfTimeouts == 0) {
-                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                ops->timeout = DEFAULT_TIMEOUT;
-                ops->bufsize = DEFAULT_BUFFSIZE;
-                ops->file_id = 0;
+        	unsigned numberOfActives;
+
+            sql << " SELECT COUNT(*) "
+            	   " FROM t_file, t_job "
+            	   " WHERE t_file.file_state = 'ACTIVE' "
+            	   "	AND t_job.job_id = t_file.job_id "
+            	   "	AND t_job.source_se = :source "
+            	   "	AND t_job.dest_se = :dest",
+                   soci::use(source_hostname),
+                   soci::use(destin_hostname),
+                   soci::into(numberOfActives);
+
+            soci::rowset<soci::row> rs = (
+					sql.prepare <<
+							" SELECT throughput, active, nostreams, timeout, buffer "
+							" FROM ( "
+							"	SELECT throughput, active, nostreams, timeout, buffer "
+							"	FROM t_optimize "
+							"	WHERE source_se = :source "
+							"		AND dest_se = :destination "
+							"		AND throughput IS NOT NULL "
+							"	ORDER BY ABS(active - :active), throughput DESC"
+							" ) sub "
+							" LIMIT 1 ",
+							soci::use(source_hostname),
+							soci::use(destin_hostname),
+							soci::use(numberOfActives)
+            	);
+
+            soci::rowset<soci::row>::iterator r = rs.begin();
+
+            if (r != rs.end()) {
+            	// we are expecting just one row (LIMIT 1)
+    			ops->streamsperfile = r->get<int>("nostreams");
+    			ops->timeout = r->get<int>("timeout");
+    			ops->bufsize = r->get<int>("buffer");
+    			ops->file_id = 1;
+
+            } else {
+            	// or now row at all
+    			ops->streamsperfile = DEFAULT_NOSTREAMS;
+    			ops->timeout = DEFAULT_TIMEOUT;
+    			ops->bufsize = DEFAULT_BUFFSIZE;
+    			ops->file_id = 0;
             }
-            else {
-                ops->streamsperfile = DEFAULT_NOSTREAMS;
-                ops->timeout = MID_TIMEOUT;
-                ops->bufsize = DEFAULT_BUFFSIZE;
-                ops->file_id = 0;
-            }
-        }
-    }
-    catch (std::exception& e) {
+    	}
+
+    } catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
