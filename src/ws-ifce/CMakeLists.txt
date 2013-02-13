@@ -106,7 +106,7 @@ add_library(fts_ws_ifce_server SHARED
     ${generated_files_dir}/${gsoap_prefix}Server.cpp
 )
 add_dependencies(fts_ws_ifce_server fts_common)
-set_target_properties(fts_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
+set_target_properties(fts_ws_ifce_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
 add_dependencies(fts_ws_ifce_server fts_common)
 target_link_libraries(fts_ws_ifce_server -lgsoap++)
 
@@ -117,7 +117,7 @@ add_library(fts_ws_ifce_client SHARED
     ${generated_files_dir}/${gsoap_prefix}Client.cpp
 )
 add_dependencies(fts_ws_ifce_client fts_common)
-set_target_properties(fts_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -g -w" )
+set_target_properties(fts_ws_ifce_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} -w" )
 target_link_libraries(fts_ws_ifce_client -lgsoap++)
 
 # Client side delegation library 
