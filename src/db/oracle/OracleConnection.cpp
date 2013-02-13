@@ -62,9 +62,9 @@ password_(password), connectString_(connectString), maxConn(20), minConn(15), in
             scPool->setStmtCacheSize(500);
         }
     } catch (oracle::occi::SQLException const &e) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        throw Err_Custom(e.what());
     } catch (...) {
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown oracle exception"));
+        throw Err_Custom("Unknown oracle exception");
     }
 }
 

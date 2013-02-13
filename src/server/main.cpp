@@ -88,7 +88,6 @@ void fts3_initialize_db_backend() {
     std::string dbPassword = theServerConfig().get<std::string > ("DbPassword");
     std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
     int pooledConn = theServerConfig().get<int> ("DbThreadsNum");
-    std::cout << pooledConn << std::endl;
 
     try {
         db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, pooledConn);
