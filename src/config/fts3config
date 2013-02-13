@@ -18,10 +18,10 @@ DbPassword=
 #An alternative for oracle connection string(without failover support) is: hostname.cern.ch:10121/Service name
 DbConnectString=
 
-# number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
+#Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
 DbThreadsNum=4
 
-#The alias used for the FTS endpoint, will be published in the dashboard transfers UI
+#The alias used for the FTS endpoint, will be published in the dashboard transfers UI http://dashb-wlcg-transfers.cern.ch/ui/
 Alias=
 
 #Default log directory
@@ -30,17 +30,30 @@ TransferLogDirectory=/var/log/fts3
 #Infosys, either the fqdn:port of a BDII instance or false to disable it
 Infosys=lcg-bdii.cern.ch:2170
 
-#The rest of the parameters leave them as is
+#keep_alive socket for ldap connection
 BDIIKeepAlive=true
+
+#Query the info systems specified, e.g. glue1:myosg:glue2
+#If more than one specified are queried in this order
 InfoProviders=glue1
+
+#Do not change this
 Optimizer=true
+
+#keep_alive socket option for gsoap
 HttpKeepAlive=true
-AuthorizedVO=*
+
+#Set to true to one and only one FTS3 VM to let the cron job cleanup old records from the primary database tables. The records are not deleted but moved to *_backup tables
 CleanRecordsHost=false
+
+#Do not change this
+AuthorizedVO=*
+
 
 # To enable MyOSG comment the following line and uncomment the next one 
 MyOSG=false
 # MyOSG=http://myosg.grid.iu.edu/rgsummary/xml?summary_attrs_showservice=on&summary_attrs_showfqdn=on&gip_status_attrs_showtestresults=on&downtime_attrs_showpast=&account_type=cumulative_hours&ce_account_type=gip_vo&se_account_type=vo_transfer_volume&bdiitree_type=total_jobs&bdii_object=service&bdii_server=is-osg&start_type=7daysago&start_date=10%2F19%2F2012&end_type=now&end_date=10%2F19%2F2012&all_resources=on&facility_10009=on&gridtype_1=on&service=on&service_5=on&service_2=on&service_3=on&active_value=1&disable_value=1&has_wlcg=on
 
+#Do not change this
 [roles]
 Public = all:*
