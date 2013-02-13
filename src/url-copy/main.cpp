@@ -214,6 +214,7 @@ std::string getDefaultErrorPhase() {
 }
 
 void abnormalTermination(const std::string& classification, const std::string& msg, const std::string& finalState) {
+
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
@@ -225,10 +226,12 @@ void abnormalTermination(const std::string& classification, const std::string& m
     reporter.timeout = timeout;
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
+    
     if(strArray[0].length() > 0)
     	reporter.constructMessage(g_job_id, strArray[0], classification, errorMessage, diff, source_size);
     else
     	reporter.constructMessage(g_job_id, g_file_id, classification, errorMessage, diff, source_size);    
+	
     std::string moveFile = fileManagement->archive();
     if (moveFile.length() != 0) {
         logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
@@ -261,17 +264,19 @@ void taskTimer(int time) {
 
 void taskStatusUpdater(int time) {
     while (1) {
-	if(strArray[0].length() > 0)
+	if(strArray[0].length() > 0){
         	reporter.constructMessageUpdater(job_id, strArray[0]);	
-	else
+	}
+	else{
         	reporter.constructMessageUpdater(job_id, file_id);
+	}
+		
         boost::this_thread::sleep(boost::posix_time::seconds(time));
     }
 }
 
 void signalHandler(int signum) {
     logStream << fileManagement->timestamp() << "DEBUG Received signal " << signum << '\n';
-    // boost::mutex::scoped_lock lock(guard);    
     if (stackTrace.length() > 0) {
         propagated = true;
         errorMessage = "ERROR Transfer process died " + g_job_id;
@@ -279,7 +284,7 @@ void signalHandler(int signum) {
         logStream << fileManagement->timestamp() << "ERROR " << stackTrace << '\n';
 
         abnormalTermination("FAILED", errorMessage, "Error");
-    } else if (signum == 15) {
+    } else if (signum == 2) {
         if (propagated == false) {
             propagated = true;
             errorMessage = "WARN Transfer " + g_job_id + " canceled by the user";
@@ -308,21 +313,27 @@ void signalHandler(int signum) {
 
 
 void myunexpected() {
+   if (propagated == false) {
+            propagated = true;
     errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
     errorMessage += " Source: " +source_url;
     errorMessage += " Dest: " +dest_url;
     logStream << fileManagement->timestamp() << errorMessage << '\n';
     
     abnormalTermination("FAILED", errorMessage, "Abort");
+    }
 }
 
 void myterminate() {
+   if (propagated == false) {
+            propagated = true;
     errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
     errorMessage += " Source: " +source_url;
     errorMessage += " Dest: " +dest_url;    
     logStream << fileManagement->timestamp() << errorMessage << '\n';
 
     abnormalTermination("FAILED", errorMessage, "Abort");
+    }
 }
 
 // Callback used to populate the messaging with the different stages
@@ -532,9 +543,10 @@ int main(int argc, char **argv) {
 
     if (!handle) {
         errorMessage  = "Failed to create the gfal2 handle: ";
-	if(handleError->message)
+	if(handleError && handleError->message){
         	errorMessage += handleError->message;
-        abnormalTermination("FAILED", errorMessage, "Error");
+        	abnormalTermination("FAILED", errorMessage, "Error");
+	}
     }
 
     //reuse session    
@@ -927,7 +939,11 @@ stop:
             reporter.timeout = timeout;
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
-            reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
+
+	    if (propagated == false) {
+            	propagated = true;
+            	reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
+	    }
         } else {
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
             reporter.timeout = timeout;
