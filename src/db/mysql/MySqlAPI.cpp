@@ -146,10 +146,10 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
     try {
 
     	// Get uniqueue VOs
-    	std::vector<std::string> distinctVo;
+    	std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     	soci::rowset<soci::row> rs = (
     			sql.prepare <<
-    						" SELECT distinct vo_name "
+    						" SELECT DISTINCT source_se, dest_se, vo_name "
     						" FROM t_job "
 				 	 	 	" WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
     						" AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
@@ -160,24 +160,14 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
         for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
             soci::row const& r = *i;
-            distinctVo.push_back(r.get<std::string>("vo_name"));
-        }
+            distinct.push_back(
+            		boost::tuple< std::string, std::string, std::string>(
+            				r.get<std::string>("source_se"),
+            				r.get<std::string>("dest_se"),
+            				r.get<std::string>("vo_name")
+            			)
 
-        // Get unique SE pairs
-        std::multimap<std::string, std::string> sePairs;
-        rs = (sql.prepare <<
-        		" SELECT DISTINCT source_se, dest_se "
-				" FROM t_job "
-				" WHERE t_job.job_finished IS NULL AND "
-				"      t_job.cancel_job IS NULL AND "
-				"      (t_job.reuse_job = 'N' OR t_job.reuse_job IS NULL) AND "
-				"      t_job.job_state IN ('ACTIVE', 'READY', 'SUBMITTED')")
-				;
-
-        for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
-            soci::row const& row = *i;
-            sePairs.insert(std::make_pair(row.get<std::string>("source_se"),
-                                          row.get<std::string>("dest_se")));
+            	);
         }
 
         // Query depends on vos
@@ -196,21 +186,25 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
         // Iterate through pairs, getting jobs IF the VO has not run out of credits
         // AND there are pending file transfers within the job
-		for (std::vector<std::string>::iterator i_vo = distinctVo.begin(); i_vo != distinctVo.end(); i_vo++) {
-			for (std::multimap<std::string, std::string>::const_iterator i = sePairs.begin(); i != sePairs.end(); ++i) {
-				soci::rowset<TransferJobs> jobRs = (
-						sql.prepare << query ,
-						soci::use(i->first),
-						soci::use(i->second),
-						soci::use(*i_vo)
-					);
+		std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
+		for (it = distinct.begin(); it != distinct.end(); it++) {
 
-				for (soci::rowset<TransferJobs>::const_iterator ji = jobRs.begin(); ji != jobRs.end(); ++ji) {
-					TransferJobs const & job = *ji;
+			boost::tuple<std::string, std::string, std::string>& triplet = *it;
 
-					if (getInOutOfSe(job.SOURCE_SE, job.DEST_SE))
-						jobs.push_back(new TransferJobs(job));
-				}
+			soci::rowset<TransferJobs> rs = (
+					sql.prepare <<
+						query,
+						soci::use(boost::get<0>(triplet)),
+						soci::use(boost::get<1>(triplet)),
+						soci::use(boost::get<2>(triplet))
+				);
+
+			for (soci::rowset<TransferJobs>::const_iterator ji = rs.begin(); ji != rs.end(); ++ji) {
+
+				TransferJobs const & job = *ji;
+
+				if (getInOutOfSe(job.SOURCE_SE, job.DEST_SE))
+					jobs.push_back(new TransferJobs(job));
 			}
 		}
     }
