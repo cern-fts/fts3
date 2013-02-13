@@ -69,7 +69,7 @@ public:
     virtual ~MonitoringDbIfce() {};
 
     virtual void init(const std::string& username, const std::string& password,
-                      const std::string& connectString) = 0;
+                      const std::string& connectString, int pooledConn) = 0;
 
     virtual void setNotBefore(time_t notBefore) = 0;
 

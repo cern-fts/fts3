@@ -24,8 +24,8 @@ MonitoringDbWrapper& MonitoringDbWrapper::getInstance(void) {
 
 void MonitoringDbWrapper::init(const std::string& username,
                                const std::string& password,
-                               const std::string& connectString) {
-    db->init(username, password, connectString);
+                               const std::string& connectString, int pooledConn) {
+    db->init(username, password, connectString, pooledConn);
 }
 
 

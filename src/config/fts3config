@@ -1,19 +1,43 @@
+#default port number
 Port=8443
+
+#IP, default localhost
 IP=0.0.0.0
+
+#mysql or oracle
 DbType=oracle
+
+#db username
 DbUserName=
+
+#db password
 DbPassword=
+
+#For MySQL, it has to follow the format 'host/db' (i.e. "mysql-server.example.com/fts3db") 
+#For Oracle, it supports transparent application failover, to enable it you need to use a connection string such as: "(DESCRIPTION = (ADDRESS = (PROTOCOL = TCP)(HOST = fts2source.cern.ch)(PORT = 1521)) (ADDRESS = (PROTOCOL = TCP)(HOST = fts2source.cern.ch)(PORT = 1521))(LOAD_BALANCE = yes) (FAILOVER=yes) (CONNECT_DATA = (SERVER = DEDICATED) (SERVICE_NAME = XE)(FAILOVER_MODE=(TYPE = SELECT)(METHOD = BASIC)(RETRIES = 200)(DELAY = 15))))"
+#An alternative for oracle connection string(without failover support) is: hostname.cern.ch:10121/Service name
 DbConnectString=
+
+# number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
+DbThreadsNum=4
+
+#The alias used for the FTS endpoint, will be published in the dashboard transfers UI
 Alias=
+
+#Default log directory
 TransferLogDirectory=/var/log/fts3
+
+#Infosys, either the fqdn:port of a BDII instance or false to disable it
 Infosys=lcg-bdii.cern.ch:2170
+
+#The rest of the parameters leave them as is
 BDIIKeepAlive=true
 Optimizer=true
 HttpKeepAlive=true
 AuthorizedVO=*
 CleanRecordsHost=false
 
-# To anable MyOSG comment the following line and uncomment the next one 
+# To enable MyOSG comment the following line and uncomment the next one 
 MyOSG=false
 # MyOSG=http://myosg.grid.iu.edu/rgsummary/xml?summary_attrs_showservice=on&summary_attrs_showfqdn=on&gip_status_attrs_showtestresults=on&downtime_attrs_showpast=&account_type=cumulative_hours&ce_account_type=gip_vo&se_account_type=vo_transfer_volume&bdiitree_type=total_jobs&bdii_object=service&bdii_server=is-osg&start_type=7daysago&start_date=10%2F19%2F2012&end_type=now&end_date=10%2F19%2F2012&all_resources=on&facility_10009=on&gridtype_1=on&service=on&service_5=on&service_2=on&service_3=on&active_value=1&disable_value=1&has_wlcg=on
 

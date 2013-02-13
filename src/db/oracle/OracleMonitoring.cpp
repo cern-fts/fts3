@@ -16,9 +16,9 @@ OracleMonitoring::~OracleMonitoring()
 }
 
 
-void OracleMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString) {
+void OracleMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString, int pooledConn) {
     if (!conn)
-        conn = new OracleConnection(username, password, connectString);
+        conn = new OracleConnection(username, password, connectString, pooledConn);
     if (!conv)
         conv = new OracleTypeConversions();
 

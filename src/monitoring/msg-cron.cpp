@@ -134,11 +134,11 @@ public:
 
             std::string dbUserName = theServerConfig().get<std::string>("DbUserName");
             std::string dbPassword = theServerConfig().get<std::string>("DbPassword");
-            std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
+            std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");	    
 
             try {
                 this->monitoringDb = db::DBSingleton::instance().getMonitoringDBInstance();
-                this->monitoringDb->init(dbUserName, dbPassword, dbConnectString);
+                this->monitoringDb->init(dbUserName, dbPassword, dbConnectString, 1);
             } catch (Err& exc) {
                 logger::writeLog(std::string("Cannot connect to the database server: ") + exc.what());
                 exit(1);

@@ -41,7 +41,7 @@ public:
     OracleMonitoring();
     ~OracleMonitoring();
 
-    void init(const std::string& username, const std::string& password, const std::string& connectString);
+    void init(const std::string& username, const std::string& password, const std::string& connectString, int pooledConn);
 
     void setNotBefore(time_t notBefore);
 

@@ -15,7 +15,7 @@ MySqlMonitoring::~MySqlMonitoring()
 
 
 
-void MySqlMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString) {
+void MySqlMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString, int pooledConn) {
     std::ostringstream connParams;
     std::string host, db;
 
@@ -35,7 +35,7 @@ void MySqlMonitoring::init(const std::string& username, const std::string& passw
                << "pass='" << password << "'";
 
     std::string connStr = connParams.str();
-
+    poolSize = pooledConn;
     // Connect
     for (size_t i = 0; i < poolSize; ++i) {
         soci::session& sql = connectionPool.at(i);

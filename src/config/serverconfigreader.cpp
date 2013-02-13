@@ -65,13 +65,17 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 	po::options_description config("Configuration");
 
     config.add_options()
-	    (
+	(
             "Port,p",
             po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT),
             "File transfer listening port"
         )
-
-	    (
+	(
+            "DbThreadsNum,D",
+            po::value<std::string>( &(_vars["DbThreadsNum"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
+            "Number of db connections in the db threads pool"
+        )	
+        (
             "IP,i",
             po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
             "IP address that the server is bound to"
@@ -144,18 +148,18 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "TransferLogDirectory,l",
             po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
             "Directory where the individual transfer logs are written"
-        )
-		(
-			"AuthorizedVO,v",
-			po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
-			"List of authorized VOs"
-		)
-		(
-			"roles.*",
-			po::value<std::string>(),
-			"Authorization riths definition."
-		)
-		;
+        )	
+	(
+		"AuthorizedVO,v",
+		po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
+		"List of authorized VOs"
+	)
+	(
+		"roles.*",
+		po::value<std::string>(),
+		"Authorization riths definition."
+	)
+	;
 
     return config;
 }

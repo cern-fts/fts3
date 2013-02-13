@@ -36,7 +36,7 @@ static int extractTimeout(std::string & str) {
 
 
 
-MySqlAPI::MySqlAPI(): poolSize(20), connectionPool(poolSize)  {
+MySqlAPI::MySqlAPI(): poolSize(8), connectionPool(poolSize)  {
     char chname[MAXHOSTNAMELEN];
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
@@ -49,7 +49,7 @@ MySqlAPI::~MySqlAPI() {
 
 
 
-void MySqlAPI::init(std::string username, std::string password, std::string connectString) {
+void MySqlAPI::init(std::string username, std::string password, std::string connectString, int pooledConn) {
     std::ostringstream connParams;
     std::string host, db, port;
 
@@ -85,6 +85,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
         // Connect
         static const my_bool reconnect = 1;
+	poolSize = pooledConn;
         for (size_t i = 0; i < poolSize; ++i) {
             soci::session& sql = connectionPool.at(i);
             sql.open(soci::mysql, connStr);

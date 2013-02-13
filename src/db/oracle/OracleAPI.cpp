@@ -60,9 +60,9 @@ OracleAPI::~OracleAPI() {
         delete conv;
 }
 
-void OracleAPI::init(std::string username, std::string password, std::string connectString) {
+void OracleAPI::init(std::string username, std::string password, std::string connectString, int pooledConn) {
     if (!conn)
-        conn = new OracleConnection(username, password, connectString);   	 			
+        conn = new OracleConnection(username, password, connectString,pooledConn);   	 			
     if (!conv)
         conv = new OracleTypeConversions();
 	

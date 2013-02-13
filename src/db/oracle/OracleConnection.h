@@ -44,7 +44,7 @@ public:
  * OracleConnection class ctr with parameters
  **/
 
-    OracleConnection(const std::string username,const  std::string password, const std::string connectString);
+    OracleConnection(const std::string username,const  std::string password, const std::string connectString, int pooledConn);
 
 /**
  * OracleConnection class ctr
@@ -54,7 +54,7 @@ public:
 /**
  * OracleConnection class dctr
  **/    
-    virtual ~OracleConnection() ;
+    virtual ~OracleConnection();
 
 
 /**
@@ -104,4 +104,7 @@ private:
     std::string username_;
     std::string password_;
     std::string connectString_;
+    int maxConn;  //The maximum number of connections that can be opened the pool;
+    int minConn;  //The number of connections initially created in a pool.
+    int incrConn; //The number of connections by which to increment the pool if all open connections are busy    
 };

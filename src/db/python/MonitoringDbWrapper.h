@@ -11,7 +11,7 @@ public:
     static MonitoringDbWrapper& getInstance(void);
 
     void init(const std::string& username, const std::string& password,
-              const std::string& connectString);
+              const std::string& connectString, int pooledConn);
 
     void setNotBefore(time_t notBefore);
 

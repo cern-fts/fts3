@@ -35,16 +35,30 @@ int taf_callback(Environment*, Connection*, void*, Connection::FailOverType foTy
     return 0;
 }
 
-OracleConnection::OracleConnection(const std::string username,const  std::string password, const std::string connectString) : env(NULL), scPool(NULL), username_(username),
-password_(password), connectString_(connectString) {
+OracleConnection::OracleConnection(const std::string username,const  std::string password, const std::string connectString, int pooledConn) : env(NULL), scPool(NULL), username_(username),
+password_(password), connectString_(connectString), maxConn(20), minConn(15), incrConn(1) {
 
-    try {
+    try {        
+	if(pooledConn==1){
+		maxConn = pooledConn;
+		minConn = pooledConn;
+		incrConn = 0;
+	}else if(pooledConn == 2){
+		maxConn = pooledConn;
+		minConn = pooledConn;
+		incrConn = 0;				
+	}else{
+		maxConn = pooledConn;
+		minConn = pooledConn/2;
+		incrConn = 1;		
+	}
+	
         env = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::THREADED_MUTEXED);
         if (env) {
             // Create a homogenous connection pool  
             scPool = env->createStatelessConnectionPool
-                    (username, password, connectString, 20,
-                    18, 1, oracle::occi::StatelessConnectionPool::HOMOGENEOUS);
+                    (username, password, connectString, maxConn,
+                    minConn, incrConn, oracle::occi::StatelessConnectionPool::HOMOGENEOUS);
             scPool->setStmtCacheSize(500);
         }
     } catch (oracle::occi::SQLException const &e) {

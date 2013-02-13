@@ -81,7 +81,7 @@ public:
  * Intialize database connection  by providing information from fts3config file
  **/
  
-    virtual void init(std::string username, std::string password, std::string connectString) = 0;
+    virtual void init(std::string username, std::string password, std::string connectString, int pooledConn) = 0;
 
 /**
  * Submit a transfer request to be stored in the database

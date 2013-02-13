@@ -87,9 +87,11 @@ void fts3_initialize_db_backend() {
     std::string dbUserName = theServerConfig().get<std::string > ("DbUserName");
     std::string dbPassword = theServerConfig().get<std::string > ("DbPassword");
     std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
+    int pooledConn = theServerConfig().get<int> ("DbThreadsNum");
+    std::cout << pooledConn << std::endl;
 
     try {
-        db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
+        db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, pooledConn);
     } catch (Err& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         exit(1);

@@ -24,7 +24,7 @@ void fts3_initialize_db_backend()
     std::string dbConnectString = theServerConfig().get<std::string>("DbConnectString");
     
     try{
-    	db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString);
+    	db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 1);
     } 
     catch(Err_Custom& e)
     {            
