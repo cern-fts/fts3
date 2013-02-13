@@ -49,8 +49,26 @@ OsgParser::~OsgParser() {
 
 }
 
+bool OsgParser::isInUse() {
+
+	static const string myosg_str = "myosg";
+
+	vector<string> providers = theServerConfig().get< vector<string> >("InfoProviders");
+	vector<string>::iterator it;
+
+	for (it = providers.begin(); it != providers.end(); it++) {
+		if (myosg_str == *it) return true;
+	}
+
+	return false;
+}
+
 string OsgParser::get(string fqdn, string property) {
 
+	// if not on the list containing info providers return an empty string
+	if (!isInUse()) return string();
+
+	// if the MyOSG was set to 'flase' return an empty string
 	if (!theServerConfig().get<bool>("MyOSG")) return string();
 
 	// look for the resource name (assume that the user has provided a fqdn)
