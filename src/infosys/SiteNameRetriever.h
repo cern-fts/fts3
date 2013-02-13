@@ -64,15 +64,15 @@ private:
 	static const char* ATTR_GLUE1_SITE;
 	static const char* ATTR_GLUE1_HOSTINGORG;
 
+	static const string FIND_SE_SITE_GLUE1(string se);
+	static const char* FIND_SE_SITE_ATTR_GLUE1[];
+
 	// glue2 attribute
 	static const char* ATTR_GLUE2_SERVICE;
 	static const char* ATTR_GLUE2_SITE;
 
 	static const string FIND_SE_SITE_GLUE2(string se);
 	static const char* FIND_SE_SITE_ATTR_GLUE2[];
-
-	static const string FIND_SE_SITE_GLUE1(string se);
-	static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
 	string getFromBdii(string se);
 
