@@ -667,12 +667,13 @@ CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 CREATE INDEX file_finish_time ON t_file(finish_time);
 
-
+CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
 CREATE INDEX optimize_nostreams         ON t_optimize(nostreams);
 CREATE INDEX optimize_timeout           ON t_optimize(timeout);
 CREATE INDEX optimize_buffer            ON t_optimize(buffer);
+CREATE INDEX optimize_order         ON t_optimize(nostreams,timeout,buffer);
 
 CREATE INDEX idx_report_job      ON t_job (vo_name,job_id);
 
