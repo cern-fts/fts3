@@ -32,6 +32,7 @@ Infosys=lcg-bdii.cern.ch:2170
 
 #The rest of the parameters leave them as is
 BDIIKeepAlive=true
+InfoProviders=glue1
 Optimizer=true
 HttpKeepAlive=true
 AuthorizedVO=*

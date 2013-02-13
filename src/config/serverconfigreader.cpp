@@ -105,12 +105,12 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "Database account password"
         )
         (
-            "Infosys,r",
+            "Infosys",
             po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),
             "Set infosys"
         )
         (
-            "BDIIKeepAlive,r",
+            "BDIIKeepAlive",
             po::value<std::string>( &(_vars["BDIIKeepAlive"]) )->default_value("true"),
             "Sets the keep alive property of the BDII"
         )
@@ -118,6 +118,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         	"MyOSG,m",
         	po::value<std::string>( &(_vars["MyOSG"]) )->default_value("false"),
         	"Set the MyOSG URL (or flase meaning MyOSG wont be used)"
+        )
+        (
+        	"InfoProviders",
+        	po::value<std::string>( &(_vars["MyOSG"]) )->default_value("glue1"),
+        	"The list of info providers ( e.g.: glue1:myosg;glue2)"
         )
         (
             "InfoPublisher,P",
