@@ -121,7 +121,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         )
         (
         	"InfoProviders",
-        	po::value<std::string>( &(_vars["MyOSG"]) )->default_value("glue1"),
+        	po::value<std::string>( &(_vars["InfoProviders"]) )->default_value("glue1"),
         	"The list of info providers ( e.g.: glue1:myosg;glue2)"
         )
         (
