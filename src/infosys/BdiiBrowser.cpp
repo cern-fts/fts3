@@ -231,5 +231,27 @@ bool BdiiBrowser::isVoAllowed(string se, string vo) {
 	return true;
 }
 
+string BdiiBrowser::baseToStr(string& base) {
+
+	if (base == GLUE1) return "glue1";
+	if (base == GLUE2) return "glue2";
+
+	return string();
+}
+
+bool BdiiBrowser::checkIfInUse(string& base) {
+
+	string base_str = baseToStr(base);
+
+	vector<string> providers = theServerConfig().get< vector<string> >("InfoProviders");
+	vector<string>::iterator it;
+
+	for (it = providers.begin(); it != providers.end(); it++) {
+		if (base_str == *it) return true;
+	}
+
+	return false;
+}
+
 } /* namespace common */
 } /* namespace fts3 */

@@ -139,6 +139,10 @@ private:
 	void disconnect();
 	bool isValid();
 
+	bool checkIfInUse(string& base);
+
+	string baseToStr(string& base);
+
 	template<typename R>
 	list< map<string, R> > parseBdiiResponse(LDAPMessage *reply);
 
@@ -191,7 +195,10 @@ private:
 template<typename R>
 list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr) {
 
-	// check in the config file if the BDII is in use, if not return an empty result set
+	// check in the fts3config file if the 'base' (glue1 or glue2) is in use, if no return an empty result set
+	if (!checkIfInUse(base)) return list< map<string, R> >();
+
+	// check in the fts3config if the host name for BDII was specified, if no return an empty result set
 	if (!theServerConfig().get<bool>("Infosys")) return list< map<string, R> >();
 
 	// check if the connection is valied
