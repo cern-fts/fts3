@@ -386,14 +386,16 @@ void JobSubmitter::checkSe(string se) {
 	// if we don't care about MyOSQ return
 	if (!theServerConfig().get<bool>("MyOSG")) return;
 
-	// load from local file which is update by a cron job
-	OsgParser& osg = OsgParser::getInstance();
-	// check in the OSG if the SE is 'active'
-	optional<bool> state = osg.isActive(se);
-	if (state.is_initialized() && !(*state)) throw Err_Custom("The SE: " + se + " is not active in the OSG!");
-	// check in the OSG if the SE is 'disabled'
-	state = osg.isDisabled(se);
-	if (state.is_initialized() && *state) throw Err_Custom("The SE: " + se + " is disabled in the OSG!");
+	// checking of a state (active, disabled) in MyOSG  is commented out for now
+
+//	// load from local file which is update by a cron job
+//	OsgParser& osg = OsgParser::getInstance();
+//	// check in the OSG if the SE is 'active'
+//	optional<bool> state = osg.isActive(se);
+//	if (state.is_initialized() && !(*state)) throw Err_Custom("The SE: " + se + " is not active in the OSG!");
+//	// check in the OSG if the SE is 'disabled'
+//	state = osg.isDisabled(se);
+//	if (state.is_initialized() && *state) throw Err_Custom("The SE: " + se + " is disabled in the OSG!");
 
 }
 
