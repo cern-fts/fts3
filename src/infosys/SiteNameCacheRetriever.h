@@ -53,6 +53,9 @@ private:
 
 	static const string FIND_SE_SITE_GLUE1;
 	static const char* FIND_SE_SITE_ATTR_GLUE1[];
+
+	// glue2
+
 };
 
 } /* namespace infosys */

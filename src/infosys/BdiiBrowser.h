@@ -133,63 +133,152 @@ private:
 	bool connect(string infosys, time_t sec = 60);
 
 	/**
+	 * Reconnect in case that the current connection is not valid any more
 	 *
+	 * @return true is it has been possible to reconnect successfully, false otherwise
 	 */
 	bool reconnect();
+
+	/**
+	 * Closes the current connection to the BDII
+	 */
 	void disconnect();
+
+	/**
+	 * Checks if the current connection is valid
+	 *
+	 * @return true if the curret connection is valid, false otherwise
+	 */
 	bool isValid();
 
+	/**
+	 * Checks in the fts3config if the given base (glue1 or glue2) is currently in use
+	 *
+	 * @param base - the base (glue1 or glue2) that will be checked
+	 *
+	 * @return true if the base is in use, false otherwise
+	 */
 	bool checkIfInUse(string& base);
 
+	/**
+	 * Converts the base string from BDII to ordinary string
+	 *
+	 * @param base - BDII base
+	 *
+	 * @return respective string value
+	 */
 	string baseToStr(string& base);
 
+	/**
+	 * Parses BDII reply
+	 *
+	 * @param reply - the reply from BDII query
+	 *
+	 * @return result set containing the data retrived from BDII
+	 */
 	template<typename R>
 	list< map<string, R> > parseBdiiResponse(LDAPMessage *reply);
 
+	/**
+	 * Parses single entry retrieved from BDII query
+	 *
+	 * @param entry - single entry returned from BDII query
+	 *
+	 * @return map that holds entry names and respective values
+	 */
 	template<typename R>
 	map<string, R> parseBdiiSingleEntry(LDAPMessage *entry);
 
+	/**
+	 * Parses BDII attribute
+	 *
+	 * @param value - attribute value
+	 *
+	 * @return parsed value
+	 */
 	template<typename R>
 	R parseBdiiEntryAttribute(berval **value);
 
 
-
+	/// LDAP context
 	LDAP *ld;
+
+	/// connection timeout
 	timeval timeout;
+
+	/// search timeout
 	timeval search_timeout;
+
+	/// full LDAP URL (including protocol)
 	string url;
+
+	/// the BDII endpoint
 	string infosys;
 
+	/**
+	 *  semaphore
+	 *  positive value gives the number of threads browsing BDII at the moment
+	 *  negative value gives the number of threads trying to reconnect
+	 */
 	int querying;
+
+	/// the mutex preventing concurrent browsing and reconnecting
 	mutex qm;
+
+	/// conditional variable preventing concurrent browsing and reconnecting
 	condition_variable qv;
 
+	/**
+	 * Blocks until all threads finish browsing
+	 */
 	void waitIfBrowsing();
+
+	/**
+	 * Notify all threads that want to do browsing after reconnection happened
+	 */
 	void notifyBrowsers();
+
+	/**
+	 * Blocks until the reconnection is finished
+	 */
 	void waitIfReconnecting();
+
+	/**
+	 * Notify all threads that want to perform reconnection after all the browsing is finished
+	 */
 	void notifyReconnector();
 
-	// not used for now
+	/// not used for now
 	static const char* ATTR_STATUS;
+	/// not used for now
 	static const char* ATTR_SE;
 
+	/// not used for now
 	static const string FIND_SE_STATUS(string se);
+	/// not used for now
 	static const char* FIND_SE_STATUS_ATTR[];
 
+	/// a string 'false'
 	static const string false_str;
+	/// flag - true if connected, false if not
 	bool connected;
 
+	/// Constructor
 	BdiiBrowser() : querying(0), connected(false) {};
+	/// not implemented
 	BdiiBrowser(BdiiBrowser const&);
+	/// not implemented
 	BdiiBrowser& operator=(BdiiBrowser const&);
 
+	/// maximum number of reconnection tries
 	static const int max_reconnect = 3;
 
-	static const int max_reconnect2 = 3;
-
+	///@{
+	/// keep alive LDAP parameters
 	static const int keepalive_idle = 120;
 	static const int keepalive_probes = 3;
 	static const int keepalive_interval = 60;
+	///@}
 };
 
 template<typename R>
