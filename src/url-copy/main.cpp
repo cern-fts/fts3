@@ -703,6 +703,7 @@ int main(int argc, char **argv) {
 	    }	    
 	    
 	    //set to active
+	    log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
             reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
 	    
 	    if (fexists(proxy.c_str()) != 0) {
@@ -729,6 +730,7 @@ int main(int argc, char **argv) {
 
             /*gfal2 debug logging*/
             if (debug == true) {
+     	        log << fileManagement->timestamp() << "INFO Set the transfer to debug mode" << '\n';		
                 gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
                 FILE* reopenDebugFile = freopen(fileManagement->getLogFileFullPath().c_str(), "w", stderr);
 	        chmod(fileManagement->getLogFileFullPath().c_str(), (mode_t) 0644);
@@ -747,9 +749,11 @@ int main(int argc, char **argv) {
             gfalt_set_create_parent_dir(params, TRUE, NULL);
 	    
 	    //get checksum timeout from gfal2
+	    log << fileManagement->timestamp() << "INFO get checksum timeout" << '\n';
 	    int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);	   
             msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string>(checksumTimeout));	    
 
+   	    log << fileManagement->timestamp() << "INFO Stat the source surl start" << '\n';
             for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++) {
                 if (gfal2_stat(handle,(strArray[1]).c_str(), &statbufsrc, &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
@@ -798,18 +802,21 @@ int main(int argc, char **argv) {
             /*Checksuming*/
             if (compare_checksum) {
                 if (checksum_value.length() > 0) { //user provided checksum
+  	            log << fileManagement->timestamp() << "INFO user  provided checksum" << '\n';		
                     std::vector<std::string> token = split((strArray[3]).c_str());
                     std::string checkAlg = token[0];
                     std::string csk = token[1];
                     gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
                     gfalt_set_checksum_check(params, TRUE, NULL);
                 } else {//use auto checksum
+  	            log << fileManagement->timestamp() << "INFO Calculate checksum auto" << '\n';
                     gfalt_set_checksum_check(params, TRUE, NULL);
                 }
             }
 
             //overwrite dest file if exists
             if (overwrite) {
+	        log << fileManagement->timestamp() << "INFO Overwrite is enabled" << '\n';
                 gfalt_set_replace_existing_file(params, TRUE, NULL);
             }
 
@@ -826,9 +833,7 @@ int main(int argc, char **argv) {
                 log << fileManagement->timestamp() << "ERROR Failed to get source or dest surl" << '\n';
             }
 
-            log << fileManagement->timestamp() << "INFO Transfer Starting" << '\n';
-	   
-		
+            log << fileManagement->timestamp() << "INFO Transfer Starting" << '\n';	   		
             if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
                 diff = std::difftime(std::time(NULL), start);
                 if (tmp_err != NULL && tmp_err->message != NULL) {
@@ -850,8 +855,10 @@ int main(int argc, char **argv) {
                     reasonClass = GENERAL_FAILURE;
                     errorPhase = TRANSFER;
                 }
-	       if(handle) // finish all transfer in a clean way
+	       if(handle){ // finish all transfer in a clean way
+		        log << fileManagement->timestamp() << "INFO Transfer failed, issue cancel(transfer) to cleanup resources" << '\n';
 			gfal2_cancel(handle);    		
+	       }
                 goto stop;
             } else {
                 diff = difftime(std::time(NULL), start);
@@ -862,6 +869,7 @@ int main(int argc, char **argv) {
             bytes_to_string = to_string<double>(transferred_bytes, std::dec);
             msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
 
+   	    log << fileManagement->timestamp() << "INFO Stat the dest surl start" << '\n';
             for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++) {
                 if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0) {
                     if (tmp_err->message) {
@@ -881,8 +889,10 @@ int main(int argc, char **argv) {
                     }
                     g_clear_error(&tmp_err);
                     if (destStatRetry == 3){
-	       		if(handle) // finish all transfer in a clean way
+	       		if(handle){ // finish all transfer in a clean way
+				log << fileManagement->timestamp() << "INFO Transfer failed, issue cancel(stat dest) to cleanup resources" << '\n';
 				gfal2_cancel(handle);    				    
+			}
                         goto stop;
 		    }
                 } else {
@@ -918,7 +928,7 @@ int main(int argc, char **argv) {
 
             //check source and dest file sizes
             if (source_size == dest_size) {
-                log << fileManagement->timestamp() << "INFO Source and destination size match" << '\n';
+                log << fileManagement->timestamp() << "INFO Source and destination size matching" << '\n';
             } else {
                 log << fileManagement->timestamp() << "ERROR Source and destination size is different" << '\n';
                 errorMessage = "Source and destination file size mismatch";
@@ -942,7 +952,8 @@ stop:
             reporter.buffersize = tcpbuffersize;
 
 	    if (propagated == false) {
-            	propagated = true;
+            	propagated = true;		
+  	        logStream << fileManagement->timestamp() << "INFO Report FAILED back to the server" << '\n';	    
             	reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
 	    }
         } else {
@@ -950,12 +961,13 @@ stop:
             reporter.timeout = timeout;
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
+	    logStream << fileManagement->timestamp() << "INFO Report FINISHED back to the server" << '\n';	    
             reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
         }
-
+	logStream << fileManagement->timestamp() << "INFO Send monitoring complete message" << '\n';
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-
+	logStream << fileManagement->timestamp() << "INFO Closing the log stream" << '\n';
         if (logStream.is_open()) {
             logStream.close();
         }
@@ -963,11 +975,7 @@ stop:
             fclose(stderr);
         }
 
-        std::string moveFile = fileManagement->archive();
-        if (moveFile.length() != 0) {
-            logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
-        }
-
+        std::string moveFile = fileManagement->archive();       
     }//end for reuse loop
     	
     if (params) {
