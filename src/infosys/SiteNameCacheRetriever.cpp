@@ -32,7 +32,21 @@ const char* SiteNameCacheRetriever::ATTR_GLUE1_SERVICE = "GlueServiceUniqueID";
 const char* SiteNameCacheRetriever::ATTR_GLUE1_LINK = "GlueForeignKey";
 const char* SiteNameCacheRetriever::ATTR_GLUE1_SITE = "GlueSiteUniqueID";
 
-const string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 = "(GlueServiceUniqueID=*)";
+const string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 =
+		"("
+		"	&"
+		"	(GlueServiceUniqueID=*)"
+		"	("
+		"		|"
+		"		(GlueServiceType=SRM)"
+		"		(GlueServiceType=xroot)"
+		"		(GlueServiceType=webdav)"
+		"		(GlueServiceType=gsiftp)"
+		"		(GlueServiceType=http)"
+		"		(GlueServiceType=https)"
+		"	)"
+		")"
+		;
 const char* SiteNameCacheRetriever::FIND_SE_SITE_ATTR_GLUE1[] = {ATTR_GLUE1_SERVICE, ATTR_GLUE1_LINK, 0};
 
 const char* SiteNameCacheRetriever::ATTR_GLUE2_FK = "GLUE2EndpointServiceForeignKey";
@@ -107,6 +121,7 @@ void SiteNameCacheRetriever::fromGlue1() {
 	list< map<string, list<string> > >::iterator it;
 	for (it = rs.begin(); it != rs.end(); it++) {
 		map<string, list<string> >& item = *it;
+
 		// make sure this entry is not empty
 		if (item[ATTR_GLUE1_SERVICE].empty() || item[ATTR_GLUE1_LINK].empty()) continue;
 		// get the se name
