@@ -36,6 +36,7 @@ include_directories (/usr/include/gfal2)
 find_package (GLIB2)
 include_directories (${GLIB2_INCLUDE_DIRS})
 
+
 set(fts_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
 add_executable (fts_url_copy ${fts_url_copy_SOURCES})
 add_dependencies(fts_url_copy fts_common fts_msg_ifce)

@@ -49,7 +49,7 @@ MySqlAPI::~MySqlAPI() {
 
 
 
-void MySqlAPI::init(std::string username, std::string password, std::string connectString, int pooledConn) {
+void MySqlAPI::init(std::string username, std::string password, std::string connectString, int) {
     std::ostringstream connParams;
     std::string host, db, port;
 
@@ -85,7 +85,10 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
         // Connect
         static const my_bool reconnect = 1;
+	
+	/*do not change the number of pooled connection for now
 	poolSize = pooledConn;
+	*/
         for (size_t i = 0; i < poolSize; ++i) {
             soci::session& sql = connectionPool.at(i);
             sql.open(soci::mysql, connStr);

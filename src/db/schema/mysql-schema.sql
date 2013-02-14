@@ -675,6 +675,9 @@ CREATE INDEX optimize_timeout           ON t_optimize(timeout);
 CREATE INDEX optimize_buffer            ON t_optimize(buffer);
 CREATE INDEX optimize_order         ON t_optimize(nostreams,timeout,buffer);
 
+CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
+CREATE INDEX t_server_config_retry         ON t_server_config(retry);
+
 CREATE INDEX idx_report_job      ON t_job (vo_name,job_id);
 
 -- t_stage_request indexes:
