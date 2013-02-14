@@ -21,7 +21,6 @@ BuildRequires:  glib2-devel%{?_isa}
 BuildRequires:  python-devel%{?_isa}
 BuildRequires:  soci-mysql-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
-BuildRequires:  openldap-devel%{?_isa}
 Requires(pre):  shadow-utils
 Requires: fts-libs = %{version}-%{release}
 Requires:  soci-mysql%{?_isa}
