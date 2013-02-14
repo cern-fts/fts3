@@ -32,6 +32,7 @@
 
 #include "BdiiBrowser.h"
 #include "OsgParser.h"
+#include "BdiiCacheParser.h"
 
 #include "common/ThreadSafeInstanceHolder.h"
 

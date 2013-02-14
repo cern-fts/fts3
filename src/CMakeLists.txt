@@ -43,6 +43,7 @@ add_subdirectory(scripts)
 add_subdirectory(dbClear)
 add_subdirectory(glue2-publisher)
 add_subdirectory(myosg-update)
+add_subdirectory(bdii-update)
 ENDIF()
 
 IF (ALLBUILD STREQUAL "ON")
@@ -61,6 +62,7 @@ add_subdirectory(scripts)
 add_subdirectory(dbClear)
 add_subdirectory(glue2-publisher)
 add_subdirectory(myosg-update)
+add_subdirectory(bdii-cache-update)
 ENDIF()
 
 

@@ -111,8 +111,18 @@ string SiteNameRetriever::getSiteName(string se) {
 		return it->second;
 	}
 
+	// check in BDII cache
+	string site = BdiiCacheParser::getInstance().getSiteName(se);
+	if (!site.empty()) {
+		// save it in cache
+		seToSite[se] = site;
+		// clear the cache if there too many entries
+		if(seToSite.size() > 5000) seToSite.clear();
+		return site;
+	}
+
 	// check in BDII
-	string site = getFromBdii(se);
+	site = getFromBdii(se);
 	if (!site.empty()) {
 		// save it in cache
 		seToSite[se] = site;
