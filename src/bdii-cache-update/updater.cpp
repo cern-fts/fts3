@@ -21,10 +21,16 @@ using namespace boost::property_tree;
 /* -------------------------------------------------------------------------- */
 int main(int argc, char** argv) {
 
+	// replace Infoproviders from the fts3config file so the cache is always updated!
+	// options count
+	int c = 3;
+	// program options
+	char* v[] = {"fts_bdii_cache_updater", "--InfoProviders", "glue1;glue2"};
+
 	// exit status
 	int ret = EXIT_SUCCESS;
 
-	theServerConfig().read(argc, argv);
+	theServerConfig().read(c, v);
 
 	// path to local BDII cache
 	const string bdii_path = "/var/lib/fts3/bdii_cache.xml";
