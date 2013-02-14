@@ -7,6 +7,7 @@
 
 #include <string>
 #include <fstream>
+#include <exception>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -36,12 +37,12 @@ int main(int argc, char** argv) {
 		ptree root;
 		cache.get(root);
 		// write the cache to the disc in XML format
-		fstream out (bdii_path.c_str());
+		ofstream out (bdii_path.c_str());
 		write_xml(out, root);
 		out.flush();
 		out.close();
-	} catch(...) {
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BDII cache: An unknown exception has been catched!" << commit;
+	} catch(std::exception& ex) {
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BDII cache: " << ex.what() << commit;
 		return EXIT_FAILURE;
 	}
 
