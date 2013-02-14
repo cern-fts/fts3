@@ -27,7 +27,7 @@ prog=$(basename $exec)
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
-lockfile=/var/lock/subsys/fts-bdii-updater
+lockfile=/var/lock/subsys/fts-bdii-cache-updater
 
 start() {
     echo -n $"Starting $prog: "
