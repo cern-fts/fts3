@@ -41,6 +41,9 @@ namespace infosys {
 using namespace std;
 using namespace boost;
 
+/**
+ *
+ */
 class SiteNameRetriever: public ThreadSafeInstanceHolder<SiteNameRetriever>   {
 
 	friend class ThreadSafeInstanceHolder<SiteNameRetriever>;

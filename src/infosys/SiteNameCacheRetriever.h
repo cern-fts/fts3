@@ -1,8 +1,25 @@
 /*
+ *	Copyright notice:
+ *	Copyright © Members of the EMI Collaboration, 2010.
+ *
+ *	See www.eu-emi.eu for details on the copyright holders
+ *
+ *	Licensed under the Apache License, Version 2.0 (the "License");
+ *	you may not use this file except in compliance with the License.
+ *	You may obtain a copy of the License at
+ *
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *	Unless required by applicable law or agreed to in writing, software
+ *	distributed under the License is distributed on an "AS IS" BASIS,
+ *	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or impltnsied.
+ *	See the License for the specific language governing permissions and
+ *	limitations under the License.
+ *
  * SiteNameCacheRetriver.h
  *
  *  Created on: Feb 13, 2013
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #ifndef SITENAMECACHERETRIVER_H_
@@ -33,7 +50,7 @@ public:
 
 	virtual ~SiteNameCacheRetriever();
 
-	ptree get();
+	void get(ptree& root);
 
 private:
 
@@ -55,6 +72,15 @@ private:
 	static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
 	// glue2
+	static const char* ATTR_GLUE2_FK;
+	static const char* ATTR_GLUE2_ENDPOINT;
+	static const char* ATTR_GLUE2_SITE;
+
+	static const string FIND_SE_FK_GLUE2;
+	static const char* FIND_SE_FK_ATTR_GLUE2[];
+
+	static const string FIND_FK_SITE_GLUE2(string fk);
+	static const char* FIND_FK_SITE_ATTR_GLUE2[];
 
 };
 

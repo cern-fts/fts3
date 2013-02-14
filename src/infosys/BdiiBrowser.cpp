@@ -207,8 +207,13 @@ string BdiiBrowser::parseForeingKey(list<string> values, const char *attr) {
 
 	list<string>::iterator it;
 	for (it = values.begin(); it != values.end(); it++) {
-		size_t pos = it->find('=');
-		if (it->substr(0, pos) == attr) return it->substr(pos + 1);
+
+		string entry = *it, attr_str = attr;
+		to_lower(entry);
+		to_lower(attr_str);
+
+		size_t pos = entry.find('=');
+		if (entry.substr(0, pos) == attr_str) return it->substr(pos + 1);
 	}
 
 	return string();
