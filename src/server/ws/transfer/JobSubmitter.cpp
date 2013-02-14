@@ -134,7 +134,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
         
     	jobs.push_back(tupple);
     }
-    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+    //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
@@ -208,7 +208,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
         
     	jobs.push_back(tupple);
     }
-    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+    //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
 
 JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
@@ -293,7 +293,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		tupple.metadata = (*it)->metadata ? *(*it)->metadata : string();
 		jobs.push_back(tupple);
 	}
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+	//FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
 
 void JobSubmitter::init(tns3__TransferParams *jobParams) {
@@ -305,7 +305,7 @@ void JobSubmitter::init(tns3__TransferParams *jobParams) {
 
     if (jobParams) {
     	params(jobParams->keys, jobParams->values);
-        FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter map has been created" << commit;
+        //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Parameter map has been created" << commit;
     }
 }
 
