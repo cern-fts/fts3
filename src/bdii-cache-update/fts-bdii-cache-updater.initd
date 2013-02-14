@@ -4,7 +4,7 @@
 #
 # chkconfig:    2345 80 20
 # description:  BDII updater
-# processname:  fts_myosg_updater
+# processname:  fts_bdii_updater
 
 # http://fedoraproject.org/wiki/FCNewInit/Initscripts
 ### BEGIN INIT INFO
@@ -56,7 +56,7 @@ stop() {
     echo -n $"Stopping $prog: "
     # stop it here, often "killproc $prog"
     rm -f "$lockfile" && success || failure 
-    pkill fts_myosg_updater
+    pkill fts_bdii_updater
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile
