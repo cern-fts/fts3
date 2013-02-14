@@ -164,14 +164,14 @@ protected:
 			sleep(1);
 			continue;
 		}
-	        /*
-	        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
+	        	        
+		bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
 		if(!alive){
 			sleep(1);
 			continue;
 		}
-		*/
-			
+		
+					
                 if(!queueMsgRecovery.empty()){			
 			std::vector<struct message>::const_iterator iter;
 			for (iter = queueMsgRecovery.begin(); iter != queueMsgRecovery.end(); ++iter) {
@@ -203,18 +203,18 @@ protected:
 		
 		sleep(1);		
             } catch (const fs::filesystem_error& ex) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
 		for (iter = messages.begin(); iter != messages.end(); ++iter)
 			queueMsgRecovery.push_back(*iter);				
             } catch (Err& e) {
-                FTS3_COMMON_EXCEPTION_THROW(e);
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
 		for (iter = messages.begin(); iter != messages.end(); ++iter)
 			queueMsgRecovery.push_back(*iter);		
             } catch (...) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue thrown unhandled exception"));
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
 		for (iter = messages.begin(); iter != messages.end(); ++iter)
 			queueMsgRecovery.push_back(*iter);					
-            }            
+            } 
         }
     }
 

@@ -2722,6 +2722,9 @@ bool MySqlAPI::checkConnectionStatus() {
     catch (std::exception& e) {
         // Pass
     }
+    catch (...) {
+        // Pass
+    }    
 
     return couldConnect;
 }

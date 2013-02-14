@@ -145,17 +145,17 @@ protected:
 		}
 	      sleep(1);
             } catch (const fs::filesystem_error& ex) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom(ex.what()));
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;                	
 		for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
 			queueMsgRecovery.push_back(*iter_restore);		
 	      sleep(1);		
             } catch (Err& e) {
-                FTS3_COMMON_EXCEPTION_THROW(e);
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;                	
 		for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
 			queueMsgRecovery.push_back(*iter_restore);		
 	      sleep(1);		
-            } catch (...) {
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message queue threw unhandled exception"));
+            } catch (...) {                
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;                	
 		for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
 			queueMsgRecovery.push_back(*iter_restore);		
 	      sleep(1);		

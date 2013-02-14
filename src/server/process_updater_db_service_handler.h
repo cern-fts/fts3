@@ -117,8 +117,8 @@ protected:
 	    messages.clear();
             sleep(10);
         }catch (...) {
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
 	        sleep(10);	
-                FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Message updater thrown unhandled exception"));
             }            
     }
   }
