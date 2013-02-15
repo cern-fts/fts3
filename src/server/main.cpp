@@ -208,6 +208,7 @@ int DoServer(int argc, char** argv) {
 	
 	checkInitDirs();
 
+	//re-read here
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
         std::string arguments("");
         size_t foundHelp;
@@ -300,6 +301,19 @@ int DoServer(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
+
+    //very first check before it goes to deamon mode
+    try{
+    	FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+    }catch (Err& e) {
+        std::string msg = "Fatal error, exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        return EXIT_FAILURE;
+    } catch (...) {
+        std::string msg = "Fatal error (unknown origin), exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        return EXIT_FAILURE;
+    }
 
     std::string arguments("");
     size_t found;
