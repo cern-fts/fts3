@@ -22,7 +22,7 @@
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-exec="/usr/sbin/fts_bdii_updater"
+exec="/usr/sbin/fts_bdii_cache_updater"
 prog=$(basename $exec)
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
