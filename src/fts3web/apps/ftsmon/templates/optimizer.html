@@ -24,11 +24,6 @@ Optimizer
 	               value="{{filterForm.dest_se.value|default_if_none:''}}"/>
 	      </p>
 	      <p>
-	        <label for="filter_vo">VO:</label>
-	        <input type="text" id="filter_vo" name="vo" class="text_field"
-	               value="{{filterForm.vo.value|default_if_none:''}}"/>
-	      </p>
-	      <p>
 	        <input type="submit"/>
 	      </p>      
 	    </form>
@@ -41,7 +36,6 @@ Optimizer
  	<script type="text/javascript">
 	  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources %}"});
 	  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations %}"});
-	  $("#filter_vo").autocomplete({source: "{% url ftsmon.views.uniqueVos %}"});
   </script>
 </div>
 

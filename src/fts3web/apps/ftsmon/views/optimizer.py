@@ -10,8 +10,6 @@ def optimizer(httpRequest):
     optimizations = Optimize.objects.filter(throughput__isnull = False)
     
     if filterForm.is_valid():
-        if filterForm['vo'].value():
-            optimizations = optimizations.filter(file__job__vo_name = filterForm['vo'].value())
         if filterForm['source_se'].value():
             optimizations = optimizations.filter(source_se = filterForm['source_se'].value())
         if filterForm['dest_se'].value():

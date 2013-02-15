@@ -111,7 +111,7 @@ class  ConfigAudit(models.Model):
 
 
 class Optimize(models.Model):
-    file       = models.ForeignKey('File', db_column = 'file_id', primary_key = True)
+    file_id    = models.IntegerField(primary_key = True)
     source_se  = models.CharField(max_length = 255)
     dest_se    = models.CharField(max_length = 255)
     nostreams  = models.IntegerField()
