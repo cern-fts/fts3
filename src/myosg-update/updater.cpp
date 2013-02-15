@@ -107,7 +107,6 @@ int main(int argc, char** argv) {
 	}
 
    }catch (Err& e) {
-        std::string msg = "Fatal error, exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         return EXIT_FAILURE;
     } catch (...) {
