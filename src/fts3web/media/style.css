@@ -232,6 +232,11 @@ table.queueList tr td {
   text-align: center;
 }
 
+/* Optimizer */
+table.optimizer tr td {
+	text-align: center;
+}
+
 /* Statistics */
 #statistics em {
   font-weight: bold;

@@ -107,3 +107,20 @@ class  ConfigAudit(models.Model):
 
     def simple_action(self):
         return self.action.split(' ')[0]
+
+
+
+class Optimize(models.Model):
+    file       = models.ForeignKey('File', db_column = 'file_id', primary_key = True)
+    source_se  = models.CharField(max_length = 255)
+    dest_se    = models.CharField(max_length = 255)
+    nostreams  = models.IntegerField()
+    timeout    = models.IntegerField()
+    active     = models.IntegerField()
+    throughput = models.FloatField()
+    buffer     = models.IntegerField()
+    filesize   = models.BigIntegerField()
+    datetime   = models.DateTimeField() 
+    
+    class Meta:
+        db_table = 't_optimize'
