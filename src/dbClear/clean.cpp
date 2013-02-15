@@ -46,8 +46,7 @@ static int fexists(const char *filename) {
 
 int main(int argc, char** argv){
 
-try 
-    { 
+try { 
 	const char *configfile = "/etc/fts3/fts3config";	
 
         if (fexists(configfile) != 0){

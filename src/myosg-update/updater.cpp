@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
 	// exit status
 	int ret = EXIT_SUCCESS;
 
+  try{	
 	theServerConfig().read(argc, argv);
 
 	// path to local the MyOSG XML file and a temporary file
@@ -104,6 +105,16 @@ int main(int argc, char** argv) {
 		// if there was an error remove the part file
 		remove (myosg_path_part.c_str());
 	}
+
+   }catch (Err& e) {
+        std::string msg = "Fatal error, exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+        return EXIT_FAILURE;
+    } catch (...) {
+        std::string msg = "Fatal error (unknown origin), exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        return EXIT_FAILURE;
+    }  
 
     return ret;
 }
