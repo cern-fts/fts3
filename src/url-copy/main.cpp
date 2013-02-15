@@ -856,8 +856,11 @@ int main(int argc, char **argv) {
                     errorPhase = TRANSFER;
                 }
 	       if(handle){ // finish all transfer in a clean way
-		        log << fileManagement->timestamp() << "INFO Transfer failed, issue cancel(transfer) to cleanup resources" << '\n';
-			gfal2_cancel(handle);    		
+			if (propagated == false) {
+            			propagated = true;
+		        	log << fileManagement->timestamp() << "INFO Transfer failed, issue cancel(transfer) to cleanup resources" << '\n';
+				gfal2_cancel(handle);
+			}
 	       }
                 goto stop;
             } else {
