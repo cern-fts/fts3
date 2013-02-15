@@ -87,27 +87,14 @@ SiteNameCacheRetriever::~SiteNameCacheRetriever() {
 
 }
 
-void SiteNameCacheRetriever::get(ptree& root) {
+void SiteNameCacheRetriever::get(map<string, string>& cache) {
 	// get data from glue1
-	fromGlue1();
+	fromGlue1(cache);
 	// get data from glue2
-	fromGlue2();
-	// put the data into ptree:
-	// iterate over the results
-	map<string, string>::iterator it;
-	for (it = cache.begin(); it != cache.end(); it++) {
-		// a single entry
-		ptree entry;
-		// contains the hostname
-		entry.add("hostname", it->first);
-		// and the sitename
-		entry.add("sitename", it->second);
-		// add it to the root
-		root.add_child("entry", entry);
-	}
+	fromGlue2(cache);
 }
 
-void SiteNameCacheRetriever::fromGlue1() {
+void SiteNameCacheRetriever::fromGlue1(map<string, string>& cache) {
 
 	static BdiiBrowser& bdii = BdiiBrowser::getInstance();
 
@@ -135,7 +122,7 @@ void SiteNameCacheRetriever::fromGlue1() {
 	}
 }
 
-void SiteNameCacheRetriever::fromGlue2() {
+void SiteNameCacheRetriever::fromGlue2(map<string, string>& cache) {
 
 	static BdiiBrowser& bdii = BdiiBrowser::getInstance();
 

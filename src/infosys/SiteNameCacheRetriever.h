@@ -50,7 +50,7 @@ public:
 
 	virtual ~SiteNameCacheRetriever();
 
-	void get(ptree& root);
+	void get(map<string, string>& cache);
 
 private:
 
@@ -58,10 +58,8 @@ private:
 	SiteNameCacheRetriever(SiteNameCacheRetriever const&);
 	SiteNameCacheRetriever& operator=(SiteNameCacheRetriever const&);
 
-	void fromGlue1();
-	void fromGlue2();
-
-	map<string, string> cache;
+	void fromGlue1(map<string, string>& cache);
+	void fromGlue2(map<string, string>& cache);
 
 	// glue1
 	static const char* ATTR_GLUE1_SERVICE;
