@@ -23,6 +23,9 @@
  */
 
 #include "SiteNameCacheRetriever.h"
+
+#include "common/logger.h"
+
 #include <iostream>
 
 namespace fts3 {
@@ -99,11 +102,15 @@ void SiteNameCacheRetriever::fromGlue1(map<string, string>& cache) {
 	static BdiiBrowser& bdii = BdiiBrowser::getInstance();
 
 	// browse for se names and respective site names
+	time_t start = time(0);
 	list< map<string, list<string> > > rs = bdii.browse< list<string> >(
 			BdiiBrowser::GLUE1,
 			FIND_SE_SITE_GLUE1,
 			FIND_SE_SITE_ATTR_GLUE1
 		);
+	time_t stop = time(0);
+	if (stop - start > 30)
+		FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
 
 	list< map<string, list<string> > >::iterator it;
 	for (it = rs.begin(); it != rs.end(); it++) {
@@ -127,11 +134,16 @@ void SiteNameCacheRetriever::fromGlue2(map<string, string>& cache) {
 	static BdiiBrowser& bdii = BdiiBrowser::getInstance();
 
 	// browse for se names and foreign keys that are pointing to the site name
+	time_t start = time(0);
 	list< map<string, list<string> > > rs = bdii.browse< list<string> >(
 			BdiiBrowser::GLUE2,
 			FIND_SE_FK_GLUE2,
 			FIND_SE_FK_ATTR_GLUE2
 		);
+	time_t stop = time(0);
+	// log a warning if browsing BDII takes more than 30s
+	if (stop - start > 30)
+		FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
 
 	list< map<string, list<string> > >::iterator it;
 	for (it = rs.begin(); it != rs.end(); it++) {
@@ -145,11 +157,16 @@ void SiteNameCacheRetriever::fromGlue2(map<string, string>& cache) {
 		// get the foreign key
 		string fk = item[ATTR_GLUE2_FK].front();
 		// browse for the site name
+		start = time(0);
 		list< map<string, list<string> > > rs2 = bdii.browse< list<string> >(
 				BdiiBrowser::GLUE2,
 				FIND_FK_SITE_GLUE2(fk),
 				FIND_FK_SITE_ATTR_GLUE2
 			);
+		stop = time(0);
+		// log a warning if browsing BDII takes more than 30s
+		if (stop - start > 30)
+			FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
 		// make sure the result set is not empty
 		if (rs2.empty() || rs2.front().empty() || rs2.front()[ATTR_GLUE2_SITE].empty()) continue;
 		// get the respective site name
