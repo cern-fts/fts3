@@ -42,3 +42,9 @@ install(FILES         fts-bdii-cache-updater.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts-bdii-cache-updater )
+	
+install(FILES         bdii_cache.xml
+        DESTINATION /var/lib/fts3 
+	PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
+	
+

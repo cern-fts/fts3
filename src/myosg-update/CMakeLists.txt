@@ -39,3 +39,7 @@ install(FILES         fts-myosg-updater.initd
         DESTINATION ${SYSCONF_INSTALL_DIR}/rc.d/init.d 
 	PERMISSIONS OWNER_EXECUTE OWNER_READ GROUP_READ WORLD_READ
 	RENAME fts-myosg-updater )
+	
+install(FILES         myosg.xml
+        DESTINATION /var/lib/fts3 
+	PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
