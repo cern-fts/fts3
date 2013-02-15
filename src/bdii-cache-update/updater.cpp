@@ -29,7 +29,17 @@ int main(int argc, char** argv) {
 	// exit status
 	int ret = EXIT_SUCCESS;
 
-	theServerConfig().read(argc, argv);
+	try{
+		theServerConfig().read(argc, argv);
+	} catch (Err& e) {
+        	std::string msg = "Fatal error, exiting...";
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        	return EXIT_FAILURE;
+    	} catch (...) {
+        	std::string msg = "Fatal error (unknown origin), exiting...";
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        	return EXIT_FAILURE;
+    	}		
 
 	// path to local BDII cache
 	const string bdii_path = "/var/lib/fts3/bdii_cache.xml";

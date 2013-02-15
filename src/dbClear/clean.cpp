@@ -46,10 +46,6 @@ static int fexists(const char *filename) {
 
 int main(int argc, char** argv){
 
-int d = daemon(0,0);
-if(d < 0)
-	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;  
-
 try 
     { 
 	const char *configfile = "/etc/fts3/fts3config";	
@@ -60,15 +56,27 @@ try
 	}	
 	
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
+
+        int d = daemon(0,0);
+        if(d < 0)
+		std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;  
+
 	fts3_initialize_db_backend();
 	
 	std::string cleanRecordsHost = theServerConfig().get<std::string>("CleanRecordsHost");
+	
 	if(cleanRecordsHost.compare("true")==0)
 		db::DBSingleton::instance().getDBObjectInstance()->backup();
-      }
-    catch(...){
-    	return EXIT_FAILURE;
-    }    
+		
+    }catch (Err& e) {
+        std::string msg = "Fatal error, exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+        return EXIT_FAILURE;
+    } catch (...) {
+        std::string msg = "Fatal error (unknown origin), exiting...";
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        return EXIT_FAILURE;
+    }  
       
   return EXIT_SUCCESS;
 }
