@@ -186,6 +186,8 @@ rm -rf %{buildroot}
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/status
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/stalled
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
+%attr(0644,fts3,root) %{_var}/log/fts3/bdii_cache.xml
+%attr(0644,fts3,root) %{_var}/log/fts3/myosg.xml
 %{_sbindir}/fts_msg_cron
 %{_sbindir}/fts_msg_bulk
 %{_sbindir}/fts_server
