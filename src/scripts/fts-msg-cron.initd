@@ -76,7 +76,11 @@ case "$1" in
         restart
         ;;
     status)
-        status $prog
+        if [ -f $lockfile ]; then
+		echo $"${prog} running"
+	else
+		echo $"${prog} is stopped"	
+	fi
         ;;
     try-restart|condrestart)
         if status $prog >/dev/null ; then

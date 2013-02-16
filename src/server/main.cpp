@@ -46,6 +46,8 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
 bool stopThreads = false;
+const char *hostcert = "/etc/grid-security/hostcert.pem";
+const char *configfile = "/etc/fts3/fts3config";
 
 /* -------------------------------------------------------------------------- */
 
@@ -165,16 +167,16 @@ void checkInitDirs(){
    }      
     }catch (const fs::filesystem_error& ex){
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-        exit(1);    
+        throw;    
     }catch (Err& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-        exit(1);
+        throw;
     } catch (std::exception& ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-        exit(1);
+        throw;
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the filesystem required directories" << commit;
-        exit(1);
+        throw;
     }
 }
 
@@ -187,8 +189,7 @@ void myunexpected() {
 }
 
 int DoServer(int argc, char** argv) {
-    const char *hostcert = "/etc/grid-security/hostcert.pem";
-    const char *configfile = "/etc/fts3/fts3config";
+
     int res = 0;
 
     try {
@@ -200,14 +201,7 @@ int DoServer(int argc, char** argv) {
         REGISTER_SIGNAL(SIGBUS);
         REGISTER_SIGNAL(SIGTRAP);
         REGISTER_SIGNAL(SIGSYS);
-
-        if (fexists(configfile) != 0) {
-            std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
-            exit(1);
-        }
-	
-	checkInitDirs();
-
+  	
 	//re-read here
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
         std::string arguments("");
@@ -240,27 +234,9 @@ int DoServer(int argc, char** argv) {
             }
         }
 
-        if (false == checkUrlCopy()) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts_url_copy process is set in the PATH env variable" << commit;
-            exit(1);
-        }
-
-        if (fexists(hostcert) != 0) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert/key are installed" << commit;
-            exit(1);
-        }
-
-        //set_terminate(myterminate);
-        //set_unexpected(myunexpected);
-
-        if (res == -1) {
-            FTS3_COMMON_EXCEPTION_THROW(Err_System());
-        }
-
         bool isDaemon = !FTS3_CONFIG_NAMESPACE::theServerConfig().get<bool> ("no-daemon");
 
-        if (isDaemon) {
-            //daemonize();            
+        if (isDaemon) {                
             FILE* openlog = freopen(logDir.c_str(), "a", stderr);
             if (openlog == NULL)
                 std::cerr << "Can't open log file" << std::endl;
@@ -277,16 +253,9 @@ int DoServer(int argc, char** argv) {
         res = sigaction(SIGINT, &action, NULL);
 
         //initialize queue updater here to avoid race conditions  
-        ThreadSafeList::get_instance();
-
-        std::string infosys = theServerConfig().get<std::string > ("Infosys");
-        if (infosys.compare("false") != 0) {
-            /*only bdii to be used, not the cache file*/
-            setenv("GLITE_SD_PLUGIN", "bdii", 1);
-            setenv("LCG_GFAL_INFOSYS", infosys.c_str(), 1);
-        }
-
+        ThreadSafeList::get_instance();       
         theServer().start();
+	
     } catch (Err& e) {
         std::string msg = "Fatal error, exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
@@ -304,7 +273,24 @@ int main(int argc, char** argv) {
 
     //very first check before it goes to deamon mode
     try{
+    	if (fexists(configfile) != 0) {
+            std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
+            throw;
+        }
+	
+        if (false == checkUrlCopy()) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts_url_copy process is set in the PATH env variable" << commit;
+            throw;
+        }
+
+        if (fexists(hostcert) != 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert/key are installed" << commit;
+            throw;
+        }	
+	
     	FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+	
+	checkInitDirs();	
     }catch (Err& e) {
         std::string msg = "Fatal error, exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
@@ -353,7 +339,7 @@ int main(int argc, char** argv) {
     int result = fork();
 
     if (result == 0) {
-        DoServer(argc, argv);
+        result = DoServer(argc, argv);
     }
 
     if (result < 0) {
