@@ -259,13 +259,12 @@ int DoServer(int argc, char** argv) {
     } catch (Err& e) {
         std::string msg = "Fatal error, exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
-        return EXIT_FAILURE;
+        return -1;
     } catch (...) {
         std::string msg = "Fatal error (unknown origin), exiting...";
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
-        return EXIT_FAILURE;
+        return -1;
     }
-
     return EXIT_SUCCESS;
 }
 
@@ -353,7 +352,7 @@ int main(int argc, char** argv) {
         if (!WIFSTOPPED(status)) {
             result = fork();
             if (result == 0) {
-                DoServer(argc, argv);
+                result = DoServer(argc, argv);
             }
             if (result < 0) {
                 exit(1);
