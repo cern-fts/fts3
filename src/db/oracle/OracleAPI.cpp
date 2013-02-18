@@ -1511,9 +1511,8 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
             st2->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
             st2->setString(4, cancelReason);
             st2->setString(5, jobId);
-            updated += st2->executeUpdate();
-            if (updated != 0)
-                conn->commit(pooledConnection);
+            st2->executeUpdate();
+            conn->commit(pooledConnection);
         }
 
         conn->destroyStatement(st1, cancelJTag, pooledConnection);
@@ -1636,6 +1635,7 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
         s1->setString(4, dlg_id);
         s1->setString(5, dn);
         s1->executeUpdate();
+	conn->commit(pooledConnection);
 
         conn->destroyStatement(s, tag, pooledConnection);
         conn->destroyStatement(s1, tag1, pooledConnection);

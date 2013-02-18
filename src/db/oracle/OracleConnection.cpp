@@ -111,11 +111,11 @@ oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std:
         // Check if the statement is already cached
         if (true == conn->isCached("", tag)) {
             s = conn->createStatement("", tag);
-            s->setAutoCommit(true);
+            s->setAutoCommit(false);
             return s;
         } else {
             s = conn->createStatement(sql, tag);
-            s->setAutoCommit(true);
+            s->setAutoCommit(false);
             return s;
         }
 
