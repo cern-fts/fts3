@@ -131,7 +131,10 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     	job_element_tupple tupple;
     	tupple.source = src;
     	tupple.destination = dest;
-        
+    	tupple.checksum = string();
+		tupple.filesize = 0;
+		tupple.metadata = string();
+
     	jobs.push_back(tupple);
     }
     //FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
@@ -205,6 +208,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     	tupple.destination = dest;
         if((*it)->checksum)
     		tupple.checksum = *(*it)->checksum;
+		tupple.filesize = 0;
+		tupple.metadata = string();
         
     	jobs.push_back(tupple);
     }
