@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 
 
     //get timestamps
-    std::string getTimetamps = "stat -c %z /var/lock/subsys/fts-server | sed -e  's/ /T/g'  -e 's/.000000000T/Z/g'";
+    std::string getTimetamps = "stat -c %z /var/lock/subsys/fts-server | sed -e 's/+[0-9]*//g' -e 's/\\.[0-9]*/Z/g' -e 's/ /T/g' -e 's/ZT/Z/g'";
     std::stringstream timestamp;
     FILE *inTime;
     char buffTime[512];
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
             stream << "dn: GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
             stream << "GLUE2ServiceID: https://" << alias << ":" << port << "_org.glite.fts" << "\n";
             stream << "objectClass: GLUE2Service" << "\n";
-            stream << "GLUE2ServiceType: org.glite.fts" << "\n";
+            stream << "GLUE2ServiceType: org.glite.FileTransfer" << "\n";
             stream << "GLUE2ServiceQualityLevel: production" << "\n";
             stream << "GLUE2ServiceAdminDomainForeignKey: CERN-PROD" << "\n";
 
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
             stream << "GLUE2EndpointImplementationVersion: " << versionFTS.str() << "\n";
             stream << "GLUE2EntityOtherInfo: MiddlewareName=EMI" << "\n";
             stream << "GLUE2EntityOtherInfo: MiddlewareVersion=" << versionEMI << "\n";
-            stream << "GLUE2EndpointInterfaceName: org.glite.fts" << "\n";
+            stream << "GLUE2EndpointInterfaceName: org.glite.FileTransfer" << "\n";
 	    stream << "GLUE2EndpointURL: https://" << alias << ":" << port << "\n";	    
             stream << "GLUE2EndpointSemantics: https://svnweb.cern.ch/trac/fts3" << "\n";            
             //stream << "GLUE2EndpointWSDL: https://fts2run.cern.ch:8443/glite-data-transfer-fts/services/FileTransfer?wsdl
