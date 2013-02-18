@@ -94,14 +94,11 @@ void fts3_initialize_db_backend() {
     try {
         db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, pooledConn);
     } catch (Err& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-        exit(1);
+        throw;
     } catch (std::exception& ex) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-        exit(1);
+        throw;
     } catch (...) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the database, check username/password/connstring" << commit;
-        exit(1);
+        throw;
     }
 
 
@@ -256,13 +253,11 @@ int DoServer(int argc, char** argv) {
         ThreadSafeList::get_instance();       
         theServer().start();
 	
-    } catch (Err& e) {
-        std::string msg = "Fatal error, exiting...";
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+    } catch (Err& e) {        
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         return -1;
     } catch (...) {
-        std::string msg = "Fatal error (unknown origin), exiting...";
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
         return -1;
     }
     return EXIT_SUCCESS;
@@ -270,6 +265,7 @@ int DoServer(int argc, char** argv) {
 
 int main(int argc, char** argv) {
 
+    pid_t child;
     //very first check before it goes to deamon mode
     try{
     	if (fexists(configfile) != 0) {
@@ -291,12 +287,10 @@ int main(int argc, char** argv) {
 	
 	checkInitDirs();	
     }catch (Err& e) {
-        std::string msg = "Fatal error, exiting...";
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         return EXIT_FAILURE;
     } catch (...) {
-        std::string msg = "Fatal error (unknown origin), exiting...";
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
         return EXIT_FAILURE;
     }
 
@@ -327,24 +321,32 @@ int main(int argc, char** argv) {
         else {
             d = daemon(0, 0);
             if (d < 0)
-                std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon, will continue attached to tty"  << commit;
         }
     } else {
         d = daemon(0, 0);
         if (d < 0)
-            std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't set daemon, will continue attached to tty"  << commit;
     }
 
     int result = fork();
 
-    if (result == 0) {
-        result = DoServer(argc, argv);
+    if (result == 0) { //child
+        int resultExec = DoServer(argc, argv);
+	if (resultExec < 0) {
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Can't start the server" << commit;
+		exit(1);
+    	}
+    }else{ //parent
+            child = result;	   
+     	    sleep(2);
+	    int err  = waitpid(child, NULL, WNOHANG);
+	    if(err != 0){       
+	        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno)  << commit; 
+		return -1;
+	    }
     }
 
-    if (result < 0) {
-        std::cerr << "Can't start the server" << std::endl;
-        exit(1);
-    }
 
     for (;;) {
         int status = 0;
