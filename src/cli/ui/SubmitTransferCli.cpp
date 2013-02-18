@@ -244,7 +244,7 @@ bool SubmitTransferCli::createJobElements() {
     	if (!getSource().empty() && !getDestination().empty()) {
 
     		files.push_back (
-    				File (list_of(getSource()), list_of(getDestination()), checksums)
+    				File (list_of(getSource()), list_of(getDestination()), checksums, filesize, file_metadata)
     			);
     	}
     }
