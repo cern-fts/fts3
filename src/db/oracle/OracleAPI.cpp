@@ -459,11 +459,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     std::string selecttag = "getByJobId";
     std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
             " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.checksum, t_job.CHECKSUM_METHOD, t_job.SOURCE_SPACE_TOKEN,"
-            " t_job.SPACE_TOKEN, t_job.copy_pin_lifetime, t_job.bring_online, t_file.user_filesize, t_file.file_metadata, t_job.job_metadata, t_file.file_state, t_file.logical_name, "
-            " t_file.reason_class, t_file.reason, t_file.num_failures, t_file.current_failures, "
-            " t_file.catalog_failures, t_file.prestage_failures, t_file.filesize, "
-            " t_file.finish_time, t_file.agent_dn, t_file.internal_file_params, "
-            " t_file.error_scope, t_file.error_phase "
+            " t_job.SPACE_TOKEN, t_job.copy_pin_lifetime, t_job.bring_online, t_file.user_filesize, t_file.file_metadata, t_job.job_metadata "
             " FROM t_file, t_job WHERE"
             " t_file.job_id = t_job.job_id AND "
             " t_file.job_finished is NULL AND "
