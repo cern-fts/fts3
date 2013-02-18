@@ -70,6 +70,7 @@ void SetCfgCli::parse(int ac, char* av[]) {
 	// check JSON configurations
 	vector<string>::iterator it;
 	for (it = cfgs.begin(); it < cfgs.end(); it++) {
+		trim(*it);
 		// check if the configuration is started with an opening brace and ended with a closing brace
 		if (*it->begin() != '{' || *(it->end() - 1) != '}') {
 			// most likely the user didn't used single quotation marks and bash did some pre-parsing
