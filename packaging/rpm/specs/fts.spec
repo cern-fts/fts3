@@ -203,7 +203,6 @@ rm -rf %{buildroot}
 %attr(0755,root,root) %{_initddir}/fts-info-publisher
 %attr(0755,root,root) %{_initddir}/fts-myosg-updater
 %attr(0755,root,root) %{_initddir}/fts-bdii-cache-updater
-%config %{_sysconfdir}/logrotate.d/fts-server
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-records-cleaner
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-msg-cron
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
@@ -211,6 +210,7 @@ rm -rf %{buildroot}
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-bdii-cache-updater
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
+%config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts_server.8.gz
 
 %files client
