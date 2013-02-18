@@ -93,11 +93,7 @@ class  ConfigAudit(models.Model):
     # This field is definitely NOT the primary key, but since we are not modifying
     # this from Django, we can live with this workaround until Django supports fully
     # composite primary keys
-    if DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
-        datetime = models.DateTimeField(db_column = 'when', primary_key = True)
-    else:
-        datetime = models.DateTimeField(primary_key = True)
-     
+    datetime = models.DateTimeField(primary_key = True)
     dn       = models.CharField(max_length = 1024)
     config   = models.CharField(max_length = 4000)
     action   = models.CharField(max_length = 100)
