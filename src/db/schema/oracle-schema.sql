@@ -16,7 +16,7 @@ CREATE TABLE t_log (
   job_id     CHAR(36),
   dn         VARCHAR2(255),
   vo         VARCHAR2(255),
-  when       TIMESTAMP WITH TIME ZONE,
+  datetime       TIMESTAMP WITH TIME ZONE,
   CONSTRAINT t_log_pk PRIMARY KEY (path, job_id, dn, vo)
 );
 
@@ -53,7 +53,7 @@ CREATE TABLE t_optimize (
   filesize         	NUMBER default NULL,
 --
 -- timestamp
-   when			TIMESTAMP WITH TIME ZONE  
+   datetime			TIMESTAMP WITH TIME ZONE  
 );
 
 
@@ -63,7 +63,7 @@ CREATE TABLE t_optimize (
 CREATE TABLE t_config_audit (
 --
 -- timestamp
-   when			TIMESTAMP WITH TIME ZONE,
+   datetime		TIMESTAMP WITH TIME ZONE,
 --
 -- dn
    dn			VARCHAR2(1024),

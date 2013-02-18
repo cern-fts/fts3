@@ -2283,7 +2283,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
 
 void OracleAPI::auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) {
     const std::string tag = "auditConfiguration";
-    std::string query = "INSERT INTO t_config_audit (when, dn, config, action ) VALUES (:1, :2, :3, :4)";
+    std::string query = "INSERT INTO t_config_audit (datetime, dn, config, action ) VALUES (:1, :2, :3, :4)";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;    
@@ -2503,7 +2503,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostre
             " and t_job.job_id = t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2)"
             " and nostreams = :3 and timeout=:4 and buffer=:5 and source_se=:6 and dest_se=:7 ";
 
-    std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, when=:4, timeout=:5 "
+    std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, datetime=:4, timeout=:5 "
             " WHERE nostreams = :6 and timeout=:7 and buffer=:8 and source_se=:9 and dest_se=:10 ";
 
     oracle::occi::Statement* s1 = NULL;
@@ -2603,7 +2603,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostre
 void OracleAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int) {
     const std::string tag = "addOptimizer";
     std::string query = "insert into "
-            " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, when) "
+            " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, datetime) "
             " values(:1,:2,:3,:4,:5,(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and "
             " t_job.source_se=:6 and t_job.dest_se=:7),:8,:9,:10) ";
 
