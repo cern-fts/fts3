@@ -411,8 +411,9 @@ int main(int argc, char **argv) {
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
 
-    set_terminate(myterminate);
-    set_unexpected(myunexpected);
+    /**TODO: disable for now/
+    //set_terminate(myterminate);
+    //set_unexpected(myunexpected);
 
     std::string bytes_to_string("");
     struct stat statbufsrc;
