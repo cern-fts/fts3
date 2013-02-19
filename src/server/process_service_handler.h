@@ -53,7 +53,7 @@ limitations under the License. */
 #include <boost/scoped_ptr.hpp>
 #include "name_to_uid.h"
 #include "producer_consumer_common.h"
-
+#include <sys/resource.h>
 
 extern bool  stopThreads;
 
@@ -64,7 +64,17 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
 
-
+static int getMaxThreads(){
+    struct rlimit rlim;
+    int err = -1;
+    err = getrlimit(RLIMIT_NPROC,&rlim);
+    if( 0 != err){        
+        return -1;
+    }else{
+    	return rlim.rlim_cur;
+    }
+  return -1;	
+}
 
 template <class T>
 inline std::string to_string(const T& t) {
@@ -795,6 +805,15 @@ protected:
 	    }
 	
             try {
+
+		int maximumThreads = getMaxThreads();
+		int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();		
+		if( maximumThreads!=-1 && currentActiveTransfers!=0 && (currentActiveTransfers*10)>= maximumThreads){
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
+		        usleep(50000);
+			continue;
+		}
+
 
                 try {
 		/*force fail to stall transfers*/		

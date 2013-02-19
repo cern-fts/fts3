@@ -233,6 +233,8 @@ public:
     virtual std::vector<std::string> getAllStandAlloneCfgs();
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
+    
+    virtual int activeProcessesForThisHost();    
 
 private:
     size_t                poolSize;

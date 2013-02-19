@@ -6240,6 +6240,57 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getAllPairCfgs() {
     return ret;
 }
 
+int OracleAPI::activeProcessesForThisHost(){
+    std::string tag = "activeProcessesForThisHost";
+    std::string query = "select count(*) from t_file where file_state in ('READY','ACTIVE') and TRANSFERHOST=:1";   		
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    int ret = 0;
+    oracle::occi::Connection* pooledConnection = NULL;    
+    
+    try {
+
+	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return ret;
+
+        s = conn->createStatement(query, tag, pooledConnection);
+	s->setString(1, ftsHostName);
+        r = conn->createResultset(s, pooledConnection);
+
+        if (r->next()) {
+        		ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);                
+    return ret;
+
+}
+
+
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

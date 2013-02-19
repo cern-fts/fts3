@@ -2950,7 +2950,17 @@ std::vector< std::pair<std::string, std::string> > MySqlAPI::getAllPairCfgs() {
     return ret;
 }
 
+int MySqlAPI::activeProcessesForThisHost(){
+    soci::session sql(connectionPool);
 
+    unsigned active = 0;
+    try{
+        sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and TRANSFERHOST=:host", soci::use(hostname), soci::into(active);
+     }catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+    return active;
+}
 
 // the class factories
 

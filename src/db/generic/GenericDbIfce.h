@@ -280,6 +280,8 @@ public:
     virtual void setToFailOldQueuedJobs() = 0;
 
     virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
+    
+    virtual int activeProcessesForThisHost() = 0;
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
 };
