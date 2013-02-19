@@ -38,6 +38,7 @@ FTS3_CONFIG_NAMESPACE_START
 #define FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT "/var/log/fts3"
 #define FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT "/etc/fts3/fts3config"
 #define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "oracle"
+#define FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT "4"
 
 /* ---------------------------------------------------------------------- */
 
@@ -72,7 +73,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         )
 	(
             "DbThreadsNum,D",
-            po::value<std::string>( &(_vars["DbThreadsNum"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
+            po::value<std::string>( &(_vars["DbThreadsNum"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT),
             "Number of db connections in the db threads pool"
         )	
         (
