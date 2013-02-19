@@ -40,16 +40,16 @@ Optimizer
 </div>
 
 
-<h2>Optimizer</h2>
+<h2>Optimizer (showing {{ optimizations.count }} entries)</h2>
 
 <table class="optimizer">
 	<thead>
 		<tr>
 			<th>Source</th>
 			<th>Destination</th>
+			<th>Active</th>
 			<th>N. Streams</th>
 			<th>Timeout</th>
-			<th>Active</th>
 			<th>Throughput</th>
 			<th>Buffer</th>
 		</tr>
@@ -59,9 +59,9 @@ Optimizer
 		<tr>
 			<td>{{ o.source_se }}</td>
 			<td>{{ o.dest_se }}</td>
+			<td>{{ o.active }}</td>
 			<td>{{ o.nostreams }}</td>
 			<td>{{ o.timeout }}</td>
-			<td>{{ o.active }}</td>
 			<td>{{ o.throughput }}</td>
 			<td>{{ o.buffer }}</td>
 		</tr>
