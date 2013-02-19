@@ -146,14 +146,17 @@ CfgParser::CfgParser(string configuration) {
 	tokenizer< char_separator<char> > tokens(configuration, sep);
 	tokenizer< char_separator<char> >::iterator it;
 
-	for(it = tokens.begin(); it != tokens.end(); it++) {
-		string s = *it;
-		lines.push_back(s);
-	}
-
 	// put the configuration into a stream
 	stringstream ss;
-	ss << configuration;
+
+	for(it = tokens.begin(); it != tokens.end(); it++) {
+		string s = *it;
+		trim(s);
+		if (!s.empty()) {
+			lines.push_back(s);
+			ss << s << endl;
+		}
+	}
 
 	try {
 		// parse
