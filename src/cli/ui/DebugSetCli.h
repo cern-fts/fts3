@@ -27,12 +27,15 @@
 
 #include "SrcDestCli.h"
 
+#include <string>
+#include <vector>
+
 namespace fts3 { namespace cli {
 
 /**
  *
  */
-class DebugSetCli : public SrcDestCli {
+class DebugSetCli : public CliBase {
 
 	static const string ON;
 	static const string OFF;
@@ -76,10 +79,34 @@ public:
 		return mode;
 	}
 
+	/**
+	 * Gets the source file name (string) for the job.
+	 *
+	 * @return source string if it was given as a CLI option, or an empty string if not
+	 */
+	string getSource() {
+		return source;
+	}
+
+	/**
+	 * Gets the destination file name (string) for the job.
+	 *
+	 * @return destination string if it was given as a CLI option, or an empty string if not
+	 */
+	string getDestination() {
+		return destination;
+	}
+
 private:
 
 	/// debug mode
 	bool mode;
+
+	/// source
+	string source;
+
+	// destination
+	string destination;
 };
 
 }

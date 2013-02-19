@@ -33,17 +33,15 @@ DebugSetCli::DebugSetCli() {
 
 	// add hidden options
 	hidden.add_options()
-			("debug", value<string>(), "Set debug mode (on/off).")
+			("opt1", value<string>())
+			("opt2", value<string>())
+			("opt3", value<string>())
 			;
 
 	// add positional (those used without an option switch) command line options
-	// the 'debug' should be the first positional parameter
-	positional_options_description tmp;
-	tmp.add("debug", 1);
-	for (unsigned i = 0; i < p.max_total_count(); i++)
-		tmp.add(p.name_for_position(i).c_str(), static_cast<int>(i + 1));
-
-	p = tmp;
+	p.add("opt1", 1);
+	p.add("opt2", 1);
+	p.add("opt3", 1);
 }
 
 DebugSetCli::~DebugSetCli() {
@@ -55,32 +53,55 @@ optional<GSoapContextAdapter&> DebugSetCli::validate(bool init) {
 	// do the standard validation
 	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
-	// set the debug mode
-	if (vm.count("debug")) {
-		string str_mode = vm["debug"].as<string>();
+	vector<string> opts;
 
-		if (str_mode == ON) {
-			mode = true;
-		} else  if (str_mode == OFF){
-			mode = false;
-		} else {
-			cout << "Debug mode has to be specified (on/off)!" << endl;
-			return 0;
-		}
+	if (vm.count("opt1")) {
+		opts.push_back(
+				vm["opt1"].as<string>()
+			);
+	}
 
-	} else {
+	if (vm.count("opt2")) {
+		opts.push_back(
+				vm["opt2"].as<string>()
+			);
+	}
+
+	if (vm.count("opt3")) {
+		opts.push_back(
+				vm["opt3"].as<string>()
+			);
+	}
+
+	// make sure that at least one SE and debug mode were specified
+	if (opts.size() < 2) {
+		cout << "SE name and debug mode has to be specified (on/off)!" << endl;
+		return 0;
+	}
+
+	// index of debug mode (the last parameter)
+	int mode_index = opts.size() - 1;
+	// value of debug mode
+	string mode_str = opts[mode_index];
+	// it should be either ON
+	if (mode_str == ON) mode = true;
+	// or OFF
+	else if (mode_str == OFF) mode = false;
+	// otherwise it's an error
+	else {
 		cout << "Debug mode has to be specified (on/off)!" << endl;
 		return 0;
 	}
 
-	if (!vm.count("source")) {
-		cout << "At least one SE name must be provided!" << endl;
-		return 0;
-	}
+	// source is always the first one
+	source = opts[0];
+
+	// if mode is the second parameter the destination was not specified!
+	if (mode_index > 1) destination = opts[1];
 
 	return *ctx;
 }
 
 string DebugSetCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] MODE SOURCE DEST";
+	return "Usage: " + tool + " [options] (SE | SOURCE DESTINATION) MODE";
 }
