@@ -198,7 +198,7 @@ target_link_libraries (fts-set-priority fts_cli_common)
 
 # ------------------------------------------------------------------------
 # python bindings
-add_library(ftspython SHARED python/PythonBindings.cpp python/PythonApi.cpp python/Job.cpp)
+add_library(ftspython SHARED python/PythonBindings.cpp python/PythonApi.cpp python/Job.cpp python/PyFile.cpp)
 target_link_libraries(ftspython fts_cli_common python2.6 boost_python)
 #add_dependencies(ftspython fts_cli_common)
 

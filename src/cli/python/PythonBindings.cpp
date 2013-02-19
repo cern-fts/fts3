@@ -26,6 +26,7 @@
 #include "GSoapContextAdapter.h"
 #include "python/PythonApi.h"
 #include "python/Job.h"
+#include "python/PyFile.h"
 
 #include <boost/optional/optional.hpp>
 #include <boost/python.hpp>
@@ -53,7 +54,16 @@ BOOST_PYTHON_MODULE(libftspython) {
 			.def("getVersion", &PythonApi::getVersion)
 			;
 
-	py::class_<fts3::cli::Job>("Job", py::init<py::tuple>())
+	py::class_<fts3::cli::PyFile>("File")
+			.add_property("sources", &PyFile::getSources, &PyFile::setSources)
+			.add_property("destinations", &PyFile::getDestinations, &PyFile::setDestinations)
+			.add_property("checksums", &PyFile::getChecksums, &PyFile::setChecksums)
+			.add_property("filesize", &PyFile::getFileSize, &PyFile::setFileSize)
+			.add_property("metadata", &PyFile::getMetadata, &PyFile::setMetadata)
+			.add_property("selectionStrategy", &PyFile::getSelectionStrategy, &PyFile::setSelectionStrategy)
+			;
+
+	py::class_<fts3::cli::Job>("Job", py::init<PyFile>())
 			.def(py::init<py::list>())
 			.add_property("files", &Job::files)
 			.add_property("delegationId", &Job::getDelegationId, &Job::setDelegationId)

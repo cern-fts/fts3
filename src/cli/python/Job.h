@@ -27,6 +27,7 @@
 #define JOB_H_
 
 #include "TransferTypes.h"
+#include "python/PyFile.h"
 
 #include <boost/python.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -44,7 +45,7 @@ class Job {
 
 public:
 
-	Job(py::tuple file);
+	Job(PyFile file);
 
 	Job(py::list files);
 
@@ -90,7 +91,7 @@ private:
 
 	bool wrongChecksumFormat(std::string checksum);
 
-	void add(py::tuple file);
+	void add(PyFile file);
 
 	///
 	std::vector<File> elements;

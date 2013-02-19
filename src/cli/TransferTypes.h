@@ -38,7 +38,7 @@ struct File {
 	File (
 			vector<string> s,
 			vector<string> d,
-			 vector<string> c = vector<string>(),
+			vector<string> c = vector<string>(),
 			optional<int> fs = optional<int>(),
 			optional<string> m = optional<string>(),
 			optional<string> ss = optional<string>()) {
