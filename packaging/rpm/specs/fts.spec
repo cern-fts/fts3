@@ -5,7 +5,7 @@
 
 Name: fts
 Version: 0.0.1 
-Release: 63%{?dist}
+Release: 64%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons 
 License: ASL 2.0
@@ -279,5 +279,5 @@ rm -rf %{buildroot}
 
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-63%{?dist}
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-64%{?dist}
   - A bit like a fedora package

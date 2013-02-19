@@ -3442,7 +3442,7 @@ void OracleAPI::revertToSubmitted() {
             reuseFlag = r2->getString(4);
             time_t current_time = std::time(NULL);
             diff = difftime(current_time, start_time);
-            if (diff > 1000) { 
+            if (diff > 200) { 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1, pooledConnection);
                 s1->setInt(1, file_id);

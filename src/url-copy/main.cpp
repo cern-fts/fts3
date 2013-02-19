@@ -253,13 +253,11 @@ void abnormalTermination(const std::string& classification, const std::string& m
     exit(1);
 }
 
-void canceler() {
-    if (propagated == false) {
-        propagated = true;
+void canceler() {   
         errorMessage = "WARN Transfer " + g_job_id + " was canceled because it was not responding";
         logStream << fileManagement->timestamp() << errorMessage << '\n';
         abnormalTermination("FAILED", errorMessage, "Abort");
-    }
+	exit(1);
 }
 
 void taskTimer(int time) {
@@ -565,7 +563,7 @@ int main(int argc, char **argv) {
 
     //cancelation point 
     long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout + 500);
+    unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout);
     boost::thread bt(taskTimer, timerTimeout);
 
     if (reuseFile.length() > 0 && urlsFile.empty() == true) {

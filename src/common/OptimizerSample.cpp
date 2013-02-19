@@ -83,7 +83,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
         if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
       
 	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished	   
-	   			if(trSuccessRateForPair >= 70)
+	   			if(trSuccessRateForPair >= 85)
 					(*iter).numOfActivePerPair += 2;              
 				(*iter).numFinished = numFinished;
 				(*iter).numFailed = numFailed;  
@@ -110,7 +110,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
   
     if (sourceActive == 0 && destActive == 0) { //no active for src and dest, simply let it start
         allowed = true;
-    } else if (currentActive <= 5) { //allow no more than 5 per pair if we do not have enough samples
+    } else if (currentActive <= 4) { //allow no more than 5 per pair if we do not have enough samples
         allowed = true;
     } else {
         if (currentActive < activeInStore) {

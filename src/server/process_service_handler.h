@@ -772,6 +772,7 @@ protected:
     void executeTransfer_a() {       
 	static bool drainMode = false;
 	static long double counter = 0;
+	static unsigned int countReverted = 0; 
 
         while (1) {	
 	   	if(stopThreads){
@@ -802,6 +803,14 @@ protected:
                             DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();
                             counter=0;
                     }
+		    
+		/*revert to SUBMITTED state if stayed in READY for too long*/    
+		countReverted++; 
+                if(countReverted==100){ 
+                            DBSingleton::instance().getDBObjectInstance()->revertToSubmitted(); 
+                            countReverted=0; 
+                } 
+	 	 		    
                   
                     /*get jobs in submitted state*/
                     DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
