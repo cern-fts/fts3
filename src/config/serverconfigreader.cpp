@@ -39,6 +39,7 @@ FTS3_CONFIG_NAMESPACE_START
 #define FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT "/etc/fts3/fts3config"
 #define FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT "oracle"
 #define FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT "4"
+#define FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT "-1"
 
 /* ---------------------------------------------------------------------- */
 
@@ -75,7 +76,12 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "DbThreadsNum,D",
             po::value<std::string>( &(_vars["DbThreadsNum"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT),
             "Number of db connections in the db threads pool"
-        )	
+        )
+	(
+            "MaxNumberOfProcesses,M",
+            po::value<std::string>( &(_vars["MaxNumberOfProcesses"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT),
+            "Maximum processes resource limit"
+        )		
         (
             "IP,i",
             po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),

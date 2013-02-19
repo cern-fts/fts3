@@ -52,6 +52,10 @@ AuthorizedVO=*
 MyOSG=false
 # MyOSG=http://myosg.grid.iu.edu/rgsummary/xml?summary_attrs_showservice=on&summary_attrs_showfqdn=on&gip_status_attrs_showtestresults=on&downtime_attrs_showpast=&account_type=cumulative_hours&ce_account_type=gip_vo&se_account_type=vo_transfer_volume&bdiitree_type=total_jobs&bdii_object=service&bdii_server=is-osg&start_type=7daysago&start_date=10%2F19%2F2012&end_type=now&end_date=10%2F19%2F2012&all_resources=on&facility_10009=on&gridtype_1=on&service=on&service_5=on&service_2=on&service_3=on&active_value=1&disable_value=1&has_wlcg=on
 
+#The maximum number of processes available to a single user (resource limit)
+#-1 means use OS default (check ulimit -u)
+MaxNumberOfProcesses=-1
+
 #Do not change this
 [roles]
 Public = all:*

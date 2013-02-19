@@ -38,6 +38,7 @@ limitations under the License. */
 #include "config/FileMonitor.h"
 #include <boost/filesystem.hpp>
 #include "name_to_uid.h"
+#include <sys/resource.h>
 
 namespace fs = boost::filesystem;
 
@@ -52,7 +53,17 @@ const char *configfile = "/etc/fts3/fts3config";
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
-
+static void setLimits(){
+	struct rlimit rl;
+	int maxNumberOfProcesses = theServerConfig().get<int> ("MaxNumberOfProcesses");	
+	if(maxNumberOfProcesses != -1){
+		rl.rlim_cur = maxNumberOfProcesses;
+		rl.rlim_max = maxNumberOfProcesses;
+		if (setrlimit(RLIMIT_NPROC, &rl) == -1){
+			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit failed" << commit;
+		}
+	}
+}
 
 static int fexists(const char *filename) {
     struct stat buffer;
@@ -201,6 +212,10 @@ int DoServer(int argc, char** argv) {
   	
 	//re-read here
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+	
+	//set soft and hard limits
+	setLimits();
+	
         std::string arguments("");
         size_t foundHelp;
         if (argc > 1) {
