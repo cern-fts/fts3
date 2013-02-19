@@ -411,7 +411,7 @@ int main(int argc, char **argv) {
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
 
-    /**TODO: disable for now/
+    /**TODO: disable for now*/
     //set_terminate(myterminate);
     //set_unexpected(myunexpected);
 
