@@ -114,11 +114,11 @@ void CliBase::parse(int ac, char* av[]) {
 
 				do {
 					getline(cfg, line);
-					if (line.find("#") != 0 && line.find("Port") != string::npos) {
+					if (line.find("#") != 0 && line.find("Port") == 0) {
 						// erase 'Port='
 						port = line.erase(0, 5);
 
-					} else if (line.find("#") != 0 && line.find("IP") != string::npos) {
+					} else if (line.find("#") != 0 && line.find("IP") == 0) {
 						// erase 'IP='
 						ip += line.erase(0, 3);
 					}
