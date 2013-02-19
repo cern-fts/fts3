@@ -951,8 +951,9 @@ stop:
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;            
             if (!terminalState) {
- 	        logStream << fileManagement->timestamp() << "INFO Try issuing a cancel to clean resources" << '\n';
-                cancelTransfer();
+	        /*TODO: re-enable it later*/
+ 	        //logStream << fileManagement->timestamp() << "INFO Try issuing a cancel to clean resources" << '\n';
+                //cancelTransfer();
                 logStream << fileManagement->timestamp() << "INFO Report FAILED back to the server" << '\n';
                 reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
             }
