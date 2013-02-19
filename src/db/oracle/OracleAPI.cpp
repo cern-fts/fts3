@@ -4668,8 +4668,8 @@ bool OracleAPI::isGrInPair(std::string group) {
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
 
-    conn->releasePooledConnection(pooledConnection);                
-        throw Err_Custom(e.what());
+        	conn->releasePooledConnection(pooledConnection);
+        	throw Err_Custom(e.what());
     }   catch (...) {
 
             conn->rollback(pooledConnection);
@@ -4678,12 +4678,11 @@ bool OracleAPI::isGrInPair(std::string group) {
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
 
-    conn->releasePooledConnection(pooledConnection);                
-        throw Err_Custom("Unknown exception");
+        	conn->releasePooledConnection(pooledConnection);
+        	throw Err_Custom("Unknown exception");
     }
     conn->releasePooledConnection(pooledConnection);                
-    // if the exception was thrown don't allow to remove group
-	return true;
+	return ret;
 }
 
 void OracleAPI::addShareConfig(ShareConfig* cfg) {
