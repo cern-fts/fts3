@@ -40,7 +40,21 @@ Optimizer
 </div>
 
 
-<h2>Optimizer (showing {{ optimizations.count }} entries)</h2>
+<h2>
+	Optimizer (showing  Showing {{ optimizations.start_index }} to {{ optimizations.end_index }} out of {{ paginator.count}} entries)
+	{% if optimizations.has_previous %}
+	  <a href="?page=1&{{ extra_args }}">&lt;&lt;</a>
+	  <a href="?page={{ optimizations.previous_page_number }}&{{ extra_args }}">&lt;</a>
+	{% else %}
+	  &lt; &lt;&lt;
+	{% endif %} | 
+	{% if optimizations.has_next %}
+	  <a href="?page={{ optimizations.next_page_number }}&{{ extra_args }}">&gt;</a>
+	  <a href="?page={{ paginator.num_pages }}&{{ extra_args }}">&gt;&gt;</a>
+	{% else %}
+	  &gt; &gt;&gt;
+	{% endif %}
+</h2>
 
 <table class="optimizer">
 	<thead>
@@ -55,7 +69,7 @@ Optimizer
 		</tr>
 	</thead>
 	<tbody>
-	{% for o in optimizations %}
+	{% for o in optimizations.object_list %}
 		<tr>
 			<td>{{ o.source_se }}</td>
 			<td>{{ o.dest_se }}</td>
