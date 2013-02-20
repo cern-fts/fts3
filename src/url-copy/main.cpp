@@ -226,10 +226,15 @@ std::string getDefaultErrorPhase() {
 
 void abnormalTermination(const std::string& classification, const std::string& msg, const std::string& finalState) {
     terminalState = true;
+
+    if(globalErrorMessage.length() > 0){
+    	errorMessage += " " + globalErrorMessage;
+    }    
+    
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
-    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, msg);
+    msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
     msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
@@ -238,10 +243,6 @@ void abnormalTermination(const std::string& classification, const std::string& m
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
     
-    if(globalErrorMessage.length() > 0){
-    	errorMessage += " " + globalErrorMessage;
-    }
-
     if (strArray[0].length() > 0)
         reporter.constructMessage(g_job_id, strArray[0], classification, errorMessage, diff, source_size);
     else

@@ -191,6 +191,13 @@ protected:
                         << "\nMessage: " << (*iter).transfer_message
                         << "\nSource: " << (*iter).source_se
                         << "\nDest: " << (*iter).dest_se << commit;
+		
+		/*
+		exceptional case when a url-copy process fails to start because thread creation failed due to lack of resource
+		do not update the database with the failed state because it will be re-scheduled
+		*/
+		if(std::string((*iter).transfer_message).compare("thread_resource_error")==0)
+			continue;
 
 		bool dbUpdated = updateDatabase((*iter));
 		if(!dbUpdated){			
