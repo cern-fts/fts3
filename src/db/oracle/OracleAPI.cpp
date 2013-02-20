@@ -1486,7 +1486,6 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
     
     oracle::occi::Statement* st1 = NULL;
     oracle::occi::Statement* st2 = NULL;
-    unsigned int updated = 0;
     oracle::occi::Connection* pooledConnection = NULL;        
     try {
 	pooledConnection = conn->getPooledConnection();
@@ -3444,7 +3443,7 @@ void OracleAPI::revertToSubmitted() {
             reuseFlag = r2->getString(4);
             time_t current_time = std::time(NULL);
             diff = difftime(current_time, start_time);
-            if (diff > 500) { 
+            if (diff > 100) { 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1, pooledConnection);
                 s1->setInt(1, file_id);
