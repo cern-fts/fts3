@@ -824,7 +824,7 @@ protected:
 		    
 		/*revert to SUBMITTED state if stayed in READY for too long*/    
 		countReverted++; 
-                if(countReverted==100){ 
+                if(countReverted==300){ 
                             DBSingleton::instance().getDBObjectInstance()->revertToSubmitted(); 
                             countReverted=0; 
                 } 
