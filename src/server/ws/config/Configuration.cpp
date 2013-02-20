@@ -209,6 +209,9 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 	cfg->state = active ? on : off;
 	cfg->symbolic_name = symbolic_name;
 
+	// not used for now therefore set to 0
+	cfg->NO_TX_ACTIVITY_TO = 0;
+
 	if (protocol.is_initialized()) {
 
 		int value = protocol.get()[Protocol::NOSTREAMS];
