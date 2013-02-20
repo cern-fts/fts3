@@ -808,7 +808,7 @@ protected:
 
 		int maximumThreads = getMaxThreads();
 		int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();		
-		if( maximumThreads!=-1 && currentActiveTransfers!=0 && (currentActiveTransfers*10)>= maximumThreads){
+		if( maximumThreads!=-1 && currentActiveTransfers!=0 && (currentActiveTransfers*12)>= maximumThreads){
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
 		        usleep(50000);
 			continue;
