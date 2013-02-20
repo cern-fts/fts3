@@ -130,7 +130,6 @@ static std::string file_Metadata("");
 static std::string job_Metadata(""); //a
 static string globalErrorMessage("");
 
-
 static void cancelTransfer() {
     if (handle && !canceled) { // finish all transfer in a clean way
         canceled = true;
@@ -224,12 +223,12 @@ std::string getDefaultErrorPhase() {
     return errorPhase.length() == 0 ? GENERAL_FAILURE : errorPhase;
 }
 
-void abnormalTermination(const std::string& classification, const std::string& msg, const std::string& finalState) {
+void abnormalTermination(const std::string& classification, const std::string&, const std::string& finalState) {
     terminalState = true;
 
     if(globalErrorMessage.length() > 0){
     	errorMessage += " " + globalErrorMessage;
-    }    
+    }
     
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -537,8 +536,10 @@ int main(int argc, char **argv) {
     boost::thread btUpdater(taskStatusUpdater, 30);
     }catch (std::exception& e) {
     	globalErrorMessage = e.what();
+	throw;
     }catch(...){
         globalErrorMessage = "Failed to create boost thread, boost::thread_resource_error";
+	throw;
     }
 
     if (proxy.length() > 0) {
@@ -546,7 +547,7 @@ int main(int argc, char **argv) {
         cert = new UserProxyEnv(proxy);
     }
 
-    GError* handleError = NULL;
+    GError* handleError = NULL;    
     handle = gfal_context_new(&handleError);
 
     if (!handle) {
@@ -582,8 +583,10 @@ int main(int argc, char **argv) {
     	boost::thread bt(taskTimer, timerTimeout);
     }catch (std::exception& e) {
     	globalErrorMessage = e.what();
+	throw;
     }catch(...){
         globalErrorMessage = "Failed to create boost thread, boost::thread_resource_error";
+	throw;
     }
 
     if (reuseFile.length() > 0 && urlsFile.empty() == true) {

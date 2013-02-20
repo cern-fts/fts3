@@ -814,7 +814,6 @@ protected:
 			continue;
 		}
 
-
                 try {
 		/*force fail to stall transfers*/		
 		    counter++;
