@@ -1504,7 +1504,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
             st1->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
             st1->setString(4, cancelReason);
             st1->setString(5, jobId);
-            updated += st1->executeUpdate();
+            st1->executeUpdate();
 
             st2->setString(1, "CANCELED");
             st2->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
