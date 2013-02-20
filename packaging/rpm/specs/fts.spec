@@ -256,6 +256,7 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_delegation_api_simple.so.*
 %{_libdir}/libfts_delegation_api_cpp.so.*
 %{_docdir}/fts3/README
+%{_docdir}/fts3/LICENSE
 
 %files devel
 %defattr(-,root,root,-)
