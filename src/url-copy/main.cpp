@@ -128,6 +128,8 @@ gfalt_params_t params;
 gfal_context_t handle = NULL;
 static std::string file_Metadata("");
 static std::string job_Metadata(""); //a
+static string globalErrorMessage("");
+
 
 static void cancelTransfer() {
     if (handle && !canceled) { // finish all transfer in a clean way
@@ -235,6 +237,10 @@ void abnormalTermination(const std::string& classification, const std::string& m
     reporter.timeout = timeout;
     reporter.nostreams = nbstreams;
     reporter.buffersize = tcpbuffersize;
+    
+    if(globalErrorMessage.length() > 0){
+    	errorMessage += " " + globalErrorMessage;
+    }
 
     if (strArray[0].length() > 0)
         reporter.constructMessage(g_job_id, strArray[0], classification, errorMessage, diff, source_size);
@@ -525,8 +531,14 @@ int main(int argc, char **argv) {
     OpenSSL_add_all_ciphers();
     StaticSslLocking::init_locks();
 
+   try{
     /*send an update message back to the server to indicate it's alive*/
     boost::thread btUpdater(taskStatusUpdater, 30);
+    }catch (std::exception& e) {
+    	globalErrorMessage = e.what();
+    }catch(...){
+        globalErrorMessage = "Failed to create boost thread, boost::thread_resource_error";
+    }
 
     if (proxy.length() > 0) {
         // Set Proxy Env    
@@ -564,7 +576,14 @@ int main(int argc, char **argv) {
     //cancelation point 
     long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
     unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout);
-    boost::thread bt(taskTimer, timerTimeout);
+    
+    try{
+    	boost::thread bt(taskTimer, timerTimeout);
+    }catch (std::exception& e) {
+    	globalErrorMessage = e.what();
+    }catch(...){
+        globalErrorMessage = "Failed to create boost thread, boost::thread_resource_error";
+    }
 
     if (reuseFile.length() > 0 && urlsFile.empty() == true) {
         errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";

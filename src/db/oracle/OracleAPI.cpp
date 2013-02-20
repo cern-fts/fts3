@@ -3409,10 +3409,12 @@ void OracleAPI::revertToSubmitted() {
     const std::string tag1 = "revertToSubmitted";
     const std::string tag2 = "revertToSubmitted1";
     const std::string tag3 = "revertToSubmittedReused";
-    std::string query1 = " update t_file set file_state='SUBMITTED' where file_state='READY' and FINISH_TIME is NULL and JOB_FINISHED is NULL and file_id=:1";
+    std::string query1 = " update t_file set file_state='SUBMITTED', reason='' where file_state='READY' and FINISH_TIME is NULL and JOB_FINISHED is NULL and file_id=:1";
+
     std::string query2 = " select t_file.start_time, t_file.file_id, t_file.job_id, t_job.REUSE_JOB from t_file,t_job where t_file.file_state"
             "='READY' and t_file.FINISH_TIME is NULL "
             " and t_file.JOB_FINISHED is NULL and t_file.job_id=t_job.job_id";
+
     std::string query3 = "update t_job T1 set T1.job_state='SUBMITTED' where T1.job_state in('READY','ACTIVE') and "
             " T1.FINISH_TIME is NULL and T1.JOB_FINISHED is NULL and T1.REUSE_JOB='Y' and T1.job_id "
             " IN (SELECT T2.job_id FROM t_file T2 WHERE T2.job_id = T1.job_id and T2.file_state='READY') and T1.job_id=:1 ";
