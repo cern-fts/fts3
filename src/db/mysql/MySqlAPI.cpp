@@ -1741,7 +1741,7 @@ void MySqlAPI::revertToSubmitted() {
                 time_t startTimestamp = mktime(&startTime);
                 double diff = difftime(now, startTimestamp);
 
-                if (diff > 200) { 
+                if (diff > 500) { 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
                     sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "

@@ -291,6 +291,7 @@ void signalHandler(int signum) {
         errorMessage = "ERROR Transfer process died " + g_job_id;
         logStream << fileManagement->timestamp() << errorMessage << '\n';
         logStream << fileManagement->timestamp() << "ERROR " << stackTrace << '\n';
+	errorMessage += stackTrace;
         abnormalTermination("FAILED", errorMessage, "Error");
     } else if (signum == 2) {
         if (propagated == false) {
