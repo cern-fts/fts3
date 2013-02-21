@@ -161,6 +161,13 @@ string GSoapContextAdapter::transferSubmit (vector<File> files, map<string, stri
 			element->metadata = 0;
 		}
 
+		if (f_it->selection_strategy) {
+			element->selectionStrategy = soap_new_std__string(ctx, -1);
+			*element->selectionStrategy = *f_it->selection_strategy;
+		} else {
+			element->selectionStrategy = 0;
+		}
+
 		// push the element into the result vector
 		job.transferJobElements.push_back(element);
 	}

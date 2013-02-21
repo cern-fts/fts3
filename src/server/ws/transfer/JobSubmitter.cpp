@@ -250,33 +250,34 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 					job->transferJobElements.front()->source.front()
 					;
 
-			string dest =
-					job->transferJobElements.front()->dest.empty()
-					?
-					string()
-					:
-					job->transferJobElements.front()->dest.front()
-					;
+		string dest =
+				job->transferJobElements.front()->dest.empty()
+				?
+				string()
+				:
+				job->transferJobElements.front()->dest.front()
+				;
 
-			sourceSe = fileUrlToSeName(src);
-			if(sourceSe.empty()){
-				string errMsg = "Can't extract hostname from url " + src;
-				throw Err_Custom(errMsg);
-			}
-			checkSe(sourceSe);
+		sourceSe = fileUrlToSeName(src);
+		if(sourceSe.empty()){
+			string errMsg = "Can't extract hostname from url " + src;
+			throw Err_Custom(errMsg);
+		}
+		checkSe(sourceSe);
 
-			destinationSe = fileUrlToSeName(dest);
-			if(destinationSe.empty()){
-				std::string errMsg = "Can't extract hostname from url " + dest;
-				throw Err_Custom(errMsg);
-			}
-			checkSe(destinationSe);
+		destinationSe = fileUrlToSeName(dest);
+		if(destinationSe.empty()){
+			std::string errMsg = "Can't extract hostname from url " + dest;
+			throw Err_Custom(errMsg);
+		}
+		checkSe(destinationSe);
 	}
-
 
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
 	vector<tns3__TransferJobElement3 * >::iterator it;
 	for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
+
+		// TODO handle multiple source / destination
 
 		string src = (*it)->source.empty() ? string() : (*it)->source.front();
 		string dest = (*it)->dest.empty() ? string() : (*it)->dest.front();
