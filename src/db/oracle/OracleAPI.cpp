@@ -4965,7 +4965,7 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
 void OracleAPI::submitHost(const std::string & jobId) {
 
     std::string tag = "submitHost";
-    std::string query = "update t_job set submitHost=:1 where job_id=:2";
+    std::string query = "update t_job set submit_host=:1 where job_id=:2";
     oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;    
     

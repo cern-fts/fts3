@@ -2411,7 +2411,7 @@ void MySqlAPI::submitHost(const std::string & jobId) {
     try {
         sql.begin();
 
-        sql << "UPDATE t_job SET submitHost = :host WHERE job_id = :jobId",
+        sql << "UPDATE t_job SET submit_host = :host WHERE job_id = :jobId",
                 soci::use(hostname), soci::use(jobId);
 
         sql.commit();

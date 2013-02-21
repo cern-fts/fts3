@@ -108,6 +108,7 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessServiceHandler", desc) {
+        maximumThreads = getMaxThreads();
     	requestIDs.reserve(200);
 	jobs2.reserve(300);    
 	
@@ -155,6 +156,7 @@ protected:
     std::string allowedVOs;
     std::vector<int> requestIDs;
     std::vector<TransferJobs*> jobs2;
+    int maximumThreads;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
         std::vector<int>::const_iterator iter;
@@ -804,10 +806,8 @@ protected:
 		drainMode=false;
 	    }
 	
-            try {
-
-		int maximumThreads = getMaxThreads();
-		int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();		
+            try {		
+		int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();				
 		if( maximumThreads!=-1 && currentActiveTransfers!=0 && (currentActiveTransfers*11)>= maximumThreads){
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
 		        sleep(1);
