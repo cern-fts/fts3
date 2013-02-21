@@ -66,11 +66,13 @@ rm -rf %{buildroot}
 %doc %{_docdir}/fts3/mysql-drop.sql
 %doc %{_docdir}/fts3/mysql-truncate.sql
 %{_docdir}/fts3/README
+%{_docdir}/fts3/LICENSE
 
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/libfts_db_mysql.so
 %{_docdir}/fts3/README
+%{_docdir}/fts3/LICENSE
 
 
 %changelog

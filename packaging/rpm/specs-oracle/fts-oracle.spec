@@ -65,11 +65,13 @@ rm -rf %{buildroot}
 %doc %{_docdir}/fts3/oracle-schema.sql
 %doc %{_docdir}/fts3/oracle-drop.sql
 %{_docdir}/fts3/README
+%{_docdir}/fts3/LICENSE
 
 %files devel
 %defattr(-,root,root,-)
 %{_libdir}/libfts_db_oracle.so
 %{_docdir}/fts3/README
+%{_docdir}/fts3/LICENSE
 
 %changelog
  * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-68%{?dist}
