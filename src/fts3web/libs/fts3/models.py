@@ -7,7 +7,6 @@ class Job(models.Model):
     reuse_job       = models.CharField(max_length = 3)
     cancel_job      = models.CharField(max_length = 1)
     job_params      = models.CharField(max_length = 255)
-    submitHost      = models.CharField(max_length = 255)
     source          = models.CharField(max_length = 255)
     dest            = models.CharField(max_length = 255)
     source_se       = models.CharField(max_length = 255)

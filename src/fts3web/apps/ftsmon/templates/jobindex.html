@@ -46,7 +46,7 @@ Jobs
           <img src="{{ STATIC_URL }}plus.gif" title="Show details" onclick="$('#{{j.job_id}}').toggle()"/>
           <a href="{% url ftsmon.views.jobDetails j.job_id %}"> {{j.job_id }} </a>
         </td>
-        <td>{{ j.submitHost }}</td>
+        <td>{{ j.submit_host }}</td>
         <td>{{ j.submit_time }}</td>
         <td class="{{ j.job_state }}">{{ j.job_state }}</td>
         <td>{{ j.vo_name }}</td>

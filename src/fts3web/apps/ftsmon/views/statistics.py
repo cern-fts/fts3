@@ -41,9 +41,9 @@ def statistics(httpRequest):
     hostnames = []
         
     submissions = {}
-    for j in Job.objects.values('submitHost').annotate(count = Count('submitHost')):
-        submissions[j['submitHost']] = j['count']
-        hostnames.append(j['submitHost'])
+    for j in Job.objects.values('submit_host').annotate(count = Count('submit_host')):
+        submissions[j['submit_host']] = j['count']
+        hostnames.append(j['submit_host'])
         
     transfers = {}
     for t in File.objects.values('transferHost').annotate(count = Count('transferHost')):
