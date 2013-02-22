@@ -103,14 +103,13 @@ public:
 
 protected:
     std::vector<struct message_updater> queueMsgRecovery;
+    std::vector<struct message_updater> messages;    
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-        
-        std::vector<struct message_updater> messages;
+               
 	std::vector<struct message_updater>::const_iterator iter;
-	std::vector<struct message_updater>::const_iterator iter_restore;
-	messages.reserve(500);
+	std::vector<struct message_updater>::const_iterator iter_restore;	
     
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
             try {

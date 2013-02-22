@@ -74,8 +74,7 @@ public:
             const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
             ) :
-    TRAITS::ActiveObjectType("ProcessUpdaterDBServiceHandler", desc) {
-    	messages.reserve(500);
+    TRAITS::ActiveObjectType("ProcessUpdaterDBServiceHandler", desc) {    	
     }
 
     /* ---------------------------------------------------------------------- */
@@ -115,10 +114,10 @@ protected:
 	    /*set to fail all old queued jobs which have exceeded max queue time*/
 	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
 	    messages.clear();
-            sleep(10);
+            sleep(1);
         }catch (...) {
 		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-	        sleep(10);	
+	        sleep(1);	
             }            
     }
   }
