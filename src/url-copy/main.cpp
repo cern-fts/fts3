@@ -725,7 +725,7 @@ int main(int argc, char **argv) {
 
             //set to active
             log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
-            reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
+            reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);	    
 
             if (fexists(proxy.c_str()) != 0) {
                 errorMessage = "ERROR proxy doesn't exist, probably expired and not renewed " + proxy;
