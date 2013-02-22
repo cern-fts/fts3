@@ -89,6 +89,14 @@ public:
 	       bool updated = true;    
 	       std::string job = std::string(msg.job_id).substr(0, 36);
 	       
+		if (std::string(msg.transfer_status).compare("FINISHED") == 0 || 
+			std::string(msg.transfer_status).compare("FAILED") == 0 ||
+			std::string(msg.transfer_status).compare("CANCELED") == 0){
+		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing job from monitoring list " << job << " " << msg.file_id << commit;
+                    ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
+		    }
+			       
+	       
 	       int retry = DBSingleton::instance().getDBObjectInstance()->getRetry();
 	       if(retry != 0 && std::string(msg.transfer_status).compare("FAILED") == 0){
  		       int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
@@ -136,16 +144,7 @@ public:
                 updated = DBSingleton::instance().
                         getDBObjectInstance()->
                         updateJobTransferStatus(msg.file_id, job, std::string(msg.transfer_status));
-		}
-		
-		if(updated == true){			
-                if (std::string(msg.transfer_status).compare("FINISHED") == 0 || 
-			std::string(msg.transfer_status).compare("FAILED") == 0 ||
-			std::string(msg.transfer_status).compare("CANCELED") == 0){
-		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing job from monitoring list " << job << " " << msg.file_id << commit;
-                    ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
-		    }
-		}		    
+		}						                
         return updated;		    
     }
 
