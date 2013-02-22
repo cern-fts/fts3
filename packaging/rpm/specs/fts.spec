@@ -211,7 +211,7 @@ rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
-%{_mandir}/man8/fts_server.8.gz
+%{_mandir}/man8/fts_server.8.*
 
 %files client
 %defattr(-,root,root,-)

@@ -209,31 +209,18 @@ target_link_libraries(ftspython fts_cli_common python2.6 boost_python)
 # man pages
 
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/cli")
-set(MAN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/man1")
-set(MAN_INSTALL_DIR "/usr/share/man/man1")
+ 
+install(FILES "${MAN_INPUT_DIR}/fts-config-del.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-config-set.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-config-get.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-transfer-cancel.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-transfer-list.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-transfer-status.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-transfer-submit.1" DESTINATION ${MAN_INSTALL_DIR}/man1/) 
+install(FILES "${MAN_INPUT_DIR}/fts-set-priority.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-set-debug.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
+install(FILES "${MAN_INPUT_DIR}/fts-set-blacklist.1" DESTINATION ${MAN_INSTALL_DIR}/man1/)
 
-file(MAKE_DIRECTORY ${MAN_OUTPUT_DIR})
-
-find_package(GZip)
-
-# find all manpages filenames
-file(GLOB man_pages RELATIVE ${MAN_INPUT_DIR} ${MAN_INPUT_DIR}/fts-*)
-
-# loop over all manpages
-foreach(man_page ${man_pages})
-	# gzip the manpage
-	add_custom_command(
-		TARGET ${man_page}
-		POST_BUILD
-		COMMAND ${GZIP} -c ${MAN_INPUT_DIR}/${man_page} > ${MAN_OUTPUT_DIR}/${man_page}.1.gz
-	)
-	#install it
-	install(
-		FILES ${MAN_OUTPUT_DIR}/${man_page}.1.gz
-		DESTINATION ${MAN_INSTALL_DIR}
-	)
-	
-endforeach()
 # ------------------------------------------------------------------------
 
 

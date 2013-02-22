@@ -108,24 +108,8 @@ target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lboost_filesystem
 # man pages
 
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/server")
-set(MAN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/man8")
-set(MAN_INSTALL_DIR "/usr/share/man/man8")
+install(FILES "${MAN_INPUT_DIR}/fts_server.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
 
-file(MAKE_DIRECTORY ${MAN_OUTPUT_DIR})
-
-find_package(GZip)
-
-# gzip the manpage
-add_custom_command(
-	TARGET fts_server
-	POST_BUILD
-	COMMAND ${GZIP} -c ${MAN_INPUT_DIR}/fts_server > ${MAN_OUTPUT_DIR}/fts_server.8.gz
-)
-#install it
-install(
-	FILES ${MAN_OUTPUT_DIR}/fts_server.8.gz
-	DESTINATION ${MAN_INSTALL_DIR}
-)
 # ------------------------------------------------------------------------
 
 
