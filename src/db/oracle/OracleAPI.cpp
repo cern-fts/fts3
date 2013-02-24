@@ -3703,7 +3703,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     std::vector<struct message_updater>::const_iterator iter;
     bool isUpdated = true;
     const std::string transfer_status = "FAILED";
-    const std::string transfer_message = "Transfer failed to respond within 360 secs, probably stalled";
+    const std::string transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled";
     const std::string status = "FAILED";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL; 
