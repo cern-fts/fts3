@@ -787,6 +787,7 @@ protected:
 	static unsigned int countReverted = 0; 
 
         while (1) {	
+	   try{
 	   	if(stopThreads){
 		if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::const_iterator iter2;
@@ -805,16 +806,7 @@ protected:
 	    }else{
 		drainMode=false;
 	    }
-	
-            try {		
-		int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();				
-		if( maximumThreads!=-1 && currentActiveTransfers!=0 && (currentActiveTransfers*11)>= maximumThreads){
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
-		        sleep(1);
-			continue;
-		}		
-
-                try {
+	           
 		/*force fail to stall transfers*/		
 		    counter++;
                     if(counter == 2000){
@@ -828,6 +820,14 @@ protected:
                             DBSingleton::instance().getDBObjectInstance()->revertToSubmitted(); 
                             countReverted=0; 
                 } 
+
+		int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();				
+		if( maximumThreads!=-1 && currentActiveTransfers!=0 && (currentActiveTransfers*11)>= maximumThreads){
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
+		        sleep(1);
+			continue;
+		}		
+
 	 	 		    
                   
                     /*get jobs in submitted state*/
@@ -855,11 +855,7 @@ protected:
                         	delete *iter2;
                     	jobs2.clear();
                     }			
-                } catch (Err& e) {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-                    throw;
-                }
-
+               
             } catch (...) {
                 if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::const_iterator iter2;

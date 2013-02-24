@@ -47,6 +47,7 @@ void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messag
     boost::posix_time::time_duration::tick_type timestamp1;
     boost::posix_time::time_duration::tick_type timestamp2;  
     int n_seconds = 0;  
+    std::cout << "-------------------> debugqueuem_list = " << m_list.size() << std::endl;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {        
     	timestamp1 = milliseconds_since_epoch();
     	timestamp2 = iter->timestamp;	
@@ -87,6 +88,7 @@ void ThreadSafeList::deleteMsg(std::vector<struct message_updater>& messages) {
 
 void ThreadSafeList::removeFinishedTr(std::string job_id, int file_id) {
     ThreadTraits::LOCK_R lock(_mutex);
+    std::cout << "-------------------> debugqueuem_list before = " << m_list.size() << std::endl;
     std::list<struct message_updater>::iterator i = m_list.begin();
     while (i != m_list.end()) {
         if (file_id == i->file_id &&
@@ -96,5 +98,6 @@ void ThreadSafeList::removeFinishedTr(std::string job_id, int file_id) {
             ++i;
         }
     }    
+    std::cout << "-------------------> debugqueuem_list after = " << m_list.size() << std::endl;    
 }
 

@@ -100,7 +100,7 @@ protected:
     void executeTransfer_a() {           
         while (stopThreads==false) { /*need to receive more than one messages at a time*/
 	 try{	   
-	    
+	    std::cout << "-------------------> debugqueue = " << messages.size() << std::endl;
             ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
 
             if (!messages.empty()) {
