@@ -119,8 +119,6 @@ protected:
 			continue;
 		}
 		
-		std::cout << "-------------------> debugqueueMsgRecovery = " << queueMsgRecovery.size() << std::endl;
-		std::cout << "-------------------> debugqueuemessages = " << messages.size() << std::endl;
 		
                 if(!queueMsgRecovery.empty()){						
 			for (iter_restore = queueMsgRecovery.begin(); iter_restore != queueMsgRecovery.end(); ++iter_restore) {

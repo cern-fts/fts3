@@ -239,9 +239,12 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
 			status->numFailures = tmp->numFailures;
 
 			_param_9._getFileStatusReturn->item.push_back(status);
-			delete tmp;
+			
 		}
-
+		for (it = statuses.begin(); it < statuses.end(); it++) {
+			delete *it;
+		}
+		statuses.clear();
 	} catch(Err& ex) {
 
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
@@ -293,9 +296,12 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 			status->duration = tmp->finish_time - tmp->start_time;
 			status->numFailures = tmp->numFailures;
 
-			_param_10._getFileStatus2Return->item.push_back(status);
-			delete tmp;
+			_param_10._getFileStatus2Return->item.push_back(status);			
 		}
+		for (it = statuses.begin(); it < statuses.end(); it++) {
+			delete *it;
+		}
+		statuses.clear();		
 
 	} catch(Err& ex) {
 

@@ -170,10 +170,6 @@ protected:
 			continue;
 		}
 		
-		std::cout << "-------------------> debugqueue_handlerMsgRecovery = " << queueMsgRecovery.size() << std::endl;
-		std::cout << "-------------------> debugqueue_handlermessages = " << messages.size() << std::endl;		
-		
-					
                 if(!queueMsgRecovery.empty()){			
 			std::vector<struct message>::const_iterator iter;
 			for (iter = queueMsgRecovery.begin(); iter != queueMsgRecovery.end(); ++iter) {
