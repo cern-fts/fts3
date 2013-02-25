@@ -242,6 +242,8 @@ protected:
 						return;
 					}
 
+					if (queueiter->second.empty()) continue;
+
                     int BufSize = 0;
                     int StreamsperFile = 0;
                     int Timeout = 0;
