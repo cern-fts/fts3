@@ -18,32 +18,32 @@ Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires:  cmake
-BuildRequires:  apr-devel%{?_isa}
-BuildRequires:  apr-util-devel%{?_isa}
+BuildRequires:  apr-devel
+BuildRequires:  apr-util-devel
 %if 0%{?el5}
-BuildRequires:  activemq-cpp-library%{?_isa}
+BuildRequires:  activemq-cpp-library
 %else
-BuildRequires:  activemq-cpp-devel%{?_isa}
+BuildRequires:  activemq-cpp-devel
 %endif
-BuildRequires:  openldap-devel%{?_isa}
-BuildRequires:  gsoap-devel%{?_isa}
-BuildRequires:  doxygen%{?_isa}
+BuildRequires:  openldap-devel
+BuildRequires:  gsoap-devel
+BuildRequires:  doxygen
 %if 0%{?el5}
-BuildRequires:  e2fsprogs-devel%{?_isa}
+BuildRequires:  e2fsprogs-devel
 %else
-BuildRequires:  libuuid-devel%{?_isa}
+BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  boost-devel%{?_isa}
-BuildRequires:  globus-gsi-credential-devel%{?_isa}
-BuildRequires:  CGSI-gSOAP-devel%{?_isa}
-BuildRequires:  is-interface-devel%{?_isa}
-BuildRequires:  glib2-devel%{?_isa}
-BuildRequires:  gridsite-devel%{?_isa}
-BuildRequires:  gfal2-devel%{?_isa}
-BuildRequires:  voms-devel%{?_isa}
-BuildRequires:  python-devel%{?_isa}
-BuildRequires:  pugixml-devel%{?_isa}
-BuildRequires:  libcurl-devel%{?_isa}
+BuildRequires:  boost-devel
+BuildRequires:  globus-gsi-credential-devel
+BuildRequires:  CGSI-gSOAP-devel
+BuildRequires:  is-interface-devel
+BuildRequires:  glib2-devel
+BuildRequires:  gridsite-devel
+BuildRequires:  gfal2-devel
+BuildRequires:  voms-devel
+BuildRequires:  python-devel
+BuildRequires:  pugixml-devel
+BuildRequires:  libcurl-devel
 Requires(pre):  shadow-utils
 
 %description
@@ -52,7 +52,7 @@ The File Transfer Service V3
 %package devel
 Summary: Development files for File Transfer Service V3
 Group: Applications/Internet
-Requires: fts-libs = %{version}-%{release}
+Requires: fts-libs%{?_isa} = %{version}-%{release}
 
 %description devel
 Development files for File Transfer Service V3
@@ -60,12 +60,12 @@ Development files for File Transfer Service V3
 %package server
 Summary: File Transfer Service version 3 server
 Group: System Environment/Daemons
-Requires: fts-libs = %{version}-%{release}
-Requires: gfal2-plugin-gridftp >= 2.1.0
-Requires: gfal2-plugin-srm >= 2.1.0
-Requires: bdii
-Requires: glue-schema
-Requires: glue-validator
+Requires: fts-libs%{?_isa} = %{version}-%{release}
+Requires: gfal2-plugin-gridftp%{?_isa} >= 2.1.0
+Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
+Requires: bdii%{?_isa}
+Requires: glue-schema%{?_isa}
+Requires: glue-validator%{?_isa}
 
 #Requires: emi-resource-information-service (from EMI3)
 #Requires: emi-version (from EMI3)
@@ -75,12 +75,12 @@ Requires: glue-validator
 %package libs
 Summary: File Transfer Service version 3 libs
 Group: System Environment/Libraries
-Requires: python
+Requires: python%{?_isa}
 
 %package client
 Summary: File Transfer Service version 3 client
 Group: Applications/Internet
-Requires: fts-libs = %{version}-%{release}
+Requires: fts-libs%{?_isa} = %{version}-%{release}
 
 %description server
 FTS server is a service which accepts transfer jobs, querying their status, etc
