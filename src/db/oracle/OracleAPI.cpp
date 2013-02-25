@@ -3447,17 +3447,13 @@ void OracleAPI::revertToSubmitted() {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1, pooledConnection);
                 s1->setInt(1, file_id);
-                if (s1->executeUpdate() != 0) {
-                    conn->commit(pooledConnection);
-                }
+                conn->commit(pooledConnection);                
                 conn->destroyStatement(s1, tag1, pooledConnection);
                 s1 = NULL;
                 if (reuseFlag.compare("Y") == 0) {
                     s3 = conn->createStatement(query3, tag3, pooledConnection);
                     s3->setString(1, job_id);
-                    if (s3->executeUpdate() != 0) {
-                        conn->commit(pooledConnection);
-                    }
+                    conn->commit(pooledConnection);
                     conn->destroyStatement(s3, tag3, pooledConnection);
                     s3 = NULL;
                 }
@@ -3712,8 +3708,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     oracle::occi::Connection* pooledConnection = NULL;        
     try {
 	pooledConnection = conn->getPooledConnection();
-        if (!pooledConnection){
- 	    isUpdated  = false;
+        if (!pooledConnection){ 	   
             return isUpdated;
 	}
        
@@ -6078,7 +6073,8 @@ void OracleAPI::setToFailOldQueuedJobs(){
     oracle::occi::ResultSet* r = 0;
     std::vector<std::string> jobId;
     std::vector<std::string>::const_iterator iter;
-        oracle::occi::Connection* pooledConnection = NULL;    
+    oracle::occi::Connection* pooledConnection = NULL;    
+
     /*in hours*/
     int maxTime = getMaxTimeInQueue();
     if(maxTime==0)
