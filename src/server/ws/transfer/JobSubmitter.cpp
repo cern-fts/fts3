@@ -446,10 +446,11 @@ map<string, string> JobSubmitter::pairSourceAndDestination(vector<string> source
 		// look for the corresponding destination
 		string destination;
 		for (it_d = destinations.begin(); it_d != destinations.end(); it_d++) {
+			ret.insert(make_pair(*it_s, *it_d));
 			// if the destination uses the same protocol ...
-			if (it_d->find(protocol) == 0) {
-				ret.insert(make_pair(*it_s, *it_d));
-			}
+//			if (it_d->find(protocol) == 0) {
+//				ret.insert(make_pair(*it_s, *it_d));
+//			}
 		}
 	}
 
