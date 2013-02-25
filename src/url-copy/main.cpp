@@ -262,8 +262,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 void canceler() {   
         errorMessage = "WARN Transfer " + g_job_id + " was canceled because it was not responding";
         logStream << fileManagement->timestamp() << errorMessage << '\n';
-        abnormalTermination("FAILED", errorMessage, "Abort");
-	exit(1);
+        abnormalTermination("FAILED", errorMessage, "Abort");	
 }
 
 void taskTimer(int time) {
