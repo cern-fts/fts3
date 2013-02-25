@@ -5,7 +5,7 @@
 
 Name: fts
 Version: 0.0.1 
-Release: 76%{?dist}
+Release: 77%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons 
 License: ASL 2.0
@@ -63,9 +63,9 @@ Group: System Environment/Daemons
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2-plugin-gridftp%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
-Requires: bdii%{?_isa}
-Requires: glue-schema%{?_isa}
-Requires: glue-validator%{?_isa}
+Requires: bdii
+Requires: glue-schema
+Requires: glue-validator
 
 #Requires: emi-resource-information-service (from EMI3)
 #Requires: emi-version (from EMI3)
@@ -280,5 +280,5 @@ rm -rf %{buildroot}
 
 
 %changelog
- * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-76%{?dist}
+ * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.0-77%{?dist}
   - A bit like a fedora package
