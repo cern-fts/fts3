@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
 from fts3.models import Job, File, ConfigAudit
@@ -10,6 +11,26 @@ def configurationAudit(httpRequest):
                   {'configs': configs})
 
 
+def _getCountPerState(states, age = None):
+	count = {}
+	
+	query = File.objects.filter(file_state__in = states)
+	if age:
+		query = query.filter(job_finished__gt = datetime.now() - age)
+	query = query.values('file_state').annotate(number = Count('file_state'))
+	
+	for row in query:
+		count[row['file_state'].lower()] = row['number']
+		
+	for s in filter(lambda s: s.lower() not in count, states):
+		count[s.lower()] = 0
+		
+	# Couple of aggregations
+	count['queued'] = count['submitted'] + count['ready']
+	count['total'] = count['finished'] + count['failed'] + count['canceled']
+		
+	return count
+
 
 def statistics(httpRequest):
     statsDict = {}
@@ -18,16 +39,13 @@ def statistics(httpRequest):
     STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
     ACTIVE_STATES = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
     
-    # Overall
-    overall = {}
-    for s in STATES:
-        label = s.lower()
-        overall[label] = File.objects.filter(file_state = s).count()
-        
-    overall['queued'] = overall['submitted'] + overall['ready']
-    total = overall['finished'] + overall['failed'] + overall['canceled']
-    if total > 0:
-        overall['rate'] = (overall['finished'] * 100.0) / total
+    # Overall (all times)
+    overall = _getCountPerState(STATES)        
+    
+    # Success rate (last hour)
+    lastHour = _getCountPerState(STATES, timedelta(hours = 1))
+    if lastHour['total'] > 0:
+        overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
     else:
         overall['rate'] = 0
         
