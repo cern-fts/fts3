@@ -303,6 +303,12 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 				(*it)->source,
 				(*it)->dest
 			);
+
+		if (pairs.empty()) {
+			throw Err_Custom("It has not been possible to pair the sources with destinations (protocols don't match)!");
+		}
+
+
 		// add each pair
 		map<string, string>::iterator it_p;
 		for (it_p = pairs.begin(); it_p != pairs.end(); it_p++) {
@@ -441,12 +447,9 @@ map<string, string> JobSubmitter::pairSourceAndDestination(vector<string> source
 		string destination;
 		for (it_d = destinations.begin(); it_d != destinations.end(); it_d++) {
 			// if the destination uses the same protocol ...
-			if (it_d->find(protocol) == 0) break;
-		}
-		// if a destination has been found
-		if (it_d != destinations.end()) {
-			ret.insert(make_pair(*it_s, *it_d));
-			destinations.erase(it_d);
+			if (it_d->find(protocol) == 0) {
+				ret.insert(make_pair(*it_s, *it_d));
+			}
 		}
 	}
 
