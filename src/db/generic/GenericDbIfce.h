@@ -70,8 +70,6 @@ struct job_element_tupple{
     std::string checksum;
     int filesize;
     std::string metadata;
-    std::string selectionStrategy;
-    int fileIndex;
 };
  
 class GenericDbIfce {

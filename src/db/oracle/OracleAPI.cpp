@@ -547,7 +547,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
             " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE, bring_online, job_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23, :24)";
-    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum,user_filesize,file_metadata, selection_strategy, file_index) VALUES (:1,:2,:3,:4,:5,:6,:7,:8, :9)";
+    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum,user_filesize,file_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7)";
     
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
@@ -602,8 +602,6 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_file_statement->setString(5, iter->checksum);
             s_file_statement->setInt(6, iter->filesize);
             s_file_statement->setString(7, iter->metadata);
-            s_file_statement->setString(8, iter->selectionStrategy);
-            s_file_statement->setInt(9, iter->fileIndex);
             s_file_statement->executeUpdate();
         }
         conn->commit(pooledConnection);
