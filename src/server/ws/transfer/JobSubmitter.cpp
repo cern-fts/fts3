@@ -243,12 +243,12 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 	if (!job->transferJobElements.empty()) {
 
 		string src =
-					job->transferJobElements.front()->source.empty()
-					?
-					string()
-					:
-					job->transferJobElements.front()->source.front()
-					;
+				job->transferJobElements.front()->source.empty()
+				?
+				string()
+				:
+				job->transferJobElements.front()->source.front()
+				;
 
 		string dest =
 				job->transferJobElements.front()->dest.empty()
@@ -273,31 +273,53 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		checkSe(destinationSe);
 	}
 
+	// index of the file
+	int fileIndex = 0;
+
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
 	vector<tns3__TransferJobElement3 * >::iterator it;
-	for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
+	for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++, fileIndex++) {
 
-		// TODO handle multiple source / destination
-
-		string src = (*it)->source.empty() ? string() : (*it)->source.front();
-		string dest = (*it)->dest.empty() ? string() : (*it)->dest.front();
-
-		// check weather the destination file is supported
-		if (!checkProtocol(dest)) {
-			throw Err_Custom("Destination protocol is not supported for file: " + dest);
-		}
-		// check weather the source file is supported
-		if (!checkProtocol(src) && !checkIfLfn(src)) {
-			throw Err_Custom("Source protocol is not supported for file: " + src);
-		}
 		// prepare the job element and add it to the job
 		job_element_tupple tupple;
-		tupple.source = src;
-		tupple.destination = dest;
-		tupple.checksum = (*it)->checksum.empty() ? string() : (*it)->checksum.front();
+
+		// TODO for now use only adler32!
+		vector<string>::iterator it_ch;
+		for (it_ch = (*it)->checksum.begin(); it_ch != (*it)->checksum.end(); it_ch++) {
+			if (it_ch->find("adler32:") == 0) {
+				tupple.checksum = *it_ch;
+				break;
+			}
+		}
+
+		// common properties
 		tupple.filesize = (*it)->filesize ? *(*it)->filesize : 0;
 		tupple.metadata = (*it)->metadata ? *(*it)->metadata : string();
-		jobs.push_back(tupple);
+		tupple.selectionStrategy = (*it)->selectionStrategy ? *(*it)->selectionStrategy : string();
+		tupple.fileIndex = fileIndex;
+
+		// pair sources with destinations
+		map<string, string> pairs = pairSourceAndDestination(
+				(*it)->source,
+				(*it)->dest
+			);
+		// add each pair
+		map<string, string>::iterator it_p;
+		for (it_p = pairs.begin(); it_p != pairs.end(); it_p++) {
+			// check weather the destination file is supported
+			if (!checkProtocol(it_p->second)) {
+				throw Err_Custom("Destination protocol is not supported for file: " + it_p->second);
+			}
+			// check weather the source file is supported
+			if (!checkProtocol(it_p->first) && !checkIfLfn(it_p->first)) {
+				throw Err_Custom("Source protocol is not supported for file: " + it_p->first);
+			}
+			// set the values for source and destination
+			tupple.source = it_p->first;
+			tupple.destination = it_p->second;
+
+			jobs.push_back(tupple);
+		}
 	}
 	//FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
 }
@@ -403,5 +425,31 @@ void JobSubmitter::checkSe(string se) {
 //	state = osg.isDisabled(se);
 //	if (state.is_initialized() && *state) throw Err_Custom("The SE: " + se + " is disabled in the OSG!");
 
+}
+
+map<string, string> JobSubmitter::pairSourceAndDestination(vector<string> sources, vector<string> destinations) {
+
+	map<string, string> ret;
+
+	vector<string>::iterator it_s, it_d;
+
+	for (it_s = sources.begin(); it_s != sources.end(); it_s++) {
+		// retrieve the protocol
+		string::size_type pos = it_s->find("://");
+		string protocol = it_s->substr(0, pos);
+		// look for the corresponding destination
+		string destination;
+		for (it_d = destinations.begin(); it_d != destinations.end(); it_d++) {
+			// if the destination uses the same protocol ...
+			if (it_d->find(protocol) == 0) break;
+		}
+		// if a destination has been found
+		if (it_d != destinations.end()) {
+			ret.insert(make_pair(*it_s, *it_d));
+			destinations.erase(it_d);
+		}
+	}
+
+	return ret;
 }
 

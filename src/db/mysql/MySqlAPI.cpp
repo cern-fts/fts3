@@ -355,19 +355,21 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe), soci::use(bring_online), soci::use(metadata);
 
         // Insert src/dest pair
-        std::string sourceSurl, destSurl, checksum, metadata;
-        int filesize;
+        std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy;
+        int filesize, fileIndex;
         soci::statement pairStmt = (
         		sql.prepare <<
-        		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata) "
-                "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata)",
+        		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index) "
+                "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex)",
                 soci::use(jobId),
                 soci::use(initialState),
                 soci::use(sourceSurl),
                 soci::use(destSurl),
                 soci::use(checksum),
                 soci::use(filesize),
-                soci::use(metadata)
+                soci::use(metadata),
+                soci::use(selectionStrategy),
+                soci::use(fileIndex)
         	);
         std::vector<job_element_tupple>::const_iterator iter;
         for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
@@ -376,6 +378,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             checksum   = iter->checksum;
             filesize   = iter->filesize;
             metadata   = iter->metadata;
+            selectionStrategy = iter->selectionStrategy;
+            fileIndex = iter->fileIndex;
             pairStmt.execute();
         }
 
