@@ -236,6 +236,8 @@ public:
     
     virtual int activeProcessesForThisHost();    
 
+    virtual void setFilesToNotUsed(std::string jobId, int fileIndex);
+
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;

@@ -286,6 +286,8 @@ public:
     virtual int activeProcessesForThisHost() = 0;
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
+
+    virtual void setFilesToNotUsed(std::string jobId, int fileIndex) = 0;
 };
 
 

@@ -218,6 +218,34 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 }
 
 
+void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+        soci::statement stmt(sql);
+
+        stmt.exchange(soci::use(jobId, "jobId"));
+        stmt.exchange(soci::use(fileIndex, "fileIndex"));
+        stmt.alloc();
+        stmt.prepare(
+        		"UPDATE t_file "
+        		"SET file_state = 'NOT_USED' "
+                "WHERE "
+                "	job_id = :jobId AND "
+                "	file_index = :fileIndex "
+    			"	AND file_state = 'SUBMITTED' "
+        	);
+        stmt.define_and_bind();
+        stmt.execute(true);
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
 
 unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string status) {
     soci::session sql(connectionPool);

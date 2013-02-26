@@ -349,6 +349,50 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 }
 
 
+void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
+
+	std::string tag = "setFilesToNotUsed";
+	std::string stmt =
+			"UPDATE t_file "
+			"SET file_state = 'NOT_USED' "
+			"WHERE "
+			"	job_id = :1 "
+			"	AND file_index = :2 "
+			"	AND file_state = 'SUBMITTED' "
+			;
+
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+        s = conn->createStatement(stmt, tag, pooledConnection);
+        s->setString(1, jobId);
+        s->setInt(2, fileIndex);
+        s->executeUpdate();
+        conn->commit(pooledConnection);
+        conn->destroyStatement(s, tag, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+			conn->rollback(pooledConnection);
+
+			if(s)
+				conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+			conn->rollback(pooledConnection);
+
+			if(s)
+				conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+
+    conn->releasePooledConnection(pooledConnection);
+}
 
 unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
     unsigned int updated = 0;    

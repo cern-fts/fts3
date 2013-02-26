@@ -244,6 +244,8 @@ public:
     
     virtual int activeProcessesForThisHost();
 
+    virtual void setFilesToNotUsed(std::string jobId, int fileIndex);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

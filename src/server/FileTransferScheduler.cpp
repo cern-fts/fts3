@@ -73,6 +73,8 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 		if(allowed == true) {
 			unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
 			if(updated == 0) return false;
+			// set all other files that were generated due to a multi-source/destination submission to NOT_USED
+			db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX);
 			return true;
 		}
 		return false;
@@ -155,6 +157,8 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 	unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
 	if(updated == 0)
 		return false;
+	// set all other files that were generated due to a multi-source/destination submission to NOT_USED
+	db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX);
 
 	return true;
 }
