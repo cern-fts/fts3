@@ -41,6 +41,7 @@ public:
     }
 
  int FILE_ID;
+ int FILE_INDEX;
  std::string JOB_ID;
  std::string FILE_STATE;
  std::string LOGICAL_NAME;

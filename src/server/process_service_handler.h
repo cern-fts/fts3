@@ -53,6 +53,7 @@ limitations under the License. */
 #include <boost/scoped_ptr.hpp>
 #include "name_to_uid.h"
 #include "producer_consumer_common.h"
+#include "TransferFileHandler.h"
 #include <sys/resource.h>
 
 extern bool  stopThreads;
@@ -218,44 +219,35 @@ protected:
                 /*get the file for each job*/
         	std::vector<TransferJobs*>::const_iterator iter2;
 
-        	unsigned int emptyVoQueues = 0;
         	std::map< std::string, std::list<TransferFiles*> > voQueues;
             DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
 
-            while (voQueues.size() != emptyVoQueues) {
+            // create transfer-file handler
+            TransferFileHandler tfh (voQueues);
 
-            	std::map< std::string, std::list<TransferFiles*> >::iterator queueiter;
-            	for (queueiter = voQueues.begin(); queueiter != voQueues.end(); ++queueiter) {
+            // loop until all files have been served
+            while (!tfh.empty()) {
+
+            	// iterate over all VOs
+            	set<string>::iterator it_vo;
+            	for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++) {
 
 					if(stopThreads){
-						   /** cleanup resources */
-							for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-								delete *iter2;
-							jobs2.clear();
-							for (queueiter = voQueues.begin(); queueiter != voQueues.end(); ++queueiter) {
-								while (!queueiter->second.empty()) {
-									delete queueiter->second.front();
-									queueiter->second.pop_front();
-								}
-							}
-							voQueues.clear();
+					   /** cleanup resources */
+						for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+							delete *iter2;
+						jobs2.clear();
 						return;
 					}
-
-					if (queueiter->second.empty()) continue;
 
                     int BufSize = 0;
                     int StreamsperFile = 0;
                     int Timeout = 0;
                     std::stringstream internalParams;
                     // serve the first file from the queue
-                    boost::scoped_ptr<TransferFiles> temp ((TransferFiles*) queueiter->second.front());
-                    // remove the file from the queue
-                    queueiter->second.pop_front();
-                    // if the queue is empty increment empty-queue counter
-                    if (queueiter->second.empty()) {
-                    	emptyVoQueues++;
-                    }
+                    boost::scoped_ptr<TransferFiles> temp (tfh.get(*it_vo));
+                    // if there are no more files for that VO just continue
+                    if (!temp.get()) continue;
 
                     source_hostname = extractHostname(temp->SOURCE_SURL);
                     destin_hostname = extractHostname(temp->DEST_SURL);

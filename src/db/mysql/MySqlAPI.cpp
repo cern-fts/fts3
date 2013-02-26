@@ -286,16 +286,30 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
         for (std::vector<TransferJobs*>::const_iterator i = jobs.begin(); i != jobs.end(); ++i) {
             std::string jobId = (*i)->JOB_ID;
 
-            soci::rowset<TransferFiles> rs = (sql.prepare << "SELECT t_file.*, t_job.vo_name, t_job.overwrite_flag, "
-                                                             "    t_job.user_dn, t_job.cred_id, t_job.checksum_method, "
-                                                             "    t_job.source_space_token, t_job.space_token, t_job.job_metadata, "
-                                                             "    t_job.copy_pin_lifetime, t_job.bring_online, t_job.job_metadata "
-                                                             "FROM t_file, t_job WHERE "
-                                                             "    t_file.job_id = t_job.job_id AND "
-                                                             "    t_file.job_finished IS NULL AND "
-                                                             "    t_file.file_state = 'SUBMITTED' AND "
-                                                             "    t_job.job_id = :jobId "
-                                                             "ORDER BY t_file.file_id DESC", soci::use(jobId));
+            soci::rowset<TransferFiles> rs = (
+            		sql.prepare <<
+            		"SELECT f1.*, j.vo_name, j.overwrite_flag, "
+                    "    j.user_dn, j.cred_id, j.checksum_method, "
+                    "    j.source_space_token, j.space_token, j.job_metadata, "
+                    "    j.copy_pin_lifetime, j.bring_online, j.job_metadata "
+                    "FROM t_file f1, t_job j "
+                    "WHERE "
+                    "    f1.job_id = j.job_id AND "
+                    "    f1.job_finished IS NULL AND "
+                    "    f1.file_state = 'SUBMITTED' AND "
+                    "    j.job_id = :jobId AND "
+            		"	 NOT EXISTS ( "
+            		"		SELECT * "
+            		"		FROM t_file f2 "
+            		"		WHERE "
+            		"			f2.job_id = f1.job_id AND "
+            		"			f2.file_index = f1.file_index AND "
+            		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
+            		"	 ) "
+                    "ORDER BY f1.file_id",
+                    soci::use(jobId)
+            	);
+
 
             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti) {
                 TransferFiles const& tfile = *ti;		
@@ -355,19 +369,21 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe), soci::use(bring_online), soci::use(metadata);
 
         // Insert src/dest pair
-        std::string sourceSurl, destSurl, checksum, metadata;
-        int filesize;
+        std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy;
+        int filesize, fileIndex;
         soci::statement pairStmt = (
         		sql.prepare <<
-        		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata) "
-                "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata)",
+        		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index) "
+                "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex)",
                 soci::use(jobId),
                 soci::use(initialState),
                 soci::use(sourceSurl),
                 soci::use(destSurl),
                 soci::use(checksum),
                 soci::use(filesize),
-                soci::use(metadata)
+                soci::use(metadata),
+                soci::use(selectionStrategy),
+                soci::use(fileIndex)
         	);
         std::vector<job_element_tupple>::const_iterator iter;
         for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
@@ -376,6 +392,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             checksum   = iter->checksum;
             filesize   = iter->filesize;
             metadata   = iter->metadata;
+            selectionStrategy = iter->selectionStrategy;
+            fileIndex = iter->fileIndex;
             pairStmt.execute();
         }
 

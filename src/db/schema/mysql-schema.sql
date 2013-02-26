@@ -475,6 +475,10 @@ CREATE TABLE t_file (
 -- job.  It is created automatically.
 --
   file_id          INTEGER PRIMARY KEY AUTO_INCREMENT,
+-- the file index is used in case multiple sources/destinations were provided for one file
+-- entries with the same file_index and same file_id are pointing to the same file 
+-- (but use different protocol)
+  file_index       INTEGER,
 --
 -- job_id (used in joins with file table)
   job_id           CHAR(36) NOT NULL,
@@ -564,6 +568,10 @@ CREATE TABLE t_file (
 --
 -- File metadata
   file_metadata   VARCHAR(255),
+  
+--
+-- selection strategy used in case when multiple protocols were provided
+  selection_strategy VARCHAR(255),
 --
 -- Staging start timestamp
   staging_start   TIMESTAMP NULL DEFAULT NULL,  

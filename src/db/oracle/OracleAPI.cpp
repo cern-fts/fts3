@@ -457,16 +457,31 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::const_iterator iter;
     std::string selecttag = "getByJobId";
-    std::string select = "SELECT t_file.source_surl, t_file.dest_surl, t_file.job_id, t_job.vo_name, "
-            " t_file.file_id, t_job.overwrite_flag, t_job.USER_DN, t_job.CRED_ID, t_file.checksum, t_job.CHECKSUM_METHOD, t_job.SOURCE_SPACE_TOKEN,"
-            " t_job.SPACE_TOKEN, t_job.copy_pin_lifetime, t_job.bring_online, t_file.user_filesize, t_file.file_metadata, t_job.job_metadata "
-            " FROM t_file, t_job WHERE"
-            " t_file.job_id = t_job.job_id AND "
-            " t_file.job_finished is NULL AND "
-            " t_file.file_state ='SUBMITTED' AND "
-            " t_job.job_finished is NULL AND "
-            " t_job.job_id=:1 ORDER BY t_file.file_id DESC ";
 
+    std::string select =
+    		"SELECT "
+    		"		f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
+            " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
+            "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
+            " 		j.SPACE_TOKEN, j.copy_pin_lifetime, j.bring_online, "
+            "		f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index  "
+    		"FROM t_file f1, t_job j "
+    		"WHERE "
+    		"	f1.job_id = j.job_id AND "
+    		"    f1.job_finished is NULL AND "
+    		"	j.job_finished is NULL AND "
+    		"	j.job_id = :1 AND "
+    		"	f1.file_state ='SUBMITTED' AND "
+    		"	NOT EXISTS ( "
+    		"		SELECT NULL "
+    		"		FROM t_file f2 "
+    		"		WHERE "
+    		"			f2.job_id = f1.job_id AND "
+    		"			f2.file_index = f1.file_index AND "
+    		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
+    		"	) "
+    		"ORDER BY f1.file_id "
+    		;
    
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -498,11 +513,12 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                 tr_files->CHECKSUM_METHOD = r->getString(10);
                 tr_files->SOURCE_SPACE_TOKEN = r->getString(11);
                 tr_files->DEST_SPACE_TOKEN = r->getString(12);
- 		tr_files->PIN_LIFETIME = r->getInt(13);
- 		tr_files->BRINGONLINE = r->getInt(14);
-		tr_files->USER_FILESIZE = r->getDouble(15);
-		tr_files->FILE_METADATA = r->getString(16);
-		tr_files->JOB_METADATA = r->getString(16);		
+                tr_files->PIN_LIFETIME = r->getInt(13);
+                tr_files->BRINGONLINE = r->getInt(14);
+                tr_files->USER_FILESIZE = r->getDouble(15);
+                tr_files->FILE_METADATA = r->getString(16);
+                tr_files->JOB_METADATA = r->getString(17);
+                tr_files->FILE_INDEX = r->getInt(18);
 			
                 files[tr_files->VO_NAME].push_back(tr_files);
             }
@@ -547,7 +563,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
             " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE, bring_online, job_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23, :24)";
-    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum,user_filesize,file_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7)";
+    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum,user_filesize,file_metadata, selection_strategy, file_index) VALUES (:1,:2,:3,:4,:5,:6,:7,:8, :9)";
     
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
@@ -602,6 +618,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_file_statement->setString(5, iter->checksum);
             s_file_statement->setInt(6, iter->filesize);
             s_file_statement->setString(7, iter->metadata);
+            s_file_statement->setString(8, iter->selectionStrategy);
+            s_file_statement->setInt(9, iter->fileIndex);
             s_file_statement->executeUpdate();
         }
         conn->commit(pooledConnection);
