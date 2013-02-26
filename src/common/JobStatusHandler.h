@@ -68,7 +68,8 @@ public:
 	    FTS3_STATUS_SUBMITTED_ID,
 	    FTS3_STATUS_READY_ID,
 	    FTS3_STATUS_ACTIVE_ID,
-	    FTS3_STATUS_STAGING_ID
+	    FTS3_STATUS_STAGING_ID,
+	    FTS3_STATUS_NOT_USED_ID
 	};
 
 	///@{
@@ -84,6 +85,7 @@ public:
     static const string FTS3_STATUS_READY;
     static const string FTS3_STATUS_ACTIVE;
     static const string FTS3_STATUS_STAGING;
+    static const string FTS3_STATUS_NOT_USED;
 	///@}
 
 	/**
