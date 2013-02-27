@@ -704,9 +704,11 @@ int main(int argc, char **argv) {
 	    
 	    log << fileManagement->timestamp() << "INFO Send transfer start message to monitoring" << '\n';	    	
 
+	        char stagingToken[512];
             if ((bringonline > 0 || copy_pin_lifetime > 0) && isSrmUrl(strArray[1])) { //issue a bring online	    	
                 reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
-                if (gfal2_bring_online(handle, (strArray[1]).c_str(), copy_pin_lifetime, bringonline, &tmp_err) < 0) {
+                if (gfal2_bring_online(handle, (strArray[1]).c_str(), copy_pin_lifetime, bringonline,
+                                       stagingToken, 0, sizeof(stagingToken), &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
                     const int errCode = tmp_err->code;
                     log << fileManagement->timestamp() << "ERROR Failed to stage file, errno:" << tempError << '\n';
