@@ -54,7 +54,7 @@ MyOSG=false
 
 #The maximum number of processes available to a single user (resource limit)
 #-1 means use OS default (check ulimit -u)
-MaxNumberOfProcesses=4000
+MaxNumberOfProcesses=10000
 
 #Do not change this
 [roles]
