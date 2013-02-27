@@ -503,12 +503,10 @@ CREATE TABLE t_file (
 			CONSTRAINT file_file_id_not_null NOT NULL
 		        -- JC next constraint is actually too strict!
 		        CONSTRAINT file_file_id_pk PRIMARY KEY
-
 -- the file index is used in case multiple sources/destinations were provided for one file
 -- entries with the same file_index and same file_id are pointing to the same file 
 -- (but use different protocol)
   ,file_index       INTEGER        
-		        
 --
 -- job_id (used in joins with file table)
    ,job_id		CHAR(36)
@@ -601,7 +599,6 @@ CREATE TABLE t_file (
 --
 -- user provided metadata
   ,file_metadata    VARCHAR2(255)  
-  
 --
 -- selection strategy used in case when multiple protocols were provided
   ,selection_strategy VARCHAR(255)
