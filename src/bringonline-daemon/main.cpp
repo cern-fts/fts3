@@ -120,7 +120,6 @@ void issueBringOnLineStatus(gfal2_context_t handle) {
         std::list<struct message_bringonline>::iterator i = m_list.begin();
         if (!m_list.empty()) {
             while (i != m_list.end()) {
-	    	std::cout << m_list.size() << std::endl;
                 cert = new UserProxyEnv((*i).proxy);
 		bool deleteIt = false;
                 if ((*i).started == false) { //issue bringonline
