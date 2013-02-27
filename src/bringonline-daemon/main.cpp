@@ -267,6 +267,7 @@ int DoServer(int argc, char** argv) {
         std::vector<struct message_bringonline> urls;
         vector<struct message_bringonline>::iterator itUrls;
 
+	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
         while (!stopThreads) {
 
             //select from the database the config for bringonline for each VO / hostname

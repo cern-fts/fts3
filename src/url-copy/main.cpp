@@ -700,12 +700,8 @@ int main(int argc, char **argv) {
 	    
 	    log << fileManagement->timestamp() << "INFO Send transfer start message to monitoring" << '\n';	    	
 	
-	    /*Implement bringonline as a separate daemon	    
-	       *if bringonline was issued and in url-copy stat source failed, revert the state to STAGING to be brought online again
-	    
-	        char stagingToken[512];
-            if ((bringonline > 0 || copy_pin_lifetime > 0) && isSrmUrl(strArray[1])) { //issue a bring online	    	
-                reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
+	    /*
+            if ( errCode==ENOENT && (bringonline > 0 || copy_pin_lifetime > 0) && isSrmUrl(strArray[1])) { 
                 if (gfal2_bring_online(handle, (strArray[1]).c_str(), copy_pin_lifetime, bringonline,
                                        stagingToken, 0, sizeof(stagingToken), &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
@@ -720,9 +716,9 @@ int main(int argc, char **argv) {
                 }
                 //staging finished without failure
 		log << fileManagement->timestamp() << "INFO Staging file" << source_size << " finished" << '\n';
-                reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
             }
 	    */
+
 
             //set to active
             log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
