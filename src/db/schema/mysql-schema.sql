@@ -577,7 +577,10 @@ CREATE TABLE t_file (
   staging_start   TIMESTAMP NULL DEFAULT NULL,  
 --
 -- Staging finish timestamp
-  staging_finished   TIMESTAMP NULL DEFAULT NULL,  
+  staging_finished   TIMESTAMP NULL DEFAULT NULL,
+--
+-- bringonline token
+  bringonline_token VARCHAR2(255),
   
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
@@ -589,60 +592,16 @@ CREATE TABLE t_file (
 --
 CREATE TABLE t_stage_req (
 --
--- transfer request id
-  request_id           VARCHAR(255) NOT NULL,
+-- vo name
+   vo_name           VARCHAR2(255) NOT NULL
+-- hostname
+   ,host           VARCHAR2(255) NOT NULL			
 --
--- Identifier of the file to transfer
-  file_id              INTEGER NOT NULL,
--- 
--- file identifier within the request. It could be used for ordering
-  stage_id             INTEGER NOT NULL,
---
--- Identifier of the job owning the file to transfer
-  job_id               CHAR(36) NOT NULL,
---
--- The state of this file
-  stage_state          VARCHAR(32) NOT NULL,
---
--- The Returned TURL
-  turl                 VARCHAR(1100),
---
--- the time at which the stage request was started
-  request_time         TIMESTAMP,
---
--- the total duration in seconds
-  duration             FLOAT,
---
--- The finalization duration
-  final_duration       FLOAT,
---
--- The error scope
-  error_scope          VARCHAR(32),
---
--- The FTS phase when the error happened
-  error_phase          VARCHAR(32),
---
--- The class for the reason field
-  reason_class         VARCHAR(32),
---
--- The reason the transfer is in this state
-  reason               VARCHAR(2048),
---
--- the nominal size of the file (bytes)
-  filesize             BIGINT,
---
--- the time at which the transfer finished (successfully or not)
-  finish_time          TIMESTAMP NULL DEFAULT NULL,
---
--- this timestamp will be set when the job enter in one of the terminal 
--- states (Finished, FinishedDirty, Failed, Canceled). Use for table
--- partitioning
-  job_finished          TIMESTAMP NULL DEFAULT NULL,
---
+-- parallel bringonline ops
+  ,concurrent_ops INTEGER DEFAULT 0
+  
 -- Set primary key
-  CONSTRAINT stagereq_pk PRIMARY KEY (request_id, file_id),
-  FOREIGN KEY (file_id) REFERENCES t_file(file_id),
-  FOREIGN KEY (job_id)  REFERENCES t_job(job_id)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, vo_name)
 );
 
 
@@ -688,13 +647,6 @@ CREATE INDEX t_server_config_retry         ON t_server_config(retry);
 
 CREATE INDEX idx_report_job      ON t_job (vo_name,job_id);
 
--- t_stage_request indexes:
--- t_stage_request(t_stagereq__unique_id) is primary key
-CREATE INDEX stagereq_request_id        ON t_stage_req(request_id);
-CREATE INDEX stagereq_file_id           ON t_stage_req(file_id);
-CREATE INDEX stagereq_job_id            ON t_stage_req(job_id);
-CREATE INDEX stagereq_stage_state       ON t_stage_req(stage_state);
-CREATE INDEX stagereq_jobfinished_id    ON t_stage_req(job_finished);
 
 -- Config index
 CREATE INDEX t_group_members_1  ON t_group_members(groupName);

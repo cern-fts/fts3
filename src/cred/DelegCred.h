@@ -37,8 +37,6 @@ public:
      */
     virtual ~DelegCred();
 
-protected:
-
     /**
      * Generate a Name for the Certificate Proxy File
      */

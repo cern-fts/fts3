@@ -31,7 +31,7 @@ CREATE TABLE t_optimize (
 -- source se
    source_se	VARCHAR2(255),
 --
--- dest se	
+-- dest se
    dest_se	VARCHAR2(255),
 --
 -- number of streams
@@ -47,13 +47,13 @@ CREATE TABLE t_optimize (
    throughput       	NUMBER default NULL,
 --
 -- tcp buffer size
-   buffer       	NUMBER default NULL,   
+   buffer       	NUMBER default NULL,
 --
 -- the nominal size of the file (bytes)
   filesize         	NUMBER default NULL,
 --
 -- timestamp
-   datetime			TIMESTAMP WITH TIME ZONE  
+   datetime			TIMESTAMP WITH TIME ZONE
 );
 
 
@@ -69,10 +69,10 @@ CREATE TABLE t_config_audit (
    dn			VARCHAR2(1024),
 --
 -- what has changed
-   config		VARCHAR2(4000), 
+   config		VARCHAR2(4000),
 --
 -- action (insert/update/delete)
-   action		VARCHAR2(100)    
+   action		VARCHAR2(100)
 );
 
 
@@ -168,7 +168,7 @@ CREATE TABLE t_se (
   ,site VARCHAR2(100)
   ,state VARCHAR2(30)
   ,version VARCHAR2(30)
--- This field will contain the host parse for FTS and extracted from name 
+-- This field will contain the host parse for FTS and extracted from name
   ,host varchar2(100)
   ,se_transfer_type VARCHAR2(30)
   ,se_transfer_protocol VARCHAR2(30)
@@ -177,12 +177,12 @@ CREATE TABLE t_se (
   ,CONSTRAINT se_info_pk PRIMARY KEY (name)
 );
 
--- 
+--
 -- relation of SE and VOs
 --
 CREATE TABLE t_se_acl (
   name varchar2(255)
-  ,vo varchar2(32) 
+  ,vo varchar2(32)
   ,CONSTRAINT se_acl_pk PRIMARY KEY (name, vo)
 );
 
@@ -206,28 +206,28 @@ CREATE TABLE t_group_members(
 	groupName VARCHAR2(255) NOT NULL
 	,member VARCHAR2(255) NOT NULL UNIQUE
 	,CONSTRAINT t_group_members_pk PRIMARY KEY (groupName, member)
-	,CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)	
-); 
+	,CONSTRAINT t_group_members_fk FOREIGN KEY (member) REFERENCES t_se (name)
+);
 
 -- SE HOSTNAME / GROUP NAME / *
 
-CREATE TABLE t_link_config ( 
+CREATE TABLE t_link_config (
    source         VARCHAR2(255)   NOT NULL
    ,destination         VARCHAR2(255)   NOT NULL
    ,state VARCHAR2(30)  NOT NULL
    ,symbolicName         VARCHAR2(255)  NOT NULL UNIQUE
    ,nostreams       	INTEGER NOT NULL
    ,tcp_buffer_size     INTEGER DEFAULT 0
-   ,urlcopy_tx_to      INTEGER NOT NULL  
+   ,urlcopy_tx_to      INTEGER NOT NULL
    ,no_tx_activity_to INTEGER DEFAULT 360
    ,auto_protocol VARCHAR2(3) check (auto_protocol in ('on', 'off'))
    ,placeholder1 INTEGER
-   ,placeholder2 INTEGER   
+   ,placeholder2 INTEGER
    ,placeholder3 VARCHAR2(255)
-   ,CONSTRAINT t_link_config_pk PRIMARY KEY (source, destination)    
+   ,CONSTRAINT t_link_config_pk PRIMARY KEY (source, destination)
 );
 
-CREATE TABLE t_share_config ( 
+CREATE TABLE t_share_config (
    source         VARCHAR2(255)   NOT NULL
    ,destination         VARCHAR2(255)   NOT NULL
    ,vo VARCHAR2(100) NOT NULL
@@ -241,10 +241,10 @@ CREATE TABLE t_share_config (
 --
 CREATE TABLE t_bad_ses (
 --
--- The hostname of the bad SE   
+-- The hostname of the bad SE
    se         VARCHAR2(256)
 --
--- The reason this host was added 
+-- The reason this host was added
    ,message             VARCHAR2(2048) DEFAULT NULL
 --
 -- The time the host was added
@@ -260,10 +260,10 @@ CREATE TABLE t_bad_ses (
 --
 CREATE TABLE t_bad_dns (
 --
--- The hostname of the bad SE   
+-- The hostname of the bad SE
    dn         VARCHAR2(256)
 --
--- The reason this host was added 
+-- The reason this host was added
    ,message             VARCHAR2(2048) DEFAULT NULL
 --
 -- The time the host was added
@@ -277,14 +277,14 @@ CREATE TABLE t_bad_dns (
 
 --
 -- Table for saving the site-group association. As convention, group names should be between "[""]"
--- 
+--
 CREATE TABLE t_site_group (
--- name of the group 
+-- name of the group
 --
    group_name     VARCHAR2(100)
                   CONSTRAINT site_group_gname_not_null NOT NULL
 -- name of the site
--- 
+--
   ,site_name      VARCHAR2(100)
                   CONSTRAINT site_group_sname_not_null NOT NULL
 -- priority used for ordering
@@ -347,7 +347,7 @@ CREATE TABLE t_job (
                     	CONSTRAINT job_job_state_not_null NOT NULL
 --
 -- Session reuse for this job. Allowed values are Y, (N), NULL
-  ,reuse_job           VARCHAR2(3) 
+  ,reuse_job           VARCHAR2(3)
 --
 -- Canceling flag. Allowed values are Y, (N), NULL
   ,cancel_job           CHAR(1)
@@ -419,19 +419,19 @@ CREATE TABLE t_job (
 -- legacy cert retrieval is used
   ,myproxy_server       VARCHAR2(255)
 --
--- The endpoint of Source Catalog to be used in case 
+-- The endpoint of Source Catalog to be used in case
 -- logical names are used in the files
   ,src_catalog          VARCHAR2(1024)
 --
--- The type of the the Source Catalog to be used in case 
+-- The type of the the Source Catalog to be used in case
 -- logical names are used in the files
   ,src_catalog_type     VARCHAR2(1024)
 --
--- The endpoint of the Destination Catalog to be used in case 
+-- The endpoint of the Destination Catalog to be used in case
 -- logical names are used in the files
   ,dest_catalog          VARCHAR2(1024)
 --
--- The type of the Destination Catalog to be used in case 
+-- The type of the Destination Catalog to be used in case
 -- logical names are used in the files
   ,dest_catalog_type     VARCHAR2(1024)
 --
@@ -442,7 +442,7 @@ CREATE TABLE t_job (
 -- Overwrite flag for job
   ,overwrite_flag        CHAR(1) DEFAULT NULL
 --
--- this timestamp will be set when the job enter in one of the terminal 
+-- this timestamp will be set when the job enter in one of the terminal
 -- states (Finished, FinishedDirty, Failed, Canceled). Use for table
 -- partitioning
   ,job_finished          TIMESTAMP WITH TIME ZONE DEFAULT NULL
@@ -451,9 +451,9 @@ CREATE TABLE t_job (
 --
   ,source_space_token VARCHAR2(255)
 --
--- description used by the agents to eventually get the source token. 
+-- description used by the agents to eventually get the source token.
 --
-  ,source_token_description VARCHAR2(255) 
+  ,source_token_description VARCHAR2(255)
 -- *** New in 3.3.0 ***
 --
 -- pin lifetime of the copy of the file created after a successful srmPutDone
@@ -474,11 +474,10 @@ CREATE TABLE t_job (
  -- Specifies how many configurations were assigned to the transfer-job
   ,configuration_count INTEGER default NULL
 -- user provided metadata
-  ,job_metadata    VARCHAR2(255)    
+  ,job_metadata    VARCHAR2(255)
   );
-  
-  
--- 
+
+--
 -- t_job_share_config the se configuration to be used by the job
 --
 CREATE TABLE t_job_share_config (
@@ -490,8 +489,7 @@ CREATE TABLE t_job_share_config (
    ,CONSTRAINT t_share_config_fk1 FOREIGN KEY (source, destination, vo) REFERENCES t_share_config (source, destination, vo) ON DELETE CASCADE
    ,CONSTRAINT t_share_config_fk2 FOREIGN KEY (job_id) REFERENCES t_job (job_id) ON DELETE CASCADE
 );
-  
-  
+
 --
 -- t_file stores the actual file transfers - one row per source/dest pair
 --
@@ -500,18 +498,16 @@ CREATE TABLE t_file (
 -- job.  It is created automatically.
 --
    file_id		INTEGER
-			CONSTRAINT file_file_id_not_null NOT NULL
-		        -- JC next constraint is actually too strict!
+			CONSTRAINT file_file_id_not_null NOT NULL		     
 		        CONSTRAINT file_file_id_pk PRIMARY KEY
--- the file index is used in case multiple sources/destinations were provided for one file
--- entries with the same file_index and same file_id are pointing to the same file 
--- (but use different protocol)
-  ,file_index       INTEGER        
+--
+-- file index
+   ,file_index       INTEGER
 --
 -- job_id (used in joins with file table)
    ,job_id		CHAR(36)
                     	CONSTRAINT file_job_id_not_null NOT NULL
-                    	REFERENCES t_job(job_id)
+			REFERENCES t_job(job_id)
 --
 -- The state of this file
   ,file_state		VARCHAR2(32)
@@ -521,7 +517,7 @@ CREATE TABLE t_file (
   ,logical_name      	VARCHAR2(1100)
 --
 -- The Source Logical Name
-  ,symbolicName      	VARCHAR2(255)  
+  ,symbolicName      	VARCHAR2(255)
 --
 -- Hostname which this file was transfered
   ,transferHost       	VARCHAR2(255)
@@ -570,12 +566,12 @@ CREATE TABLE t_file (
   ,finish_time		TIMESTAMP WITH TIME ZONE
 --
 -- the timestamp when the file is in a terminal state
-  ,start_time		TIMESTAMP WITH TIME ZONE  
+  ,start_time		TIMESTAMP WITH TIME ZONE
 --
 -- internal file parameters for storing information between retry attempts
   ,internal_file_params    VARCHAR2(255)
 --
--- this timestamp will be set when the job enter in one of the terminal 
+-- this timestamp will be set when the job enter in one of the terminal
 -- states (Finished, FinishedDirty, Failed, Canceled). Use for table
 -- partitioning
   ,job_finished          TIMESTAMP WITH TIME ZONE DEFAULT NULL
@@ -595,13 +591,16 @@ CREATE TABLE t_file (
   ,staging_finished       TIMESTAMP WITH TIME ZONE DEFAULT NULL
 --
 -- user provided size of the file (bytes)
-  ,user_filesize         	INTEGER  
+  ,user_filesize         	INTEGER
 --
 -- user provided metadata
-  ,file_metadata    VARCHAR2(255)  
+  ,file_metadata    VARCHAR2(255)
 --
 -- selection strategy used in case when multiple protocols were provided
   ,selection_strategy VARCHAR(255)
+--
+-- bringonline token
+  ,bringonline_token VARCHAR2(255)
 );
 --
 -- autoinc sequence on file_id
@@ -626,72 +625,24 @@ END;
 --
 CREATE TABLE t_stage_req (
 --
--- transfer request id
-   request_id           VARCHAR2(255)
-                        CONSTRAINT stagereq_req_id_not_null NOT NULL
+-- vo name
+   vo_name           VARCHAR2(255) CONSTRAINT stagereq_vo_name_not_null NOT NULL
 --
--- Identifier of the file to transfer
-  ,file_id              INTEGER
-		        CONSTRAINT stagereq_file_id_not_null NOT NULL
-		        REFERENCES t_file(file_id)
--- 
--- file identifier within the request. It could be used for ordering
-  ,stage_id             INTEGER
-                        CONSTRAINT stagereq_stage_id_not_null NOT NULL
+-- hostname
+   ,host           VARCHAR2(255) CONSTRAINT stagereq_host_not_null NOT NULL
 --
--- Identifier of the job owning the file to transfer
-  ,job_id               CHAR(36)
-		        CONSTRAINT stagereq_job_id_not_null NOT NULL
-		        REFERENCES t_job(job_id)
---
--- The state of this file
-  ,stage_state          VARCHAR2(32)
-                        CONSTRAINT stagereq_state_not_null NOT NULL
---
--- The Returned TURL
-  ,turl                 VARCHAR2(1100)
---
--- the time at which the stage request was started
-  ,request_time         TIMESTAMP WITH TIME ZONE
---
--- the total duration in seconds
-  ,duration             NUMBER(12,2)
---
--- The finalization duration
-  ,final_duration       NUMBER(12,3)
---
--- The error scope
-  ,error_scope          VARCHAR2(32)
---
--- The FTS phase when the error happened
-  ,error_phase          VARCHAR2(32)
---
--- The class for the reason field
-  ,reason_class         VARCHAR2(32)
---
--- The reason the transfer is in this state
-  ,reason               VARCHAR2(2048)
---
--- the nominal size of the file (bytes)
-  ,filesize         	INTEGER
---
--- the time at which the transfer finished (successfully or not)
-  ,finish_time          TIMESTAMP WITH TIME ZONE
---
--- this timestamp will be set when the job enter in one of the terminal 
--- states (Finished, FinishedDirty, Failed, Canceled). Use for table
--- partitioning
-  ,job_finished          TIMESTAMP WITH TIME ZONE DEFAULT NULL
+-- parallel bringonline ops
+  ,concurrent_ops              INTEGER DEFAULT 0
 --
 -- Set primary key
-  ,CONSTRAINT stagereq_pk PRIMARY KEY (request_id, file_id)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
 );
 
 
 
 --
 --
--- Index Section 
+-- Index Section
 --
 --
 
@@ -730,19 +681,11 @@ CREATE INDEX t_server_config_retry         ON t_server_config(retry);
 
 CREATE index idx_report_job      ON t_job (vo_name,job_id);
 
--- t_stage_request indexes:
--- t_stage_request(t_stagereq__unique_id) is primary key
-CREATE INDEX stagereq_request_id        ON t_stage_req(request_id);
-CREATE INDEX stagereq_file_id           ON t_stage_req(file_id);
-CREATE INDEX stagereq_job_id            ON t_stage_req(job_id);
-CREATE INDEX stagereq_stage_state       ON t_stage_req(stage_state);
-CREATE INDEX stagereq_jobfinished_id    ON t_stage_req(job_finished);
 
 -- Config index
 CREATE INDEX t_group_members  ON t_group_members(groupName);
 
-
--- 
+--
 --
 -- Schema version
 --

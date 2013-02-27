@@ -130,6 +130,7 @@ exit 0
 
 %post server
 /sbin/chkconfig --add fts-server
+/sbin/chkconfig --add fts-bringonline
 /sbin/chkconfig --add fts-msg-bulk
 /sbin/chkconfig --add fts-msg-cron
 /sbin/chkconfig --add fts-records-cleaner
@@ -142,6 +143,8 @@ exit 0
 if [ $1 -eq 0 ] ; then
     /sbin/service fts-server stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-server
+    /sbin/service fts-bringonline stop >/dev/null 2>&1
+    /sbin/chkconfig --del fts-bringonline    
     /sbin/service fts-msg-bulk stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-msg-bulk
     /sbin/service fts-msg-cron stop >/dev/null 2>&1
@@ -163,6 +166,7 @@ exit 0
 %postun server
 if [ "$1" -ge "1" ] ; then
     /sbin/service fts-server condrestart >/dev/null 2>&1 || :
+    /sbin/service fts-bringonline condrestart >/dev/null 2>&1 || :    
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
     /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :    
@@ -191,6 +195,7 @@ rm -rf %{buildroot}
 %{_sbindir}/fts_msg_cron
 %{_sbindir}/fts_msg_bulk
 %{_sbindir}/fts_server
+%{_sbindir}/fts_bringonline
 %{_sbindir}/fts_url_copy
 %{_sbindir}/fts_db_cleaner
 %{_sbindir}/fts_info_publisher
@@ -198,6 +203,7 @@ rm -rf %{buildroot}
 %{_sbindir}/fts_bdii_cache_updater
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
+%attr(0755,root,root) %{_initddir}/fts-bringonline
 %attr(0755,root,root) %{_initddir}/fts-msg-cron
 %attr(0755,root,root) %{_initddir}/fts-records-cleaner
 %attr(0755,root,root) %{_initddir}/fts-info-publisher

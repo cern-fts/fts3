@@ -3008,6 +3008,24 @@ int MySqlAPI::activeProcessesForThisHost(){
     return active;
 }
 
+
+std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBringonlimeMax(){
+}
+
+std::vector<struct message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue){
+}
+
+void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg){
+}
+
+void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::string & token){
+}
+
+
+void MySqlAPI::getCredentials(const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id){
+}
+
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

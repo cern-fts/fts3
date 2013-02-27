@@ -75,6 +75,7 @@ static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
 static std::string reuseFile("");
+static std::string token_bringonline("");
 double source_size = 0.0;
 double dest_size = 0.0;
 double userFilesize = 0;
@@ -141,13 +142,6 @@ static int fexists(const char *filename) {
     struct stat buffer;
     if (stat(filename, &buffer) == 0) return 0;
     return -1;
-}
-
-static bool isSrmUrl(const std::string & url) {
-    if (url.compare(0, 6, "srm://") == 0)
-        return true;
-
-    return false;
 }
 
 static std::string srmVersion(const std::string & url) {
@@ -422,7 +416,7 @@ int main(int argc, char **argv) {
     std::string bytes_to_string("");
     struct stat statbufsrc;
     struct stat statbufdest;
-    GError * tmp_err = NULL; // classical GError/glib error management   
+    GError *tmp_err = NULL; // classical GError/glib error management   
     params = gfalt_params_handle_new(NULL);
 
     gfalt_set_event_callback(params, event_logger, NULL);
@@ -436,6 +430,8 @@ int main(int argc, char **argv) {
 
     for (register int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
+        if (temp.compare("-L") == 0)
+            token_bringonline = std::string(argv[i + 1]);	
         if (temp.compare("-K") == 0)
             file_Metadata = std::string(argv[i + 1]);
         if (temp.compare("-J") == 0)
@@ -703,7 +699,10 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A
 	    
 	    log << fileManagement->timestamp() << "INFO Send transfer start message to monitoring" << '\n';	    	
-
+	
+	    /*Implement bringonline as a separate daemon	    
+	       *if bringonline was issued and in url-copy stat source failed, revert the state to STAGING to be brought online again
+	    
 	        char stagingToken[512];
             if ((bringonline > 0 || copy_pin_lifetime > 0) && isSrmUrl(strArray[1])) { //issue a bring online	    	
                 reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
@@ -723,6 +722,7 @@ int main(int argc, char **argv) {
 		log << fileManagement->timestamp() << "INFO Staging file" << source_size << " finished" << '\n';
                 reporter.constructMessage(job_id, strArray[0], "STAGING", "", diff, source_size);
             }
+	    */
 
             //set to active
             log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
@@ -989,6 +989,13 @@ stop:
             reporter.buffersize = tcpbuffersize;
             logStream << fileManagement->timestamp() << "INFO Report FINISHED back to the server" << '\n';
             reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
+	    /*unpin the file here and report the result in the log file...*/
+ 	     g_clear_error(&tmp_err);
+	     if (bringonline > 0 && gfal2_release_file(handle, (strArray[1]).c_str(), token_bringonline.c_str(), &tmp_err) < 0) {
+		if (tmp_err && tmp_err->message) {
+                        logStream << fileManagement->timestamp() << "WARN Failed unpinning the file:" << std::string(tmp_err->message) << '\n';		
+		}
+	     }
         }
         logStream << fileManagement->timestamp() << "INFO Send monitoring complete message" << '\n';
         msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());

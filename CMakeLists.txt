@@ -35,6 +35,7 @@ link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli)
 link_directories (${PROJECT_BINARY_DIR}/src/dbClear) 
 link_directories (${PROJECT_BINARY_DIR}/src/glue2-publisher) 
 link_directories (${PROJECT_BINARY_DIR}/src/infosys)
+link_directories (${PROJECT_BINARY_DIR}/src/bringonline-daemon)
 
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)

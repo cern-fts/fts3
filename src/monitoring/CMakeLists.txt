@@ -48,7 +48,7 @@ include_directories (${fts_include_dir})
 find_package (GLIB2)
 include_directories (${GLIB2_INCLUDE_DIRS})
 
-set(fts_msg_bulk_SOURCES utility_routines.cpp msg-bulk-send.cpp MsgPipe.cpp MsgProducer.cpp concurrent_queue.cpp Logger.cpp)
+set(fts_msg_bulk_SOURCES utility_routines.cpp msg-bulk-send.cpp MsgPipe.cpp MsgProducer.cpp Logger.cpp)
 add_executable (fts_msg_bulk ${fts_msg_bulk_SOURCES})
 add_dependencies(fts_msg_bulk fts_common fts_config)
 target_link_libraries(fts_msg_bulk ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES}  -lfts_common -lfts_config -lrt -lglib-2.0 -lboost_filesystem-mt -lboost_thread-mt -lboost_system-mt -lrt)

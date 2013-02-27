@@ -288,6 +288,16 @@ public:
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
 
     virtual void setFilesToNotUsed(std::string jobId, int fileIndex) = 0;
+    
+    virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax() = 0;
+    
+    virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue) = 0;
+    
+    virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg) = 0;
+    
+    virtual void addToken(const std::string & job_id, int file_id, const std::string & token) = 0;
+    
+    virtual void getCredentials(const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id) = 0;
 };
 
 

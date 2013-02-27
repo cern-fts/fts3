@@ -90,6 +90,32 @@ public:
 };
 
 
+struct message_bringonline {
+public:
+    message_bringonline() {
+    	job_id = std::string();
+    	file_id = 0;
+    	url = std::string();
+        timestamp = time(NULL);
+        retries = 0;       
+        proxy = std::string();
+	started = false;
+	token = std::string();
+    }
+
+    ~message_bringonline() {
+    }
+    std::string job_id;
+    int file_id;
+    std::string url;
+    time_t timestamp; 
+    int retries;
+    std::string proxy;
+    bool started;
+    std::string token;
+};
+
+
 
 #define DEFAULT_TIMEOUT 3600
 #define MID_TIMEOUT 5000
