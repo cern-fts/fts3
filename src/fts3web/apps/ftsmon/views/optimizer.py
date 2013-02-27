@@ -20,13 +20,13 @@ def optimizer(httpRequest):
 	
 	# Only max!   
 	optimizations = optimizations.extra(where = [
-	""" "T_OPTIMIZE"."THROUGHPUT" = (SELECT MAX("O2"."THROUGHPUT") FROM T_OPTIMIZE O2
-	                                 WHERE "O2"."SOURCE_SE" = "T_OPTIMIZE"."SOURCE_SE" AND
-	                                       "O2"."DEST_SE" = "T_OPTIMIZE"."DEST_SE" AND
-	                                       "O2"."ACTIVE" = "T_OPTIMIZE"."ACTIVE")"""])
+	""" t_optimize.throughput = (SELECT MAX(O2.throughput) FROM t_optimize O2
+	                                 WHERE O2.source_se = t_optimize.source_se AND
+	                                       O2.dest_se = t_optimize.dest_se AND
+	                                       O2.active = t_optimize.active)"""])
 	
 	optimizations = optimizations.order_by('source_se', 'dest_se', 'active')
-	
+	print str(optimizations.query)
 	
 	# Paginate
 	paginator = Paginator(optimizations, 50)
