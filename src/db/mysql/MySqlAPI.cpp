@@ -368,7 +368,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
         const std::string & sourceSE, const std::string & destSe, int bring_online, std::string metadata) {
 
     const std::string currenthost = hostname;
-    const std::string initialState = "SUBMITTED";
+    const std::string initialState = bring_online > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
     const std::string params;
 

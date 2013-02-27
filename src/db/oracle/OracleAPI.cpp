@@ -599,7 +599,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         const std::string & sourceSE, const std::string & destSe, int bringonline, std::string metadata) {
 
 
-    const std::string initial_state = "SUBMITTED";
+    const std::string initial_state = bringonline > 0? "STAGING" : "SUBMITTED";
     time_t timed = time(NULL);
     const std::string currenthost = ftsHostName; //current hostname
     const std::string tag_job_statement = "tag_job_statement";
