@@ -1916,7 +1916,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     bool ok = true;
     std::vector<struct message_updater>::const_iterator iter;
     const std::string transfer_status = "FAILED";
-    const std::string transfer_message = "Transfer failed to respond within 360 secs, probably stalled";
+    const std::string transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled";
     const std::string status = "FAILED";
 
     try {
