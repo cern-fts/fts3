@@ -3164,6 +3164,63 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 }
 
 void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg){
+
+	if (state != "STARTED" && state != "FINISHED" && state != "FAILED") return;
+
+    soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+        soci::statement stmt(sql);
+
+        if (state == "STARTED") {
+
+            stmt.exchange(soci::use(msg.job_id, "jobId"));
+            stmt.exchange(soci::use(msg.file_id, "fileId"));
+            stmt.alloc();
+            stmt.prepare(
+            		" UPDATE t_file "
+            		" SET staging_start = UTC_TIMESTAMP() "
+            		" WHERE job_id = :jobId "
+            		"	AND file_id= :fileId "
+            		"	AND file_state='STAGING'"
+            	);
+            stmt.define_and_bind();
+            stmt.execute(true);
+
+        } else {
+
+        	if (state == "FINISHED") {
+
+        		stmt.exchange(soci::use(std::string(), "reason"));
+        		stmt.exchange(soci::use(std::string("SUBMITTED"), "fileState"));
+
+        	} else if (state=="FAILED")  {
+
+        		stmt.exchange(soci::use(message, "reason"));
+        		stmt.exchange(soci::use(std::string("FAILED"), "fileState"));
+        	}
+
+            stmt.exchange(soci::use(msg.job_id, "jobId"));
+            stmt.exchange(soci::use(msg.file_id, "fileId"));
+            stmt.alloc();
+            stmt.prepare(
+            		" UPDATE t_file "
+            		" SET staging_finished = UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
+            		" WHERE job_id = :jobId "
+            		"	AND file_id = :fileId "
+            		"	AND file_state = 'STAGING'"
+            	);
+            stmt.define_and_bind();
+            stmt.execute(true);
+        }
+
+        sql.commit();
+    }
+    catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
 void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::string & token){
