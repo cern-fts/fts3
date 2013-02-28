@@ -1237,7 +1237,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     	int numberOfSamples;
 
     	sql <<
-			" SELECT count(*) "
+			" SELECT COUNT(*) "
 			" FROM t_optimize "
 			" WHERE throughput is NULL "
 			"	AND source_se = :source "
@@ -1247,12 +1247,32 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
 			soci::use(destin_hostname),
 			soci::into(numberOfSamples);
 
-    	if (numberOfSamples > 0) {
+    	int timeoutTr = 0;
+
+    	sql <<
+    		" SELECT COUNT(*) "
+    		" FROM t_file, t_job "
+    		" WHERE t_job.job_id = t_file.job_id "
+    		"	AND t_file.file_state = 'FAILED' "
+    		" 	AND t_file.reason LIKE '%operation timeout%' "
+    		"	AND t_job.source_se = :sourceSe "
+    		" 	AND t_job.dest_se = :destSe  "
+    		" 	AND (t_file.finish_time > (CURRENT_TIMESTAMP - INTERVAL '30' minute)) "
+    		" ORDER BY  SYS_EXTRACT_UTC(t_file.finish_time) DESC",
+    		soci::use(source_hostname),
+    		soci::use(destin_hostname),
+    		soci::into(timeoutTr)
+    		;
+
+    	if (numberOfSamples > 0 && timeoutTr == 0) {
 
         	soci::rowset<soci::row> rs = (
         			sql.prepare <<	" SELECT nostreams, timeout, buffer "
         							" FROM t_optimize "
-        			                " WHERE source_se = :source AND dest_se = :dest "
+        			                " WHERE source_se = :source "
+        			                "	AND dest_se = :dest "
+        							"	AND throughput is NULL "
+        							"	AND file_id = 0 "
         							" ORDER BY nostreams ASC, timeout ASC, buffer ASC "
         			                " LIMIT 1",
         			                soci::use(source_hostname),
@@ -1269,12 +1289,19 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     			ops->file_id = 1;
 
         	} else {
-        		// or now row at all
+        		// or no row at all
     			ops->streamsperfile = DEFAULT_NOSTREAMS;
     			ops->timeout = DEFAULT_TIMEOUT;
     			ops->bufsize = DEFAULT_BUFFSIZE;
     			ops->file_id = 0;
         	}
+
+    	} else if (numberOfSamples > 0 && timeoutTr > 0) { //tr's started timing out, use decent defaults
+
+   				ops->streamsperfile = DEFAULT_NOSTREAMS;
+    			ops->timeout = MID_TIMEOUT;
+    			ops->bufsize = DEFAULT_BUFFSIZE;
+    			ops->file_id = 0;
 
     	} else {
 
@@ -1317,7 +1344,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     			ops->file_id = 1;
 
             } else {
-            	// or now row at all
+            	// or no row at all
     			ops->streamsperfile = DEFAULT_NOSTREAMS;
     			ops->timeout = DEFAULT_TIMEOUT;
     			ops->bufsize = DEFAULT_BUFFSIZE;
