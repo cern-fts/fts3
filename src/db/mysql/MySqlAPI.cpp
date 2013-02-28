@@ -3024,8 +3024,6 @@ std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBring
 		for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
 			soci::row const& row = *i;
 
-			row.get<std::string>("vo_name");
-
 			boost::tuple<std::string, std::string, int> item (
 					row.get<std::string>("vo_name"),
 					row.get<std::string>("host"),
@@ -3043,7 +3041,126 @@ std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBring
 
 }
 
-std::vector<struct message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue){
+std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue){
+
+    soci::session sql(connectionPool);
+
+    std::vector<message_bringonline> ret;
+
+    try {
+
+    	if (voName.empty()) {
+
+			soci::rowset<soci::row> rs = (
+					sql.prepare <<
+					" SELECT distinct(source_se) "
+					" FROM t_file, t_job "
+					" WHERE t_job.job_id = t_file.job_id "
+					"	AND t_job.bring_online > 0 "
+					"	AND t_file.file_state = 'STAGING' "
+					"	AND t_file.staging_start IS NULL "
+				);
+
+			for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+				soci::row const& row = *i;
+
+				std::string hostV = row.get<std::string>("source_se");
+
+				unsigned int currentStagingFilesNoConfig = 0;
+
+				sql <<
+						" SELECT COUNT(*) "
+						" FROM t_file, t_job "
+						" WHERE t_job.job_id = t_file.job_id "
+						" 	AND t_job.bring_online > 0 "
+						"	AND t_file.file_state = 'STAGING' "
+						"	AND t_file.staging_start IS NOT NULL "
+						"	AND t_job.source_se = :hostV ",
+						soci::use(hostV),
+						soci::into(currentStagingFilesNoConfig)
+				;
+
+				unsigned int maxNoConfig = currentStagingFilesNoConfig > 0 ? maxValue - currentStagingFilesNoConfig : maxValue;
+
+				soci::rowset<soci::row> rs2 = (
+						sql.prepare <<
+						" SELECT t_file.source_surl, t_file.job_id, t_file.file_id "
+						" FROM t_file, t_job "
+						" WHERE t_job.job_id = t_file.job_id "
+						" 	AND t_job.bring_online > 0 "
+						"	AND t_file.staging_start IS NULL "
+						"	AND t_file.file_state = 'STAGING' "
+						"	AND t_job.source_se = :source_se "
+						" 	AND rownum <= :rownum "
+						" ORDER BY t_file.file_id ",
+						soci::use(hostV),
+						soci::use(maxNoConfig)
+					);
+
+				for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
+					soci::row const& row2 = *i2;
+
+					struct message_bringonline msg;
+					msg.url = row2.get<std::string>("source_surl");
+					msg.job_id = row2.get<std::string>("job_id");
+					msg.file_id = row2.get<int>("file_id");
+
+					ret.push_back(msg);
+				}
+			}
+    	} else {
+
+    		unsigned currentStagingFilesConfig = 0;
+
+			sql <<
+					" SELECT COUNT(*) FROM t_file, t_job "
+					" WHERE t_job.job_id = t_file.job_id "
+					" 	AND t_job.BRING_ONLINE > 0 "
+					"	AND t_file.file_state = 'STAGING' "
+					"	AND t_file.STAGING_START IS NOT NULL "
+					" 	AND t_job.vo_name = :vo_name "
+					"	AND t_job.source_se = :source_se ",
+					soci::use(voName),
+					soci::use(hostName),
+					soci::into(currentStagingFilesConfig)
+			;
+
+			unsigned int maxConfig = currentStagingFilesConfig > 0 ? maxValue - currentStagingFilesConfig : maxValue;
+
+			soci::rowset<soci::row> rs = (
+					sql.prepare <<
+					" SELECT t_file.source_surl, t_file.job_id, t_file.file_id "
+					" FROM t_file, t_job "
+					" WHERE t_job.job_id = t_file.job_id "
+					"	AND t_job.bring_online > 0 "
+					" 	AND t_file.staging_START IS NULL "
+					"	AND t_file.file_state = 'STAGING' "
+					"	AND t_job.source_se = :source_se "
+					"	AND rownum <= :rownum "
+					"	AND t_job.vo_name = :vo_name "
+					" ORDER BY t_file.file_id ",
+					soci::use(hostName),
+					soci::use(maxConfig),
+					soci::use(voName)
+				);
+
+			for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+				soci::row const& row = *i;
+
+				struct message_bringonline msg;
+				msg.url = row.get<std::string>("source_surl");
+				msg.job_id = row.get<std::string>("job_id");
+				msg.file_id = row.get<int>("file_id");
+
+				ret.push_back(msg);
+			}
+    	}
+
+    } catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return ret;
 }
 
 void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg){
