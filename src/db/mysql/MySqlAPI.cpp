@@ -3244,9 +3244,22 @@ void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::stri
 }
 
 
-void MySqlAPI::getCredentials(const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id) {
+void MySqlAPI::getCredentials(const std::string & job_id, int, std::string & dn, std::string & dlg_id) {
 
+	soci::session sql(connectionPool);
+
+	try {
+		sql <<
+				" SELECT user_dn, cred_id FROM t_job WHERE job_id = :jobId",
+				soci::use(job_id),
+				soci::into(dn),
+				soci::into(dlg_id)
+		;
+	} catch (std::exception& e) {
+		throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+	}
 }
+
 
 
 // the class factories
