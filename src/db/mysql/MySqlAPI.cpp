@@ -1454,12 +1454,10 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
 
             for (unsigned register int x = 0; x < timeoutslen; x++) {
                 for (unsigned register int y = 0; y < nostreamslen; y++) {
-                    for (unsigned register int z = 0; z < buffsizeslen; z++) {
                         timeout    = timeouts[x];
                         nStreams   = nostreams[y];
-                        bufferSize = buffsizes[z];
+                        bufferSize = 0;
                         stmt.execute(true);
-                    }
                 }
             }
         }
@@ -1508,13 +1506,13 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
         int nFailedAll, nFinishedAll;
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
-               "WHERE t_file.file_state = 'ACTIVE' AND "
+               "WHERE t_file.file_state in ('READY','ACTIVE') AND "
                "      t_job.job_id = t_file.job_id AND "
                "      t_job.source_se = :source ",
                soci::use(source_hostname), soci::into(nActiveSource);
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
-               "WHERE t_file.file_state = 'ACTIVE' AND "
+               "WHERE t_file.file_state in ('READY','ACTIVE') AND "
                "      t_job.job_id = t_file.job_id AND "
                "      t_job.dest_se = :dst",
                soci::use(destin_hostname), soci::into(nActiveDest);
@@ -1536,7 +1534,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE t_job.job_id = t_file.job_id AND "
                "      t_job.source_se = :source AND t_job.dest_se = :dst AND "
-               "      file_state = 'ACTIVE'",
+               "      file_state in ('READY','ACTIVE')",
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(nActive);
 

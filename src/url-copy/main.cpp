@@ -131,6 +131,25 @@ static std::string file_Metadata("");
 static std::string job_Metadata(""); //a
 static string globalErrorMessage("");
 
+/*hardcoded for now*/
+static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams){
+	if(sizeInBytes <= 20971520) {
+		return 1;
+	}
+	else if(sizeInBytes >= 20971520 && sizeInBytes <= 104857600){
+		return 2;
+	}
+	else if (sizeInBytes >= 104857600 && sizeInBytes <= 524288000){
+		return 3;
+	}
+	else{
+		if(currentStreams < 4 )
+			return 4;
+		else
+			return currentStreams;
+	}
+}
+
 static void cancelTransfer() {
     if (handle && !canceled) { // finish all transfer in a clean way
         canceled = true;
@@ -847,7 +866,13 @@ int main(int argc, char **argv) {
             }
 
             gfalt_set_timeout(params, timeout, NULL);
-            gfalt_set_nbstreams(params, nbstreams, NULL);
+	
+            unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, nbstreams);
+	    nbstreams = experimentalNstreams;
+            gfalt_set_nbstreams(params, experimentalNstreams, NULL);
+            nstream_to_string = to_string<unsigned int>(experimentalNstreams, std::dec);
+            msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
+
             gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
             gfalt_set_monitor_callback(params, &call_perf, NULL);
 
