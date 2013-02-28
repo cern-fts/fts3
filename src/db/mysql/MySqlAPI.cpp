@@ -2630,7 +2630,7 @@ int MySqlAPI::countActiveTransfers(std::string source, std::string destination, 
     int nActive = 0;
     try {
         sql << "SELECT COUNT(*) FROM t_file, t_job_share_config "
-               "WHERE (t_file.file_state = 'ACTIVE'  OR f.file_state = 'READY') AND "
+               "WHERE (t_file.file_state = 'ACTIVE'  OR t_file.file_state = 'READY') AND "
                "      t_job_share_config.job_id = t_file.job_id AND "
                "      t_job_share_config.source = :source AND "
                "      t_job_share_config.destination = :dest AND "
@@ -2652,7 +2652,7 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
     int nActiveOutbound = 0;
     try {
         sql << "SELECT COUNT(*) FROM t_file, t_job, t_job_share_config "
-               "WHERE (t_file.file_state = 'ACTIVE' OR f.file_state = 'READY') AND "
+               "WHERE (t_file.file_state = 'ACTIVE' OR t_file.file_state = 'READY') AND "
                "      t_file.job_id = t_job.job_id AND "
                "      t_job.source_se = :source AND "
                "      t_job.job_id = t_job_share_config.job_id AND "
@@ -2675,7 +2675,7 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
     int nActiveInbound = 0;
     try {
         sql << "SELECT COUNT(*) FROM t_file, t_job, t_job_share_config "
-               "WHERE (t_file.file_state = 'ACTIVE'  OR f.file_state = 'READY') AND "
+               "WHERE (t_file.file_state = 'ACTIVE'  OR t_file.file_state = 'READY') AND "
                "      t_file.job_id = t_job.job_id AND "
                "      t_job.dest_se = :source AND "
                "      t_job.job_id = t_job_share_config.job_id AND "
