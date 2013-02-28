@@ -283,13 +283,9 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		// prepare the job element and add it to the job
 		job_element_tupple tupple;
 
-		// TODO for now use only adler32!
-		vector<string>::iterator it_ch;
-		for (it_ch = (*it)->checksum.begin(); it_ch != (*it)->checksum.end(); it_ch++) {
-			if (it_ch->find("adler32:") == 0) {
-				tupple.checksum = *it_ch;
-				break;
-			}
+		// TODO for now we just use the first one!
+		if (!(*it)->checksum.empty()) {
+			tupple.checksum = (*it)->checksum.front();
 		}
 
 		// common properties
