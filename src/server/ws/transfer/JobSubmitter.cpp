@@ -283,16 +283,17 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		// prepare the job element and add it to the job
 		job_element_tupple tupple;
 
-		// TODO for now we just use the first one!
-		if (!(*it)->checksum.empty()) {
-			tupple.checksum = (*it)->checksum.front();
-		}
-
 		// common properties
 		tupple.filesize = (*it)->filesize ? *(*it)->filesize : 0;
 		tupple.metadata = (*it)->metadata ? *(*it)->metadata : string();
 		tupple.selectionStrategy = (*it)->selectionStrategy ? *(*it)->selectionStrategy : string();
 		tupple.fileIndex = fileIndex;
+
+		// TODO for now we just use the first one!
+		// in the future the checksum should be assigned to pairs!
+		if (!(*it)->checksum.empty()) {
+			tupple.checksum = (*it)->checksum.front();
+		}
 
 		// pair sources with destinations
 		map<string, string> pairs = pairSourceAndDestination(
@@ -303,7 +304,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		if (pairs.empty()) {
 			throw Err_Custom("It has not been possible to pair the sources with destinations (protocols don't match)!");
 		}
-
 
 		// add each pair
 		map<string, string>::iterator it_p;
