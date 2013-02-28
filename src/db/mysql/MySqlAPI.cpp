@@ -3008,6 +3008,39 @@ int MySqlAPI::activeProcessesForThisHost(){
 
 
 std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBringonlimeMax(){
+
+
+
+	soci::session sql(connectionPool);
+
+	std::vector< boost::tuple<std::string, std::string, int> > ret;
+
+    try {
+		soci::rowset<soci::row> rs = (
+				sql.prepare <<
+				"SELECT vo_name, host, concurrent_ops FROM t_stage_req"
+			);
+
+		for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+			soci::row const& row = *i;
+
+			row.get<std::string>("vo_name");
+
+			boost::tuple<std::string, std::string, int> item (
+					row.get<std::string>("vo_name"),
+					row.get<std::string>("host"),
+					row.get<int>("concurrent_ops")
+				);
+
+			ret.push_back(item);
+		}
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return ret;
+
 }
 
 std::vector<struct message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue){
