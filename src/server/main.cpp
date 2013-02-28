@@ -285,17 +285,17 @@ int main(int argc, char** argv) {
     try{
     	if (fexists(configfile) != 0) {
             std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
-            throw;
+            return EXIT_FAILURE;
         }
 	
         if (false == checkUrlCopy()) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if fts_url_copy process is set in the PATH env variable" << commit;
-            throw;
+            return EXIT_FAILURE;
         }
 
         if (fexists(hostcert) != 0) {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Check if hostcert/key are installed" << commit;
-            throw;
+            return EXIT_FAILURE;
         }	
 	
     	FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
