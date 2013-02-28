@@ -73,4 +73,5 @@ public:
  double USER_FILESIZE;
  std::string FILE_METADATA;
  std::string JOB_METADATA;
+ std::string BRINGONLINE_TOKEN;
 };

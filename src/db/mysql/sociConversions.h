@@ -115,6 +115,7 @@ namespace soci
             file.JOB_METADATA  = v.get<std::string>("job_metadata", "");
             file.USER_FILESIZE = v.get<int>("user_filesize", 0);
             file.FILE_INDEX    = v.get<int>("file_index", 0);
+	    file.BRINGONLINE_TOKEN = v.get<std::string>("bringonline_token", "");
 
             unsigned size = static_cast<unsigned>(v.get<int>("filesize", 0));
             std::ostringstream str;

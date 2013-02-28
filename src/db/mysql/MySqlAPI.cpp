@@ -319,7 +319,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
             		"SELECT f1.*, j.vo_name, j.overwrite_flag, "
                     "    j.user_dn, j.cred_id, j.checksum_method, "
                     "    j.source_space_token, j.space_token, j.job_metadata, "
-                    "    j.copy_pin_lifetime, j.bring_online, j.job_metadata "
+                    "    j.copy_pin_lifetime, j.bring_online "
                     "FROM t_file f1, t_job j "
                     "WHERE "
                     "    f1.job_id = j.job_id AND "

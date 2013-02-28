@@ -67,7 +67,7 @@ static Reporter reporter;
 static std::ofstream logStream;
 static transfer_completed tr_completed;
 static bool retry = true;
-static std::string strArray[6];
+static std::string strArray[7];
 static std::string g_file_id("0");
 static std::string g_job_id("");
 static std::string errorScope("");
@@ -79,7 +79,7 @@ static std::string reuseFile("");
 static std::string token_bringonline("");
 double source_size = 0.0;
 double dest_size = 0.0;
-double userFilesize = 0;
+std::string userFilesize("");
 double diff = 0.0;
 std::time_t start;
 static uid_t pw_uid;
@@ -537,7 +537,7 @@ int main(int argc, char **argv) {
         if (temp.compare("-J") == 0)
             job_Metadata = std::string(argv[i + 1]);
         if (temp.compare("-I") == 0)
-            userFilesize = boost::lexical_cast<double>(argv[i + 1]);
+            userFilesize = std::string(argv[i + 1]);
         if (temp.compare("-H") == 0)
             bringonline = boost::lexical_cast<int>(argv[i + 1]);
         if (temp.compare("-G") == 0)
@@ -708,8 +708,12 @@ int main(int argc, char **argv) {
             strArray[1] = source_url;
             strArray[2] = dest_url;
             strArray[3] = checksum_value;
-            strArray[4] = userFilesize;
+	    if(userFilesize.length() > 0)
+            	strArray[4] = userFilesize;
+	    else
+	        strArray[4] = "0";
             strArray[5] = file_Metadata;
+	    strArray[6] = token_bringonline;
         }
 
 
@@ -795,9 +799,10 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
             log << fileManagement->timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
             log << fileManagement->timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
-            log << fileManagement->timestamp() << "INFO User specified filesize:" << userFilesize << '\n'; //A
+            log << fileManagement->timestamp() << "INFO User specified filesize:" << strArray[4] << '\n'; //A
             log << fileManagement->timestamp() << "INFO File metadata:" << strArray[5] << '\n'; //A
             log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A
+	    log << fileManagement->timestamp() << "INFO Bringonline token:" << strArray[6] << '\n'; //A
 	    
 	    log << fileManagement->timestamp() << "INFO Send transfer start message to monitoring" << '\n';	    	
 	
@@ -902,9 +907,9 @@ int main(int argc, char **argv) {
 			    retry = true;
                             goto stop;
 			 }
-                    } else if (userFilesize != 0 && userFilesize != statbufsrc.st_size) {
+                    } else if (boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufsrc.st_size) {
                         std::stringstream error_;
-                        error_ << "User specified source file size is " << userFilesize << " but stat returned " << statbufsrc.st_size;
+                        error_ << "User specified source file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
                         errorMessage = error_.str();
                         log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
                         errorScope = SOURCE;
@@ -1040,9 +1045,9 @@ int main(int argc, char **argv) {
 			    retry = true;
                             goto stop;
                         }
-                    } else if (userFilesize != 0 && userFilesize != statbufdest.st_size) {
+                    } else if (boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufdest.st_size) {
                         std::stringstream error_;
-                        error_ << "User specified destination file size is " << userFilesize << " but stat returned " << statbufsrc.st_size;
+                        error_ << "User specified destination file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
                         errorMessage = error_.str();
                         log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
                         errorScope = DESTINATION;
@@ -1103,9 +1108,10 @@ stop:
             reporter.constructMessage(false, job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
 	    /*unpin the file here and report the result in the log file...*/
  	     g_clear_error(&tmp_err);
-	     if (bringonline > 0 && gfal2_release_file(handle, (strArray[1]).c_str(), token_bringonline.c_str(), &tmp_err) < 0) {
+	     if (bringonline > 0 && gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0) {
+	        logStream << fileManagement->timestamp() << "INFO Token: " << strArray[6] << '\n';
 		if (tmp_err && tmp_err->message) {
-                        logStream << fileManagement->timestamp() << "WARN Failed unpinning the file:" << std::string(tmp_err->message) << '\n';		
+                        logStream << fileManagement->timestamp() << "WARN Failed unpinning the file: " << std::string(tmp_err->message) << '\n';		
 		}
 	     }
         }

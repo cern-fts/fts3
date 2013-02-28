@@ -465,6 +465,11 @@ protected:
                                 params.append(temp->JOB_METADATA);
                             }
 
+                            if (temp->BRINGONLINE_TOKEN.length() > 0) {
+                                params.append(" -L ");
+                                params.append(temp->BRINGONLINE_TOKEN);
+                            }
+
                             std::string host = DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);
                             bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
 
@@ -523,6 +528,7 @@ protected:
                 double userFilesize = 0;
                 std::string jobMetadata("");
                 std::string fileMetadata("");
+		std::string bringonlineToken("");
 
                 TransferFiles* tempUrl = NULL;
                 /*get the file for each job*/
@@ -584,15 +590,18 @@ protected:
                     userFilesize = temp->USER_FILESIZE;
                     jobMetadata = temp->JOB_METADATA;
                     fileMetadata = temp->FILE_METADATA;
+		    bringonlineToken = temp->BRINGONLINE_TOKEN;
 
                     if (fileMetadata.length() <= 0)
                         fileMetadata = "x";
+		    if (bringonlineToken.length() <= 0)
+                        bringonlineToken = "x";
 
                     if (std::string(temp->CHECKSUM_METHOD).length() > 0) {
                         if (std::string(temp->CHECKSUM).length() > 0)
                             checksum = temp->CHECKSUM;
                     }
-                    url << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata;
+                    url << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata << " " << bringonlineToken;
                     urls.push_back(url.str());
                     url.str("");
                 }
@@ -770,8 +779,8 @@ protected:
                     }
 
                     if (jobMetadata.length() > 0) {
-                        params.append(" -K ");
-                        params.append(dest_space_token);
+                        params.append(" -J ");
+                        params.append(jobMetadata);
                     }
 
                     std::string host = DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);

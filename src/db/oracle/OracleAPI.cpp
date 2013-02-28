@@ -508,7 +508,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
             " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
             "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
             " 		j.SPACE_TOKEN, j.copy_pin_lifetime, j.bring_online, "
-            "		f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index  "
+            "		f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index, f1.BRINGONLINE_TOKEN  "
     		"FROM t_file f1, t_job j "
     		"WHERE "
     		"	f1.job_id = j.job_id AND "
@@ -563,6 +563,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                 tr_files->FILE_METADATA = r->getString(16);
                 tr_files->JOB_METADATA = r->getString(17);
                 tr_files->FILE_INDEX = r->getInt(18);
+                tr_files->BRINGONLINE_TOKEN = r->getString(19);		
+		
 			
                 files[tr_files->VO_NAME].push_back(tr_files);
             }
@@ -662,7 +664,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_file_statement->setString(5, iter->checksum);
             s_file_statement->setInt(6, iter->filesize);
             s_file_statement->setString(7, iter->metadata);
-            s_file_statement->setString(8, iter->selectionStrategy);
+            s_file_statement->setString(8, iter->selectionStrategy);	   
             s_file_statement->setInt(9, iter->fileIndex);
             s_file_statement->executeUpdate();
         }
@@ -3501,15 +3503,16 @@ void OracleAPI::revertToSubmitted() {
     const std::string tag1 = "revertToSubmitted";
     const std::string tag2 = "revertToSubmitted1";
     const std::string tag3 = "revertToSubmittedReused";
+    
     std::string query1 = " update t_file set file_state='SUBMITTED', reason='' where file_state='READY' and FINISH_TIME is NULL and JOB_FINISHED is NULL and file_id=:1";
 
     std::string query2 = " select t_file.start_time, t_file.file_id, t_file.job_id, t_job.REUSE_JOB from t_file,t_job where t_file.file_state"
             "='READY' and t_file.FINISH_TIME is NULL "
             " and t_file.JOB_FINISHED is NULL and t_file.job_id=t_job.job_id";
 
-    std::string query3 = "update t_job T1 set T1.job_state='SUBMITTED' where T1.job_state in('READY','ACTIVE') and "
-            " T1.FINISH_TIME is NULL and T1.JOB_FINISHED is NULL and T1.REUSE_JOB='Y' and T1.job_id "
-            " IN (SELECT T2.job_id FROM t_file T2 WHERE T2.job_id = T1.job_id and T2.file_state='READY') and T1.job_id=:1 ";
+    std::string query3 = "update t_job T1 set T1.job_state='SUBMITTED' where T1.job_state in ('READY','ACTIVE') and "
+            " T1.FINISH_TIME is NULL and T1.JOB_FINISHED is NULL and T1.REUSE_JOB='Y' and T1.job_id=:1 ";
+	    
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::Statement* s2 = NULL;
     oracle::occi::ResultSet* r2 = NULL;
@@ -3519,7 +3522,7 @@ void OracleAPI::revertToSubmitted() {
     std::string job_id("");
     std::string reuseFlag("");
     time_t start_time;
-        oracle::occi::Connection* pooledConnection = NULL;    
+    oracle::occi::Connection* pooledConnection = NULL;    
     
 
     try {
@@ -3540,16 +3543,19 @@ void OracleAPI::revertToSubmitted() {
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1, pooledConnection);
                 s1->setInt(1, file_id);
-                conn->commit(pooledConnection);                
+		s1->executeUpdate();  
+		conn->commit(pooledConnection);                          
                 conn->destroyStatement(s1, tag1, pooledConnection);
                 s1 = NULL;
-                if (reuseFlag.compare("Y") == 0) {
+                if (reuseFlag == "Y") {
                     s3 = conn->createStatement(query3, tag3, pooledConnection);
                     s3->setString(1, job_id);
-                    conn->commit(pooledConnection);
+		    s3->executeUpdate();
+		    conn->commit(pooledConnection);		                        
                     conn->destroyStatement(s3, tag3, pooledConnection);
                     s3 = NULL;
                 }
+		    
             }
         }
         conn->destroyResultset(s2, r2);
