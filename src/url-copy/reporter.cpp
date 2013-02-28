@@ -57,7 +57,7 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s) {
     }
 }
 
-void Reporter::constructMessage(string job_id, string file_id, string transfer_status, string transfer_message, double timeInSecs, double filesize) {
+void Reporter::constructMessage(bool retry, string job_id, string file_id, string transfer_status, string transfer_message, double timeInSecs, double filesize) {
     try {
         strcpy(msg->job_id, job_id.c_str());
         msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
@@ -82,6 +82,7 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
 	msg->timestamp = milliseconds_since_epoch();
+	msg->retry = retry;
 	runProducerStatus(*msg);      
     } catch (...) {
         //second attempt to resend the message
@@ -108,6 +109,7 @@ void Reporter::constructMessage(string job_id, string file_id, string transfer_s
         strcpy(msg->source_se, source_se.c_str());
         strcpy(msg->dest_se, dest_se.c_str());
 	msg->timestamp = milliseconds_since_epoch();
+	msg->retry = retry;	
 	runProducerStatus(*msg);        
     }
 }

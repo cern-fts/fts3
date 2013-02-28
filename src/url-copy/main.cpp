@@ -66,6 +66,7 @@ FileManagement* fileManagement = NULL;
 static Reporter reporter;
 static std::ofstream logStream;
 static transfer_completed tr_completed;
+static bool retry = true;
 static std::string strArray[6];
 static std::string g_file_id("0");
 static std::string g_job_id("");
@@ -131,6 +132,85 @@ static std::string file_Metadata("");
 static std::string job_Metadata(""); //a
 static string globalErrorMessage("");
 
+
+//categories are: source, destination, transfer
+static bool retryTransfer(int errorNo, std::string category ){
+	bool retry = true;
+			
+	if(category=="SOURCE"){
+		switch ( errorNo ) {
+			case ENOENT:
+			  retry = false;
+			  break;
+			case EPERM:
+			  retry = false;
+			  break;
+			case EACCES:
+			  retry = false;
+			  break;			
+			case EISDIR:
+			  retry = false;
+			  break;
+			case ENAMETOOLONG:
+			  retry = false;
+			  break;				  				  
+			default:
+			  retry = true;
+			  break;
+			}		
+	}else if(category=="DESTINATION"){
+  	        switch ( errorNo ) {
+			case ENOENT:
+			  retry = false;
+			  break;
+			case EPERM:
+			  retry = false;
+			  break;
+			case EACCES:
+			  retry = false;
+			  break;
+			case EISDIR:
+			  retry = false;
+			  break;
+			case ENAMETOOLONG:
+			  retry = false;
+			  break;					  				  
+			default:
+			  retry = true;
+			  break;
+		}
+	}else{ //TRANSFER
+		switch ( errorNo ) {	
+			case ENOSPC:
+			  retry = false;
+			  break;
+			case EPERM:
+			  retry = false;
+			  break;
+			case EACCES:
+			  retry = false;
+			  break;
+			case EEXIST:
+			  retry = false;
+			  break;
+			case EFBIG:
+			  retry = false;
+			  break;
+			case EROFS:
+			  retry = false;
+			  break;
+			case ENAMETOOLONG:
+			  retry = false;
+			  break;				  
+			default:
+			  retry = true;
+			  break;
+		}			
+	}
+	
+	return retry;
+}
+
 /*hardcoded for now*/
 static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams){
 	if(sizeInBytes <= 20971520) {
@@ -148,6 +228,7 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 		else
 			return currentStreams;
 	}
+ return 2;	
 }
 
 static void cancelTransfer() {
@@ -256,9 +337,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.buffersize = tcpbuffersize;
     
     if (strArray[0].length() > 0)
-        reporter.constructMessage(g_job_id, strArray[0], classification, errorMessage, diff, source_size);
+        reporter.constructMessage(retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
     else
-        reporter.constructMessage(g_job_id, g_file_id, classification, errorMessage, diff, source_size);
+        reporter.constructMessage(retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
 
     std::string moveFile = fileManagement->archive();
     if (moveFile.length() != 0) {
@@ -615,6 +696,7 @@ int main(int argc, char **argv) {
         errorScope = std::string("");
         reasonClass = std::string("");
         errorPhase = std::string("");
+	retry = true;
 
         if (reuseFile.length() > 0) {
             std::string mid_str(urlsFile[ii]);
@@ -741,7 +823,7 @@ int main(int argc, char **argv) {
 
             //set to active
             log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
-            reporter.constructMessage(job_id, strArray[0], "ACTIVE", "", diff, source_size);
+            reporter.constructMessage(false, job_id, strArray[0], "ACTIVE", "", diff, source_size);
 	    
 	    	  	   
             if (fexists(proxy.c_str()) != 0) {
@@ -801,11 +883,13 @@ int main(int argc, char **argv) {
                     errorScope = SOURCE;
                     reasonClass = mapErrnoToString(errCode);
                     errorPhase = TRANSFER_PREPARATION;
-                    g_clear_error(&tmp_err);
-                    if (sourceStatRetry == 3 || ENOENT == errCode || EACCES == errCode){
+		    retry = retryTransfer(tmp_err->code, "SOURCE" );
+                    if (sourceStatRetry == 3 || retry == false){
   			log << fileManagement->timestamp() << "INFO No more retries for stat the source" << '\n';
+                        g_clear_error(&tmp_err);
                         goto stop;
 		    }
+                  g_clear_error(&tmp_err);
                 } else {
                     if (statbufsrc.st_size <= 0) {
                         errorMessage = "Source file size is 0";
@@ -815,6 +899,7 @@ int main(int argc, char **argv) {
                         errorPhase = TRANSFER_PREPARATION;
                         if (sourceStatRetry == 3){
 		            log << fileManagement->timestamp() << "INFO No more retries for stat the source" << '\n';
+			    retry = true;
                             goto stop;
 			 }
                     } else if (userFilesize != 0 && userFilesize != statbufsrc.st_size) {
@@ -827,6 +912,7 @@ int main(int argc, char **argv) {
                         errorPhase = TRANSFER_PREPARATION;
                         if (sourceStatRetry == 3){
 			    log << fileManagement->timestamp() << "INFO No more retries for stat the source" << '\n';
+			    retry = true;
                             goto stop;
 			}
                     } else {
@@ -898,7 +984,6 @@ int main(int argc, char **argv) {
                     errorScope = TRANSFER;
                     reasonClass = mapErrnoToString(tmp_err->code);
                     errorPhase = TRANSFER;
-                    g_clear_error(&tmp_err);
                 } else {
                     log << fileManagement->timestamp() << "ERROR Transfer failed - Error message: Unresolved error" << '\n';
                     errorMessage = std::string("Unresolved error");
@@ -906,6 +991,8 @@ int main(int argc, char **argv) {
                     reasonClass = GENERAL_FAILURE;
                     errorPhase = TRANSFER;
                 }
+		retry = retryTransfer(tmp_err->code, "TRANSFER" );
+                g_clear_error(&tmp_err);
                 goto stop;
             } else {
                 diff = difftime(std::time(NULL), start);
@@ -934,11 +1021,13 @@ int main(int argc, char **argv) {
                         reasonClass = mapErrnoToString(tmp_err->code);
                         errorPhase = TRANSFER_FINALIZATION;
                     }
-                    g_clear_error(&tmp_err);
-                    if (destStatRetry == 3) {
+                    retry = retryTransfer(tmp_err->code, "DESTINATION" );
+                    if (destStatRetry == 3 || false == retry) {
                         log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
+			g_clear_error(&tmp_err);
                         goto stop;
                     }
+		    g_clear_error(&tmp_err);
                 } else {
                     if (statbufdest.st_size <= 0) {
                         errorMessage = "Destination file size is 0";
@@ -948,6 +1037,7 @@ int main(int argc, char **argv) {
                         errorPhase = TRANSFER_FINALIZATION;
                         if (destStatRetry == 3) {
                             log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
+			    retry = true;
                             goto stop;
                         }
                     } else if (userFilesize != 0 && userFilesize != statbufdest.st_size) {
@@ -959,6 +1049,7 @@ int main(int argc, char **argv) {
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                         errorPhase = TRANSFER_FINALIZATION;
                         if (destStatRetry == 3) {
+			    retry = true;
                             log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
                             goto stop;
                         }
@@ -1001,7 +1092,7 @@ stop:
  	        //logStream << fileManagement->timestamp() << "INFO Try issuing a cancel to clean resources" << '\n';
                 //cancelTransfer();
                 logStream << fileManagement->timestamp() << "INFO Report FAILED back to the server" << '\n';
-                reporter.constructMessage(job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
+                reporter.constructMessage(retry, job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
             }
         } else {
             msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
@@ -1009,7 +1100,7 @@ stop:
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;
             logStream << fileManagement->timestamp() << "INFO Report FINISHED back to the server" << '\n';
-            reporter.constructMessage(job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
+            reporter.constructMessage(false, job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
 	    /*unpin the file here and report the result in the log file...*/
  	     g_clear_error(&tmp_err);
 	     if (bringonline > 0 && gfal2_release_file(handle, (strArray[1]).c_str(), token_bringonline.c_str(), &tmp_err) < 0) {

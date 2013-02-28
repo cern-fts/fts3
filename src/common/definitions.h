@@ -50,7 +50,8 @@ public:
         timeout = 3600;
         buffersize = 0;
         memset(source_se, 0, sizeof (source_se));
-        memset(dest_se, 0, sizeof (dest_se));	
+        memset(dest_se, 0, sizeof (dest_se));
+	retry = false;
     }
 
     ~message() {
@@ -68,6 +69,7 @@ public:
     char source_se[SOURCE_SE_];
     char dest_se[DEST_SE_];
     boost::posix_time::time_duration::tick_type timestamp;
+    bool retry;
 
 
 
