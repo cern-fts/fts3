@@ -3196,43 +3196,36 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
 
     try {
         sql.begin();
-        soci::statement stmt(sql);
-        stmt.exchange(soci::use(msg.job_id, "jobId"));
-        stmt.exchange(soci::use(msg.file_id, "fileId"));
 
         if (state == "STARTED") {
 
-            stmt.alloc();
-            stmt.prepare(
+        	sql <<
             		" UPDATE t_file "
             		" SET staging_start = UTC_TIMESTAMP() "
             		" WHERE job_id = :jobId "
             		"	AND file_id= :fileId "
-            		"	AND file_state='STAGING'"
-            	);
+            		"	AND file_state='STAGING'",
+            		soci::use(msg.job_id),
+            		soci::use(msg.file_id)
+        	;
 
         } else {
 
-        	if (state == "FINISHED") {
-        		stmt.exchange(soci::use(std::string(), "reason"));
-        		stmt.exchange(soci::use(std::string("SUBMITTED"), "fileState"));
-        	} else if (state=="FAILED")  {
-        		stmt.exchange(soci::use(message, "reason"));
-        		stmt.exchange(soci::use(std::string("FAILED"), "fileState"));
-        	}
+        	std::string dbState = state == "FINISHED" ? "SUBMITTED" : state;
 
-            stmt.alloc();
-            stmt.prepare(
+        	sql <<
             		" UPDATE t_file "
             		" SET staging_finished = UTC_TIMESTAMP(), reason = :reason, file_state = :fileState "
             		" WHERE job_id = :jobId "
             		"	AND file_id = :fileId "
-            		"	AND file_state = 'STAGING'"
-            	);
+            		"	AND file_state = 'STAGING'",
+            		soci::use(message),
+            		soci::use(dbState),
+            		soci::use(msg.job_id),
+            		soci::use(msg.file_id)
+            	;
         }
 
-        stmt.define_and_bind();
-        stmt.execute(true);
         sql.commit();
 
     } catch (std::exception& e) {
