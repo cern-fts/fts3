@@ -3305,13 +3305,14 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
 	        		soci::use(se)
 	        ;
 		} else {
-			// otherwise inser
-	        sql << 	" INSERT "
+			// otherwise insert
+	        sql <<
+	        		" INSERT "
 	        		" INTO t_stage_req (host, vo_name, concurrent_ops) "
 	        		" VALUES (:se, :vo, :value)",
-	               soci::use(se),
-	               soci::use(vo),
-	               soci::use(val)
+	        		soci::use(se),
+	        		soci::use(vo),
+	        		soci::use(val)
 	        ;
 		}
 
