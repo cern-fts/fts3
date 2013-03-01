@@ -601,7 +601,7 @@ CREATE TABLE t_stage_req (
   ,concurrent_ops INTEGER DEFAULT 0
   
 -- Set primary key
-  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, vo_name)
+  ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
 );
 
 
