@@ -59,12 +59,6 @@ void SetCfgCli::parse(int ac, char* av[]) {
 	// do the basic initialization
 	CliBase::parse(ac, av);
 
-	if (vm.count("bring-online")) {
-		vector<string> v = vm["bring-online"].as< vector<string> >();
-		int s = v .size();
-		int i = s;
-	}
-
 	if (vm.count("drain")) {
 		if (vm["drain"].as<string>() != "on" && vm["drain"].as<string>() != "off") {
 			throw string("drain may only take on/off values!");
