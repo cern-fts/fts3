@@ -3212,6 +3212,7 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
         } else {
 
         	std::string dbState = state == "FINISHED" ? "SUBMITTED" : state;
+        	std::string dbReason = state == "FINISHED" ? string() : message;
 
         	sql <<
             		" UPDATE t_file "
@@ -3219,7 +3220,7 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
             		" WHERE job_id = :jobId "
             		"	AND file_id = :fileId "
             		"	AND file_state = 'STAGING'",
-            		soci::use(message),
+            		soci::use(dbReason),
             		soci::use(dbState),
             		soci::use(msg.job_id),
             		soci::use(msg.file_id)
