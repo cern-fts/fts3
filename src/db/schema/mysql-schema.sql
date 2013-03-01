@@ -580,7 +580,7 @@ CREATE TABLE t_file (
   staging_finished   TIMESTAMP NULL DEFAULT NULL,
 --
 -- bringonline token
-  bringonline_token VARCHAR2(255),
+  bringonline_token VARCHAR(255),
   
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
