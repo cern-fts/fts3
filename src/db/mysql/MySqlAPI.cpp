@@ -3240,21 +3240,18 @@ void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::stri
 
     try {
         sql.begin();
-        soci::statement stmt(sql);
 
-        stmt.exchange(soci::use(token, "token"));
-        stmt.exchange(soci::use(job_id, "jobId"));
-        stmt.exchange(soci::use(file_id, "fileId"));
-        stmt.alloc();
-        stmt.prepare(
+        sql <<
         		" UPDATE t_file "
         		" SET bringonline_token = :token "
         		" WHERE job_id = :jobId "
         		"	AND file_id = :fileId "
-        		"	AND file_state = 'STAGING' "
-        	);
-        stmt.define_and_bind();
-        stmt.execute(true);
+        		"	AND file_state = 'STAGING' ",
+        		soci::use(token),
+        		soci::use(job_id),
+        		soci::use(file_id);
+
+        sql.commit();
 
     } catch (std::exception& e) {
         sql.rollback();
@@ -3269,7 +3266,7 @@ void MySqlAPI::getCredentials(const std::string & job_id, int, std::string & dn,
 
 	try {
 		sql <<
-				" SELECT user_dn, cred_id FROM t_job WHERE job_id = :jobId",
+				" SELECT user_dn, cred_id FROM t_job WHERE job_id = :jobId ",
 				soci::use(job_id),
 				soci::into(dn),
 				soci::into(dlg_id)
