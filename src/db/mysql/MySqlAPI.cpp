@@ -3277,7 +3277,50 @@ void MySqlAPI::getCredentials(const std::string & job_id, int, std::string & dn,
 }
 
 void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val) {
+    soci::session sql(connectionPool);
 
+    try {
+    	int exist = 0;
+
+		sql <<
+				" SELECT COUNT(*) "
+				" FROM t_stage_req "
+				" WHERE vo_name = :vo AND host = :se ",
+				soci::use(vo),
+				soci::use(se),
+				soci::into(exist)
+		;
+
+        sql.begin();
+
+		// if the record already exist ...
+		if (exist) {
+			// update
+	        sql <<
+	        		" UPDATE t_stage_req "
+	        		" SET concurrent_ops = :value "
+	        		" WHERE vo_name = :vo AND host = :se ",
+	        		soci::use(val),
+	        		soci::use(vo),
+	        		soci::use(se)
+	        ;
+		} else {
+			// otherwise inser
+	        sql << 	" INSERT "
+	        		" INTO t_stage_req (host, vo_name, concurrent_ops) "
+	        		" VALUES (:se, :vo, :value)",
+	               soci::use(se),
+	               soci::use(vo),
+	               soci::use(val)
+	        ;
+		}
+
+        sql.commit();
+
+    } catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
 // the class factories

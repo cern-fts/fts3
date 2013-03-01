@@ -287,9 +287,20 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
 				AuthorizationManager::dummy
 			);
 
-		// get user VO
+		try {
+			AuthorizationManager::getInstance().authorize(
+					ctx,
+					AuthorizationManager::DELEG,
+					AuthorizationManager::dummy
+				);
+		} catch (Err& ex) {
+			throw Err_Custom("Authorization failed, a host certificate has been used to set max number of concurrent staging operations!");
+		}
+
+		// get user VO and DN
 		CGsiAdapter cgsi(ctx);
 		string vo = cgsi.getClientVo();
+		string dn = cgsi.getClientDn();
 
 		vector<config__BringOnlinePair*>& v = bring_online->boElem;
 		vector<config__BringOnlinePair*>::iterator it;
@@ -303,6 +314,16 @@ int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, 
 					vo,
 					pair->second
 				);
+
+			// log it
+			FTS3_COMMON_LOGGER_NEWLOG (INFO)
+				<< "User: "
+				<< dn
+				<< " had set the maximum number of concurrent staging operations for "
+				<< pair->first
+				<< " to "
+				<< pair->second
+				<< commit;
 		}
 
 	} catch(Err& ex) {
