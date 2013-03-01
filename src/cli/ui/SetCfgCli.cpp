@@ -110,7 +110,8 @@ optional<GSoapContextAdapter&> SetCfgCli::validate(bool init) {
 		}
 	}
 
-	if (getConfigurations().empty() && !vm.count("drain") && !vm.count("retry") && !vm.count("queue-timeout")) {
+	if (getConfigurations().empty() && !vm.count("drain")
+			&& !vm.count("retry") && !vm.count("queue-timeout") && !vm.count("bring-online")) {
 		cout << "No parameters have been specified." << endl;
 		return optional<GSoapContextAdapter&>();
 	}
