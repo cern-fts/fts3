@@ -1258,7 +1258,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     		"	AND t_job.source_se = :sourceSe "
     		" 	AND t_job.dest_se = :destSe  "
     		" 	AND (t_file.finish_time > (CURRENT_TIMESTAMP - INTERVAL '30' minute)) "
-    		" ORDER BY  SYS_EXTRACT_UTC(t_file.finish_time) DESC",
+    		" ORDER BY t_file.finish_time DESC",
     		soci::use(source_hostname),
     		soci::use(destin_hostname),
     		soci::into(timeoutTr)
