@@ -275,3 +275,8 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
 
 	return SOAP_OK;
 }
+
+int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, implcfg__setBringOnlineResponse &resp) {
+
+	return SOAP_OK;
+}

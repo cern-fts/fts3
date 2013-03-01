@@ -19,6 +19,19 @@
                     <element maxOccurs="unbounded" name="cfg" nillable="true" type="xsd:string"/>
                 </sequence>
             </complexType>
+            
+            <complexType name="BringOnlinePair">
+            	<sequence>
+            		<element minOccurs="1" maxOccurs="1" name="first" type="xsd:string"/>
+            		<element minOccurs="1" maxOccurs="1" name="second" type="xsd:int"/>
+            	</sequence>
+            </complexType>
+            
+            <complexType name="BringOnline">
+            	<sequence>
+            		<element maxOccurs="unbounded" name="boElem" type="config:BringOnlinePair"/>
+            	</sequence>
+            </complexType>
 
             <complexType name="ConfigurationException">
                 <sequence>
@@ -108,6 +121,12 @@
     <message name="GetConfigurationResponse">
         <part name="configuration" type="config:Configuration"/>
     </message>
+    
+    <message name="SetBringOnlineRequest">
+    	<part name="bring-online" type="config:BringOnline"/>    	
+    </message>
+
+	<message name="SetBringOnlineResponse"/>
 
     <message name="AuthorizationException">
         <part name="fault" element="config:AuthorizationExceptionElement"/>
@@ -171,6 +190,14 @@
         <operation name="setQueueTimeout">
             <input message="impl:QueueTimeoutRequest" name="QueueTimeoutRequest"/>
             <output message="impl:QueueTimeoutResponse" name="QueueTimeoutResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+        <operation name="setBringOnline">
+            <input message="impl:SetBringOnlineRequest" name="SetBringOnlineRequest"/>
+            <output message="impl:SetBringOnlineResponse" name="SetBringOnlineResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
@@ -333,6 +360,31 @@
                 <wsdlsoap:fault name="InternalException" use="literal"/>
             </fault>
         </operation>
+        
+        <operation name="setBringOnline">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="SetBringOnlineRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="SetBringOnlineResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+        
     </binding>
 
     <service name="Config">
