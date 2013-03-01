@@ -125,9 +125,22 @@ public:
 	 */
 	optional<unsigned> queueTimeout();
 
+	/**
+	 * Get the bring-online settings
+	 *
+	 * @return SE name - value mapping
+	 */
+	map<string, int> getBringOnline();
+
 private:
+	/// parses the multiple parameters that were provided by the user and creates a SE name - value mapping
+	void parseBringOnline();
+
 	/// JSON configurations specified by user
 	vector<string> cfgs;
+
+	/// SE name and the respective value of maximum concurrent files in staging process
+	map<string, int> bring_online;
 
 	CfgParser::CfgType type;
 };

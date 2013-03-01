@@ -26,6 +26,7 @@
 
 #include <stdexcept>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 using namespace boost::algorithm;
 using namespace fts3::cli;
@@ -35,6 +36,7 @@ SetCfgCli::SetCfgCli() {
 
 	// add commandline options specific for fts3-transfer-submit
 	specific.add_options()
+			("bring-online", "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE.")
 			("drain", value<string>(), "If set to 'on' drains the given endpoint.")
 			("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
 			("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
@@ -57,6 +59,12 @@ void SetCfgCli::parse(int ac, char* av[]) {
 	// do the basic initialization
 	CliBase::parse(ac, av);
 
+	if (vm.count("bring-online")) {
+		vector<string> v = vm["bring-online"].as< vector<string> >();
+		int s = v .size();
+		int i = s;
+	}
+
 	if (vm.count("drain")) {
 		if (vm["drain"].as<string>() != "on" && vm["drain"].as<string>() != "off") {
 			throw string("drain may only take on/off values!");
@@ -64,7 +72,10 @@ void SetCfgCli::parse(int ac, char* av[]) {
 	}
 
 	if (vm.count("cfg")) {
-		cfgs = vm["cfg"].as< vector<string> >();
+		if (vm.count("bring-online"))
+			parseBringOnline();
+		else
+			cfgs = vm["cfg"].as< vector<string> >();
 	}
 
 	// check JSON configurations
@@ -148,3 +159,24 @@ optional<unsigned> SetCfgCli::queueTimeout() {
 	return optional<unsigned>();
 }
 
+void SetCfgCli::parseBringOnline() {
+
+	vector<string> v = vm["cfg"].as< vector<string> >();
+	// check if the number of parameters is even
+	if (v.size() % 2) throw string("After specifying '--bring-online' SE_NAME - VALUE pairs have to be given!");
+
+	vector<string>::iterator first = v.begin(), second;
+
+	do {
+		second = first + 1;
+		bring_online.insert(
+				make_pair(*first, lexical_cast<int>(*second))
+			);
+		first += 2;
+	} while (first != v.end());
+}
+
+map<string, int> SetCfgCli::getBringOnline() {
+
+	return bring_online;
+}

@@ -68,6 +68,15 @@ int main(int ac, char* av[]) {
 			ctx.queueTimeoutSet(*queueTimeout);
 		}
 
+		map<string, int> bring_online = cli->getBringOnline();
+		if (!bring_online.empty()) {
+
+
+
+			// if bring online was used normal config was not!
+			return 0;
+		}
+
 		config__Configuration *config = soap_new_config__Configuration(ctx, -1);
 		config->cfg = cli->getConfigurations();
 		if (config->cfg.empty()) return 0;
