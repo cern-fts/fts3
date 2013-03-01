@@ -219,6 +219,13 @@ public:
 	void delConfiguration(config__Configuration *config, implcfg__delConfigurationResponse &resp);
 
 	/**
+	 * Remote call to setBringOnline
+	 *
+	 * @param pairs - se name - max number staging files pairs
+	 */
+	void setBringOnline(map<string, int>& pairs);
+
+	/**
 	 * Splits the given string, and sets:
 	 * 		- major number
 	 * 		- minor number

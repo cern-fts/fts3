@@ -430,6 +430,23 @@ void GSoapContextAdapter::delConfiguration(config__Configuration *config, implcf
 		handleSoapFault("Failed to delete configuration: delConfiguration.");
 }
 
+void GSoapContextAdapter::setBringOnline(map<string, int>& pairs) {
+
+	config__BringOnline bring_online;
+
+	map<string, int>::iterator it;
+	for (it = pairs.begin(); it != pairs.end(); it++) {
+		config__BringOnlinePair* pair = soap_new_config__BringOnlinePair(ctx, -1);
+		pair->first = it->first;
+		pair->second = it->second;
+		bring_online.boElem.push_back(pair);
+	}
+
+	implcfg__setBringOnlineResponse resp;
+	if (soap_call_implcfg__setBringOnline(ctx, endpoint.c_str(), 0, &bring_online, resp))
+		handleSoapFault("Failed to set bring-online limit: setBringOnline.");
+}
+
 void GSoapContextAdapter::debugSet(string source, string destination, bool debug) {
 	impltns__debugSetResponse resp;
 	if (soap_call_impltns__debugSet(ctx, endpoint.c_str(), 0, source, destination, debug, resp)) {

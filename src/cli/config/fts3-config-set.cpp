@@ -70,9 +70,7 @@ int main(int ac, char* av[]) {
 
 		map<string, int> bring_online = cli->getBringOnline();
 		if (!bring_online.empty()) {
-
-
-
+			ctx.setBringOnline(bring_online);
 			// if bring online was used normal config was not!
 			return 0;
 		}
