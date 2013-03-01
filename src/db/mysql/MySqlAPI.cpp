@@ -3036,8 +3036,6 @@ int MySqlAPI::activeProcessesForThisHost(){
 
 std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBringonlimeMax(){
 
-
-
 	soci::session sql(connectionPool);
 
 	std::vector< boost::tuple<std::string, std::string, int> > ret;
@@ -3118,8 +3116,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 						"	AND t_file.staging_start IS NULL "
 						"	AND t_file.file_state = 'STAGING' "
 						"	AND t_job.source_se = :source_se "
-						" 	AND rownum <= :rownum "
-						" ORDER BY t_file.file_id ",
+						" ORDER BY t_file.file_id "
+						" LIMIT :limit",
 						soci::use(hostV),
 						soci::use(maxNoConfig)
 					);
@@ -3163,12 +3161,12 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					" 	AND t_file.staging_START IS NULL "
 					"	AND t_file.file_state = 'STAGING' "
 					"	AND t_job.source_se = :source_se "
-					"	AND rownum <= :rownum "
 					"	AND t_job.vo_name = :vo_name "
-					" ORDER BY t_file.file_id ",
+					" ORDER BY t_file.file_id "
+					" LIMIT :limit",
 					soci::use(hostName),
-					soci::use(maxConfig),
-					soci::use(voName)
+					soci::use(voName),
+					soci::use(maxConfig)
 				);
 
 			for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
