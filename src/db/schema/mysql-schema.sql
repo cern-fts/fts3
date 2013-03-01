@@ -593,9 +593,9 @@ CREATE TABLE t_file (
 CREATE TABLE t_stage_req (
 --
 -- vo name
-   vo_name           VARCHAR2(255) NOT NULL
+   vo_name           VARCHAR(255) NOT NULL
 -- hostname
-   ,host           VARCHAR2(255) NOT NULL			
+   ,host           VARCHAR(255) NOT NULL			
 --
 -- parallel bringonline ops
   ,concurrent_ops INTEGER DEFAULT 0
