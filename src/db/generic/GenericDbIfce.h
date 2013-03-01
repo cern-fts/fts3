@@ -298,6 +298,8 @@ public:
     virtual void addToken(const std::string & job_id, int file_id, const std::string & token) = 0;
     
     virtual void getCredentials(const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id) = 0;
+
+    virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val) = 0;
 };
 
 

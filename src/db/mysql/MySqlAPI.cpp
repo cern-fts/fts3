@@ -3276,7 +3276,9 @@ void MySqlAPI::getCredentials(const std::string & job_id, int, std::string & dn,
 	}
 }
 
+void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val) {
 
+}
 
 // the class factories
 

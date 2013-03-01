@@ -6771,6 +6771,10 @@ void OracleAPI::getCredentials(const std::string & job_id, int, std::string & dn
     conn->releasePooledConnection(pooledConnection);                    
 }
 
+void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val) {
+
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

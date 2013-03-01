@@ -278,5 +278,43 @@ int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__set
 
 int fts3::implcfg__setBringOnline(soap* ctx, config__BringOnline *bring_online, implcfg__setBringOnlineResponse &resp) {
 
+	try {
+
+		// authorize
+		AuthorizationManager::getInstance().authorize(
+				ctx,
+				AuthorizationManager::CONFIG,
+				AuthorizationManager::dummy
+			);
+
+		// get user VO
+		CGsiAdapter cgsi(ctx);
+		string vo = cgsi.getClientVo();
+
+		vector<config__BringOnlinePair*>& v = bring_online->boElem;
+		vector<config__BringOnlinePair*>::iterator it;
+
+		for (it = v.begin(); it != v.end(); it++) {
+
+			config__BringOnlinePair* pair = *it;
+
+			DBSingleton::instance().getDBObjectInstance()->setMaxStageOp(
+					pair->first,
+					vo,
+					pair->second
+				);
+		}
+
+	} catch(Err& ex) {
+
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(ctx, ex.what(), "TransferException");
+
+		return SOAP_FAULT;
+	} catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+	    return SOAP_FAULT;
+	}
+
 	return SOAP_OK;
 }
