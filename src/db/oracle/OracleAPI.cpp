@@ -6773,6 +6773,105 @@ void OracleAPI::getCredentials(const std::string & job_id, int, std::string & dn
 
 void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val) {
 
+	std::string selectTag = "setMaxStageOp";
+	std::string updateTag = "setMaxStageOpUpdate";
+	std::string insertTag = "setMaxStageOpInsert";
+
+    std::string select =
+			" SELECT COUNT(*) "
+			" FROM t_stage_req "
+			" WHERE vo_name = :1 AND host = :2 "
+    		;
+
+    oracle::occi::Statement* s1 = 0, *s2 = 0, *s3 = 0;
+    oracle::occi::ResultSet* r1 = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+    std::vector< boost::tuple<std::string, std::string, int> > ret;
+
+
+    try {
+
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+        s1 = conn->createStatement(select, selectTag, pooledConnection);
+        s1->setString(1, vo);
+        s1->setString(2, se);
+        r1 = conn->createResultset(s1, pooledConnection);
+
+        int exist = 0;
+
+        if (r1->next()) {
+        	exist = r1->getInt(1);
+        }
+
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, selectTag, pooledConnection);
+
+        // if the record already exist ...
+        if (exist) {
+        	// update
+            std::string update =
+	        		" UPDATE t_stage_req "
+	        		" SET concurrent_ops = :1 "
+	        		" WHERE vo_name = :2 AND host = :3 "
+            		;
+
+            s2 = conn->createStatement(update, updateTag, pooledConnection);
+            s2->setInt(1, val);
+            s2->setString(2, vo);
+            s2->setString(3, se);
+            s2->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s2, updateTag, pooledConnection);
+
+        } else {
+        	// otherwise insert
+        	std::string insert =
+	        		" INSERT "
+	        		" INTO t_stage_req (host, vo_name, concurrent_ops) "
+	        		" VALUES (:1, :2, :3)"
+        			;
+
+            s3 = conn->createStatement(insert, insertTag, pooledConnection);
+            s3->setString(1, se);
+            s3->setString(2, vo);
+            s3->setInt(3, val);
+            s3->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s3, insertTag, pooledConnection);
+        }
+
+    } catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if(s1 && r1)
+        		conn->destroyResultset(s1, r1);
+        	if (s1)
+        		conn->destroyStatement(s1, selectTag, pooledConnection);
+        	if (s2)
+        		conn->destroyStatement(s2, updateTag, pooledConnection);
+        	if (s3)
+        		conn->destroyStatement(s3, insertTag, pooledConnection);
+
+        throw Err_Custom(e.what());
+
+    }catch (...) {
+
+
+            conn->rollback(pooledConnection);
+        	if(s1 && r1)
+        		conn->destroyResultset(s1, r1);
+        	if (s1)
+        		conn->destroyStatement(s1, selectTag, pooledConnection);
+        	if (s2)
+        		conn->destroyStatement(s2, updateTag, pooledConnection);
+        	if (s3)
+        		conn->destroyStatement(s3, insertTag, pooledConnection);
+
+        throw Err_Custom("Unknown exception");
+    }
+    conn->releasePooledConnection(pooledConnection);
 }
 
 // the class factories
