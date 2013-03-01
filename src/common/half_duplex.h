@@ -23,7 +23,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define FTS3_MQ_NAME_MON "fts3mqmon"
 
 #define MAX_NUM_MSGS_MON 20000
 

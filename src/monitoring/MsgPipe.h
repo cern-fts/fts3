@@ -43,7 +43,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "mq_manager.h"
 #include <boost/scoped_ptr.hpp>
 #include "common/logger.h"
 #include "common/error.h"
@@ -57,7 +56,6 @@ using namespace decaf::util;
 using namespace decaf::util::concurrent;
 using namespace cms;
 using namespace std;
-using namespace boost::interprocess;
 using namespace FTS3_COMMON_NAMESPACE;
 
 
@@ -67,7 +65,7 @@ private:
     std::string errorMessage;
 
 public:
-   MsgPipe(std::string qname);
+   MsgPipe();
    virtual ~MsgPipe();
    virtual void run();
    void cleanup();	     

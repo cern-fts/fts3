@@ -48,7 +48,7 @@ void handler(int sig) {
     exit(0);
 }
 
-MsgPipe::MsgPipe(std::string){ 
+MsgPipe::MsgPipe(){ 
     //register sig handler to cleanup resources upon exiting
     signal(SIGFPE, handler);
     signal(SIGILL, handler);

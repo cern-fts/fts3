@@ -48,7 +48,6 @@
 #include <stdio.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include "mq_manager.h"
 #include "producer_consumer_common.h"
 
 

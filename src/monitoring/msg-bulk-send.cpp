@@ -68,7 +68,7 @@ void DoServer() {
     //initialize here to avoid race conditions  
     concurrent_queue::getInstance();
 
-    MsgPipe pipeMsg1(FTS3_MQ_NAME_MON);   
+    MsgPipe pipeMsg1;   
     MsgProducer producer;
 
     // Start the pipe thread.

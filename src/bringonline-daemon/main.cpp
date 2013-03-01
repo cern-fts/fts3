@@ -76,7 +76,6 @@ void _handle_sigint(int) {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;
     sleep(2);
     fts3_teardown_db_backend();
-    StaticSslLocking::kill_locks();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
     exit(0);
 }
@@ -235,7 +234,6 @@ int DoServer(int argc, char** argv) {
         }
 
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE starting daemon..." << commit;
-        StaticSslLocking::init_locks();
         fts3_initialize_db_backend();
         struct sigaction action;
         action.sa_handler = _handle_sigint;

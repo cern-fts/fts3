@@ -29,9 +29,6 @@ limitations under the License. */
 #define SOURCE_SE_ 100
 #define DEST_SE_ 100
 
-#define FTS3_MQ_NAME "fts3mq"
-#define FTS3_MQ_NAME_UPDATER "fts3mqupdater"
-#define FTS3_MQ_NAME_MON "fts3mqmon"
 
 using namespace std;
 

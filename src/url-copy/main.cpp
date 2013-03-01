@@ -27,7 +27,6 @@ limitations under the License. */
 #include <transfer/gfal_transfer.h>
 #include "common/logger.h"
 #include "common/error.h"
-#include "mq_manager.h"
 #include <fstream>
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include "parse_url.h"
@@ -828,7 +827,7 @@ int main(int argc, char **argv) {
 
             //set to active
             log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
-            reporter.constructMessage(false, job_id, strArray[0], "ACTIVE", "", diff, source_size);
+            reporter.constructMessage(false, job_id, strArray[0], "ACTIVE", "", diff, source_size);	    
 	    
 	    	  	   
             if (fexists(proxy.c_str()) != 0) {

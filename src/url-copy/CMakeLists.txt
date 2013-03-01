@@ -20,14 +20,11 @@ set (CMAKE_INCLUDE_CURRENT_DIR ON)
 
 SET(fts_include_dir "${PROJECT_SOURCE_DIR}/src/")
 link_directories (/usr/lib64/gfal2-plugins)
-include_directories (${PROJECT_SOURCE_DIR}/src/db/generic/)
+
 include_directories (${PROJECT_SOURCE_DIR}/src/common/)
-include_directories (${PROJECT_SOURCE_DIR}/src/server/)
 include_directories (${PROJECT_SOURCE_DIR}/src/monitoring/)
 
-include_directories (${PROJECT_BINARY_DIR}/src/db/generic/)
 include_directories (${PROJECT_BINARY_DIR}/src/common/)
-include_directories (${PROJECT_BINARY_DIR}/src/server/)
 include_directories (${PROJECT_BINARY_DIR}/src/monitoring/)
 
 include_directories (${fts_include_dir})

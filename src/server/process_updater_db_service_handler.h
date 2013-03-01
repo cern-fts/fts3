@@ -38,7 +38,6 @@ limitations under the License. */
 #include "definitions.h"
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>  
-#include "mq_manager.h"
 #include <boost/interprocess/ipc/message_queue.hpp>
 
 extern bool stopThreads;
