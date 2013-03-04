@@ -129,7 +129,7 @@ static std::string infosys("");
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
 
-//conver milli to secs
+//convert milli to secs
 static double transferDuration(double start , double complete){
 	return (start==0 && complete==0)==true? 0.0: (complete - start) / 1000; 
 }

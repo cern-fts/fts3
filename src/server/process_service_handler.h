@@ -80,11 +80,12 @@ static int getMaxThreads() {
 }
 
 static int getAvailableMemory() {
+    const double megabyte = 1024 * 1024;
     struct sysinfo info;
     if (sysinfo(&info) != 0)
         return -1;
 
-    return (info.freeram) / 1024 / 1024;
+    return (info.freeram) / megabyte;
 }
 
 template <class T>
@@ -257,8 +258,8 @@ protected:
                             continue;
                         }
 
-                        int freeRam = getAvailableMemory();                       
-                        if (freeRam != -1 && freeRam < 50) {
+                        int freeRam = getAvailableMemory();    			                
+                        if (freeRam != -1 && freeRam < 500) {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
                             sleep(1);
                             continue;
@@ -568,7 +569,7 @@ protected:
                     }
 
                     int freeRam = getAvailableMemory();                    
-                    if (freeRam != -1 && freeRam < 50) {
+                    if (freeRam != -1 && freeRam < 500) {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
                         sleep(1);
                         continue;
