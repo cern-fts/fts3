@@ -34,11 +34,10 @@ find_package (GLIB2)
 include_directories (${GLIB2_INCLUDE_DIRS})
 
 
-set(fts_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp)
+set(fts_url_copy_SOURCES main.cpp file_management.cpp reporter.cpp ${PROJECT_SOURCE_DIR}/src/common/signal_logger.cpp ${PROJECT_SOURCE_DIR}/src/common/UserProxyEnv.cpp ${PROJECT_SOURCE_DIR}/src/common/name_to_uid.cpp ${PROJECT_SOURCE_DIR}/src/common/producer.cpp ${PROJECT_SOURCE_DIR}/src/common/consumer.cpp ${PROJECT_SOURCE_DIR}/src/common/uuid_generator.cpp ${PROJECT_SOURCE_DIR}/src/common/parse_url.cpp)
 add_executable (fts_url_copy ${fts_url_copy_SOURCES})
-add_dependencies(fts_url_copy fts_common fts_msg_ifce)
-SET(fts_libs "-lfts_config -lfts_common")
-target_link_libraries(fts_url_copy  -luuid  -lboost_thread-mt -lboost_system-mt -lssl -lgfal_transfer -lgfal2 -lglib-2.0 -lfts_msg_ifce ${fts_libs})
+add_dependencies(fts_url_copy fts_msg_ifce)
+target_link_libraries(fts_url_copy  -luuid  -lboost_thread-mt -lboost_system-mt -lssl -lgfal_transfer -lgfal2 -lglib-2.0 -lfts_msg_ifce)
 
 
 install(TARGETS         fts_url_copy 

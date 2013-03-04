@@ -16,10 +16,7 @@
  ***********************************************/
 
 #include "UserProxyEnv.h"
-#include "common/logger.h"
-#include "common/error.h"
-
-using namespace FTS3_COMMON_NAMESPACE;
+#include <iostream>
 
 
 namespace {
@@ -57,9 +54,9 @@ UserProxyEnv::UserProxyEnv(const std::string& file_name):
         }
         setenv(PROXY_ENV_VAR,file_name.c_str(),1);
         m_isSet = true;
-	//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Environment Variable set to " << file_name << commit;
+	
     } else {
-    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Delegated credentials not found" << commit;
+    	std::cerr << "Delegated credentials not found" << std::endl;
     }
 }
 

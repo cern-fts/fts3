@@ -31,7 +31,7 @@ limitations under the License. */
 #include <sys/dir.h>
 #include <errno.h>
 
-using namespace FTS3_CONFIG_NAMESPACE;
+
 using namespace std;
 
 static int fexists(const char *filename) {
@@ -40,11 +40,8 @@ static int fexists(const char *filename) {
     return -1;
 }
 
-FileManagement::FileManagement() : base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0) {
-    try {
-        FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
-        logFileName = theServerConfig().get<std::string > ("TransferLogDirectory");
-        bdii = theServerConfig().get<std::string > ("Infosys");
+FileManagement::FileManagement(const std::string & _bdii) : logFileName("/var/log/fts3/"), bdii(_bdii), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0) {
+    try {                
         if (logFileName.length() > 0)
             directoryExists(logFileName.c_str());
 
@@ -52,21 +49,14 @@ FileManagement::FileManagement() : base_scheme(NULL), base_host(NULL), base_path
         std::string dateArch = logFileName + "/" + dateDir();
         directoryExists(dateArch.c_str());
         logFileName = dateArch;
-    } catch (...) {
-        /*try again before let it fail*/
-        try {
-            FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
-            logFileName = theServerConfig().get<std::string > ("TransferLogDirectory");
-            bdii = theServerConfig().get<std::string > ("Infosys");
+    } catch (...) { //try again
             if (logFileName.length() > 0)
-                directoryExists(logFileName.c_str());
-            //generate arc based on date
-            std::string dateArch = logFileName + "/" + dateDir();
-            directoryExists(dateArch.c_str());
-            logFileName = dateArch;
-        } catch (...) {
-            /*no way to recover if an exception is thrown here, better let it fail and log the error*/
-        }
+            directoryExists(logFileName.c_str());
+
+        //generate arc based on date
+        std::string dateArch = logFileName + "/" + dateDir();
+        directoryExists(dateArch.c_str());
+        logFileName = dateArch;
     }
 }
 

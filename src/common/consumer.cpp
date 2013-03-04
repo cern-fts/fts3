@@ -15,7 +15,7 @@
 #include "logger.h"
 
 using namespace std;
-using namespace FTS3_COMMON_NAMESPACE;
+
 
 struct sort_functor_updater
 {
@@ -51,7 +51,7 @@ int getDir (string dir, vector<string> &files)
     struct dirent *dirp=NULL;
     struct stat st;
     if((dp  = opendir(dir.c_str())) == NULL) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Error opening dir: " << strerror(errno) << commit;
+        std::cerr << "Error opening dir: " <<  strerror(errno) << std::endl;
         return errno;
     }
 

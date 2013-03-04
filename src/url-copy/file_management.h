@@ -24,7 +24,7 @@
 
 class FileManagement {
 public:
-    FileManagement();
+    FileManagement(const std::string & _bdii);
     ~FileManagement();
 
 public:

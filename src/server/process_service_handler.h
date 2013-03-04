@@ -119,15 +119,14 @@ public:
             (goes to log) */
             ) :
     TRAITS::ActiveObjectType("ProcessServiceHandler", desc) {
-        maximumThreads = getMaxThreads();
-        requestIDs.reserve(200);
-        jobs2.reserve(300);
+        maximumThreads = getMaxThreads();        
 
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
         char hostname[MAXHOSTNAMELEN];
         gethostname(hostname, MAXHOSTNAMELEN);
         ftsHostName = std::string(hostname);
         allowedVOs = std::string("");
+	infosys = theServerConfig().get<std::string > ("Infosys");	
         const vector<std::string> voNameList(theServerConfig().get< vector<string> >("AuthorizedVO"));
         if (voNameList.size() > 0 && std::string(voNameList[0]).compare("*") != 0) {
             std::vector<std::string>::const_iterator iterVO;
@@ -168,6 +167,7 @@ protected:
     std::vector<int> requestIDs;
     std::vector<TransferJobs*> jobs2;
     int maximumThreads;
+    std::string infosys;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
         std::vector<int>::const_iterator iter;
@@ -469,6 +469,10 @@ protected:
                                 params.append(" -L ");
                                 params.append(temp->BRINGONLINE_TOKEN);
                             }
+			    
+                             params.append(" -M ");
+                             params.append(infosys);
+
 
                             std::string host = DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);
                             bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
@@ -782,6 +786,9 @@ protected:
                         params.append(" -J ");
                         params.append(jobMetadata);
                     }
+		    
+                    params.append(" -M ");
+                    params.append(infosys);		    
 
                     std::string host = DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);
                     bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);

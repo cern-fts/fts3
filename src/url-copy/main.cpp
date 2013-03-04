@@ -25,12 +25,8 @@ limitations under the License. */
 #include <stdio.h>
 #include <pwd.h>
 #include <transfer/gfal_transfer.h>
-#include "common/logger.h"
-#include "common/error.h"
 #include <fstream>
 #include "boost/date_time/gregorian/gregorian.hpp"
-#include "parse_url.h"
-#include <uuid/uuid.h>
 #include <vector>
 #include <gfal_api.h>
 #include <memory>
@@ -52,14 +48,14 @@ limitations under the License. */
 #include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <exception>
-#include "StaticSslLocking.h"
 #include "monitoring/utility_routines.h"
 #include <ctime>
 #include "name_to_uid.h"
+#include <boost/thread.hpp>  
 
 
-using namespace FTS3_COMMON_NAMESPACE;
 using namespace std;
+using boost::thread;
 
 FileManagement* fileManagement = NULL;
 static Reporter reporter;
@@ -76,11 +72,12 @@ static std::string errorMessage("");
 static std::string readFile("");
 static std::string reuseFile("");
 static std::string token_bringonline("");
-double source_size = 0.0;
-double dest_size = 0.0;
-std::string userFilesize("");
-double diff = 0.0;
-std::time_t start;
+static double source_size = 0.0;
+static double dest_size = 0.0;
+static std::string userFilesize("");
+static double diff = 0.0;
+static double transfer_start = 0.0;
+static double transfer_complete = 0.0;
 static uid_t pw_uid;
 static std::string file_id("0");
 static std::string job_id(""); //a
@@ -120,16 +117,22 @@ static bool debug = false;
 static volatile bool propagated = false;
 static volatile bool canceled = false;
 static volatile bool terminalState = false;
-std::string nstream_to_string("");
-std::string tcpbuffer_to_string("");
-std::string block_to_string("");
-std::string timeout_to_string("");
-extern std::string stackTrace;
-gfalt_params_t params;
-gfal_context_t handle = NULL;
+static std::string nstream_to_string("");
+static std::string tcpbuffer_to_string("");
+static std::string block_to_string("");
+static std::string timeout_to_string("");
 static std::string file_Metadata("");
 static std::string job_Metadata(""); //a
-static string globalErrorMessage("");
+static std::string globalErrorMessage("");
+static std::string infosys("");
+
+extern std::string stackTrace;
+gfal_context_t handle = NULL;
+
+//conver milli to secs
+static double transferDuration(double start , double complete){
+	return (start==0 && complete==0)==true? 0.0: (complete - start) / 1000; 
+}
 
 
 //categories are: source, destination, transfer
@@ -323,6 +326,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     	errorMessage += " " + globalErrorMessage;
     }
     
+    diff = transferDuration(transfer_start, transfer_complete);
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
     msg_ifce::getInstance()->set_failure_phase(&tr_completed, getDefaultErrorPhase());
@@ -409,31 +413,9 @@ void signalHandler(int signum) {
     }
 }
 
-void myunexpected() {
-    if (propagated == false) {
-        propagated = true;
-        errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
-        errorMessage += " Source: " + source_url;
-        errorMessage += " Dest: " + dest_url;
-        logStream << fileManagement->timestamp() << errorMessage << '\n';
-        abnormalTermination("FAILED", errorMessage, "Abort");
-    }
-}
-
-void myterminate() {
-    if (propagated == false) {
-        propagated = true;
-        errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
-        errorMessage += " Source: " + source_url;
-        errorMessage += " Dest: " + dest_url;
-        logStream << fileManagement->timestamp() << errorMessage << '\n';
-        abnormalTermination("FAILED", errorMessage, "Abort");
-    }
-}
-
 // Callback used to populate the messaging with the different stages
 
-void event_logger(const gfalt_event_t e, gpointer udata) {
+static void event_logger(const gfalt_event_t e, gpointer udata) {
     static const char* sideStr[] = {"SRC", "DST", "BTH"};
     static const GQuark SRM_DOMAIN = g_quark_from_static_string("SRM");
 
@@ -451,10 +433,13 @@ void event_logger(const gfalt_event_t e, gpointer udata) {
                 << e->description << '\n';
     }
 
-    if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
+    if (e->stage == GFAL_EVENT_TRANSFER_ENTER){
         msg->set_timestamp_transfer_started(&tr_completed, timestampStr);
-    else if (e->stage == GFAL_EVENT_TRANSFER_EXIT)
-        msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);
+	transfer_start = e->timestamp;	
+    }else if (e->stage == GFAL_EVENT_TRANSFER_EXIT){
+        msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);	   
+	transfer_complete = e->timestamp;		
+    }
 
     else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE)
         msg->set_timestamp_checksum_source_started(&tr_completed, timestampStr);
@@ -488,8 +473,6 @@ __attribute__((constructor)) void begin(void) {
     pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
-
-    fileManagement = new FileManagement();
 }
 
 int main(int argc, char **argv) {
@@ -508,27 +491,10 @@ int main(int argc, char **argv) {
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
 
-    /**TODO: disable for now*/
-    //set_terminate(myterminate);
-    //set_unexpected(myunexpected);
-
-    std::string bytes_to_string("");
-    struct stat statbufsrc;
-    struct stat statbufdest;
-    GError *tmp_err = NULL; // classical GError/glib error management   
-    params = gfalt_params_handle_new(NULL);
-
-    gfalt_set_event_callback(params, event_logger, NULL);
-
-    int ret = -1;
-    long long transferred_bytes = 0;
-    UserProxyEnv* cert = NULL;
-
-    hostname[1023] = '\0';
-    gethostname(hostname, 1023);
-
     for (register int i(1); i < argc; ++i) {
         std::string temp(argv[i]);
+        if (temp.compare("-M") == 0)
+            infosys = std::string(argv[i + 1]);	
         if (temp.compare("-L") == 0)
             token_bringonline = std::string(argv[i + 1]);	
         if (temp.compare("-K") == 0)
@@ -611,20 +577,35 @@ int main(int argc, char **argv) {
 
     g_file_id = file_id;
     g_job_id = job_id;
+    
+    
+    fileManagement = new FileManagement(infosys);
+    
+    std::string bytes_to_string("");
+    struct stat statbufsrc;
+    struct stat statbufdest;
+    GError *tmp_err = NULL; // classical GError/glib error management   
+    gfalt_params_t params;
+    params = gfalt_params_handle_new(NULL);
+
+    gfalt_set_event_callback(params, event_logger, NULL);
+
+    int ret = -1;
+    long long transferred_bytes = 0;
+    UserProxyEnv* cert = NULL;
+
+    hostname[1023] = '\0';
+    gethostname(hostname, 1023);    
 
 
     /*TODO: until we find a way to calculate RTT(perfsonar) accurately, OS tcp auto-tuning does a better job*/
     tcpbuffersize = DEFAULT_BUFFSIZE;
+    
+    if(argc < 4){
+        errorMessage = "Failed to read url-copy process arguments";
+    	abnormalTermination("FAILED", errorMessage, "Abort");
+    }
 
-
-    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use
-    SSL_library_init(); // Initialize OpenSSL's SSL libraries
-    SSL_load_error_strings(); // Load SSL error strings
-    ERR_load_BIO_strings(); // Load BIO error strings
-    OpenSSL_add_all_algorithms(); // Load all available encryption algorithms
-    OpenSSL_add_all_digests();
-    OpenSSL_add_all_ciphers();
-    StaticSslLocking::init_locks();
 
    try{
     /*send an update message back to the server to indicate it's alive*/
@@ -643,7 +624,7 @@ int main(int argc, char **argv) {
     }
 
     GError* handleError = NULL;    
-    handle = gfal_context_new(&handleError);
+    handle = gfal_context_new(&handleError);   
 
     if (!handle) {
         errorMessage = "Failed to create the gfal2 handle: ";
@@ -966,17 +947,18 @@ int main(int argc, char **argv) {
             gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
             gfalt_set_monitor_callback(params, &call_perf, NULL);
 
-            //calculate tr time in seconds
-            start = std::time(NULL);
-
             //check all params before passed to gfal2
             if ((strArray[1]).c_str() == NULL || (strArray[2]).c_str() == NULL) {
-                log << fileManagement->timestamp() << "ERROR Failed to get source or dest surl" << '\n';
+   	         errorMessage = "Failed to get source or dest surl";
+                 log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+		 errorScope = TRANSFER;
+                 reasonClass = GENERAL_FAILURE;
+                 errorPhase = TRANSFER;
+		 goto stop;
             }
 
             log << fileManagement->timestamp() << "INFO Transfer Starting" << '\n';
             if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0) {
-                diff = std::difftime(std::time(NULL), start);
                 if (tmp_err != NULL && tmp_err->message != NULL) {
                     log << fileManagement->timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
                     if (tmp_err->code == 110) {
@@ -999,7 +981,6 @@ int main(int argc, char **argv) {
                 g_clear_error(&tmp_err);
                 goto stop;
             } else {
-                diff = difftime(std::time(NULL), start);
                 log << fileManagement->timestamp() << "INFO Transfer completed successfully" << '\n';
             }
 
@@ -1081,7 +1062,8 @@ int main(int argc, char **argv) {
 
             gfalt_set_user_data(params, NULL, NULL);
         }//logStream
-stop:
+stop:             
+        diff = transferDuration(transfer_start, transfer_complete);  	
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
         msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
         msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);
@@ -1092,9 +1074,6 @@ stop:
             reporter.nostreams = nbstreams;
             reporter.buffersize = tcpbuffersize;            
             if (!terminalState) {
-	        /*TODO: re-enable it later*/
- 	        //logStream << fileManagement->timestamp() << "INFO Try issuing a cancel to clean resources" << '\n';
-                //cancelTransfer();
                 logStream << fileManagement->timestamp() << "INFO Report FAILED back to the server" << '\n';
                 reporter.constructMessage(retry, job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
             }
@@ -1149,6 +1128,6 @@ stop:
     if (fileManagement)
         delete fileManagement;
 
-    StaticSslLocking::kill_locks();
+
     return EXIT_SUCCESS;
 }
