@@ -134,8 +134,8 @@ gfal_context_t handle = NULL;
 
 static void setStackLimits(){
 	struct rlimit rl;
-	rl.rlim_cur = 2048;
-	rl.rlim_max = 5120;
+	rl.rlim_cur = 1048576; //1MB
+	rl.rlim_max = 2097152; //2MB
 	setrlimit(RLIMIT_STACK, &rl);
 }
 
