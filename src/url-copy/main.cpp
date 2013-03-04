@@ -52,6 +52,8 @@ limitations under the License. */
 #include <ctime>
 #include "name_to_uid.h"
 #include <boost/thread.hpp>  
+#include "StaticSslLocking.h"
+#include <sys/resource.h>
 
 
 using namespace std;
@@ -128,6 +130,14 @@ static std::string infosys("");
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
+
+
+static void setStackLimits(){
+	struct rlimit rl;
+	rl.rlim_cur = 2048;
+	rl.rlim_max = 5120;
+	setrlimit(RLIMIT_STACK, &rl);
+}
 
 //convert milli to secs
 static double transferDuration(double start , double complete){
@@ -472,7 +482,8 @@ __attribute__((constructor)) void begin(void) {
     //switch to non-priviledged user to avoid reading the hostcert
     pw_uid = name_to_uid();
     setuid(pw_uid);
-    seteuid(pw_uid);
+    seteuid(pw_uid);   
+    setStackLimits();     
 }
 
 int main(int argc, char **argv) {
@@ -578,6 +589,12 @@ int main(int argc, char **argv) {
     g_file_id = file_id;
     g_job_id = job_id;
     
+    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use 
+    SSL_library_init(); // Initialize OpenSSL's SSL libraries 
+    SSL_load_error_strings(); // Load SSL error strings 
+    ERR_load_BIO_strings(); // Load BIO error strings 
+    StaticSslLocking::init_locks();     
+    
     
     fileManagement = new FileManagement(infosys);
     
@@ -624,7 +641,7 @@ int main(int argc, char **argv) {
     }
 
     GError* handleError = NULL;    
-    handle = gfal_context_new(&handleError);   
+    handle = gfal_context_new(&handleError); 
 
     if (!handle) {
         errorMessage = "Failed to create the gfal2 handle: ";
@@ -1062,7 +1079,7 @@ int main(int argc, char **argv) {
 
             gfalt_set_user_data(params, NULL, NULL);
         }//logStream
-stop:             
+stop:       	
         diff = transferDuration(transfer_start, transfer_complete);  	
         msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
         msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
@@ -1129,5 +1146,7 @@ stop:
         delete fileManagement;
 
 
+    StaticSslLocking::kill_locks(); 
+    
     return EXIT_SUCCESS;
 }

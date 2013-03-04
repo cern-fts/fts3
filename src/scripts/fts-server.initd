@@ -30,6 +30,7 @@ prog=$(basename $exec)
 lockfile=/var/lock/subsys/fts-server
 export GLOBUS_THREAD_MODEL=pthread
 
+
 start() {
     echo -n $"Starting $prog: "
     sleep 10

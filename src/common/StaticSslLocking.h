@@ -6,9 +6,6 @@
 #include <assert.h>
 
 #include "threadabstractionlayer.h"
-#include "threadtraits.h"
-
-using namespace FTS3_COMMON_NAMESPACE;
 
 /// static locking mechanism for OpenSSL
 
@@ -23,8 +20,7 @@ public:
 
     /// static mutex array
     static MUTEX_TYPE * poMutexes;
-    static ThreadTraits::MUTEX _mutex;
-
+  
     static void init_locks();
     static void kill_locks();
 

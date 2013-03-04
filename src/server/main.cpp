@@ -60,9 +60,16 @@ static void setLimits(){
 		rl.rlim_cur = maxNumberOfProcesses;
 		rl.rlim_max = maxNumberOfProcesses;
 		if (setrlimit(RLIMIT_NPROC, &rl) == -1){
-			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit failed" << commit;
+			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit nproc failed" << commit;
 		}
 	}
+	
+	struct rlimit r2;
+	r2.rlim_cur = 2048;
+	r2.rlim_max = 5120;
+	if (setrlimit(RLIMIT_STACK, &r2)== -1){
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit stack failed" << commit;
+	}	
 }
 
 static int fexists(const char *filename) {

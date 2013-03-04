@@ -71,7 +71,7 @@ void CRYPTO_thread_cleanup() {
 
 // deal with static variables
 MUTEX_TYPE * StaticSslLocking::poMutexes;
-ThreadTraits::MUTEX StaticSslLocking::_mutex;
+
 
 void StaticSslLocking::SslStaticLockCallback(int inMode, int inMutex, const char * ipsFile, int inLine) {
     (void) ipsFile;
@@ -90,7 +90,7 @@ unsigned long StaticSslLocking::SslThreadIdCallback() {
 }
 
 void StaticSslLocking::init_locks() {
-    ThreadTraits::LOCK lock(_mutex);
+
     CRYPTO_thread_setup();
     /* LEAVE IT HERE JUST FOR REFERENCE OF STATIC USAGE
             // If some other library already set these 
@@ -120,7 +120,7 @@ StaticSslLocking::~StaticSslLocking() {
 }
 
 void StaticSslLocking::kill_locks() {
-    ThreadTraits::LOCK lock(_mutex);
+
     CRYPTO_thread_cleanup();
     /* LEAVE IT HERE JUST FOR REFERENCE OF STATIC USAGE
             if(StaticSslLocking::poMutexes)
