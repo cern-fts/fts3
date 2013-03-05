@@ -130,14 +130,6 @@ static std::string infosys("");
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
 
-/*TODO: disable for now
-static void setStackLimits(){
-	struct rlimit rl;
-	rl.rlim_cur = 1; //1MB
-	rl.rlim_max = 1; //2MB
-	setrlimit(RLIMIT_STACK, &rl);			
-}
-*/
 
 //convert milli to secs
 static double transferDuration(double start , double complete){

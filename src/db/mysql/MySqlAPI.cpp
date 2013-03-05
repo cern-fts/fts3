@@ -1366,21 +1366,14 @@ bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostrea
     soci::session sql(connectionPool);
 
     try {
-        double throughput;
-        int active, activeExists;
+        double throughput=0;
+        int active=0;
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE source_se = :source_se AND dest_se = :dest_se AND "
                "    file_state = 'ACTIVE' AND t_job.job_id = t_file.job_id",
                soci::use(source_hostname), soci::use(destin_hostname),
-               soci::into(active);
-
-        sql << "SELECT COUNT(*) FROM t_optimize "
-               "WHERE source_se = :source_se AND dest_se = :dest_se AND "
-               "      timeout = :timeout AND nostreams = :nstreams",
-               soci::use(source_hostname), soci::use(destin_hostname),
-               soci::use(timeout), soci::use(nostreams),
-               soci::into(activeExists);
+               soci::into(active);      
 
         if (filesize > 0 && timeInSecs > 0)
             throughput = convertBtoM(filesize, timeInSecs);
@@ -1392,21 +1385,16 @@ bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostrea
         if (buffersize <= 0)
             buffersize = 0;
 
-        // Update
-        if (activeExists) {
+       
             sql << "UPDATE t_optimize SET filesize = :fsize, throughput = :throughput, "
                    "   active = :active, datetime = UTC_TIMESTAMP(), timeout= :timeout "
                    "WHERE nostreams = :nstreams AND buffer = :buffer AND "
-                   "      source_se = :source_se AND dest_se = :dest_se AND timeout = :timeout",
+                   "      source_se = :source_se AND dest_se = :dest_se AND timeout = :timeout"
+		   " and (throughput is null or throughput<=:throughput) and (active<=:active or active is null)",
                    soci::use(filesize), soci::use(throughput), soci::use(active),
                    soci::use(timeout), soci::use(nostreams), soci::use(buffersize),
-                   soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout);
-        }
-        // Insert
-        else {
-            this->addOptimizer(std::time(NULL), throughput, source_hostname,
-                               destin_hostname, 1, nostreams, timeout, buffersize, active);
-        }
+                   soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
+		   soci::use(throughput),soci::use(active);       
     }
     catch (std::exception& e) {
         ok = false;
