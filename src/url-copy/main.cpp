@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and 
 limitations under the License. */
 
-
 #include <iostream>
 #include <algorithm>
 #include <ctype.h>
@@ -498,7 +497,8 @@ __attribute__((constructor)) void begin(void) {
     //switch to non-priviledged user to avoid reading the hostcert
     pw_uid = name_to_uid();
     setuid(pw_uid);
-    seteuid(pw_uid);
+    seteuid(pw_uid);   
+    StaticSslLocking::init_locks();     
 }
 
 int main(int argc, char **argv) {
@@ -604,13 +604,7 @@ int main(int argc, char **argv) {
     g_file_id = file_id;
     g_job_id = job_id;
     
-    CRYPTO_malloc_init(); // Initialize malloc, free, etc for OpenSSL's use 
-    SSL_library_init(); // Initialize OpenSSL's SSL libraries 
-    SSL_load_error_strings(); // Load SSL error strings 
-    ERR_load_BIO_strings(); // Load BIO error strings 
-    StaticSslLocking::init_locks();     
-    
-    
+
     fileManagement = new FileManagement(infosys);
     
     std::string bytes_to_string("");
