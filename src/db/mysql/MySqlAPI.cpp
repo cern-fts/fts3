@@ -1359,27 +1359,28 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
 
 
 
-bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {
+bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostreams,
+                               int timeout, int buffersize,
+                               std::string source_hostname, std::string destin_hostname) {
     bool ok = true;
     soci::session sql(connectionPool);
 
     try {
-        bool activeExists;
-        int active;
         double throughput;
+        int active, activeExists;
 
-        sql << "SELECT active FROM t_optimize WHERE "
-               "    active = (SELECT COUNT(*) FROM t_file, t_job WHERE "
-               "                  t_file.file_state = 'ACTIVE' AND "
-               "                  t_file.job_id = t_job.job_id AND "
-               "                  t_job.source_se = :source AND t_job.dest_se = :dest) AND "
-               "    nostreams = :nstreams AND timeout = :timeout AND buffer = :buffer AND "
-               "    source_se = :source AND dest_se = :dest",
-               soci::use(source_hostname, "source"), soci::use(destin_hostname, "dest"),
-               soci::use(nostreams, "nstreams"), soci::use(timeout, "timeout"),
-               soci::use(buffersize, "buffer"),
+        sql << "SELECT COUNT(*) FROM t_file, t_job "
+               "WHERE source_se = :source_se AND dest_se = :dest_se AND "
+               "    file_state = 'ACTIVE' AND t_job.job_id = t_file.job_id",
+               soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(active);
-        activeExists = sql.got_data();
+
+        sql << "SELECT COUNT(*) FROM t_optimize "
+               "WHERE source_se = :source_se AND dest_se = :dest_se AND "
+               "      timeout = :timeout AND nostreams = :nstreams",
+               soci::use(source_hostname), soci::use(destin_hostname),
+               soci::use(timeout), soci::use(nostreams),
+               soci::into(activeExists);
 
         if (filesize > 0 && timeInSecs > 0)
             throughput = convertBtoM(filesize, timeInSecs);
@@ -1388,35 +1389,23 @@ bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostrea
 
         if (filesize <= 0)
             filesize = 0;
-
-        if (nostreams <= 0)
-            nostreams = DEFAULT_NOSTREAMS;
-
         if (buffersize <= 0)
             buffersize = 0;
 
+        // Update
         if (activeExists) {
-            int newTimeout = timeout;
-            if (timeInSecs <= DEFAULT_TIMEOUT)
-                newTimeout = DEFAULT_TIMEOUT;
-
-            sql.begin();
-            sql << "UPDATE t_optimize SET "
-                   "    filesize = :filesize, throughput = :throughput, active = :active, "
-                   "    datetime = UTC_TIMESTAMP(), timeout = :timeout "
-                   "WHERE nostreams = :nstreams AND timeout = :timeout AND buffer = :buffer AND "
-                   "      source_se = :source AND dest_se = :dest",
-                    soci::use(filesize), soci::use(throughput), soci::use(active),
-                    soci::use(newTimeout),
-                    soci::use(nostreams), soci::use(timeout), soci::use(buffersize),
-                    soci::use(source_hostname), soci::use(destin_hostname);
-            sql.commit();
+            sql << "UPDATE t_optimize SET filesize = :fsize, throughput = :throughput, "
+                   "   active = :active, datetime = UTC_TIMESTAMP(), timeout= :timeout "
+                   "WHERE nostreams = :nstreams AND buffer = :buffer AND "
+                   "      source_se = :source_se AND dest_se = :dest_se AND timeout = :timeout",
+                   soci::use(filesize), soci::use(throughput), soci::use(active),
+                   soci::use(timeout), soci::use(nostreams), soci::use(buffersize),
+                   soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout);
         }
+        // Insert
         else {
-                if (timeInSecs <= DEFAULT_TIMEOUT)
-                    timeout = DEFAULT_TIMEOUT;
-                addOptimizer(time(NULL), throughput, source_hostname, destin_hostname,
-                             1, nostreams, timeout, buffersize, active);
+            this->addOptimizer(std::time(NULL), throughput, source_hostname,
+                               destin_hostname, 1, nostreams, timeout, buffersize, active);
         }
     }
     catch (std::exception& e) {
