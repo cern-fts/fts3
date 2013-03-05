@@ -2627,8 +2627,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostre
         s1->setInt(4, nostreams);
         r1 = conn->createResultset(s1, pooledConnection);
         if (r1->next()) {
-            activeExists = true;
-            active = r1->getInt(1);
+            activeExists = true;            
         }
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1, pooledConnection);

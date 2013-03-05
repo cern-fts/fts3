@@ -239,20 +239,20 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 		return 2;	
 	}
 	else if(sizeInBytes > 52428800 && sizeInBytes <= 104857600){
-		return 3;
+		return 4;
 	}
 	else if(sizeInBytes > 104857600 && sizeInBytes <= 209715200){
 		return 4;
 	}
 	else if(sizeInBytes > 209715200 && sizeInBytes <= 524288000){
-		return 5;
+		return 6;
 	}
 	else if (sizeInBytes > 524288000 && sizeInBytes <= 734003200){
 		return 6;
 	}
 	else{
-		if(currentStreams < 7 )
-			return 7;
+		if(currentStreams < 8 )
+			return 8;
 		else
 			return currentStreams;
 	}
