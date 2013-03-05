@@ -61,10 +61,11 @@ Optimizer
 		<tr>
 			<th>Source</th>
 			<th>Destination</th>
-			<th>Active</th>
+			<th>Max. Active</th>
+			<th>Max. Throughput</th>
+			<th>Avg. Throughput</th>
 			<th>N. Streams</th>
 			<th>Timeout</th>
-			<th>Throughput</th>
 			<th>Buffer</th>
 		</tr>
 	</thead>
@@ -73,10 +74,11 @@ Optimizer
 		<tr>
 			<td>{{ o.source_se }}</td>
 			<td>{{ o.dest_se }}</td>
-			<td>{{ o.active }}</td>
+			<td>{{ o.max_active }}</td>
+			<td>{{ o.max_throughput|floatformat:2 }}</td>
+			<td>{{ o.avg_throughput|floatformat:2 }}</td>
 			<td>{{ o.nostreams }}</td>
 			<td>{{ o.timeout }}</td>
-			<td>{{ o.throughput }}</td>
 			<td>{{ o.buffer }}</td>
 		</tr>
 	{% endfor %}

@@ -1,16 +1,34 @@
 from django.shortcuts import render, redirect
-from django.db.models import Max
+from django.db.models import Max, Avg
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from fts3.models import Optimize
 from ftsmon import forms
 
+
+class OptimizerGenerator(object):
+	def __init__(self, optimizations):
+		self.optimizations = optimizations
+		
+	def __len__(self):
+		return len(self.optimizations)
+	
+	def __getitem__(self, index):
+		items = self.optimizations[index]
+		for item in items:
+			item.update(Optimize.objects.filter(source_se = item['source_se'],
+												dest_se = item['dest_se'],
+												active = item['max_active'])\
+										.values('nostreams', 'timeout', 'buffer').all()[0])
+		return items
+		
 
 def optimizer(httpRequest):
 	# Initialize forms
 	filterForm    = forms.FilterForm(httpRequest.GET)
 	
 	# Query
-	optimizations = Optimize.objects.filter(throughput__isnull = False)
+	optimizations = Optimize.objects.filter(throughput__isnull = False)\
+						.values('source_se', 'dest_se')
 	
 	if filterForm.is_valid():
 		if filterForm['source_se'].value():
@@ -19,14 +37,13 @@ def optimizer(httpRequest):
 			optimizations = optimizations.filter(dest_se = filterForm['dest_se'].value())
 	
 	# Only max!   
-	optimizations = optimizations.extra(where = [
-	""" t_optimize.throughput = (SELECT MAX(O2.throughput) FROM t_optimize O2
-	                                 WHERE O2.source_se = t_optimize.source_se AND
-	                                       O2.dest_se = t_optimize.dest_se AND
-	                                       O2.active = t_optimize.active)"""])
+	optimizations = optimizations.annotate(max_active     = Max('active'),
+										   max_throughput = Max('throughput'),
+										   avg_throughput = Avg('throughput'))
+	optimizations = optimizations.order_by('source_se', 'dest_se')
 	
-	optimizations = optimizations.order_by('source_se', 'dest_se', 'active')
-	print str(optimizations.query)
+	# Wrap with a generator so the number of streams and timeout can be retrieved
+	optimizations = OptimizerGenerator(optimizations)
 	
 	# Paginate
 	paginator = Paginator(optimizations, 50)
