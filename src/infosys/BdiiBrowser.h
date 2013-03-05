@@ -27,7 +27,8 @@
 
 #include "common/logger.h"
 #include "common/ThreadSafeInstanceHolder.h"
-
+#include <sys/types.h>
+#include <signal.h>
 #include "config/serverconfig.h"
 
 #include <ldap.h>
@@ -284,6 +285,7 @@ private:
 template<typename R>
 list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr) {
 
+        signal(SIGPIPE, SIG_IGN);
 	// check in the fts3config file if the 'base' (glue1 or glue2) is in use, if no return an empty result set
 	if (!checkIfInUse(base)) return list< map<string, R> >();
 
@@ -310,8 +312,7 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
 	}
 
     int rc = 0;
-    LDAPMessage *reply = 0;
-
+    LDAPMessage *reply = 0;    
     waitIfReconnecting();
     rc = ldap_search_ext_s(ld, base.c_str(), LDAP_SCOPE_SUBTREE, query.c_str(), const_cast<char**>(attr), 0, 0, 0, &timeout, 0, &reply);
     notifyReconnector();

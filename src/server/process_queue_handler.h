@@ -113,15 +113,13 @@ public:
 		       }
 	       }
     
-               if (std::string(msg.transfer_status).compare("FINISHED") == 0 && enableOptimization.compare("true") == 0) {
-                    if (!(msg.nostreams == DEFAULT_NOSTREAMS && msg.buffersize == DEFAULT_BUFFSIZE && msg.timeout == DEFAULT_TIMEOUT)) {
+               if (std::string(msg.transfer_status).compare("FINISHED") == 0 && enableOptimization.compare("true") == 0) {                   
                         updated = DBSingleton::instance().
                                 getDBObjectInstance()->
                                 updateOptimizer(msg.file_id, msg.filesize, msg.timeInSecs,
                                 static_cast<int> (msg.nostreams), static_cast<int> (msg.timeout),
                                 static_cast<int> (msg.buffersize), std::string(msg.source_se),
                                 std::string(msg.dest_se));
-                    }
                 }
  
                 /*session reuse process died or terminated unexpected*/

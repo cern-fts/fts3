@@ -62,7 +62,7 @@ static void setLimits(){
 		if (setrlimit(RLIMIT_NPROC, &rl) == -1){
 			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit nproc failed" << commit;
 		}
-	}		
+	}				
 }
 
 static int fexists(const char *filename) {

@@ -158,7 +158,7 @@ void BdiiBrowser::notifyReconnector() {
 }
 
 bool BdiiBrowser::reconnect() {
-
+	signal(SIGPIPE, SIG_IGN);
 	waitIfBrowsing();
 
 	if (connected) disconnect();
@@ -177,7 +177,7 @@ bool BdiiBrowser::isValid() {
 	if (theServerConfig().get<string>("Infosys") != this->infosys) return false;
 
 	LDAPMessage *result = 0;
-
+	signal(SIGPIPE, SIG_IGN);
 	waitIfReconnecting();
 	int rc = ldap_search_ext_s(ld, "dc=example,dc=com", LDAP_SCOPE_BASE, "(sn=Curly)", 0, 0, 0, 0, &timeout, 0, &result);
 	notifyReconnector();

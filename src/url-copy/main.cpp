@@ -131,13 +131,14 @@ static std::string infosys("");
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
 
-
+/*TODO: disable for now
 static void setStackLimits(){
 	struct rlimit rl;
-	rl.rlim_cur = 1048576; //1MB
-	rl.rlim_max = 2097152; //2MB
-	setrlimit(RLIMIT_STACK, &rl);
+	rl.rlim_cur = 1; //1MB
+	rl.rlim_max = 1; //2MB
+	setrlimit(RLIMIT_STACK, &rl);			
 }
+*/
 
 //convert milli to secs
 static double transferDuration(double start , double complete){
@@ -165,7 +166,13 @@ static bool retryTransfer(int errorNo, std::string category ){
 			  break;
 			case ENAMETOOLONG:
 			  retry = false;
-			  break;				  				  
+			  break;
+			case E2BIG:
+			  retry = false;
+			  break;			  
+			case ENOTDIR:
+			  retry = false;
+			  break;					  				  
 			default:
 			  retry = true;
 			  break;
@@ -225,22 +232,31 @@ static bool retryTransfer(int errorNo, std::string category ){
 
 /*hardcoded for now*/
 static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams){
-	if(sizeInBytes <= 20971520) {
+	if(sizeInBytes <= 10485760) { //starting with 10MB
 		return 1;
 	}
-	else if(sizeInBytes >= 20971520 && sizeInBytes <= 104857600){
-		return 2;
+	else if(sizeInBytes > 10485760 && sizeInBytes <= 52428800){
+		return 2;	
 	}
-	else if (sizeInBytes >= 104857600 && sizeInBytes <= 524288000){
+	else if(sizeInBytes > 52428800 && sizeInBytes <= 104857600){
 		return 3;
 	}
+	else if(sizeInBytes > 104857600 && sizeInBytes <= 209715200){
+		return 4;
+	}
+	else if(sizeInBytes > 209715200 && sizeInBytes <= 524288000){
+		return 5;
+	}
+	else if (sizeInBytes > 524288000 && sizeInBytes <= 734003200){
+		return 6;
+	}
 	else{
-		if(currentStreams < 4 )
-			return 4;
+		if(currentStreams < 7 )
+			return 7;
 		else
 			return currentStreams;
 	}
- return 2;	
+ return 6;	
 }
 
 static void cancelTransfer() {
@@ -482,8 +498,7 @@ __attribute__((constructor)) void begin(void) {
     //switch to non-priviledged user to avoid reading the hostcert
     pw_uid = name_to_uid();
     setuid(pw_uid);
-    seteuid(pw_uid);   
-    setStackLimits();     
+    seteuid(pw_uid);
 }
 
 int main(int argc, char **argv) {
