@@ -20,7 +20,6 @@ limitations under the License. */
 #include <sys/types.h>
 #include "boost/date_time/gregorian/gregorian.hpp"
 #include <boost/tokenizer.hpp>
-#include <boost/asio.hpp>
 #include "producer_consumer_common.h"
 #include <algorithm>
 #include <ctime>

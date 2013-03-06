@@ -44,7 +44,6 @@ limitations under the License. */
 #include <cstdio>
 #include <ctime>
 #include "definitions.h"
-#include <boost/asio.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <exception>
 #include "monitoring/utility_routines.h"
@@ -602,12 +601,6 @@ int main(int argc, char **argv) {
     std::string bytes_to_string("");
     struct stat statbufsrc;
     struct stat statbufdest;
-    GError *tmp_err = NULL; // classical GError/glib error management   
-    gfalt_params_t params;
-    params = gfalt_params_handle_new(NULL);
-
-    gfalt_set_event_callback(params, event_logger, NULL);
-
     int ret = -1;
     long long transferred_bytes = 0;
     UserProxyEnv* cert = NULL;
@@ -640,23 +633,7 @@ int main(int argc, char **argv) {
         // Set Proxy Env    
         cert = new UserProxyEnv(proxy);
     }
-
-    GError* handleError = NULL;    
-    handle = gfal_context_new(&handleError); 
-
-    if (!handle) {
-        errorMessage = "Failed to create the gfal2 handle: ";
-        if (handleError && handleError->message) {
-            errorMessage += handleError->message;
-            abnormalTermination("FAILED", errorMessage, "Error");
-        }
-    }
-
-    //reuse session    
-    if (reuseFile.length() > 0) {
-        gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
-    }
-
+    
     std::vector<std::string> urlsFile;
     std::string line("");
     readFile = "/var/lib/fts3/" + job_id;
@@ -687,6 +664,29 @@ int main(int argc, char **argv) {
         errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
 
         abnormalTermination("FAILED", errorMessage, "Error");
+    }
+
+
+    GError* handleError = NULL;    
+    GError *tmp_err = NULL; 
+    gfalt_params_t params;
+    handle = gfal_context_new(&handleError);     
+    params = gfalt_params_handle_new(NULL);
+    gfalt_set_event_callback(params, event_logger, NULL);
+        
+
+    //reuse session    
+    if (reuseFile.length() > 0) {
+        gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
+    }
+
+
+    if (!handle) {
+        errorMessage = "Failed to create the gfal2 handle: ";
+        if (handleError && handleError->message) {
+            errorMessage += handleError->message;
+            abnormalTermination("FAILED", errorMessage, "Error");
+        }
     }
 
 
