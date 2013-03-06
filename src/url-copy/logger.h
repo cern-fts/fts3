@@ -2,7 +2,6 @@
 #ifndef _LOGGER
 #define _LOGGER
 
-#include <boost/thread/mutex.hpp>
 #include <iostream>
 
 class logger {
