@@ -82,10 +82,18 @@ def statistics(httpRequest):
     statsDict['servers'] = servers
     
     # Stats per pair of SEs
-    sePairs = []
+    pairQuery = Job.objects.exclude(job_state__in = ACTIVE_STATES).values('source_se', 'dest_se')
     
+    if 'source_se' in httpRequest.GET:
+        pairQuery = pairQuery.filter(source_se = httpRequest.GET['source_se'])
+    if 'dest_se' in httpRequest.GET:
+        pairQuery = pairQuery.filter(dest_se = httpRequest.GET['dest_se'])
+    
+    pairQuery = pairQuery.distinct()
+    
+    sePairs = []    
     avgsPerPair = {}
-    for pair in Job.objects.exclude(job_state__in = ACTIVE_STATES).values('source_se', 'dest_se').distinct():
+    for pair in pairQuery:
         pair_tuple = (pair['source_se'], pair['dest_se'])
         sePairs.append(pair_tuple)
         
@@ -94,8 +102,18 @@ def statistics(httpRequest):
                                       job__dest_se = pair_tuple[1]).aggregate(Avg('tx_duration'), Avg('throughput'))
         avgsPerPair[pair_tuple] = {'avgDuration': pairAvg['tx_duration__avg'], 'avgThroughput': pairAvg['throughput__avg']}
     
+    
+    activeQuery = File.objects.filter(file_state__in = ACTIVE_STATES).values('job__source_se', 'job__dest_se', 'file_state')
+
+    if 'source_se' in httpRequest.GET:
+        activeQuery = activeQuery.filter(job__source_se = httpRequest.GET['source_se'])
+    if 'dest_se' in httpRequest.GET:
+        activeQuery = activeQuery.filter(job__dest_se = httpRequest.GET['dest_se'])
+    
+    activeQuery = activeQuery.annotate(count = Count('file_state'))
+    
     activePerPair = {}
-    for pair in File.objects.filter(file_state__in = ACTIVE_STATES).values('job__source_se', 'job__dest_se', 'file_state').annotate(count = Count('file_state')):
+    for pair in activeQuery:
         pair_tuple = (pair['job__source_se'], pair['job__dest_se'])
         state      = pair['file_state']
         count      = pair['count']

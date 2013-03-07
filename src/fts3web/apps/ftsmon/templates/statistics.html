@@ -77,8 +77,18 @@ Statistics
       <table>
         <thead>
           <tr>
-            <th>Source</th>
-            <th>Destination</th>
+            <th>
+                Source
+                <a href="{% url ftsmon.views.statistics %}#perPair">
+                  <img src="{{STATIC_URL}}filter_clear.png" title="Clear filter"/>
+                </a>
+            </th>
+            <th>
+                Destination
+                <a href="{% url ftsmon.views.statistics %}#perPair">
+                  <img src="{{STATIC_URL}}filter_clear.png" title="Clear filter"/>
+                </a>
+            </th>
             <th>Transfers active</th>
             <th>Avg. Throughput</th>
             <th>Avg. Duration</th>
@@ -87,8 +97,18 @@ Statistics
         <tbody class="centered">
           {% for p in pairs %}
             <tr class="{% cycle 'odd' 'even' %}">
-              <td>{{ p.source }}</td>
-              <td>{{ p.destination }}</td>
+              <td>
+                {{ p.source }}
+                <a href="{% url ftsmon.views.statistics %}?{% with_query 'source_se' p.source %}#perPair">
+                    <img src="{{ STATIC_URL }}filter.png" title="Filter by this source"/>
+                </a>
+              </td>
+              <td>
+                {{ p.destination }}
+                <a href="{% url ftsmon.views.statistics %}?{% with_query 'dest_se' p.destination %}#perPair">
+                    <img src="{{ STATIC_URL }}filter.png" title="Filter by this destination"/>
+                </a>
+               </td>
               <td>
                 {% for s in p.active %}
                   {{ s.1 }} {{ s.0 }}
