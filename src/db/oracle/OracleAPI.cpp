@@ -259,8 +259,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 
 
     s = conn->createStatement(query_stmt, tag, pooledConnection);
-	s->setPrefetchRowCount(1000);
-	
 	
 	vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
 	for (it = distinct.begin(); it != distinct.end(); it++) {
@@ -537,7 +535,6 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
 		return;
 		
         s = conn->createStatement(select, selecttag, pooledConnection);
-        s->setPrefetchRowCount(3000);
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
             TransferJobs* temp = (TransferJobs*) * iter;
             std::string job_id = std::string(temp->JOB_ID);
@@ -2276,7 +2273,6 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
             return;
 
         s = conn->createStatement(query_stmt, tag, pooledConnection);
-        s->setPrefetchRowCount(1);
         r = conn->createResultset(s, pooledConnection);
         while (r->next()) {
             tr_jobs = new TransferJobs();
@@ -2918,7 +2914,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 	    	    
 	s1 = conn->createStatement(query_stmt1, tag1, pooledConnection);
         s1->setString(1, source_hostname);
-        s1->setPrefetchRowCount(1);
         r1 = conn->createResultset(s1, pooledConnection);
         if (r1->next()) {
             maxSource = r1->getInt(1);
@@ -2930,7 +2925,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 	    
   	s2 = conn->createStatement(query_stmt2, tag2, pooledConnection);
         s2->setString(1, destin_hostname);
-        s2->setPrefetchRowCount(1);
         r2 = conn->createResultset(s2, pooledConnection);
         if (r2->next()) {
             maxDest = r2->getInt(1);
@@ -2943,7 +2937,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
    	s3 = conn->createStatement(query_stmt3, tag3, pooledConnection);
         s3->setString(1, source_hostname);
 	s3->setString(2, destin_hostname);	
-        s3->setPrefetchRowCount(20);
         r3 = conn->createResultset(s3, pooledConnection);
 	
         while (r3->next()) {
@@ -2962,7 +2955,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
   	s4 = conn->createStatement(query_stmt4, tag4, pooledConnection);
         s4->setString(1, source_hostname);
 	s4->setString(2, destin_hostname);
-        s4->setPrefetchRowCount(1);
         r4 = conn->createResultset(s4, pooledConnection);
         if (r4->next()) {
             act = r4->getInt(1);
@@ -2975,7 +2967,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
   	s5 = conn->createStatement(query_stmt5, tag5, pooledConnection);
         s5->setString(1, source_hostname);
 	s5->setString(2, destin_hostname);
-        s5->setPrefetchRowCount(1);
         r5 = conn->createResultset(s5, pooledConnection);
         if (r5->next()) {
             numberOfFinishedAll = r5->getInt(1);	    
@@ -2988,7 +2979,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
   	s6 = conn->createStatement(query_stmt6, tag6, pooledConnection);
         s6->setString(1, source_hostname);
 	s6->setString(2, destin_hostname);
-        s6->setPrefetchRowCount(1);
         r6 = conn->createResultset(s6, pooledConnection);
         if (r6->next()) {
             numberOfFailedAll = r6->getInt(1);	    
