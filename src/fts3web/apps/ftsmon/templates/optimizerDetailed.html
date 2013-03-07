@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load filesize %}
+
+{% block title %}
+{{ source_se }} - {{ dest_se }}
+{% endblock %}
+
+{% block content %}
+
+<h2>Details for {{ source_se }} → {{ dest_se }}</h2>
+
+<h3>File sizes</h3>
+<table style="width: auto">
+	<thead>
+		<tr>
+			<th>Count</th>
+			<th>Smallest</th>
+			<th>Biggest</th>
+			<th>Average</th>
+			<th>Std. Deviation</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>{{ fsizes.nfiles }}</td>
+			<td>{% filesize fsizes.smallest %}</td>
+			<td>{% filesize fsizes.biggest %}</td>
+			<td>{% filesize fsizes.average %}</td>
+			<td>{% filesize fsizes.deviation %}</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2>Optimizer evolution</h2>
+<table style="width: auto">
+	<thead>
+		<tr>
+			<th>Timestamp</th>
+			<th>Throughput achieved (MB/s)</th>
+			<th>Number of streams</th>
+			<th>Timeout</th>
+			<th>Active</th>
+			<th>Buffer size</th>
+		</tr>
+	</thead>
+	<tbody>
+	{% for o in optimizerEntires %}
+		<tr class="{% cycle 'odd' 'even' %}">
+			<td>{{ o.datetime }}</td>
+			<td>{{ o.throughput|floatformat:2 }}</td>
+			<td>{{ o.nostreams }}</td>
+			<td>{{ o.timeout }}</td>
+			<td>{{ o.active }}</td>
+			<td>{{ o.buffer }}</td>
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+
+{% endblock %}

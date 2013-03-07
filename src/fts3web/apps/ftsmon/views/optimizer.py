@@ -1,25 +1,10 @@
+from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
-from django.db.models import Max, Avg
+from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from fts3.models import Optimize
+from fts3.models import Optimize, File, Job
 from ftsmon import forms
 
-
-class OptimizerGenerator(object):
-	def __init__(self, optimizations):
-		self.optimizations = optimizations
-		
-	def __len__(self):
-		return len(self.optimizations)
-	
-	def __getitem__(self, index):
-		items = self.optimizations[index]
-		for item in items:
-			item.update(Optimize.objects.filter(source_se = item['source_se'],
-												dest_se = item['dest_se'],
-												active = item['max_active'])\
-										.values('nostreams', 'timeout', 'buffer').all()[0])
-		return items
 		
 
 def optimizer(httpRequest):
@@ -29,21 +14,25 @@ def optimizer(httpRequest):
 	# Query
 	optimizations = Optimize.objects.filter(throughput__isnull = False)\
 						.values('source_se', 'dest_se')
-	
+
+	hours = 1
 	if filterForm.is_valid():
 		if filterForm['source_se'].value():
 			optimizations = optimizations.filter(source_se = filterForm['source_se'].value())
 		if filterForm['dest_se'].value():
 			optimizations = optimizations.filter(dest_se = filterForm['dest_se'].value())
+		if filterForm['time_window'].value():
+			hours = int(filterForm['time_window'].value())
+			
+	notBefore = datetime.now() - timedelta(hours = hours)
+	optimizations = optimizations.filter(datetime__gte = notBefore)
 	
 	# Only max!   
-	optimizations = optimizations.annotate(max_active     = Max('active'),
-										   max_throughput = Max('throughput'),
-										   avg_throughput = Avg('throughput'))
+	optimizations = optimizations.annotate(max_throughput = Max('throughput'),
+										   avg_throughput = Avg('throughput'),
+										   std_deviation  = StdDev('throughput'),
+										   count          = Count('throughput'))
 	optimizations = optimizations.order_by('source_se', 'dest_se')
-	
-	# Wrap with a generator so the number of streams and timeout can be retrieved
-	optimizations = OptimizerGenerator(optimizations)
 	
 	# Paginate
 	paginator = Paginator(optimizations, 50)
@@ -66,3 +55,38 @@ def optimizer(httpRequest):
 					'paginator': paginator,
 					'extra_args': extra_args
 					})
+
+
+
+def optimizerDetailed(httpRequest, source_se, dest_se):
+	hours = 1
+	try:
+		if 'time_window' in httpRequest.GET:
+			hours = int(httpRequest.GET['time_window'])
+	except:
+		pass
+	notBefore = datetime.now() - timedelta(hours = hours)
+	
+	# File sizes
+	fsizes = File.objects.filter(job__source_se = source_se, job__dest_se = dest_se,
+								 job__finish_time__isnull = False,
+								 job__finish_time__gte = notBefore)
+	
+	fsizes = fsizes.aggregate(nfiles  = Count('file_id'),
+							  biggest = Max('filesize'),
+							  smallest = Min('filesize'),
+							  average  = Avg('filesize'),
+							  deviation = StdDev('filesize'))
+	
+	# Optimizer
+	optimizerEntires = Optimize.objects.filter(source_se = source_se, dest_se = dest_se,
+											   datetime__gte = notBefore).order_by('-datetime')
+	
+	return render(httpRequest, 'optimizerDetailed.html',
+					{'request': httpRequest,
+					 'source_se': source_se,
+					 'dest_se': dest_se,
+					 'fsizes': fsizes,
+					 'optimizerEntires': optimizerEntires
+					})
+
