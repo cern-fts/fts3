@@ -5,10 +5,16 @@ from fts3.models import Job, File, ConfigAudit
 
 
 
+STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
+ACTIVE_STATES = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
+
+
+
 def configurationAudit(httpRequest):
     configs = ConfigAudit.objects.order_by('-datetime')
     return render(httpRequest, 'configurationAudit.html',
                   {'configs': configs})
+
 
 
 def _getCountPerState(states, age = None):
@@ -22,8 +28,8 @@ def _getCountPerState(states, age = None):
 	for row in query:
 		count[row['file_state'].lower()] = row['number']
 		
-	for s in filter(lambda s: s.lower() not in count, states):
-		count[s.lower()] = 0
+	for s in filter(lambda s: s not in count, map(lambda s: s.lower(), states)):
+		count[s] = 0
 		
 	# Couple of aggregations
 	count['queued'] = count['submitted'] + count['ready']
@@ -32,30 +38,8 @@ def _getCountPerState(states, age = None):
 	return count
 
 
-def statistics(httpRequest):
-    statsDict = {}
-    statsDict['request'] = httpRequest
-    
-    STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
-    ACTIVE_STATES = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
-    
-    # Overall (all times)
-    overall = _getCountPerState(STATES)        
-    
-    # Success rate (last hour)
-    lastHour = _getCountPerState(STATES, timedelta(hours = 1))
-    if lastHour['total'] > 0:
-        overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
-    else:
-        overall['rate'] = 0
-        
-    statsDict['overall'] = overall
-    
-    # Unique error reasons
-    statsDict['uniqueReasons'] = File.objects.filter(reason__isnull = False).exclude(reason = '').\
-                                   values('reason').annotate(count = Count('reason')).order_by('-count')
-                                   
-    # Submissions and transfers handled per each FTS3 machine
+
+def _getTransferAndSubmissionPerHost():
     hostnames = []
         
     submissions = {}
@@ -79,68 +63,11 @@ def statistics(httpRequest):
         else:                t = 0   
         servers.append({'hostname': h, 'submissions': s, 'transfers': t})
         
-    statsDict['servers'] = servers
-    
-    # Stats per pair of SEs
-    pairQuery = Job.objects.exclude(job_state__in = ACTIVE_STATES).values('source_se', 'dest_se')
-    
-    if 'source_se' in httpRequest.GET:
-        pairQuery = pairQuery.filter(source_se = httpRequest.GET['source_se'])
-    if 'dest_se' in httpRequest.GET:
-        pairQuery = pairQuery.filter(dest_se = httpRequest.GET['dest_se'])
-    
-    pairQuery = pairQuery.distinct()
-    
-    sePairs = []    
-    avgsPerPair = {}
-    for pair in pairQuery:
-        pair_tuple = (pair['source_se'], pair['dest_se'])
-        sePairs.append(pair_tuple)
-        
-        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES).filter(
-                                      job__source_se = pair_tuple[0],
-                                      job__dest_se = pair_tuple[1]).aggregate(Avg('tx_duration'), Avg('throughput'))
-        avgsPerPair[pair_tuple] = {'avgDuration': pairAvg['tx_duration__avg'], 'avgThroughput': pairAvg['throughput__avg']}
-    
-    
-    activeQuery = File.objects.filter(file_state__in = ACTIVE_STATES).values('job__source_se', 'job__dest_se', 'file_state')
+    return servers
 
-    if 'source_se' in httpRequest.GET:
-        activeQuery = activeQuery.filter(job__source_se = httpRequest.GET['source_se'])
-    if 'dest_se' in httpRequest.GET:
-        activeQuery = activeQuery.filter(job__dest_se = httpRequest.GET['dest_se'])
-    
-    activeQuery = activeQuery.annotate(count = Count('file_state'))
-    
-    activePerPair = {}
-    for pair in activeQuery:
-        pair_tuple = (pair['job__source_se'], pair['job__dest_se'])
-        state      = pair['file_state']
-        count      = pair['count']
-        
-        if pair_tuple not in sePairs:
-            sePairs.append(pair_tuple)
-        
-        if pair_tuple not in activePerPair:
-            activePerPair[pair_tuple] = []
-            
-        activePerPair[pair_tuple].append((state, count))
-        
-    pairs = []
-    for pair in sorted(sePairs):
-        p = {'source': pair[0], 'destination': pair[1]}
-        
-        if pair in activePerPair:
-            p['active'] = activePerPair[pair]
-            
-        if pair in avgsPerPair:
-            p.update(avgsPerPair[pair])
-            
-        pairs.append(p)
-    
-    statsDict['pairs'] = pairs
-    
-    # State per VO    
+
+
+def _getStateCountPerVo():
     perVoDict = {}
     for voJob in File.objects.values('file_state', 'job__vo_name').annotate(count = Count('file_state')):
         vo = voJob['job__vo_name']
@@ -151,8 +78,112 @@ def statistics(httpRequest):
     perVo = []
     for (vo, states) in perVoDict.iteritems():
         perVo.append({'vo': vo, 'states': states})
+    return perVo
+
+
+
+def _getAllPairs(source = None, dest = None):
+    pairs = []
     
-    statsDict['vos'] = perVo
+    query = Job.objects.values('source_se', 'dest_se')
+    if source:
+        query = query.filter(source_se = source)
+    if dest:
+        query = query.filter(dest_se = dest)
+    
+    for pair in query.distinct():
+        pairs.append((pair['source_se'], pair['dest_se']))
+    return pairs
+
+
+
+def _getAveragePerPair(pairs):
+    avg = {}
+    
+    for (source, dest) in pairs:
+        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES)\
+                              .filter(job__source_se = source,
+                                      job__dest_se = dest)\
+                              .aggregate(Avg('tx_duration'), Avg('throughput'))
+        avg[(source, dest)] = {'avgDuration': pairAvg['tx_duration__avg'],
+                               'avgThroughput': pairAvg['throughput__avg']}
+    
+    return avg
+
+
+
+def _getFilesInStatePerPair(pairs, states):
+    statesPerPair = {}
+    
+    for (source, dest) in pairs:
+        statesPerPair[(source, dest)] = []
+        
+        statesInPair = File.objects.filter(file_state__in = states,
+                                     job__source_se = source,
+                                     job__dest_se = dest)\
+                             .values('file_state')\
+                             .annotate(count = Count('file_state'))
+
+        for st in statesInPair:
+            statesPerPair[(source, dest)].append((st['file_state'], st['count']))
+        
+    return statesPerPair
+
+
+
+def _getStatsPerPair(source_se = None, dest_se = None):
+    allPairs      = _getAllPairs(source_se, dest_se)
+    avgsPerPair   = _getAveragePerPair(allPairs)
+    activePerPair = _getFilesInStatePerPair(allPairs, ACTIVE_STATES) 
+        
+    pairs = []
+    for pair in sorted(allPairs):
+        p = {'source': pair[0], 'destination': pair[1]}
+        
+        if pair in activePerPair:
+            p['active'] = activePerPair[pair]
+            
+        if pair in avgsPerPair:
+            p.update(avgsPerPair[pair])
+            
+        pairs.append(p)
+    return pairs
+
+
+
+def _getUniqueReasons():
+    return File.objects.filter(reason__isnull = False)\
+                       .exclude(reason = '')\
+                       .values('reason')\
+                       .annotate(count = Count('reason'))\
+                       .order_by('-count')
+
+
+
+def statistics(httpRequest):
+    statsDict = {}
+    statsDict['request'] = httpRequest
+    
+    # Filters
+    source_se = httpRequest.GET['source_se'] if 'source_se' in httpRequest.GET else None  
+    dest_se   = httpRequest.GET['dest_se'] if 'dest_se' in httpRequest.GET else None    
+    
+    # Overall (all times)
+    overall = _getCountPerState(STATES)        
+    
+    # Success rate (last hour)
+    lastHour = _getCountPerState(STATES, timedelta(hours = 1))
+    if lastHour['total'] > 0:
+        overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
+    else:
+        overall['rate'] = 0
+        
+    statsDict['overall'] = overall
+    
+    statsDict['uniqueReasons'] = _getUniqueReasons()
+    statsDict['servers'] = _getTransferAndSubmissionPerHost()
+    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se)   
+    statsDict['vos'] = _getStateCountPerVo();
     
     # Render
     return render(httpRequest, 'statistics.html',
