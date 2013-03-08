@@ -115,7 +115,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< scoped_pt
 			// if it is a auto-share don't assign a configuration
 			if (ptr->active_transfers == auto_share) continue;
 			// assign the share configuration to transfer job
-			out.push_back(ptr);
+// TODO			out.push_back(ptr);
 			// a configuration has been assigned
 			assign_count++;
 			// set the respective flags
@@ -144,7 +144,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< scoped_pt
 			ptr->vo = Configuration::pub;
 			ptr->active_transfers = 0;
 			// add to out
-			out.push_back(ptr);
+// TODO			out.push_back(ptr);
 		}
 
 		// if it is a auto-share don't assign a configuration
@@ -160,18 +160,6 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< scoped_pt
 		if (both.first && both.second) break;
 	}
 }
-//
-//string ConfigurationAssigner::fileUrlToSeName(string url) {
-//
-//	static const regex re(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
-//	smatch what;
-//
-//	if (regex_match(url, what, re, match_extra)) {
-//		// indexes are shifted by 1 because at index 0 is the whole string
-//		return string(what[1]);
-//	} else
-//		return string();
-//}
 
 } /* namespace server */
 } /* namespace fts3 */
