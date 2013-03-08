@@ -150,7 +150,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< scoped_pt
 		// if it is a auto-share don't assign a configuration
 		if (ptr->active_transfers == auto_share) continue;
 		// assign the share configuration to transfer job
-		out.push_back(ptr);
+// TODO		out.push_back(ptr);
 		// a configuration has been assigned
 		assign_count++;
 		// set the respective flags
