@@ -2,7 +2,7 @@
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Name: fts-mysql
-Version: 0.0.1 
+Version: 0.0.1
 Release: 78%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet 
