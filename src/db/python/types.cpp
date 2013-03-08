@@ -92,7 +92,9 @@ void export_types(void) {
         .def_readonly("CRED_ID", &TransferFiles::CRED_ID)
         .def_readonly("CHECKSUM_METHOD", &TransferFiles::CHECKSUM_METHOD)
         .def_readonly("SOURCE_SPACE_TOKEN", &TransferFiles::SOURCE_SPACE_TOKEN)
-        .def_readonly("DEST_SPACE_TOKEN", &TransferFiles::DEST_SPACE_TOKEN);
+        .def_readonly("DEST_SPACE_TOKEN", &TransferFiles::DEST_SPACE_TOKEN)
+    	.def_readonly("SOURCE_SE", &TransferFiles::SOURCE_SE)
+        .def_readonly("DEST_SE", &TransferFiles::DEST_SE);
 
     class_<TransferJobs>("TransferJobs", init<>())
         .def_readonly("JOB_ID", &TransferJobs::JOB_ID)
@@ -101,8 +103,6 @@ void export_types(void) {
         .def_readonly("JOB_PARAMS", &TransferJobs::JOB_PARAMS)
         .def_readonly("SOURCE", &TransferJobs::SOURCE)
         .def_readonly("DEST", &TransferJobs::DEST)
-        .def_readonly("SOURCE_SE", &TransferJobs::SOURCE_SE)
-        .def_readonly("DEST_SE", &TransferJobs::DEST_SE)
         .def_readonly("USER_DN", &TransferJobs::USER_DN)
         .def_readonly("AGENT_DN", &TransferJobs::AGENT_DN)
         .def_readonly("USER_CRED", &TransferJobs::USER_CRED)

@@ -154,10 +154,11 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
     	soci::rowset<soci::row> rs = (
     			sql.prepare <<
     						" SELECT DISTINCT source_se, dest_se, vo_name "
-    						" FROM t_job "
-				 	 	 	" WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
-    						" AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
-    						" AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
+    						" FROM t_job, t_file "
+				 	 	 	" WHERE t_file.job_id = t_job.job_id "
+				 	 	 	"	AND t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
+    						" 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
+    						" 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
     						<<
     						(vos == "*" ? "" : " AND t_job.vo_name IN " + vos)
     		);
@@ -176,10 +177,11 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
         // Query depends on vos
         std::string query;
-		query = "SELECT t_job.* FROM t_job "
-							"WHERE t_job.job_finished IS NULL AND "
+		query = "SELECT t_job.* FROM t_job, t_file "
+							"WHERE t_job.job_id = t_file.job_id AND "
+							"	   t_job.job_finished IS NULL AND "
 							"      t_job.cancel_job IS NULL AND "
-							"      t_job.source_se = :source AND t_job.dest_se = :dest AND "
+							"      t_file.source_se = :source AND t_file.dest_se = :dest AND "
 							"      (t_job.reuse_job = 'N' OR t_job.reuse_job IS NULL) AND "
 							"      t_job.job_state IN ('ACTIVE', 'READY', 'SUBMITTED') AND "
 							"      t_job.vo_name = :vo AND "
@@ -206,9 +208,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 			for (soci::rowset<TransferJobs>::const_iterator ji = rs.begin(); ji != rs.end(); ++ji) {
 
 				TransferJobs const & job = *ji;
-
-				if (getInOutOfSe(job.SOURCE_SE, job.DEST_SE))
-					jobs.push_back(new TransferJobs(job));
+				jobs.push_back(new TransferJobs(job));
 			}
 		}
     }
@@ -365,7 +365,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        const std::string & sourceSE, const std::string & destSe, int bring_online, std::string metadata) {
+        int bring_online, std::string metadata) {
 
     const std::string currenthost = hostname;
     const std::string initialState = bring_online > 0 ? "STAGING" : "SUBMITTED";
@@ -384,7 +384,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
                "                   copy_pin_lifetime, lan_connection, fail_nearline, checksum_method, "
-               "                   reuse_job, source_se, dest_se, bring_online, job_metadata)                                     "
+               "                   reuse_job, bring_online, job_metadata)                                     "
                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
                "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,                  "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
@@ -394,15 +394,15 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                soci::use(voName), soci::use(params), soci::use(currenthost), soci::use(delegationID),
                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                soci::use(copyPinLifeTime), soci::use(lanConnection), soci::use(failNearLine), soci::use(checksumMethod),
-               soci::use(reuse, reuseIndicator), soci::use(sourceSE), soci::use(destSe), soci::use(bring_online), soci::use(metadata);
+               soci::use(reuse, reuseIndicator), soci::use(bring_online), soci::use(metadata);
 
         // Insert src/dest pair
-        std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy;
+        std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;
         int filesize, fileIndex;
         soci::statement pairStmt = (
         		sql.prepare <<
-        		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index) "
-                "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex)",
+        		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se) "
+                "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se)",
                 soci::use(jobId),
                 soci::use(initialState),
                 soci::use(sourceSurl),
@@ -411,7 +411,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                 soci::use(filesize),
                 soci::use(metadata),
                 soci::use(selectionStrategy),
-                soci::use(fileIndex)
+                soci::use(fileIndex),
+        		soci::use(sourceSe),
+        		soci::use(destSe)
         	);
         std::vector<job_element_tupple>::const_iterator iter;
         for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter) {
@@ -422,6 +424,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             metadata   = iter->metadata;
             selectionStrategy = iter->selectionStrategy;
             fileIndex = iter->fileIndex;
+            sourceSe = iter->source_se;
+            destSe = iter->dest_se;
             pairStmt.execute();
         }
 
@@ -1196,9 +1200,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
         soci::rowset<TransferJobs> rs = (sql.prepare << query);
         for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
             TransferJobs const& tjob = *i;
-
-            if (getInOutOfSe(tjob.SOURCE_SE, tjob.DEST_SE))
-                    jobs.push_back(new TransferJobs(tjob));
+            jobs.push_back(new TransferJobs(tjob));
         }
     }
     catch (std::exception& e) {

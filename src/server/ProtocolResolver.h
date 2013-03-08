@@ -102,7 +102,7 @@ public:
 	 *
 	 * @param job_id - transfer job ID
 	 */
-	ProtocolResolver(string &job_id);
+	ProtocolResolver(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs);
 
 	/**
 	 * Destructor.
@@ -208,8 +208,10 @@ private:
 	/// stores the protocol parameters that have been resolved
 	optional<protocol> prot;
 
-	// the transfer job ID
-	string& job_id;
+	// the transfer file
+	TransferFiles* file;
+
+	vector< scoped_ptr<ShareConfig> >& cfgs;
 };
 
 FTS3_SERVER_NAMESPACE_END

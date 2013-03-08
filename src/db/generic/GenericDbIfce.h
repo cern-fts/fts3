@@ -67,6 +67,8 @@
 struct job_element_tupple{
     std::string source;
     std::string destination;
+    std::string source_se;
+    std::string dest_se;
     std::string checksum;
     int filesize;
     std::string metadata;
@@ -93,7 +95,7 @@ public:
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
                                  const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-				 const std::string & sourceSE, const std::string & destSe, int bringonline, std::string metadata) = 0;
+                                 int bringonline, std::string metadata) = 0;
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) = 0;
     

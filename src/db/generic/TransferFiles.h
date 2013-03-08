@@ -46,6 +46,8 @@ public:
  std::string FILE_STATE;
  std::string LOGICAL_NAME;
  std::string SOURCE_SURL;
+ std::string SOURCE_SE;//					    VARCHAR2(255)
+ std::string DEST_SE;//					    VARCHAR2(255)
  std::string DEST_SURL;
  std::string AGENT_DN;
  std::string ERROR_SCOPE;

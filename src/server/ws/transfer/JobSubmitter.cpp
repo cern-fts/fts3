@@ -100,30 +100,26 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 		cred = *job->credential;
 	}
 
-	if (!job->transferJobElements.empty()) {
-		string* src = (*job->transferJobElements.begin())->source;
-		string* dest = (*job->transferJobElements.begin())->dest;
-
-		sourceSe = fileUrlToSeName(*src);
-		if(sourceSe.empty()){
-			std::string errMsg = "Can't extract hostname from url " + *src;
-			throw Err_Custom(errMsg);
-		}
-		checkSe(sourceSe);
-		
-		destinationSe = fileUrlToSeName(*dest);
-		if(destinationSe.empty()){
-			std::string errMsg = "Can't extract hostname from url " + *dest;		
-			throw Err_Custom(errMsg);
-		}
-		checkSe(destinationSe);
-	}
-
 	// extract the job elements from tns3__TransferJob object and put them into a vector
     vector<tns3__TransferJobElement * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
+
+		string sourceSe = fileUrlToSeName(src);
+		if(sourceSe.empty()){
+			std::string errMsg = "Can't extract hostname from url " + src;
+			throw Err_Custom(errMsg);
+		}
+		checkSe(sourceSe);
+
+		string destinationSe = fileUrlToSeName(dest);
+		if(destinationSe.empty()){
+			std::string errMsg = "Can't extract hostname from url " + dest;
+			throw Err_Custom(errMsg);
+		}
+		checkSe(destinationSe);
+
     	// check weather the source and destination files are supported
     	if (!checkProtocol(dest)) throw Err_Custom("Destination protocol not supported (" + dest + ")");
     	if (!checkProtocol(src) && !checkIfLfn(src)) throw Err_Custom("Source protocol not supported (" + src + ")");
@@ -131,6 +127,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     	job_element_tupple tupple;
     	tupple.source = src;
     	tupple.destination = dest;
+    	tupple.source_se = sourceSe;
+    	tupple.dest_se = destinationSe;
     	tupple.checksum = string();
 		tupple.filesize = 0;
 		tupple.metadata = string();
@@ -169,31 +167,25 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 	// do the common initialization
 	init(job->jobParams);
 
-        if (!job->transferJobElements.empty()) {
-                string* src = (*job->transferJobElements.begin())->source;
-                string* dest = (*job->transferJobElements.begin())->dest;
-
-        		sourceSe = fileUrlToSeName(*src);
-        		if(sourceSe.empty()){
-        			std::string errMsg = "Can't extract hostname from url " + *src;
-        			throw Err_Custom(errMsg);
-        		}
-        		checkSe(sourceSe);
-
-        		destinationSe = fileUrlToSeName(*dest);
-        		if(destinationSe.empty()){
-        			std::string errMsg = "Can't extract hostname from url " + *dest;
-        			throw Err_Custom(errMsg);
-        		}
-        		checkSe(destinationSe);
-        }
-
-
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
     vector<tns3__TransferJobElement2 * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
+
+		string sourceSe = fileUrlToSeName(src);
+		if(sourceSe.empty()){
+			std::string errMsg = "Can't extract hostname from url " + src;
+			throw Err_Custom(errMsg);
+		}
+		checkSe(sourceSe);
+
+		string destinationSe = fileUrlToSeName(dest);
+		if(destinationSe.empty()){
+			std::string errMsg = "Can't extract hostname from url " + dest;
+			throw Err_Custom(errMsg);
+		}
+		checkSe(destinationSe);
 
     	// check weather the destination file is supported
     	if (!checkProtocol(dest)) {
@@ -206,6 +198,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     	job_element_tupple tupple;
     	tupple.source = src;
     	tupple.destination = dest;
+    	tupple.source_se = sourceSe;
+    	tupple.dest_se = destinationSe;
         if((*it)->checksum)
     		tupple.checksum = *(*it)->checksum;
 		tupple.filesize = 0;
@@ -239,39 +233,6 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
 	// do the common initialization
 	init(job->jobParams);
-
-	if (!job->transferJobElements.empty()) {
-
-		string src =
-				job->transferJobElements.front()->source.empty()
-				?
-				string()
-				:
-				job->transferJobElements.front()->source.front()
-				;
-
-		string dest =
-				job->transferJobElements.front()->dest.empty()
-				?
-				string()
-				:
-				job->transferJobElements.front()->dest.front()
-				;
-
-		sourceSe = fileUrlToSeName(src);
-		if(sourceSe.empty()){
-			string errMsg = "Can't extract hostname from url " + src;
-			throw Err_Custom(errMsg);
-		}
-		checkSe(sourceSe);
-
-		destinationSe = fileUrlToSeName(dest);
-		if(destinationSe.empty()){
-			std::string errMsg = "Can't extract hostname from url " + dest;
-			throw Err_Custom(errMsg);
-		}
-		checkSe(destinationSe);
-	}
 
 	// index of the file
 	int fileIndex = 0;
@@ -319,6 +280,23 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 			// set the values for source and destination
 			tupple.source = it_p->first;
 			tupple.destination = it_p->second;
+
+			string sourceSe = fileUrlToSeName(it_p->first);
+			if(sourceSe.empty()){
+				string errMsg = "Can't extract hostname from url " + it_p->first;
+				throw Err_Custom(errMsg);
+			}
+			checkSe(sourceSe);
+
+			string destinationSe = fileUrlToSeName(it_p->second);
+			if(destinationSe.empty()){
+				std::string errMsg = "Can't extract hostname from url " + it_p->second;
+				throw Err_Custom(errMsg);
+			}
+			checkSe(destinationSe);
+
+			tupple.source_se = sourceSe;
+			tupple.dest_se = destinationSe;
 
 			jobs.push_back(tupple);
 		}
@@ -373,8 +351,6 @@ string JobSubmitter::submit() {
             params.get(JobParameterHandler::FAIL_NEARLINE),
             params.get(JobParameterHandler::CHECKSUM_METHOD),
             params.get(JobParameterHandler::REUSE),
-            sourceSe,
-            destinationSe,
             params.get<int>(JobParameterHandler::BRING_ONLINE),
             params.get<string>(JobParameterHandler::JOB_METADATA)
     	);

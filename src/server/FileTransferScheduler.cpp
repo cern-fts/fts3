@@ -41,33 +41,24 @@
 using namespace db;
 using namespace fts3::ws;
 
-string FileTransferScheduler::fileUrlToSeName(string url) {
 
-	static const regex re(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
-	smatch what;
-
-	if (regex_match(url, what, re, match_extra)) {
-		// indexes are shifted by 1 because at index 0 is the whole string
-		return string(what[1]);
-	} else
-		return string();
-}
-
-FileTransferScheduler::FileTransferScheduler(TransferFiles* file) :
-		file (file), db (DBSingleton::instance().getDBObjectInstance())
+FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs) :
+		file (file),
+		cfgs (cfgs),
+		db (DBSingleton::instance().getDBObjectInstance())
 		{
 
-	srcSeName = fileUrlToSeName(file->SOURCE_SURL);
-	destSeName = fileUrlToSeName(file->DEST_SURL);
+	srcSeName = file->SOURCE_SE;
+	destSeName = file->DEST_SE;
 }
 
 FileTransferScheduler::~FileTransferScheduler() {
 
 }
 
-bool FileTransferScheduler::schedule(bool optimize, bool manual) {
+bool FileTransferScheduler::schedule(bool optimize) {
 
-	if(optimize && !manual) {
+	if(optimize && cfgs.empty()) {
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);
 		// update file state to READY
 		if(allowed == true) {
@@ -80,31 +71,15 @@ bool FileTransferScheduler::schedule(bool optimize, bool manual) {
 		return false;
 	}
 
-	// source, destination & VO
-	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(file->JOB_ID);
-	vector< tuple<string, string, string> >::iterator it;
-
-	// get the number of configurations assigned to the transfer job
-	optional<unsigned int> count = db->getJobConfigCount(file->JOB_ID);
-	// check if count has been initialized, in principal it must been initialized, but anyway it is good to check
-	if (count) {
-		if ( (*count != cfgs.size()) && manual) {
-			// the configuration has been removed,
-			// return false in next round configuration will be reassigned
-			// or auto-tuner will take care of it
-			return false;
-		}
-	}
+	vector< scoped_ptr<ShareConfig> >::iterator it;
 
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
 
-		string source = get<SOURCE>(*it);
-		string destination = get<DESTINATION>(*it);
-		string vo = get<VO>(*it);
+		string source = (*it)->source;
+		string destination = (*it)->destination;
+		string vo = (*it)->vo;
 
-		scoped_ptr<ShareConfig> cfg (
-				db->getShareConfig(source, destination, vo)
-			);
+		scoped_ptr<ShareConfig>& cfg = *it;
 
 		if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
 

@@ -52,30 +52,10 @@ ConfigurationAssigner::~ConfigurationAssigner() {
 
 }
 
-bool ConfigurationAssigner::assign() {
+void ConfigurationAssigner::assign(vector< scoped_ptr<ShareConfig> >& out) {
 
-	string job_id = file->JOB_ID;
-
-	// check if a configuration has already been assigned to the transfer job
-	optional<unsigned int> count = db->getJobConfigCount(job_id);
-	if (count) {
-		// if the job was already checked and no configuration was assigned return false
-		if (*count == 0) {
-			return false;
-		}
-		// make sure nothing was deleted
-		if (*count == db->countJobShareConfig(job_id)) {
-			return true;
-		}
-		// if the configuration changed remove the assignments for the job (it will be reassigned)
-		db->delJobShareConfig(job_id);
-	}
-
-	// the flag that will be returned
-	bool assigned = false;
-
-	string source = fileUrlToSeName(file->SOURCE_SURL);
-	string destination = fileUrlToSeName(file->DEST_SURL);
+	string source = file->SOURCE_SE;
+	string destination = file->DEST_SE;
 	string vo = file->VO_NAME;
 
 	// possible configurations for SE
@@ -86,8 +66,8 @@ bool ConfigurationAssigner::assign() {
 			( cfg_type( share(Configuration::any, destination, vo), content(false, true) ) )
 			( cfg_type( share(Configuration::any, Configuration::wildcard, vo), content(false, true) ) )
 			;
-	// assign configuration at SE level
-	assigned |= assignShareCfg(se_cfgs);
+
+	assignShareCfg(se_cfgs, out);
 
 	// get group names for source and destination SEs
 	string sourceGr = db->getGroupForSe(source);
@@ -101,16 +81,11 @@ bool ConfigurationAssigner::assign() {
 		gr_cfgs.push_back( cfg_type( share(sourceGr, Configuration::any, vo), content(true, false) ) );
 	if (!destinationGr.empty())
 		gr_cfgs.push_back( cfg_type( share(Configuration::any, destinationGr, vo), content(false, true) ) );
-	// assign configuration at SE group level
-	assigned |= assignShareCfg(gr_cfgs);
 
-	// set the number of assigned configurations
-	db->setJobConfigCount(job_id, assign_count);
-
-	return assigned;
+	assignShareCfg(gr_cfgs, out);
 }
 
-bool ConfigurationAssigner::assignShareCfg(list<cfg_type> arg) {
+void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< scoped_ptr<ShareConfig> >& out) {
 
 	content both (false, false);
 
@@ -140,9 +115,7 @@ bool ConfigurationAssigner::assignShareCfg(list<cfg_type> arg) {
 			// if it is a auto-share don't assign a configuration
 			if (ptr->active_transfers == auto_share) continue;
 			// assign the share configuration to transfer job
-			db->addJobShareConfig(
-					file->JOB_ID, ptr->source, ptr->destination, ptr->vo
-				);
+			out.push_back(ptr);
 			// a configuration has been assigned
 			assign_count++;
 			// set the respective flags
@@ -170,16 +143,14 @@ bool ConfigurationAssigner::assignShareCfg(list<cfg_type> arg) {
 			ptr->destination = destination;
 			ptr->vo = Configuration::pub;
 			ptr->active_transfers = 0;
-			// add to DB
-			db->addShareConfig(ptr.get());
+			// add to out
+			out.push_back(ptr);
 		}
 
 		// if it is a auto-share don't assign a configuration
 		if (ptr->active_transfers == auto_share) continue;
 		// assign the share configuration to transfer job
-		db->addJobShareConfig(
-				file->JOB_ID, ptr->source, ptr->destination, ptr->vo
-			);
+		out.push_back(ptr);
 		// a configuration has been assigned
 		assign_count++;
 		// set the respective flags
@@ -188,21 +159,19 @@ bool ConfigurationAssigner::assignShareCfg(list<cfg_type> arg) {
 		// if both source and destination are covert break;
 		if (both.first && both.second) break;
 	}
-
-	return both.first || both.second;
 }
-
-string ConfigurationAssigner::fileUrlToSeName(string url) {
-
-	static const regex re(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
-	smatch what;
-
-	if (regex_match(url, what, re, match_extra)) {
-		// indexes are shifted by 1 because at index 0 is the whole string
-		return string(what[1]);
-	} else
-		return string();
-}
+//
+//string ConfigurationAssigner::fileUrlToSeName(string url) {
+//
+//	static const regex re(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+//	smatch what;
+//
+//	if (regex_match(url, what, re, match_extra)) {
+//		// indexes are shifted by 1 because at index 0 is the whole string
+//		return string(what[1]);
+//	} else
+//		return string();
+//}
 
 } /* namespace server */
 } /* namespace fts3 */

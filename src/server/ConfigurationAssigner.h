@@ -78,18 +78,11 @@ public:
 	virtual ~ConfigurationAssigner();
 
 	/**
-	 * Assigns share configurations to the transfer-job
-	 * containing the file that was used to construct the object
+	 * Gets the respective configurations without assigning them persistently in DB to transfer-job
 	 *
-	 * If the job was already assigned with configurations
-	 * while another file was been scheduled, the configurations
-	 * are NOT reassigned, unless some of the configurations
-	 * that have been assigned were deleted
-	 *
-	 *
-	 * @return true if at least one configuration was assigned, false otherwise
+	 * @return list of configurations
 	 */
-	bool assign();
+	void assign(vector< scoped_ptr<ShareConfig> >& out);
 
 private:
 
@@ -101,16 +94,7 @@ private:
 	/// number of share configuration that have been assigned to the job
 	int assign_count;
 
-	/**
-	 * Assigns share configuration to the job.
-	 * The first configuration in the list has higher priority.
-	 * The assignment has to cover both source and destination.
-	 *
-	 * @param arg - the list of possible configurations
-	 *
-	 * @return true if at least one configuration has been assigned, false otherwise
-	 */
-	bool assignShareCfg(list<cfg_type> arg);
+	void assignShareCfg(list<cfg_type> arg, vector< scoped_ptr<ShareConfig> >& out);
 
 	/**
 	 * Retrieves SE name from URL
@@ -119,7 +103,7 @@ private:
 	 *
 	 * @return SE name
 	 */
-	string fileUrlToSeName(string url);
+//	string fileUrlToSeName(string url);
 
 	static const int auto_share = -1;
 };

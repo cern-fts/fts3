@@ -63,8 +63,6 @@ namespace soci
             job.DEST           = v.get<std::string>("dest", "");
             job.AGENT_DN       = v.get<std::string>("agent_dn", "");
             job.SUBMIT_HOST    = v.get<std::string>("submit_host");
-            job.SOURCE_SE      = v.get<std::string>("source_se");
-            job.DEST_SE        = v.get<std::string>("dest_se");
             job.USER_DN        = v.get<std::string>("user_dn");
             job.USER_CRED      = v.get<std::string>("user_cred");
             job.CRED_ID        = v.get<std::string>("cred_id");
@@ -115,7 +113,9 @@ namespace soci
             file.JOB_METADATA  = v.get<std::string>("job_metadata", "");
             file.USER_FILESIZE = v.get<int>("user_filesize", 0);
             file.FILE_INDEX    = v.get<int>("file_index", 0);
-	    file.BRINGONLINE_TOKEN = v.get<std::string>("bringonline_token", "");
+            file.BRINGONLINE_TOKEN = v.get<std::string>("bringonline_token", "");
+            file.SOURCE_SE = v.get<std::string>("source_se", "");
+            file.DEST_SE = v.get<std::string>("dest_se", "");
 
             unsigned size = static_cast<unsigned>(v.get<int>("filesize", 0));
             std::ostringstream str;

@@ -46,8 +46,6 @@ public:
  std::string JOB_PARAMS;//					    VARCHAR2(255)
  std::string SOURCE;// 					    VARCHAR2(255)
  std::string DEST;//						    VARCHAR2(255)
- std::string SOURCE_SE;//					    VARCHAR2(255)
- std::string DEST_SE;//					    VARCHAR2(255)
  std::string USER_DN;//				   NOT NULL VARCHAR2(1024)
  std::string AGENT_DN;//					    VARCHAR2(1024)
  std::string USER_CRED;//					    VARCHAR2(255)

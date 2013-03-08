@@ -61,7 +61,7 @@ public:
 	 *
 	 * @param file - the file for which the scheduling decision has to be taken
 	 */
-	FileTransferScheduler(TransferFiles* file);
+	FileTransferScheduler(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs);
 
 	/**
 	 * Destructor
@@ -74,7 +74,7 @@ public:
 	 *
 	 * @return returns true if file status has been changed to Ready, false otherwise
 	 */
-	bool schedule(bool optimize, bool manual);
+	bool schedule(bool optimize);
 
 private:
 
@@ -85,18 +85,10 @@ private:
 	/// name of the destination SE
 	string destSeName;
 
+	vector< scoped_ptr<ShareConfig> >& cfgs;
 
 	/// DB singleton instance
 	GenericDbIfce* db;
-
-	/**
-	 * Retrieves SE name from URL
-	 *
-	 * @param url - URL to file
-	 *
-	 * @return SE name
-	 */
-	string fileUrlToSeName(string url);
 
 	/**
 	 * Creates a could-not-allocate-credits error message

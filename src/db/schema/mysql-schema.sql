@@ -337,12 +337,6 @@ CREATE TABLE t_job (
 -- Dest site name - the destination cluster name
   dest                 VARCHAR(255),
 --
--- Source SE host name
-  source_se            VARCHAR(255),
---
--- Dest SE host name
-  dest_se              VARCHAR(255),
---
 -- the DN of the user starting the job - they are the only one
 -- who can sumbit/cancel
   user_dn              VARCHAR(1024) NOT NULL,
@@ -501,6 +495,12 @@ CREATE TABLE t_file (
 -- The Destination
   dest_surl        VARCHAR(1100),
 --
+-- Source SE host name
+  source_se            VARCHAR(255),
+--
+-- Dest SE host name
+  dest_se              VARCHAR(255),  
+--
 -- The agent who is transferring the file. This is only valid when the file
 -- is in 'Active' state
   agent_dn         VARCHAR(1024),
@@ -622,7 +622,6 @@ CREATE INDEX job_job_state    ON t_job(job_state);
 CREATE INDEX job_vo_name      ON t_job(vo_name);
 CREATE INDEX job_cred_id      ON t_job(user_dn(800),cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
-CREATE INDEX job_job_A     ON t_job(source_se,dest_se);
 CREATE INDEX job_priority     ON t_job(priority);
 CREATE INDEX job_submit_time     ON t_job(submit_time);
 

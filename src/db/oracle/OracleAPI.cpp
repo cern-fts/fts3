@@ -181,10 +181,12 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     
     std::string bring_distinct =
-    		" SELECT distinct t_job.source_se, t_job.dest_se, t_job.vo_name FROM t_job "
-    		" WHERE t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
-			" AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
-			" AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') ";
+    		" SELECT distinct t_file.source_se, t_file.dest_se, t_job.vo_name "
+    		" FROM t_job, t_file "
+    		" WHERE t_file.job_id = t_job.job_id "
+    		"	AND t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
+			" 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
+			" 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') ";
 
     if (vos != "*") {
     	bring_distinct +=
@@ -202,8 +204,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " 	t_job.dest,  "
             " 	t_job.agent_dn, "
             " 	t_job.submit_host, "
-            " 	t_job.source_se, "
-            "	t_job.dest_se, "
             " 	t_job.user_dn, "
             " 	t_job.user_cred, "
             " 	t_job.cred_id,  "
@@ -216,11 +216,12 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " 	t_job.copy_pin_lifetime, "
             " 	t_job.checksum_method, "
     		" 	t_job.bring_online "
-            " FROM t_job"
+            " FROM t_job, t_file"
             " WHERE "
-            " 	t_job.job_finished is NULL"
+    		" 	t_job.job_id = t_file.job_id "
+            " 	AND t_job.job_finished is NULL"
             " 	AND t_job.CANCEL_JOB is NULL"
-    		" 	AND t_job.source_se=:1 and t_job.dest_se=:2 "
+    		" 	AND t_file.source_se=:1 and t_file.dest_se=:2 "
     		" 	AND t_job.VO_NAME=:3 "
             " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
@@ -282,30 +283,29 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 			tr_jobs->DEST = r->getString(6);
 			tr_jobs->AGENT_DN = r->getString(7);
 			tr_jobs->SUBMIT_HOST = r->getString(8);
-			tr_jobs->SOURCE_SE = r->getString(9);
-			tr_jobs->DEST_SE = r->getString(10);
-			tr_jobs->USER_DN = r->getString(11);
-			tr_jobs->USER_CRED = r->getString(12);
-			tr_jobs->CRED_ID = r->getString(13);
-			tr_jobs->SPACE_TOKEN = r->getString(14);
-			tr_jobs->STORAGE_CLASS = r->getString(15);
-			tr_jobs->INTERNAL_JOB_PARAMS = r->getString(16);
-			tr_jobs->OVERWRITE_FLAG = r->getString(17);
-			tr_jobs->SOURCE_SPACE_TOKEN = r->getString(18);
-			tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
-			tr_jobs->COPY_PIN_LIFETIME = r->getInt(20);
-			tr_jobs->CHECKSUM_METHOD = r->getString(21);
-			tr_jobs->BRINGONLINE = r->getInt(22);
+			tr_jobs->USER_DN = r->getString(9);
+			tr_jobs->USER_CRED = r->getString(10);
+			tr_jobs->CRED_ID = r->getString(11);
+			tr_jobs->SPACE_TOKEN = r->getString(12);
+			tr_jobs->STORAGE_CLASS = r->getString(13);
+			tr_jobs->INTERNAL_JOB_PARAMS = r->getString(14);
+			tr_jobs->OVERWRITE_FLAG = r->getString(15);
+			tr_jobs->SOURCE_SPACE_TOKEN = r->getString(16);
+			tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(17);
+			tr_jobs->COPY_PIN_LIFETIME = r->getInt(18);
+			tr_jobs->CHECKSUM_METHOD = r->getString(19);
+			tr_jobs->BRINGONLINE = r->getInt(20);
 
 				//check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-			if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
-				bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-				if (process == true) {
+//			if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
+//				// TODO ...
+//				bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
+//				if (process == true) {
 					jobs.push_back(tr_jobs);
-				} else {
-					delete tr_jobs;
-				}
-			}
+//				} else {
+//					delete tr_jobs;
+//				}
+//			}
 		}
 		conn->destroyResultset(s, r);
 	}
@@ -506,7 +506,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
             " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
             "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
             " 		j.SPACE_TOKEN, j.copy_pin_lifetime, j.bring_online, "
-            "		f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index, f1.BRINGONLINE_TOKEN  "
+            "		f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index, f1.BRINGONLINE_TOKEN,"
+            "		f1.source_se, f1.dest_se  "
     		"FROM t_file f1, t_job j "
     		"WHERE "
     		"	f1.job_id = j.job_id AND "
@@ -561,6 +562,8 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                 tr_files->JOB_METADATA = r->getString(17);
                 tr_files->FILE_INDEX = r->getInt(18);
                 tr_files->BRINGONLINE_TOKEN = r->getString(19);		
+                tr_files->SOURCE_SE = r->getString(20);
+                tr_files->DEST_SE = r->getString(21);
 		
 			
                 files[tr_files->VO_NAME].push_back(tr_files);
@@ -595,7 +598,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        const std::string & sourceSE, const std::string & destSe, int bringonline, std::string metadata) {
+        int bringonline, std::string metadata) {
 
 
     const std::string initial_state = bringonline > 0? "STAGING" : "SUBMITTED";
@@ -603,11 +606,30 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     const std::string currenthost = ftsHostName; //current hostname
     const std::string tag_job_statement = "tag_job_statement";
     const std::string tag_file_statement = "tag_file_statement";
-    const std::string job_statement = "INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
-            " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
-            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, SOURCE_SE, DEST_SE, bring_online, job_metadata) VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23, :24)";
-    const std::string file_statement = "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl,checksum,user_filesize,file_metadata, selection_strategy, file_index) VALUES (:1,:2,:3,:4,:5,:6,:7,:8, :9)";
+    const std::string job_statement =
+    		"INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
+            " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, "
+            " SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
+            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, bring_online, job_metadata) "
+            " VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22)";
     
+    const std::string file_statement =
+    		" INSERT "
+    		" INTO t_file ("
+    		"	job_id, "
+    		"	file_state, "
+    		"	source_surl, "
+    		"	dest_surl, "
+    		"	checksum, "
+    		"	user_filesize, "
+    		"	file_metadata, "
+    		"	selection_strategy, "
+    		"	file_index, "
+    		"	source_se, "
+    		"	dest_se "
+    		" ) "
+    		" VALUES (:1,:2,:3,:4,:5,:6,:7,:8, :9, :10, :11)";
+
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
     oracle::occi::Connection* pooledConnection = NULL;        
@@ -643,10 +665,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_job_statement->setNull(20, oracle::occi::OCCISTRING);
         else
             s_job_statement->setString(20, "Y"); //reuse session for this job
-        s_job_statement->setString(21, sourceSE); //reuse session for this job
-        s_job_statement->setString(22, destSe); //reuse session for this job    
-        s_job_statement->setInt(23, bringonline); //reuse session for this job
-        s_job_statement->setString(24, metadata); // job metadata
+
+        s_job_statement->setInt(21, bringonline); //reuse session for this job
+        s_job_statement->setString(22, metadata); // job metadata
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id
@@ -662,7 +683,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_file_statement->setInt(6, iter->filesize);
             s_file_statement->setString(7, iter->metadata);
             s_file_statement->setString(8, iter->selectionStrategy);	   
-            s_file_statement->setInt(9, iter->fileIndex);
+            s_file_statement->setInt(9, iter->fileIndex);//todo
+            s_file_statement->setString(10, iter->source_se);
+            s_file_statement->setString(11, iter->dest_se);
             s_file_statement->executeUpdate();
         }
         conn->commit(pooledConnection);
@@ -2207,8 +2230,6 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                 " t_job.dest,  "
                 " t_job.agent_dn, "
                 " t_job.submit_host, "
-                " t_job.source_se, "
-                " t_job.dest_se, "
                 " t_job.user_dn, "
                 " t_job.user_cred, "
                 " t_job.cred_id,  "
@@ -2239,8 +2260,6 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                 " t_job.dest,  "
                 " t_job.agent_dn, "
                 " t_job.submit_host, "
-                " t_job.source_se, "
-                " t_job.dest_se, "
                 " t_job.user_dn, "
                 " t_job.user_cred, "
                 " t_job.cred_id,  "
@@ -2284,29 +2303,27 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
             tr_jobs->DEST = r->getString(6);
             tr_jobs->AGENT_DN = r->getString(7);
             tr_jobs->SUBMIT_HOST = r->getString(8);
-            tr_jobs->SOURCE_SE = r->getString(9);
-            tr_jobs->DEST_SE = r->getString(10);
-            tr_jobs->USER_DN = r->getString(11);
-            tr_jobs->USER_CRED = r->getString(12);
-            tr_jobs->CRED_ID = r->getString(13);
-            tr_jobs->SPACE_TOKEN = r->getString(14);
-            tr_jobs->STORAGE_CLASS = r->getString(15);
-            tr_jobs->INTERNAL_JOB_PARAMS = r->getString(16);
-            tr_jobs->OVERWRITE_FLAG = r->getString(17);
-            tr_jobs->SOURCE_SPACE_TOKEN = r->getString(18);
-            tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(19);
-            tr_jobs->COPY_PIN_LIFETIME = r->getInt(20);
-            tr_jobs->CHECKSUM_METHOD = r->getString(21);
+            tr_jobs->USER_DN = r->getString(9);
+            tr_jobs->USER_CRED = r->getString(10);
+            tr_jobs->CRED_ID = r->getString(11);
+            tr_jobs->SPACE_TOKEN = r->getString(12);
+            tr_jobs->STORAGE_CLASS = r->getString(13);
+            tr_jobs->INTERNAL_JOB_PARAMS = r->getString(14);
+            tr_jobs->OVERWRITE_FLAG = r->getString(15);
+            tr_jobs->SOURCE_SPACE_TOKEN = r->getString(16);
+            tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(17);
+            tr_jobs->COPY_PIN_LIFETIME = r->getInt(18);
+            tr_jobs->CHECKSUM_METHOD = r->getString(19);
 
             //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-            if (std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
-                bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-                if (process == true) {
+//            if (std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
+//                bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
+//                if (process == true) {
                     jobs.push_back(tr_jobs);
-                } else {
-                    delete tr_jobs;
-                }
-            }
+//                } else {
+//                    delete tr_jobs;
+//                }
+//            }
 
         }
         conn->destroyResultset(s, r);

@@ -133,10 +133,6 @@ private:
 	string cred;
 	/// copy lifetime pin
 	int copyPinLifeTime;
-	/// source SE (it's the same for all files in the transfer job)
-	string sourceSe;
-	/// destination SE (it's the same for all files in the transfer job)
-	string destinationSe;
 
 	/// maps job parameter values to their names
 	JobParameterHandler params;

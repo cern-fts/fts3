@@ -275,15 +275,18 @@ protected:
                         // if there are no more files for that VO just continue
                         if (!temp.get()) continue;
 
-                        source_hostname = extractHostname(temp->SOURCE_SURL);
-                        destin_hostname = extractHostname(temp->DEST_SURL);
+                        source_hostname = temp->SOURCE_SE;
+                        destin_hostname = temp->DEST_SE;
 
                         /*check if manual config exist for this pair and vo*/
+
+                        vector< scoped_ptr<ShareConfig> > cfgs;
+
                         ConfigurationAssigner cfgAssigner(temp.get());
-                        manualConfigExists = cfgAssigner.assign();
+                        cfgAssigner.assign(cfgs);
 
                         bool optimize = false;
-                        if (enableOptimization.compare("true") == 0 && manualConfigExists == false) {
+                        if (enableOptimization.compare("true") == 0 && cfgs.empty()) {
                             optimize = true;
                             opt_config = new OptimizerSample();
                             DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
@@ -295,14 +298,14 @@ protected:
                             opt_config = NULL;
                         }
 
-                        FileTransferScheduler scheduler(temp.get());
-                        if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
+                        FileTransferScheduler scheduler(temp.get(), cfgs);
+                        if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
-                            if (optimize && manualConfigExists == false) {
+                            if (optimize && cfgs.empty()) {
                                 DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
                             } else {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
-                                ProtocolResolver resolver(temp->JOB_ID);
+                                ProtocolResolver resolver(temp.get(), cfgs);
                                 protocolExists = resolver.resolve();
                                 if (protocolExists) {
 
@@ -617,12 +620,13 @@ protected:
                 createJobFile(job_id, urls);
 
                 /*check if manual config exist for this pair and vo*/
+                vector< scoped_ptr<ShareConfig> > cfgs;
                 ConfigurationAssigner cfgAssigner(tempUrl);
-                manualConfigExists = cfgAssigner.assign();
+                cfgAssigner.assign(cfgs);
 
                 bool optimize = false;
 
-                if (enableOptimization.compare("true") == 0 && manualConfigExists == false) {
+                if (enableOptimization.compare("true") == 0 && cfgs.empty()) {
                     optimize = true;
                     opt_config = new OptimizerSample();
                     DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
@@ -635,14 +639,14 @@ protected:
                 }
 
 
-                FileTransferScheduler scheduler(tempUrl);
-                if (scheduler.schedule(optimize, manualConfigExists)) { /*SET TO READY STATE WHEN TRUE*/
+                FileTransferScheduler scheduler(tempUrl, cfgs);
+                if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
                     std::stringstream internalParams;
                     if (optimize && manualConfigExists == false) {
                         DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
                     } else {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
-                        ProtocolResolver resolver(job_id);
+                        ProtocolResolver resolver(tempUrl, cfgs);
                         protocolExists = resolver.resolve();
                         if (protocolExists) {
 

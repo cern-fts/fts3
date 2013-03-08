@@ -39,17 +39,19 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(string &job_id) : db(DBSingleton::instance().getDBObjectInstance()), job_id(job_id) {
+ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs) :
+		db(DBSingleton::instance().getDBObjectInstance()),
+		file(file),
+		cfgs(cfgs) {
 
-	vector< tuple<string, string, string> > cfgs = db->getJobShareConfig(job_id);
-	vector< tuple<string, string, string> >::iterator it;
+	vector< scoped_ptr<ShareConfig> >::iterator it;
 
 	// loop over the assigned configurations
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
 
 		// get the source and destination
-		string source = get<SOURCE>(*it);
-		string destination = get<DESTINATION>(*it);
+		string source = (*it)->source;
+		string destination = (*it)->destination;
 		// create source-destination pair
 		pair<string, string> entry = pair<string, string>(source, destination);
 
@@ -218,12 +220,8 @@ bool ProtocolResolver::resolve() {
 
 void ProtocolResolver::autotune() {
 
-	scoped_ptr<TransferJobs> ptr (
-			db->getTransferJob(job_id)
-		);
-
-	string source = ptr->SOURCE_SE;
-	string destination = ptr->DEST_SE;
+	string source = file->SOURCE_SE;
+	string destination = file->DEST_SE;
 
 	OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->initOptimizer(source, destination, 0);

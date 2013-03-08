@@ -198,7 +198,7 @@ void OracleMonitoring::getTransferFiles(const std::string& jobId,
 
 void OracleMonitoring::getJob(const std::string& jobId, TransferJobs& job) {
     const std::string tag   = "getJob";
-    const std::string query = "SELECT USER_DN, JOB_ID, VO_NAME, SOURCE_SE, DEST_SE,\
+    const std::string query = "SELECT USER_DN, JOB_ID, VO_NAME,\
                                      JOB_STATE, SUBMIT_TIME, FINISH_TIME, REASON,\
                                      SOURCE_SPACE_TOKEN, SPACE_TOKEN\
                                FROM T_JOB\
@@ -215,8 +215,6 @@ void OracleMonitoring::getJob(const std::string& jobId, TransferJobs& job) {
         job.USER_DN = r->getString(1);
         job.JOB_ID = r->getString(2);
         job.VO_NAME = r->getString(3);
-        job.SOURCE_SE = r->getString(4);
-        job.DEST_SE = r->getString(5);
         job.JOB_STATE = r->getString(6);
         job.SUBMIT_TIME = conv->toTimeT(r->getTimestamp(7));
         job.FINISH_TIME = conv->toTimeT(r->getTimestamp(8));
@@ -241,7 +239,7 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
 
     tag << "filterJobs" << inVos.size() << "-" << inStates.size();
 
-    query << "SELECT USER_DN, JOB_ID, VO_NAME, SOURCE_SE, DEST_SE, JOB_STATE, "
+    query << "SELECT USER_DN, JOB_ID, VO_NAME, JOB_STATE, "
              "       SUBMIT_TIME, FINISH_TIME, SOURCE_SPACE_TOKEN, SPACE_TOKEN "
              "FROM T_JOB "
              "WHERE SUBMIT_TIME > :notBefore";
@@ -277,8 +275,6 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
         job.USER_DN = r->getString(1);
         job.JOB_ID  = r->getString(2);
         job.VO_NAME = r->getString(3);
-        job.SOURCE_SE = r->getString(4);
-        job.DEST_SE = r->getString(5);
         job.JOB_STATE = r->getString(6);
         job.SUBMIT_TIME = conv->toTimeT(r->getTimestamp(7));
         job.FINISH_TIME = conv->toTimeT(r->getTimestamp(8));
