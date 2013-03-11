@@ -1313,8 +1313,8 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
             	   " FROM t_file, t_job "
             	   " WHERE t_file.file_state = 'ACTIVE' "
             	   "	AND t_job.job_id = t_file.job_id "
-            	   "	AND t_job.source_se = :source "
-            	   "	AND t_job.dest_se = :dest",
+            	   "	AND t_file.source_se = :source "
+            	   "	AND t_file.dest_se = :dest",
                    soci::use(source_hostname),
                    soci::use(destin_hostname),
                    soci::into(numberOfActives);
@@ -1418,7 +1418,7 @@ void MySqlAPI::addOptimizer(time_t when, double throughput, const std::string & 
 
         sql << "SELECT COUNT(*) FROM t_file, t_job WHERE "
                "    t_file.file_state = 'ACTIVE' AND t_job.job_id = t_file.job_id AND "
-               "    t_job.source_se = :source AND t_job.dest_se = :dest",
+               "    t_file.source_se = :source AND t_file.dest_se = :dest",
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(actives);
 
@@ -2660,7 +2660,7 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
         sql << "SELECT COUNT(*) FROM t_file, t_job, t_job_share_config "
                "WHERE (t_file.file_state = 'ACTIVE' OR t_file.file_state = 'READY') AND "
                "      t_file.job_id = t_job.job_id AND "
-               "      t_job.source_se = :source AND "
+               "      t_file.source_se = :source AND "
                "      t_job.job_id = t_job_share_config.job_id AND "
                "      t_job_share_config.source = '(*)' AND "
                "      t_job_share_config.destination = '*' AND "
@@ -2683,7 +2683,7 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
         sql << "SELECT COUNT(*) FROM t_file, t_job, t_job_share_config "
                "WHERE (t_file.file_state = 'ACTIVE'  OR t_file.file_state = 'READY') AND "
                "      t_file.job_id = t_job.job_id AND "
-               "      t_job.dest_se = :source AND "
+               "      t_file.dest_se = :source AND "
                "      t_job.job_id = t_job_share_config.job_id AND "
                "      t_job_share_config.source = '*' AND "
                "      t_job_share_config.destination = '(*)' AND "
@@ -3079,7 +3079,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 						" 	AND t_job.bring_online > 0 "
 						"	AND t_file.file_state = 'STAGING' "
 						"	AND t_file.staging_start IS NOT NULL "
-						"	AND t_job.source_se = :hostV ",
+						"	AND t_file.source_se = :hostV ",
 						soci::use(hostV),
 						soci::into(currentStagingFilesNoConfig)
 				;
@@ -3094,7 +3094,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 						" 	AND t_job.bring_online > 0 "
 						"	AND t_file.staging_start IS NULL "
 						"	AND t_file.file_state = 'STAGING' "
-						"	AND t_job.source_se = :source_se "
+						"	AND t_file.source_se = :source_se "
 						" ORDER BY t_file.file_id "
 						" LIMIT :limit",
 						soci::use(hostV),
@@ -3123,7 +3123,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					"	AND t_file.file_state = 'STAGING' "
 					"	AND t_file.STAGING_START IS NOT NULL "
 					" 	AND t_job.vo_name = :vo_name "
-					"	AND t_job.source_se = :source_se ",
+					"	AND t_file.source_se = :source_se ",
 					soci::use(voName),
 					soci::use(hostName),
 					soci::into(currentStagingFilesConfig)
@@ -3139,7 +3139,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					"	AND t_job.bring_online > 0 "
 					" 	AND t_file.staging_START IS NULL "
 					"	AND t_file.file_state = 'STAGING' "
-					"	AND t_job.source_se = :source_se "
+					"	AND t_file.source_se = :source_se "
 					"	AND t_job.vo_name = :vo_name "
 					" ORDER BY t_file.file_id "
 					" LIMIT :limit",

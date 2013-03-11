@@ -2409,7 +2409,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
             				      " FROM t_optimize WHERE  "
             				      " throughput is NULL and source_se = :1 and dest_se=:2 and file_id=0 ";
 					      			
-    std::string current_active = " select count(*) from t_file,t_job where file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_job.source_se=:1 and t_job.dest_se=:2";   
+    std::string current_active = " select count(*) from t_file,t_job where file_state='ACTIVE' and t_job.job_id=t_file.job_id and t_file.source_se=:1 and t_file.dest_se=:2";
 
     std::string pick_next_sample = " SELECT nostreams, timeout, buffer "
             			   "  FROM t_optimize WHERE  "
@@ -2695,7 +2695,7 @@ void OracleAPI::addOptimizer(time_t when, double throughput, const std::string &
     std::string query = "insert into "
             " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, datetime) "
             " values(:1,:2,:3,:4,:5,(select count(*) from  t_file, t_job where t_file.file_state='ACTIVE' and t_job.job_id = t_file.job_id and "
-            " t_job.source_se=:6 and t_job.dest_se=:7),:8,:9,:10) ";
+            " t_file.source_se=:6 and t_file.dest_se=:7),:8,:9,:10) ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;        
@@ -5538,7 +5538,7 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
     		"where "
     		"	(f.file_state = 'ACTIVE'  or f.file_state = 'READY') and "
     		"	f.job_id = j.job_id and "
-    		"	j.source_se = :1 and "
+    		"	f.source_se = :1 and "
     		"	j.job_id = c.job_id and "
     		"	c.source = '(*)' and "
     		"	c.destination = '*' and "
@@ -5600,7 +5600,7 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
     		"where "
     		"	(f.file_state = 'ACTIVE' or f.file_state = 'READY') and "
     		"	f.job_id = j.job_id and "
-    		"	j.dest_se = :1 and "
+    		"	f.dest_se = :1 and "
     		"	j.job_id = c.job_id and "
     		"	c.source = '*' and "
     		"	c.destination = '(*)' and "
@@ -6444,18 +6444,18 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     std::string query2 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' "
-		" and t_job.source_se=:1 and rownum<=:2 and t_job.vo_name=:3 ORDER BY t_file.file_id ";	
+		" and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3 ORDER BY t_file.file_id ";
     std::string query3 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_job.source_se=:1 "
+		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_file.source_se=:1 "
 		" and rownum<=:1 ORDER BY t_file.file_id ";
     std::string query4 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null "
-		" and t_job.vo_name=:1 and t_job.source_se=:2";
+		" and t_job.vo_name=:1 and t_file.source_se=:2";
     std::string query5 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null and t_job.source_se=:1 ";				
+		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null and t_file.source_se=:1 ";
 			
 		
     oracle::occi::Statement* s1 = NULL;
