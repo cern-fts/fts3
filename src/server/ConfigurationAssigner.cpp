@@ -52,7 +52,7 @@ ConfigurationAssigner::~ConfigurationAssigner() {
 
 }
 
-void ConfigurationAssigner::assign(vector< scoped_ptr<ShareConfig> >& out) {
+void ConfigurationAssigner::assign(vector< shared_ptr<ShareConfig> >& out) {
 
 	string source = file->SOURCE_SE;
 	string destination = file->DEST_SE;
@@ -85,7 +85,7 @@ void ConfigurationAssigner::assign(vector< scoped_ptr<ShareConfig> >& out) {
 	assignShareCfg(gr_cfgs, out);
 }
 
-void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< scoped_ptr<ShareConfig> >& out) {
+void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_ptr<ShareConfig> >& out) {
 
 	content both (false, false);
 

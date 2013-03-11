@@ -26,7 +26,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include <sstream>
 
@@ -42,7 +41,7 @@ using namespace db;
 using namespace fts3::ws;
 
 
-FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs) :
+FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs) :
 		file (file),
 		cfgs (cfgs),
 		db (DBSingleton::instance().getDBObjectInstance())
@@ -71,7 +70,7 @@ bool FileTransferScheduler::schedule(bool optimize) {
 		return false;
 	}
 
-	vector< scoped_ptr<ShareConfig> >::iterator it;
+	vector< shared_ptr<ShareConfig> >::iterator it;
 
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
 
@@ -79,7 +78,7 @@ bool FileTransferScheduler::schedule(bool optimize) {
 		string destination = (*it)->destination;
 		string vo = (*it)->vo;
 
-		scoped_ptr<ShareConfig>& cfg = *it;
+		shared_ptr<ShareConfig>& cfg = *it;
 
 		if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
 
@@ -170,7 +169,7 @@ string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg) {
 	vector<ShareConfig*>::iterator it;
 
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
-		scoped_ptr<ShareConfig> ptr (*it);
+		shared_ptr<ShareConfig> ptr (*it);
 		if (ptr->active_transfers) {
 			if (it != cfgs.begin()) ss << ", ";
 			ss << ptr->vo;

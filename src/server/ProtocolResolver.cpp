@@ -31,7 +31,6 @@
 #include <vector>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/scoped_ptr.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -39,12 +38,12 @@ using namespace fts3::ws;
 using namespace fts3::common;
 using namespace boost::assign;
 
-ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs) :
+ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs) :
 		db(DBSingleton::instance().getDBObjectInstance()),
 		file(file),
 		cfgs(cfgs) {
 
-	vector< scoped_ptr<ShareConfig> >::iterator it;
+	vector< shared_ptr<ShareConfig> >::iterator it;
 
 	// loop over the assigned configurations
 	for (it = cfgs.begin(); it != cfgs.end(); it++) {
@@ -113,7 +112,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 	string source = (*link).first;
 	string destination = (*link).second;
 
-	scoped_ptr<LinkConfig> cfg (
+	shared_ptr<LinkConfig> cfg (
 			db->getLinkConfig(source, destination)
 		);
 

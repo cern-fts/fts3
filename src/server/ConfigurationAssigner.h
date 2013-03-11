@@ -32,6 +32,7 @@
 #include <list>
 
 #include <boost/tuple/tuple.hpp>
+#include <boost/shared_ptr.hpp>
 
 namespace fts3 {
 namespace server {
@@ -82,7 +83,7 @@ public:
 	 *
 	 * @return list of configurations
 	 */
-	void assign(vector< scoped_ptr<ShareConfig> >& out);
+	void assign(vector< shared_ptr<ShareConfig> >& out);
 
 private:
 
@@ -94,7 +95,7 @@ private:
 	/// number of share configuration that have been assigned to the job
 	int assign_count;
 
-	void assignShareCfg(list<cfg_type> arg, vector< scoped_ptr<ShareConfig> >& out);
+	void assignShareCfg(list<cfg_type> arg, vector< shared_ptr<ShareConfig> >& out);
 
 	/**
 	 * Retrieves SE name from URL

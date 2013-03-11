@@ -35,6 +35,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/shared_ptr.hpp>
 
 FTS3_SERVER_NAMESPACE_START
 
@@ -102,7 +103,7 @@ public:
 	 *
 	 * @param job_id - transfer job ID
 	 */
-	ProtocolResolver(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs);
+	ProtocolResolver(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs);
 
 	/**
 	 * Destructor.
@@ -211,7 +212,7 @@ private:
 	// the transfer file
 	TransferFiles* file;
 
-	vector< scoped_ptr<ShareConfig> >& cfgs;
+	vector< shared_ptr<ShareConfig> >& cfgs;
 };
 
 FTS3_SERVER_NAMESPACE_END

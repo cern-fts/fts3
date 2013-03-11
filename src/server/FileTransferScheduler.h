@@ -34,6 +34,7 @@
 #include "boost/tuple/tuple.hpp"
 #include <boost/optional.hpp>
 #include <boost/regex.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "db/generic/SingleDbInstance.h"
 
@@ -61,7 +62,7 @@ public:
 	 *
 	 * @param file - the file for which the scheduling decision has to be taken
 	 */
-	FileTransferScheduler(TransferFiles* file, vector< scoped_ptr<ShareConfig> >& cfgs);
+	FileTransferScheduler(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs);
 
 	/**
 	 * Destructor
@@ -85,7 +86,7 @@ private:
 	/// name of the destination SE
 	string destSeName;
 
-	vector< scoped_ptr<ShareConfig> >& cfgs;
+	vector< shared_ptr<ShareConfig> >& cfgs;
 
 	/// DB singleton instance
 	GenericDbIfce* db;

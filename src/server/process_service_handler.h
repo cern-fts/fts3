@@ -50,7 +50,7 @@ limitations under the License. */
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>  
 #include <sys/param.h>
-#include <boost/scoped_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 #include "name_to_uid.h"
 #include "producer_consumer_common.h"
 #include "TransferFileHandler.h"
@@ -280,7 +280,7 @@ protected:
 
                         /*check if manual config exist for this pair and vo*/
 
-                        vector< scoped_ptr<ShareConfig> > cfgs;
+                        vector< shared_ptr<ShareConfig> > cfgs;
 
                         ConfigurationAssigner cfgAssigner(temp.get());
                         cfgAssigner.assign(cfgs);
@@ -620,7 +620,7 @@ protected:
                 createJobFile(job_id, urls);
 
                 /*check if manual config exist for this pair and vo*/
-                vector< scoped_ptr<ShareConfig> > cfgs;
+                vector< shared_ptr<ShareConfig> > cfgs;
                 ConfigurationAssigner cfgAssigner(tempUrl);
                 cfgAssigner.assign(cfgs);
 
