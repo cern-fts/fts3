@@ -1514,18 +1514,18 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE t_file.file_state in ('READY','ACTIVE') AND "
                "      t_job.job_id = t_file.job_id AND "
-               "      t_job.source_se = :source ",
+               "      t_file.source_se = :source ",
                soci::use(source_hostname), soci::into(nActiveSource);
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE t_file.file_state in ('READY','ACTIVE') AND "
                "      t_job.job_id = t_file.job_id AND "
-               "      t_job.dest_se = :dst",
+               "      t_file.dest_se = :dst",
                soci::use(destin_hostname), soci::into(nActiveDest);
 
         soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file, t_job "
                                                        "WHERE t_job.job_id = t_file.job_id AND "
-                                                       "      t_job.source_se = :source AND t_job.dest_se = :dst AND "
+                                                       "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                                        "      file_state IN ('FAILED','FINISHED') AND "
                                                        "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))",
                                                        soci::use(source_hostname), soci::use(destin_hostname));
@@ -1539,21 +1539,21 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE t_job.job_id = t_file.job_id AND "
-               "      t_job.source_se = :source AND t_job.dest_se = :dst AND "
+               "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                "      file_state in ('READY','ACTIVE')",
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(nActive);
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE t_job.job_id = t_file.job_id AND "
-               "      t_job.source_se = :source AND t_job.dest_se = :dst AND "
+               "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                "      file_state = 'FINISHED'",
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(nFinishedAll);
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE t_job.job_id = t_file.job_id AND "
-               "      t_job.source_se = :source AND t_job.dest_se = :dst AND "
+               "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                "      file_state = 'FAILED'",
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(nFailedAll);
