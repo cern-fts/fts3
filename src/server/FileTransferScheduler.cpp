@@ -44,8 +44,7 @@ using namespace fts3::ws;
 FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs) :
 		file (file),
 		cfgs (cfgs),
-		db (DBSingleton::instance().getDBObjectInstance())
-		{
+		db (DBSingleton::instance().getDBObjectInstance()) {
 
 	srcSeName = file->SOURCE_SE;
 	destSeName = file->DEST_SE;
