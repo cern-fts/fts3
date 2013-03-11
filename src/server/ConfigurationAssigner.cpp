@@ -107,7 +107,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 		if (!db->isThereLinkConfig(source, destination)) continue;
 
 		// check if there is a VO share
-		scoped_ptr<ShareConfig> ptr (
+		shared_ptr<ShareConfig> ptr (
 				db->getShareConfig(source, destination, vo)
 			);
 
@@ -115,7 +115,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 			// if it is a auto-share don't assign a configuration
 			if (ptr->active_transfers == auto_share) continue;
 			// assign the share configuration to transfer job
-// TODO			out.push_back(ptr);
+			out.push_back(ptr);
 			// a configuration has been assigned
 			assign_count++;
 			// set the respective flags
@@ -144,13 +144,13 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 			ptr->vo = Configuration::pub;
 			ptr->active_transfers = 0;
 			// add to out
-// TODO			out.push_back(ptr);
+			out.push_back(ptr);
 		}
 
 		// if it is a auto-share don't assign a configuration
 		if (ptr->active_transfers == auto_share) continue;
 		// assign the share configuration to transfer job
-// TODO		out.push_back(ptr);
+		out.push_back(ptr);
 		// a configuration has been assigned
 		assign_count++;
 		// set the respective flags
