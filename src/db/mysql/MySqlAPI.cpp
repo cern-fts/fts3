@@ -1257,8 +1257,8 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     		" WHERE t_job.job_id = t_file.job_id "
     		"	AND t_file.file_state = 'FAILED' "
     		" 	AND t_file.reason LIKE '%operation timeout%' "
-    		"	AND t_job.source_se = :sourceSe "
-    		" 	AND t_job.dest_se = :destSe  "
+    		"	AND t_file.source_se = :sourceSe "
+    		" 	AND t_file.dest_se = :destSe  "
     		" 	AND (t_file.finish_time > (CURRENT_TIMESTAMP - INTERVAL '30' minute)) "
     		" ORDER BY t_file.finish_time DESC",
     		soci::use(source_hostname),
