@@ -257,7 +257,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		}
 
 		// pair sources with destinations
-		map<string, string> pairs = pairSourceAndDestination(
+		list< pair<string, string> > pairs = pairSourceAndDestination(
 				(*it)->source,
 				(*it)->dest
 			);
@@ -267,7 +267,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		}
 
 		// add each pair
-		map<string, string>::iterator it_p;
+		list< pair<string, string> >::iterator it_p;
 		for (it_p = pairs.begin(); it_p != pairs.end(); it_p++) {
 			// check weather the destination file is supported
 			if (!checkProtocol(it_p->second)) {
@@ -405,11 +405,11 @@ void JobSubmitter::checkSe(string se) {
 
 }
 
-map<string, string> JobSubmitter::pairSourceAndDestination(vector<string> sources, vector<string> destinations) {
+list< pair<string, string> > JobSubmitter::pairSourceAndDestination(vector<string> sources, vector<string> destinations) {
 
 	static const string srm = "srm";
 
-	map<string, string> ret;
+	list< pair<string, string> > ret;
 
 	vector<string>::iterator it_s, it_d;
 
@@ -422,7 +422,9 @@ map<string, string> JobSubmitter::pairSourceAndDestination(vector<string> source
 		for (it_d = destinations.begin(); it_d != destinations.end(); it_d++) {
 			// if the destination uses the same protocol ...
 			if (it_d->find(protocol) == 0 || it_d->find(srm) == 0 || protocol == srm) { // TODO verify!!!
-				ret.insert(make_pair(*it_s, *it_d));
+				ret.push_back(
+						make_pair(*it_s, *it_d)
+					);
 			}
 		}
 	}

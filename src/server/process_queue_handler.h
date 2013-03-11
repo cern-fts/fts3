@@ -131,13 +131,17 @@ public:
                     updated = DBSingleton::instance().getDBObjectInstance()->terminateReuseProcess(std::string(msg.job_id).substr(0, 36));
                 }
                 if(updated == true){
-                updated = DBSingleton::instance().
+                	updated = DBSingleton::instance().
                         getDBObjectInstance()->
                         updateFileTransferStatus(job, msg.file_id, std::string(msg.transfer_status),
                         std::string(msg.transfer_message), static_cast<int> (msg.process_id),
                         msg.filesize, msg.timeInSecs);
-			
-		}
+
+                	if (std::string(msg.transfer_status) == "FAILED") {
+						DBSingleton::instance().
+								getDBObjectInstance()->useFileReplica(msg.job_id, msg.file_id);
+                	}
+                }
                 if(updated == true){		
                 updated = DBSingleton::instance().
                         getDBObjectInstance()->
