@@ -389,7 +389,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,                  "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
                "        :copyPinLifetime, :lanConnection, :failNearline, :checksumMethod,             "
-               "        :reuseJob, :sourceSE, :destSE, :bring_online, :job_metadata)",
+               "        :reuseJob, :bring_online, :job_metadata)",
                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
                soci::use(voName), soci::use(params), soci::use(currenthost), soci::use(delegationID),
                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
