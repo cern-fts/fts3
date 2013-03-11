@@ -392,6 +392,10 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
     conn->releasePooledConnection(pooledConnection);
 }
 
+void OracleAPI::useFileReplica(std::string jobId, int fileId) {
+
+}
+
 unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
     unsigned int updated = 0;    
     const std::string tag1 = "updateFileStatus1";

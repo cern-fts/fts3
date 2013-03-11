@@ -246,6 +246,50 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
     }
 }
 
+void MySqlAPI::useFileReplica(std::string jobId, int fileId) {
+	soci::session sql(connectionPool);
+
+	try {
+
+		soci::indicator ind;
+		int id;
+
+		sql <<
+				" SELECT MIN(f1.file_id) AS file_id "
+				" FROM t_file f2, t_file f1 "
+				" WHERE f2.job_id = :jobId "
+				"	AND f2.file_id = :fileId "
+				"	AND f1.file_index = f2.file_index "
+				"	AND f1.job_id = :jobId "
+				"	AND f1.file_state = 'NOT_USED' ",
+				soci::use(jobId),
+				soci::use(fileId),
+				soci::use(jobId),
+				soci::into(id, ind)
+		;
+
+		// make sure it's not NULL
+		if (ind == soci::i_ok) {
+			sql.begin();
+
+			sql <<
+					" UPDATE t_file "
+					" SET file_state = 'SUBMITTED' "
+					" WHERE job_id = :jobId "
+					"	AND file_id = :fileId",
+					soci::use(jobId),
+					soci::use(id)
+			;
+
+			sql.commit();
+		}
+
+    } catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+}
 
 unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string status) {
     soci::session sql(connectionPool);

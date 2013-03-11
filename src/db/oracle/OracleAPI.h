@@ -259,6 +259,8 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
+    virtual void useFileReplica(std::string jobId, int fileId);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

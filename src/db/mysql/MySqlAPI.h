@@ -250,6 +250,8 @@ public:
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
+    virtual void useFileReplica(std::string jobId, int fileId);
+
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;
