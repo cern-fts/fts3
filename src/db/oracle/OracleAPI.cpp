@@ -394,6 +394,84 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
 
 void OracleAPI::useFileReplica(std::string jobId, int fileId) {
 
+
+	std::string selectTag = "selectUseFileReplica";
+	std::string selectStmt =
+			" SELECT MIN(f1.file_id) AS file_id "
+			" FROM t_file f2, t_file f1 "
+			" WHERE f2.job_id = :1 "
+			"	AND f2.file_id = :2 "
+			"	AND f1.file_index = f2.file_index "
+			"	AND f1.job_id = :3 "
+			"	AND f1.file_state = 'NOT_USED' "
+			;
+
+	std::string updateTag = "updateUseFileReplica";
+	std::string updateStmt =
+			" UPDATE t_file "
+			" SET file_state = 'SUBMITTED' "
+			" WHERE job_id = :1 "
+			"	AND file_id = :2 "
+			;
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+		s = conn->createStatement(selectStmt, selectTag, pooledConnection);
+		s->setString(1, jobId);
+		s->setInt(2, fileId);
+		s->setString(3, jobId);
+		r = conn->createResultset(s, pooledConnection);
+
+		if (r->next() && !r->isNull(1)) {
+			int id = r->getInt(1);
+
+	        s2 = conn->createStatement(updateStmt, updateTag, pooledConnection);
+	        s2->setString(1, jobId);
+	        s2->setInt(2, id);
+	        s2->executeUpdate();
+	        conn->commit(pooledConnection);
+	        conn->destroyStatement(s2, updateTag, pooledConnection);
+		}
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, selectTag, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+		conn->rollback(pooledConnection);
+		if(s && r)
+			conn->destroyResultset(s, r);
+		if (s)
+			conn->destroyStatement(s, selectTag, pooledConnection);
+		if(s2)
+			conn->destroyStatement(s2, updateTag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    } catch (...) {
+		conn->rollback(pooledConnection);
+		if(s && r)
+			conn->destroyResultset(s, r);
+		if (s)
+			conn->destroyStatement(s, selectTag, pooledConnection);
+		if(s2)
+			conn->destroyStatement(s2, updateTag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+
+        conn->releasePooledConnection(pooledConnection);
+
+
+
+
+
 }
 
 unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {
