@@ -489,7 +489,8 @@ __attribute__((constructor)) void begin(void) {
     pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);   
-    StaticSslLocking::init_locks();     
+    StaticSslLocking::init_locks();
+    fileManagement = new FileManagement();     
 }
 
 int main(int argc, char **argv) {
@@ -594,10 +595,7 @@ int main(int argc, char **argv) {
 
     g_file_id = file_id;
     g_job_id = job_id;
-    
-
-    fileManagement = new FileManagement(infosys);
-    
+        
     std::string bytes_to_string("");
     struct stat statbufsrc;
     struct stat statbufdest;
@@ -752,7 +750,7 @@ int main(int argc, char **argv) {
         timeout_to_string = to_string<unsigned int>(timeout, std::dec);
         msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
         msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, dest_token_desc);
-        msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);
+        msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);	   
         msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);	
 
         int checkError = fileManagement->getLogStream(logStream);
@@ -800,30 +798,8 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO User specified filesize:" << strArray[4] << '\n'; //A
             log << fileManagement->timestamp() << "INFO File metadata:" << strArray[5] << '\n'; //A
             log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A
-	    log << fileManagement->timestamp() << "INFO Bringonline token:" << strArray[6] << '\n'; //A
-	    
-	    log << fileManagement->timestamp() << "INFO Send transfer start message to monitoring" << '\n';	    	
-	
-	    /*
-            if ( errCode==ENOENT && (bringonline > 0 || copy_pin_lifetime > 0) && isSrmUrl(strArray[1])) { 
-                if (gfal2_bring_online(handle, (strArray[1]).c_str(), copy_pin_lifetime, bringonline,
-                                       stagingToken, 0, sizeof(stagingToken), &tmp_err) < 0) {
-                    std::string tempError(tmp_err->message);
-                    const int errCode = tmp_err->code;
-                    log << fileManagement->timestamp() << "ERROR Failed to stage file, errno:" << tempError << '\n';
-                    errorMessage = "Failed to stage file: " + tempError;
-                    errorScope = SOURCE;
-                    reasonClass = mapErrnoToString(errCode);
-                    errorPhase = TRANSFER_PREPARATION;
-                    g_clear_error(&tmp_err);
-                    goto stop;
-                }
-                //staging finished without failure
-		log << fileManagement->timestamp() << "INFO Staging file" << source_size << " finished" << '\n';
-            }
-	    */
-
-
+	    log << fileManagement->timestamp() << "INFO Bringonline token:" << strArray[6] << '\n'; //A	    	    	
+		   
             //set to active
             log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
             reporter.constructMessage(false, job_id, strArray[0], "ACTIVE", "", diff, source_size);	    
@@ -840,15 +816,12 @@ int main(int argc, char **argv) {
 
             /*set infosys to gfal2*/
             if (handle) {
-                char *bdii = (char *) fileManagement->getBDII().c_str();
-                if (bdii) {
-                    log << fileManagement->timestamp() << "INFO BDII:" << bdii << '\n';
-                    if (std::string(bdii).compare("false") == 0) {
+                    log << fileManagement->timestamp() << "INFO BDII:" << infosys << '\n';
+                    if (infosys.compare("false") == 0) {
                         gfal2_set_opt_boolean(handle, "BDII", "ENABLED", false, NULL);
                     } else {
-                        gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", bdii, NULL);
+                        gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
                     }
-                }
             }
 
             /*gfal2 debug logging*/

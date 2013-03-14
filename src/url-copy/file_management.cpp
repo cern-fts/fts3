@@ -40,7 +40,7 @@ static int fexists(const char *filename) {
     return -1;
 }
 
-FileManagement::FileManagement(const std::string & _bdii) : logFileName("/var/log/fts3/"), bdii(_bdii), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0) {
+FileManagement::FileManagement() : logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0) {
     try {                
         if (logFileName.length() > 0)
             directoryExists(logFileName.c_str());

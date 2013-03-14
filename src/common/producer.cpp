@@ -63,7 +63,8 @@ void runProducerMonitoring(const char* msg)
        		if ((fp = fopen(tempname.c_str(), "w")) != NULL)
        		{        					
         		size_t writesBytes = fwrite(msg, strlen(msg)+1, 1, fp); 
-			if(writesBytes==0 || errno != 0){
+			if(writesBytes==0 || errno != 0){ //try again, doesn't harm anything
+				writesBytes = fwrite(msg, strlen(msg)+1, 1, fp);
 			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
@@ -83,6 +84,7 @@ void runProducerStatus(struct message msg){
        		{        					
         		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp); 
 			if(writesBytes==0 || errno != 0){
+				writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
 			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
@@ -100,6 +102,7 @@ void runProducerStall(struct message_updater msg){
        		{        					
         		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
 			if(writesBytes==0 || errno != 0){
+				writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
 			} 
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";

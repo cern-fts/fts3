@@ -24,7 +24,7 @@
 
 class FileManagement {
 public:
-    FileManagement(const std::string & _bdii);
+    FileManagement();
     ~FileManagement();
 
 public:
@@ -56,10 +56,6 @@ public:
     	return dhost;
     }
 
-    inline std::string getBDII(){
-    	return bdii;
-    }
-
 private:
     std::string source_url;
     std::string dest_url;
@@ -73,7 +69,6 @@ private:
     std::string dateArch;
     std::string log;
     std::string fullPath;
-    std::string bdii;
     char *base_scheme;
     char *base_host;
     char *base_path;
