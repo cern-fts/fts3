@@ -28,6 +28,7 @@
 
 #include <set>
 
+#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
 namespace fts3 {
@@ -138,6 +139,10 @@ string Configuration::json(vector<string>& members) {
 void Configuration::addSe(string se, bool active) {
 
 	// make sure SE includes protocol! TODO
+	static const regex re(".+://[a-zA-Z0-9\\.-]+");
+
+	if (se != wildcard && !regex_match(se, re))
+		throw Err_Custom("The SE name should be complaint with the following convention: 'protocol://hostname' !");
 
 	//check if SE exists
 	Se* ptr = 0;
