@@ -55,7 +55,7 @@ using namespace boost;
 using namespace boost::assign;
 
 
-const regex JobSubmitter::fileUrlRegex(".+://([a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
+const regex JobSubmitter::fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
 const string JobSubmitter::false_str = "false";
 
@@ -377,7 +377,6 @@ string JobSubmitter::fileUrlToSeName(string url) {
 
 	smatch what;
 	if (regex_match(url, what, fileUrlRegex, match_extra)) {
-
 		// indexes are shifted by 1 because at index 0 is the whole string
 		return string(what[1]);
 

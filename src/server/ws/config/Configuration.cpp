@@ -136,6 +136,9 @@ string Configuration::json(vector<string>& members) {
 }
 
 void Configuration::addSe(string se, bool active) {
+
+	// make sure SE includes protocol! TODO
+
 	//check if SE exists
 	Se* ptr = 0;
 	db->getSe(ptr, se);

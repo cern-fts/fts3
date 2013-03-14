@@ -97,15 +97,6 @@ private:
 
 	void assignShareCfg(list<cfg_type> arg, vector< shared_ptr<ShareConfig> >& out);
 
-	/**
-	 * Retrieves SE name from URL
-	 *
-	 * @param url - URL to file
-	 *
-	 * @return SE name
-	 */
-//	string fileUrlToSeName(string url);
-
 	static const int auto_share = -1;
 };
 
