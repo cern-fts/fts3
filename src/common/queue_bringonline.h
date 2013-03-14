@@ -33,17 +33,16 @@ public:
     }
     ThreadSafeBringOnlineList();
     ~ThreadSafeBringOnlineList();
-
-    std::list<struct message_bringonline> getList();
+   
     void push_back(struct message_bringonline message);
     void clear();
     void updateMsg(struct message_bringonline msg);
     void checkExpiredMsg(std::vector<struct message_bringonline>& messages);
     void deleteMsg(std::vector<struct message_bringonline>& messages);
     void removeFinishedTr(struct message_bringonline message);
+    std::list<struct message_bringonline> m_list;
 
 private:
-    std::list<struct message_bringonline> m_list;
     mutable ThreadTraits::MUTEX _mutex;    
 };
 

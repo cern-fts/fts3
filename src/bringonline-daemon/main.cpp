@@ -44,6 +44,7 @@ limitations under the License. */
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include "name_to_uid.h"
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -99,7 +100,7 @@ void fts3_initialize_db_backend() {
     }
 }
 
-void issueBringOnLineStatus(gfal2_context_t handle) {
+void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
     char token[512] = {0};
     int statusA = 0;
     int statusB = 0;
@@ -110,64 +111,76 @@ void issueBringOnLineStatus(gfal2_context_t handle) {
 
     gfal2_set_opt_string_list(handle, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 1, &error);
     if (error) {
-	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message << commit;
         return;
     }
 
-    while (!stopThreads) {
-        std::list<struct message_bringonline> m_list = ThreadSafeBringOnlineList::get_instance().getList();
-        std::list<struct message_bringonline>::iterator i = m_list.begin();
-        if (!m_list.empty()) {
-            while (i != m_list.end()) {
-                cert = new UserProxyEnv((*i).proxy);
-		bool deleteIt = false;
+    if (infosys.compare("false") == 0) {
+        gfal2_set_opt_boolean(handle, "BDII", "ENABLED", false, NULL);
+    } else {
+        gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
+    }    
+    
+    while (!stopThreads) {        
+        std::list<struct message_bringonline>::iterator i = ThreadSafeBringOnlineList::get_instance().m_list.begin();	
+        if (!ThreadSafeBringOnlineList::get_instance().m_list.empty()) {
+            while (i != ThreadSafeBringOnlineList::get_instance().m_list.end()) {
+                cert = new UserProxyEnv((*i).proxy);		
+                bool deleteIt = false;					
                 if ((*i).started == false) { //issue bringonline
-		    db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
+                    db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
+
                     statusA = gfal2_bring_online(handle, ((*i).url).c_str(), 28800, 28800, token, sizeof (token), 1, &error);
+		    
                     if (statusA < 0) {
-			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE online failed " << error->code << " " << error->message << commit;
-			db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE online failed " << error->code << " " << error->message << commit;
+                        db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
                         (*i).started = true;
-			deleteIt = true;
+                        deleteIt = true;
                         g_clear_error(&error);
-                    } else if (statusA == 0) {                        
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online queued, got token " << token << commit;
-			(*i).token = std::string(token);			
-                        (*i).started = true;
-                    } else {                        
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online succeeded, got token " << token << commit;			
-			db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));			
+                    } else if (statusA == 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online queued, got token " << token << commit;
+                        (*i).token = std::string(token);
+			db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));
+                        (*i).started = true;			
+                    } else {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online succeeded, got token " << token << commit;
+                        db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));
                         (*i).started = true;
                     }
                 } else { //poll
                     statusB = gfal2_bring_online_poll(handle, ((*i).url).c_str(), ((*i).token).c_str(), &error);
-                    if (statusB < 0) {                      
-			FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling failed " << error->code << " " << error->message << commit;
-			db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
-			deleteIt = true;
-			(*i).started = true;			
+
+                    if (statusB < 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling failed " << error->code << " " << error->message << commit;
+                        db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
+                        deleteIt = true;
+                        (*i).started = true;
                         g_clear_error(&error);
-                    } else {
-			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online finished" << commit;
-			(*i).started = true;
-			db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FINISHED", "", (*i));
-                    }
+                    } else if(statusB == 0) {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling" << commit;
+                        (*i).started = true;
+                    } else{
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online finished" << commit;
+                        (*i).started = true;
+			deleteIt = true;
+                        db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FINISHED", "", (*i));
+		    }
                 }
-		
-		if(deleteIt){
-			ThreadSafeBringOnlineList::get_instance().removeFinishedTr(*i);
-			m_list.erase(i++);
-		}else{
-			++i;
-		}
-		
+
+                if (deleteIt) {
+                    ThreadSafeBringOnlineList::get_instance().m_list.erase(i++);                    
+                } else {
+                    ++i;
+                }
+
                 if (cert) {
                     delete cert;
                     cert = NULL;
                 }
             }
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
     }
 }
 
@@ -180,6 +193,7 @@ int DoServer(int argc, char** argv) {
 
     int res = 0;
     std::string proxy_file("");
+    std::string infosys("");
     gfal2_context_t handle;
 
     try {
@@ -233,6 +247,9 @@ int DoServer(int argc, char** argv) {
                 std::cerr << "BRINGONLINE  Can't open log file" << std::endl;
         }
 
+        /*set infosys to gfal2*/
+        infosys = theServerConfig().get<std::string > ("Infosys");
+
         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE starting daemon..." << commit;
         fts3_initialize_db_backend();
         struct sigaction action;
@@ -248,11 +265,11 @@ int DoServer(int argc, char** argv) {
             // Set up handle
             GError *error = NULL;
             handle = gfal2_context_new(&error);
-            if (!handle) {                
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE bad initialization " << error->code << " " << error->message << commit;
+            if (!handle) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE bad initialization " << error->code << " " << error->message << commit;
                 return -1;
             }
-            boost::thread bt2(issueBringOnLineStatus, handle);
+            boost::thread bt2(issueBringOnLineStatus, handle, infosys);
         } catch (std::exception& e) {
             throw;
         } catch (...) {
@@ -264,7 +281,7 @@ int DoServer(int argc, char** argv) {
         std::vector<struct message_bringonline> urls;
         vector<struct message_bringonline>::iterator itUrls;
 
-	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon started..." << commit;
         while (!stopThreads) {
 
             //select from the database the config for bringonline for each VO / hostname
@@ -288,7 +305,7 @@ int DoServer(int argc, char** argv) {
                         std::string dn;
                         std::string dlg_id;
                         db::DBSingleton::instance().getDBObjectInstance()->getCredentials((*itUrls).job_id, (*itUrls).file_id, dn, dlg_id);
-			
+
                         //get the proxy
                         proxy_file = generateProxy(dn, dlg_id);
                         (*itUrls).proxy = proxy_file;
@@ -312,6 +329,15 @@ int DoServer(int argc, char** argv) {
     return EXIT_SUCCESS;
 }
 
+
+__attribute__((constructor)) void begin(void) {
+    //switch to non-priviledged user to avoid reading the hostcert
+    uid_t pw_uid;
+    pw_uid = name_to_uid();
+    setuid(pw_uid);
+    seteuid(pw_uid);    
+}
+
 int main(int argc, char** argv) {
 
     pid_t child;
@@ -319,7 +345,7 @@ int main(int argc, char** argv) {
     try {
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
     } catch (Err& e) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " <<  e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
         return EXIT_FAILURE;
     } catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;

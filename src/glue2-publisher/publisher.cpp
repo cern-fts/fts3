@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
     std::string hostVM(hostname);
     std::stringstream versionFTS;
     const char *emiVersion = "/etc/emi-version";
+    std::stringstream issuerCA;
     
     if (fexists(emiVersion) != 0) {
     	return EXIT_FAILURE;
@@ -55,14 +56,20 @@ int main(int argc, char** argv) {
     //get fts server version  
     FILE *in;
     char buff[512];
-
     in = popen("rpm -q --qf '%{VERSION}' fts-server", "r");
-
     while (fgets(buff, sizeof (buff), in) != NULL) {
         versionFTS << buff;
     }
-
     pclose(in);
+    
+
+    //get issuer CA
+    char buff2[512];
+    in = popen("openssl x509 -issuer -noout -in /etc/grid-security/hostcert.pem | sed 's/^[^/]*//'", "r");
+    while (fgets(buff, sizeof (buff2), in) != NULL) {
+        issuerCA << buff;
+    }
+    pclose(in);    
 
 
     //get emi-version	 
@@ -117,7 +124,9 @@ int main(int argc, char** argv) {
             stream << "objectClass: GLUE2Service" << "\n";
             stream << "GLUE2ServiceType: org.glite.FileTransfer" << "\n";
             stream << "GLUE2ServiceQualityLevel: production" << "\n";
-            stream << "GLUE2ServiceAdminDomainForeignKey: CERN-PROD" << "\n";
+	    stream << "GLUE2ServiceCapability: data.transfer" << "\n";
+	    stream << "GLUE2EndpointIssuerCA:" << issuerCA.str() << "\n";	    	    
+            stream << "GLUE2ServiceAdminDomainForeignKey: CERN-PROD" << "\n"; /*must not be hardcoded, site name in FTS3 config*/
 
             stream << "dn: GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
             stream << "objectClass: GLUE2Endpoint" << "\n";

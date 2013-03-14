@@ -25,12 +25,6 @@ ThreadSafeBringOnlineList::ThreadSafeBringOnlineList() {
 ThreadSafeBringOnlineList::~ThreadSafeBringOnlineList() {
 }
 
-std::list<message_bringonline> ThreadSafeBringOnlineList::getList() {
-    ThreadTraits::LOCK lock(_mutex);
-    std::list<struct message_bringonline> tempList = m_list;   
-    return tempList;
-}
-
 void ThreadSafeBringOnlineList::push_back(struct message_bringonline msg) {
     ThreadTraits::LOCK lock(_mutex);
     m_list.push_back(msg);

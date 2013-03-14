@@ -1601,7 +1601,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             if (updated != 0)
                 conn->commit(pooledConnection);
         } else { //job not finished
-            if (status.compare("ACTIVE") == 0 || status.compare("STAGING") == 0) {
+            if (status.compare("ACTIVE") == 0 || status.compare("STAGING") == 0 || status.compare("READY") == 0) {
                 st->setSQL(updateJobNotFinished);
                 st->setString(1, status);
                 st->setString(2, job_id);
@@ -6622,6 +6622,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 			msg.job_id = r3->getString(2);
 			msg.file_id = r3->getInt(3);
 			ret.push_back(msg);
+			bringOnlineReportStatus("STARTED", "", msg);
 		}
 		conn->destroyResultset(s3, r3);	    			    
 	    }
