@@ -187,7 +187,7 @@ protected:
         int base_port = 0;
         parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
         if (base_host)
-            hostname = std::string(base_host);
+            hostname = std::string(base_scheme) + "://" + std::string(base_host);
         if (base_scheme)
             free(base_scheme);
         if (base_host)
@@ -275,8 +275,8 @@ protected:
                         // if there are no more files for that VO just continue
                         if (!temp.get()) continue;
 
-                        source_hostname = temp->SOURCE_SE;
-                        destin_hostname = temp->DEST_SE;
+                        source_hostname = extractHostname(temp->SOURCE_SURL);
+                        destin_hostname = extractHostname(temp->DEST_SURL);
 
                         /*check if manual config exist for this pair and vo*/
 

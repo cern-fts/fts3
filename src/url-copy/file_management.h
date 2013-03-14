@@ -55,6 +55,13 @@ public:
     inline std::string getDestHostname(){
     	return dhost;
     }
+    
+    inline std::string getSourceHostnameFile(){
+    	return shostFile;
+    }
+    inline std::string getDestHostnameFile(){
+    	return dhostFile;
+    }    
 
 private:
     std::string source_url;
@@ -66,6 +73,8 @@ private:
     std::string fname;
     std::string shost;
     std::string dhost;
+    std::string shostFile;
+    std::string dhostFile;    
     std::string dateArch;
     std::string log;
     std::string fullPath;

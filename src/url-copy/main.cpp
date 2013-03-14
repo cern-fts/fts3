@@ -735,8 +735,8 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(strArray[2]));
         msg_ifce::getInstance()->set_source_url(&tr_completed, strArray[1]);
         msg_ifce::getInstance()->set_dest_url(&tr_completed, strArray[2]);
-        msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostname());
-        msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostname());
+        msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostnameFile());
+        msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostnameFile());
         msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
         msg_ifce::getInstance()->set_vo(&tr_completed, vo);
         msg_ifce::getInstance()->set_source_site_name(&tr_completed, sourceSiteName);
