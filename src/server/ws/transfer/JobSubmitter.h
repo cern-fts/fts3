@@ -178,7 +178,7 @@ private:
 	 */
 	bool checkIfLfn(string file);
 
-	list< pair<string, string> > pairSourceAndDestination(vector<string> sources, vector<string> destinations);
+	list< pair<string, string> > pairSourceAndDestination(vector<string> sources, vector<string> destinations, string selectionStrategy);
 
 	///
 	static const regex fileUrlRegex;

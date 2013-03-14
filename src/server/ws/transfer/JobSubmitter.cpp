@@ -259,7 +259,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		// pair sources with destinations
 		list< pair<string, string> > pairs = pairSourceAndDestination(
 				(*it)->source,
-				(*it)->dest
+				(*it)->dest,
+				tupple.selectionStrategy
 			);
 
 		if (pairs.empty()) {
@@ -405,7 +406,14 @@ void JobSubmitter::checkSe(string se) {
 
 }
 
-list< pair<string, string> > JobSubmitter::pairSourceAndDestination(vector<string> sources, vector<string> destinations) {
+list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
+		vector<string> sources,
+		vector<string> destinations,
+		string selectionStrategy
+	) {
+
+	if (!selectionStrategy.empty() && selectionStrategy != "fixed" && selectionStrategy != "auto")
+		throw Err_Custom("'" + selectionStrategy + "'");
 
 	static const string srm = "srm";
 
@@ -428,6 +436,10 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(vector<strin
 			}
 		}
 	}
+
+	if (selectionStrategy.empty() || selectionStrategy == "fixed") return ret;
+
+
 
 	return ret;
 }
