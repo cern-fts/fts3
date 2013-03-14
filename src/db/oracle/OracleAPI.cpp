@@ -6591,6 +6591,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 			msg.job_id = r2->getString(2);
 			msg.file_id = r2->getInt(3);
 			ret.push_back(msg);
+			bringOnlineReportStatus("STARTED", "", msg);
 		}
 		conn->destroyResultset(s2, r2);	    			
 	 }else{

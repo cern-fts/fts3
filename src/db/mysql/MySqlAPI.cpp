@@ -902,7 +902,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*file_id*/, std::string job_id, cons
         }
         // Job not finished yet
         else {
-            if (status == "ACTIVE" || status == "STAGING") {
+            if (status == "ACTIVE" || status == "STAGING" || status == "READY") {
                 sql << "UPDATE t_job "
                        "SET job_state = :state "
                        "WHERE job_id = :jobId AND"
@@ -3154,6 +3154,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					msg.file_id = row2.get<int>("file_id");
 
 					ret.push_back(msg);
+					bringOnlineReportStatus("STARTED", "", msg);
 				}
 			}
     	} else {
@@ -3201,6 +3202,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 				msg.file_id = row.get<int>("file_id");
 
 				ret.push_back(msg);
+				bringOnlineReportStatus("STARTED", "", msg);
 			}
     	}
 
