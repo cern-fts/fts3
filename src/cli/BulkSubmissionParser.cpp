@@ -128,8 +128,13 @@ void BulkSubmissionParser::parse_item(ptree& item) {
 	// handle selection_strategy
 
 	file.selection_strategy = get<string>(item, "selection_strategy");
-	if (file.selection_strategy != "auto" && file.selection_strategy != "fixed") {
-		throw Err_Custom("'" + file.selection_strategy + "' is not a valid selection strategy!");
+	if (file.selection_strategy.is_initialized()) {
+
+		string selectionStrategy = file.selection_strategy.get();
+
+		if (selectionStrategy != "auto" && selectionStrategy != "fixed") {
+			throw Err_Custom("'" + selectionStrategy + "' is not a valid selection strategy!");
+		}
 	}
 
 	// handle checksums
