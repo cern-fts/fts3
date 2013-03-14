@@ -296,7 +296,7 @@ int DoServer(int argc, char** argv) {
                     urls = db::DBSingleton::instance().getDBObjectInstance()->getBringOnlineFiles(voName, hostName, maxValue);
                 }
             } else {//no config for any vo and/or se, hardcode 100 files at any given time for each hostname
-                urls = db::DBSingleton::instance().getDBObjectInstance()->getBringOnlineFiles("", "", 100);
+                urls = db::DBSingleton::instance().getDBObjectInstance()->getBringOnlineFiles("", "", 500);
             }
 
             if (!urls.empty()) {
