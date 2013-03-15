@@ -352,7 +352,8 @@ string JobSubmitter::submit() {
 	} else {
 		// make sure that bring online has been used for SRM source
 		// (bring online is not supported for multiple source/destination submission)
-		if (!srm_source) throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
+		if (params.get(JobParameterHandler::BRING_ONLINE) != "-1" && !srm_source)
+			throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
 	}
 
     // submit the transfer job (add it to the DB)
