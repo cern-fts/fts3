@@ -56,6 +56,9 @@ MyOSG=false
 #-1 means use OS default (check ulimit -u)
 MaxNumberOfProcesses=20000
 
+# site name 
+Sitename=
+
 #Do not change this
 [roles]
 Public = all:*

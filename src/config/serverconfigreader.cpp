@@ -160,18 +160,23 @@ po::options_description ServerConfigReader::_defineConfigOptions()
             "TransferLogDirectory,l",
             po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
             "Directory where the individual transfer logs are written"
-        )	
-	(
-		"AuthorizedVO,v",
-		po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
-		"List of authorized VOs"
-	)
-	(
-		"roles.*",
-		po::value<std::string>(),
-		"Authorization riths definition."
-	)
-	;
+        )
+		(
+			"AuthorizedVO,v",
+			po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
+			"List of authorized VOs"
+		)
+		(
+			"roles.*",
+			po::value<std::string>(),
+			"Authorization rights definition."
+		)
+        (
+			"SiteName",
+			po::value<std::string>( &(_vars["SiteName"]) ),
+			"Site name running the FTS3 service"
+        )
+		;
 
     return config;
 }
@@ -258,6 +263,7 @@ struct ReadConfigFile_SystemTraits
     {
         reader.storeValuesAsStrings();
         reader.storeRoles ();
+        reader.validateRequired ("SiteName");
     }
 };
 
@@ -731,6 +737,12 @@ void ServerConfigReader::storeRoles ()
 			_vars[it->first] = it->second.as<std::string>();
 		}
 	}
+}
+
+void ServerConfigReader::validateRequired (std::string key) {
+
+	if (!_vm.count("SiteName"))
+		throw Err_Custom("The required configuration option: '" + key + "' has not been found!");
 }
 
 /* ========================================================================== */

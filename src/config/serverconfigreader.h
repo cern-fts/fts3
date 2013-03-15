@@ -53,9 +53,11 @@ public:
     void storeValuesAsStrings();
 
     /**
-     *
+     * Map the roles to the VOMS attributes
      */
     void storeRoles();
+
+    void validateRequired(std::string key);
 
     /* ---------------------------------------------------------------------- */
 
