@@ -300,7 +300,7 @@ int DoServer(int argc, char** argv) {
             }
 
             if (!urls.empty()) {
-	        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << urls.size() << " are ready for bringonline"  << commit;
+	        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE " << urls.size() << " are ready for bringonline"  << commit;
                 for (itUrls = urls.begin(); itUrls != urls.end(); itUrls++) {
                     if (true == isSrmUrl((*itUrls).url)) {
                         std::string dn;
