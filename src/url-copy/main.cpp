@@ -772,7 +772,6 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO Source url:" << strArray[1] << '\n'; //b
             log << fileManagement->timestamp() << "INFO Dest url:" << strArray[2] << '\n'; //c
             log << fileManagement->timestamp() << "INFO Overwrite enabled:" << overwrite << '\n'; //d
-            log << fileManagement->timestamp() << "INFO nbstreams:" << nbstreams << '\n'; //e
             log << fileManagement->timestamp() << "INFO tcpbuffersize:" << tcpbuffersize << '\n'; //f
             log << fileManagement->timestamp() << "INFO blocksize:" << blocksize << '\n'; //g
             log << fileManagement->timestamp() << "INFO Timeout:" << timeout << '\n'; //h
@@ -934,6 +933,7 @@ int main(int argc, char **argv) {
             gfalt_set_nbstreams(params, experimentalNstreams, NULL);
             nstream_to_string = to_string<unsigned int>(experimentalNstreams, std::dec);
             msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
+            log << fileManagement->timestamp() << "INFO nbstreams:" << nbstreams << '\n'; //e
 
             gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
             gfalt_set_monitor_callback(params, &call_perf, NULL);
@@ -1077,10 +1077,15 @@ stop:
             reporter.constructMessage(false, job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
 	    /*unpin the file here and report the result in the log file...*/
  	     g_clear_error(&tmp_err);
-	     if (bringonline > 0 && gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0) {
-	        logStream << fileManagement->timestamp() << "INFO Token: " << strArray[6] << '\n';
-		if (tmp_err && tmp_err->message) {
-                        logStream << fileManagement->timestamp() << "WARN Failed unpinning the file: " << std::string(tmp_err->message) << '\n';		
+	     
+	     if (bringonline > 0){
+	        logStream << fileManagement->timestamp() << "INFO Token will be unpinned: " << strArray[6] << '\n';
+	     	if(gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0) {	        	
+			if (tmp_err && tmp_err->message) {
+                        	logStream << fileManagement->timestamp() << "WARN Failed unpinning the file: " << std::string(tmp_err->message) << '\n';		
+			}
+	        }else{
+			        logStream << fileManagement->timestamp() << "INFO Token unpinned: " << strArray[6] << '\n';
 		}
 	     }
         }

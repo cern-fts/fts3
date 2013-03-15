@@ -152,16 +152,16 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
                     statusB = gfal2_bring_online_poll(handle, ((*i).url).c_str(), ((*i).token).c_str(), &error);
 
                     if (statusB < 0) {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling failed " << error->code << " " << error->message << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling failed, token " << (*i).token << ", "  << error->code << " " << error->message << commit;
                         db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
                         deleteIt = true;
                         (*i).started = true;
                         g_clear_error(&error);
                     } else if(statusB == 0) {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling token " << (*i).token << commit;
                         (*i).started = true;
                     } else{
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online finished" << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online finished token " << (*i).token << commit;
                         (*i).started = true;
 			deleteIt = true;
                         db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FINISHED", "", (*i));
@@ -300,6 +300,7 @@ int DoServer(int argc, char** argv) {
             }
 
             if (!urls.empty()) {
+	        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << urls.size() << " are ready for bringonline"  << commit;
                 for (itUrls = urls.begin(); itUrls != urls.end(); itUrls++) {
                     if (true == isSrmUrl((*itUrls).url)) {
                         std::string dn;
