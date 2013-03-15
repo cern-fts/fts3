@@ -409,7 +409,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        int bring_online, std::string metadata) {
+        int bring_online, std::string metadata,
+        int retry, int retryDelay) {
 
     const std::string currenthost = hostname;
     const std::string initialState = bring_online > 0 ? "STAGING" : "SUBMITTED";
@@ -428,17 +429,18 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
                "                   copy_pin_lifetime, lan_connection, fail_nearline, checksum_method, "
-               "                   reuse_job, bring_online, job_metadata)                                     "
+               "                   reuse_job, bring_online, retry, retry_delay, job_metadata)         "
                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
-               "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,                  "
+               "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,              "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
                "        :copyPinLifetime, :lanConnection, :failNearline, :checksumMethod,             "
-               "        :reuseJob, :bring_online, :job_metadata)",
+               "        :reuseJob, :bring_online, :retry, :retryDelay, :job_metadata)",
                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
                soci::use(voName), soci::use(params), soci::use(currenthost), soci::use(delegationID),
                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                soci::use(copyPinLifeTime), soci::use(lanConnection), soci::use(failNearLine), soci::use(checksumMethod),
-               soci::use(reuse, reuseIndicator), soci::use(bring_online), soci::use(metadata);
+               soci::use(reuse, reuseIndicator), soci::use(bring_online),
+               soci::use(retry), soci::use(retryDelay), soci::use(metadata);
 
         // Insert src/dest pair
         std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;

@@ -442,6 +442,12 @@ CREATE TABLE t_job (
 -- Bringonline timeout
   bring_online INTEGER default NULL,
 --
+-- retry
+  retry INTEGER default 0,
+--
+-- retry delay
+  retry_delay INTEGER default 0,
+--
 -- Job metadata
   job_metadata VARCHAR(255)     
 );

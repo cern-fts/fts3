@@ -680,7 +680,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-        int bringonline, std::string metadata) {
+        int bringonline, std::string metadata,
+        int retry, int retryDelay) {
 
 
     const std::string initial_state = bringonline > 0? "STAGING" : "SUBMITTED";
@@ -692,8 +693,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     		"INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, "
             " SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
-            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, bring_online, job_metadata) "
-            " VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22)";
+            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, bring_online, job_metadata, retry, retry_delay) "
+            " VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23, :24)";
     
     const std::string file_statement =
     		" INSERT "
@@ -750,6 +751,8 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
 
         s_job_statement->setInt(21, bringonline); //reuse session for this job
         s_job_statement->setString(22, metadata); // job metadata
+        s_job_statement->setInt(23, retry); // job metadata
+        s_job_statement->setInt(24, retryDelay); // job metadata
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id

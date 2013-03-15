@@ -356,6 +356,14 @@ string JobSubmitter::submit() {
 			throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
 	}
 
+	if (!params.isParamSet(JobParameterHandler::RETRY)) {
+		params.set(JobParameterHandler::RETRY, "0");
+	}
+
+	if (!params.isParamSet(JobParameterHandler::RETRY_DELAY)) {
+		params.set(JobParameterHandler::RETRY_DELAY, "0");
+	}
+
     // submit the transfer job (add it to the DB)
     db->submitPhysical (
     		id,
@@ -376,7 +384,9 @@ string JobSubmitter::submit() {
             params.get(JobParameterHandler::CHECKSUM_METHOD),
             params.get(JobParameterHandler::REUSE),
             params.get<int>(JobParameterHandler::BRING_ONLINE),
-            params.get<string>(JobParameterHandler::JOB_METADATA)
+            params.get<string>(JobParameterHandler::JOB_METADATA),
+            params.get<int>(JobParameterHandler::RETRY),
+            params.get<int>(JobParameterHandler::RETRY_DELAY)
     	);
 
     db->submitHost(id);

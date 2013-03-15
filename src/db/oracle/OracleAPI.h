@@ -54,7 +54,8 @@ public:
                                  const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite, 
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
                                  const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                                 int bringonline, std::string metadata);
+                                 int bringonline, std::string metadata,
+                                 int retry, int retryDelay);
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
     

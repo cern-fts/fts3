@@ -467,6 +467,13 @@ CREATE TABLE t_job (
  --
  -- Specifies how many configurations were assigned to the transfer-job
   ,configuration_count INTEGER default NULL
+--
+-- retry
+  ,retry INTEGER default 0
+--
+-- retry delay
+  ,retry_delay INTEGER default 0
+--
 -- user provided metadata
   ,job_metadata    VARCHAR2(255)
   );

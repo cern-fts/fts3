@@ -64,10 +64,6 @@ class JobSubmitter {
 		VO
 	};
 
-	typedef tuple<string, string, string> share;
-	typedef pair<bool, bool> content;
-	typedef tuple< share, content > cfg_type;
-
 public:
 	/**
 	 * Constructor - creates a submitter object that should be used
