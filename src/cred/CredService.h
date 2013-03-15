@@ -54,8 +54,6 @@ public:
      * Constructor
      */
     CredService();	
-
-protected:
     
     /**
      * Generate a name for the file that should contain the proxy certificate.

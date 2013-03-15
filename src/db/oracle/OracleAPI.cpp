@@ -6722,8 +6722,7 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
 		conn->commit(pooledConnection);		
 	        conn->destroyStatement(s2, tag2, pooledConnection);
 		conn->releasePooledConnection(pooledConnection);   		
-		updateJobTransferStatus(0, msg.job_id, "READY");				
-		
+		updateJobTransferStatus(0, msg.job_id, "READY");						
 	}else if(state=="FAILED"){
 		s2 = conn->createStatement(query2, tag2, pooledConnection);     
         	s2->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));		
@@ -6800,9 +6799,9 @@ void OracleAPI::addToken(const std::string & job_id, int file_id, const std::str
     conn->releasePooledConnection(pooledConnection);    
 }
 
-void OracleAPI::getCredentials(const std::string & job_id, int, std::string & dn, std::string & dlg_id){
+void OracleAPI::getCredentials(std::string & vo_name, const std::string & job_id, int, std::string & dn, std::string & dlg_id){
     std::string tag = "getCredentials";
-    std::string query = "select USER_DN, CRED_ID from t_job where job_id=:1";   		
+    std::string query = "select USER_DN, CRED_ID, VO_NAME  from t_job where job_id=:1";   		
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;  
@@ -6819,7 +6818,8 @@ void OracleAPI::getCredentials(const std::string & job_id, int, std::string & dn
 
         if (r->next()) {
         		dn = r->getString(1);
-        		dlg_id = r->getString(2);			
+        		dlg_id = r->getString(2);
+        		vo_name = r->getString(3);
         }
 
         conn->destroyResultset(s, r);

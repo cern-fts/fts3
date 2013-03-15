@@ -3285,14 +3285,15 @@ void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::stri
 }
 
 
-void MySqlAPI::getCredentials(const std::string & job_id, int, std::string & dn, std::string & dlg_id) {
+void MySqlAPI::getCredentials(std::string & vo_name, const std::string & job_id, int, std::string & dn, std::string & dlg_id) {
 
 	soci::session sql(connectionPool);
 
 	try {
 		sql <<
-				" SELECT user_dn, cred_id FROM t_job WHERE job_id = :jobId ",
+				" SELECT vo_name, user_dn, cred_id FROM t_job WHERE job_id = :jobId ",
 				soci::use(job_id),
+				soci::into(vo_name),
 				soci::into(dn),
 				soci::into(dlg_id)
 		;

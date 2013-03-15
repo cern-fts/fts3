@@ -246,7 +246,7 @@ public:
     
     virtual void addToken(const std::string & job_id, int file_id, const std::string & token);
     
-    virtual void getCredentials(const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
+    virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 

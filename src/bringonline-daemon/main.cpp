@@ -40,11 +40,13 @@ limitations under the License. */
 #include "queue_bringonline.h"
 #include "UserProxyEnv.h"
 #include "DelegCred.h"
+#include "CredService.h"
 #include <gfal_api.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include "name_to_uid.h"
+#include "cred-utility.h"
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -189,6 +191,13 @@ static std::string generateProxy(const std::string& dn, const std::string& dlg_i
     return delegCredPtr->getFileName(dn, dlg_id);
 }
 
+
+static bool checkValidProxy(const std::string& filename) {
+    boost::scoped_ptr<DelegCred> delegCredPtr(new DelegCred);
+    return delegCredPtr->isValidProxy(filename);
+}
+
+
 int DoServer(int argc, char** argv) {
 
     int res = 0;
@@ -305,11 +314,26 @@ int DoServer(int argc, char** argv) {
                     if (true == isSrmUrl((*itUrls).url)) {
                         std::string dn;
                         std::string dlg_id;
-                        db::DBSingleton::instance().getDBObjectInstance()->getCredentials((*itUrls).job_id, (*itUrls).file_id, dn, dlg_id);
+			std::string vo_name;
+                        db::DBSingleton::instance().getDBObjectInstance()->getCredentials(vo_name, (*itUrls).job_id, (*itUrls).file_id, dn, dlg_id);
 
                         //get the proxy
                         proxy_file = generateProxy(dn, dlg_id);
                         (*itUrls).proxy = proxy_file;
+			
+			if(false == checkValidProxy(proxy_file)){
+				proxy_file = get_proxy_cert(
+                                    dn, // user_dn
+                                    dlg_id, // user_cred
+                                    vo_name, // vo_name
+                                    "",
+                                    "", // assoc_service
+                                    "", // assoc_service_type
+                                    false,
+                                    ""
+                                    );
+			}
+			
                         ThreadSafeBringOnlineList::get_instance().push_back(*itUrls);
                     }
                 }
