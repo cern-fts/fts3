@@ -1644,7 +1644,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
 void OracleAPI::cancelJob(std::vector<std::string>& requestIDs) {
     const std::string cancelReason = "Job canceled by the user";
     std::string cancelJ = "update t_job SET  JOB_STATE=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE job_id = :5 AND job_state not in('FINISHEDDIRTY','FINISHED','FAILED')";
-    std::string cancelF = "update t_file set file_state=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE JOB_ID=:5 AND file_state not in('FINISHEDDIRTY','FINISHED','FAILED')";
+    std::string cancelF = "update t_file set file_state=:1, JOB_FINISHED =:2, FINISH_TIME=:3, REASON=:4 WHERE JOB_ID=:5 AND file_state not in('FINISHED','FAILED')";
     const std::string cancelJTag = "cancelJTag";
     const std::string cancelFTag = "cancelFTag";
     std::vector<std::string>::const_iterator iter;

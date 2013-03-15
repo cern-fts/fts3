@@ -941,7 +941,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs) {
             // Cancel files
             sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                    "                  reason = :reason "
-                   "WHERE job_id = :jobId AND file_state NOT IN ('FINISHEDDIRTY','FINISHED','FAILED')",
+                   "WHERE job_id = :jobId AND file_state NOT IN ('FINISHED','FAILED')",
                    soci::use(reason, "reason"), soci::use(*i, "jobId");
         }
 
