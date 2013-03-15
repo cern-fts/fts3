@@ -1601,7 +1601,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             if (updated != 0)
                 conn->commit(pooledConnection);
         } else { //job not finished
-            if (status.compare("ACTIVE") == 0 || status.compare("STAGING") == 0 || status.compare("READY") == 0) {
+            if (status.compare("ACTIVE") == 0 || status.compare("STAGING") == 0 || status.compare("SUBMITTED") == 0) {
                 st->setSQL(updateJobNotFinished);
                 st->setString(1, status);
                 st->setString(2, job_id);
@@ -2327,7 +2327,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                 " WHERE t_job.job_finished is NULL"
                 " AND t_job.CANCEL_JOB is NULL"
                 " AND t_job.reuse_job='Y' "
-                " AND t_job.job_state in ('SUBMITTED') "
+                " AND t_job.job_state in ('SUBMITTED','READY','ACTIVE') "
                 " AND ROWNUM <=1 "
                 " ORDER BY t_job.priority DESC"
                 " , SYS_EXTRACT_UTC(t_job.submit_time)";
@@ -2358,7 +2358,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                 " AND t_job.CANCEL_JOB is NULL"
                 " AND t_job.reuse_job='Y' "
                 " AND t_job.VO_NAME IN " + vos +
-                " AND t_job.job_state in ('SUBMITTED') "
+                " AND t_job.job_state in ('SUBMITTED','READY','ACTIVE') "
                 " AND ROWNUM <=1 "
                 " ORDER BY t_job.priority DESC"
                 " , SYS_EXTRACT_UTC(t_job.submit_time)";
@@ -6522,22 +6522,23 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     std::string tag5 = "getBringOnlineFiles5";    
     std::string query1 =
     		" select distinct(SOURCE_SE) from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is null ";
+		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is null and t_file.SOURCE_SURL like 'srm%' ";
     std::string query2 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' "
-		" and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3 ORDER BY t_file.file_id ";
+		" and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3  and t_file.SOURCE_SURL like 'srm%'  ORDER BY t_file.file_id ";
     std::string query3 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_file.source_se=:1 "
-		" and rownum<=:1 ORDER BY t_file.file_id ";
+		" and rownum<=:1  and t_file.SOURCE_SURL like 'srm%'  ORDER BY t_file.file_id ";
     std::string query4 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null "
-		" and t_job.vo_name=:1 and t_file.source_se=:2";
+		" and t_job.vo_name=:1 and t_file.source_se=:2  and t_file.SOURCE_SURL like 'srm%' ";
     std::string query5 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null and t_file.source_se=:1 ";
+		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null and t_file.source_se=:1 "
+		" and t_file.SOURCE_SURL like 'srm%' ";
 			
 		
     oracle::occi::Statement* s1 = NULL;
@@ -6722,7 +6723,7 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
 		conn->commit(pooledConnection);		
 	        conn->destroyStatement(s2, tag2, pooledConnection);
 		conn->releasePooledConnection(pooledConnection);   		
-		updateJobTransferStatus(0, msg.job_id, "READY");						
+		updateJobTransferStatus(0, msg.job_id, "SUBMITTED");						
 	}else if(state=="FAILED"){
 		s2 = conn->createStatement(query2, tag2, pooledConnection);     
         	s2->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));		

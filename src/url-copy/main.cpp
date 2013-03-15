@@ -877,7 +877,7 @@ int main(int argc, char **argv) {
 			    retry = true;
                             goto stop;
 			 }
-                    } else if (boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufsrc.st_size) {
+                    } else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufsrc.st_size) {
                         std::stringstream error_;
                         error_ << "User specified source file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
                         errorMessage = error_.str();
@@ -1016,7 +1016,7 @@ int main(int argc, char **argv) {
 			    retry = true;
                             goto stop;
                         }
-                    } else if (boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufdest.st_size) {
+                    } else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufdest.st_size) {
                         std::stringstream error_;
                         error_ << "User specified destination file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
                         errorMessage = error_.str();

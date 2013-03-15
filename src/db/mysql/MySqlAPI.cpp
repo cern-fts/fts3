@@ -902,7 +902,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*file_id*/, std::string job_id, cons
         }
         // Job not finished yet
         else {
-            if (status == "ACTIVE" || status == "STAGING" || status == "READY") {
+            if (status == "ACTIVE" || status == "STAGING" || status == "SUBMITTED") {
                 sql << "UPDATE t_job "
                        "SET job_state = :state "
                        "WHERE job_id = :jobId AND"
@@ -1226,7 +1226,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "    t_job.job_finished IS NULL AND "
                     "    t_job.cancel_job IS NULL AND "
                     "    t_job.reuse_job='Y' AND "
-                    "    t_job.job_state IN ('SUBMITTED') "
+                    "    t_job.job_state IN ('SUBMITTED','READY','ACTIVE') "
                     "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
                     "LIMIT 1";
         }
@@ -1235,7 +1235,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "    t_job.job_finished IS NULL AND "
                     "    t_job.cancel_job IS NULL AND "
                     "    t_job.reuse_job='Y' AND "
-                    "    t_job.job_state IN ('SUBMITTED') AND "
+                    "    t_job.job_state IN ('SUBMITTED','READY','ACTIVE') AND "
                     "    t_job.vo_name IN " + vos + " "
                     "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
                     "LIMIT 1";
@@ -3106,7 +3106,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					" WHERE t_job.job_id = t_file.job_id "
 					"	AND t_job.bring_online > 0 "
 					"	AND t_file.file_state = 'STAGING' "
-					"	AND t_file.staging_start IS NULL "
+					"	AND t_file.staging_start IS NULL and t_file.source_surl like 'srm%' "
 				);
 
 			for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
@@ -3123,7 +3123,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 						" 	AND t_job.bring_online > 0 "
 						"	AND t_file.file_state = 'STAGING' "
 						"	AND t_file.staging_start IS NOT NULL "
-						"	AND t_file.source_se = :hostV ",
+						"	AND t_file.source_se = :hostV  and t_file.source_surl like 'srm%'  ",
 						soci::use(hostV),
 						soci::into(currentStagingFilesNoConfig)
 				;
@@ -3138,7 +3138,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 						" 	AND t_job.bring_online > 0 "
 						"	AND t_file.staging_start IS NULL "
 						"	AND t_file.file_state = 'STAGING' "
-						"	AND t_file.source_se = :source_se "
+						"	AND t_file.source_se = :source_se and t_file.source_surl like 'srm%'   "
 						" ORDER BY t_file.file_id "
 						" LIMIT :limit",
 						soci::use(hostV),
@@ -3168,7 +3168,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					"	AND t_file.file_state = 'STAGING' "
 					"	AND t_file.STAGING_START IS NOT NULL "
 					" 	AND t_job.vo_name = :vo_name "
-					"	AND t_file.source_se = :source_se ",
+					"	AND t_file.source_se = :source_se and t_file.source_surl like 'srm%'   ",
 					soci::use(voName),
 					soci::use(hostName),
 					soci::into(currentStagingFilesConfig)
@@ -3185,7 +3185,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					" 	AND t_file.staging_START IS NULL "
 					"	AND t_file.file_state = 'STAGING' "
 					"	AND t_file.source_se = :source_se "
-					"	AND t_job.vo_name = :vo_name "
+					"	AND t_job.vo_name = :vo_name and t_file.source_surl like 'srm%'   "
 					" ORDER BY t_file.file_id "
 					" LIMIT :limit",
 					soci::use(hostName),
