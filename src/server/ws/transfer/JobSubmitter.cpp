@@ -59,6 +59,8 @@ const regex JobSubmitter::fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 
 const string JobSubmitter::false_str = "false";
 
+const string JobSubmitter::srm_protocol = "srm";
+
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
 
@@ -100,6 +102,9 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 		cred = *job->credential;
 	}
 
+	// if at least one source uses different protocol than SRM it will be 'false'
+	srm_source = true;
+
 	// extract the job elements from tns3__TransferJob object and put them into a vector
     vector<tns3__TransferJobElement * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
@@ -112,6 +117,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 			throw Err_Custom(errMsg);
 		}
 		checkSe(sourceSe);
+		// check if all the sources use SRM protocol
+		srm_source &= sourceSe.find(srm_protocol) == 0;
 
 		string destinationSe = fileUrlToSeName(dest);
 		if(destinationSe.empty()){
@@ -167,6 +174,9 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 	// do the common initialization
 	init(job->jobParams);
 
+	// if at least one source uses different protocol than SRM it will be 'false'
+	srm_source = true;
+
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
     vector<tns3__TransferJobElement2 * >::iterator it;
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
@@ -179,6 +189,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 			throw Err_Custom(errMsg);
 		}
 		checkSe(sourceSe);
+		// check if all the sources use SRM protocol
+		srm_source &= sourceSe.find(srm_protocol) == 0;
 
 		string destinationSe = fileUrlToSeName(dest);
 		if(destinationSe.empty()){
@@ -237,6 +249,9 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 	// index of the file
 	int fileIndex = 0;
 
+	// if at least one source uses different protocol than SRM it will be 'false'
+	srm_source = true;
+
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
 	vector<tns3__TransferJobElement3 * >::iterator it;
 	for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++, fileIndex++) {
@@ -288,6 +303,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 				throw Err_Custom(errMsg);
 			}
 			checkSe(sourceSe);
+			// check if all the sources use SRM protocol
+			srm_source &= sourceSe.find(srm_protocol) == 0;
 
 			string destinationSe = fileUrlToSeName(it_p->second);
 			if(destinationSe.empty()){
@@ -331,6 +348,11 @@ string JobSubmitter::submit() {
 
 	if (!params.isParamSet(JobParameterHandler::BRING_ONLINE)) {
 		params.set(JobParameterHandler::BRING_ONLINE, "-1");
+
+	} else {
+		// make sure that bring online has been used for SRM source
+		// (bring online is not supported for multiple source/destination submission)
+		if (!srm_source) throw Err_Custom("The 'bring-online' operation can be used only with source SEs that are using SRM protocol!");
 	}
 
     // submit the transfer job (add it to the DB)
@@ -411,10 +433,8 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
 		string selectionStrategy
 	) {
 
-	if (!selectionStrategy.empty() && selectionStrategy != "fixed" && selectionStrategy != "auto")
+	if (!selectionStrategy.empty() && selectionStrategy != "orderly" && selectionStrategy != "auto")
 		throw Err_Custom("'" + selectionStrategy + "'");
-
-	static const string srm = "srm";
 
 	list< pair<string, string> > ret;
 
@@ -428,7 +448,7 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
 		string destination;
 		for (it_d = destinations.begin(); it_d != destinations.end(); it_d++) {
 			// if the destination uses the same protocol ...
-			if (it_d->find(protocol) == 0 || it_d->find(srm) == 0 || protocol == srm) { // TODO verify!!!
+			if (it_d->find(protocol) == 0 || it_d->find(srm_protocol) == 0 || protocol == srm_protocol) { // TODO verify!!!
 				ret.push_back(
 						make_pair(*it_s, *it_d)
 					);
@@ -436,7 +456,7 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
 		}
 	}
 
-	if (selectionStrategy.empty() || selectionStrategy == "fixed") return ret;
+	if (selectionStrategy.empty() || selectionStrategy == "orderly") return ret;
 
 
 

@@ -132,7 +132,7 @@ void BulkSubmissionParser::parse_item(ptree& item) {
 
 		string selectionStrategy = file.selection_strategy.get();
 
-		if (selectionStrategy != "auto" && selectionStrategy != "fixed") {
+		if (selectionStrategy != "auto" && selectionStrategy != "orderly") {
 			throw Err_Custom("'" + selectionStrategy + "' is not a valid selection strategy!");
 		}
 	}

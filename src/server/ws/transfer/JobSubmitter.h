@@ -185,6 +185,11 @@ private:
 
 	static const string false_str;
 
+
+	static const string srm_protocol;
+
+	bool srm_source;
+
 	/**
 	 *
 	 */
