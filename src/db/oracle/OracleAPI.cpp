@@ -6523,7 +6523,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     std::string tag4 = "getBringOnlineFiles4";
     std::string tag5 = "getBringOnlineFiles5";    
     std::string query1 =
-    		" select distinct(SOURCE_SE) from t_file, t_job where t_job.job_id = t_file.job_id "
+    		" select distinct(t_file.SOURCE_SE) from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is null and t_file.SOURCE_SURL like 'srm%' ";
     std::string query2 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id from t_file, t_job where t_job.job_id = t_file.job_id "

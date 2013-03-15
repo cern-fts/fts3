@@ -153,7 +153,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
     	std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     	soci::rowset<soci::row> rs = (
     			sql.prepare <<
-    						" SELECT DISTINCT source_se, dest_se, vo_name "
+    						" SELECT DISTINCT t_file.source_se, t_file.dest_se, t_job.vo_name "
     						" FROM t_job, t_file "
 				 	 	 	" WHERE t_file.job_id = t_job.job_id "
 				 	 	 	"	AND t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
@@ -1418,7 +1418,7 @@ bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostrea
         int active=0;
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
-               "WHERE source_se = :source_se AND dest_se = :dest_se AND "
+               "WHERE t_file.source_se = :source_se AND t_file.dest_se = :dest_se AND "
                "    file_state = 'ACTIVE' AND t_job.job_id = t_file.job_id",
                soci::use(source_hostname), soci::use(destin_hostname),
                soci::into(active);      
@@ -3103,7 +3103,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 
 			soci::rowset<soci::row> rs = (
 					sql.prepare <<
-					" SELECT distinct(source_se) "
+					" SELECT distinct(t_file.source_se) "
 					" FROM t_file, t_job "
 					" WHERE t_job.job_id = t_file.job_id "
 					"	AND t_job.bring_online > 0 "
