@@ -110,14 +110,13 @@ int main(int argc, char** argv) {
 
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv);
         /*
-	DO not connect to the db for now
-	fts3_initialize_db_backend();
+		DO not connect to the db for now
+		fts3_initialize_db_backend();
 	*/
-
-        //std::string publisherHost = theServerConfig().get<std::string > ("InfoPublisher");
-        //if (publisherHost.compare("true") == 0) {
+       
             std::string alias = theServerConfig().get<std::string > ("Alias");
             int port = theServerConfig().get<int>("Port");
+	    std::string sitename = theServerConfig().get<std::string > ("SiteName");
 
             stream << "dn: GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
             stream << "GLUE2ServiceID: https://" << alias << ":" << port << "_org.glite.fts" << "\n";
@@ -126,7 +125,7 @@ int main(int argc, char** argv) {
             stream << "GLUE2ServiceQualityLevel: production" << "\n";
 	    stream << "GLUE2ServiceCapability: data.transfer" << "\n";
 	    stream << "GLUE2EndpointIssuerCA:" << issuerCA.str() << "\n";	    	    
-            stream << "GLUE2ServiceAdminDomainForeignKey: CERN-PROD" << "\n"; /*must not be hardcoded, site name in FTS3 config*/
+            stream << "GLUE2ServiceAdminDomainForeignKey: " << sitename << "\n";
 
             stream << "dn: GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
             stream << "objectClass: GLUE2Endpoint" << "\n";
@@ -155,8 +154,7 @@ int main(int argc, char** argv) {
 	    stream << "GLUE2PolicyRule: ALL" << "\n";
             stream << "GLUE2AccessPolicyEndpointForeignKey: " << alias << "_org.glite.fts" << "\n";
 
-            std::cout << stream.str() << std::endl;
-        //}
+            std::cout << stream.str() << std::endl;        
     }    catch (...) {
         return EXIT_FAILURE;
     }

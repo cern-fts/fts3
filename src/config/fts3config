@@ -57,7 +57,7 @@ MyOSG=false
 MaxNumberOfProcesses=20000
 
 # site name 
-Sitename=
+SiteName=
 
 #Do not change this
 [roles]
