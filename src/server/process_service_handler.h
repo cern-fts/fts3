@@ -91,7 +91,7 @@ static int getAvailableMemory() {
 template <class T>
 inline std::string to_string(const T& t) {
     std::stringstream ss;
-    ss << t;
+    ss << std::fixed << t;
     return ss.str();
 }
 
@@ -604,12 +604,16 @@ protected:
                         fileMetadata = "x";
 		    if (bringonlineToken.length() <= 0)
                         bringonlineToken = "x";
-
                     if (std::string(temp->CHECKSUM_METHOD).length() > 0) {
                         if (std::string(temp->CHECKSUM).length() > 0)
                             checksum = temp->CHECKSUM;
-                    }
-                    url << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata << " " << bringonlineToken;
+			else
+			    checksum = "x";
+                    }else{
+		    	checksum = "x";
+		    }
+		    
+                    url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata << " " << bringonlineToken;
                     urls.push_back(url.str());
                     url.str("");
                 }
@@ -779,12 +783,6 @@ protected:
                     if (bringOnline > 0) {
                         params.append(" -H ");
                         params.append(to_string(bringOnline));
-                    }
-
-
-                    if (userFilesize > 0) {
-                        params.append(" -I ");
-                        params.append(to_string(userFilesize));
                     }
 
                     if (jobMetadata.length() > 0) {

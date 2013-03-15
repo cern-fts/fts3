@@ -702,7 +702,7 @@ int main(int argc, char **argv) {
         } else {
             strArray[0] = file_id;
             strArray[1] = source_url;
-            strArray[2] = dest_url;
+            strArray[2] = dest_url;	    
             strArray[3] = checksum_value;
 	    if(userFilesize.length() > 0)
             	strArray[4] = userFilesize;
@@ -907,7 +907,7 @@ int main(int argc, char **argv) {
 
             /*Checksuming*/
             if (compare_checksum) {
-                if (checksum_value.length() > 0) { //user provided checksum
+                if (checksum_value.length() > 0 && checksum_value!="x") { //user provided checksum
                     log << fileManagement->timestamp() << "INFO user  provided checksum" << '\n';
                     std::vector<std::string> token = split((strArray[3]).c_str());
                     std::string checkAlg = token[0];
