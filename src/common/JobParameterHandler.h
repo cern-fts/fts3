@@ -65,6 +65,8 @@ public:
 	static const string CHECKSUM_METHOD;
 	static const string REUSE;
 	static const string JOB_METADATA;
+	static const string RETRY;
+	static const string RETRY_DELAY;
 	///@}
 
 	/**

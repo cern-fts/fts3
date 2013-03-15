@@ -21,7 +21,8 @@ const string JobParameterHandler::OVERWRITEFLAG = "overwrite";
 const string JobParameterHandler::CHECKSUM_METHOD = "checksum_method";
 const string JobParameterHandler::REUSE = "reuse";
 const string JobParameterHandler::JOB_METADATA = "job_metadata";
-
+const string JobParameterHandler::RETRY = "retry";
+const string JobParameterHandler::RETRY_DELAY = "retry_delay";
 
 JobParameterHandler::JobParameterHandler() {
 

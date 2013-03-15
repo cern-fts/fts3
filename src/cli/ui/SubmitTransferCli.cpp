@@ -75,6 +75,8 @@ SubmitTransferCli::SubmitTransferCli() {
 			("file-metadata", value<string>(), "file metadata")
 			("file-size", value<int>(), "file size (in Bytes)")
 			("new-bulk-format", "New JSON format for bulk submission will be used")
+			("retry", value<int>(), "Number of retries")
+			("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
 			;
 
 	// add hidden options
@@ -368,11 +370,15 @@ map<string, string> SubmitTransferCli::getParams() {
 	}
 
 	if (vm.count("copy-pin-lifetime")) {
-		parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<string>(vm["copy-pin-lifetime"].as<int>());
+		int val = vm["copy-pin-lifetime"].as<int>();
+		if (val < -1) throw string("The 'copy-pin-lifetime' value has to be positive!");
+		parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<string>(val);
 	}
 
 	if (vm.count("bring-online")) {
-		parameters[JobParameterHandler::BRING_ONLINE] = lexical_cast<string>(vm["bring-online"].as<int>());
+		int val = vm["bring-online"].as<int>();
+		if (val < -1) throw string("The 'bring-online' value has to be positive!");
+		parameters[JobParameterHandler::BRING_ONLINE] = lexical_cast<string>(val);
 	}
 
 	if (vm.count("reuse")) {
@@ -381,6 +387,18 @@ map<string, string> SubmitTransferCli::getParams() {
 
 	if (vm.count("job-metadata")) {
 		parameters[JobParameterHandler::JOB_METADATA] = vm["job-metadata"].as<string>();
+	}
+
+	if (vm.count("retry")) {
+		int val = vm["retry"].as<int>();
+		if (val < 0) throw string("The 'retry' value has to be positive!");
+		parameters[JobParameterHandler::RETRY] = lexical_cast<string>(val);
+	}
+
+	if (vm.count("retry-delay")) {
+		int val = vm["retry-delay"].as<int>();
+		if (val < 0) throw string("The 'retry-delay' value has to be positive!");
+		parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<string>(val);
 	}
 
 	return parameters;
