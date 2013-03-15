@@ -215,17 +215,17 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " 	t_job.source_token_description,"
             " 	t_job.copy_pin_lifetime, "
             " 	t_job.checksum_method, "
-    		" 	t_job.bring_online "
+    	    " 	t_job.bring_online "
             " FROM t_job, t_file"
             " WHERE "
-    		" 	t_job.job_id = t_file.job_id "
+    	    " 	t_job.job_id = t_file.job_id "
             " 	AND t_job.job_finished is NULL"
             " 	AND t_job.CANCEL_JOB is NULL"
-    		" 	AND t_file.source_se=:1 and t_file.dest_se=:2 "
-    		" 	AND t_job.VO_NAME=:3 "
+    	    " 	AND t_file.source_se=:1 and t_file.dest_se=:2 "
+    	    " 	AND t_job.VO_NAME=:3 "
             " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-    		" 	AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
+    	    " 	AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
             " 	AND rownum <=15  ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)";
 
     oracle::occi::Statement* s = NULL;
@@ -2329,6 +2329,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                 " AND t_job.reuse_job='Y' "
                 " AND t_job.job_state in ('SUBMITTED','READY','ACTIVE') "
                 " AND ROWNUM <=1 "
+		" AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
                 " ORDER BY t_job.priority DESC"
                 " , SYS_EXTRACT_UTC(t_job.submit_time)";
     } else {
@@ -2360,6 +2361,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                 " AND t_job.VO_NAME IN " + vos +
                 " AND t_job.job_state in ('SUBMITTED','READY','ACTIVE') "
                 " AND ROWNUM <=1 "
+		" AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "		
                 " ORDER BY t_job.priority DESC"
                 " , SYS_EXTRACT_UTC(t_job.submit_time)";
     }

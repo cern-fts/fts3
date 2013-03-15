@@ -1227,6 +1227,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "    t_job.cancel_job IS NULL AND "
                     "    t_job.reuse_job='Y' AND "
                     "    t_job.job_state IN ('SUBMITTED','READY','ACTIVE') "
+      		    "    AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
                     "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
                     "LIMIT 1";
         }
@@ -1235,8 +1236,9 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "    t_job.job_finished IS NULL AND "
                     "    t_job.cancel_job IS NULL AND "
                     "    t_job.reuse_job='Y' AND "
-                    "    t_job.job_state IN ('SUBMITTED','READY','ACTIVE') AND "
+                    "    t_job.job_state IN ('SUBMITTED','READY','ACTIVE') AND "		    
                     "    t_job.vo_name IN " + vos + " "
+      		    "    AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "		    
                     "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
                     "LIMIT 1";
         }
