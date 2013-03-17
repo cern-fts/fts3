@@ -58,10 +58,11 @@ int getDir (string dir, vector<string> &files)
     while ((dirp = readdir(dp)) != NULL) {
         std::string fileName = string(dirp->d_name);
 	size_t found = fileName.find("ready");
-	stat(fileName.c_str(), &st);
-	if(found!=std::string::npos && st.st_size > 0){
-		std::string copyFilename = dir + "/" + fileName;		
-        	files.push_back(copyFilename);
+	if(found!=std::string::npos){
+		std::string copyFilename = dir + fileName;		
+		stat(copyFilename.c_str(), &st);
+		if(st.st_size > 0)
+        		files.push_back(copyFilename);
 	}
     }
     closedir(dp);
