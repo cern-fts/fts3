@@ -309,7 +309,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
         stmt.define_and_bind();
         stmt.execute(true);
 
-        updated = stmt.get_affected_rows();
+        updated = (unsigned int) stmt.get_affected_rows();
         if (updated != 0) {
             soci::statement jobStmt(sql);
             jobStmt.exchange(soci::use(status, "state"));
@@ -1611,7 +1611,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
 	}
 		
-        allowed = optimizerObject.transferStart(nFinishedLastHour, nFailedLastHour,
+        allowed = optimizerObject.transferStart((int) nFinishedLastHour, (int) nFailedLastHour,
                                                 source_hostname, destin_hostname,
                                                 nActive, nActiveSource, nActiveDest,
                                                 ratioSuccessFailure,
