@@ -68,8 +68,7 @@ void runProducerMonitoring(const char* msg)
 			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
-			rename(tempname.c_str(), renamedFile.c_str());
-			unlink(tempname.c_str());
+			rename(tempname.c_str(), renamedFile.c_str());			
 	       }		
 }
 
@@ -88,8 +87,7 @@ void runProducerStatus(struct message msg){
 			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
-			rename(tempname.c_str(), renamedFile.c_str());
-			unlink(tempname.c_str());
+			rename(tempname.c_str(), renamedFile.c_str());			
 	       }		
 }
 
@@ -106,8 +104,7 @@ void runProducerStall(struct message_updater msg){
 			} 
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
-			rename(tempname.c_str(), renamedFile.c_str());
-			unlink(tempname.c_str());
+			rename(tempname.c_str(), renamedFile.c_str());			
 	       }		
 }
 
