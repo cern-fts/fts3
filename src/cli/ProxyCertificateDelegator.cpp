@@ -142,7 +142,7 @@ void ProxyCertificateDelegator::delegate() {
 
     if (needDelegation) {
 
-    	time_t requestProxyDelegationTime;
+    	int requestProxyDelegationTime;
 
         if (userRequestedDelegationExpTime == 0) {
             requestProxyDelegationTime = localProxyTimeLeft - 60; // 60 seconds off current proxy
@@ -158,8 +158,8 @@ void ProxyCertificateDelegator::delegate() {
         }
 
         printer.delegation_request_duration(
-        		(long int)((requestProxyDelegationTime) / 3600),
-        		(long int)((requestProxyDelegationTime) % 3600 / 60)
+        		(int)((requestProxyDelegationTime) / 3600),
+        		(int)((requestProxyDelegationTime) % 3600 / 60)
         	);
 
         err = glite_delegation_delegate(

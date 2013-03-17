@@ -80,7 +80,7 @@ optional<GSoapContextAdapter&> DebugSetCli::validate(bool init) {
 	}
 
 	// index of debug mode (the last parameter)
-	int mode_index = opts.size() - 1;
+	size_t mode_index = opts.size() - 1;
 	// value of debug mode
 	string mode_str = opts[mode_index];
 	// it should be either ON

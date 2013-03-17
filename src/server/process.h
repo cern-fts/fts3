@@ -27,8 +27,8 @@ public:
     int executeProcess();
     int executeProcessShell();
     std::string generate_request_id(const std::string& prefix);
-    int execProcess(int argc, char** argv);
-    int execProcessLog(int argc, char** argv);
+    int execProcess(size_t argc, char** argv);
+    int execProcessLog(size_t argc, char** argv);
     void setPid(const string& jobId, const string& fileId);
     void setPidV(std::map<int,std::string>& pids);
     

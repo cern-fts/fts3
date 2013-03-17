@@ -2735,7 +2735,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostre
             s2->setString(8, source_hostname);
             s2->setString(9, destin_hostname);
 	    s2->setInt(10, timeout);
-	    s2->setInt(11, throughput);
+	    s2->setDouble(11, throughput);
 	    s2->setInt(12, active);
             if (s2->executeUpdate() != 0)
                 conn->commit(pooledConnection);
@@ -3099,7 +3099,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 		ratioSuccessFailure = 0;
 	}
 		
-	allowed = optimizerObject.transferStart(numberOfFinished,numberOfFailed,source_hostname, destin_hostname, act, maxSource, maxDest,
+	allowed = optimizerObject.transferStart((int) numberOfFinished, (int) numberOfFailed,source_hostname, destin_hostname, act, maxSource, maxDest,
 	ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll);       
 	
     } catch (oracle::occi::SQLException const &e) {

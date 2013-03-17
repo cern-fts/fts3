@@ -70,7 +70,7 @@ void FileMonitor::run (FileMonitor* const me) {
 	// monitor the file
 	while (me->running) {
 		// read to determine the event change happens on the given file. Actually this read blocks until the change event occurs
-		int length = read(me->fd, buffer, EVENT_BUF_LEN);
+		ssize_t length = read(me->fd, buffer, EVENT_BUF_LEN);
 
 		// checking for error
 		if (length < 0) {

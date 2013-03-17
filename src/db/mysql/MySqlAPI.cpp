@@ -294,7 +294,7 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId) {
 unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string status) {
     soci::session sql(connectionPool);
 
-    unsigned updated = 0;
+    unsigned int updated = 0;
     try {
         sql.begin();
         soci::statement stmt(sql);
@@ -1557,7 +1557,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
         int nActiveSource, nActiveDest;
         double nFailedLastHour=0, nFinishedLastHour=0;
         int nActive;
-        int nFailedAll, nFinishedAll;
+        double nFailedAll, nFinishedAll;
 
         sql << "SELECT COUNT(*) FROM t_file, t_job "
                "WHERE t_file.file_state in ('READY','ACTIVE') AND "

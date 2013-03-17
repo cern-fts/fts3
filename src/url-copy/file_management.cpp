@@ -131,7 +131,7 @@ std::string FileManagement::timestamp() {
 bool FileManagement::directoryExists(const char* pzPath) {
     if (pzPath == NULL) return false;
 
-    DIR *pDir;
+    DIR *pDir=NULL;
     bool bExists = false;
 
     pDir = opendir(pzPath);

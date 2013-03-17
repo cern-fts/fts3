@@ -488,7 +488,7 @@ __attribute__((constructor)) void begin(void) {
     //switch to non-priviledged user to avoid reading the hostcert
     pw_uid = name_to_uid();
     setuid(pw_uid);
-    seteuid(pw_uid);   
+    seteuid(pw_uid);      
     StaticSslLocking::init_locks();
     fileManagement = new FileManagement();     
 }

@@ -46,7 +46,7 @@ void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messag
     std::list<struct message_updater>::iterator iter;
     boost::posix_time::time_duration::tick_type timestamp1;
     boost::posix_time::time_duration::tick_type timestamp2;  
-    int n_seconds = 0;  
+    boost::posix_time::time_duration::tick_type n_seconds = 0;  
     for (iter = m_list.begin(); iter != m_list.end(); ++iter) {        
     	timestamp1 = milliseconds_since_epoch();
     	timestamp2 = iter->timestamp;	

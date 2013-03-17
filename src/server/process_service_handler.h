@@ -67,25 +67,24 @@ using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
 
 /*resource resource management as not to run out of memory or too many processes*/
-static int getMaxThreads() {
+static rlim_t getMaxThreads() {
     struct rlimit rlim;
     int err = -1;
     err = getrlimit(RLIMIT_NPROC, &rlim);
     if (0 != err) {
-        return -1;
+        return 0;
     } else {
         return rlim.rlim_cur;
     }
-    return -1;
+    return 0;
 }
 
-static int getAvailableMemory() {
-    const double megabyte = 1024 * 1024;
+static long unsigned int getAvailableMemory() {
     struct sysinfo info;
     if (sysinfo(&info) != 0)
-        return -1;
+        return 0;
 
-    return (info.freeram) / megabyte;
+    return (info.freeram) / (1024 * 1024);
 }
 
 template <class T>
@@ -167,7 +166,7 @@ protected:
     std::string allowedVOs;
     std::vector<int> requestIDs;
     std::vector<TransferJobs*> jobs2;
-    int maximumThreads;
+    rlim_t maximumThreads;
     std::string infosys;
 
     void killRunninfJob(std::vector<int>& requestIDs) {
@@ -251,15 +250,15 @@ protected:
                             return;
                         }
 
-                        int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                        if (maximumThreads != -1 && currentActiveTransfers != 0 && (currentActiveTransfers * 11) >= maximumThreads) {
+                        unsigned int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
+                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 11) >= maximumThreads) {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
                             sleep(1);
                             continue;
                         }
 
-                        int freeRam = getAvailableMemory();    			                
-                        if (freeRam != -1 && freeRam < 200) {
+                        long unsigned int freeRam = getAvailableMemory();    			                
+                        if (freeRam != 0 && freeRam < 200) {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
                             sleep(1);
                             continue;
@@ -564,15 +563,15 @@ protected:
                     }
 
 
-                    int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                    if (maximumThreads != -1 && currentActiveTransfers != 0 && (currentActiveTransfers * 11) >= maximumThreads) {
+                    unsigned int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
+                    if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 11) >= maximumThreads) {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
                         sleep(1);
                         continue;
                     }
 
-                    int freeRam = getAvailableMemory();                    
-                    if (freeRam != -1 && freeRam < 200) {
+                    long unsigned int freeRam = getAvailableMemory();                    
+                    if (freeRam != 0 && freeRam < 200) {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
                         sleep(1);
                         continue;

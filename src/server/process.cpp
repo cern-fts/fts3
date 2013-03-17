@@ -53,7 +53,7 @@ int ExecuteProcess::executeProcess() {
     list<string> args;
     split(m_arguments, ' ', args, 0, false);
 
-    int argc = 1 + args.size() + 1;
+    size_t argc = 1 + args.size() + 1;
 
     char** argv = new char*[argc];
     list<string>::iterator it = args.begin();
@@ -73,7 +73,7 @@ int ExecuteProcess::executeProcess() {
     if (m_fdlog > 0) {
         status = execProcessLog(argc, argv);
     } else {
-        status = execProcess(argc, argv);
+        status = (size_t) execProcess(argc, argv);
     }
     delete [] argv;
 
@@ -113,7 +113,7 @@ std::string ExecuteProcess::generate_request_id(const std::string& prefix) {
     return new_name;
 }
 
-int ExecuteProcess::execProcessLog(int argc, char** argv) {
+int ExecuteProcess::execProcessLog(size_t argc, char** argv) {
     int status = 0;
     int fdpipe[2];
     ssize_t  write_size;
@@ -160,7 +160,7 @@ int ExecuteProcess::execProcessLog(int argc, char** argv) {
     return status;
 }
 
-int ExecuteProcess::execProcess(int argc, char** argv) {
+int ExecuteProcess::execProcess(size_t argc, char** argv) {
     int status = 0;
     argc = 0;
     pid_t pid = fork();
@@ -254,18 +254,19 @@ int ExecuteProcess::execProcessShell() {
     std::vector<std::string>::iterator iter;
     std::string p;
     int pipefds[2];
-    int count=0, err=0;
+    ssize_t count=0;
+    int err=0;
     pid_t child;    
     const char *path=NULL;
     char *copy=NULL;
-    int maxfd;
+    long int maxfd;
     ssize_t checkWriteSize;
     int checkDir = 0;
 
     list<string> args;
     split(m_arguments, ' ', args, 0, false);
 
-    int argc = 1 + args.size() + 1;
+    size_t argc = 1 + args.size() + 1;
 
     char** argv = new char*[argc];
     list<string>::iterator it = args.begin();

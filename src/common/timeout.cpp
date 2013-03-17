@@ -29,7 +29,7 @@ Timeout& Timeout::actualize()
 	
 	if (boost::TIME_UTC != res) FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Time error"));
 	
-	int nsecs = _ns + _xt.nsec;
+	int nsecs = _ns + (int) _xt.nsec;
 	int usecs = _us + nsecs / NANOSECONDS_PER_MILLISECOND;
 	int secs = _s + usecs / MILLISECONDS_PER_SECOND;
 	nsecs += (usecs % MILLISECONDS_PER_SECOND) * NANOSECONDS_PER_MILLISECOND;
