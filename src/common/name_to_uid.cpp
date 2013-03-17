@@ -24,11 +24,14 @@ uid_t name_to_uid() {
     if (buflen == -1)
         return static_cast<uid_t>(-1);
 
-    char buf[buflen];
+    //char buf[buflen];
+    char *buf = (char *)malloc(buflen+1);
     struct passwd pwbuf, *pwbufp;
-    if (0 != getpwnam_r(name, &pwbuf, buf, static_cast<size_t>(buflen), &pwbufp)
-            || !pwbufp)
+    if (0 != getpwnam_r(name, &pwbuf, buf, static_cast<size_t>(buflen), &pwbufp) || !pwbufp){
+        free(buf);
         return static_cast<uid_t>(-1);
+    }
+    free(buf);
     return pwbufp->pw_uid;
 }
 

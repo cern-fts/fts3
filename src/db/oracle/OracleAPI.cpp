@@ -2678,7 +2678,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     conn->releasePooledConnection(pooledConnection);                    
 }
 
-bool OracleAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {  
+bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {  
     const std::string tag2 = "updateOptimizer2";
     const std::string tag3 = "updateOptimizer3";
     double throughput = 0;    

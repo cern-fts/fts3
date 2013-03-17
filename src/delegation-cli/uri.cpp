@@ -40,7 +40,7 @@
 static void fixup_lfn_uri(glite_uri *uri)
 {
 	char *p, *path, *start;
-	int len;
+	size_t len;
 
 	if (!uri->endpoint || !uri->query)
 		return;

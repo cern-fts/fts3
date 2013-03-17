@@ -145,7 +145,7 @@ void ProxyCertificateDelegator::delegate() {
     	int requestProxyDelegationTime;
 
         if (userRequestedDelegationExpTime == 0) {
-            requestProxyDelegationTime = localProxyTimeLeft - 60; // 60 seconds off current proxy
+            requestProxyDelegationTime = (int)localProxyTimeLeft - 60; // 60 seconds off current proxy
             if (requestProxyDelegationTime > MAXIMUM_TIME_FOR_DELEGATION_REQUEST ) {
                 requestProxyDelegationTime = MAXIMUM_TIME_FOR_DELEGATION_REQUEST;
             }

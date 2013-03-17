@@ -42,7 +42,7 @@ public:
         memset(transfer_message, 0, sizeof (transfer_message));
         process_id = 0;
         timeInSecs = 0.0;
-        filesize = 0.0;
+        filesize = 0;
         nostreams = 2;
         timeout = 3600;
         buffersize = 0;

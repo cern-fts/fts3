@@ -42,7 +42,7 @@ Job::Job(PyFile file) : checksum(false), expiration(0) {
 
 Job::Job(py::list files) : checksum(false), expiration(0) {
 	// check the size
-	int size = py::len(files);
+	boost::python::ssize_t size = py::len(files);
 	// loop over all files
 	for (int i = 0; i < size; i++) {
 		// extract the tuple

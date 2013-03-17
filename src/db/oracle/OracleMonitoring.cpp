@@ -265,9 +265,9 @@ void OracleMonitoring::filterJobs(const std::vector<std::string>& inVos,
     oracle::occi::Statement* s = conn->createStatement(query.str(), tag.str(), pooledConnection);
     s->setTimestamp(1, notBefore);
     for (i = 0; i < inVos.size(); ++i)
-        s->setString(i + 2, inVos[i]);
+        s->setString((unsigned int)i + 2, inVos[i]);
     for (j = 0; j < inStates.size(); ++j)
-        s->setString(i + j + 2, inStates[j]);
+        s->setString((unsigned int)i + (unsigned int)j + 2, inStates[j]);
 
     oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     while (r->next()) {
@@ -319,10 +319,10 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     s->setTimestamp(1, notBefore);
 
     for (i = 0; i < state.size(); ++i)
-        s->setString(i + 2, state[i]);
+        s->setString((unsigned int)i + 2, state[i]);
 
     if (!vo.empty())
-        s->setString(i + 2, vo);
+        s->setString((unsigned int)i + 2, vo);
 
     oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     unsigned count = 0;
@@ -370,13 +370,13 @@ unsigned OracleMonitoring::numberOfTransfersInState(const std::string& vo,
     s->setTimestamp(1, notBefore);
 
     for (i = 0; i < state.size(); ++i)
-        s->setString(i + 2, state[i]);
+        s->setString((unsigned int)i + 2, state[i]);
 
-    s->setString(i + 2, pair.sourceStorageElement);
-    s->setString(i + 3, pair.destinationStorageElement);
+    s->setString((unsigned int)i + 2, pair.sourceStorageElement);
+    s->setString((unsigned int)i + 3, pair.destinationStorageElement);
 
     if (!vo.empty())
-        s->setString(i + 4, vo);
+        s->setString((unsigned int)i + 4, vo);
 
     oracle::occi::ResultSet* r = conn->createResultset(s, pooledConnection);
     unsigned count = 0;

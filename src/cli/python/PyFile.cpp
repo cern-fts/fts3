@@ -45,7 +45,7 @@ PyFile::~PyFile() {
 
 void PyFile::setSources(py::list src) {
 	// check the size
-	int size = py::len(src);
+	boost::python::ssize_t size = py::len(src);
 	// loop over all files
 	for (int i = 0; i < size; i++) {
 		// extract the tuple
@@ -70,7 +70,7 @@ py::list PyFile::getSources() {
 
 void PyFile::setDestinations(py::list dest) {
 	// check the size
-	int size = py::len(dest);
+	boost::python::ssize_t size = py::len(dest);
 	// loop over all files
 	for (int i = 0; i < size; i++) {
 		// extract the tuple
@@ -95,7 +95,7 @@ py::list PyFile::getDestinations() {
 
 void PyFile::setChecksums(py::list checksum) {
 	// check the size
-	int size = py::len(checksum);
+	boost::python::ssize_t size = py::len(checksum);
 	// loop over all files
 	for (int i = 0; i < size; i++) {
 		// extract the tuple

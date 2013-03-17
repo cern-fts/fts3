@@ -1409,7 +1409,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
 
 
 
-bool MySqlAPI::updateOptimizer(int, double filesize, int timeInSecs, int nostreams,
+bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nostreams,
                                int timeout, int buffersize,
                                std::string source_hostname, std::string destin_hostname) {
     bool ok = true;

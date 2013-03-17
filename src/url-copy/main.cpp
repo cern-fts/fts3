@@ -451,10 +451,10 @@ static void event_logger(const gfalt_event_t e, gpointer udata) {
 
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER){
         msg->set_timestamp_transfer_started(&tr_completed, timestampStr);
-	transfer_start = e->timestamp;	
+	transfer_start = (double) e->timestamp;	
     }else if (e->stage == GFAL_EVENT_TRANSFER_EXIT){
         msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);	   
-	transfer_complete = e->timestamp;		
+	transfer_complete = (double) e->timestamp;		
     }
 
     else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE)
@@ -600,7 +600,7 @@ int main(int argc, char **argv) {
     struct stat statbufsrc;
     struct stat statbufdest;
     int ret = -1;
-    long long transferred_bytes = 0;
+    double transferred_bytes = 0;
     UserProxyEnv* cert = NULL;
 
     hostname[1023] = '\0';
@@ -646,7 +646,7 @@ int main(int argc, char **argv) {
 
     //cancelation point 
     long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    unsigned timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout);
+    long unsigned int timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + timeout);
     
     try{
     	boost::thread bt(taskTimer, timerTimeout);
@@ -893,9 +893,9 @@ int main(int argc, char **argv) {
                     } else {
                         log << fileManagement->timestamp() << "INFO Source file size: " << statbufsrc.st_size << '\n';
                         if (statbufsrc.st_size > 0)
-                            source_size = statbufsrc.st_size;
+                            source_size = (double) statbufsrc.st_size;
                         //conver longlong to string
-                        std::string size_to_string = to_string<long double > (source_size, std::dec);
+                        std::string size_to_string = to_string<double > (source_size, std::dec);
                         //set the value of file size to the message
                         msg_ifce::getInstance()->set_file_size(&tr_completed, size_to_string.c_str());
                         break;
@@ -975,7 +975,7 @@ int main(int argc, char **argv) {
                 log << fileManagement->timestamp() << "INFO Transfer completed successfully" << '\n';
             }
 
-            transferred_bytes = source_size;
+            transferred_bytes = (double) source_size;
             bytes_to_string = to_string<double>(transferred_bytes, std::dec);
             msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
 
@@ -1031,7 +1031,7 @@ int main(int argc, char **argv) {
                         }
                     } else {
                         log << fileManagement->timestamp() << "INFO Destination file size: " << statbufdest.st_size << '\n';
-                        dest_size = statbufdest.st_size;
+                        dest_size = (double) statbufdest.st_size;
                         break;
                     }
                 }

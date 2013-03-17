@@ -60,7 +60,7 @@ void PythonApi::cancelAll(py::list ids) {
 
 	vector<string> c_ids;
 
-	int size = len(ids);
+	boost::python::ssize_t size = len(ids);
 	for (int i = 0; i < size; i++) {
 		c_ids.push_back(py::extract<string>(ids[i]));
 	}

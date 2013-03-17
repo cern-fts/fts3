@@ -231,9 +231,9 @@ bool SubmitTransferCli::createJobElements() {
     	}
 
     	// check if size of the file has been specified
-    	optional<int> filesize;
+    	optional<long int> filesize;
     	if (vm.count("file-size")) {
-    		filesize = vm["file-size"].as<int>();
+    		filesize = vm["file-size"].as<long int>();
     	}
 
     	// check if there are some file metadata
