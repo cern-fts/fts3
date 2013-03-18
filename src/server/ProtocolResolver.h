@@ -104,6 +104,7 @@ public:
 	 * @param job_id - transfer job ID
 	 */
 	ProtocolResolver(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs);
+        ProtocolResolver(const fts3::server::ProtocolResolver&);
 
 	/**
 	 * Destructor.

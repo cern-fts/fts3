@@ -40,6 +40,7 @@ class GSoapRequestHandler {
 
 public:
     GSoapRequestHandler(GSoapAcceptor& acceptor);
+    GSoapRequestHandler(const fts3::server::GSoapRequestHandler&);
     ~GSoapRequestHandler();
 
     void handle();

@@ -72,6 +72,7 @@ public:
 	 * @param file - a file that is being scheduled
 	 */
 	ConfigurationAssigner(TransferFiles* file);
+	ConfigurationAssigner(const fts3::server::ConfigurationAssigner&);
 
 	/**
 	 * Destructor.

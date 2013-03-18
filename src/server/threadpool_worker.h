@@ -31,7 +31,8 @@ namespace ThreadPool {
 class Worker 
 {
 public:
-	Worker(ThreadTraits::THREAD_GROUP& tg, const int id);	
+	Worker(ThreadTraits::THREAD_GROUP& tg, const int id);
+	Worker(const Worker&);	
 
 	virtual ~Worker() {}
 	

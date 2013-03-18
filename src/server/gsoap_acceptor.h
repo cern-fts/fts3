@@ -37,6 +37,7 @@ class GSoapAcceptor: public MonitorObject {
 
 public:
     GSoapAcceptor(const unsigned int port, const std::string& ip);
+   GSoapAcceptor(const fts3::server::GSoapAcceptor&);
     virtual ~GSoapAcceptor();
 
     soap* getSoapContext();

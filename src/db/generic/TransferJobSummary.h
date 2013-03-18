@@ -34,6 +34,7 @@ class TransferJobSummary{
 
 public:
 	TransferJobSummary(){}
+	TransferJobSummary(const TransferJobSummary&);
 	~TransferJobSummary(){}	
 
     int numReady;
