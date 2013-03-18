@@ -130,6 +130,12 @@ extern std::string stackTrace;
 gfal_context_t handle = NULL;
 
 
+static std::string removeDecimal(const std::string & input){
+	size_t pos = input.find("."); 
+	return input.substr (0, pos);
+}
+
+
 //convert milli to secs
 static double transferDuration(double start , double complete){
 	return (start==0 && complete==0)==true? 0.0: (complete - start) / 1000; 
@@ -705,7 +711,7 @@ int main(int argc, char **argv) {
             strArray[2] = dest_url;	    
             strArray[3] = checksum_value;
 	    if(userFilesize.length() > 0)
-            	strArray[4] = userFilesize;
+            	strArray[4] = removeDecimal(userFilesize);
 	    else
 	        strArray[4] = "0";
             strArray[5] = file_Metadata;
