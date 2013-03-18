@@ -75,7 +75,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     #ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)   
     ADD_DEFINITIONS(-D_GLIBCXX_DEBUG_PEDANTIC -DDEBUG=1 -g3  -O0 )
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -ftrapv -findirect-inlining -ftree-switch-conversion -ftree-builtin-call-dce -fconserve-stack -Wno-long-long -Wconversion -Wuninitialized  -Wno-deprecated-declarations  -fno-strict-aliasing -Wextra -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-all -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -findirect-inlining -ftree-switch-conversion -ftree-builtin-call-dce -fconserve-stack -Wno-long-long -Wconversion -Wuninitialized  -Wno-deprecated-declarations  -fno-strict-aliasing -Wextra -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-all -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64")
 endif ()
 
 set(BOOST_LIBRARYDIR /usr/lib64)
