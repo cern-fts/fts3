@@ -569,6 +569,7 @@ CREATE TABLE t_file (
   
 --
 -- user provided size of the file (bytes)
+-- we use DOUBLE because SOCI truncates BIGINT to int32
   user_filesize  DOUBLE,  
   
 --
