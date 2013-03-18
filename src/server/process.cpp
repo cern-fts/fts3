@@ -80,38 +80,6 @@ int ExecuteProcess::executeProcess() {
     return status;
 }
 
-std::string ExecuteProcess::generate_request_id(const std::string& prefix) {
-
-    std::string new_name = std::string("");
-
-    // Get current time
-    time_t current;
-    time(&current);
-    struct tm * date = gmtime(&current);
-
-    // Create template
-    std::stringstream ss;
-    if (false == prefix.empty()) {
-        ss << prefix;
-    }
-    ss << std::setfill('0');
-    ss << "__" << std::setw(4) << (date->tm_year + 1900)
-            << "-" << std::setw(2) << (date->tm_mon + 1)
-            << "-" << std::setw(2) << (date->tm_mday)
-            << "-" << std::setw(2) << (date->tm_hour)
-            << std::setw(2) << (date->tm_min)
-            << "_XXXXXX";
-
-    // Generate File name
-    new_name = "/var/log/fts3";
-    new_name += ss.str();
-    char* ret = mktemp(&(*(new_name.begin())));
-
-    if (ret == NULL)
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Job id " + prefix + " log file cannot be generated"));
-
-    return new_name;
-}
 
 int ExecuteProcess::execProcessLog(size_t argc, char** argv) {
     int status = 0;

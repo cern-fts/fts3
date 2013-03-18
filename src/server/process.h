@@ -26,7 +26,6 @@ public:
     ExecuteProcess( const string& app, const string& arguments, int fdlog=0 );
     int executeProcess();
     int executeProcessShell();
-    std::string generate_request_id(const std::string& prefix);
     int execProcess(size_t argc, char** argv);
     int execProcessLog(size_t argc, char** argv);
     void setPid(const string& jobId, const string& fileId);

@@ -130,7 +130,7 @@ static bool checkUrlCopy() {
         pathV.push_back(std::string(token));
     }
 
-    for (iter = pathV.begin(); iter < pathV.end(); iter++) {
+    for (iter = pathV.begin(); iter < pathV.end(); ++iter) {
         p = *iter + "/fts_url_copy";
         if (fexists(p.c_str()) == 0) {
             free(copy);

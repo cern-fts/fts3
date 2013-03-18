@@ -224,7 +224,6 @@ protected:
 
         if (reuse == false) {
             bool manualConfigExists = false;
-            std::string symbolicName("");
             if (!jobs2.empty()) {
                 /*get the file for each job*/
                 std::vector<TransferJobs*>::const_iterator iter2;
@@ -512,7 +511,6 @@ protected:
         } else { /*reuse session*/
             if (!jobs2.empty()) {
                 bool manualConfigExists = false;
-                std::string symbolicName("");
                 std::vector<std::string> urls;
                 std::map<int, std::string> fileIds;
                 std::string job_id = std::string("");

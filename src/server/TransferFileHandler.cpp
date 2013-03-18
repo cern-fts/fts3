@@ -44,7 +44,7 @@ TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& fi
 TransferFileHandler::~TransferFileHandler() {
 
 	map< FileIndex, list<TransferFiles*> >::iterator it;
-	for (it = fileIndexToFiles.begin(); it != fileIndexToFiles.end(); it++) {
+	for (it = fileIndexToFiles.begin(); it != fileIndexToFiles.end(); ++it) {
 		freeList(it->second);
 	}
 }
@@ -100,7 +100,7 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index) {
 void TransferFileHandler::freeList(list<TransferFiles*>& l) {
 	// iterate over the list
 	list<TransferFiles*>::iterator it;
-	for (it = l.begin(); it != l.end(); it++) {
+	for (it = l.begin(); it != l.end(); ++it) {
 		// and release the memory
 		delete *it;
 	}
