@@ -449,6 +449,15 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
 
 	list< pair<string, string> > ret;
 
+	// if it is single source - single destination submission just return the pair
+	if (sources.size() == 1 && destinations.size() == 1) {
+		ret.push_back(
+				make_pair(sources.front(), destinations.front())
+			);
+
+		return ret;
+	}
+
 	vector<string>::iterator it_s, it_d;
 
 	for (it_s = sources.begin(); it_s != sources.end(); it_s++) {
