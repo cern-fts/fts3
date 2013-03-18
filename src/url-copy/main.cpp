@@ -857,10 +857,8 @@ int main(int argc, char **argv) {
                     errorMessage = "Failed to get source file size: " + tempError;
                     errorScope = SOURCE;
                     reasonClass = mapErrnoToString(errCode);
-                    errorPhase = TRANSFER_PREPARATION;
-		    if(tmp_err){
-		    	retry = retryTransfer(tmp_err->code, "SOURCE" );
-		    }
+                    errorPhase = TRANSFER_PREPARATION;		    
+		    retry = retryTransfer(tmp_err->code, "SOURCE" );		    
                     if (sourceStatRetry == 3 || retry == false){
   			log << fileManagement->timestamp() << "INFO No more retries for stat the source" << '\n';
                         g_clear_error(&tmp_err);
@@ -986,30 +984,19 @@ int main(int argc, char **argv) {
 
             log << fileManagement->timestamp() << "INFO Stat the dest surl start" << '\n';
             for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++) {
-                if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0) {
-                    if (tmp_err && tmp_err->message) {
+                if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0) {                  
                         std::string tempError(tmp_err->message);
                         log << fileManagement->timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
                         errorMessage = "Failed to get dest file size: " + tempError;
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(tmp_err->code);
-                        errorPhase = TRANSFER_FINALIZATION;
-                    } else {
-                        std::string tempError = "Undetermined error";
-                        log << fileManagement->timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
-                        errorMessage = "Failed to get dest file size: " + tempError;
-                        errorScope = DESTINATION;
-                        reasonClass = mapErrnoToString(tmp_err->code);
-                        errorPhase = TRANSFER_FINALIZATION;
-                    }
-		    if (tmp_err){
+                        errorPhase = TRANSFER_FINALIZATION;                    		    
                     	retry = retryTransfer(tmp_err->code, "DESTINATION" );
-		    }
-                    if (destStatRetry == 3 || false == retry) {
-                        log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
-			g_clear_error(&tmp_err);
-                        goto stop;
-                    }
+                    	if (destStatRetry == 3 || false == retry) {
+                        	log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
+				g_clear_error(&tmp_err);
+                        	goto stop;
+                   	}
 		    g_clear_error(&tmp_err);
                 } else {
                     if (statbufdest.st_size <= 0) {

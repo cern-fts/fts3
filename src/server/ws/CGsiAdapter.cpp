@@ -79,7 +79,7 @@ vector<string> CGsiAdapter::getClientRoles() {
 	vector<string> ret;
 	vector<string>::iterator it;
 
-	for (it = attrs.begin(); it != attrs.end(); it++) {
+	for (it = attrs.begin(); it != attrs.end(); ++it) {
 
 		smatch what;
 		regex_match(*it, what, re, match_extra);

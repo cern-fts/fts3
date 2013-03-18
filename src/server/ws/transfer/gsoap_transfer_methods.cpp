@@ -241,7 +241,7 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
 			_param_9._getFileStatusReturn->item.push_back(status);
 			
 		}
-		for (it = statuses.begin(); it < statuses.end(); it++) {
+		for (it = statuses.begin(); it < statuses.end(); ++it) {
 			delete *it;
 		}
 		statuses.clear();
@@ -298,7 +298,7 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 
 			_param_10._getFileStatus2Return->item.push_back(status);			
 		}
-		for (it = statuses.begin(); it < statuses.end(); it++) {
+		for (it = statuses.begin(); it < statuses.end(); ++it) {
 			delete *it;
 		}
 		statuses.clear();		
@@ -331,7 +331,7 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
 //			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
-			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it) {
 				delete *it;
 			}
 		} else {
@@ -388,7 +388,7 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
 //			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
-			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it) {
 				delete *it;
 			}
 
@@ -450,7 +450,7 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
 //			FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
 			vector<JobStatus*>::iterator it;
-			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it) {
 				delete *it;
 			}
 
@@ -758,7 +758,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
 			status = (*fileStatuses.begin())->jobStatus;
 			// release the memory
 			vector<JobStatus*>::iterator it;
-			for (it = fileStatuses.begin(); it < fileStatuses.end(); it++) {
+			for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it) {
 				delete *it;
 			}
 		} else {

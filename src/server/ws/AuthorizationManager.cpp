@@ -65,7 +65,7 @@ vector<string> AuthorizationManager::get< vector<string> >(string cfg) { // TODO
 	tokenizer< char_separator<char> >::iterator it;
 
 	std::vector<string> ret;
-	for (it = tokens.begin(); it != tokens.end(); it++) {
+	for (it = tokens.begin(); it != tokens.end(); ++it) {
 		ret.push_back(*it);
 	}
 
@@ -237,7 +237,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
 	vector<string> roles = cgsi.getClientRoles();
 	if (!roles.empty()) {
 		vector<string>::iterator it;
-		for (it = roles.begin(); it != roles.end(); it++) {
+		for (it = roles.begin(); it != roles.end(); ++it) {
 			Level tmp = check(ROLES_SECTION_PREFIX + *it, op_str);
 			if (tmp > lvl) lvl = tmp;
 		}

@@ -107,7 +107,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 
 	// extract the job elements from tns3__TransferJob object and put them into a vector
     vector<tns3__TransferJobElement * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
+    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
 
@@ -179,7 +179,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
     vector<tns3__TransferJobElement2 * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); it++) {
+    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
 
@@ -456,7 +456,6 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
 		string::size_type pos = it_s->find("://");
 		string protocol = it_s->substr(0, pos);
 		// look for the corresponding destination
-		string destination;
 		for (it_d = destinations.begin(); it_d != destinations.end(); it_d++) {
 			// if the destination uses the same protocol ...
 			if (it_d->find(protocol) == 0 || it_d->find(srm_protocol) == 0 || protocol == srm_protocol) { // TODO verify!!!

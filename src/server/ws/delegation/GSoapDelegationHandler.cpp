@@ -355,7 +355,7 @@ string GSoapDelegationHandler::fqansToString(vector<string> attrs) {
 	const string delimiter = " ";
 
 	vector<string>::iterator it;
-	for (it = attrs.begin(); it < attrs.end(); it++) {
+	for (it = attrs.begin(); it < attrs.end(); ++it) {
 		ss << *it << delimiter;
 	}
 

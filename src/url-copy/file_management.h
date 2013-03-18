@@ -30,9 +30,9 @@ public:
 public:
     std::string archive();
     std::string generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id);
-    bool directoryExists(const char* pzPath);
-    std::string timestamp();
-    std::string dateDir();
+    static bool directoryExists(const char* pzPath);
+    static std::string timestamp();
+    static std::string dateDir();
     int getLogStream(std::ofstream& logStream);
     void setSourceUrl(std::string& source_url);
     void setDestUrl(std::string& dest_url);
