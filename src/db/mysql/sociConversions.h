@@ -111,7 +111,7 @@ namespace soci
             file.PIN_LIFETIME  = v.get<int>("copy_pin_lifetime");
             file.FILE_METADATA = v.get<std::string>("file_metadata", "");
             file.JOB_METADATA  = v.get<std::string>("job_metadata", "");
-            file.USER_FILESIZE = v.get<int>("user_filesize", 0);
+            file.USER_FILESIZE = v.get<double>("user_filesize", 0);
             file.FILE_INDEX    = v.get<int>("file_index", 0);
             file.BRINGONLINE_TOKEN = v.get<std::string>("bringonline_token", "");
             file.SOURCE_SE = v.get<std::string>("source_se", "");
