@@ -90,7 +90,7 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 	content both (false, false);
 
 	list<cfg_type>::iterator it;
-	for (it = arg.begin(); it != arg.end(); it++) {
+	for (it = arg.begin(); it != arg.end(); ++it) {
 
 		share s = get<SHARE>(*it);
 		content c = get<CONTENT>(*it);

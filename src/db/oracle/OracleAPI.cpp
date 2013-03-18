@@ -262,7 +262,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     s = conn->createStatement(query_stmt, tag, pooledConnection);
 	
 	vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-	for (it = distinct.begin(); it != distinct.end(); it++) {
+	for (it = distinct.begin(); it != distinct.end(); ++it) {
 
 		boost::tuple< std::string, std::string, std::string>& triplet = *it;
 

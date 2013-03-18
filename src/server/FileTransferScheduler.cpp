@@ -71,7 +71,7 @@ bool FileTransferScheduler::schedule(bool optimize) {
 
 	vector< shared_ptr<ShareConfig> >::iterator it;
 
-	for (it = cfgs.begin(); it != cfgs.end(); it++) {
+	for (it = cfgs.begin(); it != cfgs.end(); ++it) {
 
 		string source = (*it)->source;
 		string destination = (*it)->destination;
@@ -167,7 +167,7 @@ string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg) {
 	vector<ShareConfig*> cfgs = db->getShareConfig(cfg->source, cfg->destination);
 	vector<ShareConfig*>::iterator it;
 
-	for (it = cfgs.begin(); it != cfgs.end(); it++) {
+	for (it = cfgs.begin(); it != cfgs.end(); ++it) {
 		shared_ptr<ShareConfig> ptr (*it);
 		if (ptr->active_transfers) {
 			if (it != cfgs.begin()) ss << ", ";

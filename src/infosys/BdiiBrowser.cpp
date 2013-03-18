@@ -206,7 +206,7 @@ bool BdiiBrowser::isValid() {
 string BdiiBrowser::parseForeingKey(list<string> values, const char *attr) {
 
 	list<string>::iterator it;
-	for (it = values.begin(); it != values.end(); it++) {
+	for (it = values.begin(); it != values.end(); ++it) {
 
 		string entry = *it, attr_str = attr;
 		to_lower(entry);
@@ -251,7 +251,7 @@ bool BdiiBrowser::checkIfInUse(string& base) {
 	vector<string> providers = theServerConfig().get< vector<string> >("InfoProviders");
 	vector<string>::iterator it;
 
-	for (it = providers.begin(); it != providers.end(); it++) {
+	for (it = providers.begin(); it != providers.end(); ++it) {
 		if (base_str == *it) return true;
 	}
 

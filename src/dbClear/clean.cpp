@@ -68,12 +68,10 @@ try {
 		db::DBSingleton::instance().getDBObjectInstance()->backup();
 		
     }catch (Err& e) {
-        std::string msg = "Fatal error, exiting...";
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error, exiting..." << commit;
         return EXIT_FAILURE;
-    } catch (...) {
-        std::string msg = "Fatal error (unknown origin), exiting...";
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+    } catch (...) {        
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Fatal error (unknown origin), exiting..." << commit;
         return EXIT_FAILURE;
     }  
       

@@ -113,7 +113,7 @@ void SiteNameCacheRetriever::fromGlue1(map<string, string>& cache) {
 		FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
 
 	list< map<string, list<string> > >::iterator it;
-	for (it = rs.begin(); it != rs.end(); it++) {
+	for (it = rs.begin(); it != rs.end(); ++it) {
 		map<string, list<string> >& item = *it;
 
 		// make sure this entry is not empty
@@ -146,7 +146,7 @@ void SiteNameCacheRetriever::fromGlue2(map<string, string>& cache) {
 		FTS3_COMMON_LOGGER_NEWLOG(WARNING) << "Querying BDII took more than 30s!" << commit;
 
 	list< map<string, list<string> > >::iterator it;
-	for (it = rs.begin(); it != rs.end(); it++) {
+	for (it = rs.begin(); it != rs.end(); ++it) {
 		map<string, list<string> >& item = *it;
 		// make sure this entry is not empty
 		if (item[ATTR_GLUE2_ENDPOINT].empty() || item[ATTR_GLUE2_FK].empty()) continue;

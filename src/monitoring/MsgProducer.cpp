@@ -153,7 +153,6 @@ bool MsgProducer::getConnection() {
 }
 
 void MsgProducer::readConfig() {
-    std::string filename;
     bool fileExists = get_mon_cfg_file();
 
     if ((fileExists == false) || (false == getACTIVE())) {
@@ -168,7 +167,6 @@ void MsgProducer::readConfig() {
 
         this->logfilename = getLOGFILENAME();
         this->logfilepath = getLOGFILEDIR();
-        filename = logfilepath + "" + logfilename;
 
         this->brokerURI = "tcp://" + broker + "?wireFormat=stomp&soKeepAlive=true";
 

@@ -339,7 +339,7 @@ int ExecuteProcess::execProcessShell() {
         while ( (token = strtok(0, ":")) != NULL) {
             pathV.push_back(std::string(token));
         }
-        for (iter = pathV.begin(); iter < pathV.end(); iter++) {
+        for (iter = pathV.begin(); iter < pathV.end(); ++iter) {
             p = *iter + "/" + std::string(argv[0]);
             if (fexists(p.c_str()) == 0)
                 break;

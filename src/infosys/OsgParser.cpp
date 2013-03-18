@@ -56,7 +56,7 @@ bool OsgParser::isInUse() {
 	vector<string> providers = theServerConfig().get< vector<string> >("InfoProviders");
 	vector<string>::iterator it;
 
-	for (it = providers.begin(); it != providers.end(); it++) {
+	for (it = providers.begin(); it != providers.end(); ++it) {
 		if (myosg_str == *it) return true;
 	}
 

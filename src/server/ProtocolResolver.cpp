@@ -46,7 +46,7 @@ ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< shared_ptr<Share
 	vector< shared_ptr<ShareConfig> >::iterator it;
 
 	// loop over the assigned configurations
-	for (it = cfgs.begin(); it != cfgs.end(); it++) {
+	for (it = cfgs.begin(); it != cfgs.end(); ++it) {
 
 		// get the source and destination
 		string source = (*it)->source;
@@ -176,7 +176,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
 optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l) {
 	// look for the first link
 	list<LinkType>::iterator it;
-	for (it = l.begin(); it != l.end(); it++) {
+	for (it = l.begin(); it != l.end(); ++it) {
 		// return the first existing link
 		if (link[*it]) return link[*it];
 	}

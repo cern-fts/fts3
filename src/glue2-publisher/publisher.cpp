@@ -40,10 +40,7 @@ static int fexists(const char *filename) {
 }
 
 int main(int argc, char** argv) {
-
-    char hostname[MAXHOSTNAMELEN];
-    gethostname(hostname, MAXHOSTNAMELEN);
-    std::string hostVM(hostname);
+   
     std::stringstream versionFTS;
     const char *emiVersion = "/etc/emi-version";
     std::stringstream issuerCA;
