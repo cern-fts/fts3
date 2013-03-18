@@ -3278,7 +3278,6 @@ void OracleAPI::forceFailTransfers() {
             pid = r->getInt(4);
             internalParams = r->getString(5);
             timeout = extractTimeout(internalParams);
-	    timeout = 20;
             time_t lifetime = std::time(NULL);
 	    vmHostname = r->getString(6);
 	    reuseFlag = r->getString(7);
@@ -6867,9 +6866,7 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
 
     oracle::occi::Statement* s1 = 0, *s2 = 0, *s3 = 0;
     oracle::occi::ResultSet* r1 = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
-    std::vector< boost::tuple<std::string, std::string, int> > ret;
-
+    oracle::occi::Connection* pooledConnection = NULL;    
 
     try {
 

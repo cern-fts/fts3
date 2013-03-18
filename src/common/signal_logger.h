@@ -41,7 +41,7 @@ public:
     }
 	*/
 	
-    void log_stack(int sig);
+    static void log_stack(int sig);
 
     /**
      * destructor

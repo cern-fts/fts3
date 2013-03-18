@@ -66,7 +66,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
         struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe};
         transfersStoreVector.push_back(initial);
     } else {
-        for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); iter++) {
+        for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter) {
             if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
                 found = true;
                 break;
@@ -78,7 +78,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
         }
     }
 
-    for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); iter++) {
+    for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter) {
        
         if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
       
