@@ -46,10 +46,6 @@ FILE(WRITE ${PROJECT_SOURCE_DIR}/src/common/version.h
 "\#define VERSION \"@VERSION_STRING@\"\n"
 )
 
-#REMOVE PATCH once boost is fixed
-execute_process(COMMAND cp -f ${PROJECT_SOURCE_DIR}/src/patches/exception_ptr.hpp /usr/include/boost/exception_ptr.hpp)
-
-
 option(ORACLEBUILD "Build oracle plug-in" OFF)
 option(MYSQLBUILD "Build for EPEL" OFF)
 option(MAINBUILD "Build fts" OFF)
