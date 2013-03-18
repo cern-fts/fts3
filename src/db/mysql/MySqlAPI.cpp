@@ -444,7 +444,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
 
         // Insert src/dest pair
         std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;
-        int filesize, fileIndex;
+        int64_t filesize; int fileIndex;
         soci::statement pairStmt = (
         		sql.prepare <<
         		"INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se) "
