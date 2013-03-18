@@ -765,7 +765,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             s_file_statement->setString(3, iter->source);
             s_file_statement->setString(4, iter->destination);
             s_file_statement->setString(5, iter->checksum);
-            s_file_statement->setNumber(6, iter->filesize);
+            s_file_statement->setDouble(6, iter->filesize);
             s_file_statement->setString(7, iter->metadata);
             s_file_statement->setString(8, iter->selectionStrategy);	   
             s_file_statement->setInt(9, iter->fileIndex);//todo

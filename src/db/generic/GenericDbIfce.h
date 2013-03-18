@@ -70,7 +70,7 @@ struct job_element_tupple{
     std::string source_se;
     std::string dest_se;
     std::string checksum;
-    int64_t filesize;
+    double filesize;
     std::string metadata;
     std::string selectionStrategy;
     int fileIndex;

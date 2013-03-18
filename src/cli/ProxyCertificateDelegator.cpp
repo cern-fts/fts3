@@ -164,7 +164,7 @@ void ProxyCertificateDelegator::delegate() {
 
         err = glite_delegation_delegate(
         		dctx, delegationId.c_str(),
-        		(requestProxyDelegationTime/60),
+        		(int)(requestProxyDelegationTime/60),
                 renewDelegation
         	);
 

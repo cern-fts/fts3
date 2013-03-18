@@ -73,7 +73,7 @@ SubmitTransferCli::SubmitTransferCli() {
 			("reuse,r", "enable session reuse for the transfer job")
 			("job-metadata", value<string>(), "transfer-job metadata")
 			("file-metadata", value<string>(), "file metadata")
-			("file-size", value<int64_t>(), "file size (in Bytes)")
+			("file-size", value<double>(), "file size (in Bytes)")
 			("new-bulk-format", "New JSON format for bulk submission will be used")
 			("retry", value<int>(), "Number of retries")
 			("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
@@ -231,9 +231,9 @@ bool SubmitTransferCli::createJobElements() {
     	}
 
     	// check if size of the file has been specified
-    	optional<int64_t> filesize;
+    	optional<double> filesize;
     	if (vm.count("file-size")) {
-    		filesize = vm["file-size"].as<int64_t>();
+    		filesize = vm["file-size"].as<double>();
     	}
 
     	// check if there are some file metadata

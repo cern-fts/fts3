@@ -39,7 +39,7 @@ struct File {
 			vector<string> s,
 			vector<string> d,
 			vector<string> c = vector<string>(),
-			optional<long int> fs = optional<long int>(),
+			optional<double> fs = optional<double>(),
 			optional<string> m = optional<string>(),
 			optional<string> ss = optional<string>()) {
 
@@ -60,7 +60,7 @@ struct File {
 	/// checksum (multiple checksums in case of protocols that don't support adler32)
 	vector<string> checksums;
 	/// file size
-	optional<int64_t> file_size;
+	optional<double> file_size;
 	/// metadata
 	optional<string> metadata;
 };
