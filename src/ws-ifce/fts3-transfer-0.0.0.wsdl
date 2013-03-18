@@ -101,7 +101,7 @@
      <element name="source" minOccurs="1" maxOccurs="unbounded" type="xsd:string"/>
      <element name="dest" minOccurs="1" maxOccurs="unbounded" type="xsd:string"/>
      <element name="checksum" nillable="true" minOccurs="0" maxOccurs="unbounded" type="xsd:string"/>
-     <element name="filesize" nillable="true" minOccurs="0" type="xsd:int"/>
+     <element name="filesize" nillable="true" minOccurs="0" type="xsd:long"/>
      <element name="metadata" nillable="true" minOccurs="0" type="xsd:string"/>
      <element name="selectionStrategy" nillable="true" minOccurs="0" type="xsd:string"/>
     </sequence>

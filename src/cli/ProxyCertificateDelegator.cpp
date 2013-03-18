@@ -37,7 +37,7 @@ namespace fts3 {
 namespace cli {
 
 
-ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, int userRequestedDelegationExpTime, MsgPrinter& printer):
+ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime, MsgPrinter& printer):
 		delegationId(delegationId),
 		endpoint(endpoint),
 		userRequestedDelegationExpTime(userRequestedDelegationExpTime),
@@ -142,7 +142,7 @@ void ProxyCertificateDelegator::delegate() {
 
     if (needDelegation) {
 
-    	int requestProxyDelegationTime;
+    	long requestProxyDelegationTime;
 
         if (userRequestedDelegationExpTime == 0) {
             requestProxyDelegationTime = (int)localProxyTimeLeft - 60; // 60 seconds off current proxy

@@ -147,7 +147,7 @@ string GSoapContextAdapter::transferSubmit (vector<File> files, map<string, stri
 
 		// the file size
 		if (f_it->file_size) {
-			element->filesize = (int*) soap_malloc(ctx, sizeof(int));
+			element->filesize = (int64_t*) soap_malloc(ctx, sizeof(int64_t));
 			*element->filesize = *f_it->file_size;
 		} else {
 			element->filesize = 0;

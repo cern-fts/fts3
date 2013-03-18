@@ -60,7 +60,7 @@ struct File {
 	/// checksum (multiple checksums in case of protocols that don't support adler32)
 	vector<string> checksums;
 	/// file size
-	optional<long int> file_size;
+	optional<int64_t> file_size;
 	/// metadata
 	optional<string> metadata;
 };
