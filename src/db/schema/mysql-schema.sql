@@ -52,7 +52,7 @@ CREATE TABLE t_optimize (
   buffer       INTEGER DEFAULT NULL,   
 --
 -- the nominal size of the file (bytes)
-  filesize     BIGINT DEFAULT NULL,
+  filesize     DOUBLE DEFAULT NULL,
 --
 -- timestamp
   datetime     TIMESTAMP
@@ -536,7 +536,7 @@ CREATE TABLE t_file (
   prestage_failures  INTEGER,
 --
 -- the nominal size of the file (bytes)
-  filesize           INTEGER,
+  filesize           DOUBLE,
 --
 -- the user-defined checksum of the file "checksum_type:checksum"
   checksum           VARCHAR(100),
