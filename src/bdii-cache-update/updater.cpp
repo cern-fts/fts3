@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 		bdii_cache.get(cache);
 
 		map<string, string>::iterator it;
-		for (it = cache.begin(); it != cache.end(); it++) {
+		for (it = cache.begin(); it != cache.end(); ++it) {
 			string xpath = "/entry[hostname='" + it->first + "']";
 		    xpath_node node = doc.select_single_node(xpath.c_str());
 		    if (node) {

@@ -26,7 +26,7 @@ limitations under the License. */
 
 using namespace std;
 
-Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), msg_updater(NULL) {
+Reporter::Reporter() :source_se(""), dest_se("") , msg(NULL), msg_updater(NULL), nostreams(4), timeout(3600), buffersize(0) {
 	msg = new struct message();	
 	msg_updater = new struct message_updater();	
 }

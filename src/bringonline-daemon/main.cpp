@@ -297,7 +297,7 @@ int DoServer(int argc, char** argv) {
             voHostnameConfig = db::DBSingleton::instance().getDBObjectInstance()->getVOBringonlimeMax();
 
             if (!voHostnameConfig.empty()) {
-                for (it = voHostnameConfig.begin(); it != voHostnameConfig.end(); it++) {
+                for (it = voHostnameConfig.begin(); it != voHostnameConfig.end(); ++it) {
                     string voName = get < 0 > (*it);
                     string hostName = get < 1 > (*it);
                     int maxValue = get < 2 > (*it);
@@ -310,7 +310,7 @@ int DoServer(int argc, char** argv) {
 
             if (!urls.empty()) {
 	        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE " << urls.size() << " are ready for bringonline"  << commit;
-                for (itUrls = urls.begin(); itUrls != urls.end(); itUrls++) {
+                for (itUrls = urls.begin(); itUrls != urls.end(); ++itUrls) {
                     if (true == isSrmUrl((*itUrls).url)) {
                         std::string dn;
                         std::string dlg_id;

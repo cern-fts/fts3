@@ -76,7 +76,7 @@ public:
         
     }
     
-    std::string timestamp() {
+    static std::string timestamp() {
 	std::string timestapStr("");	
         char timebuf[128] = "";        
         // Get Current Time
@@ -89,7 +89,7 @@ public:
     	return timestapStr + " ";		
 	}
 
-    std::string logLevelStringRepresentation(int loglevel) {
+    static std::string logLevelStringRepresentation(int loglevel) {
 		switch (loglevel) {
   			case 0:
 				return std::string("EMERG   ");

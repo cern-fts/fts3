@@ -199,7 +199,7 @@ inline vector<string> CfgParser::get< vector<string> >(string path) {
 	}
 
 	ptree::iterator it;
-	for (it = array.begin(); it != array.end(); it++) {
+	for (it = array.begin(); it != array.end(); ++it) {
 		pair<string, ptree> v = *it;
 
 		// check if the node has a name,
@@ -237,7 +237,7 @@ inline map <string, int> CfgParser::get< map<string, int> >(string path) {
 	}
 
 	ptree::iterator it;
-	for (it = array.begin(); it != array.end(); it++) {
+	for (it = array.begin(); it != array.end(); ++it) {
 		pair<string, ptree> v = *it;
 
 		// check if the node has a name,

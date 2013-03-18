@@ -34,7 +34,7 @@
 class FileTransferStatus {
 public:
 
-    FileTransferStatus() {
+    FileTransferStatus():numFailures(0),fileId(0)  {
     }
 
     ~FileTransferStatus() {

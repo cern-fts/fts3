@@ -188,13 +188,6 @@ void checkInitDirs(){
     }
 }
 
-void myterminate() {
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "myterminate() was called" << commit;
-}
-
-void myunexpected() {
-    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "myunexpected() was called" << commit;
-}
 
 int DoServer(int argc, char** argv) {
 

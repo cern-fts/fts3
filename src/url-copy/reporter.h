@@ -34,7 +34,7 @@ public:
 	unsigned int buffersize;
 	std::string source_se;
 	std::string dest_se;	
-        std::string ReplaceNonPrintableCharacters(std::string s);
+        static std::string ReplaceNonPrintableCharacters(std::string s);
 
 private:
 	struct message* msg;	

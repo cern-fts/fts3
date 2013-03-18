@@ -6570,10 +6570,9 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 
         if(voName.length() > 0){
 		s4 = conn->createStatement(query4, tag4, pooledConnection);
-	       	r4 = conn->createResultset(s4, pooledConnection);
     		s4->setString(1, voName);		
 		s4->setString(2, hostName);
-		r4 = conn->createResultset(s2, pooledConnection);	    	
+	       	r4 = conn->createResultset(s4, pooledConnection);
 		if(r4->next()){
 			currentStagingFilesConfig = r4->getInt(1);
 		}
@@ -6599,7 +6598,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 			ret.push_back(msg);
 			bringOnlineReportStatus("STARTED", "", msg);
 		}
-		conn->destroyResultset(s2, r2);	    			
+		conn->destroyResultset(s2, r2);
+		conn->destroyStatement(s2, tag2, pooledConnection);	    			
 	 }else{
 	    s1 = conn->createStatement(query1, tag1, pooledConnection);        
             r1 = conn->createResultset(s1, pooledConnection);

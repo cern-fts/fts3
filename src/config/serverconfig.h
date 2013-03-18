@@ -210,7 +210,7 @@ inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (c
 	boost::tokenizer< boost::char_separator<char> >::iterator it;
 
 	std::vector<std::string> ret;
-	for (it = tokens.begin(); it != tokens.end(); it++) {
+	for (it = tokens.begin(); it != tokens.end(); ++it) {
 		ret.push_back(*it);
 	}
 
@@ -226,7 +226,7 @@ inline std::map<std::string, std::string> ServerConfig::get< std::map<std::strin
 	waitIfReading();
 
 	_t_vars::iterator it;
-	for (it = _vars.begin(); it != _vars.end(); it++) {
+	for (it = _vars.begin(); it != _vars.end(); ++it) {
 		if (boost::regex_match(it->first, re)) {
 			ret[it->first] = it->second;
 		}
