@@ -475,10 +475,6 @@ list< pair<string, string> > JobSubmitter::pairSourceAndDestination(
 		}
 	}
 
-	if (selectionStrategy.empty() || selectionStrategy == "orderly") return ret;
-
-
-
 	return ret;
 }
 
