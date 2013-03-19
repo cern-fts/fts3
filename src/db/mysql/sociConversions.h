@@ -117,7 +117,7 @@ namespace soci
             file.SOURCE_SE = v.get<std::string>("source_se", "");
             file.DEST_SE = v.get<std::string>("dest_se", "");
 
-            double size = static_cast<double>(v.get<double>("filesize", 0));
+            unsigned long long size = static_cast<unsigned>(v.get<double>("filesize", 0));
             std::ostringstream str;
             str << size;
             file.FILESIZE = str.str();	                 

@@ -559,7 +559,7 @@ CREATE TABLE t_file (
   pid                   INTEGER,
 --
 -- transfer duration
-  tx_duration           BIGINT,
+  tx_duration           DOUBLE,
 --
 -- Average throughput
   throughput            FLOAT,
