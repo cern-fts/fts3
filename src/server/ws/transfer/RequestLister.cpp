@@ -78,7 +78,7 @@ impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationMa
 
 	// fill it with job statuses
 	vector<JobStatus*>::iterator it;
-	for (it = jobs.begin(); it < jobs.end(); it++) {
+	for (it = jobs.begin(); it < jobs.end(); ++it) {
 		GSoapJobStatus job_ptr (soap, **it);
 		result->item.push_back(job_ptr);
 		delete *it;
@@ -96,7 +96,7 @@ void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring
 
 	JobStatusHandler& handler = JobStatusHandler::getInstance();
 	vector<string>::iterator it;
-	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); it++) {
+	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); ++it) {
 		if (*it == "Pending") continue; // TODO for now we are ignoring the legacy state 'Pending'
 		if(!handler.isStatusValid(*it)) {
 			throw Err_Custom("Unknown job status: " + *it);

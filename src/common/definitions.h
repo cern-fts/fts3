@@ -35,36 +35,36 @@ using namespace std;
 struct message {
 public:
 
-    message() {
+    message():file_id(0),
+        	process_id(0),
+        	timeInSecs(0.0),
+        	filesize(0),
+        	nostreams(2),
+        	timeout(3600),
+        	buffersize(0),
+		timestamp(0),
+		retry(false) {
         memset(job_id, 0, sizeof (job_id));
-        file_id = 0;
         memset(transfer_status, 0, sizeof (transfer_status));
         memset(transfer_message, 0, sizeof (transfer_message));
-        process_id = 0;
-        timeInSecs = 0.0;
-        filesize = 0;
-        nostreams = 2;
-        timeout = 3600;
-        buffersize = 0;
         memset(source_se, 0, sizeof (source_se));
-        memset(dest_se, 0, sizeof (dest_se));
-	retry = false;
+        memset(dest_se, 0, sizeof (dest_se));	
     }
 
     ~message() {
     }
     char job_id[JOB_ID_LEN];
-    int file_id;
     char transfer_status[TRANFER_STATUS_LEN];
-    char transfer_message[TRANSFER_MESSAGE];
+    char transfer_message[TRANSFER_MESSAGE];    
+    char source_se[SOURCE_SE_];
+    char dest_se[DEST_SE_];    
+    int file_id;
     pid_t process_id;
     double timeInSecs;
     double filesize;
     unsigned int nostreams;
     unsigned int timeout;
     unsigned int buffersize;
-    char source_se[SOURCE_SE_];
-    char dest_se[DEST_SE_];
     boost::posix_time::time_duration::tick_type timestamp;
     bool retry;
 
@@ -74,10 +74,8 @@ public:
 
 struct message_updater {
 public:
-    message_updater() {
-        memset(job_id, 0, sizeof (job_id));
-        file_id = 0;
-        process_id = 0;       
+    message_updater():file_id(0),process_id(0),timestamp(0)  {
+        memset(job_id, 0, sizeof (job_id));            
     }
 
     ~message_updater() {
@@ -91,27 +89,19 @@ public:
 
 struct message_bringonline {
 public:
-    message_bringonline() {
-    	job_id = std::string();
-    	file_id = 0;
-    	url = std::string();
-        timestamp = time(NULL);
-        retries = 0;       
-        proxy = std::string();
-	started = false;
-	token = std::string();
+    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0), file_id(0),started(false),timestamp(0) {
     }
 
     ~message_bringonline() {
     }
-    std::string job_id;
-    int file_id;
+    std::string job_id;    
     std::string url;
-    time_t timestamp; 
-    int retries;
     std::string proxy;
+    std::string token;    
+    int retries;
+    int file_id;
     bool started;
-    std::string token;
+    time_t timestamp;     
 };
 
 

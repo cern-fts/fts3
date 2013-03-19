@@ -23,7 +23,7 @@ OptimizerSample::OptimizerSample() {
 OptimizerSample::~OptimizerSample() {
 }
 
-OptimizerSample::OptimizerSample(int spf, int nf, int bs, float gp) : streamsperfile(spf), numoffiles(nf), bufsize(bs), goodput(gp) {
+OptimizerSample::OptimizerSample(int spf, int nf, int bs, float gp) : streamsperfile(spf), numoffiles(nf), bufsize(bs), goodput(gp), timeout(3600), file_id(0) {
 }
 
 int OptimizerSample::getBufSize() {

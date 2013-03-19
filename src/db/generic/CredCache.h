@@ -30,7 +30,7 @@
 class CredCache {
 public:
 
-    CredCache() {
+    CredCache():delegationID(""), DN(""),vomsAttributes(""),certificateRequest(""),privateKey(""){
     }
 
     ~CredCache() {

@@ -17,7 +17,7 @@ TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& fi
 	map< string, set<FileIndex> > unique;
 
 	// iterate over all VOs
-	for (it_v = files.begin(); it_v != files.end(); it_v++) {
+	for (it_v = files.begin(); it_v != files.end(); ++it_v) {
 		// the vo name
 		string vo = it_v->first;
 		// unique vo names
@@ -26,7 +26,7 @@ TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& fi
 		list<TransferFiles*>& tfs = it_v->second;
 		list<TransferFiles*>::iterator it_tf;
 		// iterate over all files in a given VO
-		for (it_tf = tfs.begin(); it_tf != tfs.end(); it_tf++) {
+		for (it_tf = tfs.begin(); it_tf != tfs.end(); ++it_tf) {
 			// create index (job ID + file index)
 			FileIndex index((*it_tf)->JOB_ID, (*it_tf)->FILE_INDEX);
 			// file index to files mapping
