@@ -3351,6 +3351,21 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
     }
 }
 
+int MySqlAPI::countActiveTransfers(std::string source, std::string destination) {
+	// TODO
+	return 0;
+}
+
+int MySqlAPI::getFailureRate(std::string source, std::string destination) {
+	//TODO
+
+	return 0;
+}
+
+int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers) {
+	// TODO
+	return 0;
+}
 
 void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
 }

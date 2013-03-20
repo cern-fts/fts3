@@ -307,6 +307,10 @@ public:
     virtual void useFileReplica(std::string jobId, int fileId) = 0;
     
     virtual void setRetryTimestamp(const std::string& jobId, int fileId) = 0;	 
+
+    virtual int getFailureRate(std::string source, std::string destination) = 0;
+
+    virtual int getAvgThroughput(std::string source, std::string destination, int activeTransfers) = 0;
 };
 
 

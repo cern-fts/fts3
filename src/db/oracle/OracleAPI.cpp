@@ -7040,6 +7040,95 @@ void OracleAPI::setRetryTimestamp(const std::string& jobId, int fileId){
 }	 
 
 
+int OracleAPI::countActiveTransfers(std::string source, std::string destination) {
+
+    std::string tag = "countTotalActiveTransfers";
+    std::string query =
+    		"select count(*) "
+    		"from t_file f "
+    		"where "
+    		"	(f.file_state = 'ACTIVE' or f.file_state = 'READY') and "
+    		"	f.source_se = :1 and "
+    		"	f.dest_se = :2 "
+    		;
+
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+    int ret = 0;
+
+
+    try {
+
+	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return ret;
+
+        s = conn->createStatement(query, tag, pooledConnection);
+        s->setString(1, source);
+        s->setString(2, destination);
+        r = conn->createResultset(s, pooledConnection);
+
+        if (r->next()) {
+        	ret = r->getInt(1);
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
+    return ret;
+}
+
+int OracleAPI::getFailureRate(std::string source, std::string destination) {
+
+	std::string tag = "getFailureRate";
+
+	std::string query =
+    		" SELECT COUNT (*) "
+            " FROM t_file "
+            " WHERE file_state = 'FAILED' "
+            "	AND source_se = :1 "
+            "	AND dest_se = :2 "
+    		"	AND finish_time > (CURRENT_TIMESTAMP - interval '30' minute) "
+			;
+}
+
+int OracleAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers) {
+
+	std::string tag = "getAvgThroughpu";
+
+    std::string query =
+    		" SELECT AVG(throughput) "
+            " FROM t_optimize "
+            " WHERE throughput IS NOT NULL "
+            "	AND source_se = :1 "
+            "	AND dest_se = :2 "
+            "	AND active = :3 "
+    		"	AND datetime > (CURRENT_TIMESTAMP - INTERVAL '30' MINUTE) "
+    		;
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {
