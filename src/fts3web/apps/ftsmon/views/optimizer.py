@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import Http404
 from fts3.models import Optimize, File, Job
 from ftsmon import forms
 
@@ -58,8 +59,19 @@ def optimizer(httpRequest):
 
 
 
-def optimizerDetailed(httpRequest, source_se, dest_se):
+def optimizerDetailed(httpRequest):
 	hours = 1
+	
+	try:
+		source_se = str(httpRequest.GET['source'])
+		dest_se   = str(httpRequest.GET['destination'])
+	except:
+		source_se = None
+		dest_se   = None
+	finally:
+		if not source_se or not dest_se:
+			raise Http404
+		
 	try:
 		if 'time_window' in httpRequest.GET:
 			hours = int(httpRequest.GET['time_window'])

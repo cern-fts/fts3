@@ -86,7 +86,7 @@ Optimizer
 			<td>
 				{% with escapedSource=o.source_se|urlencode:"" %}
 				{% with escapedDestination=o.dest_se|urlencode:"" %}
-                <a href="{% url ftsmon.views.optimizerDetailed escapedSource escapedDestination %}?time_window={{ filterForm.time_window.value }}">
+                <a href="{% url ftsmon.views.optimizerDetailed %}?source={{ escapedSource }}&destination={{ escapedDestination }}&time_window={{ filterForm.time_window.value }}">
                     <img src="{{ STATIC_URL }}detailed.png" title="View details" alt="[Detailed]"/>
                 </a>
 				{% endwith %}
