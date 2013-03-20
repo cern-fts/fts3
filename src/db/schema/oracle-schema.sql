@@ -608,6 +608,9 @@ CREATE TABLE t_file (
 --
 -- bringonline token
   ,bringonline_token VARCHAR2(255)
+--
+-- the timestamp that the file will be retried
+  ,retry_timestamp          TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
 --
 -- autoinc sequence on file_id

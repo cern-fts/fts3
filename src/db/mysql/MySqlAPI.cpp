@@ -2848,7 +2848,7 @@ void MySqlAPI::setRetry(int retry){
 
 
 
-int MySqlAPI::getRetry(){
+int MySqlAPI::getRetry(const std::string & jobId){
     soci::session sql(connectionPool);
 
     int nRetries = 0;
@@ -3352,6 +3352,10 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+}
+
+
+void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
 }
 
 // the class factories

@@ -588,6 +588,10 @@ CREATE TABLE t_file (
 --
 -- bringonline token
   bringonline_token VARCHAR(255),
+--
+-- the timestamp that the file will be retried
+  retry_timestamp          TIMESTAMP NULL DEFAULT NULL,
+  
   
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );

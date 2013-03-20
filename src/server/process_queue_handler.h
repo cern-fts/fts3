@@ -97,17 +97,19 @@ public:
 		    }
 			       
 	       
-	       int retry = DBSingleton::instance().getDBObjectInstance()->getRetry();
+	       int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
 	       if(msg.retry==true && retry != 0 && std::string(msg.transfer_status).compare("FAILED") == 0){
  		       int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
 		       if(retry == -1){ //unlimited times
 				DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
 				DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
+				DBSingleton::instance().getDBObjectInstance()->setRetryTimestamp(job, msg.file_id);
 				return true;		       
 		       }else{	       		       
 			       if(retryTimes <= retry-1 ){	
 					DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
 					DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
+					DBSingleton::instance().getDBObjectInstance()->setRetryTimestamp(job, msg.file_id);
 					return true;			       					
 			       }
 		       }

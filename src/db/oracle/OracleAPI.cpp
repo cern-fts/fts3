@@ -593,10 +593,11 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     		"FROM t_file f1, t_job j "
     		"WHERE "
     		"	f1.job_id = j.job_id AND "
-    		"    f1.job_finished is NULL AND "
+    		"    	f1.job_finished is NULL AND "
     		"	j.job_finished is NULL AND "
     		"	j.job_id = :1 AND "
     		"	f1.file_state ='SUBMITTED' AND "
+		" 	f1.retry_timestamp is NULL OR f1.retry_timestamp < SYSTIMESTAMP AT TIME ZONE 'UTC' AND " 
     		"	NOT EXISTS ( "
     		"		SELECT NULL "
     		"		FROM t_file f2 "
@@ -5879,15 +5880,21 @@ void OracleAPI::setPriority(std::string job_id, int priority) {
     conn->releasePooledConnection(pooledConnection);                    
 }
 
-int OracleAPI::getRetry(){
+int OracleAPI::getRetry(const std::string & jobId){
     std::string tag = "getRetry";
+    std::string tag1 = "getRetry1";    
     std::string query =
     		"select retry "
     		"from t_server_config ";
+    std::string query1 =
+    		"select retry "
+    		"from t_job where job_id=:1 ";		
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
-    int ret = 0;
+    oracle::occi::Statement* s1 = 0;
+    oracle::occi::ResultSet* r1 = 0;    
+    unsigned int ret = 0;
     oracle::occi::Connection* pooledConnection = NULL;    
     
     try {
@@ -5895,15 +5902,30 @@ int OracleAPI::getRetry(){
 	pooledConnection = conn->getPooledConnection();
         if (!pooledConnection) return ret;
 
-        s = conn->createStatement(query, tag, pooledConnection);
-        r = conn->createResultset(s, pooledConnection);
 
-        if (r->next()) {
-        		ret = r->getInt(1);
+        s1 = conn->createStatement(query1, tag1, pooledConnection);
+	s1->setString(1, jobId);
+        r1 = conn->createResultset(s1, pooledConnection);
+
+        if (r1->next()) {
+        		ret = r1->getInt(1);
         }
 
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag, pooledConnection);
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1, pooledConnection);
+	
+	if(ret==0) //now check for global retry value
+	{
+        	s = conn->createStatement(query, tag, pooledConnection);
+        	r = conn->createResultset(s, pooledConnection);
+
+        	if (r->next()) {
+        		ret = r->getInt(1);
+        	}
+
+        	conn->destroyResultset(s, r);
+        	conn->destroyStatement(s, tag, pooledConnection);
+	}
 
     } catch (oracle::occi::SQLException const &e) {
 
@@ -5912,6 +5934,10 @@ int OracleAPI::getRetry(){
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
+        	if(s1 && r1)
+        		conn->destroyResultset(s1, r1);
+        	if (s1)
+        		conn->destroyStatement(s1, tag1, pooledConnection);			
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
@@ -5921,6 +5947,10 @@ int OracleAPI::getRetry(){
         		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
+        	if(s1 && r1)
+        		conn->destroyResultset(s1, r1);
+        	if (s1)
+        		conn->destroyStatement(s1, tag1, pooledConnection);						
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
@@ -6952,6 +6982,74 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
     }
     conn->releasePooledConnection(pooledConnection);
 }
+
+
+void OracleAPI::setRetryTimestamp(const std::string& jobId, int fileId){
+    std::string tag = "setRetryTimestamp";
+    std::string tag1 = "setRetryTimestamp1";    
+    std::string query = "select RETRY_DELAY from t_job where job_id=:1";   		
+    std::string query1 = "update t_file set retry_timestamp=:1 where job_id=:2 and file_id=:3";   		    
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::Statement* s1 = 0;    
+    oracle::occi::ResultSet* r = 0;  
+    oracle::occi::Connection* pooledConnection = NULL;
+    //expressed in secs
+    int retry_delay = 0;
+    
+    try {
+
+	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+        s = conn->createStatement(query, tag, pooledConnection);
+	s->setString(1, jobId);
+        r = conn->createResultset(s, pooledConnection);
+
+        if (r->next()) {
+        		retry_delay = r->getInt(1);        		
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag, pooledConnection);
+	
+	if(retry_delay > 0){            
+	    time_t now = time(0);
+	    time_t now_plus_seconds = now + retry_delay;
+	    s1 = conn->createStatement(query1, tag1, pooledConnection);
+            s1->setTimestamp(1, conv->toTimestamp(now_plus_seconds, conn->getEnv()));
+            s1->setString(2, jobId);
+            s1->setInt(3, fileId);
+            s1->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s1, tag1, pooledConnection);		
+	}	
+    } catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+        	if (s1)
+        		conn->destroyStatement(s1, tag1, pooledConnection);			
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+        	if (s1)
+        		conn->destroyStatement(s1, tag1, pooledConnection);						
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);   
+}	 
+
 
 // the class factories
 
