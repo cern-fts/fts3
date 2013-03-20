@@ -484,13 +484,15 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus
     soci::session sql(connectionPool);
 
     try {
-        soci::rowset<JobStatus> rs = (sql.prepare << "SELECT t_job.job_id, t_job.job_state, t_file.file_state, "
-                                                     "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
-                                                     "    t_job.vo_name, "
-                                                     "    (SELECT COUNT(*) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
-                                                     "FROM t_job, t_file "
-                                                     "WHERE t_file.job_id = t_job.job_id and t_file.job_id = :jobId",
-                                                     soci::use(requestID, "jobId"));
+        soci::rowset<JobStatus> rs = (
+        		sql.prepare <<
+        			"SELECT t_job.job_id, t_job.job_state, t_file.file_state, "
+					 "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
+					 "    t_job.vo_name, "
+					 "    (SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
+					 "FROM t_job, t_file "
+					 "WHERE t_file.job_id = t_job.job_id and t_file.job_id = :jobId",
+					 soci::use(requestID, "jobId"));
 
         for (soci::rowset<JobStatus>::iterator i = rs.begin(); i != rs.end(); ++i) {
             JobStatus& job = *i;
