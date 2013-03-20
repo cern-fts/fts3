@@ -2850,10 +2850,25 @@ int MySqlAPI::getRetry(const std::string & jobId){
 
     int nRetries = 0;
     try {
-        sql << "SELECT retry FROM t_server_config",
-               soci::into(nRetries);
-    }
-    catch (std::exception& e) {
+
+    	sql <<
+    		" SELECT retry "
+    		" FROM t_job "
+    		" WHERE job_id = :jobId ",
+    		soci::use(jobId),
+    		soci::into(nRetries)
+    	;
+
+    	if (!nRetries) {
+
+    		sql <<
+            	" SELECT retry "
+            	" FROM t_server_config",
+            	soci::into(nRetries)
+    		;
+    	}
+
+    } catch (std::exception& e) {
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
