@@ -43,7 +43,7 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
         if filterForm['source_se'].value():
             jobs = jobs.filter(file__source_se = filterForm['source_se'].value())\
                        .values('job_id').annotate(nSourceMatches = Count('file__file_id'))
-    
+
         if filterForm['dest_se'].value():
             jobs = jobs.filter(file__dest_se = filterForm['dest_se'].value())\
                        .values('job_id').annotate(nDestMatches = Count('file__file_id'))
@@ -53,6 +53,7 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
     # Push needed fields
     jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'finish_time',
                        'vo_name', 'source_space_token', 'space_token',
+                       'priority', 'user_dn', 'reason',
                        'job_metadata', 'nullFinished')
     # Ordering
     jobs = jobs.order_by('-nullFinished', '-submit_time')
