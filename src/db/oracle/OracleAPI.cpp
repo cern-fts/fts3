@@ -7129,6 +7129,45 @@ int OracleAPI::getAvgThroughput(std::string source, std::string destination, int
     		;
 }
 
+
+void OracleAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize){
+    const std::string tag = "updateProtocol1";
+    std::string query = " UPDATE t_file set INTERNAL_FILE_PARAMS=:1 where job_id=:2 and file_id=:3 ";
+
+    oracle::occi::Statement* s = NULL;    
+    oracle::occi::Connection* pooledConnection = NULL; 
+    std::stringstream internalParams;   
+    
+    try {
+	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+		return;    
+    
+        internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
+        s = conn->createStatement(query, tag, pooledConnection);     
+        s->setString(1, internalParams.str());       	
+        s->setString(2, jobId);       	
+        s->setInt(3, fileId);       			
+        s->executeUpdate();
+        conn->commit(pooledConnection);
+        conn->destroyStatement(s, tag, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+			conn->rollback(pooledConnection);
+			if(s)
+				conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+			conn->rollback(pooledConnection);
+			if(s)
+				conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);    
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

@@ -3370,6 +3370,9 @@ int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int 
 void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
 }
 
+void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize){
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

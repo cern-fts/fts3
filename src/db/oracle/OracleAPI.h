@@ -269,6 +269,8 @@ public:
     virtual int getFailureRate(std::string source, std::string destination);
 
     virtual int getAvgThroughput(std::string source, std::string destination, int activeTransfers);
+    
+    virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize);    
 
 private:
 	OracleConnection *conn;	

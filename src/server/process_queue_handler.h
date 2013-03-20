@@ -89,14 +89,19 @@ public:
 	       bool updated = true;    
 	       std::string job = std::string(msg.job_id).substr(0, 36);
 	       
+	       
+  	       DBSingleton::instance().getDBObjectInstance()->updateProtocol(job, msg.file_id, 
+		    									    static_cast<int> (msg.nostreams), 
+											    static_cast<int> (msg.timeout),
+											    static_cast<int> (msg.buffersize));	       
+	       
 		if (std::string(msg.transfer_status).compare("FINISHED") == 0 || 
 			std::string(msg.transfer_status).compare("FAILED") == 0 ||
 			std::string(msg.transfer_status).compare("CANCELED") == 0){
 		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Removing job from monitoring list " << job << " " << msg.file_id << commit;
                     ThreadSafeList::get_instance().removeFinishedTr(job, msg.file_id);
 		    }
-			       
-	       
+			       	       
 	       int retry = DBSingleton::instance().getDBObjectInstance()->getRetry(job);
 	       if(msg.retry==true && retry != 0 && std::string(msg.transfer_status).compare("FAILED") == 0){
  		       int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
