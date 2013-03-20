@@ -6071,7 +6071,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId){
             " UPDATE t_file set file_state='SUBMITTED' "
             "  where job_id=:1 and file_id=:2 and file_state not in ('FAILED','CANCELED') ";
     std::string query1= "select job_id from t_job where t_job.reuse_job='Y' and job_id=:1  and job_state not in ('FAILED','CANCELED') ";
-    std::string query2= "update t_job set job_state='SUBMITTED' where job_id=:1  and job_state not in ('FAILED','CANCELED') ";
+    std::string query2= "update t_job set job_state='ACTIVE' where job_id=:1  and job_state not in ('FAILED','CANCELED') ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::Statement* s1 = NULL;

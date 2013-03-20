@@ -148,25 +148,25 @@ static bool retryTransfer(int errorNo, std::string category ){
 			
 	if(category=="SOURCE"){
 		switch ( errorNo ) {
-			case ENOENT:
+			case ENOENT: /*No such file or directory*/
 			  retry = false;
 			  break;
-			case EPERM:
+			case EPERM: /*Operation not permitted*/
 			  retry = false;
 			  break;
-			case EACCES:
+			case EACCES: /*Permission denied*/
 			  retry = false;
 			  break;			
-			case EISDIR:
+			case EISDIR: /*Is a directory*/
 			  retry = false;
 			  break;
-			case ENAMETOOLONG:
+			case ENAMETOOLONG: /*File name too long*/
 			  retry = false;
 			  break;
-			case E2BIG:
+			case E2BIG: /*Argument list too long*/
 			  retry = false;
 			  break;			  
-			case ENOTDIR:
+			case ENOTDIR: /**/
 			  retry = false;
 			  break;					  				  
 			default:
@@ -174,47 +174,47 @@ static bool retryTransfer(int errorNo, std::string category ){
 			  break;
 			}		
 	}else if(category=="DESTINATION"){
-  	        switch ( errorNo ) {
-			case ENOENT:
+  	        switch ( errorNo ) {			
+			case EPERM: /*Operation not permitted*/
 			  retry = false;
 			  break;
-			case EPERM:
+			case EACCES: /*Permission denied*/
 			  retry = false;
 			  break;
-			case EACCES:
+			case EISDIR: /*Is a directory*/
 			  retry = false;
 			  break;
-			case EISDIR:
+			case ENAMETOOLONG: /*File name too long*/
 			  retry = false;
 			  break;
-			case ENAMETOOLONG:
+			case E2BIG: /*Argument list too long*/
 			  retry = false;
-			  break;					  				  
+			  break;			  					  				  
 			default:
 			  retry = true;
 			  break;
 		}
 	}else{ //TRANSFER
 		switch ( errorNo ) {	
-			case ENOSPC:
+			case ENOSPC: /*No space left on device*/
 			  retry = false;
 			  break;
-			case EPERM:
+			case EPERM: /*Operation not permitted*/
 			  retry = false;
 			  break;
-			case EACCES:
+			case EACCES: /*Permission denied*/
 			  retry = false;
 			  break;
-			case EEXIST:
+			case EEXIST: /*File exists*/
 			  retry = false;
 			  break;
-			case EFBIG:
+			case EFBIG: /*File too big*/
 			  retry = false;
 			  break;
-			case EROFS:
+			case EROFS: /*Read-only file system*/
 			  retry = false;
 			  break;
-			case ENAMETOOLONG:
+			case ENAMETOOLONG: /*File name too long*/
 			  retry = false;
 			  break;				  
 			default:
