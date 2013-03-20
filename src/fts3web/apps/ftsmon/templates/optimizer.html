@@ -84,9 +84,13 @@ Optimizer
 	{% for o in optimizations.object_list %}
 		<tr class="{% cycle 'odd' 'even' %}">
 			<td>
-				<a href="{% url ftsmon.views.optimizerDetailed o.source_se o.dest_se %}?time_window={{ filterForm.time_window.value }}">
-					<img src="{{ STATIC_URL }}detailed.png" title="View details" alt="[Detailed]"/>
-				</a>
+				{% with escapedSource=o.source_se|urlencode:"" %}
+				{% with escapedDestination=o.dest_se|urlencode:"" %}
+                <a href="{% url ftsmon.views.optimizerDetailed escapedSource escapedDestination %}?time_window={{ filterForm.time_window.value }}">
+                    <img src="{{ STATIC_URL }}detailed.png" title="View details" alt="[Detailed]"/>
+                </a>
+				{% endwith %}
+				{% endwith %}
 			</td>
 			<td>{{ o.source_se }}</td>
 			<td>{{ o.dest_se }}</td>

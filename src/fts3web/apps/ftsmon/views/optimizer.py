@@ -68,7 +68,7 @@ def optimizerDetailed(httpRequest, source_se, dest_se):
 	notBefore = datetime.now() - timedelta(hours = hours)
 	
 	# File sizes
-	fsizes = File.objects.filter(job__source_se = source_se, job__dest_se = dest_se,
+	fsizes = File.objects.filter(source_se = source_se, dest_se = dest_se,
 								 job__finish_time__isnull = False,
 								 job__finish_time__gte = notBefore)
 	

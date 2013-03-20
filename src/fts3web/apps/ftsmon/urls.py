@@ -16,5 +16,5 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^plot/pie', 'pie'),
     
     url(r'^optimizer/$', 'optimizer'),
-    url(r'^optimizer/detailed/([\w.-]+)/([\w.-]+)$', 'optimizerDetailed'),
+    url(r'^optimizer/detailed/([\w.%/:-]+)&([\w.%/:-]+)$', 'optimizerDetailed'),
 )
