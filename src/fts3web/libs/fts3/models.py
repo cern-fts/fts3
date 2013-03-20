@@ -9,8 +9,6 @@ class Job(models.Model):
     job_params      = models.CharField(max_length = 255)
     source          = models.CharField(max_length = 255)
     dest            = models.CharField(max_length = 255)
-    source_se       = models.CharField(max_length = 255)
-    dest_se         = models.CharField(max_length = 255)
     user_dn         = models.CharField(max_length = 1024)
     agent_dn        = models.CharField(max_length = 1024)
     user_cred       = models.CharField(max_length = 255)
@@ -41,6 +39,8 @@ class Job(models.Model):
     checksum_method = models.CharField(max_length = 1)
     bring_online    = models.IntegerField()
     job_metadata    = models.CharField(max_length = 255)
+    retry           = models.IntegerField()
+    retry_delay     = models.IntegerField()
     
     class Meta:
         db_table = 't_job'
@@ -53,6 +53,8 @@ class Job(models.Model):
 class File(models.Model):
     file_id      = models.IntegerField(primary_key = True)
     job          = models.ForeignKey('Job', db_column = 'job_id')
+    source_se    = models.CharField(max_length = 255)
+    dest_se      = models.CharField(max_length = 255)
     symbolicName = models.CharField(max_length = 255)
     file_state   = models.CharField(max_length = 32)
     transferHost = models.CharField(max_length = 255)
@@ -68,7 +70,7 @@ class File(models.Model):
     current_failures  = models.IntegerField()
     catalog_failures  = models.IntegerField()
     prestage_failures = models.IntegerField()
-    filesize     = models.BigIntegerField()
+    filesize     = models.FloatField()
     checksum     = models.CharField(max_length = 100)
     finish_time  = models.DateTimeField()
     start_time   = models.DateTimeField()
@@ -79,7 +81,7 @@ class File(models.Model):
     throughput   = models.FloatField()
     retry        = models.IntegerField()
     file_metadata    = models.CharField(max_length = 255)
-    user_filesize    = models.BigIntegerField()
+    user_filesize    = models.FloatField()
     staging_start    = models.DateTimeField()
     staging_finished = models.DateTimeField()
     
@@ -114,7 +116,7 @@ class Optimize(models.Model):
     active     = models.IntegerField()
     throughput = models.FloatField()
     buffer     = models.IntegerField()
-    filesize   = models.BigIntegerField()
+    filesize   = models.FloatField()
     datetime   = models.DateTimeField() 
     
     class Meta:

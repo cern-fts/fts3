@@ -7,7 +7,7 @@ from fts3.models import Job, File
 
 
 def uniqueSources(httpRequest):
-    query = Job.objects.values('source_se').distinct('source_se')
+    query = File.objects.values('source_se').distinct('source_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(source_se__icontains = httpRequest.GET['term'])
     
@@ -19,7 +19,7 @@ def uniqueSources(httpRequest):
 
 
 def uniqueDestinations(httpRequest):    
-    query = Job.objects.values('dest_se').distinct('dest_se')
+    query = File.objects.values('dest_se').distinct('dest_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(dest_se__icontains = httpRequest.GET['term'])
     

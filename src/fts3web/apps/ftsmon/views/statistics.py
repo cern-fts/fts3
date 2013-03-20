@@ -85,7 +85,7 @@ def _getStateCountPerVo():
 def _getAllPairs(source = None, dest = None):
     pairs = []
     
-    query = Job.objects.values('source_se', 'dest_se')
+    query = File.objects.values('source_se', 'dest_se')
     if source:
         query = query.filter(source_se = source)
     if dest:
@@ -102,8 +102,8 @@ def _getAveragePerPair(pairs):
     
     for (source, dest) in pairs:
         pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES)\
-                              .filter(job__source_se = source,
-                                      job__dest_se = dest)\
+                              .filter(source_se = source,
+                                      dest_se = dest)\
                               .aggregate(Avg('tx_duration'), Avg('throughput'))
         avg[(source, dest)] = {'avgDuration': pairAvg['tx_duration__avg'],
                                'avgThroughput': pairAvg['throughput__avg']}
@@ -119,8 +119,8 @@ def _getFilesInStatePerPair(pairs, states):
         statesPerPair[(source, dest)] = []
         
         statesInPair = File.objects.filter(file_state__in = states,
-                                     job__source_se = source,
-                                     job__dest_se = dest)\
+                                     source_se = source,
+                                     dest_se = dest)\
                              .values('file_state')\
                              .annotate(count = Count('file_state'))
 

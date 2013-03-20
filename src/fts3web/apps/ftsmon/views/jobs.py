@@ -30,6 +30,7 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
         
     # Initial query
     jobs = Job.objects.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))
+    jobs = jobs.extra(select = {'nullFinished': 'coalesce(t_job.finish_time, CURRENT_TIMESTAMP)'})
     
     # Filter
     if filterForm.is_valid():
@@ -40,17 +41,22 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
             jobs = jobs.filter(vo_name = filterForm['vo'].value())
         
         if filterForm['source_se'].value():
-            jobs = jobs.filter(source_se = filterForm['source_se'].value())
+            jobs = jobs.filter(file__source_se = filterForm['source_se'].value())\
+                       .values('job_id').annotate(nSourceMatches = Count('file__file_id'))
     
         if filterForm['dest_se'].value():
-            jobs = jobs.filter(dest_se = filterForm['dest_se'].value())
-            
+            jobs = jobs.filter(file__dest_se = filterForm['dest_se'].value())\
+                       .values('job_id').annotate(nDestMatches = Count('file__file_id'))
+                        
     jobs = jobs.filter(job_state__in = states)
     
+    # Push needed fields
+    jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'finish_time',
+                       'vo_name', 'source_space_token', 'space_token',
+                       'job_metadata', 'nullFinished')
     # Ordering
-    jobs = jobs.order_by('-finish_time', '-submit_time')
-    jobs = jobs.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'}, order_by=['-nullFinished'])
-    
+    jobs = jobs.order_by('-nullFinished', '-submit_time')
+
     # Paginate
     paginator = Paginator(jobs, 50)
     try:
