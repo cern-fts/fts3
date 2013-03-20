@@ -74,7 +74,7 @@ public:
     /**
      * Number of files (transfers) that are part of the job.
      */
-    int numFiles;
+    long long numFiles;
     
     /**
      * Job priority on the server.
