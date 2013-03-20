@@ -80,10 +80,11 @@ class File(models.Model):
     tx_duration  = models.FloatField()
     throughput   = models.FloatField()
     retry        = models.IntegerField()
-    file_metadata    = models.CharField(max_length = 255)
-    user_filesize    = models.FloatField()
-    staging_start    = models.DateTimeField()
-    staging_finished = models.DateTimeField()
+    file_metadata     = models.CharField(max_length = 255)
+    user_filesize     = models.FloatField()
+    staging_start     = models.DateTimeField()
+    staging_finished  = models.DateTimeField()
+    bringonline_token = models.CharField(max_length = 255) 
     
     class Meta:
         db_table = 't_file'

@@ -33,8 +33,7 @@ Staging
         <th>STARTED</th>
         <th>BRING ONLINE</th>
         <th>PIN LIFETIME</th>
-        <th>SOURCE SPACE TOKEN</th>
-        <th>DEST. SPACE TOKEN</th>
+        <th>TOKEN</th>
       </tr>
     </thead>
     <tbody>
@@ -52,8 +51,7 @@ Staging
           <td>{{ t.staging_start }}</td>
           <td>{{ t.job.bring_online }}</td>
           <td>{{ t.job.copy_pin_lifetime }}</td>
-          <td>{{ t.job.source_space_token }}</td>
-          <td>{{ t.job.space_token }}</td>
+          <td>{{ t.bringonline_token }}</td>
         </tr>
       {% endfor %}
     </tbody>
