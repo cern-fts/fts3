@@ -859,7 +859,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*file_id*/, std::string job_id, cons
         int numberOfFilesFailed = 0;
 
         sql << "SELECT nFiles, nTerminal, nFinished, nFailed FROM "
-               "    (SELECT COUNT(*) AS nFiles FROM t_file WHERE job_id = :jobId) as DTableTotal, "
+               "    (SELECT COUNT(DISTINCT file_index) AS nFiles FROM t_file WHERE job_id = :jobId) as DTableTotal, "
                "    (SELECT COUNT(*) AS nTerminal FROM t_file WHERE job_id = :jobId AND file_state IN ('CANCELED', 'FINISHED', 'FAILED')) as DTableTerminal, "
                "    (SELECT COUNT(*) AS nFinished FROM t_file WHERE job_id = :jobId AND file_state = 'FINISHED') AS DTableFinished, "
                "    (SELECT COUNT(*) AS nFailed FROM t_file WHERE job_id = :jobId AND file_state IN ('CANCELED', 'FAILED')) AS DTableFailed",

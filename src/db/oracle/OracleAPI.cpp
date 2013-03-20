@@ -1531,7 +1531,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             "SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE not in ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ";
 
     std::string query = "select Num1, Num2, Num3, Num4  from "
-            "(select count(*) As Num1 from t_file where job_id=:1), "
+            "(select count(DISTINCT file_index) As Num1 from t_file where job_id=:1), "
             "(select count(*) As Num2 from t_file where job_id=:2 and file_state in ('CANCELED','FINISHED','FAILED')), "
             "(select count(*) As Num3 from t_file where job_id=:3 and file_state = 'FINISHED'), "
             "(select count(*) As Num4 from t_file where job_id=:4 and file_state in ('CANCELED','FAILED')) ";
