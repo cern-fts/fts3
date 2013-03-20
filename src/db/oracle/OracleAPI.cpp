@@ -394,16 +394,11 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
 
 void OracleAPI::useFileReplica(std::string jobId, int fileId) {
 
-
 	std::string selectTag = "selectUseFileReplica";
 	std::string selectStmt =
-			" SELECT MIN(f1.file_id) AS file_id "
-			" FROM t_file f2, t_file f1 "
-			" WHERE f2.job_id = :1 "
-			"	AND f2.file_id = :2 "
-			"	AND f1.file_index = f2.file_index "
-			"	AND f1.job_id = :3 "
-			"	AND f1.file_state = 'NOT_USED' "
+			" SELECT file_index "
+			" FROM t_file "
+			" WHERE file_id = :1 "
 			;
 
 	std::string updateTag = "updateUseFileReplica";
@@ -411,7 +406,8 @@ void OracleAPI::useFileReplica(std::string jobId, int fileId) {
 			" UPDATE t_file "
 			" SET file_state = 'SUBMITTED' "
 			" WHERE job_id = :1 "
-			"	AND file_id = :2 "
+			"	AND file_index = :2 "
+			"	AND file_state = 'NOT_USED'"
 			;
 
     oracle::occi::Statement* s = 0;
@@ -424,17 +420,15 @@ void OracleAPI::useFileReplica(std::string jobId, int fileId) {
         if (!pooledConnection) return;
 
 		s = conn->createStatement(selectStmt, selectTag, pooledConnection);
-		s->setString(1, jobId);
-		s->setInt(2, fileId);
-		s->setString(3, jobId);
+		s->setInt(1, fileId);
 		r = conn->createResultset(s, pooledConnection);
 
 		if (r->next() && !r->isNull(1)) {
-			int id = r->getInt(1);
+			int index = r->getInt(1);
 
 	        s2 = conn->createStatement(updateStmt, updateTag, pooledConnection);
 	        s2->setString(1, jobId);
-	        s2->setInt(2, id);
+	        s2->setInt(2, index);
 	        s2->executeUpdate();
 	        conn->commit(pooledConnection);
 	        conn->destroyStatement(s2, updateTag, pooledConnection);
@@ -467,11 +461,6 @@ void OracleAPI::useFileReplica(std::string jobId, int fileId) {
     }
 
         conn->releasePooledConnection(pooledConnection);
-
-
-
-
-
 }
 
 unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string status) {

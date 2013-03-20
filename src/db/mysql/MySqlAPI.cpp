@@ -252,20 +252,14 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId) {
 	try {
 
 		soci::indicator ind;
-		int id;
+		int fileIndex;
 
 		sql <<
-				" SELECT MIN(f1.file_id) AS file_id "
-				" FROM t_file f2, t_file f1 "
-				" WHERE f2.job_id = :jobId "
-				"	AND f2.file_id = :fileId "
-				"	AND f1.file_index = f2.file_index "
-				"	AND f1.job_id = :jobId "
-				"	AND f1.file_state = 'NOT_USED' ",
-				soci::use(jobId),
+				" SELECT file_index "
+				" FROM t_file "
+				" WHERE file_id = :fileId ",
 				soci::use(fileId),
-				soci::use(jobId),
-				soci::into(id, ind)
+				soci::into(fileIndex, ind)
 		;
 
 		// make sure it's not NULL
@@ -276,9 +270,10 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId) {
 					" UPDATE t_file "
 					" SET file_state = 'SUBMITTED' "
 					" WHERE job_id = :jobId "
-					"	AND file_id = :fileId",
+					"	AND file_index = :fileIndex "
+					"	AND file_state = 'NOT_USED'",
 					soci::use(jobId),
-					soci::use(id)
+					soci::use(fileIndex)
 			;
 
 			sql.commit();
