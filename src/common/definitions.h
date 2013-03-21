@@ -89,7 +89,7 @@ public:
 
 struct message_bringonline {
 public:
-    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0), file_id(0),started(false),timestamp(0) {
+    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0), file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0)  {
     }
 
     ~message_bringonline() {
@@ -101,7 +101,9 @@ public:
     int retries;
     int file_id;
     bool started;
-    time_t timestamp;     
+    time_t timestamp; 
+    long int pinlifetime;
+    long int bringonlineTimeout;    
 };
 
 

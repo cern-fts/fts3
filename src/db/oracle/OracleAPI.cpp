@@ -6550,11 +6550,11 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     		" select distinct(t_file.SOURCE_SE) from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is null and t_file.SOURCE_SURL like 'srm%' ";
     std::string query2 =
-    		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id from t_file, t_job where t_job.job_id = t_file.job_id "
+    		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' "
 		" and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3  and t_file.SOURCE_SURL like 'srm%'  ORDER BY t_file.file_id ";
     std::string query3 =
-    		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id from t_file, t_job where t_job.job_id = t_file.job_id "
+    		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_file.source_se=:1 "
 		" and rownum<=:1  and t_file.SOURCE_SURL like 'srm%'  ORDER BY t_file.file_id ";
     std::string query4 =
@@ -6616,6 +6616,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 			msg.url = r2->getString(1);			
 			msg.job_id = r2->getString(2);
 			msg.file_id = r2->getInt(3);
+			msg.pinlifetime = r2->getInt(4);
+			msg.bringonlineTimeout = r2->getInt(5);
 			ret.push_back(msg);
 			bringOnlineReportStatus("STARTED", "", msg);
 		}
@@ -6649,6 +6651,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 			msg.url = r3->getString(1);			
 			msg.job_id = r3->getString(2);
 			msg.file_id = r3->getInt(3);
+			msg.pinlifetime = r3->getInt(4);
+			msg.bringonlineTimeout = r3->getInt(5);			
 			ret.push_back(msg);
 			bringOnlineReportStatus("STARTED", "", msg);
 		}

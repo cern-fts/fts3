@@ -110,7 +110,9 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
     const char *protocols[10];
     protocols[0] = "rfio";
     UserProxyEnv* cert = NULL;
-
+    long int pinlifetime = 28800;
+    long int bringonlineTimeout = 28800;
+    
     gfal2_set_opt_string_list(handle, "SRM PLUGIN", "TURL_PROTOCOLS", protocols, 1, &error);
     if (error) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Could not set the protocol list " << error->code << " " << error->message << commit;
@@ -131,8 +133,16 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
                 bool deleteIt = false;					
                 if ((*i).started == false) { //issue bringonline
                     db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
-
-                    statusA = gfal2_bring_online(handle, ((*i).url).c_str(), 28800, 28800, token, sizeof (token), 1, &error);
+		    
+		    if((*i).pinlifetime > pinlifetime){
+		    	pinlifetime = (*i).pinlifetime;
+		    }
+		    
+		    if((*i).bringonlineTimeout > bringonlineTimeout){
+		    	bringonlineTimeout = (*i).bringonlineTimeout;
+		    }		    		    		  
+		    
+                    statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);
 		    
                     if (statusA < 0) {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE failed " << error->code << " " << error->message << commit;

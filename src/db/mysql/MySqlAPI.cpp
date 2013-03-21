@@ -3151,7 +3151,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 
 				soci::rowset<soci::row> rs2 = (
 						sql.prepare <<
-						" SELECT t_file.source_surl, t_file.job_id, t_file.file_id "
+						" SELECT t_file.source_surl, t_file.job_id, t_file.file_id, t_job.copy_pin_lifetime, t_job.bring_online "
 						" FROM t_file, t_job "
 						" WHERE t_job.job_id = t_file.job_id "
 						" 	AND t_job.bring_online > 0 "
@@ -3171,6 +3171,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					msg.url = row2.get<std::string>("source_surl");
 					msg.job_id = row2.get<std::string>("job_id");
 					msg.file_id = row2.get<int>("file_id");
+				        msg.pinlifetime = row2.get<long int>("copy_pin_lifetime");
+			                msg.bringonlineTimeout = row2.get<long int>("bring_online");					
 
 					ret.push_back(msg);
 					bringOnlineReportStatus("STARTED", "", msg);
@@ -3197,7 +3199,7 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 
 			soci::rowset<soci::row> rs = (
 					sql.prepare <<
-					" SELECT t_file.source_surl, t_file.job_id, t_file.file_id "
+					" SELECT t_file.source_surl, t_file.job_id, t_file.file_id, t_job.copy_pin_lifetime, t_job.bring_online "
 					" FROM t_file, t_job "
 					" WHERE t_job.job_id = t_file.job_id "
 					"	AND t_job.bring_online > 0 "
@@ -3219,6 +3221,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 				msg.url = row.get<std::string>("source_surl");
 				msg.job_id = row.get<std::string>("job_id");
 				msg.file_id = row.get<int>("file_id");
+				msg.pinlifetime = row.get<long int>("copy_pin_lifetime");
+			        msg.bringonlineTimeout = row.get<long int>("bring_online");									
 
 				ret.push_back(msg);
 				bringOnlineReportStatus("STARTED", "", msg);
