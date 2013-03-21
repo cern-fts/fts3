@@ -105,9 +105,12 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 	// if at least one source uses different protocol than SRM it will be 'false'
 	srm_source = true;
 
+	// index of the file
+	int fileIndex = 0;
+
 	// extract the job elements from tns3__TransferJob object and put them into a vector
     vector<tns3__TransferJobElement * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it) {
+    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it, ++fileIndex) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
 
@@ -153,6 +156,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     	tupple.checksum = string();
 		tupple.filesize = 0;
 		tupple.metadata = string();
+		tupple.fileIndex = fileIndex;
 
     	jobs.push_back(tupple);
     }
@@ -191,9 +195,12 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 	// if at least one source uses different protocol than SRM it will be 'false'
 	srm_source = true;
 
+	// index of the file
+	int fileIndex = 0;
+
 	// extract the job elements from tns3__TransferJob2 object and put them into a vector
     vector<tns3__TransferJobElement2 * >::iterator it;
-    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it) {
+    for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it, ++fileIndex) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
 
@@ -245,6 +252,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     		tupple.checksum = *(*it)->checksum;
 		tupple.filesize = 0;
 		tupple.metadata = string();
+		tupple.fileIndex = fileIndex;
         
     	jobs.push_back(tupple);
     }
