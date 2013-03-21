@@ -491,7 +491,7 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus
         		sql.prepare <<
         			"SELECT t_job.job_id, t_job.job_state, t_file.file_state, "
 					 "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
-					 "    t_job.vo_name, "
+					 "    t_job.vo_name, t_file.file_index, "
 					 "    (SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
 					 "FROM t_job, t_file "
 					 "WHERE t_file.job_id = t_job.job_id and t_file.job_id = :jobId",
@@ -525,7 +525,7 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
 
         query << "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, "
                 "                 vo_name, priority, cancel_job, "
-                "                 (SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
+                "                 (SELECT COUNT(DISTINCT t_file.file_index) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
                  "FROM t_job ";
 
         //joins
@@ -574,6 +574,7 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
         JobStatus job;
         stmt.exchange(soci::into(job));
         stmt.alloc();
+        std::string test = query.str();
         stmt.prepare(query.str());
         stmt.define_and_bind();
 

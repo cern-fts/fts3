@@ -166,6 +166,12 @@ namespace soci
             job.numFiles   = v.get<long long>("numFiles");
 
             try {
+            	job.fileIndex  = v.get<int>("file_index");
+            } catch (...) {
+                // Ignore failures, since not all methods ask for this (i.e. listRequests)
+            }
+
+            try {
                 job.fileStatus = v.get<std::string>("file_state");
             } catch (...) {
                 // Ignore failures, since not all methods ask for this (i.e. listRequests)

@@ -26,6 +26,8 @@
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <set>
+
 using namespace boost::assign;
 using namespace fts3::common;
 using namespace boost;
@@ -77,14 +79,14 @@ bool JobStatusHandler::isStatusValid(string& status) {
 
 int JobStatusHandler::countInState(const string status, vector<JobStatus*>& statuses) {
 
-	int count = 0;
+	set<int> files;
 
 	vector<JobStatus*>::iterator it;
 	for (it = statuses.begin(); it < statuses.end(); it++) {
 		if (status == (*it)->fileStatus) {
-			++count;
+			files.insert((*it)->fileIndex);
 		}
 	}
 
-	return count;
+	return files.size();
 }

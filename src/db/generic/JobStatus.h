@@ -52,6 +52,11 @@ public:
     std::string fileStatus;
     
     /**
+     * file index
+     */
+    int fileIndex;
+
+    /**
      * Distinguished Name (DN) of client owning job.
      */
     std::string clientDN;
