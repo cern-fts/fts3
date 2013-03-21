@@ -1508,10 +1508,13 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
     const std::string terminal4 = "FINISHEDDIRTY";
     bool finished = true;
     unsigned int updated = 0;
-    int finishedDirty = 0;
-    int numberOfFileInJob = 0;
-    int numOfFilesInGivenState = 0;
-    int failedExistInJob = 0;   
+
+    int numOfFilesInJob = 0;
+    int numOfFilesCanceled = 0;
+    int numOfFilesFinished = 0;
+    int numOfFilesFailed = 0;
+    int numOfFilesTerminal = 0;
+
     bool ok = true;
     std::string update =
             "UPDATE t_job "
@@ -1524,9 +1527,10 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
 
     std::string query = "select Num1, Num2, Num3, Num4  from "
             "(select count(DISTINCT file_index) As Num1 from t_file where job_id=:1), "
-            "(select count(*) As Num2 from t_file where job_id=:2 and file_state in ('CANCELED','FINISHED','FAILED')), "
-            "(select count(*) As Num3 from t_file where job_id=:3 and file_state = 'FINISHED'), "
-            "(select count(*) As Num4 from t_file where job_id=:4 and file_state in ('CANCELED','FAILED')) ";
+            "(select count(DISTINCT file_index) As Num2 from t_file where job_id=:2 and file_state = 'CANCELED'), "
+            "(select count(DISTINCT file_index) As Num3 from t_file where job_id=:3 and file_state = 'FINISHED'), "
+            "(select count(DISTINCT f1.file_index) As Num4 from t_file f1 where job_id=:4 and "
+            "																	NOT EXISTS (SELECT * FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'FAILED')) ";
 
 
     std::string updateFileJobFinished =
@@ -1552,11 +1556,13 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
         st->setString(4, job_id);
         r = conn->createResultset(st, pooledConnection);
         while (r->next()) {
-            numberOfFileInJob = r->getInt(1);
-            numOfFilesInGivenState = r->getInt(2);
-            finishedDirty = r->getInt(3);
-            failedExistInJob = r->getInt(4);
-            if (numberOfFileInJob != numOfFilesInGivenState) {
+            numOfFilesInJob = r->getInt(1);
+            numOfFilesCanceled = r->getInt(2);
+            numOfFilesFinished = r->getInt(3);
+            numOfFilesFailed = r->getInt(4);
+            numOfFilesTerminal = numOfFilesCanceled + numOfFilesFailed + numOfFilesFinished;
+
+            if (numOfFilesInJob != numOfFilesTerminal) {
                 finished = false;
                 break;
             }
@@ -1571,13 +1577,13 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             st->setSQL(update);
 
             //finisheddirty
-            if ((finishedDirty > 0) && (failedExistInJob > 0)) {
+            if ((numOfFilesFailed > 0) && (numOfFilesFinished > 0)) {
                 st->setString(1, terminal4);
             }// finished
-            else if (numberOfFileInJob == finishedDirty) {
+            else if (numOfFilesInJob == numOfFilesFinished) {
                 st->setString(1, terminal1);
                 reason = std::string("");
-            } else if (failedExistInJob > 0) { //failed
+            } else if (numOfFilesFailed > 0) { //failed
                 st->setString(1, terminal2);
             } else { //unknown state
             }
@@ -1609,7 +1615,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
 
         conn->destroyStatement(st, "", pooledConnection);
         st = NULL;
-        finishedDirty = 0;
+
     } catch (oracle::occi::SQLException const &e) {
 
             conn->rollback(pooledConnection);
@@ -1617,8 +1623,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             	conn->destroyResultset(st, r);
             if (st)
             	conn->destroyStatement(st, "", pooledConnection);
-		
-        finishedDirty = 0;
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	ok = false;
     }catch (...) {
@@ -1629,7 +1634,6 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             if (st)
             	conn->destroyStatement(st, "", pooledConnection);
 		
-        finishedDirty = 0;
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
 	ok = false;
     }
@@ -2682,7 +2686,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
             " WHERE nostreams = :6 and buffer=:7 and source_se=:8 and dest_se=:9 and timeout=:10 "
 	    " and (throughput is null or throughput<=:11) and (active<=:12 or active is null) ";
 	    
-    std::string query3 = " select count(*) from t_file, t_job where t_file.source_se=:1 and t_file.dest_se=:2 and file_state='ACTIVE' and t_job.job_id=t_file.job_id";	    
+    std::string query3 = " select count(*) from t_file, t_job where t_file.source_se=:1 and t_file.dest_se=:2 and t_file.file_state='ACTIVE' and t_job.job_id=t_file.job_id";
 
     oracle::occi::Statement* s3 = NULL;
     oracle::occi::ResultSet* r3 = NULL;    

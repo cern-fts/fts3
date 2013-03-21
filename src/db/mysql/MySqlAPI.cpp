@@ -854,18 +854,22 @@ bool MySqlAPI::updateJobTransferStatus(int /*file_id*/, std::string job_id, cons
 
     try {
         int numberOfFilesInJob = 0;
-        int numberOfFilesTerminal = 0;
+        int numberOfFilesCanceled = 0;
         int numberOfFilesFinished = 0;
         int numberOfFilesFailed = 0;
 
-        sql << "SELECT nFiles, nTerminal, nFinished, nFailed FROM "
+        sql << "SELECT nFiles, nCanceled, nFinished, nFailed FROM "
                "    (SELECT COUNT(DISTINCT file_index) AS nFiles FROM t_file WHERE job_id = :jobId) as DTableTotal, "
-               "    (SELECT COUNT(*) AS nTerminal FROM t_file WHERE job_id = :jobId AND file_state IN ('CANCELED', 'FINISHED', 'FAILED')) as DTableTerminal, "
-               "    (SELECT COUNT(*) AS nFinished FROM t_file WHERE job_id = :jobId AND file_state = 'FINISHED') AS DTableFinished, "
-               "    (SELECT COUNT(*) AS nFailed FROM t_file WHERE job_id = :jobId AND file_state IN ('CANCELED', 'FAILED')) AS DTableFailed",
+               "    (SELECT COUNT(DISTINCT file_index) AS nCanceled FROM t_file WHERE job_id = :jobId AND file_state = 'CANCELED') as DTableCanceled, "
+               "    (SELECT COUNT(DISTINCT file_index) AS nFinished FROM t_file WHERE job_id = :jobId AND file_state = 'FINISHED') AS DTableFinished, "
+               "    (SELECT COUNT(DISTINCT f1.file_index) AS nFailed FROM t_file f1 WHERE f1.job_id = :jobId "
+        	   "																	AND NOT EXISTS (SELECT * FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'FAILED') "
+               "		) AS DTableFailed ",
                soci::use(job_id, "jobId"),
-               soci::into(numberOfFilesInJob), soci::into(numberOfFilesTerminal),
+               soci::into(numberOfFilesInJob), soci::into(numberOfFilesCanceled),
                soci::into(numberOfFilesFinished), soci::into(numberOfFilesFailed);
+
+        int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
         bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
 
