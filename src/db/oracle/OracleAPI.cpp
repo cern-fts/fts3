@@ -671,7 +671,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
         int bringonline, std::string metadata,
-        int retry, int retryDelay) {
+        int retry, int retryDelay, std::string sourceSe, std::string destinationSe) {
 
 
     const std::string initial_state = bringonline > 0? "STAGING" : "SUBMITTED";

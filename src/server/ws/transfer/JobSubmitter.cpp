@@ -278,6 +278,12 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 				tupple.selectionStrategy
 			);
 
+		// if it is not multiple source/destination submission ..
+		if (pairs.size() == 1) {
+			// add the source and destination SE to t_job
+			// TODO
+		}
+
 		if (pairs.empty()) {
 			throw Err_Custom("It has not been possible to pair the sources with destinations (protocols don't match)!");
 		}
@@ -386,7 +392,9 @@ string JobSubmitter::submit() {
             params.get<int>(JobParameterHandler::BRING_ONLINE),
             params.get<string>(JobParameterHandler::JOB_METADATA),
             params.get<int>(JobParameterHandler::RETRY),
-            params.get<int>(JobParameterHandler::RETRY_DELAY)
+            params.get<int>(JobParameterHandler::RETRY_DELAY),
+            string(),
+            string()
     	);
 
     db->submitHost(id);

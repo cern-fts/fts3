@@ -96,7 +96,7 @@ public:
                                  const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, const std::string & lanConnection, int copyPinLifeTime,
                                  const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
                                  int bringonline, std::string metadata,
-                                 int retry, int retryDelay) = 0;
+                                 int retry, int retryDelay, std::string sourceSe, std::string destinationSe) = 0;
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) = 0;
     
