@@ -649,6 +649,7 @@ CREATE INDEX file_file_state_job_id ON t_file(file_state,job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 CREATE INDEX file_finish_time ON t_file(finish_time);
+CREATE INDEX file_file_index ON t_file(file_index);
 
 CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
