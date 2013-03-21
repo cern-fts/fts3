@@ -192,7 +192,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
                 }
             }
         }
-        boost::this_thread::sleep(boost::posix_time::milliseconds(100));
+        boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
     }
 }
 
