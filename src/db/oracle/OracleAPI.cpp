@@ -1531,7 +1531,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             "(select count(DISTINCT file_index) As Num2 from t_file where job_id=:2 and file_state = 'CANCELED'), "
             "(select count(DISTINCT file_index) As Num3 from t_file where job_id=:3 and file_state = 'FINISHED'), "
             "(select count(DISTINCT f1.file_index) As Num4 from t_file f1 where job_id=:4 and "
-            "																	NOT EXISTS (SELECT * FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'FAILED')) ";
+            "																	NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'FAILED')) ";
 
 
     std::string updateFileJobFinished =
