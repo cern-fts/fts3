@@ -191,6 +191,9 @@ private:
 	 */
 	string fileUrlToSeName(string url);
 
+	string sourceSe;
+	string destinationSe;
+
 };
 
 }

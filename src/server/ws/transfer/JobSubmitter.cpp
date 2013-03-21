@@ -117,6 +117,13 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 			throw Err_Custom(errMsg);
 		}
 		checkSe(sourceSe);
+		// set the source SE for the transfer job,
+		// in case of this submission type multiple
+		// source/destination submission is not possible
+		// so we can just pick the first one
+		if (this->sourceSe.empty()) {
+			this->sourceSe = sourceSe;
+		}
 		// check if all the sources use SRM protocol
 		srm_source &= sourceSe.find(srm_protocol) == 0;
 
@@ -126,6 +133,13 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 			throw Err_Custom(errMsg);
 		}
 		checkSe(destinationSe);
+		// set the destination SE for the transfer job,
+		// in case of this submission type multiple
+		// source/destination submission is not possible
+		// so we can just pick the first one
+		if (this->destinationSe.empty()) {
+			this->destinationSe = sourceSe;
+		}
 
     	// check weather the source and destination files are supported
     	if (!checkProtocol(dest)) throw Err_Custom("Destination protocol not supported (" + dest + ")");
@@ -189,6 +203,14 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 			throw Err_Custom(errMsg);
 		}
 		checkSe(sourceSe);
+		// set the source SE for the transfer job,
+		// in case of this submission type multiple
+		// source/destination submission is not possible
+		// so we can just pick the first one
+		if (this->sourceSe.empty()) {
+			this->sourceSe = sourceSe;
+		}
+
 		// check if all the sources use SRM protocol
 		srm_source &= sourceSe.find(srm_protocol) == 0;
 
@@ -198,6 +220,13 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 			throw Err_Custom(errMsg);
 		}
 		checkSe(destinationSe);
+		// set the destination SE for the transfer job,
+		// in case of this submission type multiple
+		// source/destination submission is not possible
+		// so we can just pick the first one
+		if (this->destinationSe.empty()) {
+			this->destinationSe = sourceSe;
+		}
 
     	// check weather the destination file is supported
     	if (!checkProtocol(dest)) {
@@ -280,8 +309,9 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
 		// if it is not multiple source/destination submission ..
 		if (pairs.size() == 1) {
-			// add the source and destination SE to t_job
-			// TODO
+			// add the source and destination SE for the transfer job
+			sourceSe = pairs.front().first;
+			destinationSe = pairs.front().second;
 		}
 
 		if (pairs.empty()) {
@@ -393,8 +423,8 @@ string JobSubmitter::submit() {
             params.get<string>(JobParameterHandler::JOB_METADATA),
             params.get<int>(JobParameterHandler::RETRY),
             params.get<int>(JobParameterHandler::RETRY_DELAY),
-            string(),
-            string()
+            sourceSe,
+            destinationSe
     	);
 
     db->submitHost(id);
