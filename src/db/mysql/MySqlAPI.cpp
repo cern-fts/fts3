@@ -525,7 +525,7 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
 
         query << "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, "
                 "                 vo_name, priority, cancel_job, "
-                "                 (SELECT COUNT(*) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
+                "                 (SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = t_job.job_id) as numFiles "
                  "FROM t_job ";
 
         //joins

@@ -870,7 +870,7 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
     /*this statement cannot be prepared, it's generated dynamically*/
     std::string tag = "listRequests";
-    std::string sel = "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, J.vo_name,(SELECT count(*) from t_file where t_file.job_id = J.job_id), priority, cancel_job FROM t_job J ";
+    std::string sel = "SELECT DISTINCT job_id, job_state, reason, submit_time, user_dn, J.vo_name,(SELECT count(DISTINCT file_index) from t_file where t_file.job_id = J.job_id), priority, cancel_job FROM t_job J ";
     //gain the benefit from the statement pooling
     std::sort(inGivenStates.begin(), inGivenStates.end());
     std::vector<std::string>::const_iterator foundCancel;
