@@ -2682,7 +2682,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
             " WHERE nostreams = :6 and buffer=:7 and source_se=:8 and dest_se=:9 and timeout=:10 "
 	    " and (throughput is null or throughput<=:11) and (active<=:12 or active is null) ";
 	    
-    std::string query3 = " select count(*) from t_file, t_job where source_se=:1 and dest_se=:2 and file_state='ACTIVE' and t_job.job_id=t_file.job_id";	    
+    std::string query3 = " select count(*) from t_file, t_job where t_file.source_se=:1 and t_file.dest_se=:2 and file_state='ACTIVE' and t_job.job_id=t_file.job_id";	    
 
     oracle::occi::Statement* s3 = NULL;
     oracle::occi::ResultSet* r3 = NULL;    

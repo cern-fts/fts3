@@ -135,18 +135,18 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
                     statusA = gfal2_bring_online(handle, ((*i).url).c_str(), 28800, 28800, token, sizeof (token), 1, &error);
 		    
                     if (statusA < 0) {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE online failed " << error->code << " " << error->message << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE failed " << error->code << " " << error->message << commit;
                         db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
                         (*i).started = true;
                         deleteIt = true;
                         g_clear_error(&error);
                     } else if (statusA == 0) {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online queued, got token " << token << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << commit;
                         (*i).token = std::string(token);
 			db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));
                         (*i).started = true;			
                     } else {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online succeeded, got token " << token << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE succeeded, got token " << token << commit;
                         db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));
                         (*i).started = true;
                     }
@@ -163,7 +163,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling token " << (*i).token << commit;
                         (*i).started = true;
                     } else{
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE online finished token " << (*i).token << commit;
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE finished token " << (*i).token << commit;
                         (*i).started = true;
 			deleteIt = true;
                         db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FINISHED", "", (*i));
