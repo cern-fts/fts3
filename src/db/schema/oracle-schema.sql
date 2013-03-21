@@ -364,6 +364,12 @@ CREATE TABLE t_job (
 -- Dest site name - the destination cluster name
   ,dest              VARCHAR2(255)
 --
+-- Source SE host name
+  ,source_se         VARCHAR2(255)
+--
+-- Dest SE host name
+  ,dest_se           VARCHAR2(255)
+--
 -- the DN of the user starting the job - they are the only one
 -- who can sumbit/cancel
   ,user_dn          	VARCHAR2(1024)
@@ -528,7 +534,7 @@ CREATE TABLE t_file (
 --
 -- The Destination
   ,dest_surl		VARCHAR2(1100)
-  --
+--
 -- Source SE host name
   ,source_se         VARCHAR2(255)
 --
