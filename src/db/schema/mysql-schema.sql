@@ -260,25 +260,6 @@ CREATE TABLE t_bad_dns (
 
 
 --
--- Table for saving the site-group association. As convention, group names should be between "[""]"
--- 
-CREATE TABLE t_site_group (
--- name of the group 
---
-  group_name     VARCHAR(100) NOT NULL,
--- name of the site
--- 
-  site_name      VARCHAR(100) NOT NULL,
--- priority used for ordering
---
-  priority       INTEGER DEFAULT 3,
--- define private key
---
-  CONSTRAINT sitegroup_pk PRIMARY KEY (group_name, site_name)
-);
-
-
---
 -- Store se_pair ACL
 --
 CREATE TABLE t_se_pair_acl (
@@ -330,13 +311,6 @@ CREATE TABLE t_job (
 --
 -- Hostname which this job was received
   submitHost           VARCHAR(255),
---
--- Source site name - the source cluster name
-  source               VARCHAR(255),
---
--- Dest site name - the destination cluster name
-  dest                 VARCHAR(255),
---
 -- Source SE host name
   source_se            VARCHAR(255),
 --
@@ -391,22 +365,6 @@ CREATE TABLE t_job (
 -- legacy cert retrieval is used
   myproxy_server       VARCHAR(255),
 --
--- The endpoint of Source Catalog to be used in case 
--- logical names are used in the files
-  src_catalog          VARCHAR(1024),
---
--- The type of the the Source Catalog to be used in case 
--- logical names are used in the files
-  src_catalog_type     VARCHAR(1024),
---
--- The endpoint of the Destination Catalog to be used in case 
--- logical names are used in the files
-  dest_catalog         VARCHAR(1024),
---
--- The type of the Destination Catalog to be used in case 
--- logical names are used in the files
-  dest_catalog_type    VARCHAR(1024),
---
 -- Internal job parameters,used to pass job specific data from the
 -- WS to the agent
   internal_job_params  VARCHAR(255),
@@ -431,9 +389,6 @@ CREATE TABLE t_job (
 -- pin lifetime of the copy of the file created after a successful srmPutDone
 -- or srmCopy operations, in seconds
   copy_pin_lifetime        INTEGER DEFAULT NULL,
---
--- use "LAN" as ConnectionType (FTS by default uses WAN). Default value is false.
-  lan_connection           CHAR(1) DEFAULT NULL,
 --
 -- fail the transfer immediately if the file location is NEARLINE (do not even
 -- start the transfer). The default is false.
@@ -645,7 +600,7 @@ CREATE INDEX job_submit_time     ON t_job(submit_time);
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_job_id     ON t_file(job_id);
-CREATE INDEX file_file_state_job_id ON t_file(file_state,job_id);
+CREATE INDEX file_file_state_job_id ON t_file(file_state,file_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 CREATE INDEX file_finish_time ON t_file(finish_time);
