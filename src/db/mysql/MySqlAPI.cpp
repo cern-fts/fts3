@@ -13,8 +13,13 @@
 using namespace FTS3_COMMON_NAMESPACE;
 
 
-static time_t convertToUTC(){
-        time_t now = time(NULL);
+static time_t convertToUTC(int advance){
+        time_t now;
+	if(advance > 0)
+		now = time(NULL) + advance;
+	else
+		now = time(NULL);	
+		
         struct tm tTime;
         gmtime_r(&now, &tTime);
 	return mktime(&tTime);
@@ -1666,7 +1671,7 @@ void MySqlAPI::forceFailTransfers() {
         std::string jobId, params, tHost,reuse;
         int fileId, pid, timeout;
         struct tm startTimeSt;
-	time_t now2 = convertToUTC();
+	time_t now2 = convertToUTC(0);
         time_t startTime;
         double diff;
 	soci::indicator isNull;
@@ -1833,7 +1838,7 @@ void MySqlAPI::revertToSubmitted() {
         struct tm startTime;
         int fileId;
         std::string jobId, reuseJob;       
-	time_t now2 = convertToUTC();
+	time_t now2 = convertToUTC(0);
         sql.begin();
 
         soci::indicator reuseInd;
@@ -3381,6 +3386,69 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
     }
 }
 
+
+void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
+    soci::session sql(connectionPool);
+
+    try {
+    	//expressed in secs
+    	int retry_delay = 0;
+
+		sql <<
+				" select RETRY_DELAY from t_job where job_id=:jobId ",
+				soci::use(jobId),	
+				soci::into(retry_delay)
+		;
+
+        sql.begin();
+
+		if (retry_delay > 0) {
+		// update
+		time_t now = convertToUTC(retry_delay);
+		struct tm tTime;
+        	gmtime_r(&now, &tTime);
+	    			
+	        sql <<
+	        		" update t_file set retry_timestamp=:1 where job_id=:jobId and file_id=:fileId ",
+	        		soci::use(tTime),
+	        		soci::use(jobId),
+	        		soci::use(fileId)
+	        ;
+		} 
+
+        sql.commit();
+
+    } catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize){
+
+   std::stringstream internalParams;
+   soci::session sql(connectionPool);
+
+    try {
+        sql.begin();
+	
+	internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
+
+        sql <<
+        		" UPDATE t_file set INTERNAL_FILE_PARAMS=:1 where job_id=:jobId and file_id=:fileId ",
+        		soci::use(internalParams.str()),
+        		soci::use(jobId),
+        		soci::use(fileId);
+
+        sql.commit();
+
+    } catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+
 int MySqlAPI::countActiveTransfers(std::string source, std::string destination) {
 	// TODO
 	return 0;
@@ -3397,11 +3465,6 @@ int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int 
 	return 0;
 }
 
-void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
-}
-
-void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize){
-}
 
 // the class factories
 
