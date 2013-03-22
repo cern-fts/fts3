@@ -5,7 +5,7 @@ from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from ftsmon import forms
-from fts3.models import Job, File, ConfigAudit
+from fts.models import Job, File, ConfigAudit
 
 
 def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING'],
@@ -54,7 +54,7 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
     jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'finish_time',
                        'vo_name', 'source_space_token', 'space_token',
                        'priority', 'user_dn', 'reason',
-                       'job_metadata', 'nullFinished')
+                       'job_metadata', 'nullFinished', 'source_se', 'dest_se')
     # Ordering
     jobs = jobs.order_by('-nullFinished', '-submit_time')
 
