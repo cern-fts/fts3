@@ -429,7 +429,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
                "        :voName, UTC_TIMESTAMP(), :internalParams, :submitHost, :credId,              "
                "        :myproxyServer, :spaceToken, :overwriteFlag, :sourceSpaceToken,               "
-               "        :copyPinLifetime, :lanConnection, :failNearline, :checksumMethod,             "
+               "        :copyPinLifetime, :failNearline, :checksumMethod,             "
                "        :reuseJob, :bring_online, :retry, :retryDelay, :job_metadata,				  "
                "		:sourceSe, :destSe)															  ",
                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
@@ -438,7 +438,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
                soci::use(reuse, reuseIndicator), soci::use(bring_online),
                soci::use(retry), soci::use(retryDelay), soci::use(metadata),
-        	   soci::use(sourceSe), soci::use(destinationSe);
+               soci::use(sourceSe), soci::use(destinationSe);
 
         // Insert src/dest pair
         std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;
