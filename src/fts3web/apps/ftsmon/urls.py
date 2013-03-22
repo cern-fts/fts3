@@ -17,4 +17,7 @@ urlpatterns = patterns('ftsmon.views',
     
     url(r'^optimizer/$', 'optimizer'),
     url(r'^optimizer/detailed$', 'optimizerDetailed'),
+    
+    url(r'^errors/$', 'showErrors'),
+    url(r'^errors/view$', 'transfersWithError')
 )

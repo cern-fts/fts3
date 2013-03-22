@@ -151,15 +151,6 @@ def _getStatsPerPair(source_se = None, dest_se = None):
 
 
 
-def _getUniqueReasons():
-    return File.objects.filter(reason__isnull = False)\
-                       .exclude(reason = '')\
-                       .values('reason')\
-                       .annotate(count = Count('reason'))\
-                       .order_by('-count')
-
-
-
 def statistics(httpRequest):
     statsDict = {}
     statsDict['request'] = httpRequest
@@ -180,7 +171,6 @@ def statistics(httpRequest):
         
     statsDict['overall'] = overall
     
-    statsDict['uniqueReasons'] = _getUniqueReasons()
     statsDict['servers'] = _getTransferAndSubmissionPerHost()
     statsDict['pairs'] = _getStatsPerPair(source_se, dest_se)   
     statsDict['vos'] = _getStateCountPerVo();

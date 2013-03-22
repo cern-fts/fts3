@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}
+Failed transfers
+{% endblock %}
+
+{% block refresh %}
+{% endblock %}
+
+{% block content %}
+<h3>Transfers failed with the given error</h3>
+<p class="reason">
+{{reason}}
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>FILE ID</th>
+      <th>JOB ID</th>
+      <th>VO</th>
+      <th>SOURCE URL</th>
+      <th>DESTINATION URL</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for t in transfers %}
+    <tr class="{% cycle 'odd' 'even' %}">
+      <td>{{ t.file_id }}</td>
+      <td>
+        <a href="{% url ftsmon.views.jobDetails t.job_id %}">
+          {{ t.job_id }}
+        </a>
+      </td>
+      <td>{{ t.job.vo_name }}</td>
+      <td>{{ t.source_surl }}</td>
+      <td>{{ t.dest_surl }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

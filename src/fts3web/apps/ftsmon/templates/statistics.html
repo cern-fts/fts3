@@ -14,7 +14,6 @@ Statistics
       <li><a href="#fts3">FTS3 Servers</a></li>
       <li><a href="#perPair">Per pair</a></li>
       <li><a href="#perVo">Per vo</a></li>
-      <li><a href="#errors">Distinct errors</a></li>
     </ul>
     
     
@@ -144,25 +143,7 @@ Statistics
         </tbody>
       </table>
     </div>
-    
-    <div id="errors">
-      <table>
-        <thead>
-          <tr>
-            <th>Count</th>
-            <th>Reason</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in uniqueReasons %}
-            <tr class="{% cycle 'odd' 'even' %}">
-              <td>{{ r.count }}</td>
-              <td class="reason">{{ r.reason }}</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+
   </div>
   <script type="text/javascript">
     $('#statistics').tabs({select: function(event, ui) {
