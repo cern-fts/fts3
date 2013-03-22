@@ -116,7 +116,7 @@ public:
 	 *
 	 * @return
 	 */
-	int countInState(string status, vector<JobStatus*>& statuses);
+	size_t countInState(string status, vector<JobStatus*>& statuses);
 
 protected:
 

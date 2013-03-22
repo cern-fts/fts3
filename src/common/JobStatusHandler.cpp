@@ -77,7 +77,7 @@ bool JobStatusHandler::isStatusValid(string& status) {
 	return statusNameToId.find(status) != statusNameToId.end();
 }
 
-int JobStatusHandler::countInState(const string status, vector<JobStatus*>& statuses) {
+size_t JobStatusHandler::countInState(const string status, vector<JobStatus*>& statuses) {
 
 	set<int> files;
 
