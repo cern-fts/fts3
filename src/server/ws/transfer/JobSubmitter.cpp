@@ -141,7 +141,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 		// source/destination submission is not possible
 		// so we can just pick the first one
 		if (this->destinationSe.empty()) {
-			this->destinationSe = sourceSe;
+			this->destinationSe = destinationSe;
 		}
 
     	// check weather the source and destination files are supported
@@ -232,7 +232,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 		// source/destination submission is not possible
 		// so we can just pick the first one
 		if (this->destinationSe.empty()) {
-			this->destinationSe = sourceSe;
+			this->destinationSe = destinationSe;
 		}
 
     	// check weather the destination file is supported
@@ -318,8 +318,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		// if it is not multiple source/destination submission ..
 		if (pairs.size() == 1) {
 			// add the source and destination SE for the transfer job
-			sourceSe = pairs.front().first;
-			destinationSe = pairs.front().second;
+			sourceSe = fileUrlToSeName(pairs.front().first);
+			destinationSe = fileUrlToSeName(pairs.front().second);
 		}
 
 		if (pairs.empty()) {
