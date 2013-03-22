@@ -668,7 +668,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
 void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> job_elements, const std::string & paramFTP,
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-        const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
+        const std::string & sourceSpaceToken, const std::string &, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
         int bringonline, std::string metadata,
         int retry, int retryDelay, std::string sourceSe, std::string destinationSe) {
@@ -683,9 +683,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     		"INSERT INTO t_job(job_id, job_state, job_params, user_dn, user_cred, priority, "
             " vo_name,submit_time,internal_job_params,submit_host, cred_id, myproxy_server, "
             " SPACE_TOKEN, overwrite_flag,SOURCE_SPACE_TOKEN,copy_pin_lifetime, "
-            " lan_connection,fail_nearline, checksum_method, REUSE_JOB, bring_online, job_metadata, retry, retry_delay, "
+            " fail_nearline, checksum_method, REUSE_JOB, bring_online, job_metadata, retry, retry_delay, "
             " source_se, dest_se) "
-            " VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23, :24, :25, :26)";
+            " VALUES (:1,:2,:3,:4,:5,:6,:7, :8, :9, :10, :11, :12, :13, :14, :15, :16, :17, :18, :19, :20, :21, :22, :23, :24, :25)";
     
     const std::string file_statement =
     		" INSERT "
@@ -728,24 +728,23 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         s_job_statement->setString(13, spaceToken); //space_token
         s_job_statement->setString(14, overwrite); //overwrite_flag
         s_job_statement->setString(15, sourceSpaceToken); //source_space_token
-        s_job_statement->setInt(16, copyPinLifeTime); //copy_pin_lifetime
-        s_job_statement->setString(17, lanConnection); //lan_connection
-        s_job_statement->setString(18, failNearLine); //fail_nearline	
+        s_job_statement->setInt(16, copyPinLifeTime); //copy_pin_lifetime       
+        s_job_statement->setString(17, failNearLine); //fail_nearline	
         if (checksumMethod.length() == 0)
-            s_job_statement->setNull(19, oracle::occi::OCCICHAR);
+            s_job_statement->setNull(18, oracle::occi::OCCICHAR);
         else
-            s_job_statement->setString(19, "Y"); //checksum_method
+            s_job_statement->setString(18, "Y"); //checksum_method
         if (reuse.length() == 0)
-            s_job_statement->setNull(20, oracle::occi::OCCISTRING);
+            s_job_statement->setNull(19, oracle::occi::OCCISTRING);
         else
-            s_job_statement->setString(20, "Y"); //reuse session for this job
+            s_job_statement->setString(19, "Y"); //reuse session for this job
 
-        s_job_statement->setInt(21, bringonline); //reuse session for this job
-        s_job_statement->setString(22, metadata); // job metadata
-        s_job_statement->setInt(23, retry); // number of retries
-        s_job_statement->setInt(24, retryDelay); // delay between retries
-        s_job_statement->setString(25, sourceSe); // source SE
-        s_job_statement->setString(26, destinationSe); // destination SE
+        s_job_statement->setInt(20, bringonline); //reuse session for this job
+        s_job_statement->setString(21, metadata); // job metadata
+        s_job_statement->setInt(22, retry); // number of retries
+        s_job_statement->setInt(23, retryDelay); // delay between retries
+        s_job_statement->setString(24, sourceSe); // source SE
+        s_job_statement->setString(25, destinationSe); // destination SE
         s_job_statement->executeUpdate();
 
         //now insert each src/dest pair for this job id

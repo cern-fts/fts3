@@ -402,7 +402,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
 void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
         const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
         const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-        const std::string & sourceSpaceToken, const std::string &, const std::string & lanConnection, int copyPinLifeTime,
+        const std::string & sourceSpaceToken, const std::string &, int copyPinLifeTime,
         const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
         int bring_online, std::string metadata,
         int retry, int retryDelay, std::string sourceSe, std::string destinationSe) {
@@ -423,7 +423,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
         sql << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
                "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
                "                   myproxy_server, space_token, overwrite_flag, source_space_token,   "
-               "                   copy_pin_lifetime, lan_connection, fail_nearline, checksum_method, "
+               "                   copy_pin_lifetime, fail_nearline, checksum_method, "
                "                   reuse_job, bring_online, retry, retry_delay, job_metadata,		  "
                "			       source_se, dest_se)         										  "
                "VALUES (:jobId, :jobState, :jobParams, :userDn, :userCred, :priority,                 "
@@ -435,7 +435,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
                soci::use(voName), soci::use(params), soci::use(currenthost), soci::use(delegationID),
                soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
-               soci::use(copyPinLifeTime), soci::use(lanConnection), soci::use(failNearLine), soci::use(checksumMethod),
+               soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
                soci::use(reuse, reuseIndicator), soci::use(bring_online),
                soci::use(retry), soci::use(retryDelay), soci::use(metadata),
         	   soci::use(sourceSe), soci::use(destinationSe);
