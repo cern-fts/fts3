@@ -2569,7 +2569,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 			ops->file_id = 1;				
         	}else{ //nothing found, this is weird, set to defaults then
 			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
-			ops->timeout = DEFAULT_TIMEOUT;
+			ops->timeout = MID_TIMEOUT;
 			ops->bufsize = DEFAULT_BUFFSIZE;
 			ops->file_id = 0;				
 		}
@@ -2609,7 +2609,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 			ops->file_id = 1;			
         	}else{ //nothing found, use decent defaults
 			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
-			ops->timeout = DEFAULT_TIMEOUT;
+			ops->timeout = MID_TIMEOUT;
 			ops->bufsize = DEFAULT_BUFFSIZE;
 			ops->file_id = 0;				
 		}
@@ -3613,7 +3613,7 @@ void OracleAPI::revertToSubmitted() {
             job_id = r2->getString(3);
             reuseFlag = r2->getString(4);
             time_t current_time = std::time(NULL);
-            diff = difftime(current_time, start_time);
+            diff = difftime(current_time, start_time);  	    
             if (diff > 100) { 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1, pooledConnection);

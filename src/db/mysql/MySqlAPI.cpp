@@ -12,6 +12,7 @@
 
 using namespace FTS3_COMMON_NAMESPACE;
 
+
 static double convertBtoM( double byte,  double duration) {
     return ceil((((byte / duration) / 1024) / 1024) * 100 + 0.5) / 100;
 }
@@ -1346,14 +1347,14 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
         	} else {
         		// or no row at all
     			ops->streamsperfile = DEFAULT_NOSTREAMS;
-    			ops->timeout = DEFAULT_TIMEOUT;
+    			ops->timeout = MID_TIMEOUT;
     			ops->bufsize = DEFAULT_BUFFSIZE;
     			ops->file_id = 0;
         	}
 
     	} else if (numberOfSamples > 0 && timeoutTr > 0) { //tr's started timing out, use decent defaults
 
-   				ops->streamsperfile = DEFAULT_NOSTREAMS;
+   			ops->streamsperfile = DEFAULT_NOSTREAMS;
     			ops->timeout = MID_TIMEOUT;
     			ops->bufsize = DEFAULT_BUFFSIZE;
     			ops->file_id = 0;
@@ -1400,7 +1401,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
             } else {
             	// or no row at all
     			ops->streamsperfile = DEFAULT_NOSTREAMS;
-    			ops->timeout = DEFAULT_TIMEOUT;
+    			ops->timeout = MID_TIMEOUT;
     			ops->bufsize = DEFAULT_BUFFSIZE;
     			ops->file_id = 0;
             }
@@ -1658,7 +1659,9 @@ void MySqlAPI::forceFailTransfers() {
         std::string jobId, params, tHost,reuse;
         int fileId, pid, timeout;
         struct tm startTimeSt;
-        time_t lifetime = time(NULL);
+        time_t now = time(NULL);
+	struct tm *p = gmtime(&now);
+	time_t now2 = mktime( p ); 
         time_t startTime;
         double diff;
 	soci::indicator isNull;
@@ -1692,7 +1695,7 @@ void MySqlAPI::forceFailTransfers() {
     					terminateTime *= count;
             	}
 
-                diff = difftime(lifetime, startTime);
+                diff = difftime(now2, startTime);
                 if (timeout != 0 && diff > terminateTime && tHost == hostname) {
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;                    
                     kill(pid, SIGUSR1);
@@ -1826,7 +1829,8 @@ void MySqlAPI::revertToSubmitted() {
         int fileId;
         std::string jobId, reuseJob;
         time_t now = time(NULL);
-
+	struct tm *p = gmtime(&now);
+	time_t now2 = mktime( p ); 		
         sql.begin();
 
         soci::indicator reuseInd;
@@ -1839,8 +1843,7 @@ void MySqlAPI::revertToSubmitted() {
         if (readyStmt.execute(true)) {
             do {
                 time_t startTimestamp = mktime(&startTime);
-                double diff = difftime(now, startTimestamp);
-
+                double diff = difftime(now2, startTimestamp);		
                 if (diff > 100) { 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 
