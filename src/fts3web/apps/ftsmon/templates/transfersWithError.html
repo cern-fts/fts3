@@ -8,7 +8,7 @@ Failed transfers
 {% endblock %}
 
 {% block content %}
-<h3>Transfers failed with the given error</h3>
+<h3>{{ transfers.count }} transfers failed with the given error</h3>
 <p class="reason">
 {{reason}}
 </p>
@@ -28,9 +28,7 @@ Failed transfers
     <tr class="{% cycle 'odd' 'even' %}">
       <td>{{ t.file_id }}</td>
       <td>
-        <a href="{% url ftsmon.views.jobDetails t.job_id %}">
-          {{ t.job_id }}
-        </a>
+        <a href="{% url ftsmon.views.jobDetails t.job_id %}">{{ t.job_id }}</a>
       </td>
       <td>{{ t.job.vo_name }}</td>
       <td>{{ t.source_surl }}</td>

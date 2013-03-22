@@ -21,9 +21,12 @@ def transfersWithError(httpRequest):
     if 'reason' not in httpRequest.POST:
         return redirect(to = showErrors)
     
-    reason = httpRequest.POST['reason']
+    reason = str(httpRequest.POST['reason'])
+    # String quotes
+    if reason[0] == '"':
+        reason = reason[1:-1]
     
-    transfers = File.objects.filter(reason = reason)
+    transfers = File.objects.filter(reason = reason).order_by('file_id')
     
     # Render
     return render(httpRequest, 'transfersWithError.html',
