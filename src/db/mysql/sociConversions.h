@@ -59,8 +59,8 @@ namespace soci
             job.VO_NAME        = v.get<std::string>("vo_name");
             job.PRIORITY       = v.get<int>("priority");
             job.SUBMIT_HOST    = v.get<std::string>("submit_host", "");
-            job.SOURCE         = v.get<std::string>("source", "");
-            job.DEST           = v.get<std::string>("dest", "");
+            job.SOURCE         = v.get<std::string>("source_se", "");
+            job.DEST           = v.get<std::string>("dest_se", "");
             job.AGENT_DN       = v.get<std::string>("agent_dn", "");
             job.SUBMIT_HOST    = v.get<std::string>("submit_host");
             job.USER_DN        = v.get<std::string>("user_dn");

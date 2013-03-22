@@ -7,7 +7,6 @@ DROP TABLE t_job_share_config;
 DROP TABLE t_job;
 DROP TABLE t_vo_acl;
 DROP TABLE t_se_pair_acl;
-DROP TABLE t_site_group;
 DROP TABLE t_bad_dns;
 DROP TABLE t_bad_ses;
 DROP TABLE t_share_config;

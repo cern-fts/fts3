@@ -16,7 +16,6 @@ drop table T_LOG cascade constraints;
 drop table T_SE cascade constraints;
 drop table T_SE_ACL cascade constraints;
 drop table T_SE_PAIR_ACL cascade constraints;
-drop table T_SITE_GROUP cascade constraints;
 drop table T_STAGE_REQ cascade constraints;
 drop table T_VO_ACL cascade constraints;
 drop table T_DEBUG cascade constraints;
