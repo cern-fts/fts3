@@ -309,8 +309,6 @@ CREATE TABLE t_job (
 -- Transport specific parameters
   job_params           VARCHAR(255),
 --
--- Hostname which this job was received
-  submitHost           VARCHAR(255),
 -- Source SE host name
   source_se            VARCHAR(255),
 --
