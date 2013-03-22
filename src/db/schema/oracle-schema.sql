@@ -611,10 +611,6 @@ CREATE TABLE t_stage_req (
 --
 --
 
--- t_site_group indexes:
--- t_site_group(group_name,site_name) is primary key
-CREATE INDEX site_group_sname_id ON t_site_group(site_name);
-
 -- t_job indexes:
 -- t_job(job_id) is primary key
 CREATE INDEX job_job_state    ON t_job(job_state);
