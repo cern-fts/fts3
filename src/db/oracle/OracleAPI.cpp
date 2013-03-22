@@ -3577,21 +3577,16 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids) {
 void OracleAPI::revertToSubmitted() {
     const std::string tag1 = "revertToSubmitted";
     const std::string tag2 = "revertToSubmitted1";
-    const std::string tag3 = "revertToSubmittedReused";
-    
+   
     std::string query1 = " update t_file set file_state='SUBMITTED', reason='' where file_state='READY' and FINISH_TIME is NULL and JOB_FINISHED is NULL and file_id=:1";
 
     std::string query2 = " select t_file.start_time, t_file.file_id, t_file.job_id, t_job.REUSE_JOB from t_file,t_job where t_file.file_state"
             "='READY' and t_file.FINISH_TIME is NULL "
             " and t_file.JOB_FINISHED is NULL and t_file.job_id=t_job.job_id";
 
-    std::string query3 = "update t_job T1 set T1.job_state='SUBMITTED' where T1.job_state in ('READY','ACTIVE') and "
-            " T1.FINISH_TIME is NULL and T1.JOB_FINISHED is NULL and T1.REUSE_JOB='Y' and T1.job_id=:1 ";
-	    
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::Statement* s2 = NULL;
     oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
     double diff = 0;
     int file_id = 0;
     std::string job_id("");
@@ -3614,7 +3609,7 @@ void OracleAPI::revertToSubmitted() {
             reuseFlag = r2->getString(4);
             time_t current_time = std::time(NULL);
             diff = difftime(current_time, start_time);  	    
-            if (diff > 100) { 
+            if (diff > 100 && reuseFlag != "Y") { 
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                 s1 = conn->createStatement(query1, tag1, pooledConnection);
                 s1->setInt(1, file_id);
@@ -3622,17 +3617,18 @@ void OracleAPI::revertToSubmitted() {
 		conn->commit(pooledConnection);                          
                 conn->destroyStatement(s1, tag1, pooledConnection);
                 s1 = NULL;
-                if (reuseFlag == "Y") {
-                    s3 = conn->createStatement(query3, tag3, pooledConnection);
-                    s3->setString(1, job_id);
-		    s3->executeUpdate();
-		    conn->commit(pooledConnection);		                        
-                    conn->destroyStatement(s3, tag3, pooledConnection);
-                    s3 = NULL;
-                }
-		    
-            }
-        }
+	    }else{
+	    	if (diff > 1300000 && reuseFlag == "Y") {
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id(reused) " << file_id << " seems to be stalled, restart it" << commit;
+                	s1 = conn->createStatement(query1, tag1, pooledConnection);
+                	s1->setInt(1, file_id);
+			s1->executeUpdate();  
+			conn->commit(pooledConnection);                          
+                	conn->destroyStatement(s1, tag1, pooledConnection);
+                	s1 = NULL;
+		}
+	    }                                   		    
+       }
         conn->destroyResultset(s2, r2);
         conn->destroyStatement(s2, tag2, pooledConnection);
     } catch (oracle::occi::SQLException const &e) {
@@ -3645,10 +3641,7 @@ void OracleAPI::revertToSubmitted() {
         	if(s2 && r2)
         		conn->destroyResultset(s2, r2);
         	if (s2)
-        		conn->destroyStatement(s2, tag2, pooledConnection);
-
-        	if(s3)
-        		conn->destroyStatement(s3, tag3, pooledConnection);
+        		conn->destroyStatement(s2, tag2, pooledConnection);        	
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
@@ -3662,10 +3655,7 @@ void OracleAPI::revertToSubmitted() {
         		conn->destroyResultset(s2, r2);
         	if (s2)
         		conn->destroyStatement(s2, tag2, pooledConnection);
-
-        	if(s3)
-        		conn->destroyStatement(s3, tag3, pooledConnection);
-
+        	
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);                    

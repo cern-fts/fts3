@@ -834,8 +834,7 @@ protected:
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a() {
-        static bool drainMode = false;
-        static long double counter = 0;
+        static bool drainMode = false;     
         static unsigned int countReverted = 0;
 
         while (1) {
@@ -857,16 +856,9 @@ protected:
                     continue;
                 } else {
                     drainMode = false;
-                }
+                }                
 
-                /*force fail to stall transfers*/
-                counter++;
-                if (counter == 2000) {
-                    DBSingleton::instance().getDBObjectInstance()->forceFailTransfers();
-                    counter = 0;
-                }
-
-                /*revert to SUBMITTED state if stayed in READY for too long*/
+                /*revert to SUBMITTED state if stayed in READY for too long (100 secs)*/
                 countReverted++;
                 if (countReverted == 100) {
                     DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
