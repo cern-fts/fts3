@@ -699,6 +699,7 @@ int main(int argc, char **argv) {
         reasonClass = std::string("");
         errorPhase = std::string("");
 	retry = true;
+	errorMessage = std::string("");
 
         if (reuseFile.length() > 0) {
             std::string mid_str(urlsFile[ii]);
