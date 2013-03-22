@@ -236,6 +236,15 @@ CREATE TABLE t_bad_ses (
 --
 -- The DN of the administrator who added it
   admin_dn       VARCHAR(1024),
+  --
+-- VO that is banned for the SE
+   vo			 VARCHAR(50) DEFAULT NULL,
+--
+-- status: either CANCEL or WAIT
+   status 		 VARCHAR(10) DEFAULT NULL,
+--
+-- the timeout that is used when WAIT status was specified
+   wait_timeout  INTEGER default 0,
   CONSTRAINT bad_se_pk PRIMARY KEY (se)
 );
 
