@@ -3618,7 +3618,7 @@ void OracleAPI::revertToSubmitted() {
                 conn->destroyStatement(s1, tag1, pooledConnection);
                 s1 = NULL;
 	    }else{
-	    	if (diff > 1300000 && reuseFlag == "Y") {
+	    	if (diff > 30000 && reuseFlag == "Y") {
 			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id(reused) " << file_id << " seems to be stalled, restart it" << commit;
                 	s1 = conn->createStatement(query1, tag1, pooledConnection);
                 	s1->setInt(1, file_id);

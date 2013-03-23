@@ -1860,7 +1860,7 @@ void MySqlAPI::revertToSubmitted() {
                            "      job_finished IS NULL AND file_id = :fileId",
                            soci::use(fileId);
                 }else{
-		  if(diff > 1300000 && reuseJob == "Y") {
+		  if(diff > 30000 && reuseJob == "Y") {
 		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
                         sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
                            "WHERE file_state = 'READY' AND finish_time IS NULL AND "
