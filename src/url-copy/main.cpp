@@ -255,6 +255,37 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
  return 6;	
 }
 
+
+/*hardcoded for now*/
+static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout){
+	if(sizeInBytes <= 10485760) { //starting with 10MB
+		return 3600;
+	}
+	else if(sizeInBytes > 10485760 && sizeInBytes <= 52428800){
+		return 4500;	
+	}
+	else if(sizeInBytes > 52428800 && sizeInBytes <= 104857600){
+		return 5500;
+	}
+	else if(sizeInBytes > 104857600 && sizeInBytes <= 209715200){
+		return 8000;
+	}
+	else if(sizeInBytes > 209715200 && sizeInBytes <= 524288000){
+		return 9000;
+	}
+	else if (sizeInBytes > 524288000 && sizeInBytes <= 734003200){
+		return 10000;
+	}
+	else{
+		if(timeout < 10000 )
+			return 10000;
+		else
+			return timeout;
+	}
+ return 6000;	
+}
+
+
 static void cancelTransfer() {
     if (handle && !canceled) { // finish all transfer in a clean way
         canceled = true;
@@ -754,8 +785,6 @@ int main(int argc, char **argv) {
         msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, tcpbuffer_to_string.c_str());
         block_to_string = to_string<unsigned int>(blocksize, std::dec);
         msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
-        timeout_to_string = to_string<unsigned int>(timeout, std::dec);
-        msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
         msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, dest_token_desc);
         msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);	   
         msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);	
@@ -780,8 +809,7 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO Dest url:" << strArray[2] << '\n'; //c
             log << fileManagement->timestamp() << "INFO Overwrite enabled:" << overwrite << '\n'; //d
             log << fileManagement->timestamp() << "INFO tcpbuffersize:" << tcpbuffersize << '\n'; //f
-            log << fileManagement->timestamp() << "INFO blocksize:" << blocksize << '\n'; //g
-            log << fileManagement->timestamp() << "INFO Timeout:" << timeout << '\n'; //h
+            log << fileManagement->timestamp() << "INFO blocksize:" << blocksize << '\n'; //g            
             log << fileManagement->timestamp() << "INFO Daemonize:" << daemonize << '\n'; //i
             log << fileManagement->timestamp() << "INFO Dest space token:" << dest_token_desc << '\n'; //j
             log << fileManagement->timestamp() << "INFO Sourcespace token:" << source_token_desc << '\n'; //k
@@ -933,7 +961,12 @@ int main(int argc, char **argv) {
                 gfalt_set_replace_existing_file(params, TRUE, NULL);
             }
 
+            unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, timeout);
+	    timeout = experimentalTimeout;
             gfalt_set_timeout(params, timeout, NULL);
+            timeout_to_string = to_string<unsigned int>(timeout, std::dec);
+            msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
+	    log << fileManagement->timestamp() << "INFO Timeout:" << timeout << '\n'; //h	    
 	
             unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, nbstreams);
 	    nbstreams = experimentalNstreams;
