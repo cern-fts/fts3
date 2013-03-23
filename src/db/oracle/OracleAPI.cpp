@@ -2577,9 +2577,9 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
         	conn->destroyStatement(s3, tag3, pooledConnection);
 	        s3 = NULL;
         	r3 = NULL;				
-	}else if(check_if_more_samples_exist_count > 0 && timeoutTr > 0){ //tr's started timing out, use decent defaults
+	}else if(timeoutTr > 0){ //tr's started timing out, use decent defaults
 			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
-			ops->timeout = MID_TIMEOUT;
+			ops->timeout = 8000;
 			ops->bufsize = DEFAULT_BUFFSIZE;
 			ops->file_id = 0;	
 	}else{ //no more samples, try to optimize

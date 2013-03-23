@@ -1364,10 +1364,10 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     			ops->file_id = 0;
         	}
 
-    	} else if (numberOfSamples > 0 && timeoutTr > 0) { //tr's started timing out, use decent defaults
+    	} else if (timeoutTr > 0) { //tr's started timing out, use decent defaults
 
    			ops->streamsperfile = DEFAULT_NOSTREAMS;
-    			ops->timeout = MID_TIMEOUT;
+    			ops->timeout = 8000;
     			ops->bufsize = DEFAULT_BUFFSIZE;
     			ops->file_id = 0;
 
