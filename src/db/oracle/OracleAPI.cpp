@@ -2579,7 +2579,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
         	r3 = NULL;				
 	}else if(timeoutTr > 0){ //tr's started timing out, use decent defaults
 			ops->streamsperfile = DEFAULT_NOSTREAMS;		   
-			ops->timeout = 8000;
+			ops->timeout = 0;
 			ops->bufsize = DEFAULT_BUFFSIZE;
 			ops->file_id = 0;	
 	}else{ //no more samples, try to optimize
