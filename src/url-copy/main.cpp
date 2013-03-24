@@ -229,23 +229,26 @@ static bool retryTransfer(int errorNo, std::string category ){
 /*hardcoded for now*/
 static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int currentStreams){
 	if(sizeInBytes <= 10485760) { //starting with 10MB
-		return 2;
+		return 1;
 	}
 	else if(sizeInBytes > 10485760 && sizeInBytes <= 52428800){
-		return 3;	
+		return 2;	
 	}
 	else if(sizeInBytes > 52428800 && sizeInBytes <= 104857600){
-		return 4;
+		return 3;
 	}
 	else if(sizeInBytes > 104857600 && sizeInBytes <= 209715200){
+		return 4;
+	}
+	else if(sizeInBytes > 209715200 && sizeInBytes <= 734003200){
 		return 5;
 	}
-	else if(sizeInBytes > 209715200 && sizeInBytes <= 524288000){
+	else if (sizeInBytes > 734003200 && sizeInBytes <= 1073741824){
 		return 6;
 	}
-	else if (sizeInBytes > 524288000 && sizeInBytes <= 734003200){
+	else if (sizeInBytes > 1073741824 && sizeInBytes <= 1610612736){
 		return 7;
-	}
+	}	
 	else{
 		if(currentStreams < 8 )
 			return 8;

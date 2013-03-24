@@ -2683,8 +2683,8 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
     int active = 0;   
 
     std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, datetime=:4, timeout=:5 "
-            " WHERE nostreams = :6 and buffer=:7 and source_se=:8 and dest_se=:9 and timeout=:10 "
-	    " and (throughput is null or throughput<=:11) and (active<=:12 or active is null) ";
+            " WHERE nostreams = :6 and buffer=:7 and source_se=:8 and dest_se=:9 "
+	    " and (throughput is null or throughput<=:10) and (active<=:11 or active is null) ";
 	    
     std::string query3 = " select count(*) from t_file where t_file.source_se=:1 and t_file.dest_se=:2 and t_file.file_state='ACTIVE' ";
 
@@ -2730,10 +2730,9 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
             s2->setInt(6, nostreams);            
             s2->setInt(7, buffersize);
             s2->setString(8, source_hostname);
-            s2->setString(9, destin_hostname);
-	    s2->setInt(10, timeout);
-	    s2->setDouble(11, throughput);
-	    s2->setInt(12, active);
+            s2->setString(9, destin_hostname);	   
+	    s2->setDouble(10, throughput);
+	    s2->setInt(11, active);
             if (s2->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s2, tag2, pooledConnection);
@@ -2965,6 +2964,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     const std::string tag4 = "isTrAllowed4";
     const std::string tag5 = "isTrAllowed5"; 
     const std::string tag6 = "isTrAllowed6";     
+    const std::string tag7 = "isTrAllowed7";         
     bool allowed = true;
     int act = 0;
     int maxDest = 0;
@@ -2974,6 +2974,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     double ratioSuccessFailure = 0;
     double numberOfFinishedAll = 0;
     double numberOfFailedAll = 0;    
+    double throughput = 0.0;
   
     std::string query_stmt1 = " select count(*) from  t_file where t_file.file_state in ('READY','ACTIVE') and t_file.source_se=:1 ";
 	    
@@ -2990,7 +2991,10 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     			      " and file_state = 'FINISHED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";
 			      
     std::string query_stmt6 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
-    			      " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";			      
+    			      " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";	
+			      
+    std::string query_stmt7 = " select throughput from t_file where source_se=:1 and dest_se=:2 and FINISH_TIME = ( select max(FINISH_TIME) "
+    			      " from t_file  where source_se=:3 and dest_se=:4) and rownum = 1";			      		      
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;   
@@ -3003,7 +3007,9 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     oracle::occi::Statement* s5 = NULL;
     oracle::occi::ResultSet* r5 = NULL;        
     oracle::occi::Statement* s6 = NULL;
-    oracle::occi::ResultSet* r6 = NULL;    
+    oracle::occi::ResultSet* r6 = NULL;
+    oracle::occi::Statement* s7 = NULL;
+    oracle::occi::ResultSet* r7 = NULL;        
     oracle::occi::Connection* pooledConnection = NULL;    
     
 
@@ -3013,6 +3019,20 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
         if (!pooledConnection)
             return false;	
 	    	    
+	s7 = conn->createStatement(query_stmt7, tag7, pooledConnection);
+        s7->setString(1, source_hostname);
+        s7->setString(2, destin_hostname);	
+        s7->setString(3, source_hostname);
+        s7->setString(4, destin_hostname);	
+        r7 = conn->createResultset(s7, pooledConnection);
+        if (r7->next()) {
+            throughput = r7->getDouble(1);
+        }
+        conn->destroyResultset(s7, r7);
+        conn->destroyStatement(s7, tag7, pooledConnection);
+        s7 = NULL;
+        r7 = NULL;	    		    
+		    
 	s1 = conn->createStatement(query_stmt1, tag1, pooledConnection);
         s1->setString(1, source_hostname);
         r1 = conn->createResultset(s1, pooledConnection);
@@ -3097,7 +3117,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 	}
 		
 	allowed = optimizerObject.transferStart((int) numberOfFinished, (int) numberOfFailed,source_hostname, destin_hostname, act, maxSource, maxDest,
-	ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll);       
+	ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll, throughput);       
 	
     } catch (oracle::occi::SQLException const &e) {
 
@@ -3133,6 +3153,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
             if (s6)
                 conn->destroyStatement(s6, tag6, pooledConnection);
 
+            if (s7 && r7)
+                conn->destroyResultset(s7, r7);
+            if (s7)
+                conn->destroyStatement(s7, tag7, pooledConnection);		
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
@@ -3167,6 +3192,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 conn->destroyResultset(s6, r6);
             if (s6)
                 conn->destroyStatement(s6, tag6, pooledConnection);
+		
+            if (s7 && r7)
+                conn->destroyResultset(s7, r7);
+            if (s7)
+                conn->destroyStatement(s7, tag7, pooledConnection);				
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }

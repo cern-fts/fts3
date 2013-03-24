@@ -1456,11 +1456,11 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
             sql << "UPDATE t_optimize SET filesize = :fsize, throughput = :throughput, "
                    "   active = :active, datetime = UTC_TIMESTAMP(), timeout= :timeout "
                    "WHERE nostreams = :nstreams AND buffer = :buffer AND "
-                   "      source_se = :source_se AND dest_se = :dest_se AND timeout = :timeout"
+                   "      source_se = :source_se AND dest_se = :dest_se "
 		   " and (throughput is null or throughput<=:throughput) and (active<=:active or active is null)",
                    soci::use(filesize), soci::use(throughput), soci::use(active),
                    soci::use(timeout), soci::use(nostreams), soci::use(buffersize),
-                   soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
+                   soci::use(source_hostname), soci::use(destin_hostname),
 		   soci::use(throughput),soci::use(active);       
     }
     catch (std::exception& e) {
@@ -1574,7 +1574,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
         int nActiveSource, nActiveDest;
         double nFailedLastHour=0, nFinishedLastHour=0;
         int nActive;
-        double nFailedAll, nFinishedAll;
+        double nFailedAll, nFinishedAll, throughput;
 
         sql << "SELECT COUNT(*) FROM t_file "
                "WHERE t_file.file_state in ('READY','ACTIVE') AND "
@@ -1585,6 +1585,13 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                "WHERE t_file.file_state in ('READY','ACTIVE') AND "
                "      t_file.dest_se = :dst",
                soci::use(destin_hostname), soci::into(nActiveDest);
+	       
+	       
+        sql << " select throughput from t_file where source_se=:source and dest_se=:dst and FINISH_TIME = ( select max(FINISH_TIME) "
+    			      " from t_file  where source_se=:source and dest_se=:dst) LIMIT 1",
+			      soci::use(source_hostname), soci::use(destin_hostname),
+			      soci::use(source_hostname), soci::use(destin_hostname),
+			      soci::into(throughput);
 
         soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                        "WHERE "
@@ -1630,7 +1637,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                                                 source_hostname, destin_hostname,
                                                 nActive, nActiveSource, nActiveDest,
                                                 ratioSuccessFailure,
-                                                nFinishedAll, nFailedAll);
+                                                nFinishedAll, nFailedAll,throughput);
     }
     catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());

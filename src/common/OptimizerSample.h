@@ -29,7 +29,8 @@ struct transfersStore{
 	int numOfActivePerPair;	
 	double successRate;	
 	std::string source;
-	std::string dest;	
+	std::string dest;
+	double throughput;	
 };
 
 
@@ -46,7 +47,7 @@ public:
 	float getGoodput();
 	int getTimeout();
 	bool transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
-	lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll);
+	lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput);
 	
 	int streamsperfile;
 	int numoffiles;
@@ -54,6 +55,7 @@ public:
 	float goodput;
 	int timeout;
 	int file_id;
+	double throughput;
 	
 private:
 	std::vector<struct transfersStore> transfersStoreVector;	

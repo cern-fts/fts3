@@ -23,7 +23,7 @@ OptimizerSample::OptimizerSample() {
 OptimizerSample::~OptimizerSample() {
 }
 
-OptimizerSample::OptimizerSample(int spf, int nf, int bs, float gp) : streamsperfile(spf), numoffiles(nf), bufsize(bs), goodput(gp), timeout(3600), file_id(0) {
+OptimizerSample::OptimizerSample(int spf, int nf, int bs, float gp) : streamsperfile(spf), numoffiles(nf), bufsize(bs), goodput(gp), timeout(3600), file_id(0), throughput(0.0) {
 }
 
 int OptimizerSample::getBufSize() {
@@ -47,7 +47,7 @@ int OptimizerSample::getTimeout() {
 }
 
 bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int
-destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll) {
+destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput) {
     /*
             currectActive: number of active for a given src/dest pair
             sourceActive: number of active for a given source
@@ -63,7 +63,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
 
     //check if this src/dest pair already exists
     if (transfersStoreVector.empty()) {
-        struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe};
+        struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe, throughput};
         transfersStoreVector.push_back(initial);
     } else {
         for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter) {
@@ -73,7 +73,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
             }
         }
         if (!found) {
-            struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe};
+            struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe, throughput};
             transfersStoreVector.push_back(initial);
         }
     }
@@ -82,14 +82,15 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
        
         if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
       
-	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished	   
-	   			if(trSuccessRateForPair >= 80)
-					(*iter).numOfActivePerPair += 2;              
+	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished		   			
+	   			if(trSuccessRateForPair >= 80 && throughput >= (*iter).throughput)
+					(*iter).numOfActivePerPair += 2;									             
 				(*iter).numFinished = numFinished;
 				(*iter).numFailed = numFailed;  
 				(*iter).successRate = trSuccessRateForPair;
 				(*iter).numberOfFinishedAll = numberOfFinishedAll;
 				(*iter).numberOfFailedAll = numberOfFailedAll;
+				(*iter).throughput = throughput;
 	   }else if((*iter).numberOfFailedAll != numberOfFailedAll){
 	   			(*iter).numOfActivePerPair -= 1;
 				(*iter).numFinished = numFinished;
