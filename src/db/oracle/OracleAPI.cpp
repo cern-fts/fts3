@@ -196,7 +196,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     }
 				     
     std::string query_stmt =
-    		" SELECT /* FIRST_ROWS(15) */"
+    		" SELECT /* FIRST_ROWS(5) */"
             " 	t_job.job_id, "
             " 	t_job.job_state, "
             " 	t_job.vo_name,  "
@@ -227,7 +227,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
             " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
     	    " 	AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
-            " 	AND rownum <=15  ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)";
+            " 	AND rownum <=5  ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;

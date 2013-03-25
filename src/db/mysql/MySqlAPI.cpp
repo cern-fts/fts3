@@ -200,7 +200,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 							"      t_job.vo_name = :vo AND "
 							"      EXISTS ( SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
 							"ORDER BY t_job.priority DESC, t_job.submit_time ASC "
-							"LIMIT 15";
+							"LIMIT 5";
 
 
         // Iterate through pairs, getting jobs IF the VO has not run out of credits
