@@ -25,6 +25,12 @@ BlacklistCli::BlacklistCli() {
 			("mode", value<string>(&mode), "Mode, either: on or off")
 			;
 
+	command_specific.add_options()
+			("vo", value<string>(), "The VO that is banned for the given SE")
+			("status", value<string>()->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
+			("timeout", value<int>()->default_value(0), "The timeout for the jobs that are already in the queue in case if 'WAIT' status (0 means the job wont timeout)")
+			;
+
 	// add positional (those used without an option switch) command line options
 	p.add("type", 1);
 	p.add("subject", 1);
@@ -54,7 +60,40 @@ optional<GSoapContextAdapter&> BlacklistCli::validate(bool init) {
 }
 
 string BlacklistCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] TYPE SUBJECT MODE";
+	return "Usage: " + tool + " [options] COMMAND NAME ON|OFF";
+}
+
+bool BlacklistCli::printHelp(string tool) {
+
+	// check whether the -h option was used
+	if (vm.count("help")) {
+
+		// remove the path to the executive
+		size_t pos = tool.find_last_of('/');
+		if( pos != string::npos) {
+			tool = tool.substr(pos + 1);
+		}
+		// print the usage guigelines
+		cout << endl << getUsageString(tool) << endl << endl;
+
+		cout << "List of Commands:" << endl << endl;
+		cout << "dn		Blacklist DN (user)" << endl;
+		cout << "se [options]	Blacklist SE (to get further information use '-h')" << endl;
+		cout << endl << endl;
+
+		// print the available options
+        cout << visible << endl << endl;
+
+        // print SE command options
+        if (vm.count("type") && type == "se") {
+			cout << "SE options:" << endl << endl;
+			cout << command_specific << endl;
+        }
+
+        return true;
+    }
+
+    return false;
 }
 
 } /* namespace cli */

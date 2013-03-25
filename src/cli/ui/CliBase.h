@@ -112,7 +112,7 @@ public:
 	 *
 	 * @return true if the help message has been printed
 	 */
-	bool printHelp(string tool);
+	virtual bool printHelp(string tool);
 
 	/**
 	 * Prints version if the -V option has been used.
@@ -209,6 +209,11 @@ protected:
 	 * hidden command line options (not printed in help)
 	 */
 	options_description hidden;
+
+	/**
+	 * command line option specific for a command
+	 */
+	options_description command_specific;
 
 	/**
 	 * the FTS3 service endpoint

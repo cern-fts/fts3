@@ -49,6 +49,15 @@ public:
 	virtual optional<GSoapContextAdapter&> validate(bool init = true);
 
 	/**
+	 * Prints help message if the -h option has been used.
+	 *
+	 * @param tool - the name of the executive that has been called (in most cases argv[0])
+	 *
+	 * @return true if the help message has been printed
+	 */
+	virtual bool printHelp(string tool);
+
+	/**
 	 * Gives the instruction how to use the command line tool.
 	 *
 	 * @return a string with instruction on how to use the tool

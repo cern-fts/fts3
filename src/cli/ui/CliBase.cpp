@@ -73,7 +73,7 @@ void CliBase::parse(int ac, char* av[]) {
 	toolname = av[0];
 
 	// add specific and hidden parameters to all parameters
-	all.add(basic).add(specific).add(hidden);
+	all.add(basic).add(specific).add(hidden).add(command_specific);
 	// add specific parameters to visible parameters (printed in help)
 	visible.add(basic).add(specific);
 
