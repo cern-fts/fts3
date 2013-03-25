@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
-from fts.models import Optimize, File, Job
+from ftsweb.models import Optimize, File, Job
 from ftsmon import forms
 
 		

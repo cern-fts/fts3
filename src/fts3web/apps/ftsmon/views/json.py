@@ -2,7 +2,7 @@ import datetime
 import simplejson
 from django.db.models import Q
 from django.http import HttpResponse
-from fts.models import Job, File
+from ftsweb.models import Job, File
 
 
 

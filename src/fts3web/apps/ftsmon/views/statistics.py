@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
-from fts.models import Job, File, ConfigAudit
+from ftsweb.models import Job, File, ConfigAudit
 
 
 
