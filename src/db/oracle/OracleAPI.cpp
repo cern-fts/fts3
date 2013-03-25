@@ -2678,6 +2678,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {  
     const std::string tag2 = "updateOptimizer2";
     const std::string tag3 = "updateOptimizer3";
+    const std::string tag4 = "updateOptimizer4";    
     double throughput = 0;    
     bool ok = true;
     int active = 0;   
@@ -2687,10 +2688,14 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
 	    " and (throughput is null or throughput<=:10) and (active<=:11 or active is null) ";
 	    
     std::string query3 = " select count(*) from t_file where t_file.source_se=:1 and t_file.dest_se=:2 and t_file.file_state='ACTIVE' ";
+    
+    std::string query4 = " DELETE FROM t_optimize a WHERE  a.rowid >  ANY ( SELECT B.rowid FROM  t_optimize B  WHERE A.NOSTREAMS = B.NOSTREAMS AND "
+    			 " A.TIMEOUT = B.TIMEOUT AND A.ACTIVE = B.ACTIVE  AND A.THROUGHPUT = B.THROUGHPUT ) ";
 
     oracle::occi::Statement* s3 = NULL;
     oracle::occi::ResultSet* r3 = NULL;    
     oracle::occi::Statement* s2 = NULL;
+    oracle::occi::Statement* s4 = NULL;    
     oracle::occi::Connection* pooledConnection = NULL;           
     
     try {
@@ -2709,6 +2714,8 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
         }
         conn->destroyResultset(s3, r3);
         conn->destroyStatement(s3, tag3, pooledConnection);
+	r3=NULL;
+	s3=NULL;
 
         time_t now = std::time(NULL);       
 
@@ -2733,9 +2740,18 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
             s2->setString(9, destin_hostname);	   
 	    s2->setDouble(10, throughput);
 	    s2->setInt(11, active);
-            if (s2->executeUpdate() != 0)
-                conn->commit(pooledConnection);
+            if (s2->executeUpdate() != 0)	    
+            	conn->commit(pooledConnection);
             conn->destroyStatement(s2, tag2, pooledConnection);
+	    s2=NULL;
+	    
+            s4 = conn->createStatement(query4, tag4, pooledConnection);
+            if (s4->executeUpdate() != 0)
+                conn->commit(pooledConnection);
+            conn->destroyStatement(s4, tag4, pooledConnection);
+            s4 = NULL;	    
+	    
+	    
             conn->releasePooledConnection(pooledConnection); 
 	    
     } catch (oracle::occi::SQLException const &e) {
@@ -2748,7 +2764,10 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
            if (s3 && r3)
                 conn->destroyResultset(s3, r3);
             if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);		
+                conn->destroyStatement(s3, tag3, pooledConnection);
+		
+            if (s4)
+                conn->destroyStatement(s4, tag4, pooledConnection);				
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	    ok = false;
@@ -2763,7 +2782,10 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
            if (s3 && r3)
                 conn->destroyResultset(s3, r3);
             if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);				
+                conn->destroyStatement(s3, tag3, pooledConnection);
+		
+            if (s4)
+                conn->destroyStatement(s4, tag4, pooledConnection);						
      
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
 	    ok = false;	
