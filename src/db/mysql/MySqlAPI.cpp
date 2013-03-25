@@ -421,7 +421,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
         int retry, int retryDelay, std::string sourceSe, std::string destinationSe) {
 
     const std::string currenthost = hostname;
-    const std::string initialState = bring_online > 0 ? "STAGING" : "SUBMITTED";
+    const std::string initialState = bring_online > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
     const std::string params;
 
