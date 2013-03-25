@@ -3970,11 +3970,18 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {
 
 void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn) {
 
-    std::string query = "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn, vo, status, wait_timeout) VALUES (:1, :2, :3, :4, :5, :6, :7)";
-    std::string tag = "blacklistSe";
+	std::string select = "SELECT COUNT(*) FROM t_bad_ses WHERE se = :1";
+    std::string insert = "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn, vo, status, wait_timeout) VALUES (:1, :2, :3, :4, :5, :6, :7)";
+    std::string update = "UPDATE t_bad_ses SET addition_time = :1, admin_dn = :2, vo = :3, status = :4, wait_timeout = :5 WHERE se = :6 ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    std::string selectTag = "blacklistSeSelect";
+    std::string updateTag = "blacklistSeUpdate";
+    std::string insertTag = "blacklistSeInsert";
+
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::Statement* s3 = NULL;
     oracle::occi::Connection* pooledConnection = NULL;    
     
     try {
@@ -3984,37 +3991,73 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
 
         time_t timed = time(NULL);
 
-        s = conn->createStatement(query, tag, pooledConnection);
-        s->setString(1, se);
-        s->setString(2, msg);
-        s->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
-        s->setString(4, adm_dn);
-        s->setString(5, vo);
-        s->setString(6, status);
-        s->setInt(7, timeout);
-        r = conn->createResultset(s, pooledConnection);
-        conn->commit(pooledConnection);
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag, pooledConnection);
+        s1 = conn->createStatement(select, selectTag, pooledConnection);
+        s1->setString(1, se);
+        r1 = conn->createResultset(s1, pooledConnection);
+
+        int count = 0;
+        while(r1->next()) {
+        	count = r1->getInt(1);
+        }
+
+        if (count) {
+
+        	s2 = conn->createStatement(update, updateTag, pooledConnection);
+        	s2->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+        	s2->setString(2, adm_dn);
+        	s2->setString(3, vo);
+        	s2->setString(4, status);
+        	s2->setInt(5, timeout);
+        	s2->setString(6, se);
+        	s2->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s2, updateTag, pooledConnection);
+
+        } else {
+
+            s3 = conn->createStatement(insert, insertTag, pooledConnection);
+            s3->setString(1, se);
+            s3->setString(2, msg);
+            s3->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
+            s3->setString(4, adm_dn);
+            s3->setString(5, vo);
+            s3->setString(6, status);
+            s3->setInt(7, timeout);
+            s3->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s3, selectTag, pooledConnection);
+        }
 
     } catch (oracle::occi::SQLException const &e) {
 
             conn->rollback(pooledConnection);
 
-        	if(s && r)
-        		conn->destroyResultset(s, r);
-        	if (s)
-        		conn->destroyStatement(s, tag, pooledConnection);
+        	if(s1 && r1)
+        		conn->destroyResultset(s1, r1);
+        	if (s1)
+        		conn->destroyStatement(s1, selectTag, pooledConnection);
+
+        	if (s2)
+        		conn->destroyStatement(s2, updateTag, pooledConnection);
+
+        	if (s3)
+        		conn->destroyStatement(s3, updateTag, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
             conn->rollback(pooledConnection);
 
-        	if(s && r)
-        		conn->destroyResultset(s, r);
-        	if (s)
-        		conn->destroyStatement(s, tag, pooledConnection);
+        	if(s1 && r1)
+        		conn->destroyResultset(s1, r1);
+        	if (s1)
+        		conn->destroyStatement(s1, selectTag, pooledConnection);
+
+        	if (s2)
+        		conn->destroyStatement(s2, updateTag, pooledConnection);
+
+        	if (s3)
+        		conn->destroyStatement(s3, updateTag, pooledConnection);
 			
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
