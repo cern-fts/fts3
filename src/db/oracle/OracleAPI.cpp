@@ -6595,22 +6595,22 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     
     std::string query1 =
     		" select distinct(t_file.SOURCE_SE) from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is null and t_file.SOURCE_SURL like 'srm%' ";
+		" and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.file_state = 'STAGING' and t_file.STAGING_START is null and t_file.SOURCE_SURL like 'srm%' ";
     std::string query2 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' "
+		" and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.STAGING_START is null and t_file.file_state = 'STAGING' "
 		" and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3  and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:4 ORDER BY t_file.file_id ";
     std::string query3 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_file.source_se=:1 "
+		" and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_file.source_se=:1 "
 		" and rownum<=:2  and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:3  ORDER BY t_file.file_id ";
     std::string query4 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null "
+		" and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null "
 		" and t_job.vo_name=:1 and t_file.source_se=:2  and t_file.SOURCE_SURL like 'srm%' ";
     std::string query5 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
-		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null and t_file.source_se=:1 "
+		" and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null and t_file.source_se=:1 "
 		" and t_file.SOURCE_SURL like 'srm%' ";		   
 			
 		
