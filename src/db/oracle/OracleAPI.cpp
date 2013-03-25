@@ -189,6 +189,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 			" 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') ";
 
     if (vos != "*") {
+        tag1 += 1;
     	bring_distinct +=
     		" AND t_job.VO_NAME IN " + vos ;
 
@@ -273,7 +274,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 		r = conn->createResultset(s, pooledConnection);
 
 		while (r->next()) {
-
 			tr_jobs = new TransferJobs();
 			tr_jobs->JOB_ID = r->getString(1);
 			tr_jobs->JOB_STATE = r->getString(2);
@@ -295,17 +295,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 			tr_jobs->COPY_PIN_LIFETIME = r->getInt(18);
 			tr_jobs->CHECKSUM_METHOD = r->getString(19);
 			tr_jobs->BRINGONLINE = r->getInt(20);
-
-				//check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-//			if(std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
-//				// TODO ...
-//				bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-//				if (process == true) {
-					jobs.push_back(tr_jobs);
-//				} else {
-//					delete tr_jobs;
-//				}
-//			}
+			jobs.push_back(tr_jobs);
 		}
 		conn->destroyResultset(s, r);
 	}
