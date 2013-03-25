@@ -2029,14 +2029,44 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
 
 
 
-void MySqlAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn) {
+void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn) {
     soci::session sql(connectionPool);
 
     try {
+
+    	int count = 0;
+
+    	sql <<
+    			" SELECT COUNT(*) FROM t_bad_ses WHERE se = :se ",
+    			soci::use(se),
+    			soci::into(count)
+    	;
+
         sql.begin();
-        sql << "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn) "
-               "               VALUES (:se, :message, UTC_TIMESTAMP(), :admin)",
-               soci::use(se), soci::use(msg), soci::use(adm_dn);
+
+        if (count) {
+
+            sql << " UPDATE t_bad_ses SET "
+                   "	addition_time = UTC_TIMESTAMP(), "
+                   "	admin_dn = :admin, "
+                   "  	vo = :vo, "
+                   "	status = :status, "
+                   "  	wait_timeout = :timeout "
+                   " WHERE se = :se ",
+                   soci::use(adm_dn),
+                   soci::use(vo),
+                   soci::use(status),
+                   soci::use(timeout),
+                   soci::use(se)
+            ;
+
+        } else {
+
+			sql << "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn, vo, status, wait_timeout) "
+				   "               VALUES (:se, :message, UTC_TIMESTAMP(), :admin, :vo, :status, :timeout)",
+				   soci::use(se), soci::use(msg), soci::use(adm_dn), soci::use(vo), soci::use(status), soci::use(timeout);
+        }
+
         sql.commit();
     }
     catch (std::exception& e) {

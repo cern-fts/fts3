@@ -687,6 +687,39 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 
 int fts3::impltns__blacklistSe(soap* ctx, string name, string vo, string status, int timeout, bool blk, impltns__blacklistSeResponse& resp) {
 
+	try {
+
+		CGsiAdapter cgsi(ctx);
+		string dn = cgsi.getClientDn();
+
+		AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
+
+		string cmd = "fts-set-blacklist se " + name + (blk ? " on" : " off");
+
+		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "blacklist");
+
+		if (blk) {
+			DBSingleton::instance().getDBObjectInstance()->blacklistSe(
+					name, vo, status, timeout, string(), dn
+				);
+			// log it
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had blacklisted the SE: " << name << commit;
+
+		} else {
+			DBSingleton::instance().getDBObjectInstance()->unblacklistSe(name);
+			// log it
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had unblacklisted the SE: " << name << commit;
+		}
+
+	} catch(Err& ex) {
+		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+		soap_receiver_fault(ctx, ex.what(), "TransferException");
+		return SOAP_FAULT;
+	} catch (...) {
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+	    return SOAP_FAULT;
+	}
+
 	return SOAP_OK;
 }
 

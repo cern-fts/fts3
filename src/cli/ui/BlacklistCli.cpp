@@ -62,13 +62,13 @@ optional<GSoapContextAdapter&> BlacklistCli::validate(bool init) {
 		return 0;
 	}
 
-	if ( type != "se" && (vm.count("vo") || vm.count("status") || vm.count("timeout")) ) {
-		cout << "The vo, status and timeout may only be specified when blacklisting a SE" << endl;
-		return 0;
-	}
+//	if ( type != "se" && (vm.count("vo") || vm.count("status") || vm.count("timeout")) ) {
+//		cout << "The vo, status and timeout may only be specified when blacklisting a SE" << endl;
+//		return 0;
+//	}
 
 	if ( (!vm.count("status") || status != "WAIT")
-			&& vm.count("timeout")) {
+			&& timeout != 0) {
 		cout << "You may only specify the timeout for the 'WAIT' status" << endl;
 		return 0;
 	}

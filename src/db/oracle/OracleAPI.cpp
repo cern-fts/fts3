@@ -3968,9 +3968,9 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages) {
     return isUpdated;
 }
 
-void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn) {
+void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn) {
 
-    std::string query = "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn) VALUES (:1, :2, :3, :4)";
+    std::string query = "INSERT INTO t_bad_ses (se, message, addition_time, admin_dn, vo, status, wait_timeout) VALUES (:1, :2, :3, :4, :5, :6, :7)";
     std::string tag = "blacklistSe";
 
     oracle::occi::Statement* s = NULL;
@@ -3989,6 +3989,9 @@ void OracleAPI::blacklistSe(std::string se, std::string msg, std::string adm_dn)
         s->setString(2, msg);
         s->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
         s->setString(4, adm_dn);
+        s->setString(5, vo);
+        s->setString(6, status);
+        s->setInt(7, timeout);
         r = conn->createResultset(s, pooledConnection);
         conn->commit(pooledConnection);
         conn->destroyResultset(s, r);

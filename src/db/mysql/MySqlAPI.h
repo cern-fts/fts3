@@ -141,7 +141,7 @@ public:
     
     virtual bool retryFromDead(std::vector<struct message_updater>& messages);
     
-    virtual void blacklistSe(std::string se, std::string msg, std::string adm_dn);
+    virtual void blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn);
 
     virtual void blacklistDn(std::string dn, std::string msg, std::string adm_dn);
 
