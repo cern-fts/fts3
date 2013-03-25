@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
@@ -5,7 +6,9 @@ from ftsweb.models import File
 
 
 def showErrors(httpRequest):
-    errors = File.objects.filter(reason__isnull = False)\
+    notbefore = datetime.now() - timedelta(hours = 12)
+    
+    errors = File.objects.filter(reason__isnull = False, finish_time__gte = notbefore)\
                        .exclude(reason = '')\
                        .values('reason')\
                        .annotate(count = Count('reason'))\
@@ -26,7 +29,9 @@ def transfersWithError(httpRequest):
     if reason[0] == '"':
         reason = reason[1:-1]
     
-    transfers = File.objects.filter(reason = reason).order_by('file_id')
+    notbefore = datetime.now() - timedelta(hours = 12)
+    transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)\
+                            .order_by('file_id')
     
     # Render
     return render(httpRequest, 'transfersWithError.html',
