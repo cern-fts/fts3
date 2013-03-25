@@ -2081,10 +2081,24 @@ void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn) 
     soci::session sql(connectionPool);
 
     try {
+
+    	int count = 0;
+
+    	sql <<
+    			" SELECT COUNT(*) FROM t_bad_dns WHERE dn = :dn ",
+    			soci::use(dn),
+    			soci::into(count)
+    	;
+
         sql.begin();
-        sql << "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) "
-               "               VALUES (:dn, :message, UTC_TIMESTAMP(), :admin)",
-               soci::use(dn), soci::use(msg), soci::use(adm_dn);
+
+        if (!count) {
+
+			sql << "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) "
+				   "               VALUES (:dn, :message, UTC_TIMESTAMP(), :admin)",
+				   soci::use(dn), soci::use(msg), soci::use(adm_dn);
+        }
+
         sql.commit();
     }
     catch (std::exception& e) {
