@@ -6591,18 +6591,19 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     std::string tag2 = "getBringOnlineFiles2";    
     std::string tag3 = "getBringOnlineFiles3";        
     std::string tag4 = "getBringOnlineFiles4";
-    std::string tag5 = "getBringOnlineFiles5";    
+    std::string tag5 = "getBringOnlineFiles5";            
+    
     std::string query1 =
     		" select distinct(t_file.SOURCE_SE) from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is null and t_file.SOURCE_SURL like 'srm%' ";
     std::string query2 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' "
-		" and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3  and t_file.SOURCE_SURL like 'srm%'  ORDER BY t_file.file_id ";
+		" and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3  and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:4 ORDER BY t_file.file_id ";
     std::string query3 =
     		" select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_file.source_se=:1 "
-		" and rownum<=:1  and t_file.SOURCE_SURL like 'srm%'  ORDER BY t_file.file_id ";
+		" and rownum<=:2  and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:3  ORDER BY t_file.file_id ";
     std::string query4 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null "
@@ -6610,7 +6611,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     std::string query5 =
     		" select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
 		" and t_job.BRING_ONLINE > 0 and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null and t_file.source_se=:1 "
-		" and t_file.SOURCE_SURL like 'srm%' ";
+		" and t_file.SOURCE_SURL like 'srm%' ";		   
 			
 		
     oracle::occi::Statement* s1 = NULL;
@@ -6622,13 +6623,14 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
     oracle::occi::Statement* s4 = NULL;
     oracle::occi::ResultSet* r4 = NULL; 
     oracle::occi::Statement* s5 = NULL;
-    oracle::occi::ResultSet* r5 = NULL;                 
+    oracle::occi::ResultSet* r5 = NULL;    
+                         
     std::vector<struct message_bringonline> ret;
     oracle::occi::Connection* pooledConnection = NULL;
     unsigned int currentStagingFilesConfig = 0;
     unsigned int currentStagingFilesNoConfig = 0;
     unsigned int maxConfig = 0;    
-    unsigned int maxNoConfig = 0;        
+    unsigned int maxNoConfig = 0; 
     
     try {
 	pooledConnection = conn->getPooledConnection();
@@ -6656,6 +6658,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 	    	s2->setString(1, hostName);
 	    	s2->setInt(2, maxConfig);		
 	    	s2->setString(3, voName);
+		s2->setString(4,ftsHostName);
 		r2 = conn->createResultset(s2, pooledConnection);
 		while (r2->next()) {
 			struct message_bringonline msg;
@@ -6668,7 +6671,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 			bringOnlineReportStatus("STARTED", "", msg);
 		}
 		conn->destroyResultset(s2, r2);
-		conn->destroyStatement(s2, tag2, pooledConnection);	    			
+		conn->destroyStatement(s2, tag2, pooledConnection);							    			
 	 }else{
 	    s1 = conn->createStatement(query1, tag1, pooledConnection);        
             r1 = conn->createResultset(s1, pooledConnection);
@@ -6690,7 +6693,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 		}	
 				
 		s3->setString(1, hostV);
-	    	s3->setInt(2, maxNoConfig);			    	
+	    	s3->setInt(2, maxNoConfig);	
+		s3->setString(3,ftsHostName);		    	
 		r3 = conn->createResultset(s3, pooledConnection);
 		while (r3->next()) {
 			struct message_bringonline msg;

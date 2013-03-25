@@ -26,6 +26,7 @@ CREATE TABLE t_log (
 -- Holds optimization parameters
 --
 CREATE TABLE t_optimize (
+  auto_number	INTEGER AUTO_INCREMENT,
 --
 -- file id
   file_id      INTEGER NOT NULL,
@@ -55,7 +56,9 @@ CREATE TABLE t_optimize (
   filesize     DOUBLE DEFAULT NULL,
 --
 -- timestamp
-  datetime     TIMESTAMP
+  datetime     TIMESTAMP,
+  
+  CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );
 
 

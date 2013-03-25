@@ -2,6 +2,9 @@ drop trigger se_id_info_auto_inc;
 drop sequence file_file_id_seq;
 drop trigger file_file_id_auto_inc;
 drop sequence se_id_info_seq;
+drop trigger t_optimize_auto_number_inc;
+drop sequence t_optimize_auto_number_seq;
+
 
 DROP TABLE t_credential;
 DROP TABLE t_credential_cache;

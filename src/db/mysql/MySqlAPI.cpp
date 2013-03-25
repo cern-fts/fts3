@@ -1452,6 +1452,7 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
         if (buffersize <= 0)
             buffersize = 0;
 
+	sql.begin();
        
             sql << "UPDATE t_optimize SET filesize = :fsize, throughput = :throughput, "
                    "   active = :active, datetime = UTC_TIMESTAMP(), timeout= :timeout "
@@ -1461,7 +1462,17 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
                    soci::use(filesize), soci::use(throughput), soci::use(active),
                    soci::use(timeout), soci::use(nostreams), soci::use(buffersize),
                    soci::use(source_hostname), soci::use(destin_hostname),
-		   soci::use(throughput),soci::use(active);       
+		   soci::use(throughput),soci::use(active);     
+		   
+	sql.commit();
+	
+	sql.begin();		   		   
+		   
+	  sql << " delete from t_optimize USING t_optimize, t_optimize as vtable WHERE (t_optimize.auto_number < vtable.auto_number) AND "
+	  	 " (t_optimize.nostreams=vtable.nostreams AND t_optimize.active=vtable.active and t_optimize.throughput=vtable.throughput)";
+		 
+	sql.commit();		 
+	
     }
     catch (std::exception& e) {
         ok = false;
@@ -3178,10 +3189,13 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 						"	AND t_file.staging_start IS NULL "
 						"	AND t_file.file_state = 'STAGING' "
 						"	AND t_file.source_se = :source_se and t_file.source_surl like 'srm%'   "
+						"	AND t_job.submit_host = :hostname "
 						" ORDER BY t_file.file_id "
 						" LIMIT :limit",
-						soci::use(hostV),
+						soci::use(hostV),						
+						soci::use(hostname),
 						soci::use(maxNoConfig)
+						
 					);
 
 				for (soci::rowset<soci::row>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2) {
@@ -3191,8 +3205,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					msg.url = row2.get<std::string>("source_surl");
 					msg.job_id = row2.get<std::string>("job_id");
 					msg.file_id = row2.get<int>("file_id");
-				        msg.pinlifetime = row2.get<long int>("copy_pin_lifetime");
-			                msg.bringonlineTimeout = row2.get<long int>("bring_online");					
+				        msg.pinlifetime = row2.get<int>("copy_pin_lifetime");
+			                msg.bringonlineTimeout = row2.get<int>("bring_online");					
 
 					ret.push_back(msg);
 					bringOnlineReportStatus("STARTED", "", msg);
@@ -3227,10 +3241,12 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 					"	AND t_file.file_state = 'STAGING' "
 					"	AND t_file.source_se = :source_se "
 					"	AND t_job.vo_name = :vo_name and t_file.source_surl like 'srm%'   "
+					"	AND t_job.SUBMIT_HOST = :hostname "
 					" ORDER BY t_file.file_id "
 					" LIMIT :limit",
 					soci::use(hostName),
 					soci::use(voName),
+					soci::use(hostname),
 					soci::use(maxConfig)
 				);
 
@@ -3241,8 +3257,8 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 				msg.url = row.get<std::string>("source_surl");
 				msg.job_id = row.get<std::string>("job_id");
 				msg.file_id = row.get<int>("file_id");
-				msg.pinlifetime = row.get<long int>("copy_pin_lifetime");
-			        msg.bringonlineTimeout = row.get<long int>("bring_online");									
+				msg.pinlifetime = row.get<int>("copy_pin_lifetime");
+			        msg.bringonlineTimeout = row.get<int>("bring_online");									
 
 				ret.push_back(msg);
 				bringOnlineReportStatus("STARTED", "", msg);
@@ -3263,10 +3279,10 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
     soci::session sql(connectionPool);
 
     try {
-        sql.begin();
+        
 
         if (state == "STARTED") {
-
+	sql.begin();
         	sql <<
             		" UPDATE t_file "
             		" SET staging_start = UTC_TIMESTAMP() "
@@ -3276,9 +3292,9 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
             		soci::use(msg.job_id),
             		soci::use(msg.file_id)
         	;
-
+	sql.commit();
         } else {
-
+	sql.begin();
         	std::string dbState = state == "FINISHED" ? "SUBMITTED" : state;
         	std::string dbReason = state == "FINISHED" ? string() : message;
 
@@ -3293,9 +3309,12 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
             		soci::use(msg.job_id),
             		soci::use(msg.file_id)
             	;
+	sql.commit();		
+	
+		updateJobTransferStatus(0, msg.job_id, dbState);
         }
 
-        sql.commit();
+        
 
     } catch (std::exception& e) {
         sql.rollback();

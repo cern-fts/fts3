@@ -25,6 +25,10 @@ CREATE TABLE t_log (
 --
 CREATE TABLE t_optimize (
 --
+   auto_number		INTEGER
+			CONSTRAINT t_optimize_a_not_null NOT NULL		     
+		        CONSTRAINT t_optimize_anumber_pk PRIMARY KEY,
+--
 -- file id
    file_id	INTEGER NOT NULL,
 --
@@ -573,6 +577,8 @@ CREATE TABLE t_file (
 -- the timestamp that the file will be retried
   ,retry_timestamp          TIMESTAMP WITH TIME ZONE DEFAULT NULL
 );
+
+
 --
 -- autoinc sequence on file_id
 --
@@ -589,6 +595,20 @@ END;
 /
 
 
+--
+-- autoinc sequence on auto_number
+--
+CREATE SEQUENCE t_optimize_auto_number_seq;
+
+CREATE OR REPLACE TRIGGER t_optimize_auto_number_inc
+BEFORE INSERT ON t_optimize
+FOR EACH ROW
+WHEN (new.auto_number IS NULL)
+BEGIN
+  SELECT t_optimize_auto_number_seq.nextval
+  INTO   :new.auto_number from dual;
+END;
+/
 
 
 --

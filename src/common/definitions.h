@@ -102,8 +102,8 @@ public:
     int file_id;
     bool started;
     time_t timestamp; 
-    long int pinlifetime;
-    long int bringonlineTimeout;    
+    int pinlifetime;
+    int bringonlineTimeout;    
 };
 
 
