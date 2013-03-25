@@ -45,12 +45,25 @@ int main(int ac, char* av[]) {
 		if (!opt.is_initialized()) return 0;
 		GSoapContextAdapter& ctx = opt.get();
 
-		// submit the job
-		ctx.blacklist(
-				cli->getSubjectType(),
-				cli->getSubjectName(),
-				cli->getBlkMode()
-			);
+		string type = cli->getSubjectType();
+
+		if (type == "se") {
+
+			ctx.blacklistSe(
+					cli->getSubjectName(),
+					cli->getVo(),
+					cli->getStatus(),
+					cli->getTimeout(),
+					cli->getBlkMode()
+				);
+
+		} else if (type == "dn") {
+
+			ctx.blacklistDn(
+					cli->getSubjectName(),
+					cli->getBlkMode()
+				);
+		}
 
     } catch(std::exception& e) {
         cerr << "error: " << e.what() << "\n";

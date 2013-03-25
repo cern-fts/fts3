@@ -7,8 +7,12 @@
 
 #include "BlacklistCli.h"
 
+#include <boost/algorithm/string.hpp>
+
 namespace fts3 {
 namespace cli {
+
+using namespace boost::algorithm;
 
 const string BlacklistCli::ON = "on";
 const string BlacklistCli::OFF = "off";
@@ -26,9 +30,9 @@ BlacklistCli::BlacklistCli() {
 			;
 
 	command_specific.add_options()
-			("vo", value<string>(), "The VO that is banned for the given SE")
-			("status", value<string>()->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
-			("timeout", value<int>()->default_value(0), "The timeout for the jobs that are already in the queue in case if 'WAIT' status (0 means the job wont timeout)")
+			("vo", value<string>(&vo), "The VO that is banned for the given SE")
+			("status", value<string>(&status)->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
+			("timeout", value<int>(&timeout)->default_value(0), "The timeout for the jobs that are already in the queue in case if 'WAIT' status (0 means the job wont timeout)")
 			;
 
 	// add positional (those used without an option switch) command line options
@@ -38,13 +42,15 @@ BlacklistCli::BlacklistCli() {
 }
 
 BlacklistCli::~BlacklistCli() {
-	// TODO Auto-generated destructor stub
+
 }
 
 optional<GSoapContextAdapter&> BlacklistCli::validate(bool init) {
 
 	// do the standard validation
 	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+
+	to_lower(mode);
 
 	if (mode != ON && mode != OFF) {
 		cout << "The mode has to be either 'on' or 'off'" << endl;

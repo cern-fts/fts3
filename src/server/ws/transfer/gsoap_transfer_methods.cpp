@@ -685,7 +685,12 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 	return SOAP_OK;
 }
 
-int fts3::impltns__blacklist(soap* soap, string type, string subject, bool blk, impltns__blacklistResponse &resp) {
+int fts3::impltns__blacklistSe(soap* ctx, string name, string vo, string status, int timeout, bool blk, impltns__blacklistSeResponse& resp) {
+
+	return SOAP_OK;
+}
+
+int fts3::impltns__blacklistDn(soap* soap, string subject, bool blk, impltns__blacklistDnResponse &resp) {
 
 	try {
 
@@ -694,38 +699,35 @@ int fts3::impltns__blacklist(soap* soap, string type, string subject, bool blk, 
 
 		AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::CONFIG, AuthorizationManager::dummy);
 
-		string cmd = "fts-set-blacklist " + type + " " + subject + (blk ? " on" : " off");
+		string cmd = "fts-set-blacklist dn " + subject + (blk ? " on" : " off");
 
 		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "blacklist");
 
-		if (type == "se") {
+//		if (type == "se") {
+//
+//			if (blk) {
+//				DBSingleton::instance().getDBObjectInstance()->blacklistSe(subject, string(), dn);
+//				// log it
+//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had blacklisted the SE: " << subject << commit;
+//
+//			} else {
+//				DBSingleton::instance().getDBObjectInstance()->unblacklistSe(subject);
+//				// log it
+//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had unblacklisted the SE: " << subject << commit;
+//			}
+//
+//		}
 
-			if (blk) {
-				DBSingleton::instance().getDBObjectInstance()->blacklistSe(subject, string(), dn);
-				// log it
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had blacklisted the SE: " << subject << commit;
-
-			} else {
-				DBSingleton::instance().getDBObjectInstance()->unblacklistSe(subject);
-				// log it
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had unblacklisted the SE: " << subject << commit;
-			}
-
-		} else if (type == "dn") {
-
-			if (blk) {
-				DBSingleton::instance().getDBObjectInstance()->blacklistDn(subject, string(), dn);
-				// log it
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had blacklisted the DN: " << subject << commit;
-			} else {
-				DBSingleton::instance().getDBObjectInstance()->unblacklistDn(subject);
-				// log it
-				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had unblacklisted the DN: " << subject << commit;
-			}
-
+		if (blk) {
+			DBSingleton::instance().getDBObjectInstance()->blacklistDn(subject, string(), dn);
+			// log it
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had blacklisted the DN: " << subject << commit;
 		} else {
-			throw Err_Custom("Wrong type (it should be either 'se' or 'dn')!");
+			DBSingleton::instance().getDBObjectInstance()->unblacklistDn(subject);
+			// log it
+			FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had unblacklisted the DN: " << subject << commit;
 		}
+
 
 	} catch(Err& ex) {
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;

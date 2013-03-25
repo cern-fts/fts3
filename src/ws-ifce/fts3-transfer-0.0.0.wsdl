@@ -338,15 +338,24 @@
    
    <message name="debugSetResponse"/>
 
-   <message name="blacklistRequest">
+   <message name="blacklistDnRequest">
    
-      <part name="type" type="xsd:string"/>
-      <part name="subject" type="xsd:string"/>
+      <part name="name" type="xsd:string"/>
       <part name="blk" type="xsd:boolean"/>
       
    </message> 
    
-   <message name="blacklistResponse"/>
+   <message name="blacklistSeRequest">
+   
+      <part name="name" type="xsd:string"/>
+      <part name="vo" type="xsd:string"/>
+      <part name="status" type="xsd:string"/>
+      <part name="timeout" type="xsd:int"/>
+      <part name="blk" type="xsd:boolean"/>
+      
+   </message> 
+   
+   <message name="blacklistSeResponse"/>
 
    <message name="getTransferJobSummary2Response">
 
@@ -724,11 +733,27 @@
          
       </operation>
       
-      <operation name="blacklist" parameterOrder="blacklist">
+      <operation name="blacklistDn" parameterOrder="blacklistDn">
       
-         <input message="impl:blacklistRequest" name="blacklistRequest"/>
+         <input message="impl:blacklistDnRequest" name="blacklistDnRequest"/>
 
-         <output message="impl:blacklistResponse" name="blacklistResponse"/>
+         <output message="impl:blacklistDnResponse" name="blacklistDnResponse"/>
+      
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:InvalidArgumentException" name="InvalidArgumentException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+         
+      </operation>
+      
+	<operation name="blacklistSe" parameterOrder="blacklistSe">
+      
+         <input message="impl:blacklistSeRequest" name="blacklistSeRequest"/>
+
+         <output message="impl:blacklistSeResponse" name="blacklistSeResponse"/>
       
          <fault message="impl:AuthorizationException" name="AuthorizationException"/>
 
@@ -1252,17 +1277,17 @@
 
       </operation>
       
-      <operation name="blacklist">
+      <operation name="blacklistDn">
 
          <wsdlsoap:operation soapAction=""/>
 
-         <input name="blacklistRequest">
+         <input name="blacklistDnRequest">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 
          </input>
 
-         <output name="blacklistResponse">
+         <output name="blacklistDnResponse">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 
@@ -1293,6 +1318,48 @@
          </fault>
 
       </operation>
+      
+      <operation name="blacklistSe">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="blacklistSeRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="blacklistSeResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="InvalidArgumentException">
+
+            <wsdlsoap:fault name="InvalidArgumentException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>      
 
       <operation name="listRequests">
 

@@ -81,6 +81,18 @@ public:
 		return type;
 	}
 
+	string getVo() {
+		return vo;
+	}
+
+	string getStatus() {
+		return status;
+	}
+
+	int getTimeout() {
+		return timeout;
+	}
+
 private:
 
 	/// blacklist mode, either ON or OFF
@@ -91,6 +103,12 @@ private:
 
 	/// type of the subject, either SE or DN
 	string type;
+
+	string vo;
+
+	string status;
+
+	int timeout;
 };
 
 } /* namespace cli */
