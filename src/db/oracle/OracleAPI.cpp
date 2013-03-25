@@ -585,7 +585,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     		"			f2.file_index = f1.file_index AND "
     		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
     		"	) "
-    		"ORDER BY f1.file_id "
+    		//"ORDER BY f1.file_id "
     		;
    
     oracle::occi::Statement* s = NULL;
@@ -626,8 +626,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                 tr_files->BRINGONLINE_TOKEN = r->getString(19);		
                 tr_files->SOURCE_SE = r->getString(20);
                 tr_files->DEST_SE = r->getString(21);
-		
-			
+					
                 files[tr_files->VO_NAME].push_back(tr_files);
             }
             conn->destroyResultset(s, r);

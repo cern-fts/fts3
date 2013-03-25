@@ -377,17 +377,18 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                     "    f1.job_id = j.job_id AND "
                     "    f1.job_finished IS NULL AND "
                     "    f1.file_state = 'SUBMITTED' AND "
+		    " 	 f1.retry_timestamp is NULL OR f1.retry_timestamp < UTC_TIMESTAMP() AND "
                     "    j.job_id = :jobId AND "
             		"	 NOT EXISTS ( "
-            		"		SELECT * "
+            		"		SELECT NULL "
             		"		FROM t_file f2 "
             		"		WHERE "
             		"			f2.job_id = f1.job_id AND "
             		"			f2.file_index = f1.file_index AND "
             		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
-            		"	 ) "
-                    "ORDER BY f1.file_id",
-                    soci::use(jobId)
+            		"	 ) ",soci::use(jobId)
+                    //"ORDER BY f1.file_id",
+                    
             	);
 
 
