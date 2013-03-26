@@ -49,7 +49,7 @@ static int extractTimeout(std::string & str) {
 
 
 
-MySqlAPI::MySqlAPI(): poolSize(8), connectionPool(poolSize)  {
+MySqlAPI::MySqlAPI(): poolSize(12), connectionPool(poolSize)  {
     char chname[MAXHOSTNAMELEN];
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
@@ -386,8 +386,8 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
             		"			f2.job_id = f1.job_id AND "
             		"			f2.file_index = f1.file_index AND "
             		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
-            		"	 ) ",soci::use(jobId)
-                    //"ORDER BY f1.file_id",
+            		"	 ) LIMIT 15",soci::use(jobId)
+                   
                     
             	);
 
