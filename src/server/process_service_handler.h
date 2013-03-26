@@ -899,7 +899,7 @@ protected:
                     jobs2.clear();
                 }
             }
-            usleep(10000);
+            usleep(500000);
         } /*end while*/
     }
 
