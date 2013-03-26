@@ -16,7 +16,7 @@ def optimizer(httpRequest):
 	optimizations = Optimize.objects.filter(throughput__isnull = False)\
 						.values('source_se', 'dest_se')
 
-	hours = 1
+	hours = 48
 	if filterForm.is_valid():
 		if filterForm['source_se'].value():
 			optimizations = optimizations.filter(source_se = filterForm['source_se'].value())
