@@ -603,6 +603,7 @@ CREATE INDEX job_cred_id      ON t_job(user_dn(800),cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
 CREATE INDEX job_priority     ON t_job(priority);
 CREATE INDEX job_submit_time     ON t_job(submit_time);
+CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
@@ -612,6 +613,11 @@ CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 CREATE INDEX file_finish_time ON t_file(finish_time);
 CREATE INDEX file_file_index ON t_file(file_index);
+CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
+
+
+
+
 
 CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);

@@ -362,9 +362,14 @@ void MySqlAPI::updateJObStatus(std::string jobId, const std::string status) {
 void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) {
     soci::session sql(connectionPool);
 
+	time_t now = convertToUTC(0);
+	struct tm tTime;
+        gmtime_r(&now, &tTime);   
+
     try {
         for (std::vector<TransferJobs*>::const_iterator i = jobs.begin(); i != jobs.end(); ++i) {
             std::string jobId = (*i)->JOB_ID;
+	    
 
             soci::rowset<TransferFiles> rs = (
             		sql.prepare <<
@@ -377,7 +382,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                     "    f1.job_id = j.job_id AND "
                     "    f1.job_finished IS NULL AND "
                     "    f1.file_state = 'SUBMITTED' AND "
-		    " 	 f1.retry_timestamp is NULL OR f1.retry_timestamp < UTC_TIMESTAMP() AND "
+		    " 	 (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) AND "
                     "    j.job_id = :jobId AND "
             		"	 NOT EXISTS ( "
             		"		SELECT NULL "
@@ -386,7 +391,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
             		"			f2.job_id = f1.job_id AND "
             		"			f2.file_index = f1.file_index AND "
             		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
-            		"	 ) LIMIT 15",soci::use(jobId)
+            		"	 ) LIMIT 15",soci::use(tTime), soci::use(jobId)
                    
                     
             	);
