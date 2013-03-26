@@ -60,8 +60,7 @@ def optimizer(httpRequest):
 
 
 def optimizerDetailed(httpRequest):
-	hours = 1
-	
+	hours = 48	
 	try:
 		source_se = str(httpRequest.GET['source'])
 		dest_se   = str(httpRequest.GET['destination'])
