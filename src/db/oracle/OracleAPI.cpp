@@ -576,7 +576,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     		"	j.job_finished is NULL AND "
     		"	j.job_id = :1 AND "
     		"	f1.file_state ='SUBMITTED' AND "
-		" 	f1.retry_timestamp is NULL OR f1.retry_timestamp < SYSTIMESTAMP AT TIME ZONE 'UTC' AND " 
+		" 	f1.retry_timestamp is NULL OR f1.retry_timestamp < :2 AND " 
     		"	NOT EXISTS ( "
     		"		SELECT NULL "
     		"		FROM t_file f2 "
@@ -597,9 +597,11 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
 		
         s = conn->createStatement(select, selecttag, pooledConnection);
         for (iter = jobs.begin(); iter != jobs.end(); ++iter) {
+	    time_t timed = time(NULL);
             TransferJobs* temp = (TransferJobs*) * iter;
             std::string job_id = std::string(temp->JOB_ID);
             s->setString(1, job_id);
+	    s->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); //submit_time
             r = conn->createResultset(s, pooledConnection);
             while (r->next()) {
                 tr_files = new TransferFiles();
