@@ -156,7 +156,7 @@ private:
 	 * - if the SE is in the OSG and if is's active and not disabled
 	 *   (it it is in BDII but the conditions are not met an exception is thrown)
 	 */
-	void checkSe(string se);
+	void checkSe(string se, string vo);
 
 	/**
 	 * Checks whether the right protocol has been used

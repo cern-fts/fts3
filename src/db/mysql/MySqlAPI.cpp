@@ -2149,12 +2149,12 @@ void MySqlAPI::unblacklistDn(std::string dn) {
 
 
 
-bool MySqlAPI::isSeBlacklisted(std::string se) {
+bool MySqlAPI::isSeBlacklisted(std::string se, std::string vo) {
     soci::session sql(connectionPool);
 
     bool blacklisted = false;
     try {
-        sql << "SELECT * FROM t_bad_ses WHERE se = :se", soci::use(se);
+        sql << "SELECT * FROM t_bad_ses WHERE se = :se AND (vo IS NULL OR vo = :vo)", soci::use(se), soci::use(vo);
         blacklisted = sql.got_data();
     }
     catch (std::exception& e) {

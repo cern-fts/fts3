@@ -4218,10 +4218,10 @@ void OracleAPI::unblacklistDn(std::string dn) {
     conn->releasePooledConnection(pooledConnection);                    
 }
 
-bool OracleAPI::isSeBlacklisted(std::string se) {
+bool OracleAPI::isSeBlacklisted(std::string se, std::string vo) {
 
     std::string tag = "isSeBlacklisted";
-    std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1";
+    std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1 AND (vo IS NULL OR vo = :2)";
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -4236,6 +4236,7 @@ bool OracleAPI::isSeBlacklisted(std::string se) {
 
         s = conn->createStatement(stmt, tag, pooledConnection);
         s->setString(1, se);
+        s->setString(2, vo);
         r = conn->createResultset(s, pooledConnection);
 
         ret = r->next();

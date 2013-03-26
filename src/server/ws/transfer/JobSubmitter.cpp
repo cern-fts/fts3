@@ -119,7 +119,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 			std::string errMsg = "Can't extract hostname from url " + src;
 			throw Err_Custom(errMsg);
 		}
-		checkSe(sourceSe);
+		checkSe(sourceSe, vo);
 		// set the source SE for the transfer job,
 		// in case of this submission type multiple
 		// source/destination submission is not possible
@@ -135,7 +135,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
 			std::string errMsg = "Can't extract hostname from url " + dest;
 			throw Err_Custom(errMsg);
 		}
-		checkSe(destinationSe);
+		checkSe(destinationSe, vo);
 		// set the destination SE for the transfer job,
 		// in case of this submission type multiple
 		// source/destination submission is not possible
@@ -209,7 +209,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 			std::string errMsg = "Can't extract hostname from url " + src;
 			throw Err_Custom(errMsg);
 		}
-		checkSe(sourceSe);
+		checkSe(sourceSe, vo);
 		// set the source SE for the transfer job,
 		// in case of this submission type multiple
 		// source/destination submission is not possible
@@ -226,7 +226,7 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
 			std::string errMsg = "Can't extract hostname from url " + dest;
 			throw Err_Custom(errMsg);
 		}
-		checkSe(destinationSe);
+		checkSe(destinationSe, vo);
 		// set the destination SE for the transfer job,
 		// in case of this submission type multiple
 		// source/destination submission is not possible
@@ -346,7 +346,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 				string errMsg = "Can't extract hostname from url " + it_p->first;
 				throw Err_Custom(errMsg);
 			}
-			checkSe(sourceSe);
+			checkSe(sourceSe, vo);
 			// check if all the sources use SRM protocol
 			srm_source &= sourceSe.find(srm_protocol) == 0;
 
@@ -355,7 +355,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 				std::string errMsg = "Can't extract hostname from url " + it_p->second;
 				throw Err_Custom(errMsg);
 			}
-			checkSe(destinationSe);
+			checkSe(destinationSe, vo);
 
 			tupple.source_se = sourceSe;
 			tupple.dest_se = destinationSe;
@@ -462,10 +462,10 @@ string JobSubmitter::fileUrlToSeName(string url) {
 		return string();
 }
 
-void JobSubmitter::checkSe(string se) {
+void JobSubmitter::checkSe(string se, string vo) {
 
 	// check if the SE is blacklisted
-	if (db->isSeBlacklisted(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
+	if (db->isSeBlacklisted(se, vo)) throw Err_Custom("The SE: " + se + " is blacklisted!");
 
 	// if we don't care about MyOSQ return
 	if (!theServerConfig().get<bool>("MyOSG")) return;

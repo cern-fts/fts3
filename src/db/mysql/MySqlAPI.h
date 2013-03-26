@@ -149,7 +149,7 @@ public:
 
     virtual void unblacklistDn(std::string dn);
 
-    virtual bool isSeBlacklisted(std::string se);
+    virtual bool isSeBlacklisted(std::string se, std::string vo);
 
     virtual bool isDnBlacklisted(std::string dn);
 
