@@ -77,7 +77,7 @@ void _handle_sigint(int) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     stopThreads = true;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;
-    sleep(2);
+    sleep(3);
     fts3_teardown_db_backend();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
     exit(0);
@@ -128,7 +128,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
     while (!stopThreads) {        
         std::list<struct message_bringonline>::iterator i = ThreadSafeBringOnlineList::get_instance().m_list.begin();	
         if (!ThreadSafeBringOnlineList::get_instance().m_list.empty()) {
-            while (i != ThreadSafeBringOnlineList::get_instance().m_list.end()) {
+            while (i != ThreadSafeBringOnlineList::get_instance().m_list.end() && !stopThreads) {
                 cert = new UserProxyEnv((*i).proxy);		
                 bool deleteIt = false;					
                 if ((*i).started == false) { //issue bringonline
