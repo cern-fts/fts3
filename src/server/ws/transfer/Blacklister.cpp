@@ -69,7 +69,7 @@ void Blacklister::handleSeBlacklisting() {
 		// log it
 		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " had blacklisted the SE: " << name << commit;
 
-		// TODO CANCEL transfer
+		handleJobsInTheQueue();
 
 	} else {
 		db->unblacklistSe(name);
@@ -88,10 +88,30 @@ void Blacklister::handleDnBlacklisting() {
 		db->blacklistDn(name, string(), adminDn);
 		// log it
 		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << name << " had blacklisted the DN: " << adminDn << commit;
+
+		handleJobsInTheQueue();
+
 	} else {
 		db->unblacklistDn(name);
 		// log it
 		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " had unblacklisted the DN: " << name << commit;
+	}
+}
+
+void Blacklister::handleJobsInTheQueue() {
+
+	// for now cancel only the
+
+	if (status == "CANCEL") {
+
+		if (vo.is_initialized()) {
+
+			db->cancelJobsInTheQueue(name, *vo);
+
+		} else {
+
+			db->cancelJobsInTheQueue(name);
+		}
 	}
 }
 

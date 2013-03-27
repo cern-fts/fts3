@@ -313,6 +313,10 @@ public:
     virtual int getAvgThroughput(std::string source, std::string destination, int activeTransfers) = 0;
     
     virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize) = 0;
+
+    virtual void cancelJobsInTheQueue(const std::string& se, const std::string& vo) = 0;
+
+    virtual void cancelJobsInTheQueue(const std::string& dn) = 0;
  
 };
 

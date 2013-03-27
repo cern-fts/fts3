@@ -272,6 +272,10 @@ public:
     
     virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize);    
 
+    virtual void cancelJobsInTheQueue(const std::string& se, const std::string& vo);
+
+    virtual void cancelJobsInTheQueue(const std::string& dn);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

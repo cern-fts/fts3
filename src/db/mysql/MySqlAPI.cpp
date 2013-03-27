@@ -3541,6 +3541,83 @@ int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int 
 	return 0;
 }
 
+void MySqlAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo) {
+	soci::session sql(connectionPool);
+
+	try {
+
+		soci::rowset<soci::row> rs = vo.empty() ?
+				(
+					sql.prepare <<
+						" SELECT job_id "
+						" FROM t_job "
+						" WHERE (source_se = :se OR dest_se = :se) "
+						"	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')",
+						soci::use(se),
+						soci::use(se)
+				)
+				:
+				(
+					sql.prepare <<
+						" SELECT job_id "
+						" FROM t_job "
+						" WHERE (source_se = :se OR dest_se = :se) "
+						"	AND vo_name = :vo "
+						" 	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')",
+						soci::use(se),
+						soci::use(se),
+						soci::use(vo)
+				);
+
+		std::vector<std::string> jobs;
+
+		soci::rowset<soci::row>::iterator it;
+		for (it = rs.begin(); it != rs.end(); it++) {
+
+			jobs.push_back(
+					it->get<std::string>("job_id")
+				);
+		}
+
+		cancelJob(jobs);
+
+    } catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+void MySqlAPI::cancelJobsInTheQueue(const std::string& dn) {
+	soci::session sql(connectionPool);
+
+	try {
+
+		soci::rowset<soci::row> rs = (
+				sql.prepare <<
+				" SELECT job_id "
+				" FROM t_job "
+				" WHERE user_dn = :dn "
+				"	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')",
+				soci::use(dn)
+			);
+
+
+		std::vector<std::string> jobs;
+
+		soci::rowset<soci::row>::iterator it;
+		for (it = rs.begin(); it != rs.end(); it++) {
+
+			jobs.push_back(
+					it->get<std::string>("job_id")
+				);
+		}
+
+		cancelJob(jobs);
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
 
 // the class factories
 

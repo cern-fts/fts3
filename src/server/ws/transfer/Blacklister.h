@@ -40,6 +40,8 @@ private:
 	void handleSeBlacklisting();
 	void handleDnBlacklisting();
 
+	void handleJobsInTheQueue();
+
 	string adminDn;
 
 	optional<string> vo;

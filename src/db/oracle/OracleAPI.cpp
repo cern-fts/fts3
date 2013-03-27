@@ -7286,6 +7286,173 @@ void OracleAPI::updateProtocol(const std::string& jobId, int fileId, int nostrea
     conn->releasePooledConnection(pooledConnection);    
 }
 
+
+void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo) {
+
+    std::string tag1 = "cancelJobsInTheQueue11";
+    std::string tag2 = "cancelJobsInTheQueue12";
+    std::string query1 =
+			" SELECT job_id "
+			" FROM t_job "
+			" WHERE (source_se = :se OR dest_se = :se) "
+			"	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
+    		;
+    std::string query2 =
+			" SELECT job_id "
+			" FROM t_job "
+			" WHERE (source_se = :se OR dest_se = :se) "
+			"	AND vo_name = :vo "
+			" 	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
+    		;
+
+
+    oracle::occi::Statement* s1 = 0;
+    oracle::occi::ResultSet* r1 = 0;
+    oracle::occi::Statement* s2 = 0;
+    oracle::occi::ResultSet* r2 = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+    int ret = 0;
+
+
+    try {
+
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+        std::vector<std::string> jobs;
+
+        if (vo.empty()) {
+
+            s1 = conn->createStatement(query1, tag1, pooledConnection);
+            s1->setString(1, se);
+            s1->setString(2, se);
+            r1 = conn->createResultset(s1, pooledConnection);
+
+            while (r1->next()) {
+            	jobs.push_back(
+            			r1->getString(1)
+            		);
+            }
+
+            conn->destroyResultset(s1, r1);
+            conn->destroyStatement(s1, tag1, pooledConnection);
+
+        } else {
+
+            s2 = conn->createStatement(query2, tag2, pooledConnection);
+            s2->setString(1, se);
+            s2->setString(2, se);
+            s2->setString(3, vo);
+            r2 = conn->createResultset(s2, pooledConnection);
+
+            while (r2->next()) {
+            	jobs.push_back(
+            			r2->getString(1)
+            		);
+            }
+
+            conn->destroyResultset(s2, r2);
+            conn->destroyStatement(s2, tag2, pooledConnection);
+
+        }
+
+        cancelJob(jobs);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+		conn->rollback(pooledConnection);
+		if(s1 && r1)
+			conn->destroyResultset(s1, r1);
+		if (s1)
+			conn->destroyStatement(s1, tag1, pooledConnection);
+
+		if(s2 && r2)
+			conn->destroyResultset(s2, r2);
+		if (s2)
+			conn->destroyStatement(s2, tag2, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    } catch (...) {
+
+		conn->rollback(pooledConnection);
+		if(s1 && r1)
+			conn->destroyResultset(s1, r1);
+		if (s1)
+			conn->destroyStatement(s1, tag1, pooledConnection);
+
+		if(s2 && r2)
+			conn->destroyResultset(s2, r2);
+		if (s2)
+			conn->destroyStatement(s2, tag2, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
+}
+
+void OracleAPI::cancelJobsInTheQueue(const std::string& dn) {
+
+    std::string tag = "cancelJobsInTheQueue2";
+    std::string query =
+			" SELECT job_id "
+			" FROM t_job "
+			" WHERE user_dn = :dn "
+			"	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
+    		;
+
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+    int ret = 0;
+
+    try {
+
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+        std::vector<std::string> jobs;
+
+		s = conn->createStatement(query, tag, pooledConnection);
+		s->setString(1, dn);
+		r = conn->createResultset(s, pooledConnection);
+
+		while (r->next()) {
+			jobs.push_back(
+					r->getString(1)
+				);
+		}
+
+		conn->destroyResultset(s, r);
+		conn->destroyStatement(s, tag, pooledConnection);
+
+        cancelJob(jobs);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+		conn->rollback(pooledConnection);
+		if(s && r)
+			conn->destroyResultset(s, r);
+		if (s)
+			conn->destroyStatement(s, tag, pooledConnection);
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    } catch (...) {
+
+		conn->rollback(pooledConnection);
+		if(s && r)
+			conn->destroyResultset(s, r);
+		if (s)
+			conn->destroyStatement(s, tag, pooledConnection);
+
+
+		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {
