@@ -92,7 +92,7 @@ void fts3_initialize_db_backend() {
 
     try {
         //use 1 hardcoded connection 
-        db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 4);
+        db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 2);
     } catch (Err& e) {
         throw;
     } catch (std::exception& ex) {
