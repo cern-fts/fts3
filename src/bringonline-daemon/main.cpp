@@ -223,7 +223,7 @@ int DoServer(int argc, char** argv) {
         REGISTER_SIGNAL(SIGFPE);
         REGISTER_SIGNAL(SIGBUS);
         REGISTER_SIGNAL(SIGTRAP);
-        REGISTER_SIGNAL(SIGSYS);
+        REGISTER_SIGNAL(SIGSYS);       
 
         //re-read here
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
@@ -269,8 +269,7 @@ int DoServer(int argc, char** argv) {
         /*set infosys to gfal2*/
         infosys = theServerConfig().get<std::string > ("Infosys");
 
-        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE starting daemon..." << commit;
-        fts3_initialize_db_backend();
+        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE starting daemon..." << commit;       
         struct sigaction action;
         action.sa_handler = _handle_sigint;
         sigemptyset(&action.sa_mask);
@@ -294,7 +293,8 @@ int DoServer(int argc, char** argv) {
         } catch (...) {
             throw;
         }
-
+	
+        fts3_initialize_db_backend();
         vector< tuple<string, string, int> >::iterator it;
         std::vector< boost::tuple<std::string, std::string, int> > voHostnameConfig;
         std::vector<struct message_bringonline> urls;
