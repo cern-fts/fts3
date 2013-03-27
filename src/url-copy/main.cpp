@@ -260,9 +260,9 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 
 
 static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout) {
-		long double y = 4;
+		long double y = 3;
 		if(timeout == 0)
-			y=5;			
+			y=4;			
 	        int tx_timeout = timeout > 0 ? timeout : 0;
 	        long double to_per_mb = fmaxl(0, y);
 	        static const unsigned long MB = 1 << 20;
@@ -669,7 +669,7 @@ int main(int argc, char **argv) {
 
     //cancelation point 
     long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    long unsigned int timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + 10000);
+    long unsigned int timerTimeout = reuseOrNot * (http_timeout + srm_put_timeout + srm_get_timeout + 35000);
     
     try{
     	boost::thread bt(taskTimer, timerTimeout);
