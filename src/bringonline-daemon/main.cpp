@@ -55,6 +55,14 @@ extern std::string stackTrace;
 bool stopThreads = false;
 const char * const PROXY_NAME_PREFIX = "x509up_h";
 const std::string repository = "/tmp/";
+const char *hostcert = "/etc/grid-security/hostcert.pem";
+const char *configfile = "/etc/fts3/fts3config";
+
+static int fexists(const char *filename) {
+    struct stat buffer;
+    if (stat(filename, &buffer) == 0) return 0;
+    return -1;
+}
 
 static bool isSrmUrl(const std::string & url) {
     if (url.compare(0, 6, "srm://") == 0)
@@ -376,6 +384,19 @@ __attribute__((constructor)) void begin(void) {
 int main(int argc, char** argv) {
 
     pid_t child;
+    
+        if (fexists(hostcert) != 0) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE ERROR check if hostcert/key are installed" << commit;
+            return EXIT_FAILURE;
+        }	
+	
+	
+    	if (fexists(configfile) != 0) {
+            std::cerr << "BRINGONLINE ERROR config file " << configfile << " doesn't exist" << std::endl;
+            return EXIT_FAILURE;
+        }	    
+    
+    
     //very first check before it goes to deamon mode
     try {
         FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
