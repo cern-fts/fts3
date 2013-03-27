@@ -52,6 +52,7 @@ set(fts_server_gsoap_transfer_sources
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/JobSubmitter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/VersionResolver.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/LogFileStreamer.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/Blacklister.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/gsoap_deleg_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/delegation/GSoapDelegationHandler.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/config/gsoap_config_methods.cpp"
