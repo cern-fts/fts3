@@ -29,10 +29,13 @@ BlacklistCli::BlacklistCli() {
 			("mode", value<string>(&mode), "Mode, either: on or off")
 			;
 
-	command_specific.add_options()
-			("vo", value<string>(&vo), "The VO that is banned for the given SE")
+	specific.add_options()
 			("status", value<string>(&status)->default_value("WAIT"), "Status of the jobs that are already in the queue (CANCEL or WAIT)")
 			("timeout", value<int>(&timeout)->default_value(0), "The timeout for the jobs that are already in the queue in case if 'WAIT' status (0 means the job wont timeout)")
+			;
+
+	command_specific.add_options()
+			("vo", value<string>(&vo), "The VO that is banned for the given SE")
 			;
 
 	// add positional (those used without an option switch) command line options

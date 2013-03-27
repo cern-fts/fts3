@@ -243,7 +243,7 @@ public:
 	/**
 	 * TODO
 	 */
-	void blacklistDn(string subject, bool mode);
+	void blacklistDn(string subject, string status, int timeout, bool mode);
 
 	void blacklistSe(string name, string vo, string status, int timeout, bool mode);
 

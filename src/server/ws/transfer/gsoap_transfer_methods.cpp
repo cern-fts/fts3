@@ -723,7 +723,7 @@ int fts3::impltns__blacklistSe(soap* ctx, string name, string vo, string status,
 	return SOAP_OK;
 }
 
-int fts3::impltns__blacklistDn(soap* soap, string subject, bool blk, impltns__blacklistDnResponse &resp) {
+int fts3::impltns__blacklistDn(soap* soap, string subject, bool blk, string status, int timeout, impltns__blacklistDnResponse &resp) {
 
 	try {
 
@@ -735,21 +735,6 @@ int fts3::impltns__blacklistDn(soap* soap, string subject, bool blk, impltns__bl
 		string cmd = "fts-set-blacklist dn " + subject + (blk ? " on" : " off");
 
 		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "blacklist");
-
-//		if (type == "se") {
-//
-//			if (blk) {
-//				DBSingleton::instance().getDBObjectInstance()->blacklistSe(subject, string(), dn);
-//				// log it
-//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had blacklisted the SE: " << subject << commit;
-//
-//			} else {
-//				DBSingleton::instance().getDBObjectInstance()->unblacklistSe(subject);
-//				// log it
-//				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had unblacklisted the SE: " << subject << commit;
-//			}
-//
-//		}
 
 		if (blk) {
 			DBSingleton::instance().getDBObjectInstance()->blacklistDn(subject, string(), dn);

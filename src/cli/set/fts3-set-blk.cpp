@@ -61,6 +61,8 @@ int main(int ac, char* av[]) {
 
 			ctx.blacklistDn(
 					cli->getSubjectName(),
+					cli->getStatus(),
+					cli->getTimeout(),
 					cli->getBlkMode()
 				);
 		}

@@ -342,6 +342,8 @@
    
       <part name="name" type="xsd:string"/>
       <part name="blk" type="xsd:boolean"/>
+      <part name="status" type="xsd:string"/>
+      <part name="timeout" type="xsd:int"/>
       
    </message> 
    

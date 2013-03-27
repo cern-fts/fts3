@@ -454,10 +454,10 @@ void GSoapContextAdapter::debugSet(string source, string destination, bool debug
 	}
 }
 
-void GSoapContextAdapter::blacklistDn(string subject, bool mode) {
+void GSoapContextAdapter::blacklistDn(string subject, string status, int timeout, bool mode) {
 
 	impltns__blacklistDnResponse resp;
-	if (soap_call_impltns__blacklistDn(ctx, endpoint.c_str(), 0, subject, mode, resp)) {
+	if (soap_call_impltns__blacklistDn(ctx, endpoint.c_str(), 0, subject, mode, status, timeout, resp)) {
 		handleSoapFault("Operation blacklist failed.");
 	}
 
