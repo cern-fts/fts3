@@ -260,9 +260,9 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 
 
 static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout) {
-		long double y = 3;
+		long double y = 5;
 		if(timeout == 0)
-			y=4;			
+			y=5;			
 	        int tx_timeout = timeout > 0 ? timeout : 0;
 	        long double to_per_mb = fmaxl(0, y);
 	        static const unsigned long MB = 1 << 20;
