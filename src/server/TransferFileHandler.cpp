@@ -64,7 +64,7 @@ optional<FileIndex> TransferFileHandler::getIndex(string vo) {
 	map<string, list<FileIndex> >::iterator it = voToFileIndexes.find(vo);
 
 	// if the VO has no mapping or no files are assigned to the VO ...
-	if (it == voToFileIndexes.end() || it->second.empty()) optional<int>();
+	if (it == voToFileIndexes.end() || it->second.empty()) return optional<FileIndex>();
 
 	// get the index value
 	FileIndex index = it->second.front();
