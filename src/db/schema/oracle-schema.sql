@@ -646,6 +646,7 @@ CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
 CREATE INDEX job_priority     ON t_job(priority);
 CREATE INDEX job_submit_time     ON t_job(submit_time);
 CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
+CREATE INDEX job_list     ON t_job(job_id, job_state, reason, submit_time, user_dn,vo_name, priority, cancel_job);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
@@ -656,6 +657,9 @@ CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 CREATE INDEX file_finish_time ON t_file(finish_time);
 CREATE INDEX file_file_index ON t_file(file_index);
 CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
+CREATE INDEX file_file_throughput ON t_file(throughput);
+CREATE INDEX file_file_src_dest ON t_file(source_se, dest_se);
+
 
 
 CREATE INDEX optimize_active         ON t_optimize(active);
@@ -665,6 +669,11 @@ CREATE INDEX optimize_nostreams         ON t_optimize(nostreams);
 CREATE INDEX optimize_timeout           ON t_optimize(timeout);
 CREATE INDEX optimize_buffer            ON t_optimize(buffer);
 CREATE INDEX optimize_order         ON t_optimize(nostreams,timeout,buffer);
+CREATE INDEX optimize_prot         ON t_optimize(nostreams,active,throughput);
+CREATE INDEX optimize_prot2         ON t_optimize(throughput, active, nostreams, timeout, buffer);
+CREATE INDEX optimize_auto_number         ON t_optimize(auto_number);
+
+
 
 CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
 CREATE INDEX t_server_config_retry         ON t_server_config(retry);
