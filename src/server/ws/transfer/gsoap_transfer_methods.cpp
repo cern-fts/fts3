@@ -184,7 +184,7 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
 	try {
 		// todo the jobs should be listed accordingly to the authorization level
 		AuthorizationManager::Level lvl = AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER);
-		RequestLister lister(soap, _inGivenStates);
+		RequestLister lister(soap, _inGivenStates, _forDN, _forVO);
 		_param_8._listRequests2Return = lister.list(lvl);
 
 	} catch(Err& ex) {

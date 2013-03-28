@@ -190,9 +190,14 @@ namespace soci
             transfer.transferFileState = v.get<std::string>("file_state");
             transfer.reason            = v.get<std::string>("reason", "");
             transfer.numFailures	   = v.get<int>("retry");
-            aux_tm = v.get<struct tm>("start_time");
-            transfer.start_time = timegm(&aux_tm);
-            if (v.get_indicator("finish_time") == soci::i_ok) {
+	    if (v.get_indicator("start_time") == soci::i_ok) {
+                aux_tm = v.get<struct tm>("start_time");
+                transfer.start_time = timegm(&aux_tm);
+            }
+            else {
+                transfer.start_time = -1;
+            }	    
+	    if (v.get_indicator("finish_time") == soci::i_ok) {
                 aux_tm = v.get<struct tm>("finish_time");
                 transfer.finish_time = timegm(&aux_tm);
             }
