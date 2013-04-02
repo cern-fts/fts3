@@ -655,8 +655,8 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 		CGsiAdapter cgsi(soap);
 		string dn = cgsi.getClientDn();
 
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn;
-		FTS3_COMMON_LOGGER_NEWLOG (INFO) << " is turning " << (_debug ? "on" : "off") << "the debug mode for " << _source;
+		FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn
+		<< " is turning " << (_debug ? "on" : "off") << " the debug mode for " << _source << commit;
 		if (!_destination.empty()) {
 			FTS3_COMMON_LOGGER_NEWLOG (INFO) << " and " << _destination << " pair" << commit;
 		}
@@ -673,13 +673,12 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
 		DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "debug");
 
 	} catch(Err& ex) {
-
 		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
 		soap_receiver_fault(soap, ex.what(), "TransferException");
 
 		return SOAP_FAULT;
 	} catch (...) {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
 	    return SOAP_FAULT;
 	}
 
@@ -699,7 +698,7 @@ int fts3::impltns__blacklistSe(soap* ctx, string name, string vo, string status,
 		soap_receiver_fault(ctx, ex.what(), "TransferException");
 		return SOAP_FAULT;
 	} catch (...) {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown "  << commit;
 	    return SOAP_FAULT;
 	}
 
@@ -720,7 +719,7 @@ int fts3::impltns__blacklistDn(soap* ctx, string subject, bool blk, string statu
 		soap_receiver_fault(ctx, ex.what(), "TransferException");
 		return SOAP_FAULT;
 	} catch (...) {
-	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, job can't be canceled "  << commit;
+	    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown"  << commit;
 	    return SOAP_FAULT;
 	}
 
