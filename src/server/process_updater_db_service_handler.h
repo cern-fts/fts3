@@ -38,7 +38,6 @@ limitations under the License. */
 #include "definitions.h"
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>  
-#include <boost/interprocess/ipc/message_queue.hpp>
 
 extern bool stopThreads;
 
@@ -48,7 +47,6 @@ using FTS3_COMMON_NAMESPACE::Pointer;
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace db;
 using namespace FTS3_CONFIG_NAMESPACE;
-using namespace boost::interprocess;
 
 template
 <
