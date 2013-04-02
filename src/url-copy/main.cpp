@@ -796,28 +796,14 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO Source url:" << strArray[1] << '\n'; //b
             log << fileManagement->timestamp() << "INFO Dest url:" << strArray[2] << '\n'; //c
             log << fileManagement->timestamp() << "INFO Overwrite enabled:" << overwrite << '\n'; //d
-            log << fileManagement->timestamp() << "INFO tcpbuffersize:" << tcpbuffersize << '\n'; //f
-            log << fileManagement->timestamp() << "INFO blocksize:" << blocksize << '\n'; //g            
-            log << fileManagement->timestamp() << "INFO Daemonize:" << daemonize << '\n'; //i
+            log << fileManagement->timestamp() << "INFO Tcp buffer size:" << tcpbuffersize << '\n'; //f                              
             log << fileManagement->timestamp() << "INFO Dest space token:" << dest_token_desc << '\n'; //j
-            log << fileManagement->timestamp() << "INFO Sourcespace token:" << source_token_desc << '\n'; //k
-            log << fileManagement->timestamp() << "INFO markers_timeout:" << markers_timeout << '\n'; //l
-            log << fileManagement->timestamp() << "INFO first_marker_timeout:" << first_marker_timeout << '\n'; //m
-            log << fileManagement->timestamp() << "INFO srm_get_timeout:" << srm_get_timeout << '\n'; //n
-            log << fileManagement->timestamp() << "INFO srm_put_timeout:" << srm_put_timeout << '\n'; //o
-            log << fileManagement->timestamp() << "INFO http_timeout:" << http_timeout << '\n'; //p
-            log << fileManagement->timestamp() << "INFO dont_ping_source:" << dont_ping_source << '\n'; //q
-            log << fileManagement->timestamp() << "INFO dont_ping_dest:" << dont_ping_dest << '\n'; //r
-            log << fileManagement->timestamp() << "INFO disable_dir_check:" << disable_dir_check << '\n'; //s
-            log << fileManagement->timestamp() << "INFO copy_pin_lifetime:" << copy_pin_lifetime << '\n'; //t
-            log << fileManagement->timestamp() << "INFO bringOnline:" << bringonline << '\n'; //t	    
-            log << fileManagement->timestamp() << "INFO lan_connection:" << lan_connection << '\n'; //u
-            log << fileManagement->timestamp() << "INFO fail_nearline:" << fail_nearline << '\n'; //v
-            log << fileManagement->timestamp() << "INFO timeout_per_mb:" << timeout_per_mb << '\n'; //w
-            log << fileManagement->timestamp() << "INFO no_progress_timeout:" << no_progress_timeout << '\n'; //x
+            log << fileManagement->timestamp() << "INFO Source space token:" << source_token_desc << '\n'; //k           
+            log << fileManagement->timestamp() << "INFO Pin lifetime:" << copy_pin_lifetime << '\n'; //t
+            log << fileManagement->timestamp() << "INFO BringOnline:" << bringonline << '\n'; //t	               
             log << fileManagement->timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
             log << fileManagement->timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
-            log << fileManagement->timestamp() << "INFO User specified filesize:" << strArray[4] << '\n'; //A
+            log << fileManagement->timestamp() << "INFO User filesize:" << strArray[4] << '\n'; //A
             log << fileManagement->timestamp() << "INFO File metadata:" << strArray[5] << '\n'; //A
             log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A
 	    log << fileManagement->timestamp() << "INFO Bringonline token:" << strArray[6] << '\n'; //A	    	    	
