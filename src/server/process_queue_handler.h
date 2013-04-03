@@ -89,11 +89,14 @@ public:
 	       bool updated = true;    
 	       std::string job = std::string(msg.job_id).substr(0, 36);
 	       
-	       
-  	       DBSingleton::instance().getDBObjectInstance()->updateProtocol(job, msg.file_id, 
+	       if(std::string(msg.transfer_status).compare("UPDATE") == 0){
+  	       		DBSingleton::instance().getDBObjectInstance()->updateProtocol(job, msg.file_id, 
 		    									    static_cast<int> (msg.nostreams), 
 											    static_cast<int> (msg.timeout),
-											    static_cast<int> (msg.buffersize));	       
+											    static_cast<int> (msg.buffersize),
+											    msg.filesize);
+			return true;											    
+		}
 	       
 		if (std::string(msg.transfer_status).compare("FINISHED") == 0 || 
 			std::string(msg.transfer_status).compare("FAILED") == 0 ||

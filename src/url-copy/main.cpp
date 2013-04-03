@@ -948,6 +948,14 @@ int main(int argc, char **argv) {
             nstream_to_string = to_string<unsigned int>(experimentalNstreams, std::dec);
             msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
             log << fileManagement->timestamp() << "INFO nbstreams:" << nbstreams << '\n'; //e
+	    
+            //update protocol stuff
+            log << fileManagement->timestamp() << "INFO Update protocol stuff, report back to the server" << '\n';
+	    reporter.timeout = timeout;
+            reporter.nostreams = nbstreams;
+            reporter.buffersize = tcpbuffersize;        
+            reporter.constructMessage(false, job_id, strArray[0], "UPDATE", "", diff, source_size);		    
+	    
 
             gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
             gfalt_set_monitor_callback(params, &call_perf, NULL);

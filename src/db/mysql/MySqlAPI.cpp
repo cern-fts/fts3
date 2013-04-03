@@ -3503,7 +3503,7 @@ void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
     }
 }
 
-void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize){
+void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize){
 
    std::stringstream internalParams;
    soci::session sql(connectionPool);
@@ -3514,8 +3514,9 @@ void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostream
 	internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
 
         sql <<
-        		" UPDATE t_file set INTERNAL_FILE_PARAMS=:1 where job_id=:jobId and file_id=:fileId ",
+        		" UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where job_id=:jobId and file_id=:fileId ",
         		soci::use(internalParams.str()),
+        		soci::use(filesize),			
         		soci::use(jobId),
         		soci::use(fileId);
 
