@@ -836,6 +836,7 @@ protected:
     void executeTransfer_a() {
         static bool drainMode = false;     
         static unsigned int countReverted = 0;
+	static unsigned int counter = 0; 
 
         while (1) {
             try {
@@ -858,12 +859,20 @@ protected:
                     drainMode = false;
                 }                
 
-                /*revert to SUBMITTED state if stayed in READY for too long (100 secs)*/
+                /*revert to SUBMITTED if stayed in READY for too long (100 secs)*/
                 countReverted++;
                 if (countReverted == 100) {
                     DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                     countReverted = 0;
                 }
+		
+		 /*force-fail stalled ACTIVE transfers*/ 
+	 	 counter++; 
+	 	 if (counter == 300) { 
+                    DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(); 
+                    counter = 0; 
+                } 		
+		
 
                 /*get jobs in submitted state*/
                 DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
@@ -899,7 +908,7 @@ protected:
                     jobs2.clear();
                 }
             }
-            usleep(500000);
+            usleep(300000);
         } /*end while*/
     }
 

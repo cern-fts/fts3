@@ -1705,7 +1705,8 @@ void MySqlAPI::forceFailTransfers() {
         		    " SELECT t_file.job_id, t_file.file_id, t_file.start_time, t_file.pid, t_file.internal_file_params, "
                             " t_file.transferHost, t_job.reuse_job "
                             " FROM t_file, t_job "
-                            " WHERE t_job.job_id = t_file.job_id AND t_file.file_state='READY' AND pid IS NOT NULL",
+                            " WHERE t_job.job_id = t_file.job_id AND t_file.file_state='ACTIVE' AND pid IS NOT NULL "
+			    " and t_file.finish_time IS NULL AND t_file.job_finished IS NULL ",
                             soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
                             soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
         	);
@@ -1718,7 +1719,7 @@ void MySqlAPI::forceFailTransfers() {
                 startTime = mktime(&startTimeSt);
                 timeout = extractTimeout(params);
 
-            	int terminateTime = timeout + 1500;
+            	int terminateTime = timeout + 3500;
 
             	if (isNull != soci::i_null && reuse == "Y") {
 
@@ -1730,9 +1731,11 @@ void MySqlAPI::forceFailTransfers() {
             	}
 
                 diff = difftime(now2, startTime);
-                if (timeout != 0 && diff > terminateTime && tHost == hostname) {
-                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;                    
-                    kill(pid, SIGUSR1);
+                if (diff > terminateTime) {
+		    if(tHost == hostname){
+                    	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;                    
+                    	kill(pid, SIGUSR1);
+		    }
                     updateFileTransferStatus(jobId, fileId,
                                              "FAILED", "Transfer has been forced-killed because it was stalled",
                                              pid, 0, 0);

@@ -3274,14 +3274,16 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
 }
 
 
-/* REUSE CASE*/
 void OracleAPI::forceFailTransfers() {
     std::string tag = "forceFailTransfers";
     std::string tag1 = "forceFailTransfers1";
 
     std::string query = " select t_file.job_id, t_file.file_id, t_file.START_TIME ,t_file.PID, t_file.INTERNAL_FILE_PARAMS, t_file.TRANSFERHOST, t_job.REUSE_JOB from t_file, t_job "
-    			" where t_job.job_id=t_file.job_id and t_file.file_state='READY' and t_file.pid is not null";
+    			" where t_job.job_id=t_file.job_id and t_file.file_state='ACTIVE' and t_file.pid is not null "
+			" and t_file.finish_time IS NULL AND t_file.job_finished IS NULL ";
+			
     std::string query1 = "select count(*) from t_file where job_id=:1";
+    
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     oracle::occi::Statement* s1 = NULL;
@@ -3330,15 +3332,16 @@ void OracleAPI::forceFailTransfers() {
         		conn->destroyStatement(s1, tag1, pooledConnection);
         		s1 = NULL;
         		r1 = NULL;
-		terminateTime = (timeout + 1500)*countFiles;					
+		terminateTime = (timeout + 3500)*countFiles;					
 	    }else{
-	    	terminateTime = (timeout + 1500);
+	    	terminateTime = (timeout + 3500);
 	    }
 	    diff = difftime(lifetime, start_time);
-            if (timeout != 0 && diff > terminateTime) {
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;                
-		if(vmHostname.compare(ftsHostName)==0)
+            if (diff > terminateTime) {                
+		if(vmHostname.compare(ftsHostName)==0){
+			FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << job_id << ", fileid:" << file_id << " because it was stalled" << commit;                
                 	kill(pid, SIGUSR1);
+		}
                 updateFileTransferStatus(job_id, file_id, transfer_status, transfer_message, pid, 0, 0);
                 updateJobTransferStatus(file_id, job_id, status);
             }
