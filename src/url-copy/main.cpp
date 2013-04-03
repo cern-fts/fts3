@@ -250,8 +250,8 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 		return 7;
 	}	
 	else{
-		if(currentStreams < 8 )
-			return 8;
+		if(currentStreams > 10 )
+			return 10;
 		else
 			return currentStreams;
 	}

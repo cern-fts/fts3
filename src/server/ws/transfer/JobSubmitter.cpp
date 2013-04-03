@@ -47,6 +47,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/assign.hpp>
 
+#include "parse_url.h"
+
 using namespace db;
 using namespace config;
 using namespace fts3::infosys;
@@ -60,6 +62,11 @@ const regex JobSubmitter::fileUrlRegex("(.+://[a-zA-Z0-9\\.-]+)(:\\d+)?/.+");
 const string JobSubmitter::false_str = "false";
 
 const string JobSubmitter::srm_protocol = "srm";
+
+static bool checkValidUrl(const std::string &uri){
+	Uri u0 = Uri::Parse(uri);
+	return  u0.Host.length() != 0 && u0.Protocol.length() != 0 && u0.Path.length() != 0;	
+}
 
 JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) :
 		db (DBSingleton::instance().getDBObjectInstance()) {
@@ -113,6 +120,11 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it, ++fileIndex) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
+	
+	if (!checkValidUrl(src) || !checkValidUrl(dest)){
+			std::string errMsg = "Not valid uri format, check submitted uri's";
+			throw Err_Custom(errMsg);
+	}
 
 		string sourceSe = fileUrlToSeName(src);
 		if(sourceSe.empty()){
@@ -154,9 +166,9 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation) 
     	tupple.source_se = sourceSe;
     	tupple.dest_se = destinationSe;
     	tupple.checksum = string();
-		tupple.filesize = 0;
-		tupple.metadata = string();
-		tupple.fileIndex = fileIndex;
+	tupple.filesize = 0;
+	tupple.metadata = string();
+	tupple.fileIndex = fileIndex;
 
     	jobs.push_back(tupple);
     }
@@ -203,6 +215,11 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
     for (it = job->transferJobElements.begin(); it < job->transferJobElements.end(); ++it, ++fileIndex) {
 
     	string src = *(*it)->source, dest = *(*it)->dest;
+	
+	if (!checkValidUrl(src) || !checkValidUrl(dest)){
+			std::string errMsg = "Not valid uri format, check submitted uri's";
+			throw Err_Custom(errMsg);
+	}	
 
 		string sourceSe = fileUrlToSeName(src);
 		if(sourceSe.empty()){
@@ -329,17 +346,23 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 		// add each pair
 		list< pair<string, string> >::iterator it_p;
 		for (it_p = pairs.begin(); it_p != pairs.end(); it_p++) {
-			// check weather the destination file is supported
+			// check wether the destination file is supported
 			if (!checkProtocol(it_p->second)) {
 				throw Err_Custom("Destination protocol is not supported for file: " + it_p->second);
 			}
-			// check weather the source file is supported
+			// check wether the source file is supported
 			if (!checkProtocol(it_p->first) && !checkIfLfn(it_p->first)) {
 				throw Err_Custom("Source protocol is not supported for file: " + it_p->first);
 			}
 			// set the values for source and destination
 			tupple.source = it_p->first;
 			tupple.destination = it_p->second;
+			
+			if (!checkValidUrl(it_p->first) || !checkValidUrl(it_p->second)){
+				std::string errMsg = "Not valid uri format, check submitted uri's";
+				throw Err_Custom(errMsg);
+			}			
+			
 
 			string sourceSe = fileUrlToSeName(it_p->first);
 			if(sourceSe.empty()){
@@ -362,8 +385,7 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
 			jobs.push_back(tupple);
 		}
-	}
-	//FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's vector has been created" << commit;
+	}	
 }
 
 void JobSubmitter::init(tns3__TransferParams *jobParams) {
