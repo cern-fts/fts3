@@ -671,7 +671,6 @@ CREATE INDEX optimize_buffer            ON t_optimize(buffer);
 CREATE INDEX optimize_order         ON t_optimize(nostreams,timeout,buffer);
 CREATE INDEX optimize_prot         ON t_optimize(nostreams,active,throughput);
 CREATE INDEX optimize_prot2         ON t_optimize(throughput, active, nostreams, timeout, buffer);
-CREATE INDEX optimize_auto_number         ON t_optimize(auto_number);
 
 
 
