@@ -808,7 +808,7 @@ protected:
                                     strcpy(msg.job_id, std::string(job_id).c_str());
                                     msg.file_id = iterFileIds->first;
                                     msg.process_id = (int) pr->getPid();
-                                    msg.timestamp = std::time(NULL);
+                                    msg.timestamp = milliseconds_since_epoch();
                                     ThreadSafeList::get_instance().push_back(msg);
                                 }
                             }
