@@ -7457,6 +7457,45 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn) {
     conn->releasePooledConnection(pooledConnection);
 }
 
+
+void OracleAPI::transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug){
+    std::string tag = "transferLogFile";
+    std::string query = "update t_file set T_LOG_FILE=:1, T_LOG_FILE_DEBUG=:2 where job_id=:3 and file_id=:4";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;    
+    
+    try {
+	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+            return;
+
+        s = conn->createStatement(query, tag, pooledConnection);
+        s->setString(1, filePath);
+        s->setInt(2, debug);
+        s->setString(3, jobId);
+        s->setInt(4, fileId);	
+        s->executeUpdate();
+        conn->commit(pooledConnection);
+        conn->destroyStatement(s, tag, pooledConnection);
+    }    catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+
+            conn->rollback(pooledConnection);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);    
+}
+
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

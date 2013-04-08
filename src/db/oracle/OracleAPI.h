@@ -276,6 +276,8 @@ public:
 
     virtual void cancelJobsInTheQueue(const std::string& dn);
 
+    virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

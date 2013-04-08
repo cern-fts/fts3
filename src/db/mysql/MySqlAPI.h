@@ -267,6 +267,8 @@ public:
 
     virtual void cancelJobsInTheQueue(const std::string& dn);
 
+    virtual void transferLogFile( const std::string& filePath, const std::string& jobId, int fileId, bool debug);
+
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;

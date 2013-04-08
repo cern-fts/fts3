@@ -562,8 +562,9 @@ CREATE TABLE t_file (
 --
 -- the timestamp that the file will be retried
   retry_timestamp          TIMESTAMP NULL DEFAULT NULL,
-  
-  
+  t_log_file        VARCHAR(2048),
+  t_log_file_debug  INTEGER,
+    
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
 

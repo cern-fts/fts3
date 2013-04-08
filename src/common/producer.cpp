@@ -108,3 +108,22 @@ void runProducerStall(struct message_updater msg){
 	       }		
 }
 
+
+void runProducerLog(struct message_log msg){
+                FILE *fp=NULL;
+                std::string basename(LOG_DIR);
+                std::string tempname;
+
+                getUniqueTempFileName(basename, tempname);
+                if ((fp = fopen(tempname.c_str(), "w")) != NULL)
+                {
+                        size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+                        if(writesBytes==0 || errno != 0){
+                                writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+                        }
+                        fclose(fp);
+                        std::string renamedFile = tempname + "_ready";
+                        rename(tempname.c_str(), renamedFile.c_str());
+               }
+}
+

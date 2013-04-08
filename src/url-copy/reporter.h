@@ -29,6 +29,7 @@ public:
 	~Reporter();
 	void constructMessage(bool retry, std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message,  double timeInSecs,  double fileSize);
         void constructMessageUpdater(std::string job_id, std::string file_id);
+	void constructMessageLog(std::string job_id, std::string file_id, std::string logFileName, bool debug);
         unsigned int nostreams;
 	unsigned int timeout;
 	unsigned int buffersize;
@@ -39,4 +40,6 @@ public:
 private:
 	struct message* msg;	
 	struct message_updater* msg_updater;
+	struct message_log* msg_log;	
+	std::string           hostname;	
 };

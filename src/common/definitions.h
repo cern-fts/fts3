@@ -86,6 +86,25 @@ public:
     boost::posix_time::time_duration::tick_type timestamp;
 };
 
+struct message_log {
+public:
+    message_log():file_id(0), debugFile(false),timestamp(0)  {
+        memset(job_id, 0, sizeof (job_id));
+	memset(host, 0, 255);
+	memset(filePath, 0, 1024);	
+    }
+
+    ~message_log() {
+    }   
+    char job_id[JOB_ID_LEN];
+    int file_id;
+    char host[255];
+    char filePath[1024];
+    bool debugFile;
+    boost::posix_time::time_duration::tick_type timestamp;
+};
+
+
 
 struct message_bringonline {
 public:

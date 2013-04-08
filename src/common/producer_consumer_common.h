@@ -20,6 +20,7 @@
 #define STALLED_DIR "/var/lib/fts3/stalled/"
 #define MONITORING_DIR "/var/lib/fts3/monitoring/"
 #define STATUS_DIR "/var/lib/fts3/status/"
+#define LOG_DIR "/var/lib/fts3/logs/"
 
 int getDir (std::string dir, std::vector<std::string> &files);
 
@@ -43,5 +44,13 @@ void runProducerStatus(struct message msg);
 void runConsumerStall(std::vector<struct message_updater>& messages);
 
 void runProducerStall(struct message_updater msg);
+
+
+//for checking the log file path
+void runConsumerLog(std::vector<struct message_log>& messages);
+
+void runProducerLog(struct message_log msg);
+
+
 
 boost::posix_time::time_duration::tick_type milliseconds_since_epoch();

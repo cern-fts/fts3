@@ -34,6 +34,15 @@ struct sort_functor_status
 };
 
 
+struct sort_functor_log
+{
+    bool operator()(const message_log & a, const message_log & b) const
+    {
+        return a.timestamp < b.timestamp;
+    }
+};
+
+
 boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 {
     using boost::gregorian::date;
@@ -135,3 +144,29 @@ void runConsumerStall(std::vector<struct message_updater>& messages){
     files.clear();
     std::sort(messages.begin(), messages.end(), sort_functor_updater());
 }
+
+
+void runConsumerLog(std::vector<struct message_log>& messages){
+    string dir = string(LOG_DIR);
+    vector<string> files = vector<string>();
+    struct message_log msg;
+
+    getDir(dir,files);
+    for (unsigned int i = 0;i < files.size();i++) {
+        FILE *fp = NULL;
+        if ((fp = fopen(files[i].c_str(), "r")) != NULL){
+          size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
+          if(readBytes==0 || errno != 0){
+                readBytes = fread(&msg, sizeof(msg), 1, fp);
+          }
+          messages.push_back(msg);
+          unlink(files[i].c_str());
+          fclose(fp);
+        }
+    }
+    files.clear();
+    std::sort(messages.begin(), messages.end(), sort_functor_log());
+}
+
+
+

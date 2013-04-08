@@ -23,12 +23,17 @@ limitations under the License. */
 #include "producer_consumer_common.h"
 #include <algorithm>
 #include <ctime>
+#include <sys/param.h>
 
 using namespace std;
 
-Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0), source_se(""), dest_se("") , msg(NULL), msg_updater(NULL) {
+Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0), source_se(""), dest_se("") , msg(NULL), msg_updater(NULL), msg_log(NULL) {
 	msg = new struct message();	
 	msg_updater = new struct message_updater();	
+	msg_log = new struct message_log();		
+        char chname[MAXHOSTNAMELEN];
+	gethostname(chname, sizeof(chname));
+	hostname.assign(chname);	
 }
 
 Reporter::~Reporter() {
@@ -36,6 +41,8 @@ Reporter::~Reporter() {
         delete msg;
     if (msg_updater)
         delete msg_updater;	
+    if (msg_log)
+        delete msg_log;		
 }
 
 std::string Reporter::ReplaceNonPrintableCharacters(string s) {
@@ -131,3 +138,25 @@ void Reporter::constructMessageUpdater(std::string job_id, std::string file_id){
     }
 }
 
+
+
+void Reporter::constructMessageLog(std::string job_id, std::string file_id, std::string logFileName, bool debug){
+    try {
+        strcpy(msg_log->job_id, job_id.c_str());
+        msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);   
+	strcpy(msg_log->filePath, logFileName.c_str());
+	strcpy(msg_log->host, hostname.c_str());
+	msg_log->debugFile = debug;
+	msg_log->timestamp = milliseconds_since_epoch();
+	runProducerLog(*msg_log);
+    } catch (...) {
+        //attempt to resend the message
+        strcpy(msg_log->job_id, job_id.c_str());
+        msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);   
+	strcpy(msg_log->filePath, logFileName.c_str());
+	strcpy(msg_log->host, hostname.c_str());
+	msg_log->debugFile = debug;
+	msg_log->timestamp = milliseconds_since_epoch();
+	runProducerLog(*msg_log);
+    }
+}

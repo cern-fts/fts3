@@ -317,6 +317,8 @@ public:
     virtual void cancelJobsInTheQueue(const std::string& se, const std::string& vo) = 0;
 
     virtual void cancelJobsInTheQueue(const std::string& dn) = 0;
+
+    virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug) = 0;
  
 };
 

@@ -8,17 +8,7 @@ CREATE TABLE t_server_config (
 insert into t_server_config(retry,max_time_queue) values(0,0);
 
 
---
--- Holds the log files path and host
---
-CREATE TABLE t_log (
-  path       VARCHAR2(255),
-  job_id     CHAR(36),
-  dn         VARCHAR2(255),
-  vo         VARCHAR2(255),
-  datetime       TIMESTAMP WITH TIME ZONE,
-  CONSTRAINT t_log_pk PRIMARY KEY (path, job_id, dn, vo)
-);
+
 
 --
 -- Holds optimization parameters
@@ -576,6 +566,8 @@ CREATE TABLE t_file (
 --
 -- the timestamp that the file will be retried
   ,retry_timestamp          TIMESTAMP WITH TIME ZONE DEFAULT NULL
+  ,t_log_file        VARCHAR2(2048)
+  ,t_log_file_debug  INTEGER
 );
 
 

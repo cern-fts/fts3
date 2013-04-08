@@ -43,7 +43,10 @@ public:
         processUpdaterDBHandler.executeTransfer_p();            
     
         typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
-        processUpdaterHandler.executeTransfer_p();        
+        processUpdaterHandler.executeTransfer_p();       
+
+        typename TRAITS::ProcessLogServiceType processLogHandler;
+        processLogHandler.executeTransfer_p(); 
     
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();    

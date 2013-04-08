@@ -39,6 +39,7 @@ public:
     void setFileId(std::string& file_id);
     void setJobId(std::string& job_id);
     void generateLogFile();
+    
     inline std::string getLogFileFullPath(){
 	return fullPath;
     }
@@ -63,6 +64,14 @@ public:
     	return dhostFile;
     }    
 
+    inline std::string _getLogFileFullPath(){
+    	return log;
+    }    
+
+    inline std::string _getLogArchivedFileFullPath(){
+    	return arcFileName;
+    }    
+
 private:
     std::string source_url;
     std::string dest_url;
@@ -78,6 +87,7 @@ private:
     std::string dateArch;
     std::string log;
     std::string fullPath;
+    std::string arcFileName;
     char *base_scheme;
     char *base_host;
     char *base_path;

@@ -155,7 +155,8 @@ void checkInitDirs(){
    paths.push_back(fs::path("/var/lib/fts3"));      
    paths.push_back(fs::path("/var/lib/fts3/monitoring"));         
    paths.push_back(fs::path("/var/lib/fts3/status")); 
-   paths.push_back(fs::path("/var/lib/fts3/stalled"));  
+   paths.push_back(fs::path("/var/lib/fts3/stalled")); 
+   paths.push_back(fs::path("/var/lib/fts3/logs")); 
    
    for (iter = paths.begin(); iter != paths.end(); ++iter) {
       if ( !fs::exists(*iter) || !fs::is_directory(*iter)){

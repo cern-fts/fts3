@@ -3622,6 +3622,29 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn) {
     }
 }
 
+void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug){
+    soci::session sql(connectionPool);
+    
+    //soci doesn't access bool
+    unsigned int debugFile = debug;
+
+    try {
+        sql.begin();
+
+        sql <<
+        		" update t_file set t_log_file=:filePath, t_log_file_debug=:debugFile where job_id=:jobId and file_id=:fileId ",
+        		soci::use(filePath),
+        		soci::use(debugFile),			
+        		soci::use(jobId),
+        		soci::use(fileId);			
+
+        sql.commit();
+
+    } catch (std::exception& e) {
+        sql.rollback();
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
 
 // the class factories
 

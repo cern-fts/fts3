@@ -386,6 +386,11 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         reporter.constructMessage(retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
 
     std::string moveFile = fileManagement->archive();
+    if (strArray[0].length() > 0)    
+	    reporter.constructMessageLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(), debug);    
+    else
+	    reporter.constructMessageLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(), debug);        
+    
     if (moveFile.length() != 0) {
         logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
     }
@@ -752,7 +757,7 @@ int main(int argc, char **argv) {
         reporter.source_se = fileManagement->getSourceHostname();
         reporter.dest_se = fileManagement->getDestHostname();
         fileManagement->generateLogFile();
-
+	
         msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
         msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
         msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement->getSePair());
@@ -785,6 +790,7 @@ int main(int argc, char **argv) {
         }
         { //add curly brackets to delimit the scope of the logger
             logger log(logStream);
+   	    reporter.constructMessageLog(job_id, strArray[0], fileManagement->_getLogFileFullPath(), debug);	    
 
             gfalt_set_user_data(params, &log, NULL);
 
@@ -1116,7 +1122,8 @@ stop:
             fclose(stderr);
         }
 
-        fileManagement->archive();        
+        fileManagement->archive();     
+	reporter.constructMessageLog(job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(), debug);   
     }//end for reuse loop
 
     if (params) {

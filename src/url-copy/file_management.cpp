@@ -151,7 +151,7 @@ bool FileManagement::directoryExists(const char* pzPath) {
 
 std::string FileManagement::archive() {
     char buf[256] = {0};
-    std::string arcFileName = logFileName + "/" + archiveFileName;
+    arcFileName = logFileName + "/" + archiveFileName;
     directoryExists(arcFileName.c_str());
     arcFileName += "/" + fname;
     int r = rename(log.c_str(), arcFileName.c_str());
@@ -175,7 +175,7 @@ std::string FileManagement::archive() {
         } else {
             return std::string("Unknown error when moving log file");
         }
-    }
+    }    
     return std::string("");
 }
 
