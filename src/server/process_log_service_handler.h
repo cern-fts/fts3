@@ -115,7 +115,7 @@ protected:
 		
                 if(!queueMsgRecovery.empty()){						
 			for (iter_restore = queueMsgRecovery.begin(); iter_restore != queueMsgRecovery.end(); ++iter_restore) {
-				std::string job = std::string((*iter).job_id).substr(0, 36);
+				std::string job = std::string((*iter_restore).job_id).substr(0, 36);
 				DBSingleton::instance().getDBObjectInstance()->
 					transferLogFile((*iter_restore).filePath, job, (*iter_restore).file_id, (*iter_restore).debugFile);
                                 
