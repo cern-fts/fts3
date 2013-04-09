@@ -244,7 +244,6 @@ rm -rf %{buildroot}
 
 %files libs
 %defattr(-,root,root,-)
-%{_bindir}/fts*
 %{python_sitearch}/fts/*.py*
 %{python_sitearch}/fts/ftsdb.so*
 %{python_sitearch}/fts/libftspython.so*
