@@ -9,18 +9,7 @@ CREATE TABLE t_server_config (
 );
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
 
---
--- Holds the log files path and host
---
-CREATE TABLE t_log (
-  path       VARCHAR(255),
-  job_id     CHAR(36),
-  dn         VARCHAR(255),
-  vo         VARCHAR(255),
--- Note: 'when' is a reserved word in MySQL, so a different word has to be picked
-  datetime   TIMESTAMP,
-  CONSTRAINT t_log_pk PRIMARY KEY (path, job_id, dn, vo)
-);
+
 
 --
 -- Holds optimization parameters
