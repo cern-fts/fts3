@@ -142,7 +142,7 @@ bool FileManagement::directoryExists(const char* pzPath) {
     } else {
         /* Directory does not exist */
         umask(0);
-        if (mkdir(pzPath, 0744) != 0)
+        if (mkdir(pzPath, 0755) != 0)
             bExists = false;
     }
 
