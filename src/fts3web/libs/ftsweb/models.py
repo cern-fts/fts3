@@ -78,7 +78,9 @@ class File(models.Model):
     user_filesize     = models.FloatField()
     staging_start     = models.DateTimeField()
     staging_finished  = models.DateTimeField()
-    bringonline_token = models.CharField(max_length = 255) 
+    bringonline_token = models.CharField(max_length = 255)
+    log_file        = models.CharField(max_length = 2048, db_column = 't_log_file')
+    log_debug       = models.IntegerField(db_column = 't_log_file_debug')
     
     class Meta:
         db_table = 't_file'

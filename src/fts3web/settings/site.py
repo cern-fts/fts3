@@ -9,3 +9,5 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
+
+LOG_BASE_URL = 'http://%(host)/'

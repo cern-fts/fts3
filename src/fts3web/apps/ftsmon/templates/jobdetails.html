@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load filesize %}
+{% load urlLog %}
 
 {% block title %}
 Job {{ transferJob.job_id }}
@@ -75,6 +76,9 @@ Job {{ transferJob.job_id }}
               {% if t.reason %}
                 <li><b>Reason:</b> {{ t.reason }}</li>
               {% endif %}
+              <li>
+                <b>Log files: </b> {% urlLog t %}
+              </li>
             </ul>
           </td>
         </tr>
