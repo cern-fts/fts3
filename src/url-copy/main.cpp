@@ -260,7 +260,7 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 
 
 static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout) {
-		long double y = 4;
+		long double y = 3;
 		if(timeout == 0){
 			y=5;
 			timeout = 10000;
