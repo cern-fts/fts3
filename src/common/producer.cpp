@@ -43,10 +43,12 @@ void getUniqueTempFileName(const std::string& basename,
 void mktempfile(const std::string& basename, 
             std::string& tempname)
 {
+   char *createTempFile = NULL;
    char* temp= (char *) "_XXXXXX";
-   char *createTempFile = mktemp(temp);
-   if(createTempFile == NULL){
-   }
+   
+   do{
+   	createTempFile = mktemp(temp);
+   }while(createTempFile == NULL);
 
    tempname = basename;
    tempname.append(std::string(temp));
@@ -68,7 +70,10 @@ void runProducerMonitoring(const char* msg)
 			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
-			rename(tempname.c_str(), renamedFile.c_str());			
+			int r = rename(tempname.c_str(), renamedFile.c_str());			
+			if(-1 ==r) //try again
+				rename(tempname.c_str(), renamedFile.c_str());
+				
 	       }		
 }
 
@@ -87,7 +92,9 @@ void runProducerStatus(struct message msg){
 			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
-			rename(tempname.c_str(), renamedFile.c_str());			
+			int r = rename(tempname.c_str(), renamedFile.c_str());			
+			if(-1 == r)
+				rename(tempname.c_str(), renamedFile.c_str());									
 	       }		
 }
 
@@ -104,7 +111,9 @@ void runProducerStall(struct message_updater msg){
 			} 
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
-			rename(tempname.c_str(), renamedFile.c_str());			
+			int r = rename(tempname.c_str(), renamedFile.c_str());			
+			if(-1 ==r)
+				rename(tempname.c_str(), renamedFile.c_str());						
 	       }		
 }
 
@@ -123,7 +132,9 @@ void runProducerLog(struct message_log msg){
                         }
                         fclose(fp);
                         std::string renamedFile = tempname + "_ready";
-                        rename(tempname.c_str(), renamedFile.c_str());
+                        int r = rename(tempname.c_str(), renamedFile.c_str());
+			if(-1 == r)
+				rename(tempname.c_str(), renamedFile.c_str());			
                }
 }
 
