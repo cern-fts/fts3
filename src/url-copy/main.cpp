@@ -138,7 +138,7 @@ static std::string removeDecimal(const std::string & input){
 
 //convert milli to secs
 static double transferDuration(double start , double complete){
-	return (start==0 && complete==0)==true? 0.0: (complete - start) / 1000; 
+	return (start==0 || complete==0)? 0.0: (complete - start) / 1000;
 }
 
 
