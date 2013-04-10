@@ -20,12 +20,7 @@ def showErrors(httpRequest):
                    'request': httpRequest})
 
 
-def transfersWithError(httpRequest):
-    if 'reason' not in httpRequest.POST:
-        return redirect(to = showErrors)
-    
-    reason = str(httpRequest.POST['reason'])
-    # String quotes
+def transfersWithError(httpRequest, reason):
     if reason[0] == '"':
         reason = reason[1:-1]
     

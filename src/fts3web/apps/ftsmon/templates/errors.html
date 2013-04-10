@@ -8,20 +8,6 @@ Unique errors
 {% endblock %}
 
 {% block content %}
-<script type="text/javascript">
-function showError(node)
-{
-    form = document.getElementById("submitForm");
-    form.formReason.value = node.text;
-    form.submit();
-}
-</script>
-
-<form method="POST" action="{% url ftsmon.views.transfersWithError %}" style="display: hidden" id="submitForm">
-    <input type="hidden" name="reason" id="formReason"/>
-    {% csrf_token %}
-</form>
-
 <h3>Unique errors in the last 12 hours</h3>
 <table>
   <thead>
@@ -35,7 +21,7 @@ function showError(node)
       <tr class="{% cycle 'odd' 'even' %}">
         <td>{{ r.count }}</td>
         <td class="reason">
-          <a href="#" onclick="javascript:showError(this)">"{{ r.reason }}"</a>
+          <a href="{% url ftsmon.views.transfersWithError r.reason %}">"{{ r.reason }}"</a>
         </td>
       </tr>
     {% endfor %}
