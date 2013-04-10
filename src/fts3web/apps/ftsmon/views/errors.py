@@ -6,7 +6,7 @@ from ftsweb.models import File
 
 
 def showErrors(httpRequest):
-    notbefore = datetime.now() - timedelta(hours = 12)
+    notbefore = datetime.utcnow() - timedelta(hours = 12)
     
     errors = File.objects.filter(reason__isnull = False, finish_time__gte = notbefore)\
                        .exclude(reason = '')\
@@ -29,7 +29,7 @@ def transfersWithError(httpRequest):
     if reason[0] == '"':
         reason = reason[1:-1]
     
-    notbefore = datetime.now() - timedelta(hours = 12)
+    notbefore = datetime.utcnow() - timedelta(hours = 12)
     transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)\
                             .order_by('file_id')
     

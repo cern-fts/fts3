@@ -25,7 +25,7 @@ def optimizer(httpRequest):
 		if filterForm['time_window'].value():
 			hours = int(filterForm['time_window'].value())
 			
-	notBefore = datetime.now() - timedelta(hours = hours)
+	notBefore = datetime.utcnow() - timedelta(hours = hours)
 	optimizations = optimizations.filter(datetime__gte = notBefore)
 	
 	# Only max!   
@@ -76,7 +76,7 @@ def optimizerDetailed(httpRequest):
 			hours = int(httpRequest.GET['time_window'])
 	except:
 		pass
-	notBefore = datetime.now() - timedelta(hours = hours)
+	notBefore = datetime.utcnow() - timedelta(hours = hours)
 	
 	# File sizes
 	fsizes = File.objects.filter(source_se = source_se, dest_se = dest_se,

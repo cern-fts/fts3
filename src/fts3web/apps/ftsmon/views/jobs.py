@@ -23,7 +23,7 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
     hours = 12
     if filterForm.is_valid() and filterForm['time_window'].value():
         hours = int(filterForm['time_window'].value())
-    notBefore = datetime.datetime.now() -  datetime.timedelta(hours = hours)
+    notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = hours)
         
     if additionalTitle is None:
         additionalTitle = '(from the last %dh)' % (hours)

@@ -8,7 +8,7 @@ def _urlHref(baseUrl, path):
                                                                      'path': path}
 @register.simple_tag
 def urlLog(transfer):
-    if not transfer.log_file:
+    if transfer.log_file:
         baseUrl = settings.LOG_BASE_URL.replace('%(host)', transfer.transferHost).strip('/')
         block = "<ul>\n" + _urlHref(baseUrl, transfer.log_file)
         if transfer.log_debug:

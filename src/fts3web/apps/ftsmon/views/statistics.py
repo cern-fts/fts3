@@ -22,7 +22,7 @@ def _getCountPerState(states, age = None):
 	
 	query = File.objects.filter(file_state__in = states)
 	if age:
-		query = query.filter(job_finished__gt = datetime.now() - age)
+		query = query.filter(finish_time__gte = datetime.utcnow() - age)
 	query = query.values('file_state').annotate(number = Count('file_state'))
 	
 	for row in query:
@@ -164,6 +164,7 @@ def statistics(httpRequest):
     
     # Success rate (last hour)
     lastHour = _getCountPerState(STATES, timedelta(hours = 1))
+    print lastHour
     if lastHour['total'] > 0:
         overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
     else:
