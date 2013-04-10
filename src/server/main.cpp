@@ -204,8 +204,6 @@ int DoServer(int argc, char** argv) {
         REGISTER_SIGNAL(SIGTRAP);
         REGISTER_SIGNAL(SIGSYS);
   	
-	//re-read here
-        FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 	
 	//set soft and hard limits
 	setLimits();
@@ -222,6 +220,9 @@ int DoServer(int argc, char** argv) {
                 exit(0);
             }
         }
+
+	//re-read here
+        FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 
         std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
         if (logDir.length() > 0) {
