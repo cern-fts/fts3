@@ -1,5 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
+import json
+
 
 class JobSearchForm(forms.Form):
     jobId = forms.CharField(required = False)
@@ -17,12 +19,19 @@ class StateField(forms.CharField):
                 states.append(s)
         return states
     
+    def prepare_value(self, value):
+        return self.to_python(value)
+    
     def clean(self, value):
         self.validate(value)
         return self.to_python(value)
 
     def bound_data(self, data, initial):
-        return self.to_python(data)
+        py = self.to_python(data)
+        if py:
+            return ', '.join(py)
+        else:
+            return None
 
     def validate(self, value):
         states = self.to_python(value)
@@ -32,11 +41,35 @@ class StateField(forms.CharField):
                     raise ValidationError("'%s' is not a valid state" % s)
 
 
+class JsonField(forms.CharField):
+    def to_python(self, value):
+        if not value:
+            return None
+        return json.loads(value)
+    
+    def prepare_value(self, value):
+        return self.to_python(value)
+    
+    def clean(self, value):
+        self.validate(value)
+        return self.to_python(value)
+    
+    def bound_data(self, data, initial):
+        return data
+    
+    def validate(self, value):
+        try:
+            if value: json.loads(str(value))
+        except Exception, e:
+            raise ValidationError('Invalid JSON: ' + str(e))
+    
+
 class FilterForm(forms.Form):
     source_se   = forms.CharField(required = False)
     dest_se     = forms.CharField(required = False)
     state       = StateField(required = False)
     vo          = forms.CharField(required = False)
+    metadata    = JsonField(required = False)
     time_window = forms.IntegerField(required = False) 
     
     def is_empty(self):

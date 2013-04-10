@@ -1,11 +1,52 @@
-import datetime
-import time
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from ftsmon import forms
 from ftsweb.models import Job, File
+import datetime
+import json
+import time
+
+
+def _getPage(paginator, request):
+    try:
+        if 'page' in request.GET: 
+            page = paginator.page(request.GET.get('page'))
+        else:
+            page = paginator.page(1)
+    except PageNotAnInteger:
+        page = paginator.page(1)
+    except EmptyPage:
+        page = paginator.page(paginator.num_pages)
+    return page
+
+
+
+class MetadataFilter:
+    def __init__(self, filter):
+        self.filter = filter
+        
+    def _compare(self, filter, meta):
+        if isinstance(filter, dict) and isinstance(meta, dict):
+            for (key, value) in filter.iteritems():
+                if key not in meta or not self._compare(value, meta[key]):
+                    return False
+            return True
+        elif filter == u'*':
+            return True
+        else:
+            return filter == meta
+        
+    def __call__(self, item):
+        try:
+            value = item['job_metadata']
+            if value:
+                return self._compare(self.filter, json.loads(value))
+        except:
+            raise
+        return False
+    
 
 
 def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING'],
@@ -33,6 +74,7 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
     jobs = jobs.extra(select = {'nullFinished': 'coalesce(t_job.finish_time, CURRENT_TIMESTAMP)'})
     
     # Filter
+    metadataFilter = None
     if filterForm.is_valid():
         if filterForm['state'].value():
             states = filterForm['state'].value()
@@ -47,6 +89,10 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
         if filterForm['dest_se'].value():
             jobs = jobs.filter(file__dest_se = filterForm['dest_se'].value())\
                        .values('job_id').annotate(nDestMatches = Count('file__file_id'))
+                       
+        if filterForm['metadata'].value():
+            metadataFilter = MetadataFilter(filterForm['metadata'].value())
+            
                         
     jobs = jobs.filter(job_state__in = states)
     
@@ -56,52 +102,31 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
                        'priority', 'user_dn', 'reason',
                        'job_metadata', 'nullFinished', 'source_se', 'dest_se')
     # Ordering
-    jobs = jobs.order_by('-nullFinished', '-submit_time')
+    jobs = jobs.order_by('-nullFinished', '-submit_time')[:1000]
+    
+    # Wrap with a metadata filterer
+    if metadataFilter:
+        jobs = filter(metadataFilter, jobs)
 
     # Paginate
     paginator = Paginator(jobs, 50)
-    try:
-        if 'page' in httpRequest.GET: 
-            jobs = paginator.page(httpRequest.GET.get('page'))
-        else:
-            jobs = paginator.page(1)
-    except PageNotAnInteger:
-        jobs = paginator.page(1)
-    except EmptyPage:
-        jobs = paginator.page(paginator.num_pages)
-        
-    # Remember extra attributes
-    extra_args = filterForm.args()
         
     # Render
     return render(httpRequest, 'jobindex.html',
                   {'filterForm': filterForm,
-                   'jobs': jobs,
-                   'paginator': paginator,
-                   'extra_args': extra_args,
+                   'jobs':       _getPage(paginator, httpRequest),
+                   'paginator':  paginator,
                    'additionalTitle': additionalTitle,
-                   'request': httpRequest})
+                   'request':    httpRequest})
   
   
 
 def queue(httpRequest):
   transfers = File.objects.filter(file_state__in = ['SUBMITTED', 'READY'])
   transfers = transfers.order_by('-job__submit_time', '-file_id')
-    
-  # Paginate
   paginator = Paginator(transfers, 50)
-  try:
-    if 'page' in httpRequest.GET:
-      transfers = paginator.page(httpRequest.GET.get('page'))
-    else:
-      transfers = paginator.page(1)
-  except PageNotAnInteger:
-      transfers = paginator.page(1)
-  except EmptyPage:
-    transfers = paginator.page(paginator.num_pages)
-  
   return render(httpRequest, 'queue.html',
-                {'transfers': transfers,
+                {'transfers': _getPage(paginator, httpRequest),
                  'paginator': paginator,
                  'request': httpRequest})
 
@@ -124,22 +149,9 @@ def jobDetails(httpRequest, jobId):
 def staging(httpRequest):
   transfers = File.objects.filter(file_state = 'STAGING')
   transfers = transfers.order_by('-job__submit_time', '-file_id')
-    
-  # Paginate
   paginator = Paginator(transfers, 50)
-  try:
-    if 'page' in httpRequest.GET:
-      transfers = paginator.page(httpRequest.GET.get('page'))
-    else:
-      transfers = paginator.page(1)
-  except PageNotAnInteger:
-      transfers = paginator.page(1)
-  except EmptyPage:
-    transfers = paginator.page(paginator.num_pages)
-  
   return render(httpRequest, 'staging.html',
-                {'transfers': transfers,
+                {'transfers': _getPage(paginator, httpRequest),
                  'paginator': paginator,
                  'request': httpRequest})
-
 

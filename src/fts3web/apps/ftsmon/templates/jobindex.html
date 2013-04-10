@@ -11,14 +11,14 @@ Jobs
 <h2>
   Showing {{ jobs.start_index }} to {{ jobs.end_index }} out of {{ paginator.count}} {{ additionalTitle }}
   {% if jobs.has_previous %}
-    <a href="?page=1&{{ extra_args }}">&lt;&lt;</a>
-    <a href="?page={{ jobs.previous_page_number }}&{{ extra_args }}">&lt;</a>
+    <a href="?page=1&{{ filterForm.args }}">&lt;&lt;</a>
+    <a href="?page={{ jobs.previous_page_number }}&{{ filterForm.args }}">&lt;</a>
   {% else %}
     &lt; &lt;&lt;
   {% endif %} | 
   {% if jobs.has_next %}
-    <a href="?page={{ jobs.next_page_number }}&{{ extra_args }}">&gt;</a>
-    <a href="?page={{ paginator.num_pages }}&{{ extra_args }}">&gt;&gt;</a>
+    <a href="?page={{ jobs.next_page_number }}&{{ filterForm.args }}">&gt;</a>
+    <a href="?page={{ paginator.num_pages }}&{{ filterForm.args }}">&gt;&gt;</a>
   {% else %}
     &gt; &gt;&gt;
   {% endif %}
