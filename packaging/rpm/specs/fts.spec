@@ -109,6 +109,7 @@ mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/lib/fts3/monitoring
 mkdir -p %{buildroot}%{_var}/lib/fts3/status
 mkdir -p %{buildroot}%{_var}/lib/fts3/stalled
+mkdir -p %{buildroot}%{_var}/lib/fts3/logs
 mkdir -p %{buildroot}%{_var}/log/fts3
 make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
@@ -189,6 +190,7 @@ rm -rf %{buildroot}
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/monitoring
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/status
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/stalled
+%dir %attr(0755,fts3,root) %{_var}/lib/fts3/logs
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
 %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
 %attr(0644,fts3,root) %{_var}/lib/fts3/myosg.xml
