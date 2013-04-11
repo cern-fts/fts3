@@ -91,6 +91,7 @@ def optimizerDetailed(httpRequest):
 	
 	# Optimizer
 	optimizerEntires = Optimize.objects.filter(source_se = source_se, dest_se = dest_se,
+											   throughput__isnull = False,
 											   datetime__gte = notBefore).order_by('-datetime')
 	
 	return render(httpRequest, 'optimizerDetailed.html',
