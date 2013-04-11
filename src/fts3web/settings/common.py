@@ -1,12 +1,22 @@
 import os
 import sys
 
+# INI Configuration
+from ConfigParser import RawConfigParser
+FTS3WEB_CONFIG = RawConfigParser()
+if 'FTS3WEB_CONFIG' in os.environ:
+    FTS3WEB_CONFIG.read(os.environ['FTS3WEB_CONFIG'])
+else:
+    FTS3WEB_CONFIG.read('/etc/fts3web/fts3web.ini')
+
+
+### 
 if 'BASE_URL' in os.environ:
     BASE_URL = os.environ['BASE_URL']
 else:
     BASE_URL = ''
 
-DEBUG = True
+DEBUG = FTS3WEB_CONFIG.getboolean('server', 'debug')
 TEMPLATE_DEBUG = DEBUG
 
 TIME_ZONE = 'Europe/Zurich'
@@ -88,19 +98,5 @@ SESSION_ENGINE='django.contrib.sessions.backends.cache'
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
+    'version': 1
 }

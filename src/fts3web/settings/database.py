@@ -1,26 +1,15 @@
+from common import FTS3WEB_CONFIG
 
-# Oracle example
 DATABASES = {
     'default': {
-        'ENGINE':   'django.db.backends.oracle',
-        'USER':     'FTS3',
-        'PASSWORD': 'FTS3',
-        'NAME':     'XE',
-        'HOST':     'localhost',
-        'PORT':     '1521',
-        'OPTIONS': {
-            'threaded': True,
-        }
+        'ENGINE':   'django.db.backends.' + FTS3WEB_CONFIG.get('database', 'engine'),
+        'USER':     FTS3WEB_CONFIG.get('database', 'user'),
+        'PASSWORD': FTS3WEB_CONFIG.get('database', 'password'),
+        'NAME':     FTS3WEB_CONFIG.get('database', 'name'),
+        'HOST':     FTS3WEB_CONFIG.get('database', 'host'),
+        'PORT':     FTS3WEB_CONFIG.get('database', 'port')
     }
 }
 
-# MySQL example
-#DATABASES = {
-#    'default': {
-#        'ENGINE':   'django.db.backends.mysql',
-#        'USER':     'fts3',
-#        'PASSWORD': 'fts3',
-#        'NAME':     'fts3',
-#        'HOST':     'arioch.cern.ch',
-#    }
-#}
+if DATABASES['default']['ENGINE'] == 'django.db.backends.oracle':
+    DATABASES['default']['OPTIONS'] = {'threaded': True}

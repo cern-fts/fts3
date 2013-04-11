@@ -4,7 +4,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 0.0.1
-Release: 90%{?dist}
+Release: 91%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -21,8 +21,8 @@ Requires: python-matplotlib%{?_isa}
 
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export http://svnweb.cern.ch/guest/fts3/trunk
-#  tar -czvf fts-monitoring-0.0.1-60.tar.gz fts-monitoring-00160
+#  svn export http://svnweb.cern.ch/guest/fts3/trunk fts3
+#  tar -czvf fts-monitoring-0.0.1.tar.gz --directory=fts3 .
 Source0: %{name}-%{version}.tar.gz
 
 %description
@@ -36,11 +36,14 @@ FTS v3 web application for monitoring
 mkdir build
 
 %install
+shopt -s extglob
 rm -rf %{buildroot}
-mkdir -p %{buildroot}%{_datadir}/fts3web
+mkdir -p %{buildroot}%{_datadir}/fts3web/
+mkdir -p %{buildroot}%{_sysconfdir}/fts3web/
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
-cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/* %{buildroot}%{_datadir}/fts3web/
-install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf %{buildroot}%{_sysconfdir}/httpd/conf.d/
+cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/!(etc|httpd.conf.d) %{buildroot}%{_datadir}/fts3web/
+cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/etc/fts3web         %{buildroot}%{_sysconfdir}
+install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/httpd/conf.d/
 
 %clean
 rm -rf %{buildroot}
@@ -48,7 +51,8 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{_datadir}/fts3web
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/
+%config(noreplace) %{_sysconfdir}/httpd/conf.d/ftsmon.conf
+%config(noreplace) %{_sysconfdir}/fts3web/
 
 %changelog
  * Wed Aug 8 2012 Steve Traylen <steve.traylen@cern.ch> - 0.0.1-90%{?dist}

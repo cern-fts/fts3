@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 from django.core.management import execute_manager
 import imp
+import os
+
+# Set environment pointing to development ini file
+path = os.path.dirname(__file__)
+os.environ['FTS3WEB_CONFIG'] = path + "/etc/fts3web/fts3web.ini"
+
 try:
     imp.find_module('settings') # Assumed to be in the same directory.
 except ImportError:
