@@ -274,6 +274,12 @@ CREATE TABLE t_bad_dns (
 --
 -- The DN of the administrator who added it
    ,admin_dn            VARCHAR2(1024)
+--
+-- status: either CANCEL or WAIT
+   ,status 				VARCHAR2(10) DEFAULT NULL
+--
+-- the timeout that is used when WAIT status was specified
+   , wait_timeout 		NUMBER default 0
    ,CONSTRAINT bad_dn_pk PRIMARY KEY (dn)
 );
 
@@ -566,6 +572,12 @@ CREATE TABLE t_file (
 --
 -- the timestamp that the file will be retried
   ,retry_timestamp          TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+--
+  ,wait_timestamp		TIMESTAMP WITH TIME ZONE DEFAULT NULL
+--
+--
+  ,wait_timeout			NUMBER
   ,t_log_file        VARCHAR2(2048)
   ,t_log_file_debug  INTEGER
 );
