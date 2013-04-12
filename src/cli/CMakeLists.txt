@@ -57,7 +57,6 @@ set(fts_cli_libs
     gridsite
     cgsi_plugin_cpp
     boost_program_options-mt
-    boost_regex-mt
     fts_delegation_api_simple
 )
 

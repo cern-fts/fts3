@@ -13,7 +13,6 @@
 #include <boost/optional.hpp>
 #include <boost/assign.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/regex.hpp>
 
 #include <utility>
 #include <sstream>
@@ -270,9 +269,11 @@ void MsgPrinter::error_msg(string msg) {
 
 void MsgPrinter::gsoap_error_msg(string msg) {
 
-	regex re (".*\"(.+)\"\nDetail: (.+)\n");
-	smatch what;
-	if (!regex_match(msg, what, re, match_extra)) {
+	string::size_type pos = msg.find("\"\nDetail: ", 0);
+
+//	regex re (".*\"(.+)\"\nDetail: (.+)\n");
+
+	if (pos == string::npos) {
 		error_msg(msg);
 		return;
 	}
@@ -282,8 +283,17 @@ void MsgPrinter::gsoap_error_msg(string msg) {
 		return;
 	}
 
-	json_out.put("error.message", what[1]);
-	json_out.put("error.detail", what[2]);
+	string detail = msg.substr(pos + 10);
+
+	pos = msg.find("\"");
+	string err_msg;
+	if (pos != string::npos) err_msg = msg.substr(pos + 1);
+	pos = msg.find("\"");
+	if (pos != string::npos) err_msg = msg.substr(0, pos);
+
+
+	json_out.put("error.message", err_msg);
+	json_out.put("error.detail", detail);
 }
 
 void MsgPrinter::job_status(JobStatus js) {

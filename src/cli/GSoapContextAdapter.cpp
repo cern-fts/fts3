@@ -27,7 +27,6 @@
 #include "ws-ifce/gsoap/fts3.nsmap"
 
 #include <boost/tokenizer.hpp>
-#include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <cgsi_plugin.h>
@@ -520,9 +519,9 @@ void GSoapContextAdapter::handleSoapFault(string msg) {
 
 	// replace the standard gSOAP error message before printing
 	msg = ss.str();
+	string::size_type pos = msg.find("CGSI-gSOAP running on .+ reports Error reading token data header: Connection closed", 0);
 
-	regex re (".+CGSI-gSOAP running on .+ reports Error reading token data header: Connection closed.+");
-	if (regex_match(ss.str(), re)) {
+	if (pos != string::npos) {
 		msg += " It might be the FTS server's CRL has expired!";
 	}
 
