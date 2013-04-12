@@ -285,17 +285,15 @@ void MsgPrinter::gsoap_error_msg(string msg) {
 
 	string detail = msg.substr(pos + 10);
 	string::size_type size = detail.size();
-	if (detail[size - 1] = '\n') detail = detail.substr(0, size - 1);
-
+	if (detail[size - 1] == '\n') detail = detail.substr(0, size - 1);
 
 	pos = msg.find("\"");
 	string err_msg;
 	if (pos != string::npos) err_msg = msg.substr(pos + 1);
 	pos = msg.find("\"");
 	if (pos != string::npos) err_msg = msg.substr(0, pos);
-
-
-
+	size = err_msg.size();
+	if (err_msg[size - 1] == '\n') err_msg = err_msg.substr(0, size - 1);
 
 	json_out.put("error.message", err_msg);
 	json_out.put("error.detail", detail);
