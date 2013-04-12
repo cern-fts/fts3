@@ -127,13 +127,13 @@ public:
 
 
 
-#define DEFAULT_TIMEOUT 3600
-#define MID_TIMEOUT 5000
-const int timeouts[] = {3600, 4000};
+#define DEFAULT_TIMEOUT 4000
+#define MID_TIMEOUT 4000
+const int timeouts[] = {4000};
 const size_t timeoutslen = (sizeof (timeouts) / sizeof *(timeouts));
 
 #define DEFAULT_NOSTREAMS 4
-const int nostreams[] = {1, 2, 3, 4, 5, 6, 7,8,9,10};
+const int nostreams[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
 
 

@@ -261,15 +261,17 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 
 static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout) {
 		long double y = 2;
-		if(timeout == 0){
-			y=4;
+		if(timeout == 0){ //transfers started timed out
+			y=3;
+			timeout = 6000;
+		}else if(timeout > 4000){ //if already increased, use default
 			timeout = 4000;
 		}			
 	        int tx_timeout = timeout > 0 ? timeout : 0;
 	        long double to_per_mb = fmaxl(0, y);
 	        static const unsigned long MB = 1 << 20;
 	        long double dtotal_timeout = tx_timeout + ceil(to_per_mb * sizeInBytes / MB);
-	        int total_timeout = (dtotal_timeout >= INT_MAX) ? 8000 : (int) dtotal_timeout;
+	        int total_timeout = (dtotal_timeout >= INT_MAX) ? 6000 : (int) dtotal_timeout;
 	        return total_timeout;
 }
 
