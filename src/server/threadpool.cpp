@@ -31,8 +31,7 @@ ThreadPool::ThreadPool(const size_t queueSize, const size_t workerNum)
 	int c = 1;
 	for (size_t i = 0; i < workerNum; ++i) _workers.push_back(new Worker(_thgrp, c++));
 
-	FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ThreadPool queue size: " << queueSize <<
-		", number of worker threads: " << workerNum << commit;
+	FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ThreadPool number of worker threads: " << workerNum << commit;
 }
 
 ThreadPool::~ThreadPool()

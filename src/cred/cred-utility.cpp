@@ -155,7 +155,7 @@ std::string get_proxy_cert(const std::string& user_dn,
             // Get Proxy Certificate
             cred_service->get(user_dn,user_cred,proxy_file);
             //_log_trace(CRED_MODULE,"Proxy Certificate is " << proxy_file);
-		FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is " << proxy_file << commit;	    
+		//FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Proxy Certificate is " << proxy_file << commit;	    
         } catch(const std::exception& exc){
             //_log_trace(CRED_MODULE,"Cannot Retrieve Proxy Certificate");
 	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Cannot Retrieve Proxy Certificate" << proxy_file << commit;	    

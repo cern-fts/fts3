@@ -298,7 +298,7 @@ protected:
 
                         FileTransferScheduler scheduler(temp.get(), cfgs);
                         if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
-                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
+                            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
                             if (optimize && cfgs.empty()) {
                                 DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
                             } else {
