@@ -3710,8 +3710,7 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 			ret.dest_se = it->get<std::string>("dest_se");
 		}
 
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 
@@ -3719,9 +3718,54 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 }
 
 void MySqlAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files){
+	soci::session sql(connectionPool);
+
+	try {
+
+		soci::rowset<soci::row> rs = (
+				sql.prepare <<
+				" SELECT file_id "
+				" FROM t_file "
+				" WHERE job_id = :jobId",
+				soci::use(jobId)
+			);
+
+		soci::rowset<soci::row>::iterator it;
+		for (it = rs.begin(); it != rs.end(); it++) {
+			files.push_back(
+					it->get<int>("file_id")
+				);
+		}
+
+    } catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
 void MySqlAPI::getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files){
+	soci::session sql(connectionPool);
+
+	try {
+
+		soci::rowset<soci::row> rs = (
+				sql.prepare <<
+				" SELECT file_id "
+				" FROM t_file "
+				" WHERE job_id = :jobId "
+				"	AND file_state = 'CANCELED' ",
+				soci::use(jobId)
+			);
+
+		soci::rowset<soci::row>::iterator it;
+		for (it = rs.begin(); it != rs.end(); it++) {
+			files.push_back(
+					it->get<int>("file_id")
+				);
+		}
+
+    } catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
 }
 
 // the class factories
