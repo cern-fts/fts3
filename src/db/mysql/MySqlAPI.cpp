@@ -935,6 +935,9 @@ bool MySqlAPI::updateJobTransferStatus(int /*file_id*/, std::string job_id, cons
             else if(numberOfFilesFailed > 0) {
                 state = "FAILED";
             }
+            else if(numberOfFilesCanceled > 0) {
+                state = "CANCELED";
+            }	    
             else {
                 state = "FAILED";
                 reason = "Inconsistent internal state!";

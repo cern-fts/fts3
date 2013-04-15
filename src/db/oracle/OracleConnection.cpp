@@ -80,7 +80,7 @@ oracle::occi::Connection* OracleConnection::getPooledConnection() {
         if (scPool) {
             tempConn = scPool->getConnection();
             tempConn->setTAFNotify(taf_callback, NULL);
-            tempConn->setStmtCacheSize(100);
+            tempConn->setStmtCacheSize(500);
         }
     } catch (const oracle::occi::SQLException& e) {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));

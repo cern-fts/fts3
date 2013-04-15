@@ -393,7 +393,10 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
         conn->destroyResultset(s1, r1);
         conn->destroyStatement(s1, tag1, pooledConnection);
 
-        if (count < 2) return;
+        if (count < 2){
+  	   conn->releasePooledConnection(pooledConnection);
+	   return;
+	} 
 
         s = conn->createStatement(stmt, tag, pooledConnection);
         s->setString(1, jobId);
@@ -538,8 +541,8 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
         s2 = conn->createStatement(query2, tag2, pooledConnection);
         s2->setString(1, status);
         s2->setString(2, file->JOB_ID);
-        if(0 != s2->executeUpdate())
-            	conn->commit(pooledConnection);
+        s2->executeUpdate();
+        conn->commit(pooledConnection);
 		
         conn->destroyStatement(s2, tag2, pooledConnection);
 	       
@@ -1545,8 +1548,8 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
     const std::string terminal1 = "FINISHED";
     const std::string terminal2 = "FAILED";
     const std::string terminal4 = "FINISHEDDIRTY";
-    bool finished = true;
-    unsigned int updated = 0;
+    const std::string terminal5 = "CANCELED";
+    bool finished = true;    
 
     int numOfFilesInJob = 0;
     int numOfFilesCanceled = 0;
@@ -1624,31 +1627,33 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
                 reason = std::string("");
             } else if (numOfFilesFailed > 0) { //failed
                 st->setString(1, terminal2);
-            } else { //unknown state
-            }
+            } else if(numOfFilesCanceled > 0){ //unknown state
+	        st->setString(1, terminal5);
+            } else{
+	    	st->setString(1, "FAILED");
+		reason = "Inconsistent internal state!";
+	    }
 
             //set reason and timestamps for job
             st->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
             st->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
             st->setString(4, reason);
             st->setString(5, job_id);
-            updated += st->executeUpdate();
+            st->executeUpdate();     	    
 
             //set timestamps for file
             st->setSQL(updateFileJobFinished);
             st->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
             st->setString(2, job_id);
-            updated += st->executeUpdate();
-            if (updated != 0)
-                conn->commit(pooledConnection);
+            st->executeUpdate();
+            conn->commit(pooledConnection);
         } else { //job not finished
             if (status.compare("ACTIVE") == 0 || status.compare("STAGING") == 0 || status.compare("SUBMITTED") == 0) {
                 st->setSQL(updateJobNotFinished);
                 st->setString(1, status);
-                st->setString(2, job_id);
-                if (st->executeUpdate() != 0) {
-                    conn->commit(pooledConnection);
-                }
+                st->setString(2, job_id); 
+		st->executeUpdate();              
+                conn->commit(pooledConnection);
             }
         }
 
@@ -6418,6 +6423,13 @@ bool OracleAPI::checkConnectionStatus(){
 
 
 void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs){
+
+   /*in hours*/
+    int maxTime = getMaxTimeInQueue();
+    if(maxTime==0)
+    	return;
+	
+
     const std::string tag1 = "setToFailOldQueuedJobs111";
     const std::string tag2 = "setToFailOldQueuedJobs222";
     const std::string tag3 = "setToFailOldQueuedJobs333";    
@@ -6434,12 +6446,7 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs){
     std::vector<std::string> jobId;
     std::vector<std::string>::const_iterator iter;
     oracle::occi::Connection* pooledConnection = NULL;    
-
-    /*in hours*/
-    int maxTime = getMaxTimeInQueue();
-    if(maxTime==0)
-    	return;
-	
+ 
      query3 << " select job_id from t_job where (SUBMIT_TIME < (CURRENT_TIMESTAMP - interval '";
      query3 << maxTime;
      query3 << "' hour(5))) and job_state in ('SUBMITTED','READY')  ";  
@@ -7409,6 +7416,8 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
             conn->destroyStatement(s2, tag2, pooledConnection);
 
         }
+	
+        conn->releasePooledConnection(pooledConnection);
 
         cancelJob(jobs);
 
@@ -7425,6 +7434,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
 		if (s2)
 			conn->destroyStatement(s2, tag2, pooledConnection);
 
+	conn->releasePooledConnection(pooledConnection);
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
     } catch (...) {
@@ -7440,9 +7450,10 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
 		if (s2)
 			conn->destroyStatement(s2, tag2, pooledConnection);
 
+	conn->releasePooledConnection(pooledConnection);
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
-    conn->releasePooledConnection(pooledConnection);
+   
 }
 
 void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) {
@@ -7479,6 +7490,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
 		conn->destroyResultset(s, r);
 		conn->destroyStatement(s, tag, pooledConnection);
 
+        conn->releasePooledConnection(pooledConnection);
         cancelJob(jobs);
 
     } catch (oracle::occi::SQLException const &e) {
@@ -7488,6 +7500,8 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
 			conn->destroyResultset(s, r);
 		if (s)
 			conn->destroyStatement(s, tag, pooledConnection);
+
+	        conn->releasePooledConnection(pooledConnection);
 
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
@@ -7499,10 +7513,11 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
 		if (s)
 			conn->destroyStatement(s, tag, pooledConnection);
 
+	        conn->releasePooledConnection(pooledConnection);
 
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
-    conn->releasePooledConnection(pooledConnection);
+ 
 }
 
 
@@ -7558,7 +7573,6 @@ struct message_state OracleAPI::getStateOfTransfer(const std::string& jobId, int
     oracle::occi::ResultSet* r = 0;
     oracle::occi::Connection* pooledConnection = NULL;
     struct message_state ret;
-
 
     try {
 

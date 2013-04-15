@@ -53,7 +53,7 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
   struct message_state state;
   
  try {
- 	if(fileId != -1){
+ 	if(fileId != -1){ //both job_id and file_id are provided
         	state  = db::DBSingleton::instance().getDBObjectInstance()->getStateOfTransfer(jobId, fileId);
 		constructJSONMsg(&state);
 	}else{ //need to get file_id for the given job
