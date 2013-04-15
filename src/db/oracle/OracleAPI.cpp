@@ -353,6 +353,8 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
 
 	std::string tag = "setFilesToNotUsed";
 	std::string tag1 = "setFilesToNotUsedSelect";
+	std::string tag2 = "setFilesToNotUsedSelectUpdated";
+
 	std::string stmt =
 			"UPDATE t_file "
 			"SET file_state = 'NOT_USED' "
@@ -368,9 +370,19 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
         	"WHERE job_id = :1 AND file_index = :2"
 			;
 
+	std::string selectUpdated =
+			" SELECT file_id "
+			" FROM t_file "
+			" WHERE job_id = :1 "
+			"	AND file_index = :2 "
+			"	AND file_state = 'NOT_USED' "
+			;
+
     oracle::occi::Statement* s = NULL;
     oracle::occi::Statement* s1 = 0;
     oracle::occi::ResultSet* r1 = 0;
+    oracle::occi::Statement* s2 = 0;
+    oracle::occi::ResultSet* r2 = 0;
     oracle::occi::Connection* pooledConnection = NULL;
 
     try {
@@ -401,8 +413,22 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
         s = conn->createStatement(stmt, tag, pooledConnection);
         s->setString(1, jobId);
         s->setInt(2, fileIndex);
-        s->executeUpdate();
+        unsigned int affected_rows = s->executeUpdate();
         conn->commit(pooledConnection);
+
+        if (affected_rows > 0) {
+    		s2 = conn->createStatement(selectUpdated, tag2, pooledConnection);
+    		s2->setString(1, jobId);
+    		s2->setInt(2, fileIndex);
+    		r2 = conn->createResultset(s2, pooledConnection);
+
+    		while (r2->next()) {
+    			files.push_back(
+    					r2->getInt(1)
+    				);
+    		}
+        }
+
         conn->destroyStatement(s, tag, pooledConnection);
 
     } catch (oracle::occi::SQLException const &e) {
@@ -416,6 +442,11 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
 			if (s1)
 				conn->destroyStatement(s1, tag1, pooledConnection);
 
+			if(s2 && r2)
+				conn->destroyResultset(s2, r2);
+			if (s2)
+				conn->destroyStatement(s2, tag2, pooledConnection);
+
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
@@ -428,6 +459,11 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
 				conn->destroyResultset(s1, r1);
 			if (s1)
 				conn->destroyStatement(s1, tag1, pooledConnection);
+
+			if(s2 && r2)
+				conn->destroyResultset(s2, r2);
+			if (s2)
+				conn->destroyStatement(s2, tag2, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
