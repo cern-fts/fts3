@@ -11,6 +11,8 @@
 
 #include "ws/CGsiAdapter.h"
 
+#include "SingleTrStateInstance.h"
+
 namespace fts3 {
 namespace ws {
 
@@ -108,10 +110,23 @@ void Blacklister::handleJobsInTheQueue() {
 		if (vo.is_initialized()) {
 
 			db->cancelJobsInTheQueue(name, *vo, canceled);
-
+			std::vector<std::string>::const_iterator iter;
+			if(!canceled.empty()){
+				for (iter = canceled.begin(); iter != canceled.end(); ++iter) {
+					SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
+				}
+                	canceled.clear();
+			}
 		} else {
 
 			db->cancelJobsInTheQueue(name, canceled);
+			std::vector<std::string>::const_iterator iter;
+			if(!canceled.empty()){
+				for (iter = canceled.begin(); iter != canceled.end(); ++iter) {
+					SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
+				}
+                	canceled.clear();	
+			}		
 		}
 	} else if (status == "WAIT") {
 

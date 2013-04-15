@@ -431,7 +431,8 @@ string JobSubmitter::submit() {
 	if (!params.isParamSet(JobParameterHandler::RETRY_DELAY)) {
 		params.set(JobParameterHandler::RETRY_DELAY, "0");
 	}
-
+	
+	
     // submit the transfer job (add it to the DB)
     db->submitPhysical (
     		id,
@@ -461,11 +462,15 @@ string JobSubmitter::submit() {
     db->submitHost(id);
     
     //send state message
-    vector<job_element_tupple>::iterator it;   
+    SingleTrStateInstance::instance().sendStateMessage(id, -1);
+        
+    /* Leave it as is just in case
+    vector<job_element_tupple>::const_iterator it;   
     for (it = jobs.begin(); it != jobs.end(); ++it) {    		
 	SingleTrStateInstance::instance().sendStateMessage(vo, (*it).source_se, (*it).dest_se, id, -1, "SUBMITTED", "SUBMITTED", 0,
-	params.get<int>(JobParameterHandler::RETRY), params.get<string>(JobParameterHandler::JOB_METADATA), (*it).metadata );    	
+	params.get<int>(JobParameterHandler::RETRY), params.get<string>(JobParameterHandler::JOB_METADATA), (*it).metadata );    		
     }
+    */
     
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;

@@ -36,6 +36,8 @@
 #include "common/logger.h"
 #include "common/JobStatusHandler.h"
 
+#include "SingleTrStateInstance.h"
+
 
 using namespace db;
 using namespace fts3::ws;
@@ -66,6 +68,13 @@ bool FileTransferScheduler::schedule(bool optimize) {
 			if(updated == 0) return false;
 			// set all other files that were generated due to a multi-source/destination submission to NOT_USED
 			db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
+			if(!notUsed.empty()){
+				std::vector<int>::const_iterator iter;
+				for (iter = notUsed.begin(); iter != notUsed.end(); ++iter) {
+					SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+				}
+				notUsed.clear();
+			}
 			return true;
 		}
 		return false;
@@ -134,6 +143,13 @@ bool FileTransferScheduler::schedule(bool optimize) {
 		return false;
 	// set all other files that were generated due to a multi-source/destination submission to NOT_USED
 	db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
+	if(!notUsed.empty()){
+		std::vector<int>::const_iterator iter;
+		for (iter = notUsed.begin(); iter != notUsed.end(); ++iter) {
+			SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+		}
+		notUsed.clear();
+	}
 
 	return true;
 }

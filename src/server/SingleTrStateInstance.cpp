@@ -124,6 +124,7 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state){
 	strcpy(message.msg, std::string(json_message.str()).c_str());
 	message.timestamp = milliseconds_since_epoch();   	
 	runProducerMonitoring( message );
+	
 }
 
 
