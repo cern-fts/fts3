@@ -235,6 +235,23 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
     soci::session sql(connectionPool);
 
     try {
+
+    	// first really check if it is a multi-source/destination submission
+    	// count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
+
+    	int count = 0;
+
+        sql <<
+        	"SELECT COUNT(*) "
+        	"FROM t_file "
+        	"WHERE job_id = :jobId AND file_index = :fileIndex",
+            soci::use(jobId),
+            soci::use(fileIndex),
+            soci::into(count)
+        	;
+
+        if (count < 2) return;
+
         sql.begin();
         soci::statement stmt(sql);
 

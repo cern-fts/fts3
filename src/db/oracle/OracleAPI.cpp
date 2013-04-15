@@ -340,6 +340,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
 
 	std::string tag = "setFilesToNotUsed";
+	std::string tag1 = "setFilesToNotUsedSelect";
 	std::string stmt =
 			"UPDATE t_file "
 			"SET file_state = 'NOT_USED' "
@@ -349,12 +350,38 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
 			"	AND file_state = 'SUBMITTED' "
 			;
 
+	std::string select =
+        	"SELECT COUNT(*) "
+        	"FROM t_file "
+        	"WHERE job_id = :1 AND file_index = :2"
+			;
+
     oracle::occi::Statement* s = NULL;
+    oracle::occi::Statement* s1 = 0;
+    oracle::occi::ResultSet* r1 = 0;
     oracle::occi::Connection* pooledConnection = NULL;
 
     try {
     	pooledConnection = conn->getPooledConnection();
         if (!pooledConnection) return;
+
+    	// first really check if it is a multi-source/destination submission
+    	// count the alternative replicas, if there is more than one it makes sense to set the NOT_USED state
+
+		s1 = conn->createStatement(select, tag1, pooledConnection);
+		s1->setString(1, jobId);
+		s1->setInt(2, fileIndex);
+		r1 = conn->createResultset(s1, pooledConnection);
+
+		int count = 0;
+		if (r1->next()) {
+			count = r1->getInt(1);
+		}
+
+        conn->destroyResultset(s1, r1);
+        conn->destroyStatement(s1, tag1, pooledConnection);
+
+        if (count < 2) return;
 
         s = conn->createStatement(stmt, tag, pooledConnection);
         s->setString(1, jobId);
@@ -369,12 +396,23 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
 			if(s)
 				conn->destroyStatement(s, tag, pooledConnection);
 
+			if(s1 && r1)
+				conn->destroyResultset(s1, r1);
+			if (s1)
+				conn->destroyStatement(s1, tag1, pooledConnection);
+
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 			conn->rollback(pooledConnection);
 
 			if(s)
 				conn->destroyStatement(s, tag, pooledConnection);
+
+			if(s1 && r1)
+				conn->destroyResultset(s1, r1);
+			if (s1)
+				conn->destroyStatement(s1, tag1, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
     }
