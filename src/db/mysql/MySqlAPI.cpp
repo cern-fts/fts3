@@ -278,9 +278,32 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
         	);
         stmt.define_and_bind();
         stmt.execute(true);
+        long long  affected_rows = stmt.get_affected_rows();
         sql.commit();
-    }
-    catch (std::exception& e) {
+
+        if (affected_rows > 0) {
+
+    		soci::rowset<soci::row> rs = (
+    				sql.prepare <<
+    				" SELECT file_id "
+    				" FROM t_file "
+    				" WHERE job_id = :jobId "
+    				"	AND file_index = :fileIndex "
+    				"	AND file_state = 'NOT_USED' ",
+    				soci::use(jobId),
+    				soci::use(fileIndex)
+    			);
+
+    		soci::rowset<soci::row>::iterator it;
+    		for (it = rs.begin(); it != rs.end(); it++) {
+    			files.push_back(
+    					it->get<int>("file_id")
+    				);
+    		}
+        }
+
+
+	} catch (std::exception& e) {
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
