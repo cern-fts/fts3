@@ -134,7 +134,7 @@ public:
     
     virtual bool terminateReuseProcess(const std::string & jobId);
     
-    virtual void forceFailTransfers();
+    virtual void forceFailTransfers(std::map<int, std::string>& collectJobs);
     
     virtual void setPid(const std::string & jobId, int fileId, int pid);
     
@@ -238,7 +238,7 @@ public:
     
     virtual void setMaxTimeInQueue(int afterXHours); 
     
-    virtual void setToFailOldQueuedJobs();
+    virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
     virtual std::vector<std::string> getAllStandAlloneCfgs();
 
@@ -277,6 +277,12 @@ public:
     virtual void cancelJobsInTheQueue(const std::string& dn);
 
     virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug);
+    
+    virtual struct message_state getStateOfTransfer(const std::string& jobId, int fileId);
+    
+    virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
+    
+    virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files);        
 
 private:
 	OracleConnection *conn;	

@@ -51,6 +51,8 @@
 #include <cgsi_plugin.h>
 #include "ws-ifce/gsoap/fts3.nsmap"
 
+#include "SingleTrStateInstance.h"
+
 using namespace boost;
 using namespace db;
 using namespace fts3::config;
@@ -511,8 +513,6 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 		CGsiAdapter cgsi (soap);
 		string dn = cgsi.getClientDn();
 
-
-
 		if (_requestIDs) {
 
 			vector<string> &jobs = _requestIDs->item;
@@ -555,6 +555,20 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 				FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << "is canceling a transfer jobs: " << jobId << commit;
 
 				DBSingleton::instance().getDBObjectInstance()->cancelJob(jobs);
+				
+				//send state message for cancelation
+				std::vector<int> files;
+				std::vector<std::string>::iterator it2;
+				std::vector<int>::iterator it3;
+				for (it2 = jobs.begin(); it2 != jobs.end(); ++it2) {
+					DBSingleton::instance().getDBObjectInstance()->getFilesForJobInCancelState((*it2), files);
+					if(!files.empty()){
+						for (it3 = files.begin(); it3 != files.end(); ++it3) {
+							SingleTrStateInstance::instance().sendStateMessage((*it2), (*it3));
+						}
+						files.clear();					
+					}
+				}
 			}
 		}
 	} catch(Err& ex) {

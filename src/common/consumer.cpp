@@ -42,6 +42,14 @@ struct sort_functor_log
     }
 };
 
+struct sort_functor_monitoring
+{
+    bool operator()(const message_monitoring & a, const message_monitoring & b) const
+    {
+        return a.timestamp < b.timestamp;
+    }
+};
+
 
 boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 {
@@ -78,26 +86,27 @@ int getDir (string dir, vector<string> &files)
     return 0;
 }
 
-void runConsumerMonitoring(std::vector<std::string>& messages)
+void runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 {
     string dir = string(MONITORING_DIR);
     vector<string> files = vector<string>();
-    char msg[3000]={0};
+    struct message_monitoring msg;    
     
     getDir(dir,files);    
     for (unsigned int i = 0;i < files.size();i++) {      
 	FILE *fp = NULL;	
 	if ((fp = fopen(files[i].c_str(), "r")) != NULL){
-	  size_t readBytes = fread(msg, sizeof(msg), 1, fp);
+	  size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
 	  if(readBytes==0 || errno != 0){
-	  	readBytes = fread(msg, sizeof(msg), 1, fp);
+	  	readBytes = fread(&msg, sizeof(msg), 1, fp);
 	  } 	  	  
-	  messages.push_back(std::string(msg));
+	  messages.push_back(msg);
 	  unlink(files[i].c_str());
 	  fclose(fp);
 	}
     }
     files.clear();
+    std::sort(messages.begin(), messages.end(), sort_functor_monitoring());
 }
 
 

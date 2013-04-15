@@ -36,6 +36,7 @@
 #include "Logger.h"
 #include <vector>
 #include <boost/filesystem.hpp>
+#include "definitions.h"
 
 extern bool stopThreads;
 
@@ -66,8 +67,8 @@ MsgPipe::~MsgPipe() {
 
 void MsgPipe::run() {
    
-    std::vector<std::string> messages;
-    std::vector<std::string>::const_iterator iter;
+    std::vector<struct message_monitoring> messages;
+    std::vector<struct message_monitoring>::const_iterator iter;
     
     while (stopThreads==false){
      try{
@@ -80,7 +81,7 @@ void MsgPipe::run() {
         runConsumerMonitoring(messages);
 	if(!messages.empty()){
 		for (iter = messages.begin(); iter != messages.end(); ++iter){			
-			concurrent_queue::getInstance()->push(*iter);
+			concurrent_queue::getInstance()->push( (*iter).msg );
 		}
 	messages.clear();
 	}	

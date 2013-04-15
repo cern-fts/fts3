@@ -49,6 +49,8 @@
 
 #include "parse_url.h"
 
+#include "SingleTrStateInstance.h"
+
 using namespace db;
 using namespace config;
 using namespace fts3::infosys;
@@ -457,6 +459,14 @@ string JobSubmitter::submit() {
     	);
 
     db->submitHost(id);
+    
+    //send state message
+    vector<job_element_tupple>::iterator it;   
+    for (it = jobs.begin(); it != jobs.end(); ++it) {    		
+	SingleTrStateInstance::instance().sendStateMessage(vo, (*it).source_se, (*it).dest_se, id, -1, "SUBMITTED", "SUBMITTED", 0,
+	params.get<int>(JobParameterHandler::RETRY), params.get<string>(JobParameterHandler::JOB_METADATA), (*it).metadata );    	
+    }
+    
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "The jobid " << id << " has been submitted successfully" << commit;
 	return id;

@@ -37,7 +37,8 @@ limitations under the License. */
 #include "config/serverconfig.h"
 #include "definitions.h"
 #include "queue_updater.h"
-#include <boost/algorithm/string.hpp>  
+#include <boost/algorithm/string.hpp>
+#include "SingleTrStateInstance.h"
 
 extern bool stopThreads;
 
@@ -103,12 +104,24 @@ protected:
                 bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages);
 		if(updated){
                 	ThreadSafeList::get_instance().deleteMsg(messages);
+			std::vector<struct message_updater>::const_iterator iter;
+			for (iter = messages.begin(); iter != messages.end(); ++iter) {
+				SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+			}
                 	messages.clear();
 		}
             }
 	    	    
 	    /*set to fail all old queued jobs which have exceeded max queue time*/
-	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs();
+	    std::vector<std::string> jobs;
+	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
+	    if(!jobs.empty()){
+	    	std::vector<std::string>::const_iterator iter2;
+			for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2) {
+				SingleTrStateInstance::instance().sendStateMessage((*iter2), -1);
+			}
+			jobs.clear();
+	    }
 	    messages.clear();
             sleep(1);
         }catch (...) {

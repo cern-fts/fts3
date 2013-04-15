@@ -52,7 +52,7 @@ limitations under the License. */
 #include <boost/thread.hpp>  
 #include "StaticSslLocking.h"
 #include <sys/resource.h>
-
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 using boost::thread;
@@ -135,12 +135,16 @@ static std::string removeDecimal(const std::string & input){
 	return input.substr (0, pos);
 }
 
-
 //convert milli to secs
 static double transferDuration(double start , double complete){
 	return (start==0 || complete==0)? 0.0: (complete - start) / 1000;
 }
 
+static std::string replaceMetadataString(std::string text){
+	text = boost::replace_all_copy(text, "?"," ");	
+	text = boost::replace_all_copy(text, "\\\"","");
+	return text;
+}
 
 //categories are: source, destination, transfer
 static bool retryTransfer(int errorNo, std::string category ){
@@ -812,8 +816,8 @@ int main(int argc, char **argv) {
             log << fileManagement->timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
             log << fileManagement->timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
             log << fileManagement->timestamp() << "INFO User filesize:" << strArray[4] << '\n'; //A
-            log << fileManagement->timestamp() << "INFO File metadata:" << strArray[5] << '\n'; //A
-            log << fileManagement->timestamp() << "INFO Job metadata:" << job_Metadata << '\n'; //A
+            log << fileManagement->timestamp() << "INFO File metadata:" << replaceMetadataString(strArray[5]) << '\n'; //A
+            log << fileManagement->timestamp() << "INFO Job metadata:" << replaceMetadataString(job_Metadata) << '\n'; //A
 	    log << fileManagement->timestamp() << "INFO Bringonline token:" << strArray[6] << '\n'; //A	    	    	
 		   
             //set to active

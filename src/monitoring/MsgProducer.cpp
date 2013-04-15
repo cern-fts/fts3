@@ -102,6 +102,12 @@ bool MsgProducer::sendMessage(std::string &temp) {
             TextMessage* message = session->createTextMessage(temp);
             producer_transfer_completed->send(message);
             delete message;
+        }else if (temp.compare(0, 2, "SS") == 0) {
+            temp = temp.substr(2, temp.length()); //remove message prefix
+            temp += 4;
+            TextMessage* message = session->createTextMessage(temp);
+            producer_transfer_state->send(message);
+            delete message;
         }
 
         logger::writeLog(temp);
@@ -132,9 +138,11 @@ bool MsgProducer::getConnection() {
             if (getTOPIC()) {
                 destination_transfer_started = session->createTopic(startqueueName);
                 destination_transfer_completed = session->createTopic(completequeueName);
+		destination_transfer_state = session->createTopic(statequeueName);
             } else {
                 destination_transfer_started = session->createQueue(startqueueName);
                 destination_transfer_completed = session->createQueue(completequeueName);
+                destination_transfer_state = session->createQueue(statequeueName);		
             }
 
             int ttl = GetIntVal(getTTL());
@@ -147,6 +155,11 @@ bool MsgProducer::getConnection() {
             producer_transfer_completed = session->createProducer(destination_transfer_completed);
             producer_transfer_completed->setDeliveryMode(DeliveryMode::PERSISTENT);
             producer_transfer_completed->setTimeToLive(ttl);
+	    	    
+            producer_transfer_state = session->createProducer(destination_transfer_state);
+            producer_transfer_state->setDeliveryMode(DeliveryMode::PERSISTENT);
+            producer_transfer_state->setTimeToLive(ttl);	    
+	    
             connectionIsOK = true;
       }
     return true;
@@ -164,6 +177,7 @@ void MsgProducer::readConfig() {
         this->broker = getBROKER();
         this->startqueueName = getSTART();
         this->completequeueName = getCOMPLETE();
+	this->statequeueName = getSTATE();
 
         this->logfilename = getLOGFILENAME();
         this->logfilepath = getLOGFILEDIR();
@@ -251,6 +265,23 @@ void MsgProducer::cleanup() {
         e.printStackTrace();
     }
     producer_transfer_completed = NULL;
+    
+    
+    try {
+        if (destination_transfer_state != NULL) delete destination_transfer_state;
+    } catch (CMSException& e) {
+        e.printStackTrace();
+    }
+    destination_transfer_state = NULL;
+
+    try {
+        if (producer_transfer_state != NULL) delete producer_transfer_state;
+    } catch (CMSException& e) {
+        e.printStackTrace();
+    }
+    producer_transfer_state = NULL;
+    
+    
 
 
     // Close open resources.

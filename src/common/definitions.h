@@ -126,6 +126,45 @@ public:
 };
 
 
+struct message_state {
+public:
+   
+message_state():vo_name(""),source_se(""),dest_se(""),job_id(""),file_id(0),job_state(""),file_state(""),retry_counter(0),retry_max(0),job_metadata(""),file_metadata(""),timestamp("")  {
+    }
+
+    ~message_state() {
+    }
+
+   std::string vo_name;
+   std::string source_se;
+   std::string dest_se;
+   std::string job_id;
+   int file_id;
+   std::string job_state;
+   std::string file_state;
+   int retry_counter;
+   int retry_max;
+   std::string job_metadata;
+   std::string file_metadata;
+   std::string timestamp;   
+   
+};
+
+
+struct message_monitoring {
+public:
+    message_monitoring():timestamp(0)  {
+        memset(msg, 0, sizeof (msg));            
+    }
+
+    ~message_monitoring() {
+    }
+    char msg[3000];
+    boost::posix_time::time_duration::tick_type timestamp;
+};
+
+
+
 
 #define DEFAULT_TIMEOUT 4000
 #define MID_TIMEOUT 4000

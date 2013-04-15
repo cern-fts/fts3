@@ -56,11 +56,14 @@ private:
     Destination* destination_transfer_completed;
     MessageProducer* producer_transfer_started;
     MessageProducer* producer_transfer_completed;
+    MessageProducer* producer_transfer_state;   
+    Destination* destination_transfer_state;     
 
     std::string brokerURI;
     std::string broker;
     std::string startqueueName;
     std::string completequeueName;
+    std::string statequeueName;
     std::string FTSEndpoint;
 
     std::string logfilename;

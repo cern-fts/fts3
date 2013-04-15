@@ -63,6 +63,7 @@ const std::string TEMPLOG = "/var/log/fts3/msg.log";
 std::string BROKER;
 std::string START;
 std::string COMPLETE;
+std::string STATE;
 std::string CRON;
 std::string TTL;
 bool TOPIC;
@@ -76,6 +77,8 @@ bool ENABLEMSGLOG;
 std::string USERNAME;
 std::string PASSWORD;
 bool USE_BROKER_CREDENTIALS;
+
+static bool init = false;
 
 //oracle credentials
 static std::vector<std::string> fileDB;
@@ -450,6 +453,11 @@ std::string getCOMPLETE() {
     return COMPLETE;
 }
 
+std::string getSTATE() {
+    return STATE;
+}
+
+
 std::string getCRON() {
     return CRON;
 }
@@ -558,8 +566,15 @@ bool get_mon_cfg_file() {
 	map <string, string> ::const_iterator iter12 = cfg.find("ENABLEMSGLOG");
 	map <string, string> ::const_iterator iter13 = cfg.find("USERNAME");	
 	map <string, string> ::const_iterator iter14 = cfg.find("PASSWORD");		
-	map <string, string> ::const_iterator iter15 = cfg.find("USE_BROKER_CREDENTIALS");			
+	map <string, string> ::const_iterator iter15 = cfg.find("USE_BROKER_CREDENTIALS");
+        map <string, string> ::const_iterator iter16 = cfg.find("STATE");		
 	
+	
+        if (iter16 != cfg.end()) {
+            STATE = cfg.find("STATE")->second;
+            if (STATE.length() == 0)
+		STATE = "";
+        }		
 	
         if (iter13 != cfg.end()) {
             USERNAME = cfg.find("USERNAME")->second;
@@ -655,13 +670,20 @@ bool get_mon_cfg_file() {
 void appendMessageToLogFile(std::string & text) {
     static std::string filename = LOGFILEDIR + "" + LOGFILENAME;
     static ofstream fout;   
-
+    
+    if(!init){
         fout.open(filename.c_str(), ios::app); // open file for appending
-        if (fout.is_open()){
-            fout << text << endl; //send to file
-	}
-	fout.flush();
-        fout.close(); //close file
+	init = true;
+    }
+    if (fout.is_open()  && fexists(filename.c_str())==0){
+            fout << text << endl; //send to file	    
+    }else{	
+        fout.open(filename.c_str(), ios::app); // open file for appending
+	fout << text << endl; //send to file
+	fout.close(); 
+	init = false;	
+    }
+    
 }
 
 
@@ -718,7 +740,10 @@ bool caseInsCompare(const string& s1, const string& s2) {
 
 bool send_message(std::string & text)
 {   	     	
-	runProducerMonitoring(text.c_str());
+        struct message_monitoring message;
+	strcpy(message.msg, text.c_str());
+	message.timestamp = milliseconds_since_epoch();
+	runProducerMonitoring(message);
   	return true;	
 }
 

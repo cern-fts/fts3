@@ -112,12 +112,14 @@ public:
 				DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
 				DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
 				DBSingleton::instance().getDBObjectInstance()->setRetryTimestamp(job, msg.file_id);
+				SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
 				return true;		       
 		       }else{	       		       
 			       if(retryTimes <= retry-1 ){	
 					DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
 					DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
 					DBSingleton::instance().getDBObjectInstance()->setRetryTimestamp(job, msg.file_id);
+					SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
 					return true;			       					
 			       }
 		       }
@@ -156,7 +158,10 @@ public:
                 updated = DBSingleton::instance().
                         getDBObjectInstance()->
                         updateJobTransferStatus(msg.file_id, job, std::string(msg.transfer_status));
-		}						                
+		}
+		
+		SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);	
+							                
         return updated;		    
     }
 

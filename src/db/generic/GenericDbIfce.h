@@ -176,7 +176,7 @@ public:
     
     virtual bool terminateReuseProcess(const std::string & jobId) = 0;
     
-    virtual void forceFailTransfers() = 0;
+    virtual void forceFailTransfers(std::map<int, std::string>& collectJobs) = 0;
     
     virtual void setPid(const std::string & jobId, int fileId, int pid) = 0;
     
@@ -282,7 +282,7 @@ public:
     
     virtual void setMaxTimeInQueue(int afterXHours) = 0;
     
-    virtual void setToFailOldQueuedJobs() = 0;
+    virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;
 
     virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
     
@@ -319,6 +319,12 @@ public:
     virtual void cancelJobsInTheQueue(const std::string& dn) = 0;
 
     virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug) = 0;
+    
+    virtual struct message_state getStateOfTransfer(const std::string& jobId, int fileId) = 0;
+    
+    virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files) = 0;
+    
+    virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files) = 0;    
  
 };
 

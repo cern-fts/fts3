@@ -25,6 +25,16 @@ static time_t convertToUTC(int advance){
 	return mktime(&tTime);
 }
 
+std::string _getTrTimestampUTC(){
+        time_t now = time(NULL);			
+        struct tm tTime;
+        gmtime_r(&now, &tTime);
+	time_t msec = mktime(&tTime) * 1000; //the number of milliseconds since the epoch
+        std::ostringstream oss;
+        oss << fixed << msec;
+        return oss.str();	
+}
+
 static double convertBtoM( double byte,  double duration) {
     return ceil((((byte / duration) / 1024) / 1024) * 100 + 0.5) / 100;
 }
@@ -1705,7 +1715,7 @@ void MySqlAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, con
 
 
 /* REUSE CASE*/
-void MySqlAPI::forceFailTransfers() {
+void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs) {
     soci::session sql(connectionPool);
 
     try {
@@ -1753,6 +1763,7 @@ void MySqlAPI::forceFailTransfers() {
                     	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Killing pid:" << pid << ", jobid:" << jobId << ", fileid:" << fileId << " because it was stalled" << commit;                    
                     	kill(pid, SIGUSR1);
 		    }
+		    collectJobs.insert(std::make_pair<int, std::string > (fileId, jobId));
                     updateFileTransferStatus(jobId, fileId,
                                              "FAILED", "Transfer has been forced-killed because it was stalled",
                                              pid, 0, 0);
@@ -3082,7 +3093,7 @@ void MySqlAPI::setMaxTimeInQueue(int afterXHours){
 
 
 
-void MySqlAPI::setToFailOldQueuedJobs(){
+void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs){
     const static std::string message = "Job has been canceled because it stayed in the queue for too long";
 
     soci::session sql(connectionPool);
@@ -3661,6 +3672,16 @@ void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& j
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+}
+
+
+struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId){
+}
+
+void MySqlAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files){
+}
+
+void MySqlAPI::getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files){
 }
 
 // the class factories

@@ -55,7 +55,7 @@ void mktempfile(const std::string& basename,
 
 }
 
-void runProducerMonitoring(const char* msg)
+void runProducerMonitoring(struct message_monitoring msg)
 {
 		FILE *fp=NULL; 
 		std::string basename(MONITORING_DIR);
@@ -64,16 +64,15 @@ void runProducerMonitoring(const char* msg)
 	        getUniqueTempFileName(basename, tempname);
        		if ((fp = fopen(tempname.c_str(), "w")) != NULL)
        		{        					
-        		size_t writesBytes = fwrite(msg, strlen(msg)+1, 1, fp); 
-			if(writesBytes==0 || errno != 0){ //try again, doesn't harm anything
-				writesBytes = fwrite(msg, strlen(msg)+1, 1, fp);
+        		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp); 
+			if(writesBytes==0 || errno != 0){
+				writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
 			} 			
         		fclose(fp);
 			std::string renamedFile = tempname + "_ready";
 			int r = rename(tempname.c_str(), renamedFile.c_str());			
-			if(-1 ==r) //try again
-				rename(tempname.c_str(), renamedFile.c_str());
-				
+			if(-1 == r)
+				rename(tempname.c_str(), renamedFile.c_str());									
 	       }		
 }
 

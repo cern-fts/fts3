@@ -29,9 +29,9 @@ void getUniqueTempFileName(const std::string& basename, std::string& tempname);
 void mktempfile(const std::string& basename, std::string& tempname);
 
 //for monitoring
-void runConsumerMonitoring(std::vector<std::string>& messages);
+void runConsumerMonitoring(std::vector<struct message_monitoring>& messages);
 
-void runProducerMonitoring(const char* message);
+void runProducerMonitoring(struct message_monitoring);
 
 
 //for receiving the status from url_copy

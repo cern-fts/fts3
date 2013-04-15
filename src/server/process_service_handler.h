@@ -56,6 +56,8 @@ limitations under the License. */
 #include "TransferFileHandler.h"
 #include <sys/resource.h>
 #include <sys/sysinfo.h>    
+#include <boost/algorithm/string/replace.hpp>
+#include "SingleTrStateInstance.h"
 
 extern bool stopThreads;
 
@@ -85,6 +87,13 @@ static long unsigned int getAvailableMemory() {
         return 0;
 
     return (info.freeram) / (1024 * 1024);
+}
+
+
+static std::string prepareMetadataString(std::string text){	
+	text = boost::replace_all_copy(text, " ", "?");
+	text = boost::replace_all_copy(text, "\"", "\\\"");
+	return text;
 }
 
 template <class T>
@@ -298,7 +307,8 @@ protected:
 
                         FileTransferScheduler scheduler(temp.get(), cfgs);
                         if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
-                            //FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer start: " << source_hostname << " -> " << destin_hostname << commit;
+                            SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
+			    
                             if (optimize && cfgs.empty()) {
                                 DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
                             } else {
@@ -459,12 +469,12 @@ protected:
 
                             if (temp->FILE_METADATA.length() > 0) {
                                 params.append(" -K ");
-                                params.append(temp->FILE_METADATA);
+                                params.append(prepareMetadataString(temp->FILE_METADATA));
                             }
 
                             if (temp->JOB_METADATA.length() > 0) {
                                 params.append(" -J ");
-                                params.append(temp->JOB_METADATA);
+                                params.append(prepareMetadataString(temp->JOB_METADATA));
                             }
 
                             if (temp->BRINGONLINE_TOKEN.length() > 0) {
@@ -593,8 +603,8 @@ protected:
                     pinLifetime = temp->PIN_LIFETIME;
                     bringOnline = temp->BRINGONLINE;
                     userFilesize = temp->USER_FILESIZE;
-                    jobMetadata = temp->JOB_METADATA;
-                    fileMetadata = temp->FILE_METADATA;
+                    jobMetadata = prepareMetadataString(temp->JOB_METADATA);
+                    fileMetadata = prepareMetadataString(temp->FILE_METADATA);
 		    bringonlineToken = temp->BRINGONLINE_TOKEN;
 
                     if (fileMetadata.length() <= 0)
@@ -700,6 +710,7 @@ protected:
                         TransferFiles* temp = (TransferFiles*) * queueiter;
                         DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
                         fileIds.insert(std::make_pair<int, std::string > (temp->FILE_ID, temp->JOB_ID));
+			SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
                     }
 
                     debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
@@ -869,7 +880,15 @@ protected:
 		 /*force-fail stalled ACTIVE transfers*/ 
 	 	 counter++; 
 	 	 if (counter == 300) { 
-                    DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(); 
+		    std::map<int, std::string> collectJobs;
+                    DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs); 
+		    if(!collectJobs.empty()){
+			     std::map<int, std::string>::const_iterator iterCollectJobs;
+                             for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs) {                                                                 
+				    SingleTrStateInstance::instance().sendStateMessage((*iterCollectJobs).second, (*iterCollectJobs).first);
+			     }
+			     collectJobs.clear();
+		    }
                     counter = 0; 
                 } 		
 		

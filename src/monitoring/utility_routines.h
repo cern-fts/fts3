@@ -101,6 +101,7 @@ bool get_mon_cfg_file();
 std::string getBROKER();
 std::string getSTART();
 std::string getCOMPLETE();
+std::string getSTATE();
 std::string getCRON();
 std::string getTTL();
 std::string getCRONFQDN();
