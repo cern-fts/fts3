@@ -241,7 +241,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 }
 
 
-void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
+void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files) {
     soci::session sql(connectionPool);
 
     try {
@@ -3674,6 +3674,48 @@ void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& j
 
 
 struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId){
+	soci::session sql(connectionPool);
+
+	message_state ret;
+
+	try {
+
+		soci::rowset<soci::row> rs = (
+				sql.prepare <<
+	    		" SELECT "
+	    		"	t_job.job_id, t_job.job_state, t_job.vo_name, "
+	    		"	t_job.job_metadata, t_job.retry AS retry_max, t_file.file_id, "
+	    		"	t_file.file_state, t_file.retry AS retry_counter, t_file.file_metadata, "
+	    		"	t_file.source_se, t_file.dest_se "
+	    		" FROM t_file, t_job "
+	    		" WHERE t_job.job_id = t_file.job_id "
+	    		" 	AND t_job.job_id = :jobId "
+	    		"	AND t_file.file_id = :fileId ",
+				soci::use(jobId),
+				soci::use(fileId)
+			);
+
+		soci::rowset<soci::row>::iterator it = rs.begin();
+		if (it != rs.end()) {
+			ret.job_id = it->get<std::string>("job_id");
+			ret.job_state = it->get<std::string>("job_state");
+			ret.vo_name = it->get<std::string>("vo_name");
+			ret.job_metadata = it->get<std::string>("job_metadata");
+			ret.retry_max = it->get<int>("retry_max");
+			ret.file_id = it->get<int>("file_id");
+			ret.file_state = it->get<std::string>("file_state");
+			ret.retry_counter = it->get<int>("retry_counter");
+			ret.file_metadata = it->get<std::string>("file_metadata");
+			ret.source_se = it->get<std::string>("source_se");
+			ret.dest_se = it->get<std::string>("dest_se");
+		}
+
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return ret;
 }
 
 void MySqlAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files){

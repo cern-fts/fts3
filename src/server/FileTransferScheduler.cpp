@@ -56,6 +56,8 @@ FileTransferScheduler::~FileTransferScheduler() {
 
 bool FileTransferScheduler::schedule(bool optimize) {
 
+	vector<int> notUsed;
+
 	if(optimize && cfgs.empty()) {
 		bool allowed = db->isTrAllowed(srcSeName, destSeName);
 		// update file state to READY
@@ -63,7 +65,7 @@ bool FileTransferScheduler::schedule(bool optimize) {
 			unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
 			if(updated == 0) return false;
 			// set all other files that were generated due to a multi-source/destination submission to NOT_USED
-			db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX);
+			db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
 			return true;
 		}
 		return false;
@@ -131,7 +133,7 @@ bool FileTransferScheduler::schedule(bool optimize) {
 	if(updated == 0)
 		return false;
 	// set all other files that were generated due to a multi-source/destination submission to NOT_USED
-	db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX);
+	db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
 
 	return true;
 }

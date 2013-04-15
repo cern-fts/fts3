@@ -246,7 +246,7 @@ public:
     
     virtual int activeProcessesForThisHost();
     
-    virtual void setFilesToNotUsed(std::string jobId, int fileIndex);    
+    virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
         
     virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax();
     

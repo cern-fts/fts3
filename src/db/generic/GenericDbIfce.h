@@ -290,7 +290,7 @@ public:
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;
 
-    virtual void setFilesToNotUsed(std::string jobId, int fileIndex) = 0;
+    virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files) = 0;
     
     virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax() = 0;
     

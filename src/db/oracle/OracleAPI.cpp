@@ -349,7 +349,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 }
 
 
-void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
+void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files) {
 
 	std::string tag = "setFilesToNotUsed";
 	std::string tag1 = "setFilesToNotUsedSelect";
@@ -394,9 +394,9 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex) {
         conn->destroyStatement(s1, tag1, pooledConnection);
 
         if (count < 2){
-  	   conn->releasePooledConnection(pooledConnection);
-	   return;
-	} 
+		   conn->releasePooledConnection(pooledConnection);
+		   return;
+		}
 
         s = conn->createStatement(stmt, tag, pooledConnection);
         s->setString(1, jobId);
