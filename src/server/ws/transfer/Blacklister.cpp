@@ -104,13 +104,26 @@ void Blacklister::handleJobsInTheQueue() {
 
 	if (status == "CANCEL") {
 
+		vector<string> canceled;
 		if (vo.is_initialized()) {
 
-			db->cancelJobsInTheQueue(name, *vo);
+			db->cancelJobsInTheQueue(name, *vo, canceled);
 
 		} else {
 
-			db->cancelJobsInTheQueue(name);
+			db->cancelJobsInTheQueue(name, canceled);
+		}
+	} else if (status == "WAIT") {
+
+		// TODO set job to wait
+
+		if (vo.is_initialized()) {
+
+
+
+		} else {
+
+
 		}
 	}
 }

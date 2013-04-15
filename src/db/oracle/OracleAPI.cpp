@@ -7343,7 +7343,7 @@ void OracleAPI::updateProtocol(const std::string& jobId, int fileId, int nostrea
 }
 
 
-void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo) {
+void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo, std::vector<std::string>& jobs) {
 
     std::string tag1 = "cancelJobsInTheQueue11";
     std::string tag2 = "cancelJobsInTheQueue12";
@@ -7374,8 +7374,6 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
 
     	pooledConnection = conn->getPooledConnection();
         if (!pooledConnection) return;
-
-        std::vector<std::string> jobs;
 
         if (vo.empty()) {
 
@@ -7447,7 +7445,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::cancelJobsInTheQueue(const std::string& dn) {
+void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) {
 
     std::string tag = "cancelJobsInTheQueue2";
     std::string query =
@@ -7467,8 +7465,6 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn) {
 
     	pooledConnection = conn->getPooledConnection();
         if (!pooledConnection) return;
-
-        std::vector<std::string> jobs;
 
 		s = conn->createStatement(query, tag, pooledConnection);
 		s->setString(1, dn);

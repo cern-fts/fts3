@@ -3573,7 +3573,7 @@ int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int 
 	return 0;
 }
 
-void MySqlAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo) {
+void MySqlAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo, std::vector<std::string>& jobs) {
 	soci::session sql(connectionPool);
 
 	try {
@@ -3601,8 +3601,6 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo
 						soci::use(vo)
 				);
 
-		std::vector<std::string> jobs;
-
 		soci::rowset<soci::row>::iterator it;
 		for (it = rs.begin(); it != rs.end(); it++) {
 
@@ -3618,7 +3616,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo
     }
 }
 
-void MySqlAPI::cancelJobsInTheQueue(const std::string& dn) {
+void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) {
 	soci::session sql(connectionPool);
 
 	try {
@@ -3631,9 +3629,6 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn) {
 				"	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')",
 				soci::use(dn)
 			);
-
-
-		std::vector<std::string> jobs;
 
 		soci::rowset<soci::row>::iterator it;
 		for (it = rs.begin(); it != rs.end(); it++) {

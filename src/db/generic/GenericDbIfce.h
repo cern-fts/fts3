@@ -314,9 +314,9 @@ public:
     
     virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize) = 0;
 
-    virtual void cancelJobsInTheQueue(const std::string& se, const std::string& vo) = 0;
+    virtual void cancelJobsInTheQueue(const std::string& se, const std::string& vo, std::vector<std::string>& canceled) = 0;
 
-    virtual void cancelJobsInTheQueue(const std::string& dn) = 0;
+    virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& canceled) = 0;
 
     virtual void transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug) = 0;
     
