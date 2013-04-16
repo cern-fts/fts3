@@ -87,10 +87,12 @@ void MsgPipe::run() {
 	}	
         sleep(1);							    
       } catch (const fs::filesystem_error& ex) {
-	       logger::writeLog(ex.what());		
+	       logger::writeLog(ex.what());
+	       sleep(1);		
       } catch (...) {
                errorMessage = "Exception thrown in msg pipe";
 	       logger::writeLog(errorMessage);
+	       sleep(1);
         }
     }
 }

@@ -58,6 +58,42 @@ const std::string repository = "/tmp/";
 const char *hostcert = "/etc/grid-security/hostcert.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
+
+//categories are: source, destination, transfer
+static bool retryTransfer(int errorNo){
+	bool retry = true;
+				
+		switch ( errorNo ) {
+			case ENOENT: /*No such file or directory*/
+			  retry = false;
+			  break;
+			case EPERM: /*Operation not permitted*/
+			  retry = false;
+			  break;
+			case EACCES: /*Permission denied*/
+			  retry = false;
+			  break;			
+			case EISDIR: /*Is a directory*/
+			  retry = false;
+			  break;
+			case ENAMETOOLONG: /*File name too long*/
+			  retry = false;
+			  break;
+			case E2BIG: /*Argument list too long*/
+			  retry = false;
+			  break;			  
+			case ENOTDIR: /**/
+			  retry = false;
+			  break;					  				  
+			default:
+			  retry = true;
+			  break;
+			}			
+	return retry;
+}
+
+
+
 static int fexists(const char *filename) {
     struct stat buffer;
     if (stat(filename, &buffer) == 0) return 0;
@@ -153,29 +189,41 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys) {
                     statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);
 		    
                     if (statusA < 0) {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE failed " << error->code << " " << error->message << commit;
-                        db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
-                        (*i).started = true;
-                        deleteIt = true;
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE failed " << error->code << " " << error->message << commit;                        
+                        if(true == retryTransfer(error->code) && (*i).retries < 3 ){
+				FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE will be retried" << commit;
+				(*i).retries +=1;
+			}else{
+				db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
+				(*i).started = true;
+                        	deleteIt = true;
+			}
                         g_clear_error(&error);
                     } else if (statusA == 0) {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE queued, got token " << token << commit;
                         (*i).token = std::string(token);
 			db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));
                         (*i).started = true;			
+			(*i).retries = 0;
                     } else {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE succeeded, got token " << token << commit;
                         db::DBSingleton::instance().getDBObjectInstance()->addToken((*i).job_id, (*i).file_id, std::string(token));
                         (*i).started = true;
+			(*i).retries = 0;
                     }
                 } else { //poll
                     statusB = gfal2_bring_online_poll(handle, ((*i).url).c_str(), ((*i).token).c_str(), &error);
 
                     if (statusB < 0) {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE polling failed, token " << (*i).token << ", "  << error->code << " " << error->message << commit;
-                        db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
-                        deleteIt = true;
-                        (*i).started = true;
+                        if(true == retryTransfer(error->code) && (*i).retries < 3 ){
+				FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE will be retried" << commit;
+				(*i).retries +=1;
+			}else{
+                        	db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("FAILED", std::string(error->message), (*i));
+				(*i).started = true;
+                        	deleteIt = true;
+			}
                         g_clear_error(&error);
                     } else if(statusB == 0) {
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling token " << (*i).token << commit;
@@ -301,8 +349,16 @@ int DoServer(int argc, char** argv) {
         } catch (...) {
             throw;
         }
-	
-        fts3_initialize_db_backend();
+	 
+	try{
+        	fts3_initialize_db_backend();
+	} catch (Err& e) {
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE " << e.what() << commit;
+        	exit(1);
+    	} catch (...) {
+        	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
+        	exit(1);
+    	}
         vector< tuple<string, string, int> >::iterator it;
         std::vector< boost::tuple<std::string, std::string, int> > voHostnameConfig;
         std::vector<struct message_bringonline> urls;
