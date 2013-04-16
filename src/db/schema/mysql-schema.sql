@@ -559,10 +559,10 @@ CREATE TABLE t_file (
   retry_timestamp          TIMESTAMP NULL DEFAULT NULL,
 --
 --
-  pending_timestamp		TIMESTAMP NULL DEFAULT NULL,
+  wait_timestamp		TIMESTAMP NULL DEFAULT NULL,
 --
 --
-  pending_timeout			INTEGER,
+  wait_timeout			INTEGER,
 
   t_log_file        VARCHAR(2048),
   t_log_file_debug  INTEGER,

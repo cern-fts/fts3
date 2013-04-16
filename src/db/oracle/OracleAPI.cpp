@@ -7758,10 +7758,144 @@ void OracleAPI::getFilesForJobInCancelState(const std::string& jobId, std::vecto
 
 void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, int timeout) {
 
+    std::string tag1 = "setFilesToWaiting";
+    std::string tag2 = "setFilesToWaitingWithVo";
+
+    std::string query1 =
+			" UPDATE t_file "
+			" SET wait_timestamp = :1, wait_timeout = :2 "
+			" WHERE (source_se = :3 OR dest_se = :4) "
+			"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			"	AND (wait_timestamp IS NULL OR wait_timeout IS NULL) "
+    		;
+
+    std::string query2 =
+			" UPDATE t_file f "
+			" SET f.wait_timestamp = :1, f.wait_timeout = :2 "
+			" WHERE (f.source_se = :3 OR f.dest_se = :4) "
+			"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			"	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) "
+			"	AND EXISTS ( "
+			"		SELECT NULL "
+			"		FROM t_job j "
+			"		WHERE j.job_id = f.job_id "
+    		"			AND j.vo_name = :5 "
+			"	) "
+    		;
+
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+            return;
+
+        time_t timestamp = time(0);
+
+        if (vo.empty()) {
+
+            s1 = conn->createStatement(query1, tag1, pooledConnection);
+            s1->setTimestamp(1, conv->toTimestamp(timestamp, conn->getEnv()));
+            s1->setInt(2, timeout);
+            s1->setString(3, se);
+            s1->setString(4, se);
+            s1->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s1, tag1, pooledConnection);
+
+        } else {
+
+            s2 = conn->createStatement(query2, tag2, pooledConnection);
+            s2->setTimestamp(1, conv->toTimestamp(timestamp, conn->getEnv()));
+            s2->setInt(2, timeout);
+            s2->setString(3, se);
+            s2->setString(4, se);
+            s2->setString(5, vo);
+            s2->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s2, tag2, pooledConnection);
+        }
+
+
+    }    catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if (s1)
+        		conn->destroyStatement(s1, tag1, pooledConnection);
+
+        	if (s2)
+        		conn->destroyStatement(s2, tag2, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+
+            conn->rollback(pooledConnection);
+        	if (s1)
+        		conn->destroyStatement(s1, tag1, pooledConnection);
+
+        	if (s2)
+        		conn->destroyStatement(s2, tag2, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
+
 }
 
 void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout) {
 
+    std::string tag = "setFilesToWaitingDn";
+
+    std::string query =
+			" UPDATE t_file f "
+			" SET f.wait_timestamp = :1, f.wait_timeout = :2 "
+			" WHERE f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			"	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) "
+			"	AND EXISTS( "
+			"		SELECT NULL "
+			"		FROM t_job j "
+			"		WHERE j.job_id = f.job_id "
+			"			AND j.user_dn = :3 "
+			"	)"
+    		;
+
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+            return;
+
+        time_t timestamp = time(0);
+
+		s = conn->createStatement(query, tag, pooledConnection);
+		s->setTimestamp(1, conv->toTimestamp(timestamp, conn->getEnv()));
+		s->setInt(2, timeout);
+		s->setString(3, dn);
+		s->executeUpdate();
+		conn->commit(pooledConnection);
+		conn->destroyStatement(s, tag, pooledConnection);
+
+    }    catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+
+    } catch (...) {
+
+            conn->rollback(pooledConnection);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
 }
 
 // the class factories

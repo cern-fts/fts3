@@ -2184,7 +2184,7 @@ void MySqlAPI::unblacklistSe(std::string se) {
         ;
         // set to null pending fields in respective files
 		sql <<
-				" UPDATE t_file f, t_job j SET f.pending_timestamp = NULL, f.pending_timeout = NULL "
+				" UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
 				" WHERE (f.source_se = :src OR f.dest_se = :dest) "
 				"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
 				"	AND f.job_id = j.job_id "
@@ -2219,7 +2219,7 @@ void MySqlAPI::unblacklistDn(std::string dn) {
         ;
         // set to null pending fields in respective files
 		sql <<
-				" UPDATE t_file f, t_job j SET f.pending_timestamp = NULL, f.pending_timeout = NULL "
+				" UPDATE t_file f, t_job j SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
 				" WHERE f.job_id = j.job_id "
 				"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
 				"	AND j.user_dn = :dn "
@@ -3837,10 +3837,11 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
 		if (vo.empty()) {
 
 			sql <<
-					" UPDATE t_file SET pending_timestamp = UTC_TIMESTAMP(), pending_timeout = :timeout "
+					" UPDATE t_file "
+					" SET wait_timestamp = UTC_TIMESTAMP(), wait_timeout = :timeout "
 					" WHERE (source_se = :src OR dest_se = :dest) "
 					"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
-					"	AND (pending_timestamp IS NULL OR pending_timeout IS NULL) ",
+					"	AND (wait_timestamp IS NULL OR wait_timeout IS NULL) ",
 					soci::use(timeout),
 					soci::use(se),
 					soci::use(se)
@@ -3849,12 +3850,13 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
 		} else {
 
 			sql <<
-					" UPDATE t_file f, t_job j SET f.pending_timestamp = UTC_TIMESTAMP(), f.pending_timeout = :timeout "
+					" UPDATE t_file f, t_job j "
+					" SET f.wait_timestamp = UTC_TIMESTAMP(), f.wait_timeout = :timeout "
 					" WHERE (f.source_se = :src OR f.dest_se = :dest) "
 					"	AND j.vo_name = :vo "
 					"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
-					"	AND f.job_id = j.job_id"
-					"	AND (f.pending_timestamp IS NULL OR f.pending_timeout IS NULL) ",
+					"	AND f.job_id = j.job_id "
+					"	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) ",
 					soci::use(timeout),
 					soci::use(se),
 					soci::use(se),
@@ -3877,11 +3879,12 @@ void MySqlAPI::setFilesToWaiting(const std::string& dn, int timeout) {
 		sql.begin();
 
 		sql <<
-				" UPDATE t_file f, t_job j SET f.pending_timestamp = UTC_TIMESTAMP(), f.pending_timeout = :timeout "
+				" UPDATE t_file f, t_job j "
+				" SET f.wait_timestamp = UTC_TIMESTAMP(), f.wait_timeout = :timeout "
 				" WHERE j.user_dn = :dn "
-				"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
-				"	AND f.job_id = j.job_id"
-				"	AND (f.pending_timestamp IS NULL OR f.pending_timeout IS NULL) ",
+				"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+				"	AND f.job_id = j.job_id "
+				"	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) ",
 				soci::use(timeout),
 				soci::use(dn)
 		;
