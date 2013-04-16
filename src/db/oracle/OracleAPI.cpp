@@ -4228,8 +4228,23 @@ void OracleAPI::unblacklistSe(std::string se) {
     std::string query = "DELETE FROM t_bad_ses WHERE se = :1";
     std::string tag = "unblacklistSe";
 
+    std::string query2 =
+    		" UPDATE t_file f "
+    		" SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
+			" WHERE (f.source_se = :1 OR f.dest_se = :2) "
+			"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			"	AND NOT EXISTS( "
+			"		SELECT NULL "
+			"		FROM t_bad_dns, t_job j "
+			"		WHERE j.job_id = f.job_id "
+			"			AND dn = j.user_dn AND status = 'WAIT' "
+			"	) "
+    		;
+
+    std::string tag2 = "unblacklistSeUpdate";
+
     oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Statement* s2 = NULL;
     oracle::occi::Connection* pooledConnection = NULL;    
     
     try {
@@ -4239,29 +4254,37 @@ void OracleAPI::unblacklistSe(std::string se) {
 
         s = conn->createStatement(query, tag, pooledConnection);
         s->setString(1, se);
-        r = conn->createResultset(s, pooledConnection);
+        s->executeUpdate();
         conn->commit(pooledConnection);
-        conn->destroyResultset(s, r);
+
+        s2 = conn->createStatement(query2, tag2, pooledConnection);
+        s2->setString(1, se);
+        s2->setString(2, se);
+        s2->executeUpdate();
+
+        conn->commit(pooledConnection);
+
         conn->destroyStatement(s, tag, pooledConnection);
+        conn->destroyStatement(s2, tag2, pooledConnection);
 
     } catch (oracle::occi::SQLException const &e) {
 
             conn->rollback(pooledConnection);
 
-        	if(s && r)
-        		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
+        	if (s2)
+        		conn->destroyStatement(s2, tag2, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     }catch (...) {
 
             conn->rollback(pooledConnection);
 
-        	if(s && r)
-        		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
+        	if (s2)
+        		conn->destroyStatement(s2, tag2, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
