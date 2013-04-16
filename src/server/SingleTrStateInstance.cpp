@@ -89,8 +89,7 @@ void SingleTrStateInstance::sendStateMessage(  const std::string&  vo_name, cons
    state.retry_counter = retry_counter;
    state.retry_max = retry_max;
    state.job_metadata = job_metadata;
-   state.file_metadata = file_metadata;
-   state.timestamp = _getTrTimestampUTC();  
+   state.file_metadata = file_metadata;  
   
    constructJSONMsg(&state);
 }
@@ -117,7 +116,7 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state){
 		json_message << "\"file_metadata\":" << state->file_metadata << ",";
 	else
 		json_message << "\"file_metadata\":\"\",";
-	json_message << "\"timestamp\":" << "\"" << state->timestamp << "\"";	      									
+	json_message << "\"timestamp\":" << "\"" << _getTrTimestampUTC() << "\"";	      									
 	json_message << "}";		
 	
 	struct message_monitoring message;
