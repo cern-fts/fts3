@@ -4233,12 +4233,17 @@ void OracleAPI::unblacklistSe(std::string se) {
     		" SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
 			" WHERE (f.source_se = :1 OR f.dest_se = :2) "
 			"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
-			"	AND NOT EXISTS( "
+			"	AND NOT EXISTS ( "
 			"		SELECT NULL "
 			"		FROM t_bad_dns, t_job j "
 			"		WHERE j.job_id = f.job_id "
 			"			AND dn = j.user_dn AND status = 'WAIT' "
 			"	) "
+			"	AND NOT EXISTS ( "
+			"		SELECT NULL "
+			"		FROM t_bad_ses, t_job j "
+			"		WHERE (se = f.source_se OR se = f.dest_se) AND status = 'WAIT' "
+			"	)"
     		;
 
     std::string tag2 = "unblacklistSeUpdate";
@@ -4296,8 +4301,26 @@ void OracleAPI::unblacklistDn(std::string dn) {
     std::string query = "DELETE FROM t_bad_dns WHERE dn = :1";
     std::string tag = "unblacklistDn";
 
+    std::string query2 =
+    		" UPDATE t_file f "
+    		" SET f.wait_timestamp = NULL, f.wait_timeout = NULL "
+			" WHERE f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			"	AND NOT EXISTS ( "
+			"		SELECT NULL "
+			"		FROM t_bad_ses, t_job j "
+			"		WHERE (se = f.source_se OR se = f.dest_se) AND status = 'WAIT' "
+			"	) "
+			"	AND EXISTS ( "
+			"		SELECT NULL "
+			"		FROM t_job j "
+			"		WHERE j.job_id = f.job_id "
+			"			AND j.user_dn = :1 "
+			"	)";
+
+    std::string tag2 = "unblacklistDnUpdate";
+
     oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Statement* s2 = NULL;
     oracle::occi::Connection* pooledConnection = NULL;    
     
     try {
@@ -4307,27 +4330,29 @@ void OracleAPI::unblacklistDn(std::string dn) {
 
         s = conn->createStatement(query, tag, pooledConnection);
         s->setString(1, dn);
-        r = conn->createResultset(s, pooledConnection);
+        s->executeUpdate();
+
+        s2 = conn->createStatement(query2, tag2, pooledConnection);
+        s2->setString(1, dn);
+        s2->executeUpdate();
+
         conn->commit(pooledConnection);
-        conn->destroyResultset(s, r);
+
         conn->destroyStatement(s, tag, pooledConnection);
+        conn->destroyStatement(s2, tag2, pooledConnection);
 
     } catch (oracle::occi::SQLException const &e) {
 
             conn->rollback(pooledConnection);
 
-        	if(s && r)
-        		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }catch (...) {
+    } catch (...) {
 
             conn->rollback(pooledConnection);
 
-        	if(s && r)
-        		conn->destroyResultset(s, r);
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
 
