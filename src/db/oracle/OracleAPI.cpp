@@ -7946,6 +7946,10 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout) {
     conn->releasePooledConnection(pooledConnection);
 }
 
+void OracleAPI::cancelWaitingFiles(std::vector<int>& files) {
+
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

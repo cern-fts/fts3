@@ -279,6 +279,8 @@ public:
 
     virtual void setFilesToWaiting(const std::string& dn, int timeout);
 
+    virtual void cancelWaitingFiles(std::vector<int>& files);
+
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;

@@ -288,6 +288,8 @@ public:
 
     virtual void setFilesToWaiting(const std::string& dn, int timeout);
 
+    virtual void cancelWaitingFiles(std::vector<int>& files);
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

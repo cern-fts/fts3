@@ -3896,6 +3896,35 @@ void MySqlAPI::setFilesToWaiting(const std::string& dn, int timeout) {
     }
 }
 
+void MySqlAPI::cancelWaitingFiles(std::vector<int>& files) {
+
+	soci::session sql(connectionPool);
+
+	try {
+
+		soci::rowset<soci::row> rs = (
+				sql.prepare <<
+				" SELECT file_id "
+				" FROM t_file "
+				" WHERE TIMESTAMPDIFF(SECOND, wait_timestamp, UTC_TIMESTAMP()) > wait_timeout "
+			);
+
+		soci::rowset<soci::row>::iterator it;
+		for (it = rs.begin(); it != rs.end(); it++) {
+
+			files.push_back(
+					it->get<int>("file_id")
+				);
+		}
+
+		// TODO
+		// cancelJob(jobs);
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {
