@@ -59,7 +59,6 @@ const char *hostcert = "/etc/grid-security/hostcert.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
 
-//categories are: source, destination, transfer
 static bool retryTransfer(int errorNo){
 	bool retry = true;
 				
@@ -81,10 +80,7 @@ static bool retryTransfer(int errorNo){
 			  break;
 			case E2BIG: /*Argument list too long*/
 			  retry = false;
-			  break;			  
-			case ENOTDIR: /**/
-			  retry = false;
-			  break;					  				  
+			  break;			  								  				  
 			default:
 			  retry = true;
 			  break;
