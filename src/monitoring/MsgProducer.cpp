@@ -30,6 +30,12 @@
 #include "error.h"
 #include "logger.h"
 #include "serverconfig.h"
+#include <sstream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+using boost::property_tree::ptree; 
+using boost::property_tree::read_json; 
+
 
 bool stopThreads = false;
 
@@ -103,10 +109,16 @@ bool MsgProducer::sendMessage(std::string &temp) {
             producer_transfer_completed->send(message);
             delete message;
         }else if (temp.compare(0, 2, "SS") == 0) {
-            temp = temp.substr(2, temp.length()); //remove message prefix
-            temp += 4;
-            TextMessage* message = session->createTextMessage(temp);
-            producer_transfer_state->send(message);
+            temp = temp.substr(2, temp.length()); //remove message prefix	    
+	    // Read vo from json
+	    ptree pt2;
+  	    std::istringstream is (temp);
+  	    read_json (is, pt2);
+  	    std::string vo = pt2.get<std::string> ("vo_name");	    	    	    
+            temp += 4;	    
+            TextMessage* message = session->createTextMessage(temp);            
+	    message->setStringProperty("vo",vo);            
+	    producer_transfer_state->send(message);
             delete message;
         }
 
