@@ -7756,6 +7756,14 @@ void OracleAPI::getFilesForJobInCancelState(const std::string& jobId, std::vecto
     conn->releasePooledConnection(pooledConnection); 
 }
 
+void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, int timeout) {
+
+}
+
+void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout) {
+
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

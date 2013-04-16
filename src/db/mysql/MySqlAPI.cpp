@@ -3791,6 +3791,55 @@ void MySqlAPI::getFilesForJobInCancelState(const std::string& jobId, std::vector
     }
 }
 
+
+void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, int timeout) {
+	soci::session sql(connectionPool);
+
+	try {
+
+		sql.begin();
+
+		if (vo.empty()) {
+
+			sql <<
+					" UPDATE t_file set pending_timestamp = UTC_TIMESTAMP(), pending_timeout = :timeout "
+					" WHERE (source_se = :src OR dest_se = :dest) "
+					"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
+					"	AND pending_timestamp IS NULL "
+					"	AND pending_timeout IS NULL",
+					soci::use(timeout),
+					soci::use(se),
+					soci::use(se)
+			;
+
+		} else {
+
+			sql <<
+					" UPDATE t_file f, t_job j set f.pending_timestamp = UTC_TIMESTAMP(), f.pending_timeout = :timeout "
+					" WHERE (f.source_se = :src OR f.dest_se = :dest) "
+					"	AND j.vo_name = :vo "
+					"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
+					"	AND f.job_id = j.job_id"
+					"	AND f.pending_timestamp IS NULL "
+					"	AND f.pending_timeout IS NULL",
+					soci::use(timeout),
+					soci::use(se),
+					soci::use(se),
+					soci::use(vo)
+			;
+		}
+
+		sql.commit();
+
+    } catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
+void MySqlAPI::setFilesToWaiting(const std::string& dn, int timeout) {
+
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

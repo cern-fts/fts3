@@ -282,7 +282,11 @@ public:
     
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
     
-    virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files);        
+    virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files);
+
+    virtual void setFilesToWaiting(const std::string& se, const std::string& vo, int timeout);
+
+    virtual void setFilesToWaiting(const std::string& dn, int timeout);
 
 private:
 	OracleConnection *conn;	

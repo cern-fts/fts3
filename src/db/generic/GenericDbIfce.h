@@ -325,7 +325,10 @@ public:
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files) = 0;
     
     virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files) = 0;    
+
+    virtual void setFilesToWaiting(const std::string& se, const std::string& vo, int timeout) = 0;
  
+    virtual void setFilesToWaiting(const std::string& dn, int timeout) = 0;
 };
 
 
