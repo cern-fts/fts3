@@ -847,7 +847,8 @@ protected:
     void executeTransfer_a() {
         static bool drainMode = false;     
         static unsigned int countReverted = 0;
-	static unsigned int counter = 0; 
+        static unsigned int counter = 0;
+        static unsigned int counterNotUsed = 0;
 
         while (1) {
             try {
@@ -875,6 +876,12 @@ protected:
                 if (countReverted == 100) {
                     DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                     countReverted = 0;
+                }
+
+                counterNotUsed++;
+                if (counterNotUsed == 100) {
+                	// TODO
+                	counterNotUsed = 0;
                 }
 		
 		 /*force-fail stalled ACTIVE transfers*/ 
