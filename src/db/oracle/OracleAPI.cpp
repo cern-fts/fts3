@@ -2758,7 +2758,8 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
 bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {  
     const std::string tag2 = "updateOptimizer2";
     const std::string tag3 = "updateOptimizer3";
-    const std::string tag4 = "updateOptimizer4";    
+    const std::string tag4 = "updateOptimizer4"; 
+    const std::string tag5 = "updateOptimizer5";   
     double throughput = 0;    
     bool ok = true;
     int active = 0;   
@@ -2771,11 +2772,16 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
     
     std::string query4 = " DELETE FROM t_optimize a WHERE  a.rowid >  ANY ( SELECT B.rowid FROM  t_optimize B  WHERE A.NOSTREAMS = B.NOSTREAMS AND "
     			 " A.TIMEOUT = B.TIMEOUT AND A.ACTIVE = B.ACTIVE  AND A.THROUGHPUT = B.THROUGHPUT ) ";
+			 
+   std::string query5 = "UPDATE t_optimize SET datetime=:1 "
+            " WHERE nostreams = :2 and buffer=:3 and source_se=:4 and dest_se=:5 "
+	    " and (throughput is null or throughput<=:6) and (active<=:7 or active is null) ";
 
     oracle::occi::Statement* s3 = NULL;
     oracle::occi::ResultSet* r3 = NULL;    
     oracle::occi::Statement* s2 = NULL;
     oracle::occi::Statement* s4 = NULL;    
+    oracle::occi::Statement* s5 = NULL;        
     oracle::occi::Connection* pooledConnection = NULL;           
     
     try {
@@ -2820,8 +2826,21 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
             s2->setString(9, destin_hostname);	   
 	    s2->setDouble(10, throughput);
 	    s2->setInt(11, active);
-            if (s2->executeUpdate() != 0)	    
+            if (s2->executeUpdate() != 0){	    
             	conn->commit(pooledConnection);
+	    }else{
+            	s5 = conn->createStatement(query5, tag5, pooledConnection);
+            	s5->setTimestamp(1, conv->toTimestamp(now, conn->getEnv()));          
+            	s5->setInt(2, nostreams);            
+            	s5->setInt(3, buffersize);
+            	s5->setString(4, source_hostname);
+            	s5->setString(5, destin_hostname);	   
+	    	s5->setDouble(6, throughput);
+	    	s5->setInt(7, active);
+                s5->executeUpdate();
+            	conn->commit(pooledConnection);	    
+                conn->destroyStatement(s5, tag5, pooledConnection);
+	    }
             conn->destroyStatement(s2, tag2, pooledConnection);
 	    s2=NULL;
 	    
@@ -2847,7 +2866,11 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
                 conn->destroyStatement(s3, tag3, pooledConnection);
 		
             if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);				
+                conn->destroyStatement(s4, tag4, pooledConnection);
+
+           if (s5)
+                conn->destroyStatement(s5, tag5, pooledConnection);				
+						
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 	    ok = false;
@@ -2865,7 +2888,10 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
                 conn->destroyStatement(s3, tag3, pooledConnection);
 		
             if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);						
+                conn->destroyStatement(s4, tag4, pooledConnection);	
+		
+           if (s5)
+                conn->destroyStatement(s5, tag5, pooledConnection);											
      
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
 	    ok = false;	

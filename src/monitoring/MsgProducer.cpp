@@ -135,6 +135,7 @@ bool MsgProducer::getConnection() {
             // Create a ConnectionFactory
             std::auto_ptr<ConnectionFactory> connectionFactory(
                     ConnectionFactory::createCMSConnectionFactory(brokerURI));
+	    
             // Create a Connection
             if (true == getUSE_BROKER_CREDENTIALS())
                 connection = connectionFactory->createConnection(getUSERNAME(), getPASSWORD());
