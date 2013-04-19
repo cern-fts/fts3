@@ -2775,7 +2775,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
 			 
    std::string query5 = "UPDATE t_optimize SET datetime=:1 "
             " WHERE nostreams = :2 and buffer=:3 and source_se=:4 and dest_se=:5 "
-	    " and (throughput is null or throughput<=:6) and (active<=:7 or active is null) ";
+	    " and (active<=:6 or active is null) ";
 
     oracle::occi::Statement* s3 = NULL;
     oracle::occi::ResultSet* r3 = NULL;    
@@ -2834,9 +2834,8 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nos
             	s5->setInt(2, nostreams);            
             	s5->setInt(3, buffersize);
             	s5->setString(4, source_hostname);
-            	s5->setString(5, destin_hostname);	   
-	    	s5->setDouble(6, throughput);
-	    	s5->setInt(7, active);
+            	s5->setString(5, destin_hostname);	   	    	
+	    	s5->setInt(6, active);
                 s5->executeUpdate();
             	conn->commit(pooledConnection);	    
                 conn->destroyStatement(s5, tag5, pooledConnection);
