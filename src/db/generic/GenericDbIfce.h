@@ -331,6 +331,8 @@ public:
     virtual void setFilesToWaiting(const std::string& dn, int timeout) = 0;
 
     virtual void cancelWaitingFiles(std::set<std::string>& jobs) = 0;
+
+    virtual void revertNotUsedFiles() = 0;
 };
 
 

@@ -3958,6 +3958,36 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs) {
     }
 }
 
+void MySqlAPI::revertNotUsedFiles() {
+
+	soci::session sql(connectionPool);
+
+	try {
+
+		sql.begin();
+
+		sql <<
+				" UPDATE t_file f1 "
+				" SET f1.file_state = 'SUBMITTED' "
+				" WHERE f1.file_state = 'NOT_USED' "
+				"	AND NOT EXISTS ( "
+				"		SELECT NULL "
+				"		FROM (SELECT * FROM t_file) AS f2 "
+				"		WHERE f2.job_id = f1.job_id "
+				"			and f2.file_index = f1.file_index "
+				"			and f2.file_state <> 'NOT_USED' "
+				"			and f2.file_state <> 'CANCELED' "
+				"			and f2.file_state <> 'FAILED' "
+				"	) "
+				;
+
+		sql.commit();
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {

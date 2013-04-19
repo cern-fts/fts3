@@ -290,6 +290,8 @@ public:
 
     virtual void cancelWaitingFiles(std::set<std::string>& jobs);
 
+    virtual void revertNotUsedFiles();
+
 private:
 	OracleConnection *conn;	
 	OracleTypeConversions *conv;

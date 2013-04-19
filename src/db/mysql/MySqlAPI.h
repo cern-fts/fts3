@@ -281,6 +281,8 @@ public:
 
     virtual void cancelWaitingFiles(std::set<std::string>& jobs);
 
+    virtual void revertNotUsedFiles();
+
 private:
     size_t                poolSize;
     soci::connection_pool connectionPool;

@@ -891,6 +891,9 @@ protected:
                         	canceled.clear();
         			}
 
+        			// sanity check to make sure there are no files that have all replicas in not used state
+        			DBSingleton::instance().getDBObjectInstance()->revertNotUsedFiles();
+
                 	counterTimeoutWaiting = 0;
                 }
 		

@@ -8090,6 +8090,55 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs) {
 	}
 }
 
+void OracleAPI::revertNotUsedFiles() {
+    std::string tag = "revertNotUsedFiles";
+    std::string update =
+    		" UPDATE t_file f1 "
+    		" SET file_state = 'SUBMITTED' "
+    		" WHERE file_state = 'NOT_USED' "
+    		"	AND NOT EXISTS ( "
+    		"		SELECT NULL "
+    		"		FROM t_file f2 "
+    		"		WHERE f2.job_id = f1.job_id "
+    		"			and f2.file_index = f1.file_index "
+    		"			and f2.file_state <> 'NOT_USED' "
+    		"			and f2.file_state <> 'CANCELED' "
+    		"			and f2.file_state <> 'FAILED' "
+    		"	) "
+    		;
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+        s = conn->createStatement(update, tag, pooledConnection);
+   		s->executeUpdate();
+
+        conn->commit(pooledConnection);
+
+        conn->destroyStatement(s, tag, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+		conn->rollback(pooledConnection);
+		if (s)
+			conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    } catch (...) {
+
+		conn->rollback(pooledConnection);
+		if (s)
+			conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create() {
