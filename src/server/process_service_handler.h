@@ -848,7 +848,7 @@ protected:
         static bool drainMode = false;     
         static unsigned int countReverted = 0;
         static unsigned int counter = 0;
-        static unsigned int counterNotUsed = 0;
+        static unsigned int counterTimeoutWaiting = 0;
 
         while (1) {
             try {
@@ -878,8 +878,9 @@ protected:
                     countReverted = 0;
                 }
 
-                counterNotUsed++;
-                if (counterNotUsed >= 100) {
+                /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
+                counterTimeoutWaiting++;
+                if (counterTimeoutWaiting >= 10000) {
                 	std::set<std::string> canceled;
                 	DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
         			set<string>::const_iterator iter;
@@ -890,7 +891,7 @@ protected:
                         	canceled.clear();
         			}
 
-                	counterNotUsed = 0;
+                	counterTimeoutWaiting = 0;
                 }
 		
 		 /*force-fail stalled ACTIVE transfers*/ 
