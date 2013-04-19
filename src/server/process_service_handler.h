@@ -873,14 +873,23 @@ protected:
 
                 /*revert to SUBMITTED if stayed in READY for too long (100 secs)*/
                 countReverted++;
-                if (countReverted == 100) {
+                if (countReverted >= 100) {
                     DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                     countReverted = 0;
                 }
 
                 counterNotUsed++;
-                if (counterNotUsed == 100) {
-                	// TODO
+                if (counterNotUsed >= 100) {
+                	std::set<std::string> canceled;
+                	DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
+        			set<string>::const_iterator iter;
+        			if(!canceled.empty()){
+        				for (iter = canceled.begin(); iter != canceled.end(); ++iter) {
+        					SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
+        				}
+                        	canceled.clear();
+        			}
+
                 	counterNotUsed = 0;
                 }
 		

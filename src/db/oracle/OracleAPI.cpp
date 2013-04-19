@@ -1603,12 +1603,21 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
             "UPDATE t_job "
             "SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE not in ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ";
 
-    std::string query = "select Num1, Num2, Num3, Num4  from "
-            "(select count(DISTINCT file_index) As Num1 from t_file where job_id=:1), "
-            "(select count(DISTINCT file_index) As Num2 from t_file where job_id=:2 and file_state = 'CANCELED'), "
-            "(select count(DISTINCT file_index) As Num3 from t_file where job_id=:3 and file_state = 'FINISHED'), "
-            "(select count(DISTINCT f1.file_index) As Num4 from t_file f1 where job_id=:4 and "
-            " NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'FAILED')) ";
+    std::string query =
+    		"SELECT Num1, Num2, Num3, Num4 FROM "
+    		        // the total number of files within a job
+    		               "    (SELECT COUNT(DISTINCT file_index) AS Num1 FROM t_file WHERE job_id = :1), "
+    		        // the number of canceled files in the job, files counts as canceled if all replicas has been canceled
+    		               "    (SELECT COUNT(DISTINCT file_index) AS Num2 FROM t_file f1 WHERE job_id = :2 "
+    		               "																	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'CANCELED') "
+    		               "	), "
+    		        // the number of finished files in the job, file counts as finished if at least one replica went to the finished state
+    		               "    (SELECT COUNT(DISTINCT file_index) AS Num3 FROM t_file WHERE job_id = :3 AND file_state = 'FINISHED'), "
+    		        // the number of failed files in the job, file counts as failed if all the replicas went to failed state except replicas that were cancelled
+    		               "    (SELECT COUNT(DISTINCT f1.file_index) AS Num4 FROM t_file f1 WHERE f1.job_id = :4 "
+    		        	   "																	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND (f2.file_state <> 'FAILED' AND f2.file_state <> 'CANCELED')) "
+    		               "	) "
+    		;
 
 
     std::string updateFileJobFinished =
@@ -7459,35 +7468,42 @@ void OracleAPI::updateProtocol(const std::string& jobId, int fileId, int nostrea
 }
 
 
-void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& vo, std::vector<std::string>& jobs) {
+void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs) {
 
     std::string tag1 = "cancelJobsInTheQueue11";
     std::string tag2 = "cancelJobsInTheQueue12";
+    std::string tag3 = "cancelJobsInTheQueue13";
     std::string query1 =
-			" SELECT job_id "
-			" FROM t_job "
-			" WHERE (source_se = :se OR dest_se = :se) "
-			"	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
+			" SELECT file_id, job_id "
+			" FROM t_file "
+			" WHERE (source_se = :1 OR dest_se = :2) "
+			"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
     		;
     std::string query2 =
-			" SELECT job_id "
-			" FROM t_job "
-			" WHERE (source_se = :se OR dest_se = :se) "
-			"	AND vo_name = :vo "
-			" 	AND job_state IN ('ACTIVE', 'READY', 'SUBMITTED')"
+			" SELECT f.file_id, f.job_id "
+			" FROM t_file f, t_job j "
+			" WHERE (f.source_se = :1 OR f.dest_se = :2) "
+			"	AND j.vo_name = :3 "
+			" 	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+			"	AND f.job_id = j.job_id "
     		;
 
+    std::string query3 =
+			" UPDATE t_file "
+			" SET file_state = 'CANCELED' "
+			" WHERE file_id = :1"
+    		;
 
     oracle::occi::Statement* s1 = 0;
     oracle::occi::ResultSet* r1 = 0;
     oracle::occi::Statement* s2 = 0;
     oracle::occi::ResultSet* r2 = 0;
+    oracle::occi::Statement* s3 = 0;
     oracle::occi::Connection* pooledConnection = NULL;
     int ret = 0;
 
 
     try {
-
     	pooledConnection = conn->getPooledConnection();
         if (!pooledConnection) return;
 
@@ -7499,11 +7515,17 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
             r1 = conn->createResultset(s1, pooledConnection);
 
             while (r1->next()) {
-            	jobs.push_back(
-            			r1->getString(1)
+            	jobs.insert(
+            			r1->getString(2)
             		);
+
+            	s3 = conn->createStatement(query3, tag3, pooledConnection);
+            	s3->setInt(1, r1->getInt(1));
+            	s3->executeUpdate();
+            	conn->destroyStatement(s3, tag3, pooledConnection);
             }
 
+            conn->commit(pooledConnection);
             conn->destroyResultset(s1, r1);
             conn->destroyStatement(s1, tag1, pooledConnection);
 
@@ -7516,19 +7538,22 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
             r2 = conn->createResultset(s2, pooledConnection);
 
             while (r2->next()) {
-            	jobs.push_back(
-            			r2->getString(1)
+            	jobs.insert(
+            			r2->getString(2)
             		);
+
+            	s3 = conn->createStatement(query3, tag3, pooledConnection);
+            	s3->setInt(1, r2->getInt(1));
+            	s3->executeUpdate();
+            	conn->destroyStatement(s3, tag3, pooledConnection);
             }
 
+            conn->commit(pooledConnection);
             conn->destroyResultset(s2, r2);
             conn->destroyStatement(s2, tag2, pooledConnection);
-
         }
 	
         conn->releasePooledConnection(pooledConnection);
-
-        cancelJob(jobs);
 
     } catch (oracle::occi::SQLException const &e) {
 
@@ -7542,6 +7567,9 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
 			conn->destroyResultset(s2, r2);
 		if (s2)
 			conn->destroyStatement(s2, tag2, pooledConnection);
+
+		if (s3)
+			conn->destroyStatement(s3, tag3, pooledConnection);
 
 	conn->releasePooledConnection(pooledConnection);
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
@@ -7559,10 +7587,17 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& se, const std::string& v
 		if (s2)
 			conn->destroyStatement(s2, tag2, pooledConnection);
 
+		if (s3)
+			conn->destroyStatement(s3, tag3, pooledConnection);
+
 	conn->releasePooledConnection(pooledConnection);
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
-   
+
+	std::set<std::string>::iterator job_it;
+	for (job_it = jobs.begin(); job_it != jobs.end(); job_it++) {
+		updateJobTransferStatus(int(), *job_it, string());
+	}
 }
 
 void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) {
@@ -7626,7 +7661,7 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
 
 		FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
- 
+
 }
 
 
@@ -7838,7 +7873,7 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
 			" UPDATE t_file "
 			" SET wait_timestamp = :1, wait_timeout = :2 "
 			" WHERE (source_se = :3 OR dest_se = :4) "
-			"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
 			"	AND (wait_timestamp IS NULL OR wait_timeout IS NULL) "
     		;
 
@@ -7846,7 +7881,7 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
 			" UPDATE t_file f "
 			" SET f.wait_timestamp = :1, f.wait_timeout = :2 "
 			" WHERE (f.source_se = :3 OR f.dest_se = :4) "
-			"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			"	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
 			"	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) "
 			"	AND EXISTS ( "
 			"		SELECT NULL "
@@ -7924,7 +7959,7 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout) {
     std::string query =
 			" UPDATE t_file f "
 			" SET f.wait_timestamp = :1, f.wait_timeout = :2 "
-			" WHERE f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED') "
+			" WHERE f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
 			"	AND (f.wait_timestamp IS NULL OR f.wait_timeout IS NULL) "
 			"	AND EXISTS( "
 			"		SELECT NULL "
@@ -7971,8 +8006,82 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout) {
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::cancelWaitingFiles(std::vector<int>& files) {
+void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs) {
 
+    std::string tag = "cancelWaitingFiles";
+    std::string query =
+			" SELECT file_id, job_id "
+			" FROM t_file "
+			" WHERE (CAST(CURRENT_TIMESTAMP(3) AS DATE) - CAST(wait_timestamp AS DATE)) * 86400 > wait_timeout "
+			"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+    		;
+
+    std::string tag2 = "cancelWaitingFilesUpdate";
+    std::string update =
+			" UPDATE t_file "
+			" SET file_state = 'CANCELED' "
+			" WHERE file_id = :1 "
+    		;
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Statement* s2 = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+    	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return;
+
+        s = conn->createStatement(query, tag, pooledConnection);
+        r = conn->createResultset(s, pooledConnection);
+
+        while (r->next()) {
+
+        	jobs.insert(r->getString(2));
+
+        	s2 = conn->createStatement(update, tag2, pooledConnection);
+        	s2->setInt(1, r->getInt(1));
+    		s2->executeUpdate();
+        }
+
+        conn->commit(pooledConnection);
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag, pooledConnection);
+        conn->destroyStatement(s2, tag2, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        	if (s2)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        	if (s2)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
+
+	std::set<std::string>::iterator job_it;
+	for (job_it = jobs.begin(); job_it != jobs.end(); job_it++) {
+		updateJobTransferStatus(int(), *job_it, string());
+	}
 }
 
 // the class factories

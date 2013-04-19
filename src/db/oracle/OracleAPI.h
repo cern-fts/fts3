@@ -272,7 +272,7 @@ public:
     
     virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize);    
 
-    virtual void cancelJobsInTheQueue(const std::string& se, const std::string& vo, std::vector<std::string>& jobs);
+    virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
@@ -288,7 +288,7 @@ public:
 
     virtual void setFilesToWaiting(const std::string& dn, int timeout);
 
-    virtual void cancelWaitingFiles(std::vector<int>& files);
+    virtual void cancelWaitingFiles(std::set<std::string>& jobs);
 
 private:
 	OracleConnection *conn;	

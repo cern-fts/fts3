@@ -13,6 +13,9 @@
 
 #include "SingleTrStateInstance.h"
 
+#include <vector>
+#include <set>
+
 namespace fts3 {
 namespace ws {
 
@@ -106,11 +109,13 @@ void Blacklister::handleJobsInTheQueue() {
 
 	if (status == "CANCEL") {
 
-		vector<string> canceled;
+
 		if (vo.is_initialized()) {
 
-			db->cancelJobsInTheQueue(name, *vo, canceled);
-			std::vector<std::string>::const_iterator iter;
+			set<string> canceled;
+
+			db->cancelFilesInTheQueue(name, *vo, canceled);
+			set<string>::const_iterator iter;
 			if(!canceled.empty()){
 				for (iter = canceled.begin(); iter != canceled.end(); ++iter) {
 					SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
@@ -119,8 +124,10 @@ void Blacklister::handleJobsInTheQueue() {
 			}
 		} else {
 
+			vector<string> canceled;
+
 			db->cancelJobsInTheQueue(name, canceled);
-			std::vector<std::string>::const_iterator iter;
+			vector<string>::const_iterator iter;
 			if(!canceled.empty()){
 				for (iter = canceled.begin(); iter != canceled.end(); ++iter) {
 					SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
