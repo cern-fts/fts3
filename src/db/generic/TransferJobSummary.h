@@ -33,7 +33,7 @@
 class TransferJobSummary{
 
 public:
-	TransferJobSummary(){}
+	TransferJobSummary():numReady(0), numFinishing(0),numAwaitingPrestage(0),numPrestaging(0),numWaitingCatalogRegistration(0),numWaitingCatalogResolution(0),numWaitingPrestage(0),jobStatus(NULL), numDone(0), numActive(0),numPending(0),numCanceled(0),numCanceling(0), numFailed(0),numFinished(0), numSubmitted(0), numHold(0), numWaiting(0), numCatalogFailed(0), numRestarted(0){}
 	TransferJobSummary(const TransferJobSummary&);
 	~TransferJobSummary(){}	
 

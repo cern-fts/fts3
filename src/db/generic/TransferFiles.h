@@ -34,7 +34,8 @@
 class TransferFiles {
 public:
 
-    TransferFiles() {
+   
+TransferFiles():FILE_ID(0),FILE_INDEX(0),JOB_ID(""),FILE_STATE(""),LOGICAL_NAME(""),SOURCE_SURL(""),SOURCE_SE(""),DEST_SE(""),DEST_SURL(""),AGENT_DN(""),ERROR_SCOPE(""),ERROR_PHASE(""),REASON_CLASS(""),REASON(""),NUM_FAILURES(""),CURRENT_FAILURES(""),CATALOG_FAILURES(""),PRESTAGE_FAILURES(""),FILESIZE(""),CHECKSUM(""),FINISH_TIME(""),INTERNAL_FILE_PARAMS(""),JOB_FINISHED(""),VO_NAME(""),OVERWRITE(""),DN(""),CRED_ID(""),CHECKSUM_METHOD(""),SOURCE_SPACE_TOKEN(""),DEST_SPACE_TOKEN(""),PIN_LIFETIME(0),BRINGONLINE(0),USER_FILESIZE(0.0),FILE_METADATA(""),JOB_METADATA(""),BRINGONLINE_TOKEN(""){
     }
 
     ~TransferFiles() {
@@ -46,8 +47,8 @@ public:
  std::string FILE_STATE;
  std::string LOGICAL_NAME;
  std::string SOURCE_SURL;
- std::string SOURCE_SE;//					    VARCHAR2(255)
- std::string DEST_SE;//					    VARCHAR2(255)
+ std::string SOURCE_SE;
+ std::string DEST_SE;
  std::string DEST_SURL;
  std::string AGENT_DN;
  std::string ERROR_SCOPE;

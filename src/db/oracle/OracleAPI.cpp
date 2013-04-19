@@ -4381,6 +4381,9 @@ void OracleAPI::unblacklistDn(std::string dn) {
 
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
+			
+        	if (s2)
+        		conn->destroyStatement(s2, tag2, pooledConnection);			
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
     } catch (...) {
@@ -4389,6 +4392,9 @@ void OracleAPI::unblacklistDn(std::string dn) {
 
         	if (s)
         		conn->destroyStatement(s, tag, pooledConnection);
+			
+        	if (s2)
+        		conn->destroyStatement(s2, tag2, pooledConnection);						
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
