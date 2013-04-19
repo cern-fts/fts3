@@ -3694,6 +3694,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
 		}
 
     } catch (std::exception& e) {
+    	sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
@@ -3888,6 +3889,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
 		sql.commit();
 
     } catch (std::exception& e) {
+    	sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
@@ -3913,6 +3915,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& dn, int timeout) {
 		sql.commit();
 
     } catch (std::exception& e) {
+    	sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
@@ -3954,6 +3957,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs) {
 		}
     }
     catch (std::exception& e) {
+    	sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
@@ -3972,7 +3976,7 @@ void MySqlAPI::revertNotUsedFiles() {
 				" WHERE f1.file_state = 'NOT_USED' "
 				"	AND NOT EXISTS ( "
 				"		SELECT NULL "
-				"		FROM (SELECT * FROM t_file) AS f2 "
+				"		FROM (SELECT job_id, file_index, file_state FROM t_file) AS f2 "
 				"		WHERE f2.job_id = f1.job_id "
 				"			and f2.file_index = f1.file_index "
 				"			and f2.file_state <> 'NOT_USED' "
@@ -3984,6 +3988,7 @@ void MySqlAPI::revertNotUsedFiles() {
 		sql.commit();
     }
     catch (std::exception& e) {
+    	sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
 }
