@@ -3658,7 +3658,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
 		soci::rowset<soci::row> rs = vo.empty() ?
 				(
 					sql.prepare <<
-						" SELECT file_id, job_id "
+						" SELECT file_id, job_id, file_index "
 						" FROM t_file "
 						" WHERE (source_se = :se OR dest_se = :se) "
 						"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
@@ -3668,7 +3668,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
 				:
 				(
 					sql.prepare <<
-						" SELECT f.file_id, f.job_id "
+						" SELECT f.file_id, f.job_id, file_index "
 						" FROM t_job j, t_file f "
 						" WHERE (f.source_se = :se OR f.dest_se = :se) "
 						"	AND j.vo_name = :vo "
@@ -3690,6 +3690,27 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
 					" WHERE file_id = :fileId",
 					soci::use(it->get<int>("file_id"))
 					;
+
+			// TODO
+			// use job_id and file_index
+
+//			UPDATE t_file
+//			SET file_state = 'SUBMITTED'
+//			WHERE file_state = 'NOT_USED'
+//				AND job_id = '01c83718-f29e-4a16-97ed-0bc37d1e6876'
+//				AND file_index = 1
+//				AND NOT EXISTS (
+//					SELECT NULL
+//					FROM (
+//						SELECT NULL
+//						FROM t_file
+//						WHERE job_id = '01c83718-f29e-4a16-97ed-0bc37d1e6876'
+//							AND file_index = 1
+//							AND file_state <> 'NOT_USED'
+//							AND file_state <> 'FAILED'
+//							AND file_state <> 'CANCELED'
+//					) AS tmp
+//				)
 		}
 
 		sql.commit();
@@ -3982,12 +4003,15 @@ void MySqlAPI::revertNotUsedFiles() {
 				" WHERE f1.file_state = 'NOT_USED' "
 				"	AND NOT EXISTS ( "
 				"		SELECT NULL "
-				"		FROM (SELECT job_id, file_index, file_state FROM t_file) AS f2 "
+				"		FROM ("
+				"			SELECT job_id, file_index, file_state "
+				"			FROM t_file "
+				"			WHERE file_state <> 'NOT_USED' "
+				"				AND f2.file_state <> 'CANCELED' "
+				"				AND f2.file_state <> 'FAILED' "
+				"		) AS f2 "
 				"		WHERE f2.job_id = f1.job_id "
-				"			and f2.file_index = f1.file_index "
-				"			and f2.file_state <> 'NOT_USED' "
-				"			and f2.file_state <> 'CANCELED' "
-				"			and f2.file_state <> 'FAILED' "
+				"			AND f2.file_index = f1.file_index "
 				"	) "
 				;
 
