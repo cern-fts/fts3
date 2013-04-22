@@ -1511,10 +1511,14 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
         double throughput=0;
         int active=0;
 
-        sql << "SELECT COUNT(*) FROM t_file "
-               "WHERE t_file.source_se = :source_se AND t_file.dest_se = :dest_se AND "
-               "    file_state = 'ACTIVE' ",
-               soci::use(source_hostname), soci::use(destin_hostname),
+        sql <<
+        		" SELECT COUNT(*) "
+        		" FROM t_file "
+        		" WHERE t_file.source_se = :source_se "
+        		"	AND t_file.dest_se = :dest_se "
+        		"	AND file_state = 'ACTIVE' ",
+               soci::use(source_hostname),
+               soci::use(destin_hostname),
                soci::into(active);      
 
         if (filesize > 0 && timeInSecs > 0)
@@ -1527,29 +1531,70 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
         if (buffersize <= 0)
             buffersize = 0;
 
-	sql.begin();
+        sql.begin();
        
-            sql << "UPDATE t_optimize SET filesize = :fsize, throughput = :throughput, "
-                   "   active = :active, datetime = UTC_TIMESTAMP(), timeout= :timeout "
-                   "WHERE nostreams = :nstreams AND buffer = :buffer AND "
-                   "      source_se = :source_se AND dest_se = :dest_se "
-		   " and (throughput is null or throughput<=:throughput) and (active<=:active or active is null)",
-                   soci::use(filesize), soci::use(throughput), soci::use(active),
-                   soci::use(timeout), soci::use(nostreams), soci::use(buffersize),
-                   soci::use(source_hostname), soci::use(destin_hostname),
-		   soci::use(throughput),soci::use(active);     
+        soci::statement stmt (sql);
+
+        stmt.exchange(soci::use(filesize, "fsize"));
+        stmt.exchange(soci::use(throughput, "throughput"));
+        stmt.exchange(soci::use(active, "active"));
+        stmt.exchange(soci::use(timeout, "timeout"));
+        stmt.exchange(soci::use(nostreams, "nstreams"));
+        stmt.exchange(soci::use(buffersize, "buffer"));
+        stmt.exchange(soci::use(source_hostname, "source_se"));
+        stmt.exchange(soci::use(destin_hostname, "dest_se"));
+
+        stmt.alloc();
+
+        stmt.prepare(
+				" UPDATE t_optimize "
+				" SET filesize = :fsize, throughput = :throughput, active = :active, datetime = UTC_TIMESTAMP(), timeout= :timeout "
+				" WHERE nostreams = :nstreams "
+				"	AND buffer = :buffer "
+				"	AND source_se = :source_se "
+				"	AND dest_se = :dest_se "
+				" 	AND (throughput IS NULL OR throughput<=:throughput) "
+				"	AND (active<=:active OR active IS NULL)"
+        	);
+
+        stmt.define_and_bind();
+        stmt.execute(true);
+        long long affected_rows = stmt.get_affected_rows();
+
+		sql.commit();
+
+		if ( affected_rows == 0) {
+
+			sql.begin();
+
+			sql <<
+					"UPDATE t_optimize "
+					" SET datetime = UTC_TIMESTAMP() "
+					" WHERE nostreams = :nostreams "
+					"	AND buffer = :buffer "
+					"	AND source_se = :source_se "
+					"	AND dest_se = :dest_se "
+					" 	AND (active <= :active OR active IS NULL) ",
+					soci::use(nostreams),
+					soci::use(buffersize),
+					soci::use(source_hostname),
+					soci::use(destin_hostname),
+					soci::use(active)
+					;
+
+			sql.commit();
+		}
+
+		// check the number of updated > 0 (2853)
+
+		sql.begin();
 		   
-	sql.commit();
-	
-	sql.begin();		   		   
-		   
-	  sql << " delete from t_optimize USING t_optimize, t_optimize as vtable WHERE (t_optimize.auto_number < vtable.auto_number) AND "
-	  	 " (t_optimize.nostreams=vtable.nostreams AND t_optimize.active=vtable.active and t_optimize.throughput=vtable.throughput)";
-		 
-	sql.commit();		 
-	
-    }
-    catch (std::exception& e) {
+		sql << " delete from t_optimize USING t_optimize, t_optimize as vtable WHERE (t_optimize.auto_number < vtable.auto_number) AND "
+		 " (t_optimize.nostreams=vtable.nostreams AND t_optimize.active=vtable.active and t_optimize.throughput=vtable.throughput)";
+
+		sql.commit();
+
+    } catch (std::exception& e) {
         ok = false;
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
