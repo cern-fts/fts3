@@ -7526,8 +7526,6 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
     oracle::occi::Statement* s3 = 0;
     oracle::occi::Statement* s4 = 0;
     oracle::occi::Connection* pooledConnection = NULL;
-    int ret = 0;
-
 
     try {
     	pooledConnection = conn->getPooledConnection();
@@ -7672,7 +7670,6 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
     oracle::occi::Connection* pooledConnection = NULL;
-    int ret = 0;
 
     try {
 
