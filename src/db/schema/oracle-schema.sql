@@ -704,4 +704,9 @@ INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 
+CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
+CREATE INDEX t_file_backup_1            ON t_file_backup(file_id);
+
+
+
 exit;

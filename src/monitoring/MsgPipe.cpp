@@ -45,6 +45,13 @@ namespace fs = boost::filesystem;
 void handler(int sig) {
     sig = 0;
     stopThreads = true;
+    std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
+    std::string ret;
+    while(myQueue.empty()){ 	
+                ret = myQueue.front();
+                myQueue.pop();
+		send_message(ret);
+    }
     sleep(5);
     exit(0);
 }
@@ -87,10 +94,12 @@ void MsgPipe::run() {
 	}	
         sleep(1);							    
       } catch (const fs::filesystem_error& ex) {
+      	       cleanup();
 	       logger::writeLog(ex.what());
 	       sleep(1);		
       } catch (...) {
                errorMessage = "Exception thrown in msg pipe";
+	       cleanup();
 	       logger::writeLog(errorMessage);
 	       sleep(1);
         }
@@ -98,5 +107,11 @@ void MsgPipe::run() {
 }
 
 void MsgPipe::cleanup() {
-
+ std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
+ std::string ret;
+ while(myQueue.empty()){ 	
+                ret = myQueue.front();
+                myQueue.pop();
+		send_message(ret);
+ }
 }

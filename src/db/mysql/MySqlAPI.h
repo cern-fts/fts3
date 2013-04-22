@@ -285,7 +285,7 @@ public:
 
 private:
     size_t                poolSize;
-    soci::connection_pool connectionPool;
+    soci::connection_pool* connectionPool;
     OptimizerSample       optimizerObject;
     std::string           hostname;
 

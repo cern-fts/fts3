@@ -85,7 +85,7 @@ void DoServer() {
     producerThread.join();
 
     pipeMsg1.cleanup();  
-    producer.cleanup();
+    producer.cleanup();    
 
     activemq::library::ActiveMQCPP::shutdownLibrary();
 

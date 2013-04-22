@@ -87,6 +87,7 @@ public:
     
     bool updateDatabase(struct message msg){    
 	       bool updated = true;    
+	       try{
 	       std::string job = std::string(msg.job_id).substr(0, 36);
 	       
 	       if(std::string(msg.transfer_status).compare("UPDATE") == 0){
@@ -161,7 +162,10 @@ public:
 		}
 		
 		SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);	
-							                
+	 }catch (...) {
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
+		throw;		
+            } 						                
         return updated;		    
     }
 

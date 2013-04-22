@@ -59,7 +59,7 @@ static int extractTimeout(std::string & str) {
 
 
 
-MySqlAPI::MySqlAPI(): poolSize(12), connectionPool(poolSize)  {
+MySqlAPI::MySqlAPI(){
     char chname[MAXHOSTNAMELEN];
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
@@ -68,15 +68,21 @@ MySqlAPI::MySqlAPI(): poolSize(12), connectionPool(poolSize)  {
 
 
 MySqlAPI::~MySqlAPI() {
+	if(connectionPool){
+		delete connectionPool;
+	}
 }
 
 
 
-void MySqlAPI::init(std::string username, std::string password, std::string connectString, int) {
+void MySqlAPI::init(std::string username, std::string password, std::string connectString, int pooledConn) {
     std::ostringstream connParams;
     std::string host, db, port;
 
     try {
+    
+        connectionPool = new soci::connection_pool(pooledConn);
+    
         // From connectString, get host and db
         size_t slash = connectString.find('/');
         if (slash != std::string::npos) {
@@ -108,17 +114,17 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
         // Connect
         static const my_bool reconnect = 1;
+		
+	poolSize = (size_t) pooledConn;
 	
-	/*do not change the number of pooled connection for now
-	poolSize = pooledConn;
-	*/
         for (size_t i = 0; i < poolSize; ++i) {
-            soci::session& sql = connectionPool.at(i);
-            sql.open(soci::mysql, connStr);
-
+            soci::session& sql = (*connectionPool).at(i);	    	    	    
+	    sql.open(soci::mysql, connStr);
+	    
+	    (*connectionPool).at(i) << "SET transaction isolation level read committed";
+            
             soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
-            mysql_options(static_cast<MYSQL*>(be->conn_),
-                          MYSQL_OPT_RECONNECT, &reconnect);
+            mysql_options(static_cast<MYSQL*>(be->conn_), MYSQL_OPT_RECONNECT, &reconnect);
         }
     }
     catch (std::exception& e) {
@@ -129,7 +135,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
 
 bool MySqlAPI::getInOutOfSe(const std::string & sourceSe, const std::string & destSe) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     unsigned nSE;
     sql << "SELECT COUNT(*) FROM t_se "
@@ -143,7 +149,7 @@ bool MySqlAPI::getInOutOfSe(const std::string & sourceSe, const std::string & de
 
 
 TransferJobs* MySqlAPI::getTransferJob(std::string jobId) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     TransferJobs* job = NULL;
     try {
@@ -168,7 +174,7 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId) {
 
 
 void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
 
@@ -242,7 +248,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
 
 void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
 
@@ -310,7 +316,7 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
 }
 
 void MySqlAPI::useFileReplica(std::string jobId, int fileId) {
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -350,7 +356,7 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId) {
 }
 
 unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string status) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     unsigned int updated = 0;
     try {
@@ -391,7 +397,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 
 
 void MySqlAPI::updateJObStatus(std::string jobId, const std::string status) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -410,7 +416,7 @@ void MySqlAPI::updateJObStatus(std::string jobId, const std::string status) {
 
 
 void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
 	time_t now = convertToUTC(0);
 	struct tm tTime;
@@ -481,7 +487,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
     const int priority = 3;
     const std::string params;
 
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);              
+    
     sql.begin();
 
     try {
@@ -553,7 +560,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
 
 
 void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         soci::rowset<JobStatus> rs = (
@@ -585,7 +592,7 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus
  * std::vector<std::string> inGivenStates: order doesn't really matter, more than one states supported
  */
 void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         std::ostringstream query;
@@ -662,7 +669,7 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
 
 
 void MySqlAPI::getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
      try {
          soci::rowset<FileTransferStatus> rs = (sql.prepare  << "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
                                                                 "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
@@ -683,7 +690,7 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, std::vector<FileTran
 
 
 void MySqlAPI::getSe(Se* &se, std::string seName) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
     se = NULL;
 
     try {
@@ -707,7 +714,7 @@ void MySqlAPI::getSe(Se* &se, std::string seName) {
 
 void MySqlAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                      std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -730,7 +737,7 @@ void MySqlAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE
 
 void MySqlAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
                         std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -818,7 +825,7 @@ Delete a SE
 REQUIRED: NAME
  */
 void MySqlAPI::deleteSe(std::string NAME) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -837,7 +844,7 @@ bool MySqlAPI::updateFileTransferStatus(std::string job_id, int file_id, std::st
                                         int process_id, double filesize, double duration) {
 
     bool ok = true;
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         double throughput;
@@ -920,7 +927,7 @@ bool MySqlAPI::updateFileTransferStatus(std::string job_id, int file_id, std::st
 
 bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const std::string status) {
     bool ok = true;
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
 
@@ -1012,7 +1019,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
 
 void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         const std::string reason = "Job canceled by the user";
@@ -1043,8 +1050,8 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs) {
 
 
 void MySqlAPI::getCancelJob(std::vector<int>& requestIDs) {
-    soci::session select(connectionPool);
-    soci::session update(connectionPool);
+    soci::session select(*connectionPool);
+    soci::session update(*connectionPool);
 
     try {
         soci::rowset<soci::row> rs = (select.prepare << "SELECT t_file.pid, t_job.job_id FROM t_file, t_job "
@@ -1082,7 +1089,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs) {
 
 /*t_credential API*/
 void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
     sql.begin();
 
     try {
@@ -1101,7 +1108,7 @@ void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn,
 
 
 void MySqlAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
     sql.begin();
 
     try {
@@ -1124,7 +1131,7 @@ void MySqlAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn,
 
 CredCache* MySqlAPI::findGrDPStorageCacheElement(std::string delegationID, std::string dn) {
     CredCache* cred = NULL;
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         cred = new CredCache();
@@ -1148,7 +1155,7 @@ CredCache* MySqlAPI::findGrDPStorageCacheElement(std::string delegationID, std::
 
 
 void MySqlAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::string dn) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1165,7 +1172,7 @@ void MySqlAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::stri
 
 
 void MySqlAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         struct tm tTime;
@@ -1187,7 +1194,7 @@ void MySqlAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std:
 
 
 void MySqlAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
     sql.begin();
 
     try {
@@ -1214,7 +1221,7 @@ void MySqlAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std:
 
 Cred* MySqlAPI::findGrDPStorageElement(std::string delegationID, std::string dn) {
     Cred* cred = NULL;
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         cred = new Cred();
@@ -1240,7 +1247,7 @@ Cred* MySqlAPI::findGrDPStorageElement(std::string delegationID, std::string dn)
 
 
 void MySqlAPI::deleteGrDPStorageElement(std::string delegationID, std::string dn) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1257,7 +1264,7 @@ void MySqlAPI::deleteGrDPStorageElement(std::string delegationID, std::string dn
 
 
 bool MySqlAPI::getDebugMode(std::string source_hostname, std::string destin_hostname) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool isDebug = false;
     try {
@@ -1276,7 +1283,7 @@ bool MySqlAPI::getDebugMode(std::string source_hostname, std::string destin_host
 
 
 void MySqlAPI::setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1304,7 +1311,7 @@ void MySqlAPI::setDebugMode(std::string source_hostname, std::string destin_host
 
 
 void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         std::string query;
@@ -1345,7 +1352,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
 
 
 void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & config, const std::string & action) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1365,7 +1372,7 @@ void MySqlAPI::auditConfiguration(const std::string & dn, const std::string & co
 /*custom optimization stuff*/
 
 void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
 
@@ -1392,7 +1399,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     		" 	AND t_file.reason LIKE '%operation timeout%' "
     		"	AND t_file.source_se = :sourceSe "
     		" 	AND t_file.dest_se = :destSe  "
-    		" 	AND (t_file.finish_time > (CURRENT_TIMESTAMP - INTERVAL '30' minute)) "
+    		" 	AND (t_file.finish_time > (UTC_TIMESTAMP - INTERVAL '30' minute)) "
     		" ORDER BY t_file.finish_time DESC",
     		soci::use(source_hostname),
     		soci::use(destin_hostname),
@@ -1497,7 +1504,7 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
                                int timeout, int buffersize,
                                std::string source_hostname, std::string destin_hostname) {
     bool ok = true;
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         double throughput=0;
@@ -1552,7 +1559,7 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
 
 
 void MySqlAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         struct tm timest;
@@ -1583,7 +1590,7 @@ void MySqlAPI::addOptimizer(time_t when, double throughput, const std::string & 
 
 
 void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         unsigned foundRecords = 0;
@@ -1622,7 +1629,7 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
 
 
 bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string & dn) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool expired = true;
     try {
@@ -1645,7 +1652,7 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
 
 
 bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool allowed = false;
     try {
@@ -1726,8 +1733,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
 
 void MySqlAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) {
-    soci::session sql(connectionPool);
-
+    soci::session sql(*connectionPool);
+sql.begin();
     try {
         sql.begin();
 
@@ -1750,7 +1757,7 @@ void MySqlAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, con
 
 /* REUSE CASE*/
 void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         std::string jobId, params, tHost,reuse;
@@ -1816,7 +1823,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs) {
 
 void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest,
                           int nostreams, int timeout, int buffersize) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1851,7 +1858,7 @@ void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::st
 
 bool MySqlAPI::terminateReuseProcess(const std::string & jobId) {
     bool ok = true;
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1878,7 +1885,7 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId) {
 
 
 void MySqlAPI::setPid(const std::string & jobId, int fileId, int pid) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1895,7 +1902,7 @@ void MySqlAPI::setPid(const std::string & jobId, int fileId, int pid) {
 
 
 void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1921,7 +1928,7 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids) {
 
 
 void MySqlAPI::revertToSubmitted() {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         struct tm startTime;
@@ -1971,7 +1978,7 @@ void MySqlAPI::revertToSubmitted() {
 
 
 void MySqlAPI::revertToSubmittedTerminate() {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -1995,14 +2002,15 @@ void MySqlAPI::revertToSubmittedTerminate() {
 
 
 void MySqlAPI::backup() {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
 
         sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
-               "WHERE job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY') AND "
-               "      job_finished < (CURRENT_TIMESTAMP() - interval '7' DAY )";
+               "WHERE job_finished < (UTC_TIMESTAMP - interval '7' DAY ) AND "
+	       "job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY')";
+               
 
         sql << "INSERT INTO t_file_backup SELECT * FROM t_file WHERE job_id IN (SELECT job_id FROM t_job_backup)";
         sql << "DELETE FROM t_file WHERE file_id IN (SELECT file_id FROM t_file_backup)";
@@ -2019,7 +2027,7 @@ void MySqlAPI::backup() {
 
 
 void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2038,7 +2046,7 @@ void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId) {
 
 
 void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         int fileId;
@@ -2067,7 +2075,7 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids) {
 
 
 bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
     bool ok = true;
     std::vector<struct message_updater>::const_iterator iter;
@@ -2101,7 +2109,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages) {
 
 
 void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
 
@@ -2149,7 +2157,7 @@ void MySqlAPI::blacklistSe(std::string se, std::string vo, std::string status, i
 
 
 void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
 
@@ -2181,7 +2189,7 @@ void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn) 
 
 
 void MySqlAPI::unblacklistSe(std::string se) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2216,7 +2224,7 @@ void MySqlAPI::unblacklistSe(std::string se) {
 
 
 void MySqlAPI::unblacklistDn(std::string dn) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2250,7 +2258,7 @@ void MySqlAPI::unblacklistDn(std::string dn) {
 
 
 bool MySqlAPI::isSeBlacklisted(std::string se, std::string vo) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool blacklisted = false;
     try {
@@ -2266,7 +2274,7 @@ bool MySqlAPI::isSeBlacklisted(std::string se, std::string vo) {
 
 
 bool MySqlAPI::isDnBlacklisted(std::string dn) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool blacklisted = false;
     try {
@@ -2283,7 +2291,7 @@ bool MySqlAPI::isDnBlacklisted(std::string dn) {
 
 /********* section for the new config API **********/
 bool MySqlAPI::isFileReadyState(int fileID) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
     bool isReady = false;
 
     try {
@@ -2303,7 +2311,7 @@ bool MySqlAPI::isFileReadyState(int fileID) {
 
 
 bool MySqlAPI::checkGroupExists(const std::string & groupName) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool exists = false;
     try {
@@ -2322,7 +2330,7 @@ bool MySqlAPI::checkGroupExists(const std::string & groupName) {
 //t_group_members
 
 void MySqlAPI::getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         soci::rowset<std::string> rs = (sql.prepare << "SELECT member FROM t_group_members "
@@ -2340,7 +2348,7 @@ void MySqlAPI::getGroupMembers(const std::string & groupName, std::vector<std::s
 
 
 std::string MySqlAPI::getGroupForSe(const std::string se) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::string group;
     try {
@@ -2357,7 +2365,7 @@ std::string MySqlAPI::getGroupForSe(const std::string se) {
 
 
 void MySqlAPI::addMemberToGroup(const std::string & groupName, std::vector<std::string>& groupMembers){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2384,7 +2392,7 @@ void MySqlAPI::addMemberToGroup(const std::string & groupName, std::vector<std::
 
 
 void MySqlAPI::deleteMembersFromGroup(const std::string & groupName, std::vector<std::string>& groupMembers) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2409,7 +2417,7 @@ void MySqlAPI::deleteMembersFromGroup(const std::string & groupName, std::vector
 
 
 void MySqlAPI::addLinkConfig(LinkConfig* cfg) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2435,7 +2443,7 @@ void MySqlAPI::addLinkConfig(LinkConfig* cfg) {
 
 
 void MySqlAPI::updateLinkConfig(LinkConfig* cfg) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2462,7 +2470,7 @@ void MySqlAPI::updateLinkConfig(LinkConfig* cfg) {
 
 
 void MySqlAPI::deleteLinkConfig(std::string source, std::string destination) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2481,7 +2489,7 @@ void MySqlAPI::deleteLinkConfig(std::string source, std::string destination) {
 
 
 LinkConfig* MySqlAPI::getLinkConfig(std::string source, std::string destination) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     LinkConfig* lnk = NULL;
     try {
@@ -2503,7 +2511,7 @@ LinkConfig* MySqlAPI::getLinkConfig(std::string source, std::string destination)
 
 
 bool MySqlAPI::isThereLinkConfig(std::string source, std::string destination) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool exists = false;
     try {
@@ -2523,7 +2531,7 @@ bool MySqlAPI::isThereLinkConfig(std::string source, std::string destination) {
 
 
 std::pair<std::string, std::string>* MySqlAPI::getSourceAndDestination(std::string symbolic_name) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::pair<std::string, std::string>* pair = NULL;
     try {
@@ -2542,7 +2550,7 @@ std::pair<std::string, std::string>* MySqlAPI::getSourceAndDestination(std::stri
 
 
 bool MySqlAPI::isGrInPair(std::string group) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool inPair = false;
     try {
@@ -2561,7 +2569,7 @@ bool MySqlAPI::isGrInPair(std::string group) {
 
 
 void MySqlAPI::addShareConfig(ShareConfig* cfg) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2582,7 +2590,7 @@ void MySqlAPI::addShareConfig(ShareConfig* cfg) {
 
 
 void MySqlAPI::updateShareConfig(ShareConfig* cfg) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2604,7 +2612,7 @@ void MySqlAPI::updateShareConfig(ShareConfig* cfg) {
 
 
 void MySqlAPI::deleteShareConfig(std::string source, std::string destination, std::string vo) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2623,7 +2631,7 @@ void MySqlAPI::deleteShareConfig(std::string source, std::string destination, st
 
 
 void MySqlAPI::deleteShareConfig(std::string source, std::string destination) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2642,7 +2650,7 @@ void MySqlAPI::deleteShareConfig(std::string source, std::string destination) {
 
 
 ShareConfig* MySqlAPI::getShareConfig(std::string source, std::string destination, std::string vo) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     ShareConfig* cfg = NULL;
     try {
@@ -2663,7 +2671,7 @@ ShareConfig* MySqlAPI::getShareConfig(std::string source, std::string destinatio
 
 
 std::vector<ShareConfig*> MySqlAPI::getShareConfig(std::string source, std::string destination) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::vector<ShareConfig*> cfg;
     try {
@@ -2685,7 +2693,7 @@ std::vector<ShareConfig*> MySqlAPI::getShareConfig(std::string source, std::stri
 
 
 void MySqlAPI::submitHost(const std::string & jobId) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2704,7 +2712,7 @@ void MySqlAPI::submitHost(const std::string & jobId) {
 
 
 std::string MySqlAPI::transferHost(int fileId) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::string host;
     try {
@@ -2721,7 +2729,7 @@ std::string MySqlAPI::transferHost(int fileId) {
 
 /*for session reuse check only*/
 bool MySqlAPI::isFileReadyStateV(std::map<int, std::string>& fileIds) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool isReady = false;
     try {
@@ -2740,7 +2748,7 @@ bool MySqlAPI::isFileReadyStateV(std::map<int, std::string>& fileIds) {
 
 
 std::string MySqlAPI::transferHostV(std::map<int, std::string>& fileIds) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::string host;
     try {
@@ -2759,7 +2767,7 @@ std::string MySqlAPI::transferHostV(std::map<int, std::string>& fileIds) {
     false: it is not member of another group
  */
 bool MySqlAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool isMember = false;
     try {
@@ -2778,7 +2786,7 @@ bool MySqlAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member) {
 
 
 void MySqlAPI::addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2798,7 +2806,7 @@ void MySqlAPI::addJobShareConfig(std::string job_id, std::string source, std::st
 
 
 void MySqlAPI::delJobShareConfig(std::string job_id) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2817,7 +2825,7 @@ void MySqlAPI::delJobShareConfig(std::string job_id) {
 
 
 std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::getJobShareConfig(std::string job_id) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::vector< boost::tuple<std::string, std::string, std::string> > vConfig;
     try {
@@ -2844,7 +2852,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::get
 
 
 unsigned int MySqlAPI::countJobShareConfig(std::string job_id) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     unsigned int count = 0;
     try {
@@ -2860,7 +2868,7 @@ unsigned int MySqlAPI::countJobShareConfig(std::string job_id) {
 
 
 int MySqlAPI::countActiveTransfers(std::string source, std::string destination, std::string vo) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     int nActive = 0;
     try {
@@ -2882,7 +2890,7 @@ int MySqlAPI::countActiveTransfers(std::string source, std::string destination, 
 
 
 int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     int nActiveOutbound = 0;
     try {
@@ -2905,7 +2913,7 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
 
 
 int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     int nActiveInbound = 0;
     try {
@@ -2928,7 +2936,7 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
 
 
 boost::optional<unsigned int> MySqlAPI::getJobConfigCount(std::string job_id) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     boost::optional<unsigned int> opCount;
     try {
@@ -2953,7 +2961,7 @@ boost::optional<unsigned int> MySqlAPI::getJobConfigCount(std::string job_id) {
 
 
 void MySqlAPI::setJobConfigCount(std::string job_id, int count) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2972,7 +2980,7 @@ void MySqlAPI::setJobConfigCount(std::string job_id, int count) {
 }
 
 void MySqlAPI::setPriority(std::string job_id, int priority) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -2991,7 +2999,7 @@ void MySqlAPI::setPriority(std::string job_id, int priority) {
 }
 
 bool MySqlAPI::checkConnectionStatus() {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     bool couldConnect = false;
     try {
@@ -3011,7 +3019,7 @@ bool MySqlAPI::checkConnectionStatus() {
 
 
 void MySqlAPI::setRetry(int retry){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -3030,7 +3038,7 @@ void MySqlAPI::setRetry(int retry){
 
 
 int MySqlAPI::getRetry(const std::string & jobId){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     int nRetries = 0;
     try {
@@ -3062,7 +3070,7 @@ int MySqlAPI::getRetry(const std::string & jobId){
 
 
 void MySqlAPI::setRetryTimes(int retry, const std::string & jobId, int fileId) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -3083,15 +3091,14 @@ void MySqlAPI::setRetryTimes(int retry, const std::string & jobId, int fileId) {
 
 
 int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     int nRetries = 0;
     try {
         sql << "SELECT retry FROM t_file WHERE job_id = :jobId AND file_id = :fileId",
                soci::use(jobId), soci::use(fileId), soci::into(nRetries);
     }
-    catch (std::exception& e) {
-        sql.rollback();
+    catch (std::exception& e) {       
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
     return nRetries;
@@ -3100,7 +3107,7 @@ int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId){
 
 
 void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -3127,15 +3134,14 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId){
 
 
 int MySqlAPI::getMaxTimeInQueue(){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     int maxTime = 0;
     try {
         sql << "SELECT max_time_queue FROM t_server_config",
                soci::into(maxTime);
     }
-    catch (std::exception& e) {
-        sql.rollback();
+    catch (std::exception& e) {      
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
     return maxTime;
@@ -3144,7 +3150,7 @@ int MySqlAPI::getMaxTimeInQueue(){
 
 
 void MySqlAPI::setMaxTimeInQueue(int afterXHours){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -3165,7 +3171,7 @@ void MySqlAPI::setMaxTimeInQueue(int afterXHours){
 void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs){
     const static std::string message = "Job has been canceled because it stayed in the queue for too long";
 
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         int maxTime = getMaxTimeInQueue();
@@ -3175,7 +3181,7 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs){
         sql.begin();
 
         soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                                       "    (submit_time < (CURRENT_TIMESTAMP - interval :interval hour) AND "
+                                                       "    (submit_time < (UTC_TIMESTAMP - interval :interval hour) AND "
                                                        "    job_state in ('SUBMITTED', 'READY')",
                                                        soci::use(maxTime));
 
@@ -3203,7 +3209,7 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs){
 
 std::vector<std::string> MySqlAPI::getAllStandAlloneCfgs() {
 
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::vector<std::string> ret;
 
@@ -3223,7 +3229,7 @@ std::vector<std::string> MySqlAPI::getAllStandAlloneCfgs() {
 
 std::vector< std::pair<std::string, std::string> > MySqlAPI::getAllPairCfgs() {
 
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
     std::vector< std::pair<std::string, std::string> > ret;
 
@@ -3245,7 +3251,7 @@ std::vector< std::pair<std::string, std::string> > MySqlAPI::getAllPairCfgs() {
 }
 
 int MySqlAPI::activeProcessesForThisHost(){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     unsigned active = 0;
     try{
@@ -3259,7 +3265,7 @@ int MySqlAPI::activeProcessesForThisHost(){
 
 std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBringonlimeMax(){
 
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	std::vector< boost::tuple<std::string, std::string, int> > ret;
 
@@ -3291,7 +3297,7 @@ std::vector< boost::tuple<std::string, std::string, int> >  MySqlAPI::getVOBring
 
 std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voName, std::string hostName, int maxValue){
 
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     std::vector<message_bringonline> ret;
 
@@ -3426,7 +3432,7 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
 
 	if (state != "STARTED" && state != "FINISHED" && state != "FAILED") return;
 
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         
@@ -3473,7 +3479,7 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
 }
 
 void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::string & token) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -3499,7 +3505,7 @@ void MySqlAPI::addToken(const std::string & job_id, int file_id, const std::stri
 
 void MySqlAPI::getCredentials(std::string & vo_name, const std::string & job_id, int, std::string & dn, std::string & dlg_id) {
 
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 		sql <<
@@ -3515,7 +3521,7 @@ void MySqlAPI::getCredentials(std::string & vo_name, const std::string & job_id,
 }
 
 void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int val) {
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
     	int exist = 0;
@@ -3564,7 +3570,7 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
 
 
 void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
 
     try {
     	//expressed in secs
@@ -3603,7 +3609,7 @@ void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId){
 void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize){
 
    std::stringstream internalParams;
-   soci::session sql(connectionPool);
+   soci::session sql(*connectionPool);
 
     try {
         sql.begin();
@@ -3643,7 +3649,7 @@ int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int 
 }
 
 void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs) {
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -3700,7 +3706,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
 }
 
 void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs) {
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -3729,7 +3735,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
 }
 
 void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug){
-    soci::session sql(connectionPool);
+    soci::session sql(*connectionPool);
     
     //soci doesn't access bool
     unsigned int debugFile = debug;
@@ -3754,7 +3760,7 @@ void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& j
 
 
 struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int fileId){
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	message_state ret;
 
@@ -3798,7 +3804,7 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 }
 
 void MySqlAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files){
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -3823,7 +3829,7 @@ void MySqlAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files)
 }
 
 void MySqlAPI::getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files){
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -3850,7 +3856,7 @@ void MySqlAPI::getFilesForJobInCancelState(const std::string& jobId, std::vector
 
 
 void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, int timeout) {
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -3895,7 +3901,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& se, const std::string& vo, i
 }
 
 void MySqlAPI::setFilesToWaiting(const std::string& dn, int timeout) {
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -3922,7 +3928,7 @@ void MySqlAPI::setFilesToWaiting(const std::string& dn, int timeout) {
 
 void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs) {
 
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 
@@ -3964,7 +3970,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs) {
 
 void MySqlAPI::revertNotUsedFiles() {
 
-	soci::session sql(connectionPool);
+	soci::session sql(*connectionPool);
 
 	try {
 

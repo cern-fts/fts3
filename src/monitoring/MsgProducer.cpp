@@ -210,6 +210,13 @@ void MsgProducer::onException( const CMSException& ex AMQCPP_UNUSED) {
 	logger::writeLog(ex.getStackTraceString(), true);
 	connectionIsOK = false;	
 	stopThreads = true;
+   	std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
+   	std::string ret;
+   	while(myQueue.empty()){ 	
+                ret = myQueue.front();
+                myQueue.pop();
+		send_message(ret);
+   	}
 	sleep(10);
 	exit(15); //force weird exit error code in order to restart
     }
@@ -249,7 +256,7 @@ void MsgProducer::run() {
 }
 
 void MsgProducer::cleanup() {
-
+    
     // Destroy resources.
     try {
         if (destination_transfer_started != NULL) delete destination_transfer_started;

@@ -10,14 +10,14 @@ class concurrent_queue
 {
 private:
         static bool instanceFlag;
-        static concurrent_queue *single;    
-        std::queue<std::string> the_queue;  // The queue
+        static concurrent_queue *single;            
         pthread_mutex_t lock; // The queue lock
         pthread_cond_t  cv;   // Lock conditional variable
         int             blck; // should pop() block by default
         
 public:
-    static concurrent_queue* getInstance();    
+    static concurrent_queue* getInstance(); 
+    std::queue<std::string> the_queue;  // The queue       
     void nonblock();
     void block();
     bool empty();
