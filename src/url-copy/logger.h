@@ -8,7 +8,7 @@ class logger {
 public:
 
     logger( std::ostream& os_);
-     ~logger() {os << std::endl;}
+     ~logger() {}
 
     template<class T>
     friend logger& operator<<( logger& log, const T& output );
