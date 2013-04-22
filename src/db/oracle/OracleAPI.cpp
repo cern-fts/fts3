@@ -7479,14 +7479,16 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
     std::string tag1 = "cancelJobsInTheQueue11";
     std::string tag2 = "cancelJobsInTheQueue12";
     std::string tag3 = "cancelJobsInTheQueue13";
+    std::string tag4 = "cancelJobsInTheQueue14";
+
     std::string query1 =
-			" SELECT file_id, job_id "
+			" SELECT file_id, job_id, file_index "
 			" FROM t_file "
 			" WHERE (source_se = :1 OR dest_se = :2) "
 			"	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
     		;
     std::string query2 =
-			" SELECT f.file_id, f.job_id "
+			" SELECT f.file_id, f.job_id, f.file_index "
 			" FROM t_file f, t_job j "
 			" WHERE (f.source_se = :1 OR f.dest_se = :2) "
 			"	AND j.vo_name = :3 "
@@ -7500,11 +7502,29 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
 			" WHERE file_id = :1"
     		;
 
+    std::string query4 =
+    		" UPDATE t_file "
+			" SET file_state = 'SUBMITTED' "
+			" WHERE file_state = 'NOT_USED' "
+			"	AND job_id = :1 "
+			"	AND file_index = :2 "
+			"	AND NOT EXISTS ( "
+			"		SELECT NULL "
+			"		FROM t_file "
+			"		WHERE job_id = :3 "
+			"			AND file_index = :4 "
+			"			AND file_state <> 'NOT_USED' "
+			"			AND file_state <> 'FAILED' "
+			"			AND file_state <> 'CANCELED' "
+			"	) "
+    		;
+
     oracle::occi::Statement* s1 = 0;
     oracle::occi::ResultSet* r1 = 0;
     oracle::occi::Statement* s2 = 0;
     oracle::occi::ResultSet* r2 = 0;
     oracle::occi::Statement* s3 = 0;
+    oracle::occi::Statement* s4 = 0;
     oracle::occi::Connection* pooledConnection = NULL;
     int ret = 0;
 
@@ -7521,14 +7541,27 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
             r1 = conn->createResultset(s1, pooledConnection);
 
             while (r1->next()) {
+
+            	int fileId = r1->getInt(1);
+            	std::string jobId = r1->getString(2);
+            	int fileIndex = r1->getInt(3);
+
             	jobs.insert(
-            			r1->getString(2)
+            			jobId
             		);
 
             	s3 = conn->createStatement(query3, tag3, pooledConnection);
-            	s3->setInt(1, r1->getInt(1));
+            	s3->setInt(1, fileId);
             	s3->executeUpdate();
             	conn->destroyStatement(s3, tag3, pooledConnection);
+
+            	s4 = conn->createStatement(query4, tag4, pooledConnection);
+            	s4->setString(1, jobId);
+            	s4->setInt(2, fileIndex);
+            	s4->setString(3, jobId);
+            	s4->setInt(4, fileIndex);
+            	s4->executeUpdate();
+            	conn->destroyStatement(s4, tag4, pooledConnection);
             }
 
             conn->commit(pooledConnection);
@@ -7544,14 +7577,27 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
             r2 = conn->createResultset(s2, pooledConnection);
 
             while (r2->next()) {
+
+            	int fileId = r1->getInt(1);
+            	std::string jobId = r1->getString(2);
+            	int fileIndex = r1->getInt(3);
+
             	jobs.insert(
-            			r2->getString(2)
+            			jobId
             		);
 
             	s3 = conn->createStatement(query3, tag3, pooledConnection);
-            	s3->setInt(1, r2->getInt(1));
+            	s3->setInt(1, fileId);
             	s3->executeUpdate();
             	conn->destroyStatement(s3, tag3, pooledConnection);
+
+            	s4 = conn->createStatement(query4, tag4, pooledConnection);
+            	s4->setString(1, jobId);
+            	s4->setInt(2, fileIndex);
+            	s4->setString(3, jobId);
+            	s4->setInt(4, fileIndex);
+            	s4->executeUpdate();
+            	conn->destroyStatement(s4, tag4, pooledConnection);
             }
 
             conn->commit(pooledConnection);
@@ -7577,6 +7623,9 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
 		if (s3)
 			conn->destroyStatement(s3, tag3, pooledConnection);
 
+		if (s4)
+			conn->destroyStatement(s3, tag3, pooledConnection);
+
 	conn->releasePooledConnection(pooledConnection);
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
@@ -7594,6 +7643,9 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
 			conn->destroyStatement(s2, tag2, pooledConnection);
 
 		if (s3)
+			conn->destroyStatement(s3, tag3, pooledConnection);
+
+		if (s4)
 			conn->destroyStatement(s3, tag3, pooledConnection);
 
 	conn->releasePooledConnection(pooledConnection);
