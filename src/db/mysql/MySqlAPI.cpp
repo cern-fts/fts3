@@ -3682,35 +3682,43 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
 		soci::rowset<soci::row>::iterator it;
 		for (it = rs.begin(); it != rs.end(); it++) {
 
-			jobs.insert(it->get<std::string>("job_id"));
+			std::string jobId = it->get<std::string>("job_id");
+			int fileId = it->get<int>("file_id");
+
+			jobs.insert(jobId);
 
 			sql <<
 					" UPDATE t_file "
 					" SET file_state = 'CANCELED' "
 					" WHERE file_id = :fileId",
-					soci::use(it->get<int>("file_id"))
+					soci::use(fileId)
 					;
 
-			// TODO
-			// use job_id and file_index
+			int fileIndex = it->get<int>("file_index");
 
-//			UPDATE t_file
-//			SET file_state = 'SUBMITTED'
-//			WHERE file_state = 'NOT_USED'
-//				AND job_id = '01c83718-f29e-4a16-97ed-0bc37d1e6876'
-//				AND file_index = 1
-//				AND NOT EXISTS (
-//					SELECT NULL
-//					FROM (
-//						SELECT NULL
-//						FROM t_file
-//						WHERE job_id = '01c83718-f29e-4a16-97ed-0bc37d1e6876'
-//							AND file_index = 1
-//							AND file_state <> 'NOT_USED'
-//							AND file_state <> 'FAILED'
-//							AND file_state <> 'CANCELED'
-//					) AS tmp
-//				)
+			sql <<
+					" UPDATE t_file "
+					" SET file_state = 'SUBMITTED' "
+					" WHERE file_state = 'NOT_USED' "
+					"	AND job_id = :jobId "
+					"	AND file_index = :fileIndex "
+					"	AND NOT EXISTS ( "
+					"		SELECT NULL "
+					"		FROM ( "
+					"			SELECT NULL "
+					"			FROM t_file "
+					"			WHERE job_id = :jobId "
+					"				AND file_index = :fileIndex "
+					"				AND file_state <> 'NOT_USED' "
+					"				AND file_state <> 'FAILED' "
+					"				AND file_state <> 'CANCELED' "
+					"		) AS tmp "
+					"	) ",
+					soci::use(jobId),
+					soci::use(fileIndex),
+					soci::use(jobId),
+					soci::use(fileIndex)
+					;
 		}
 
 		sql.commit();
@@ -4003,7 +4011,7 @@ void MySqlAPI::revertNotUsedFiles() {
 				" WHERE f1.file_state = 'NOT_USED' "
 				"	AND NOT EXISTS ( "
 				"		SELECT NULL "
-				"		FROM ("
+				"		FROM ( "
 				"			SELECT job_id, file_index, file_state "
 				"			FROM t_file "
 				"			WHERE file_state <> 'NOT_USED' "
