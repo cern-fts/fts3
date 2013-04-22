@@ -25,7 +25,7 @@ static time_t convertToUTC(int advance){
 	return timegm(utc);
 }
 
-std::string _getTrTimestampUTC(){
+static std::string _getTrTimestampUTC(){
         time_t now = time(NULL);			
         struct tm* tTime;
         tTime = gmtime(&now);

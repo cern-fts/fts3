@@ -622,6 +622,7 @@ CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
 CREATE INDEX file_file_throughput ON t_file(throughput);
 CREATE INDEX file_file_src_dest ON t_file(source_se, dest_se);
 CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
+CREATE INDEX file_transferhost on t_file(file_state,TRANSFERHOST);
 
 
 CREATE INDEX optimize_active         ON t_optimize(active);
