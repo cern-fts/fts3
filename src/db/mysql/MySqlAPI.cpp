@@ -20,20 +20,21 @@ static time_t convertToUTC(int advance){
 	else
 		now = time(NULL);	
 		
-        struct tm tTime;
-        gmtime_r(&now, &tTime);
-	return mktime(&tTime);
+	struct tm *utc;
+        utc = gmtime(&now);
+	return timegm(utc);
 }
 
 std::string _getTrTimestampUTC(){
         time_t now = time(NULL);			
-        struct tm tTime;
-        gmtime_r(&now, &tTime);
-	time_t msec = mktime(&tTime) * 1000; //the number of milliseconds since the epoch
+        struct tm* tTime;
+        tTime = gmtime(&now);
+	time_t msec = timegm(tTime) * 1000; //the number of milliseconds since the epoch
         std::ostringstream oss;
         oss << fixed << msec;
         return oss.str();	
 }
+
 
 static double convertBtoM( double byte,  double duration) {
     return ceil((((byte / duration) / 1024) / 1024) * 100 + 0.5) / 100;
@@ -418,7 +419,7 @@ void MySqlAPI::updateJObStatus(std::string jobId, const std::string status) {
 void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) {
     soci::session sql(*connectionPool);
 
-	time_t now = convertToUTC(0);
+	time_t now = time(NULL);
 	struct tm tTime;
         gmtime_r(&now, &tTime);   
 
@@ -1639,8 +1640,9 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
                 soci::use(dlg_id), soci::use(dn), soci::into(termTime);
 
         if (sql.got_data()) {
-            time_t termTimestamp = mktime(&termTime);
-            expired = (difftime(termTimestamp, time(NULL)) <= 0);
+            time_t termTimestamp = timegm(&termTime);
+	    time_t now = convertToUTC(0);
+            expired = (difftime(termTimestamp, now) <= 0);
         }
     }
     catch (std::exception& e) {
@@ -1784,7 +1786,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs) {
         if (stmt.execute(true)) {
 
             do {
-                startTime = mktime(&startTimeSt);
+                startTime = timegm(&startTimeSt); //from db
                 timeout = extractTimeout(params);
 
             	int terminateTime = timeout + 3500;
@@ -1946,8 +1948,8 @@ void MySqlAPI::revertToSubmitted() {
 
         if (readyStmt.execute(true)) {
             do {
-                time_t startTimestamp = mktime(&startTime);
-                double diff = difftime(now2, startTimestamp);		
+                time_t startTimestamp = timegm(&startTime);
+                double diff = difftime(now2, startTimestamp);	
                 if (diff > 100 && reuseJob != "Y") { 
                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
 

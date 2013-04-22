@@ -29,9 +29,9 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 std::string _getTrTimestampUTC(){
         time_t now = time(NULL);			
-        struct tm tTime;
-        gmtime_r(&now, &tTime);
-	time_t msec = mktime(&tTime) * 1000; //the number of milliseconds since the epoch
+        struct tm* tTime;
+        tTime = gmtime(&now);
+	time_t msec = timegm(tTime) * 1000; //the number of milliseconds since the epoch
         std::ostringstream oss;
         oss << fixed << msec;
         return oss.str();	
