@@ -27,7 +27,7 @@ limitations under the License. */
 using namespace FTS3_COMMON_NAMESPACE;
 
 
-std::string _getTrTimestampUTC(){
+static std::string _getTrTimestampUTC(){
         time_t now = time(NULL);			
         struct tm* tTime;
         tTime = gmtime(&now);
