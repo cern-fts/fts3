@@ -24,6 +24,7 @@
  */
 
 #include "VersionResolver.h"
+#include "version.h"
 
 #include <stdio.h>
 
@@ -46,7 +47,7 @@ VersionResolver::VersionResolver() {
 
     pclose(in);
 
-    version = ss.str();
+    version = VERSION;
     interface = version;
     schema = version; // TODO check DB type
     metadata = version; // TODO package name!

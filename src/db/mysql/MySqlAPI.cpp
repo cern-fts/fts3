@@ -3890,6 +3890,7 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 			ret.file_metadata = it->get<std::string>("file_metadata");
 			ret.source_se = it->get<std::string>("source_se");
 			ret.dest_se = it->get<std::string>("dest_se");
+			ret.timestamp = _getTrTimestampUTC(); 
 		}
 
     } catch (std::exception& e) {

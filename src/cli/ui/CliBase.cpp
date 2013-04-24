@@ -30,6 +30,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include "version.h"
 
 using namespace fts3::cli;
 
@@ -217,19 +218,7 @@ string CliBase::discoverService() {
 	return tmp;
 }
 
-string CliBase::getCliVersion() {
-    FILE *in;
-    char buff[512];
+string CliBase::getCliVersion() {    
 
-    in = popen("rpm -q --qf '%{VERSION}' fts-client", "r");
-
-    stringstream ss;
-    while (fgets(buff, sizeof (buff), in) != NULL) {
-        ss << buff;
-    }
-
-    pclose(in);
-
-    return "0.0.1";
-    return ss.str();
+    return VERSION;
 }

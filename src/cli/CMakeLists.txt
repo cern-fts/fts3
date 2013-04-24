@@ -26,6 +26,7 @@ set(fts_include_dir
 
 FIND_PACKAGE(PythonLibs REQUIRED)
 include_directories (${fts_include_dir} ${PYTHON_INCLUDE_PATH})
+include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
 
 find_package (Boost COMPONENTS python REQUIRED)
 execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)" 
