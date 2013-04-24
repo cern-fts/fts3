@@ -263,13 +263,25 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 }
 
 
+
+static unsigned int adjustTimeout(off_t sizeInBytes){
+	if(sizeInBytes <= 10485760) { //starting with 10MB
+		return 700;
+	}
+	else if(sizeInBytes > 10485760 && sizeInBytes <= 52428800){
+		return 1100;	
+	}
+  return DEFAULT_TIMEOUT;	
+}	
+
+
 static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout) {
 		long double y = 2;
 		if(timeout == 0){ //transfers started timed out
 			y=3;
-			timeout = 6000;
-		}else if(timeout > 4000){ //if already increased, use default
-			timeout = 4000;
+			timeout = adjustTimeout(sizeInBytes);
+		}else if(timeout > DEFAULT_TIMEOUT){ //if already increased, use default
+			timeout = adjustTimeout(sizeInBytes);
 		}			
 	        int tx_timeout = timeout > 0 ? timeout : 0;
 	        long double to_per_mb = fmaxl(0, y);
@@ -867,7 +879,7 @@ int main(int argc, char **argv) {
             //get checksum timeout from gfal2
             log << fileManagement->timestamp() << "INFO get checksum timeout" << '\n';
             int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
-            msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));
+            msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));	    	    
 
             log << fileManagement->timestamp() << "INFO Stat the source surl start" << '\n';
             for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++) {
