@@ -885,6 +885,7 @@ int main(int argc, char **argv) {
 
             log << fileManagement->timestamp() << "INFO Stat the source surl start" << '\n';
             for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++) {
+	        errorMessage = ""; //reset
                 if (gfal2_stat(handle, (strArray[1]).c_str(), &statbufsrc, &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
                     const int errCode = tmp_err->code;
@@ -1032,6 +1033,7 @@ int main(int argc, char **argv) {
 
             log << fileManagement->timestamp() << "INFO Stat the dest surl start" << '\n';
             for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++) {
+  	        errorMessage = ""; //reset
                 if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0) {                  
                         std::string tempError(tmp_err->message);
                         log << fileManagement->timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
