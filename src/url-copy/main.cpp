@@ -277,12 +277,14 @@ static unsigned int adjustTimeout(off_t sizeInBytes){
 
 static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout) {
 		long double y = 2;
+		unsigned int tempTimeout = 0;
 		if(timeout == 0){ //transfers started timed out
 			y=3;
-			timeout = adjustTimeout(sizeInBytes);
-		}else if(timeout > DEFAULT_TIMEOUT){ //if already increased, use default
-			timeout = adjustTimeout(sizeInBytes);
-		}			
+			tempTimeout = adjustTimeout(sizeInBytes);
+		}else if(timeout >= DEFAULT_TIMEOUT){ //if already increased, use default
+			tempTimeout = adjustTimeout(sizeInBytes);
+		}	
+		timeout = tempTimeout;		
 	        int tx_timeout = timeout > 0 ? timeout : 0;
 	        long double to_per_mb = fmaxl(0, y);
 	        static const unsigned long MB = 1 << 20;
