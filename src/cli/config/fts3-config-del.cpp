@@ -24,7 +24,7 @@
 
 
 #include "GSoapContextAdapter.h"
-#include "ui/SetCfgCli.h"
+#include "ui/DelCfgCli.h"
 
 #include <string>
 #include <vector>
@@ -40,8 +40,8 @@ int main(int ac, char* av[]) {
 
 	try {
 		// create and initialize the command line utility
-		auto_ptr<SetCfgCli> cli (
-				getCli<SetCfgCli>(ac, av)
+		auto_ptr<DelCfgCli> cli (
+				getCli<DelCfgCli>(ac, av)
 			);
 
 		// validate command line options, and return respective gsoap context

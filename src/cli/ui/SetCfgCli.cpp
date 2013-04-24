@@ -31,16 +31,17 @@
 using namespace boost::algorithm;
 using namespace fts3::cli;
 
+SetCfgCli::SetCfgCli(bool spec) {
 
-SetCfgCli::SetCfgCli() {
-
-	// add commandline options specific for fts3-transfer-submit
-	specific.add_options()
-			("bring-online", "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE.")
-			("drain", value<string>(), "If set to 'on' drains the given endpoint.")
-			("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
-			("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
-			;
+	if (spec) {
+		// add commandline options specific for fts3-transfer-submit
+		specific.add_options()
+				("bring-online", "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE.")
+				("drain", value<string>(), "If set to 'on' drains the given endpoint.")
+				("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
+				("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
+				;
+	}
 
 	// add hidden options (not printed in help)
 	hidden.add_options()

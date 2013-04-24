@@ -56,7 +56,7 @@ public:
 	 * Creates the command line interface for retrieving JSON configurations.
 	 * The name-value pair is market as both: hidden and positional.
 	 */
-	SetCfgCli();
+	SetCfgCli(bool spec = true);
 
 	/**
 	 * Destructor.

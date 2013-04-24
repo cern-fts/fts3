@@ -73,6 +73,7 @@ set(fts_cli_common_sources
 	ui/DebugSetCli.cpp
 	ui/DnCli.cpp
 	ui/GetCfgCli.cpp
+	ui/DelCfgCli.cpp
 	ui/JobIdCli.cpp
 	ui/ListTransferCli.cpp
 	ui/SetCfgCli.cpp
