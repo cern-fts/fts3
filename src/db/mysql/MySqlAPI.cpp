@@ -2071,8 +2071,7 @@ void MySqlAPI::revertToSubmittedTerminate() {
 void MySqlAPI::backup() {
     soci::session sql(*connectionPool);
 
-    try {
-        sql.begin();
+    try {        
 
         sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
                "WHERE job_finished < (UTC_TIMESTAMP - interval '7' DAY ) AND "
@@ -2083,7 +2082,6 @@ void MySqlAPI::backup() {
         sql << "DELETE FROM t_file WHERE file_id IN (SELECT file_id FROM t_file_backup)";
         sql << "DELETE FROM t_job WHERE job_id IN (SELECT job_id FROM t_job_backup)";
 
-        sql.commit();
     }
     catch (std::exception& e) {
         sql.rollback();

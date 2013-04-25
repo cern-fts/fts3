@@ -48,6 +48,7 @@ void fts3_initialize_db_backend()
     } 
     catch(Err_Custom& e)
     {            
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         exit(1);
     }
     catch(...){
