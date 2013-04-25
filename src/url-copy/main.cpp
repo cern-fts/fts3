@@ -277,7 +277,7 @@ static unsigned int adjustTimeout(off_t sizeInBytes){
 
 static unsigned int adjustTimeoutBasedOnSize(off_t sizeInBytes, unsigned int timeout) {
 		long double y = 2;
-		unsigned int tempTimeout = 0;
+		unsigned int tempTimeout = DEFAULT_TIMEOUT;
 		if(timeout == 0){ //transfers started timed out
 			y=3;
 			tempTimeout = adjustTimeout(sizeInBytes);
