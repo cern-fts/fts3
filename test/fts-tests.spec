@@ -1,6 +1,6 @@
 Name:    fts-tests
 Version: 0.0.1
-Release: 95%{?dist}
+Release: 96%{?dist}
 Summary: Testing package for FTS3
 Group:   Application/Internet
 License: Apache 2
