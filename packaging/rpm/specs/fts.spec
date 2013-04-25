@@ -63,6 +63,7 @@ Group: System Environment/Daemons
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2-plugin-gridftp%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
+Requires: gfal2-plugin-http%{?_isa} >= 2.1.0
 Requires: bdii
 Requires: glue-schema
 Requires: glue-validator
@@ -70,7 +71,7 @@ Requires: glue-validator
 #Requires: emi-resource-information-service (from EMI3)
 #Requires: emi-version (from EMI3)
 #Requires: fetch-crl3 (metapackage)
-#Requires: gfal2-plugin-http (when ready)
+
 
 %package libs
 Summary: File Transfer Service version 3 libs
