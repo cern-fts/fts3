@@ -2071,7 +2071,10 @@ void MySqlAPI::revertToSubmittedTerminate() {
 void MySqlAPI::backup() {
     soci::session sql(*connectionPool);
 
-    try {        
+    try {
+        sql << "SET autocommit=0";
+	sql << "SET tx_isolation = 'READ-COMMITTED'";
+	sql.commit();        
 
         sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
                "WHERE job_finished < (UTC_TIMESTAMP - interval '7' DAY ) AND "
