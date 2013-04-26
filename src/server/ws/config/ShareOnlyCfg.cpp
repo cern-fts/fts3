@@ -114,7 +114,10 @@ void ShareOnlyCfg::del() {
 }
 
 void ShareOnlyCfg::init(string se) {
-	// TODO
+
+	// get SE's in and out shares
+	in_share = getShareMap(any, se);
+	out_share = getShareMap(se, any);
 }
 
 } /* namespace ws */
