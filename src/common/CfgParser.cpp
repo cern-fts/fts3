@@ -40,6 +40,7 @@ const map<string, set <string> > CfgParser::standaloneSeCfgTokens = CfgParser::i
 const map<string, set <string> > CfgParser::standaloneGrCfgTokens = CfgParser::initStandaloneGrCfgTokens();
 const map<string, set <string> > CfgParser::sePairCfgTokens = CfgParser::initSePairCfgTokens();
 const map<string, set <string> > CfgParser::grPairCfgTokens = CfgParser::initGrPairCfgTokens();
+const map<string, set <string> > CfgParser::shareOnlyCfgTokens = CfgParser::initShareOnlyCfgTokens();
 
 const string CfgParser::auto_value = "auto";
 
@@ -135,6 +136,20 @@ const map< string, set <string> > CfgParser::initGrPairCfgTokens() {
 			;
 }
 
+const map<string, set <string> > CfgParser::initShareOnlyCfgTokens() {
+
+	set<string> root = list_of
+			("se")
+			("active")
+			("in")
+			("out")
+			;
+
+	return map_list_of
+			(string(), root)
+			;
+}
+
 CfgParser::CfgParser(string configuration) {
 
 	// break into lines to give later better feedback to users
@@ -189,6 +204,11 @@ CfgParser::CfgParser(string configuration) {
 
 	if (validate(pt, grPairCfgTokens)) {
 		type = GR_PAIR_CFG;
+		return;
+	}
+
+	if (validate(pt, shareOnlyCfgTokens)) {
+		type = SHARE_ONLY_CFG;
 		return;
 	}
 

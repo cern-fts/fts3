@@ -64,7 +64,8 @@ public:
 		STANDALONE_SE_CFG,
 		STANDALONE_GR_CFG,
 		SE_PAIR_CFG,
-		GR_PAIR_CFG
+		GR_PAIR_CFG,
+		SHARE_ONLY_CFG
 	};
 
 	/**
@@ -147,6 +148,8 @@ private:
 	static const map<string, set <string> > sePairCfgTokens;
 	/// the tokens used in se group pair configuration
 	static const map<string, set <string> > grPairCfgTokens;
+	/// the tokens used  in a share-only configuration
+	static const map<string, set <string> > shareOnlyCfgTokens;
 	/// all the allowed tokens
 	static const set<string> allTokens;
 
@@ -158,6 +161,8 @@ private:
 	static const map< string, set <string> > initSePairCfgTokens();
 	/// initializes allowed JSON members for se group pair
 	static const map< string, set <string> > initGrPairCfgTokens();
+	/// initializes allowed JSON members for share-only configuration
+	static const map<string, set <string> > initShareOnlyCfgTokens();
 };
 
 template <typename T>
