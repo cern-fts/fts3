@@ -98,7 +98,19 @@ void ShareOnlyCfg::save() {
 }
 
 void ShareOnlyCfg::del() {
-	// TODO
+
+	// erase changes in SE state
+	eraseSe(se);
+
+	// delete the shares for the in-link
+	delShareCfg(any, se);
+	// delete the in-link
+	delLinkCfg(any, se);
+
+	// delete the shares for the out-link
+	delShareCfg(se, any);
+	// delete the out-link
+	delLinkCfg(se, any);
 }
 
 void ShareOnlyCfg::init(string se) {
