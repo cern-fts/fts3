@@ -117,6 +117,8 @@ public:
 	static const string off;
 	/// the public share
 	static const string pub;
+	/// 'share_only' string
+	static const string share_only;
 	/// value of a share pointing that auto should be used
 	static const int auto_share = -1;
 
@@ -216,6 +218,16 @@ protected:
 	void checkGroup(string group);
 
 	/**
+	 * Gets link configuration object, and a flag stating whether the object exists in DB or not.
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 * @param active - the state
+	 * @param symbolic_name - the symbolic name describing the link
+	 */
+	pair< shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
+
+	/**
 	 * Adds a link configuration to the DB.
 	 *
 	 * @param source - the source (SE, SE group or 'any')
@@ -225,6 +237,17 @@ protected:
 	 * @param protocol - the protocol parameters and the rrespective values
 	 */
 	void addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol);
+
+	/**
+	 * Adds a share-only link configuration to the DB.
+	 *
+	 * @param source - the source (SE, SE group or 'any')
+	 * @param destination - the destination (SE, SE group or 'any')
+	 * @param active - the state
+	 * @param symbolic_name - the symbolic name describing the link
+	 * @param protocol - the protocol parameters and the rrespective values
+	 */
+	void addLinkCfg(string source, string destination, bool active, string symbolic_name);
 
 	/**
 	 * Adds a share configuration to the DB.

@@ -58,6 +58,7 @@ const string Configuration::wildcard = "(*)";
 const string Configuration::on = "on";
 const string Configuration::off = "off";
 const string Configuration::pub = "public";
+const string Configuration::share_only = "s-o";
 
 Configuration::Configuration(string dn) :
 		dn(dn),
@@ -191,7 +192,7 @@ void Configuration::checkGroup(string group) {
 	}
 }
 
-void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol) {
+pair< shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name) {
 
 	scoped_ptr< pair<string, string> > p (
 			db->getSourceAndDestination(symbolic_name)
@@ -202,7 +203,7 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 			throw Err_Custom("A 'pair' with the same symbolic name exists already!");
 	}
 
-	scoped_ptr<LinkConfig> cfg (
+	shared_ptr<LinkConfig> cfg (
 			db->getLinkConfig(source, destination)
 		);
 
@@ -217,38 +218,66 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 	cfg->state = active ? on : off;
 	cfg->symbolic_name = symbolic_name;
 
+	return make_pair(cfg, update);
+}
+
+void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol) {
+
+	pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+
 	// not used for now therefore set to 0
-	cfg->NO_TX_ACTIVITY_TO = 0;
+	cfg.first->NO_TX_ACTIVITY_TO = 0;
 
 	if (protocol.is_initialized()) {
 
 		int value = protocol.get()[Protocol::NOSTREAMS];
-		cfg->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
+		cfg.first->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
 
 		value = protocol.get()[Protocol::TCP_BUFFER_SIZE];
-		cfg->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
+		cfg.first->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
 
 		value = protocol.get()[Protocol::URLCOPY_TX_TO];
-		cfg->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
+		cfg.first->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
 
-		cfg->auto_protocol = off;
+		cfg.first->auto_protocol = off;
 
 	} else {
 
-		cfg->NOSTREAMS = 0;
-		cfg->TCP_BUFFER_SIZE = 0;
-		cfg->URLCOPY_TX_TO = 0;
-		cfg->auto_protocol = on;
+		cfg.first->NOSTREAMS = 0;
+		cfg.first->TCP_BUFFER_SIZE = 0;
+		cfg.first->URLCOPY_TX_TO = 0;
+		cfg.first->auto_protocol = on;
 	}
 
-	if (update) {
-		db->updateLinkConfig(cfg.get());
+	if (cfg.second) {
+		db->updateLinkConfig(cfg.first.get());
 		updateCount++;
 	} else {
-		db->addLinkConfig(cfg.get());
+		db->addLinkConfig(cfg.first.get());
 		insertCount++;
 	}
+}
 
+void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name) {
+
+	pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+
+	// not used in case of share-only configuration therefore set to 0
+	cfg.first->NO_TX_ACTIVITY_TO = 0;
+	cfg.first->NOSTREAMS = 0;
+	cfg.first->TCP_BUFFER_SIZE = 0;
+	cfg.first->URLCOPY_TX_TO = 0;
+
+	// mark it as share only
+	cfg.first->auto_protocol = share_only;
+
+	if (cfg.second) {
+		db->updateLinkConfig(cfg.first.get());
+		updateCount++;
+	} else {
+		db->addLinkConfig(cfg.first.get());
+		insertCount++;
+	}
 }
 
 void Configuration::addShareCfg(string source, string destination, map<string, int>& share) {

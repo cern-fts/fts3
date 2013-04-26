@@ -50,7 +50,6 @@ ShareOnlyCfg::ShareOnlyCfg(string dn, string name) : Configuration(dn), se(name)
 ShareOnlyCfg::ShareOnlyCfg(string dn, CfgParser& parser) : Configuration(dn) {
 
 	se = parser.get<string>("se");
-	all = json();
 
 	if (notAllowed.count(se))
 		throw Err_Custom("The SE name is not a valid!");
@@ -60,8 +59,10 @@ ShareOnlyCfg::ShareOnlyCfg(string dn, CfgParser& parser) : Configuration(dn) {
 
 	active = parser.get<bool>("active");
 
-	in_share = parser.get< map<string, int> >("in.share");
-	out_share = parser.get< map<string, int> >("out.share");
+	in_share = parser.get< map<string, int> >("in");
+	out_share = parser.get< map<string, int> >("out");
+
+	all = json();
 }
 
 ShareOnlyCfg::~ShareOnlyCfg() {
@@ -84,7 +85,16 @@ string ShareOnlyCfg::json() {
 
 void ShareOnlyCfg::save() {
 	addSe(se, active);
-	// TODO
+
+	// add the in-link
+	addLinkCfg(any, se, active, any + "-" + se);
+	// add the shares for the in-link
+	addShareCfg(any, se, in_share);
+
+	// add the out-link
+	addLinkCfg(se, any, active, se + "-" + any);
+	// add the shares for out-link
+	addShareCfg(se, any, out_share);
 }
 
 void ShareOnlyCfg::del() {

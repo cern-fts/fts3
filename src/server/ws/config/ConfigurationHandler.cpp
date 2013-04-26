@@ -36,6 +36,7 @@
 #include "StandaloneGrCfg.h"
 #include "SePairCfg.h"
 #include "GrPairCfg.h"
+#include "ShareOnlyCfg.h"
 
 using namespace fts3::ws;
 
@@ -74,6 +75,11 @@ void ConfigurationHandler::parse(string configuration) {
 	case CfgParser::GR_PAIR_CFG:
 		cfg.reset(
 				new GrPairCfg(dn, parser)
+			);
+		break;
+	case CfgParser::SHARE_ONLY_CFG:
+		cfg.reset(
+				new ShareOnlyCfg(dn, parser)
 			);
 		break;
 	case CfgParser::NOT_A_CFG:
