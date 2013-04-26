@@ -1,11 +1,22 @@
 #!/bin/bash
 
+# Method to set an environment variable only if it is not set
+# already
+function if_not_set()
+{
+	envName=$1
+	defValue=$2
+	if [ -z "${!envName}" ]; then
+		export $envName=$defValue
+	fi
+}
+
 #Configuration variables for FTS3 testing scripts
 
 #If LOGSLOCATON is not specified logs will be in the tests directory
 #LOGSLOCATION="/tmp"
 
-export FTS3_HOST="`hostname -f`"
+if_not_set FTS3_HOST "`hostname -f`"
 export FTS3_PORT=8443
 export FN="fsub"
 export BDII_HOST="certtb-bdii-top.cern.ch"
