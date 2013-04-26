@@ -187,6 +187,11 @@ CfgParser::CfgParser(string configuration) {
 		throw Err_Custom(msg);
 	}
 
+	if (validate(pt, shareOnlyCfgTokens)) {
+		type = SHARE_ONLY_CFG;
+		return;
+	}
+
 	if (validate(pt, standaloneSeCfgTokens)) {
 		type = STANDALONE_SE_CFG;
 		return;
@@ -204,11 +209,6 @@ CfgParser::CfgParser(string configuration) {
 
 	if (validate(pt, grPairCfgTokens)) {
 		type = GR_PAIR_CFG;
-		return;
-	}
-
-	if (validate(pt, shareOnlyCfgTokens)) {
-		type = SHARE_ONLY_CFG;
 		return;
 	}
 
