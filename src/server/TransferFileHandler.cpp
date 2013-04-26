@@ -28,7 +28,8 @@
 namespace fts3 {
 namespace server {
 
-TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& files) {
+TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& files) :
+		db (DBSingleton::instance().getDBObjectInstance()) {
 
 	map<string, list<TransferFiles*> >::iterator it_v;
 
@@ -103,9 +104,51 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index) {
 
 	// the return value
 	TransferFiles* ret = 0;
+	int maxThroughput = 0;
+	int minFailureRate = INT_MAX;
 
 	// TODO for now give the first one in the future a selection strategy should be implemented
 	if (!fileIndexToFiles[index].empty()) {
+
+//		list<TransferFiles*>& alternatives = fileIndexToFiles[index];
+//		list<TransferFiles*>::iterator it;
+//
+//		for (it = alternatives.begin(); it != alternatives.end(); it++) {
+//
+//			string& src = (*it)->SOURCE_SE;
+//			string& dest = (*it)->DEST_SE;
+//
+//			int activeTransfers = db->countActiveTransfers(src, dest);
+//			int throughput = db->getAvgThroughput(src, dest, activeTransfers);
+//			int failureRate = db->getFailureRate(src, dest);
+//
+//			// everything is better
+//			if (throughput >= maxThroughput && failureRate < minFailureRate) {
+//				// swap
+//				continue;
+//			}
+//
+//			// throughput is slightly smaller equal
+//			if (0.95 * maxThroughput < throughput && failureRate < 0.8 * minFailureRate) {
+//
+//			}
+//
+//			if (throughput > maxThroughput) {
+//				// swap if failure rate not critical
+//			}
+//
+//
+//
+//			// throughput +/- 5%
+//
+//
+//
+//			// for each check the failure rate for last 30 min
+//			// current number of active transfers
+//			// use the number of active transfers to check the throughtput for last 30 min
+//
+//		}
+
 		// get the first in the list
 		ret = fileIndexToFiles[index].front();
 		// remove it from the list

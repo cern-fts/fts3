@@ -27,7 +27,7 @@
 #define TRANSFERFILEHANDLER_H_
 
 
-#include "db/generic/TransferFiles.h"
+#include "db/generic/SingleDbInstance.h"
 
 #include <list>
 #include <map>
@@ -41,6 +41,7 @@ namespace server {
 
 using namespace std;
 using namespace boost;
+using namespace db;
 
 typedef pair<string, int> FileIndex;
 
@@ -71,6 +72,9 @@ private:
 	set<string> vos;
 
 	void freeList(list<TransferFiles*>& l);
+
+	/// DB interface
+	GenericDbIfce* db;
 
 };
 
