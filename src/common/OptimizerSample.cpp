@@ -83,11 +83,14 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
         if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
       
 	   if((*iter).numberOfFinishedAll != numberOfFinishedAll){ //one more tr finished		   			
-	   			if(trSuccessRateForPair >= 95 && throughput >= (*iter).throughput){
+	   			if(trSuccessRateForPair >= 95 && throughput > (*iter).throughput){
 					(*iter).numOfActivePerPair += 2;
-				}else if( trSuccessRateForPair >= 95 && throughput < (*iter).throughput){
+				}else if( trSuccessRateForPair >= 95 && throughput == (*iter).throughput){
 						(*iter).numOfActivePerPair += 1;
 				}      
+				}else if( trSuccessRateForPair >= 95 && throughput < (*iter).throughput){
+						(*iter).numOfActivePerPair -= 1;
+				}      				
 				(*iter).numFinished = numFinished;
 				(*iter).numFailed = numFailed;  
 				(*iter).successRate = trSuccessRateForPair;
