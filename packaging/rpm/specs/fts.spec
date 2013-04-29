@@ -17,33 +17,33 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:  cmake
-BuildRequires:  apr-devel
-BuildRequires:  apr-util-devel
 %if 0%{?el5}
 BuildRequires:  activemq-cpp-library
 %else
 BuildRequires:  activemq-cpp-devel
 %endif
-BuildRequires:  openldap-devel
-BuildRequires:  gsoap-devel
+BuildRequires:  apr-devel
+BuildRequires:  apr-util-devel
+BuildRequires:  boost-devel
+BuildRequires:  CGSI-gSOAP-devel
+BuildRequires:  cmake
 BuildRequires:  doxygen
 %if 0%{?el5}
 BuildRequires:  e2fsprogs-devel
 %else
 BuildRequires:  libuuid-devel
 %endif
-BuildRequires:  boost-devel
-BuildRequires:  globus-gsi-credential-devel
-BuildRequires:  CGSI-gSOAP-devel
-BuildRequires:  is-interface-devel
-BuildRequires:  glib2-devel
-BuildRequires:  gridsite-devel
 BuildRequires:  gfal2-devel
-BuildRequires:  voms-devel
-BuildRequires:  python-devel
-BuildRequires:  pugixml-devel
+BuildRequires:  glib2-devel
+BuildRequires:  globus-gsi-credential-devel
+BuildRequires:  gridsite-devel
+BuildRequires:  gsoap-devel
+BuildRequires:  is-interface-devel
 BuildRequires:  libcurl-devel
+BuildRequires:  openldap-devel
+BuildRequires:  pugixml-devel
+BuildRequires:  python-devel
+BuildRequires:  voms-devel
 Requires(pre):  shadow-utils
 
 %description
