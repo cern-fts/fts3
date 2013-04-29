@@ -45,8 +45,8 @@ GSoapAcceptor::GSoapAcceptor(const unsigned int port, const std::string& ip) {
 		ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session		
 		ctx->accept_timeout = 0; 
 		ctx->socket_flags = MSG_NOSIGNAL; // use this, prevent sigpipe
-		ctx->recv_timeout = 120; // Timeout after 2 minutes stall on recv
-		ctx->send_timeout = 120; // Timeout after 2 minute stall on send
+		ctx->recv_timeout = 240; // Timeout after 4 minutes stall on recv
+		ctx->send_timeout = 240; // Timeout after 4 minute stall on send
 
 		soap_cgsi_init(ctx,  CGSI_OPT_KEEP_ALIVE  | CGSI_OPT_SERVER | CGSI_OPT_SSL_COMPATIBLE | CGSI_OPT_DISABLE_MAPPING);// | CGSI_OPT_DISABLE_NAME_CHECK);
 		soap_set_namespaces(ctx, fts3_namespaces);
