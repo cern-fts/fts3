@@ -87,7 +87,6 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
 					(*iter).numOfActivePerPair += 2;
 				}else if( trSuccessRateForPair >= 95 && throughput == (*iter).throughput){
 						(*iter).numOfActivePerPair += 1;
-				}      
 				}else if( trSuccessRateForPair >= 95 && throughput < (*iter).throughput){
 						(*iter).numOfActivePerPair -= 1;
 				}      				
