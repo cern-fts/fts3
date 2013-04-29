@@ -226,16 +226,7 @@ rm -rf %{buildroot}
 %{_bindir}/fts-transfer-status
 %{_bindir}/fts-transfer-submit
 %{_bindir}/fts-transfer-cancel
-%{_mandir}/man1/fts-config-get.1*
-%{_mandir}/man1/fts-config-set.1*
-%{_mandir}/man1/fts-config-del.1*
-%{_mandir}/man1/fts-transfer-cancel.1*
-%{_mandir}/man1/fts-transfer-list.1*
-%{_mandir}/man1/fts-transfer-status.1*
-%{_mandir}/man1/fts-transfer-submit.1*
-%{_mandir}/man1/fts-set-priority.1*
-%{_mandir}/man1/fts-set-debug.1*
-%{_mandir}/man1/fts-set-blacklist.1*
+%{_mandir}/man1/fts*
 
 %files libs
 %defattr(-,root,root,-)
