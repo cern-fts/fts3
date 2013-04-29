@@ -4,7 +4,7 @@
 %global _hardened_build 1
 
 Name: fts
-Version: 0.0.1 
+Version: 0.0.1
 Release: 101%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
