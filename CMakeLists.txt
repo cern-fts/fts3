@@ -104,8 +104,6 @@ find_package(Boost)
 find_package(Threads)
 find_package(OpenSSL)
 
-install(FILES "LICENSE" "README" DESTINATION ${DOC_INSTALL_DIR})
-
 add_subdirectory(test)
 add_subdirectory(src)
 
