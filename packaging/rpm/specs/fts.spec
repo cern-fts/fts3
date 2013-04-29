@@ -7,7 +7,7 @@ Name: fts
 Version: 0.0.1 
 Release: 100%{?dist}
 Summary: File Transfer Service V3
-Group: System Environment/Daemons 
+Group: System Environment/Daemons
 License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
@@ -168,13 +168,13 @@ exit 0
 %postun server
 if [ "$1" -ge "1" ] ; then
     /sbin/service fts-server condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-bringonline condrestart >/dev/null 2>&1 || :    
+    /sbin/service fts-bringonline condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-bulk condrestart >/dev/null 2>&1 || :
     /sbin/service fts-msg-cron condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :    
+    /sbin/service fts-records-cleaner condrestart >/dev/null 2>&1 || :
     /sbin/service fts-info-publisher condrestart >/dev/null 2>&1 || :
     /sbin/service fts-myosg-updater condrestart >/dev/null 2>&1 || :
-    /sbin/service fts-bdii-cache-updater condrestart >/dev/null 2>&1 || :        
+    /sbin/service fts-bdii-cache-updater condrestart >/dev/null 2>&1 || :
 fi
 exit 0
 
