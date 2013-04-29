@@ -195,15 +195,7 @@ rm -rf %{buildroot}
 %dir %attr(0755,fts3,root) %{_var}/log/fts3
 %attr(0644,fts3,root) %{_var}/lib/fts3/bdii_cache.xml
 %attr(0644,fts3,root) %{_var}/lib/fts3/myosg.xml
-%{_sbindir}/fts_msg_cron
-%{_sbindir}/fts_msg_bulk
-%{_sbindir}/fts_server
-%{_sbindir}/fts_bringonline
-%{_sbindir}/fts_url_copy
-%{_sbindir}/fts_db_cleaner
-%{_sbindir}/fts_info_publisher
-%{_sbindir}/fts_myosg_updater
-%{_sbindir}/fts_bdii_cache_updater
+%{_sbindir}/fts*
 %attr(0755,root,root) %{_initddir}/fts-msg-bulk
 %attr(0755,root,root) %{_initddir}/fts-server
 %attr(0755,root,root) %{_initddir}/fts-bringonline
