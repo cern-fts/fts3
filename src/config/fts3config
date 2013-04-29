@@ -19,7 +19,7 @@ DbPassword=
 DbConnectString=
 
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
-DbThreadsNum=6
+DbThreadsNum=10
 
 #The alias used for the FTS endpoint, will be published as such in the dashboard transfers UI http://dashb-wlcg-transfers.cern.ch/ui/
 Alias=
@@ -54,7 +54,7 @@ MyOSG=false
 
 #The maximum number of processes available to a single user (resource limit)
 #-1 means use OS default (check ulimit -u)
-MaxNumberOfProcesses=20000
+MaxNumberOfProcesses=25000
 
 # site name 
 SiteName=
