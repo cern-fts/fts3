@@ -247,8 +247,8 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_ws_ifce_server.so.*
 %{_libdir}/libfts_delegation_api_simple.so.*
 %{_libdir}/libfts_delegation_api_cpp.so.*
-%{_docdir}/fts3/README
-%{_docdir}/fts3/LICENSE
+%doc README
+%doc LICENSE
 
 %files devel
 %defattr(-,root,root,-)
@@ -268,7 +268,7 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_ws_ifce_server.so
 %{_libdir}/libfts_delegation_api_simple.so
 %{_libdir}/libfts_delegation_api_cpp.so
-%{_docdir}/fts3/README
+%doc README
 
 
 %changelog
