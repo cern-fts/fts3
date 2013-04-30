@@ -889,7 +889,7 @@ int main(int argc, char **argv) {
                 if (gfal2_stat(handle, (strArray[1]).c_str(), &statbufsrc, &tmp_err) < 0) {
                     std::string tempError(tmp_err->message);
                     const int errCode = tmp_err->code;
-                    log << fileManagement->timestamp() << "ERROR Failed to get source file size, errno:" << tempError << '\n';
+                    log << fileManagement->timestamp() << "ERROR Failed to get source file size, errno:" << errCode << ", " << tempError << '\n';
                     errorMessage = "Failed to get source file size: " + tempError;
                     errorScope = SOURCE;
                     reasonClass = mapErrnoToString(errCode);
@@ -1036,7 +1036,7 @@ int main(int argc, char **argv) {
   	        errorMessage = ""; //reset
                 if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0) {                  
                         std::string tempError(tmp_err->message);
-                        log << fileManagement->timestamp() << "ERROR Failed to get dest file size, errno:" << tempError << '\n';
+                        log << fileManagement->timestamp() << "ERROR Failed to get dest file size, errno:" << tmp_err->code << ", " << tempError << '\n';
                         errorMessage = "Failed to get dest file size: " + tempError;
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(tmp_err->code);
