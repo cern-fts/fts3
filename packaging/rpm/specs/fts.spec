@@ -289,3 +289,4 @@ rm -rf %{buildroot}
 
 %changelog
  * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1%{?dist}
+  - First EPEL release
