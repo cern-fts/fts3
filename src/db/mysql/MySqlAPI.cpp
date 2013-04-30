@@ -468,7 +468,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
             		"			f2.job_id = f1.job_id AND "
             		"			f2.file_index = f1.file_index AND "
             		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
-            		"	 ) LIMIT 15",soci::use(tTime), soci::use(jobId)
+            		"	 ) ORDER BY f1.file_id ASC LIMIT 15",soci::use(tTime), soci::use(jobId)
                    
                     
             	);
@@ -1727,6 +1727,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
         double nFailedLastHour=0, nFinishedLastHour=0;
         int nActive;
         double nFailedAll, nFinishedAll, throughput;
+	soci::indicator isNull;
+	
 
         sql << "SELECT COUNT(*) FROM t_file "
                "WHERE t_file.file_state in ('READY','ACTIVE') AND "
@@ -1743,7 +1745,11 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     			      " from t_file  where source_se=:source and dest_se=:dst) LIMIT 1",
 			      soci::use(source_hostname), soci::use(destin_hostname),
 			      soci::use(source_hostname), soci::use(destin_hostname),
-			      soci::into(throughput);
+			      soci::into(throughput, isNull);
+
+        if (isNull == soci::i_null){
+		throughput = 0.0;
+	}			      
 
         soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                        "WHERE "

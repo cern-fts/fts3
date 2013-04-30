@@ -939,7 +939,15 @@ protected:
                     jobs2.clear();
                 }
 
-            } catch (...) {
+            }catch (std::exception& e) {
+	    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception is process_service_handler " << e.what() << commit;
+                if (!jobs2.empty()) {
+                    std::vector<TransferJobs*>::const_iterator iter2;
+                    for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                        delete *iter2;
+                    jobs2.clear();
+                }	    
+	    }catch (...) {
 	    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception is process_service_handler!" << commit;
                 if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::const_iterator iter2;

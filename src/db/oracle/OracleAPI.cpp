@@ -673,7 +673,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     		"			f2.job_id = f1.job_id AND "
     		"			f2.file_index = f1.file_index AND "
     		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') and rownum <= 15"
-    		"	) ";
+    		"	) ORDER BY f1.file_id ASC";
    
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
