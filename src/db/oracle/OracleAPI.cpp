@@ -208,7 +208,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     }
 				     
     std::string query_stmt =
-    		" SELECT /* FIRST_ROWS(5) */"
+    		" SELECT distinct /* FIRST_ROWS(5) */"
             " 	t_job.job_id, "
             " 	t_job.job_state, "
             " 	t_job.vo_name,  "
