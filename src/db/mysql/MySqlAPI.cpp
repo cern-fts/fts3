@@ -142,7 +142,7 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
             soci::session& sql = (*connectionPool).at(i);	    	    	    
 	    sql.open(soci::mysql, connStr);
 	    
-	    (*connectionPool).at(i) << "SET transaction isolation level read committed";
+	    (*connectionPool).at(i) << "SET tx_isolation = 'READ-COMMITTED'";
             
             soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
             mysql_options(static_cast<MYSQL*>(be->conn_), MYSQL_OPT_RECONNECT, &reconnect);
@@ -210,7 +210,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
     						" 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
     						" 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
     						<<
-    						(vos == "*" ? "" : " AND t_job.vo_name IN " + vos)
+    						(vos == "*" ? "" : " AND t_job.vo_name IN " + vos)						
     		);
 
         for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
@@ -467,8 +467,8 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
             		"		WHERE "
             		"			f2.job_id = f1.job_id AND "
             		"			f2.file_index = f1.file_index AND "
-            		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') "
-            		"	 ) ORDER BY f1.file_id ASC LIMIT 15",soci::use(tTime), soci::use(jobId)
+            		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE' OR f2.file_state = 'FINISHED' OR f2.file_state = 'CANCELED') "
+            		"	 ) ORDER BY j.submit_time ASC ",soci::use(tTime), soci::use(jobId)
                    
                     
             	);
