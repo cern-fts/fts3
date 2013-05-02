@@ -227,7 +227,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
         // Query depends on vos
         std::string query;
-		query = "SELECT t_job.* FROM t_job, t_file "
+		query = "SELECT DISTINCT t_job.* FROM t_job, t_file "
 							"WHERE t_job.job_id = t_file.job_id AND "
 							"	   t_job.job_finished IS NULL AND "
 							"      t_job.cancel_job IS NULL AND "
