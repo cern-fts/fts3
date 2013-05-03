@@ -266,10 +266,10 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
 
 static unsigned int adjustTimeout(off_t sizeInBytes){
 	if(sizeInBytes <= 10485760) { //starting with 10MB
-		return 700;
+		return 900;
 	}
 	else if(sizeInBytes > 10485760 && sizeInBytes <= 52428800){
-		return 1100;	
+		return 1300;	
 	}
   return DEFAULT_TIMEOUT;	
 }	

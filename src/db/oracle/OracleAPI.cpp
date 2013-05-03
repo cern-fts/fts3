@@ -208,7 +208,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     }
 				     
     std::string query_stmt =
-    		" SELECT distinct /* FIRST_ROWS(5) */"
+    		" SELECT distinct "
             " 	t_job.job_id, "
             " 	t_job.job_state, "
             " 	t_job.vo_name,  "
@@ -672,7 +672,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     		"		WHERE "
     		"			f2.job_id = f1.job_id AND "
     		"			f2.file_index = f1.file_index AND "
-    		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE') and rownum <= 15"
+    		"			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE' OR f2.file_state = 'FINISHED' OR f2.file_state = 'CANCELED') "
     		"	) ORDER BY f1.file_id ASC";
    
     oracle::occi::Statement* s = NULL;
