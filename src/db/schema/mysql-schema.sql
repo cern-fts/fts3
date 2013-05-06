@@ -346,7 +346,7 @@ CREATE TABLE t_job (
   reason               VARCHAR(2048),
 --
 -- The time that the job was submitted
-  submit_time          TIMESTAMP,
+  submit_time          TIMESTAMP NULL DEFAULT NULL,
 --
 -- The time that the job was in a terminal state
   finish_time          TIMESTAMP NULL DEFAULT NULL,
