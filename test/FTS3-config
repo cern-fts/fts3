@@ -16,7 +16,8 @@ function if_not_set()
 #If LOGSLOCATON is not specified logs will be in the tests directory
 #LOGSLOCATION="/tmp"
 
-if_not_set FTS3_HOST "`hostname -f`"
+if_not_set TARGET_HOST "`hostname -f`"
+export FTS3_HOST=$TARGET_HOST
 export FTS3_PORT=8443
 export FN="fsub"
 export BDII_HOST="certtb-bdii-top.cern.ch"
