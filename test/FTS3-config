@@ -29,7 +29,7 @@ export LCG_GFAL_INFOSYS="$BDII_HOST:2170"
 #LFC_HOST="lxb7608v3.cern.ch"
 
 #Name of VO to use
-export VO="testers.eu-emi.eu"
+if_not_set VO "testers.eu-emi.eu"
 
 export URL_source="https://cvitbdpm1.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/ftstest01"
 export URL_dest="https://cvitbdpm2.cern.ch/dpm/cern.ch/home/testers.eu-emi.eu/ftstest01.copy"
