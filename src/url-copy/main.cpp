@@ -696,7 +696,7 @@ int main(int argc, char **argv) {
 
     //cancelation point 
     long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    long unsigned int timerTimeout = reuseOrNot * 10000;
+    long unsigned int timerTimeout = reuseOrNot * 15000;
     
     try{
     	boost::thread bt(taskTimer, timerTimeout);
