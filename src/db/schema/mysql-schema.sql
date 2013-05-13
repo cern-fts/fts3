@@ -224,7 +224,7 @@ CREATE TABLE t_bad_ses (
   message        VARCHAR(2048) DEFAULT NULL,
 --
 -- The time the host was added
-  addition_time  TIMESTAMP,
+  addition_time  TIMESTAMP NULL DEFAULT NULL,
 --
 -- The DN of the administrator who added it
   admin_dn       VARCHAR(1024),
@@ -252,7 +252,7 @@ CREATE TABLE t_bad_dns (
   message        VARCHAR(2048) DEFAULT NULL,
 --
 -- The time the host was added
-  addition_time  TIMESTAMP,
+  addition_time  TIMESTAMP NULL DEFAULT NULL,
 --
 -- The DN of the administrator who added it
   admin_dn       VARCHAR(1024),
