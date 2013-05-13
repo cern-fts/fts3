@@ -48,8 +48,8 @@ export INTERVAL=5
 export CERN_SE1="cvitbdpm1.cern.ch"
 export CERN_SE2="cvitbdpm2.cern.ch"
 
-export DESY_SE1="sligo.desy.de"
-export DESY_SE2="sligo.desy.de"
+export DESY_SE1="dcache-se-desy.desy.de"
+export DESY_SE2="dcache-se-desy.desy.de"
 
 export DESY_SE_PORT=2811
 export DCACHE_SRM_PORT=8443
