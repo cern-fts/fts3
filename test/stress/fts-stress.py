@@ -8,6 +8,7 @@
 import random
 import subprocess
 import sys
+from datetime import datetime
 from optparse import OptionParser
 
 def loadList(path):
@@ -35,6 +36,7 @@ class Bully:
     self.logger       = None
     self.sources      = sources
     self.destinations = destinations
+    self.timestamp    = datetime.now().strftime("%Y%m%d%H%M%S")
 
   def setLogger(self, f):
     self.logger = f
@@ -54,6 +56,8 @@ class Bully:
     self.log("Number of sources:    %d"   % len(self.sources))
     self.log("Number of destinations: %d" % len(self.destinations))
 
+    random.seed()
+
     n = 0
     for i in xrange(self.iterations):
       self.log("Iteration %d" % i)
@@ -63,8 +67,8 @@ class Bully:
         dst = self.destinations[random.randrange(len(self.destinations))]
 
         transferId = "%d.%d" % (i, p)
-        src = src.replace("$ID", transferId)
-        dst = dst.replace("$ID", transferId)
+        src = src.replace("$ID", transferId).replace("$TIMESTAMP", self.timestamp)
+        dst = dst.replace("$ID", transferId).replace("$TIMESTAMP", self.timestamp)
 
         self.log("Spawning transfer %04d '%s' => '%s'" % (p, src, dst))
         procs.append(self.spawn(src, dst))
