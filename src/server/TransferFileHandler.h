@@ -59,6 +59,8 @@ public:
 
 	bool empty();
 
+	void remove(string source, string destination);
+
 private:
 
 	TransferFiles* getFile(FileIndex index);
@@ -70,6 +72,8 @@ private:
 	map< string, list<FileIndex> > voToFileIndexes;
 
 	set<string> vos;
+
+	set< pair<string, string> > notScheduled;
 
 	void freeList(list<TransferFiles*>& l);
 

@@ -155,6 +155,11 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index) {
 		fileIndexToFiles[index].pop_front();
 	}
 
+	if (notScheduled.count(make_pair(ret->SOURCE_SE, ret->DEST_SE))) {
+		delete ret;
+		return 0;
+	}
+
 	return ret;
 }
 
@@ -179,6 +184,13 @@ set<string>::iterator TransferFileHandler::end() {
 
 bool TransferFileHandler::empty() {
 	return voToFileIndexes.empty();
+}
+
+void TransferFileHandler::remove(string source, string destination) {
+
+	notScheduled.insert(
+			make_pair(source, destination)
+		);
 }
 
 } /* namespace cli */

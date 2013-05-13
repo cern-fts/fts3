@@ -509,6 +509,9 @@ protected:
                                 }
                             }
                             params.clear();
+                        } else {
+                        	// todo
+                        	tfh.remove(temp->SOURCE_SE, temp->DEST_SE);
                         }
                     }
                 }
