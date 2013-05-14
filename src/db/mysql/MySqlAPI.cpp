@@ -4127,104 +4127,19 @@ void MySqlAPI::revertNotUsedFiles() {
 
 bool MySqlAPI::isShareOnly(std::string se) {
 
-    std::string tag = "isShareOnly";
-    std::string query =
-    		"select * from t_link_config "
-    		"where source=:1 and destination = '*' and auto_tuning = 'all' ";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+//    std::string query =
+//    		"select * from t_link_config "
+//    		"where source=:1 and destination = '*' and auto_tuning = 'all' ";
 
-
-    bool ret = false;
-
-    try {
-	pooledConnection = conn->getPooledConnection();
-        if (!pooledConnection)
-            return NULL;
-
-        s = conn->createStatement(query, tag, pooledConnection);
-        s->setString(1, se);
-        r = conn->createResultset(s, pooledConnection);
-        if (r->next()) {
-        	ret = true;
-        }
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag, pooledConnection);
-
-    }    catch (oracle::occi::SQLException const &e) {
-
-            conn->rollback(pooledConnection);
-        	if(s && r)
-        		conn->destroyResultset(s, r);
-        	if (s)
-        		conn->destroyStatement(s, tag, pooledConnection);
-
-        	conn->releasePooledConnection(pooledConnection);
-        	throw Err_Custom(e.what());
-    }   catch (...) {
-
-            conn->rollback(pooledConnection);
-        	if(s && r)
-        		conn->destroyResultset(s, r);
-        	if (s)
-        		conn->destroyStatement(s, tag, pooledConnection);
-
-        	conn->releasePooledConnection(pooledConnection);
-        	throw Err_Custom("Unknown exception");
-    }
-    conn->releasePooledConnection(pooledConnection);
-	return ret;
 }
 
 std::vector<std::string> MySqlAPI::getAllShareOnlyCfgs() {
 
-	std::vector<std::string> ret;
-
-    std::string tag = "getAllShareOnlyCfgs";
-    std::string query =
-    		" select SOURCE "
-    		" from T_LINK_CONFIG "
-    		" where DESTINATION = '*' "
-    		"	and auto_tuning = 'all' ";
-
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
-
-    try {
-
-	pooledConnection = conn->getPooledConnection();
-        if (!pooledConnection) return ret;
-
-        s = conn->createStatement(query, tag, pooledConnection);
-        r = conn->createResultset(s, pooledConnection);
-
-        while (r->next()) {
-        		ret.push_back(r->getString(1));
-        }
-
-        conn->destroyResultset(s, r);
-        conn->destroyStatement(s, tag, pooledConnection);
-
-    } catch (oracle::occi::SQLException const &e) {
-            conn->rollback(pooledConnection);
-        	if(s && r)
-        		conn->destroyResultset(s, r);
-        	if (s)
-        		conn->destroyStatement(s, tag, pooledConnection);
-
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-    }catch (...) {
-            conn->rollback(pooledConnection);
-        	if(s && r)
-        		conn->destroyResultset(s, r);
-        	if (s)
-        		conn->destroyStatement(s, tag, pooledConnection);
-        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
-    }
-    conn->releasePooledConnection(pooledConnection);
-    return ret;
+//    std::string query =
+//    		" select SOURCE "
+//    		" from T_LINK_CONFIG "
+//    		" where DESTINATION = '*' "
+//    		"	and auto_tuning = 'all' ";
 }
 
 // the class factories
