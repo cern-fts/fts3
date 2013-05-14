@@ -2504,13 +2504,13 @@ void MySqlAPI::addLinkConfig(LinkConfig* cfg) {
         sql.begin();
 
         sql << "INSERT INTO t_link_config (source, destination, state, symbolicName, "
-                "                          nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_protocol)"
-                "                  VALUES (:src, :dest, :state, :sname, :nstreams, :tcp, :txto, :txactivity, :auto_protocol)",
+                "                          nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_tuning)"
+                "                  VALUES (:src, :dest, :state, :sname, :nstreams, :tcp, :txto, :txactivity, :auto_tuning)",
                 soci::use(cfg->source), soci::use(cfg->destination),
                 soci::use(cfg->state), soci::use(cfg->symbolic_name),
                 soci::use(cfg->NOSTREAMS), soci::use(cfg->TCP_BUFFER_SIZE),
                 soci::use(cfg->URLCOPY_TX_TO), soci::use(cfg->URLCOPY_TX_TO),
-                soci::use(cfg->auto_protocol);
+                soci::use(cfg->auto_tuning);
 
 
         sql.commit();
@@ -2532,12 +2532,12 @@ void MySqlAPI::updateLinkConfig(LinkConfig* cfg) {
         sql << "UPDATE t_link_config SET "
                "  state = :state, symbolicName = :sname, "
                "  nostreams = :nostreams, tcp_buffer_size = :tcp, "
-               "  urlcopy_tx_to = :txto, no_tx_activity_to = :txactivity, auto_protocol = :auto_protocol "
+               "  urlcopy_tx_to = :txto, no_tx_activity_to = :txactivity, auto_tuning = :auto_tuning "
                "WHERE source = :source AND destination = :dest",
                soci::use(cfg->state), soci::use(cfg->symbolic_name),
                soci::use(cfg->NOSTREAMS), soci::use(cfg->TCP_BUFFER_SIZE),
                soci::use(cfg->URLCOPY_TX_TO), soci::use(cfg->NO_TX_ACTIVITY_TO),
-               soci::use(cfg->auto_protocol),
+               soci::use(cfg->auto_tuning),
                soci::use(cfg->source), soci::use(cfg->destination);
 
         sql.commit();

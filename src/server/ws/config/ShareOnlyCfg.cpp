@@ -60,7 +60,9 @@ ShareOnlyCfg::ShareOnlyCfg(string dn, CfgParser& parser) : Configuration(dn) {
 	active = parser.get<bool>("active");
 
 	in_share = parser.get< map<string, int> >("in");
+	checkShare(in_share);
 	out_share = parser.get< map<string, int> >("out");
+	checkShare(out_share);
 
 	all = json();
 }
@@ -77,7 +79,7 @@ string ShareOnlyCfg::json() {
 	ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";
 	ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
 	ss << "\"" << "in" << "\":" << Configuration::json(in_share) << ",";
-	ss << "\"" << "out" << "\":" << Configuration::json(out_share) << ",";
+	ss << "\"" << "out" << "\":" << Configuration::json(out_share);
 	ss << "}";
 
 	return ss.str();
@@ -118,6 +120,18 @@ void ShareOnlyCfg::init(string se) {
 	// get SE's in and out shares
 	in_share = getShareMap(any, se);
 	out_share = getShareMap(se, any);
+}
+
+void ShareOnlyCfg::checkShare(map<string, int>& share) {
+
+	int sum = 0;
+	map<string, int>::iterator it;
+
+	for (it = share.begin(); it != share.end(); it++) {
+		sum += it->second;
+	}
+
+	if (sum != 100) throw Err_Custom("In a share-only configuration the sum of all share has to be equal to 100%");
 }
 
 } /* namespace ws */

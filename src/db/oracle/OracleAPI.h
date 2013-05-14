@@ -194,6 +194,7 @@ public:
     virtual bool isThereLinkConfig(std::string source, std::string destination);
     virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name);
     virtual bool isGrInPair(std::string group);
+    virtual bool isShareOnly(std::string se);
 
     virtual void addShareConfig(ShareConfig* cfg);
     virtual void updateShareConfig(ShareConfig* cfg);
@@ -241,6 +242,8 @@ public:
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
     virtual std::vector<std::string> getAllStandAlloneCfgs();
+
+    virtual std::vector<std::string> getAllShareOnlyCfgs();
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
     

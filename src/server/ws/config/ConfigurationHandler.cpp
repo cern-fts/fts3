@@ -101,7 +101,7 @@ vector<string> ConfigurationHandler::get() {
 	vector<string> ret;
 
 	// get all standalone configurations (SE names only)
-	vector<string> secfgs = DBSingleton::instance().getDBObjectInstance()->getAllStandAlloneCfgs();
+	vector<string> secfgs = db->getAllStandAlloneCfgs();
 	vector<string>::iterator it;
 	// add the configurations for the SEs to the response
 	for (it = secfgs.begin(); it != secfgs.end(); it++) {
@@ -122,8 +122,22 @@ vector<string> ConfigurationHandler::get() {
 
 		ret.push_back(cfg->json());
 	}
+	// get all share only configurations
+	vector<string> socfgs = db->getAllShareOnlyCfgs();
+	// add the configurations for the SEs to the response
+	for (it = socfgs.begin(); it != socfgs.end(); it++) {
+		// get the SE name
+		string se = *it;
+		// if it's a wildcard change it to 'any', due to the convention
+		if (se == Configuration::wildcard) se = Configuration::any;
+		// check if it's a group or a SE
+		cfg.reset(
+				new ShareOnlyCfg(dn, se)
+			);
+		ret.push_back(cfg->json());
+	}
 	// get all pair configuration (source-destination pairs only)
-	vector< std::pair<string, string> > paircfgs = DBSingleton::instance().getDBObjectInstance()->getAllPairCfgs();
+	vector< std::pair<string, string> > paircfgs = db->getAllPairCfgs();
 	vector< std::pair<string, string> >::iterator it2;
 	// add the configurations for the pairs to the response
 	for (it2 = paircfgs.begin(); it2 != paircfgs.end(); it2++) {
@@ -152,14 +166,23 @@ vector<string> ConfigurationHandler::get(string name) {
 
 	vector<string> ret;
 
-	if (db->checkGroupExists(name)) {
+	if (db->isShareOnly(name)) {
+
 		cfg.reset(
-				new StandaloneGrCfg(dn, name)
+				new ShareOnlyCfg(dn, name)
 			);
+
 	} else {
-		cfg.reset(
-				new StandaloneSeCfg(dn, name)
-			);
+
+		if (db->checkGroupExists(name)) {
+			cfg.reset(
+					new StandaloneGrCfg(dn, name)
+				);
+		} else {
+			cfg.reset(
+					new StandaloneSeCfg(dn, name)
+				);
+		}
 	}
 
 	ret.push_back(cfg->json());

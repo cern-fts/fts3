@@ -239,14 +239,14 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 		value = protocol.get()[Protocol::URLCOPY_TX_TO];
 		cfg.first->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
 
-		cfg.first->auto_protocol = off;
+		cfg.first->auto_tuning = off;
 
 	} else {
 
 		cfg.first->NOSTREAMS = 0;
 		cfg.first->TCP_BUFFER_SIZE = 0;
 		cfg.first->URLCOPY_TX_TO = 0;
-		cfg.first->auto_protocol = on;
+		cfg.first->auto_tuning = on;
 	}
 
 	if (cfg.second) {
@@ -269,7 +269,7 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 	cfg.first->URLCOPY_TX_TO = 0;
 
 	// mark it as share only
-	cfg.first->auto_protocol = share_only;
+	cfg.first->auto_tuning = share_only;
 
 	if (cfg.second) {
 		db->updateLinkConfig(cfg.first.get());
@@ -324,7 +324,7 @@ optional< map<string, int> > Configuration::getProtocolMap(string source, string
 			db->getLinkConfig(source, destination)
 		);
 
-	if (cfg->auto_protocol == on) return optional< map<string, int> >();
+	if (cfg->auto_tuning == on) return optional< map<string, int> >();
 
 	return getProtocolMap(cfg.get());
 }

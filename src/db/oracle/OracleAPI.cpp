@@ -4793,7 +4793,7 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
     		"	tcp_buffer_size,"
     		"	URLCOPY_TX_TO,"
     		"	no_tx_activity_to,"
-    		"	auto_protocol"
+    		"	auto_tuning"
     		") values(:1,:2,:3,:4,:5,:6,:7,:8,:9)";
     
     oracle::occi::Statement* s = NULL;
@@ -4813,7 +4813,7 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg) {
         s->setInt(6, cfg->TCP_BUFFER_SIZE);
         s->setInt(7, cfg->URLCOPY_TX_TO);
         s->setInt(8, cfg->NO_TX_ACTIVITY_TO);
-        s->setString(9, cfg->auto_protocol);
+        s->setString(9, cfg->auto_tuning);
         if (s->executeUpdate() != 0)
             conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
@@ -4842,7 +4842,7 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
     std::string tag = "updateLinkConfig";
     std::string query =
     		"update t_link_config "
-    		"set state=:1,symbolicName=:2,NOSTREAMS=:3,tcp_buffer_size=:4,URLCOPY_TX_TO=:5,no_tx_activity_to=:6, auto_protocol=:7 "
+    		"set state=:1,symbolicName=:2,NOSTREAMS=:3,tcp_buffer_size=:4,URLCOPY_TX_TO=:5,no_tx_activity_to=:6, auto_tuning=:7 "
     		"where source=:8 and destination=:9";
     oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;    
@@ -4860,7 +4860,7 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg) {
         s->setInt(4, cfg->TCP_BUFFER_SIZE);
         s->setInt(5, cfg->URLCOPY_TX_TO);
         s->setInt(6, cfg->NO_TX_ACTIVITY_TO);
-        s->setString(7, cfg->auto_protocol);
+        s->setString(7, cfg->auto_tuning);
         s->setString(8, cfg->source);
         s->setString(9, cfg->destination);
         s->executeUpdate();
@@ -4927,7 +4927,7 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination) {
 LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination) {
     std::string tag = "getLinkConfig";
     std::string query =
-    		"select source, destination, state, symbolicName, nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_protocol "
+    		"select source, destination, state, symbolicName, nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_tuning "
     		"from t_link_config where source=:1 and destination=:2";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -4954,7 +4954,7 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
             cfg->TCP_BUFFER_SIZE = r->getInt(6);
             cfg->URLCOPY_TX_TO = r->getInt(7);
             cfg->NO_TX_ACTIVITY_TO = r->getInt(8);
-            cfg->auto_protocol = r->getString(9);
+            cfg->auto_tuning = r->getString(9);
         }
         conn->destroyResultset(s, r);
         conn->destroyStatement(s, tag, pooledConnection);
@@ -5138,6 +5138,58 @@ bool OracleAPI::isGrInPair(std::string group) {
         	throw Err_Custom("Unknown exception");
     }
     conn->releasePooledConnection(pooledConnection);                
+	return ret;
+}
+
+bool OracleAPI::isShareOnly(std::string se) {
+
+    std::string tag = "isShareOnly";
+    std::string query =
+    		"select * from t_link_config "
+    		"where source=:1 and destination = '*' and auto_tuning = 'all' ";
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+
+    bool ret = false;
+
+    try {
+	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+            return NULL;
+
+        s = conn->createStatement(query, tag, pooledConnection);
+        s->setString(1, se);
+        r = conn->createResultset(s, pooledConnection);
+        if (r->next()) {
+        	ret = true;
+        }
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag, pooledConnection);
+
+    }    catch (oracle::occi::SQLException const &e) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        	conn->releasePooledConnection(pooledConnection);
+        	throw Err_Custom(e.what());
+    }   catch (...) {
+
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        	conn->releasePooledConnection(pooledConnection);
+        	throw Err_Custom("Unknown exception");
+    }
+    conn->releasePooledConnection(pooledConnection);
 	return ret;
 }
 
@@ -6640,7 +6692,11 @@ std::vector<std::string> OracleAPI::getAllStandAlloneCfgs() {
 	std::vector<std::string> ret;
 
     std::string tag = "getAllStandAlloneCfgs";
-    std::string query = "select SOURCE from T_LINK_CONFIG where DESTINATION = '*'";
+    std::string query =
+    		" select SOURCE "
+    		" from T_LINK_CONFIG "
+    		" where DESTINATION = '*' "
+    		"	and auto_tuning <> 'all' ";
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -6678,6 +6734,56 @@ std::vector<std::string> OracleAPI::getAllStandAlloneCfgs() {
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }
     conn->releasePooledConnection(pooledConnection);                
+    return ret;
+}
+
+std::vector<std::string> OracleAPI::getAllShareOnlyCfgs() {
+
+	std::vector<std::string> ret;
+
+    std::string tag = "getAllShareOnlyCfgs";
+    std::string query =
+    		" select SOURCE "
+    		" from T_LINK_CONFIG "
+    		" where DESTINATION = '*' "
+    		"	and auto_tuning = 'all' ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+
+	pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection) return ret;
+
+        s = conn->createStatement(query, tag, pooledConnection);
+        r = conn->createResultset(s, pooledConnection);
+
+        while (r->next()) {
+        		ret.push_back(r->getString(1));
+        }
+
+        conn->destroyResultset(s, r);
+        conn->destroyStatement(s, tag, pooledConnection);
+
+    } catch (oracle::occi::SQLException const &e) {
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }catch (...) {
+            conn->rollback(pooledConnection);
+        	if(s && r)
+        		conn->destroyResultset(s, r);
+        	if (s)
+        		conn->destroyStatement(s, tag, pooledConnection);
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+    conn->releasePooledConnection(pooledConnection);
     return ret;
 }
 

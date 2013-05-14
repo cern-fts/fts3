@@ -118,7 +118,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 
 	protocol ret;
 
-	get<AUTO_PROTOCOL>(ret) = cfg->auto_protocol == Configuration::on;
+	get<AUTO_TUNING>(ret) = cfg->auto_tuning == Configuration::on;
 	get<NOSTREAMS>(ret) = cfg->NOSTREAMS;
 	get<NO_TX_ACTIVITY_TO>(ret) = cfg->NO_TX_ACTIVITY_TO;
 	get<TCP_BUFFER_SIZE>(ret) = cfg->TCP_BUFFER_SIZE;
@@ -134,18 +134,18 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
 
 	protocol ret;
 
-	get<AUTO_PROTOCOL>(ret) = get<AUTO_PROTOCOL>(*source) && get<AUTO_PROTOCOL>(*destination);
+	get<AUTO_TUNING>(ret) = get<AUTO_TUNING>(*source) && get<AUTO_TUNING>(*destination);
 
 	// we care about the parameters only if the auto tuning is not enabled
-	if (!get<AUTO_PROTOCOL>(ret)) {
+	if (!get<AUTO_TUNING>(ret)) {
 
 		// for sure both source and destination were not set to auto!
 
 		// if the source is set to auto return the destination
-		if (get<AUTO_PROTOCOL>(*source)) return destination;
+		if (get<AUTO_TUNING>(*source)) return destination;
 
 		// if the destination is set to auto return the source
-		if (get<AUTO_PROTOCOL>(*destination)) return source;
+		if (get<AUTO_TUNING>(*destination)) return source;
 
 		// neither the source or the destination were set to auto merge the protocol parameters
 
@@ -231,7 +231,7 @@ void ProtocolResolver::autotune() {
 }
 
 bool ProtocolResolver::isAuto() {
-	return get<AUTO_PROTOCOL>(*prot);
+	return get<AUTO_TUNING>(*prot);
 }
 
 int ProtocolResolver::getNoStreams() {

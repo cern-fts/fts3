@@ -236,6 +236,7 @@ public:
     virtual bool isThereLinkConfig(std::string source, std::string destination) = 0;
     virtual std::pair<std::string, std::string>* getSourceAndDestination(std::string symbolic_name) = 0;
     virtual bool isGrInPair(std::string group) = 0;
+    virtual bool isShareOnly(std::string se) = 0;
 
     virtual void addShareConfig(ShareConfig* cfg) = 0;
     virtual void updateShareConfig(ShareConfig* cfg) = 0;
@@ -286,6 +287,8 @@ public:
 
     virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
     
+    virtual std::vector<std::string> getAllShareOnlyCfgs() = 0;
+
     virtual int activeProcessesForThisHost() = 0;
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs() = 0;

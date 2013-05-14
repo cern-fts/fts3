@@ -82,6 +82,11 @@ private:
 	 */
 	void init(string se);
 
+	/**
+	 * Make sure that shares sum up to 100%
+	 */
+	void checkShare(map<string, int>& share);
+
 	/// active state
 	bool active;
 

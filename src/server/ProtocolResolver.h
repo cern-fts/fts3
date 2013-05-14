@@ -86,7 +86,7 @@ class ProtocolResolver {
 	 * A tuple with all the information about a protocol
 	 */
 	enum {
-		AUTO_PROTOCOL = 0,
+		AUTO_TUNING = 0,
 		NOSTREAMS,
 		NO_TX_ACTIVITY_TO,
 		TCP_BUFFER_SIZE,

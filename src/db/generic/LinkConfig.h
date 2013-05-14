@@ -44,7 +44,7 @@ public:
     int URLCOPY_TX_TO;
     int NO_TX_ACTIVITY_TO;
 
-    std::string auto_protocol;
+    std::string auto_tuning;
 };
 
 #endif /* LINKCONFIG_H_ */
