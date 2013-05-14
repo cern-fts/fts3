@@ -36,6 +36,7 @@ public:
 	std::string destination;
 	std::string vo;
 	int active_transfers;
+	bool share_only;
 };
 
 #endif /* SHARECONFIG_H_ */
