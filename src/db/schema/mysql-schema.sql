@@ -196,7 +196,7 @@ CREATE TABLE t_link_config (
   tcp_buffer_size      INTEGER DEFAULT 0,
   urlcopy_tx_to        INTEGER NOT NULL,
   no_tx_activity_to    INTEGER DEFAULT 360,
-  auto_protocol		   VARCHAR(3) check (auto_protocol in ('on', 'off')),
+  auto_tuning		   VARCHAR(3) check (auto_tuning in ('on', 'off', 'all')),
   placeholder1         INTEGER,
   placeholder2         INTEGER,  
   placeholder3         VARCHAR(255),
