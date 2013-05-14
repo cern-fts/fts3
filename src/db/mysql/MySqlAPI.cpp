@@ -4127,19 +4127,50 @@ void MySqlAPI::revertNotUsedFiles() {
 
 bool MySqlAPI::isShareOnly(std::string se) {
 
-//    std::string query =
-//    		"select * from t_link_config "
-//    		"where source=:1 and destination = '*' and auto_tuning = 'all' ";
+	soci::session sql(*connectionPool);
 
+    bool ret = true;
+    try {
+        struct tm termTime;
+
+        sql <<
+				" select * from t_link_config "
+				" where source = :source and destination = '*' and auto_tuning = 'all'",
+				soci::use(se)
+        		;
+
+        ret = sql.got_data();
+
+    } catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return ret;
 }
 
 std::vector<std::string> MySqlAPI::getAllShareOnlyCfgs() {
 
-//    std::string query =
-//    		" select SOURCE "
-//    		" from T_LINK_CONFIG "
-//    		" where DESTINATION = '*' "
-//    		"	and auto_tuning = 'all' ";
+    soci::session sql(*connectionPool);
+
+    std::vector<std::string> ret;
+
+    try {
+		soci::rowset<std::string> rs = (
+				sql.prepare <<
+				" select source "
+				" from t_link_config "
+				" where destination = '*' and auto_tuning = 'all' "
+			);
+
+		for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i) {
+			ret.push_back(*i);
+		}
+    }
+    catch (std::exception& e) {
+        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+    }
+
+    return ret;
 }
 
 // the class factories
