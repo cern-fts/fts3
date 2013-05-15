@@ -101,9 +101,12 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 		string destination = get<DESTINATION>(s);
 		string vo = get<VO>(s);
 
-		// check if there is a link configuration, if no there will be no share
-		// ('isTherelinkConfig' will return 'false' also if the link configuration state is 'off'
-		if (!db->isThereLinkConfig(source, destination)) continue;
+		// get the link configuration
+		scoped_ptr<LinkConfig> link (db->getLinkConfig(source, destination));
+
+		// if there is no link there will be no share
+		// (also if the link configuration state is 'off' we don't care about the share)
+		if (!link.get() || link->state == Configuration::off) continue;
 
 		// check if there is a VO share
 		shared_ptr<ShareConfig> ptr (
@@ -113,6 +116,8 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 		if (ptr.get()) {
 			// if it is a auto-share don't assign a configuration
 			if (ptr->active_transfers == auto_share) continue;
+			// set the share only status
+			ptr->share_only = link->auto_tuning == Configuration::share_only;
 			// assign the share configuration to transfer job
 			out.push_back(ptr);
 			// a configuration has been assigned
@@ -142,12 +147,15 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 			ptr->destination = destination;
 			ptr->vo = Configuration::pub;
 			ptr->active_transfers = 0;
+			ptr->share_only = link->auto_tuning == Configuration::share_only;
 			// add to out
 			out.push_back(ptr);
 		}
 
 		// if it is a auto-share don't assign a configuration
 		if (ptr->active_transfers == auto_share) continue;
+		// set the share only status
+		ptr->share_only = link->auto_tuning == Configuration::share_only;
 		// assign the share configuration to transfer job
 		out.push_back(ptr);
 		// a configuration has been assigned
