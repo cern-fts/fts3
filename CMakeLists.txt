@@ -78,10 +78,6 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-long-long -Wconversion -Wuninitialized  -Wno-deprecated-declarations -Wextra -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-all -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64")
 endif ()
 
-set(BOOST_LIBRARYDIR /usr/lib64)
-SET(Boost_ADDITIONAL_VERSIONS "1.41" "1.41.0")
-set(Boost_USE_MULTITHREADED ON)
-
 if (ORACLEBUILD STREQUAL "ON")
 find_package(OCCI)
 endif ()
@@ -99,13 +95,23 @@ find_package(APRUtil 1.2.7 REQUIRED)
 find_package(ActiveMQcpp 3.2.0 REQUIRED)
 endif ()
 
-
-find_package(Boost)
 find_package(Threads)
 find_package(OpenSSL)
 
+set(Boost_DEBUG 1)
+
+set(Boost_LIBRARYDIR /usr/lib64)
+set(Boost_ADDITIONAL_VERSIONS
+    "1.41" "1.41.0" "1.42" "1.42.0" "1.43" "1.43.0" "1.44" "1.44.0" "1.45" "1.45.0"
+    "1.46" "1.47.0" "1.48" "1.49.0" "1.50" "1.51.0"
+)
+set(Boost_USE_MULTITHREADED ON)
+
+find_package(Boost)
+
+link_directories (${Boost_LIBRARY_DIRS})
+include_directories (${Boost_INCLUDE_DIR})
+
 add_subdirectory(test)
 add_subdirectory(src)
-
-
 
