@@ -98,8 +98,6 @@ endif ()
 find_package(Threads)
 find_package(OpenSSL)
 
-set(Boost_DEBUG 1)
-
 set(Boost_LIBRARYDIR /usr/lib64)
 set(Boost_ADDITIONAL_VERSIONS
     "1.41" "1.41.0" "1.42" "1.42.0" "1.43" "1.43.0" "1.44" "1.44.0" "1.45" "1.45.0"
@@ -111,6 +109,16 @@ find_package(Boost)
 
 link_directories (${Boost_LIBRARY_DIRS})
 include_directories (${Boost_INCLUDE_DIR})
+
+
+# Silly as it might be, Boost >= 1.42.0 supress the -mt suffix
+if (${Boost_VERSION} LESS 10420)
+    message ("Compiling with Boost < 1.42. Using -mt suffix")
+    set (Boost_LIB_SUFFIX "-mt")
+else()
+    set (Boost_LIB_SUFFIX "")
+    message ("Compiling with Boost >= 1.42. No suffix will be used")
+endif ()
 
 add_subdirectory(test)
 add_subdirectory(src)

@@ -26,9 +26,11 @@ include_directories (.)
 
 file(GLOB fts_infosys_sources "*.cpp")
 
+find_package (Boost COMPONENTS thread)
+
 add_library(fts_infosys SHARED ${fts_infosys_sources})
 target_link_libraries(fts_infosys ${Boost_LIBRARIES} )
-target_link_libraries(fts_infosys -lldap_r 	-lpugixml -lboost_thread-mt)
+target_link_libraries(fts_infosys -lldap_r 	-lpugixml)
 
 
 set_target_properties(fts_infosys             PROPERTIES

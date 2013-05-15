@@ -5,6 +5,8 @@ set(fts_include_dir
     "${CMAKE_BINARY_DIR}/src/"
 )
 
+find_package (Boost COMPONENTS system)
+
 include_directories (${fts_include_dir})
 include_directories (.)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/)
@@ -37,7 +39,7 @@ target_link_libraries(fts_db_cleaner ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(fts_db_cleaner -lfts_db_generic)
 target_link_libraries(fts_db_cleaner -lfts_config)
 target_link_libraries(fts_db_cleaner -lfts_common)
-target_link_libraries(fts_db_cleaner -lboost_system-mt)
+target_link_libraries(fts_db_cleaner ${Boost_LIBRARIES})
 
 install(TARGETS         fts_db_cleaner 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )

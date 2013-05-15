@@ -79,6 +79,8 @@ ${PROJECT_BINARY_DIR}/src/server
                                                 CLEAN_DIRECT_OUTPUT 1)
 
 # Server lib
+find_package (Boost COMPONENTS thread regex filesystem)
+
 file(GLOB fts_server_lib_sources RELATIVE "${PROJECT_SOURCE_DIR}/src/server" "*.cpp")
 list(REMOVE_ITEM fts_server_lib_sources "main.cpp")
 add_library(fts_server_lib SHARED ${fts_server_lib_sources})
@@ -86,11 +88,10 @@ add_dependencies(fts_server_lib fts_server_gsoap_transfer)
 target_link_libraries(fts_server_lib 
 	${fts_libs} 
 	-lfts_server_gsoap_transfer 
-	-lboost_thread-mt 
-	-lboost_regex-mt 
 	-lglib-2.0 
 	-lgridsite
 	-lcgsi_plugin_voms_cpp
+	${Boost_LIBRARIES}
 )
 set_target_properties(fts_server_lib            PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
@@ -104,7 +105,11 @@ ${PROJECT_BINARY_DIR}/src/server
 # Server executable
 add_executable (fts_server main.cpp)
 add_dependencies(fts_server fts_server_lib)
-target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lboost_filesystem-mt -lfts_proxy -lfts_config -lfts_common -lfts_db_generic -lfts_server_gsoap_transfer -lgsoap++ -lfts_ws_ifce_server -lfts_ws_ifce_client)
+target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_config
+                                 -lfts_common -lfts_db_generic
+                                 -lfts_server_gsoap_transfer -lgsoap++
+                                 -lfts_ws_ifce_server -lfts_ws_ifce_client
+                                 ${Boost_LIBRARIES})
 
 # ------------------------------------------------------------------------
 # man pages

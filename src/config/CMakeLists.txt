@@ -23,14 +23,15 @@ include_directories (${fts_include_dir})
 
 
 file(GLOB fts_config "*.cpp")
-#add_definitions(-E)
 add_library(fts_config SHARED ${fts_config})
-#target_link_libraries(fts_config ${Boost_LIBRARIES} )
 add_dependencies(fts_config fts_common)
-target_link_libraries(fts_config -lfts_common -lboost_program_options-mt -lboost_regex-mt -lboost_thread-mt  )
+
+find_package(Boost COMPONENTS program_options regex thread)
+
+target_link_libraries(fts_config -lfts_common ${Boost_LIBRARIES})
 set_target_properties(fts_config                PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
-${PROJECT_BINARY_DIR}/src/config
+                                                ${PROJECT_BINARY_DIR}/src/config
                                                 VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
                                                 SOVERSION ${VERSION_MAJOR}
                                                 CLEAN_DIRECT_OUTPUT 1)
