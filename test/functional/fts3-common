@@ -142,15 +142,15 @@ echo "get_dest_file($dest_TYPE)"
     fi
     if [ "$dest_TYPE" = "gsiftp" ]; then
     if [ "$type" = "DPM" ]; then
-        export dest_file="$dpm_SE2/$DPM_DST_FILE"
+        export dest_file="$dpm_SE2/$DPM_DST_FILE.`date +%s`"
     else
-        export dest_file="$dcache_SE2/$DCACHE_DST_FILE"
+        export dest_file="$dcache_SE2/$DCACHE_DST_FILE.`date +%s`"
     fi
     else    # IF srm FILE
         if [ "$type" = "DPM" ]; then
-        export dest_file="$CERN_SRM_DST_PATH/$DPM_DST_FILE"
+        export dest_file="$CERN_SRM_DST_PATH/$DPM_DST_FILE.`date +%s`"
     else
-        export dest_file="$DESY_SRM_DST_PATH/$DCACHE_DST_FILE"
+        export dest_file="$DESY_SRM_DST_PATH/$DCACHE_DST_FILE.`date +%s`"
     fi
     fi 
     echo $dest_file
