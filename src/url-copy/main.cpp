@@ -881,7 +881,28 @@ int main(int argc, char **argv) {
             //get checksum timeout from gfal2
             log << fileManagement->timestamp() << "INFO get checksum timeout" << '\n';
             int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
-            msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));	    	    
+            msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));	
+	    
+            /*Checksuming*/
+            if (compare_checksum) {
+                if (checksum_value.length() > 0 && checksum_value!="x") { //user provided checksum
+                    log << fileManagement->timestamp() << "INFO user  provided checksum" << '\n';
+		    //check if only alg is specified
+		    if (std::string::npos == (strArray[3]).find(":")){
+                       	gfalt_set_user_defined_checksum(params, (strArray[3]).c_str(), NULL, NULL);
+			gfalt_set_checksum_check(params, TRUE, NULL);
+		    }else{ 		    
+                    	std::vector<std::string> token = split((strArray[3]).c_str());
+                    	std::string checkAlg = token[0];
+                    	std::string csk = token[1];
+                    	gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
+                    	gfalt_set_checksum_check(params, TRUE, NULL);
+		    }
+                } else {//use auto checksum
+                    log << fileManagement->timestamp() << "INFO Calculate checksum auto" << '\n';
+                    gfalt_set_checksum_check(params, TRUE, NULL);
+                }
+            }	        	    
 
             log << fileManagement->timestamp() << "INFO Stat the source surl start" << '\n';
             for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++) {
@@ -939,21 +960,6 @@ int main(int argc, char **argv) {
                 }
 		log << fileManagement->timestamp() << "INFO Stat the source file will be retried" << '\n';
                 sleep(3); //give it some time to breath
-            }
-
-            /*Checksuming*/
-            if (compare_checksum) {
-                if (checksum_value.length() > 0 && checksum_value!="x") { //user provided checksum
-                    log << fileManagement->timestamp() << "INFO user  provided checksum" << '\n';
-                    std::vector<std::string> token = split((strArray[3]).c_str());
-                    std::string checkAlg = token[0];
-                    std::string csk = token[1];
-                    gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
-                    gfalt_set_checksum_check(params, TRUE, NULL);
-                } else {//use auto checksum
-                    log << fileManagement->timestamp() << "INFO Calculate checksum auto" << '\n';
-                    gfalt_set_checksum_check(params, TRUE, NULL);
-                }
             }
 
             //overwrite dest file if exists

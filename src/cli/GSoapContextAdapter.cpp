@@ -132,16 +132,7 @@ string GSoapContextAdapter::transferSubmit (vector<File> files, map<string, stri
 
 		// set the optional fields:
 
-		// the checksum
-		// check checksum format
-		vector<string>::iterator ch_it;
-		for (ch_it = f_it->checksums.begin(); ch_it != f_it->checksums.end(); ch_it++) {
-			string checksum_str = *ch_it;
-			string::size_type colon = checksum_str.find(":");
-			if (colon == string::npos || colon == 0 || colon == checksum_str.size() - 1) {
-				throw string("Checksum format is not valid (ALGORITHM:1234af).");
-			}
-		}
+		
 		element->checksum = f_it->checksums;
 
 		// the file size

@@ -198,15 +198,7 @@ bool SubmitTransferCli::createJobElements() {
 				it++;
 				if (it != tokens.end()) {
 
-					string checksum_str = *it;
-
-					// if the checksum algorithm has been given check if the
-					// format is correct (ALGORITHM:1234af)
-					string::size_type colon = checksum_str.find(":");
-					if (colon == string::npos || colon == 0 || colon == checksum_str.size() - 1) {
-						printer().bulk_submission_error(lineCount, "checksum format is not valid (ALGORITHM:1234af)");
-						continue;
-					}
+					string checksum_str = *it;					
 
 					checksum = true;
 					file.checksums.push_back(checksum_str);

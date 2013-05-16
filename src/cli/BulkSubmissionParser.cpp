@@ -154,19 +154,7 @@ void BulkSubmissionParser::parse_item(ptree& item) {
 		}
 	}
 
-	// check checksums' format if exists
-	if (!file.checksums.empty()) {
 
-		vector<string>::iterator it;
-		for (it = file.checksums.begin(); it != file.checksums.end(); it++) {
-
-			string::size_type colon = (*it).find(":");
-			if (colon == string::npos || colon == 0 || colon == (*it).size() - 1) {
-				throw Err_Custom("Checksum format is not valid (ALGORITHM:1234af)!");
-			}
-
-		}
-	}
 
 	// handle file size
 
