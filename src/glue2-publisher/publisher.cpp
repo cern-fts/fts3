@@ -65,11 +65,6 @@ int main(int argc, char** argv) {
     const char *emiVersion = "/etc/emi-version";
     std::stringstream issuerCA;
     
-    if (fexists(emiVersion) != 0) {
-    	return EXIT_FAILURE;
-    }
-    	
-
     //get fts server version  
     FILE *in;
     char buff[512];
@@ -91,8 +86,10 @@ int main(int argc, char** argv) {
 
     //get emi-version	 
     string versionEMI;
-    ifstream myfile(emiVersion);
-    getline(myfile, versionEMI);
+    if (fexists(emiVersion) != 0) {
+		ifstream myfile(emiVersion);
+    	   	 getline(myfile, versionEMI);
+    }
 
     //get fts server health state 
     const char *serverRunning = "/var/lock/subsys/fts-server";
