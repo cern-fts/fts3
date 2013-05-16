@@ -31,7 +31,7 @@
 	</tbody>
 </table>
 
-<h2>Optimizer evolution</h2>
+<h2>Optimizer snapshot</h2>
 <table style="width: auto">
 	<thead>
 		<tr>
@@ -44,7 +44,7 @@
 		</tr>
 	</thead>
 	<tbody>
-	{% for o in optimizerEntires %}
+	{% for o in optimizerSnapshot %}
 		<tr class="{% cycle 'odd' 'even' %}">
 			<td>{{ o.datetime }}</td>
 			<td>{{ o.throughput|floatformat:2 }}</td>
@@ -55,6 +55,32 @@
 		</tr>
 	{% endfor %}
 	</tbody>
+</table>
+
+<h2>Optimizer evolution</h2>
+<table style="width: auto">
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Throughput achieved (MB/s)</th>
+            <th>Number of streams</th>
+            <th>Timeout</th>
+            <th>Active</th>
+            <th>Buffer size</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for o in optimizerHistory %}
+        <tr class="{% cycle 'odd' 'even' %}">
+            <td>{{ o.datetime }}</td>
+            <td>{{ o.throughput|floatformat:2 }}</td>
+            <td>{{ o.nostreams }}</td>
+            <td>{{ o.timeout }}</td>
+            <td>{{ o.active }}</td>
+            <td>{{ o.buffer }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
 </table>
 
 {% endblock %}

@@ -118,3 +118,18 @@ class Optimize(models.Model):
     
     class Meta:
         db_table = 't_optimize'
+
+
+class OptimizerEvolution(models.Model):
+    datetime     = models.DateTimeField(primary_key = True) 
+    source_se    = models.CharField(max_length = 255)
+    dest_se      = models.CharField(max_length = 255)
+    nostreams    = models.IntegerField()
+    timeout      = models.IntegerField()
+    active       = models.IntegerField()
+    throughput   = models.FloatField()
+    buffer       = models.IntegerField()
+    filesize     = models.FloatField()
+    
+    class Meta:
+        db_table = 't_optimizer_evolution'

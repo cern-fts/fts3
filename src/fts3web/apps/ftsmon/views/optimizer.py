@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
-from ftsweb.models import Optimize, File, Job
+from ftsweb.models import Optimize, OptimizerEvolution, File, Job
 from ftsmon import forms
 
 		
@@ -31,8 +31,7 @@ def optimizer(httpRequest):
 	# Only max!   
 	optimizations = optimizations.annotate(max_throughput = Max('throughput'),
 										   avg_throughput = Avg('throughput'),
-										   std_deviation  = StdDev('throughput'),
-										   count          = Count('throughput'))
+										   std_deviation  = StdDev('throughput'))
 	optimizations = optimizations.order_by('source_se', 'dest_se')
 	
 	# Paginate
@@ -89,16 +88,21 @@ def optimizerDetailed(httpRequest):
 							  average  = Avg('filesize'),
 							  deviation = StdDev('filesize'))
 	
-	# Optimizer
-	optimizerEntires = Optimize.objects.filter(source_se = source_se, dest_se = dest_se,
+	# Optimizer snapshot
+	optimizerSnapshot = Optimize.objects.filter(source_se = source_se, dest_se = dest_se,
 											   throughput__isnull = False,
 											   datetime__gte = notBefore).order_by('-datetime')
+											   
+	# Optimizer evolution
+	optimizerHistory = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se,
+														 datetime__gte = notBefore).order_by('-datetime').all()[:50]
 	
 	return render(httpRequest, 'optimizerDetailed.html',
 					{'request': httpRequest,
 					 'source_se': source_se,
 					 'dest_se': dest_se,
 					 'fsizes': fsizes,
-					 'optimizerEntires': optimizerEntires
+					 'optimizerSnapshot': optimizerSnapshot,
+					 'optimizerHistory': optimizerHistory
 					})
 
