@@ -19,5 +19,6 @@ TRUNCATE t_credential_cache;
 TRUNCATE t_debug;
 TRUNCATE t_config_audit;
 TRUNCATE t_optimize;
+TRUNCATE t_optimizer_evolution
 TRUNCATE t_server_config;
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);

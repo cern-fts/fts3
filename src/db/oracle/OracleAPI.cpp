@@ -2764,148 +2764,211 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     conn->releasePooledConnection(pooledConnection);                    
 }
 
-bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs, int nostreams, int timeout, int buffersize, std::string source_hostname, std::string destin_hostname) {  
+void OracleAPI::recordOptimizerUpdate(int active, double filesize, double throughput,
+        int nostreams, int timeout, int buffersize, std::string source_hostname,
+        std::string destin_hostname)
+{
+    std::string tag = "recordOptimizerUpdate";
+    std::string query = "INSERT INTO t_optimizer_evolution "
+               " (datetime, source_se, dest_se, nostreams, timeout, active, throughput, buffer, filesize) "
+               " VALUES "
+               " (CURRENT_TIMESTAMP, :1, :2, :3, :4, :5, :6, :7, :8)";
+
+    oracle::occi::Connection* pooledConnection = NULL;
+    oracle::occi::Statement*   s = NULL;
+    try {
+        pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+            return;
+
+
+        s = conn->createStatement(query, tag, pooledConnection);
+
+        s->setString(1, source_hostname);
+        s->setString(2, destin_hostname);
+        s->setInt(3, nostreams);
+        s->setInt(4, timeout);
+        s->setInt(5, active);
+        s->setDouble(6, throughput);
+        s->setInt(7, buffersize);
+        s->setDouble(8, filesize);
+
+        s->executeUpdate();
+        conn->commit(pooledConnection);
+
+        conn->destroyStatement(s, tag, pooledConnection);
+        conn->releasePooledConnection(pooledConnection);
+    }
+    catch (...) {
+        if (s)
+            conn->destroyStatement(s, tag, pooledConnection);
+        if (pooledConnection) {
+            conn->rollback(pooledConnection);
+            conn->releasePooledConnection(pooledConnection);
+        }
+    }
+}
+
+bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
+        int nostreams, int timeout, int buffersize, std::string source_hostname,
+        std::string destin_hostname)
+{
     const std::string tag2 = "updateOptimizer2";
     const std::string tag3 = "updateOptimizer3";
-    const std::string tag4 = "updateOptimizer4"; 
-    const std::string tag5 = "updateOptimizer5";   
-    double throughput = 0;    
+    const std::string tag4 = "updateOptimizer4";
+    const std::string tag5 = "updateOptimizer5";
+    double throughput = 0;
     bool ok = true;
-    int active = 0;   
+    int active = 0;
 
-    std::string query2 = "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, datetime=:4, timeout=:5 "
-            " WHERE nostreams = :6 and buffer=:7 and source_se=:8 and dest_se=:9 "
-	    " and (throughput is null or throughput<=:10) and (active<=:11 or active is null) ";
-	    
-    std::string query3 = " select count(*) from t_file where t_file.source_se=:1 and t_file.dest_se=:2 and t_file.file_state='ACTIVE' ";
-    
-    std::string query4 = " DELETE FROM t_optimize a WHERE  a.rowid >  ANY ( SELECT B.rowid FROM  t_optimize B  WHERE A.NOSTREAMS = B.NOSTREAMS AND "
-    			 " A.TIMEOUT = B.TIMEOUT AND A.ACTIVE = B.ACTIVE  AND A.THROUGHPUT = B.THROUGHPUT ) ";
-			 
-   std::string query5 = "UPDATE t_optimize SET datetime=:1 "
-            " WHERE nostreams = :2 and buffer=:3 and source_se=:4 and dest_se=:5 "
-	    " and (active<=:6 or active is null) ";
+    std::string query2 =
+            "UPDATE t_optimize SET filesize = :1, throughput = :2, active=:3, datetime=:4, timeout=:5 "
+                    " WHERE nostreams = :6 and buffer=:7 and source_se=:8 and dest_se=:9 "
+                    " and (throughput is null or throughput<=:10) and (active<=:11 or active is null) ";
+
+    std::string query3 =
+            " select count(*) from t_file where t_file.source_se=:1 and t_file.dest_se=:2 and t_file.file_state='ACTIVE' ";
+
+    std::string query4 =
+            " DELETE FROM t_optimize a WHERE  a.rowid >  ANY ( SELECT B.rowid FROM  t_optimize B  WHERE A.NOSTREAMS = B.NOSTREAMS AND "
+                    " A.TIMEOUT = B.TIMEOUT AND A.ACTIVE = B.ACTIVE  AND A.THROUGHPUT = B.THROUGHPUT ) ";
+
+    std::string query5 =
+            "UPDATE t_optimize SET datetime=:1 "
+                    " WHERE nostreams = :2 and buffer=:3 and source_se=:4 and dest_se=:5 "
+                    " and (active<=:6 or active is null) ";
 
     oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;    
+    oracle::occi::ResultSet* r3 = NULL;
     oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s4 = NULL;    
-    oracle::occi::Statement* s5 = NULL;        
-    oracle::occi::Connection* pooledConnection = NULL;           
-    
-    try {
-	pooledConnection = conn->getPooledConnection();
-        if (!pooledConnection){
-	    ok = false;
+    oracle::occi::Statement* s4 = NULL;
+    oracle::occi::Statement* s5 = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+    {
+        pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+        {
+            ok = false;
             return ok;
-	}
+        }
 
         s3 = conn->createStatement(query3, tag3, pooledConnection);
         s3->setString(1, source_hostname);
-        s3->setString(2, destin_hostname);        
+        s3->setString(2, destin_hostname);
         r3 = conn->createResultset(s3, pooledConnection);
-        if (r3->next()) {
+        if (r3->next())
+        {
             active = r3->getInt(1);
         }
         conn->destroyResultset(s3, r3);
         conn->destroyStatement(s3, tag3, pooledConnection);
-	r3=NULL;
-	s3=NULL;
+        r3 = NULL;
+        s3 = NULL;
 
-        time_t now = std::time(NULL);       
+        time_t now = std::time(NULL);
 
         if (filesize > 0 && timeInSecs > 0)
             throughput = convertBtoM(filesize, timeInSecs);
         else
             throughput = convertBtoM(filesize, 1);
         if (filesize <= 0)
-            filesize = 0;        
+            filesize = 0;
         if (buffersize <= 0)
-            buffersize = 0;	           
-     
-            s2 = conn->createStatement(query2, tag2, pooledConnection);
-            s2->setDouble(1, filesize);
-            s2->setDouble(2, throughput);
-            s2->setInt(3, active);
-            s2->setTimestamp(4, conv->toTimestamp(now, conn->getEnv()));          
-            s2->setInt(5, timeout);
-            s2->setInt(6, nostreams);            
-            s2->setInt(7, buffersize);
-            s2->setString(8, source_hostname);
-            s2->setString(9, destin_hostname);	   
-	    s2->setDouble(10, throughput);
-	    s2->setInt(11, active);
-            if (s2->executeUpdate() != 0){	    
-            	conn->commit(pooledConnection);
-	    }else{
-            	s5 = conn->createStatement(query5, tag5, pooledConnection);
-            	s5->setTimestamp(1, conv->toTimestamp(now, conn->getEnv()));          
-            	s5->setInt(2, nostreams);            
-            	s5->setInt(3, buffersize);
-            	s5->setString(4, source_hostname);
-            	s5->setString(5, destin_hostname);	   	    	
-	    	s5->setInt(6, active);
-                s5->executeUpdate();
-            	conn->commit(pooledConnection);	    
-                conn->destroyStatement(s5, tag5, pooledConnection);
-	    }
+            buffersize = 0;
+
+        s2 = conn->createStatement(query2, tag2, pooledConnection);
+        s2->setDouble(1, filesize);
+        s2->setDouble(2, throughput);
+        s2->setInt(3, active);
+        s2->setTimestamp(4, conv->toTimestamp(now, conn->getEnv()));
+        s2->setInt(5, timeout);
+        s2->setInt(6, nostreams);
+        s2->setInt(7, buffersize);
+        s2->setString(8, source_hostname);
+        s2->setString(9, destin_hostname);
+        s2->setDouble(10, throughput);
+        s2->setInt(11, active);
+        if (s2->executeUpdate() != 0)
+        {
+            conn->commit(pooledConnection);
+        }
+        else
+        {
+            s5 = conn->createStatement(query5, tag5, pooledConnection);
+            s5->setTimestamp(1, conv->toTimestamp(now, conn->getEnv()));
+            s5->setInt(2, nostreams);
+            s5->setInt(3, buffersize);
+            s5->setString(4, source_hostname);
+            s5->setString(5, destin_hostname);
+            s5->setInt(6, active);
+            s5->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s5, tag5, pooledConnection);
+        }
+        conn->destroyStatement(s2, tag2, pooledConnection);
+        s2 = NULL;
+
+        s4 = conn->createStatement(query4, tag4, pooledConnection);
+        if (s4->executeUpdate() != 0)
+            conn->commit(pooledConnection);
+        conn->destroyStatement(s4, tag4, pooledConnection);
+        s4 = NULL;
+
+        conn->releasePooledConnection(pooledConnection);
+
+        // Store evolution
+        this->recordOptimizerUpdate(active, filesize, throughput,
+                                    nostreams, timeout, buffersize,
+                                    source_hostname, destin_hostname);
+
+    } catch (oracle::occi::SQLException const &e)
+    {
+
+        conn->rollback(pooledConnection);
+
+        if (s2)
             conn->destroyStatement(s2, tag2, pooledConnection);
-	    s2=NULL;
-	    
-            s4 = conn->createStatement(query4, tag4, pooledConnection);
-            if (s4->executeUpdate() != 0)
-                conn->commit(pooledConnection);
+
+        if (s3 && r3)
+            conn->destroyResultset(s3, r3);
+        if (s3)
+            conn->destroyStatement(s3, tag3, pooledConnection);
+
+        if (s4)
             conn->destroyStatement(s4, tag4, pooledConnection);
-            s4 = NULL;	    
-	    
-	    
-            conn->releasePooledConnection(pooledConnection); 
-	    
-    } catch (oracle::occi::SQLException const &e) {
 
-            conn->rollback(pooledConnection);           
-
-            if (s2)
-                conn->destroyStatement(s2, tag2, pooledConnection);
-		
-           if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
-		
-            if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);
-
-           if (s5)
-                conn->destroyStatement(s5, tag5, pooledConnection);				
-						
+        if (s5)
+            conn->destroyStatement(s5, tag5, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-	    ok = false;
-            conn->releasePooledConnection(pooledConnection); 	    	
-    }catch (...) {
+        ok = false;
+        conn->releasePooledConnection(pooledConnection);
+    } catch (...)
+    {
 
-            conn->rollback(pooledConnection);
-	              
-            if (s2)
-                conn->destroyStatement(s2, tag2, pooledConnection);
-		
-           if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
-		
-            if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);	
-		
-           if (s5)
-                conn->destroyStatement(s5, tag5, pooledConnection);											
-     
+        conn->rollback(pooledConnection);
+
+        if (s2)
+            conn->destroyStatement(s2, tag2, pooledConnection);
+
+        if (s3 && r3)
+            conn->destroyResultset(s3, r3);
+        if (s3)
+            conn->destroyStatement(s3, tag3, pooledConnection);
+
+        if (s4)
+            conn->destroyStatement(s4, tag4, pooledConnection);
+
+        if (s5)
+            conn->destroyStatement(s5, tag5, pooledConnection);
+
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
-	    ok = false;	
-            conn->releasePooledConnection(pooledConnection); 
+        ok = false;
+        conn->releasePooledConnection(pooledConnection);
     }
-                   
+
     return ok;
 }
 

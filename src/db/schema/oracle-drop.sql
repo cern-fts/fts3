@@ -22,6 +22,7 @@ drop table T_STAGE_REQ cascade constraints;
 drop table T_VO_ACL cascade constraints;
 drop table T_DEBUG cascade constraints;
 drop table T_CONFIG_AUDIT cascade constraints;
+drop table t_optimizer_evolution;
 drop table t_optimize cascade constraints;
 drop table t_file_backup;
 drop table t_job_backup;

@@ -50,6 +50,21 @@ CREATE TABLE t_optimize (
   CONSTRAINT t_optimize_pk PRIMARY KEY (auto_number)
 );
 
+--
+-- Historial optimizer evolution
+--
+CREATE TABLE t_optimizer_evolution (
+    datetime     TIMESTAMP,
+    source_se    VARCHAR(255),
+    dest_se      VARCHAR(255),
+    nostreams    INTEGER DEFAULT NULL,
+    timeout      INTEGER DEFAULT NULL,
+    active       INTEGER DEFAULT NULL,
+    throughput   FLOAT DEFAULT NULL,
+    buffer       INTEGER DEFAULT NULL,
+    filesize     DOUBLE DEFAULT NULL
+);
+CREATE INDEX t_optimizer_timestamp ON t_optimizer_evolution(datetime);
 
 --
 -- Holds certificate request information

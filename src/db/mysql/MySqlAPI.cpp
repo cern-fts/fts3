@@ -1614,6 +1614,16 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
 
 		sql.commit();
 
+		// Historical data
+		sql.begin();
+        sql << "INSERT INTO t_optimizer_evolution "
+               " (datetime, source_se, dest_se, nostreams, timeout, active, throughput, buffer, filesize) "
+               " VALUES "
+               " (UTC_TIMESTAMP(), :source, :dest, :nostreams, :timeout, :active, :throughput, :buffer, :filesize)",
+               soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams),
+               soci::use(timeout), soci::use(active), soci::use(throughput), soci::use(buffersize), soci::use(filesize);
+        sql.commit();
+
     } catch (std::exception& e) {
         ok = false;
         sql.rollback();

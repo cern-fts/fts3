@@ -50,6 +50,21 @@ CREATE TABLE t_optimize (
    datetime			TIMESTAMP WITH TIME ZONE
 );
 
+--
+-- Historial optimizer evolution
+--
+CREATE TABLE t_optimizer_evolution (
+    datetime     TIMESTAMP,
+    source_se    VARCHAR(255),
+    dest_se      VARCHAR(255),
+    nostreams    NUMBER DEFAULT NULL,
+    timeout      NUMBER DEFAULT NULL,
+    active       NUMBER DEFAULT NULL,
+    throughput   NUMBER DEFAULT NULL,
+    buffer       NUMBER DEFAULT NULL,
+    filesize     NUMBER DEFAULT NULL
+);
+CREATE INDEX t_optimizer_timestamp ON t_optimizer_evolution(datetime);
 
 --
 -- Holds certificate request information
