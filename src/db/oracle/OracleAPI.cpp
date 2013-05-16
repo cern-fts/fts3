@@ -2847,6 +2847,8 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
 
     try
     {
+        long rows_updated = 0;
+
         pooledConnection = conn->getPooledConnection();
         if (!pooledConnection)
         {
@@ -2890,7 +2892,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
         s2->setString(9, destin_hostname);
         s2->setDouble(10, throughput);
         s2->setInt(11, active);
-        if (s2->executeUpdate() != 0)
+        if ((rows_updated = s2->executeUpdate()) != 0)
         {
             conn->commit(pooledConnection);
         }
@@ -2903,7 +2905,7 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
             s5->setString(4, source_hostname);
             s5->setString(5, destin_hostname);
             s5->setInt(6, active);
-            s5->executeUpdate();
+            rows_updated = s5->executeUpdate();
             conn->commit(pooledConnection);
             conn->destroyStatement(s5, tag5, pooledConnection);
         }
@@ -2919,9 +2921,10 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
         conn->releasePooledConnection(pooledConnection);
 
         // Store evolution
-        this->recordOptimizerUpdate(active, filesize, throughput,
-                                    nostreams, timeout, buffersize,
-                                    source_hostname, destin_hostname);
+        if (rows_updated)
+            this->recordOptimizerUpdate(active, filesize, throughput,
+                                        nostreams, timeout, buffersize,
+                                        source_hostname, destin_hostname);
 
     } catch (oracle::occi::SQLException const &e)
     {
@@ -2972,48 +2975,77 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
     return ok;
 }
 
-void OracleAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int) {
+void OracleAPI::addOptimizer(time_t when, double throughput,
+        const std::string & source_hostname,
+        const std::string & destin_hostname, int file_id, int nostreams,
+        int timeout, int buffersize, int)
+{
     const std::string tag = "addOptimizer";
-    std::string query = "insert into "
-            " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, datetime) "
-            " values(:1,:2,:3,:4,:5,(select count(*) from  t_file where t_file.file_state='ACTIVE' and "
-            " t_file.source_se=:6 and t_file.dest_se=:7),:8,:9,:10) ";
+    const std::string countTag = "addOptimizerCount";
+    std::string countQuery =
+            "select count(*) from t_file "
+                    "   where t_file.file_state='ACTIVE' and t_file.source_se=:1 and t_file.dest_se=:2";
+    std::string query =
+            "insert into "
+                    " t_optimize(file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, datetime) "
+                    " values(:1,:2,:3,:4,:5,:6,:7,:8,:9) ";
 
     oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;        
-    try {
-	pooledConnection = conn->getPooledConnection();
+    oracle::occi::Statement* count = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+    try
+    {
+        int active = 0;
+
+        pooledConnection = conn->getPooledConnection();
         if (!pooledConnection)
             return;
 
+        // Count active
+        count = conn->createStatement(countQuery, countTag, pooledConnection);
+        count->setString(1, source_hostname);
+        count->setString(2, destin_hostname);
+        oracle::occi::ResultSet* countRs = conn->createResultset(count, pooledConnection);
+        if (countRs->next())
+            active = countRs->getInt(1);
+
+        conn->destroyResultset(count, countRs);
+        conn->destroyStatement(count, countTag, pooledConnection);
+
+        // Inset
         s = conn->createStatement(query, tag, pooledConnection);
         s->setInt(1, file_id);
         s->setString(2, source_hostname);
         s->setString(3, destin_hostname);
         s->setInt(4, nostreams);
         s->setInt(5, timeout);
-        s->setString(6, source_hostname);
-        s->setString(7, destin_hostname);
-        s->setInt(8, buffersize);
-        s->setDouble(9, throughput);
-        s->setTimestamp(10, conv->toTimestamp(when, conn->getEnv()));
+        s->setInt(6, active);
+        s->setInt(7, buffersize);
+        s->setDouble(8, throughput);
+        s->setTimestamp(9, conv->toTimestamp(when, conn->getEnv()));
         if (s->executeUpdate() != 0)
             conn->commit(pooledConnection);
         conn->destroyStatement(s, tag, pooledConnection);
 
-    } catch (oracle::occi::SQLException const &e) {
+        // Store evolution
+        this->recordOptimizerUpdate(active, 0, throughput, nostreams, timeout,
+                buffersize, source_hostname, destin_hostname);
 
-            conn->rollback(pooledConnection);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
+    } catch (oracle::occi::SQLException const &e)
+    {
+
+        conn->rollback(pooledConnection);
+        if (s)
+            conn->destroyStatement(s, tag, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
-    }catch (...) {
+    } catch (...)
+    {
 
-            conn->rollback(pooledConnection);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
+        conn->rollback(pooledConnection);
+        if (s)
+            conn->destroyStatement(s, tag, pooledConnection);
 
         FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
     }

@@ -1519,7 +1519,26 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     }
 }
 
+void MySqlAPI::recordOptimizerUpdate(int active, double filesize,
+                                     double throughput, int nostreams, int timeout, int buffersize,
+                                     std::string source_hostname, std::string destin_hostname)
+{
+    soci::session sql(*connectionPool);
 
+    try {
+        sql.begin();
+        sql << "INSERT INTO t_optimizer_evolution "
+               " (datetime, source_se, dest_se, nostreams, timeout, active, throughput, buffer, filesize) "
+               " VALUES "
+               " (UTC_TIMESTAMP(), :source, :dest, :nostreams, :timeout, :active, :throughput, :buffer, :filesize)",
+               soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams),
+               soci::use(timeout), soci::use(active), soci::use(throughput), soci::use(buffersize), soci::use(filesize);
+        sql.commit();
+    }
+    catch (...) {
+        sql.rollback();
+    }
+}
 
 bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nostreams,
                                int timeout, int buffersize,
@@ -1587,21 +1606,27 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
 
 			sql.begin();
 
-			sql <<
-					"UPDATE t_optimize "
-					" SET datetime = UTC_TIMESTAMP() "
-					" WHERE nostreams = :nostreams "
-					"	AND buffer = :buffer "
-					"	AND source_se = :source_se "
-					"	AND dest_se = :dest_se "
-					" 	AND (active <= :active OR active IS NULL) ",
-					soci::use(nostreams),
-					soci::use(buffersize),
-					soci::use(source_hostname),
-					soci::use(destin_hostname),
-					soci::use(active)
-					;
+			soci::statement stmt2(sql);
 
+	        stmt2.exchange(soci::use(active, "active"));
+	        stmt2.exchange(soci::use(nostreams, "nstreams"));
+	        stmt2.exchange(soci::use(buffersize, "buffer"));
+	        stmt2.exchange(soci::use(source_hostname, "source_se"));
+	        stmt2.exchange(soci::use(destin_hostname, "dest_se"));
+
+	        stmt2.alloc();
+
+	        stmt2.prepare("UPDATE t_optimize "
+                    " SET datetime = UTC_TIMESTAMP() "
+                    " WHERE nostreams = :nstreams "
+                    "	AND buffer = :buffer "
+                    "	AND source_se = :source_se "
+                    "	AND dest_se = :dest_se "
+                    " 	AND (active <= :active OR active IS NULL)");
+
+	        stmt2.define_and_bind();
+	        stmt2.execute(true);
+	        affected_rows += stmt2.get_affected_rows();
 			sql.commit();
 		}
 
@@ -1615,14 +1640,10 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
 		sql.commit();
 
 		// Historical data
-		sql.begin();
-        sql << "INSERT INTO t_optimizer_evolution "
-               " (datetime, source_se, dest_se, nostreams, timeout, active, throughput, buffer, filesize) "
-               " VALUES "
-               " (UTC_TIMESTAMP(), :source, :dest, :nostreams, :timeout, :active, :throughput, :buffer, :filesize)",
-               soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams),
-               soci::use(timeout), soci::use(active), soci::use(throughput), soci::use(buffersize), soci::use(filesize);
-        sql.commit();
+		if (affected_rows)
+		    recordOptimizerUpdate(active, filesize, throughput, nostreams,
+		                          timeout, buffersize,
+                                  source_hostname, destin_hostname);
 
     } catch (std::exception& e) {
         ok = false;
@@ -1634,7 +1655,11 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
 
 
 
-void MySqlAPI::addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int) {
+void MySqlAPI::addOptimizer(time_t when, double throughput,
+                            const std::string & source_hostname,
+                            const std::string & destin_hostname, int file_id, int nostreams,
+                            int timeout, int buffersize, int /*noOfActiveTransfers*/)
+{
     soci::session sql(*connectionPool);
 
     try {
@@ -1654,6 +1679,10 @@ void MySqlAPI::addOptimizer(time_t when, double throughput, const std::string & 
                "                VALUES (:fileId, :sourceSe, :destSe, :nStreams, :timeout, :active, :buffer, :throughput, :datetime)",
                soci::use(file_id), soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams), soci::use(timeout),
                soci::use(actives), soci::use(buffersize), soci::use(throughput), soci::use(timest);
+
+        recordOptimizerUpdate(actives, 0, throughput, nostreams,
+                              timeout, buffersize,
+                              source_hostname, destin_hostname);
 
         sql.commit();
     }
