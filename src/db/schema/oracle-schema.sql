@@ -64,7 +64,7 @@ CREATE TABLE t_optimizer_evolution (
     buffer       NUMBER DEFAULT NULL,
     filesize     NUMBER DEFAULT NULL
 );
-CREATE INDEX t_optimizer_timestamp ON t_optimizer_evolution(datetime);
+CREATE INDEX t_optimizer_source_and_dest ON t_optimizer_evolution(source_se, dest_se);
 
 --
 -- Holds certificate request information
