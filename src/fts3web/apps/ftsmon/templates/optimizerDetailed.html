@@ -35,23 +35,21 @@
 <table style="width: auto">
 	<thead>
 		<tr>
-			<th>Timestamp</th>
-			<th>Throughput achieved (MB/s)</th>
+		    <th>Active</th>
 			<th>Number of streams</th>
 			<th>Timeout</th>
-			<th>Active</th>
 			<th>Buffer size</th>
+			<th>Max. Throughput</th>
 		</tr>
 	</thead>
 	<tbody>
 	{% for o in optimizerSnapshot %}
 		<tr class="{% cycle 'odd' 'even' %}">
-			<td>{{ o.datetime }}</td>
-			<td>{{ o.throughput|floatformat:2 }}</td>
+		    <td>{{ o.active }}</td>
 			<td>{{ o.nostreams }}</td>
 			<td>{{ o.timeout }}</td>
-			<td>{{ o.active }}</td>
 			<td>{{ o.buffer }}</td>
+			<td>{{ o.throughput|floatformat:2 }}</td>
 		</tr>
 	{% endfor %}
 	</tbody>
@@ -62,22 +60,22 @@
     <thead>
         <tr>
             <th>Timestamp</th>
-            <th>Throughput achieved (MB/s)</th>
+            <th>Active</th>
             <th>Number of streams</th>
             <th>Timeout</th>
-            <th>Active</th>
             <th>Buffer size</th>
+            <th>Throughput</th>
         </tr>
     </thead>
     <tbody>
     {% for o in optimizerHistory %}
         <tr class="{% cycle 'odd' 'even' %}">
             <td>{{ o.datetime }}</td>
-            <td>{{ o.throughput|floatformat:2 }}</td>
+            <td>{{ o.active }}</td>
             <td>{{ o.nostreams }}</td>
             <td>{{ o.timeout }}</td>
-            <td>{{ o.active }}</td>
             <td>{{ o.buffer }}</td>
+            <td>{{ o.throughput|floatformat:2 }}</td>
         </tr>
     {% endfor %}
     </tbody>
