@@ -459,19 +459,6 @@ CREATE TABLE t_job (
   );
 
 --
--- t_job_share_config the se configuration to be used by the job
---
-CREATE TABLE t_job_share_config (
-   job_id			CHAR(36) 		NOT NULL
-   ,source    		VARCHAR2(255)   NOT NULL
-   ,destination     VARCHAR2(255)   NOT NULL
-   ,vo 				VARCHAR2(100) 	NOT NULL
-   ,CONSTRAINT t_job_share_config_pk PRIMARY KEY (job_id, source, destination, vo)
-   ,CONSTRAINT t_share_config_fk1 FOREIGN KEY (source, destination, vo) REFERENCES t_share_config (source, destination, vo) ON DELETE CASCADE
-   ,CONSTRAINT t_share_config_fk2 FOREIGN KEY (job_id) REFERENCES t_job (job_id) ON DELETE CASCADE
-);
-
---
 -- t_file stores the actual file transfers - one row per source/dest pair
 --
 CREATE TABLE t_file (
@@ -595,6 +582,21 @@ CREATE TABLE t_file (
   ,wait_timeout			NUMBER
   ,t_log_file        VARCHAR2(2048)
   ,t_log_file_debug  INTEGER
+);
+
+
+
+--
+-- t_job_share_config the se configuration to be used by the job
+--
+CREATE TABLE t_file_share_config (
+   file_id			INTEGER 		NOT NULL
+   ,source    		VARCHAR2(255)   NOT NULL
+   ,destination     VARCHAR2(255)   NOT NULL
+   ,vo 				VARCHAR2(100) 	NOT NULL
+   ,CONSTRAINT t_file_share_config_pk PRIMARY KEY (file_id, source, destination, vo)
+   ,CONSTRAINT t_share_config_fk1 FOREIGN KEY (source, destination, vo) REFERENCES t_share_config (source, destination, vo) ON DELETE CASCADE
+   ,CONSTRAINT t_share_config_fk2 FOREIGN KEY (file_id) REFERENCES t_file (file_id) ON DELETE CASCADE
 );
 
 
