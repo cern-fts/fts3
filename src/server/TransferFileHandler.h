@@ -20,7 +20,7 @@
  * TransferFileHandler.h
  *
  *  Created on: Feb 25, 2013
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #ifndef TRANSFERFILEHANDLER_H_
@@ -61,6 +61,12 @@ public:
 
 	void remove(string source, string destination);
 
+	set<string> getSources(string se);
+	set<string> getDestinations(string se);
+
+	set<string> getSourcesVos(string se);
+	set<string> getDestinationsVos(string se);
+
 private:
 
 	TransferFiles* getFile(FileIndex index);
@@ -79,6 +85,11 @@ private:
 
 	/// DB interface
 	GenericDbIfce* db;
+
+	map< string, set<string> > sourceToDestinations;
+	map< string, set<string> > sourceToVos;
+	map< string, set<string> > destinationToSources;
+	map< string, set<string> > destinationToVos;
 
 };
 

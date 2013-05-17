@@ -118,7 +118,7 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 
 	protocol ret;
 
-	get<AUTO_TUNING>(ret) = cfg->auto_tuning == Configuration::on;
+	get<AUTO_TUNING>(ret) = cfg->auto_tuning == Configuration::on || cfg->auto_tuning == Configuration::share_only;
 	get<NOSTREAMS>(ret) = cfg->NOSTREAMS;
 	get<NO_TX_ACTIVITY_TO>(ret) = cfg->NO_TX_ACTIVITY_TO;
 	get<TCP_BUFFER_SIZE>(ret) = cfg->TCP_BUFFER_SIZE;

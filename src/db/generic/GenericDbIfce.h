@@ -170,6 +170,10 @@ public:
     
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;   
     
+    virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
+
+    virtual int getSeIn(const std::set<std::string> & source, const std::string & destination) = 0;
+
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize) = 0;               
     
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params) = 0;
@@ -247,13 +251,13 @@ public:
      
     virtual bool checkIfSeIsMemberOfAnotherGroup( const std::string & member) = 0; 
 
-    virtual void addJobShareConfig(std::string job_id, std::string source, std::string destination, std::string vo) = 0;
+    virtual void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) = 0;
 
-    virtual void delJobShareConfig(std::string job_id) = 0;
+//    virtual void delJobShareConfig(std::string job_id) = 0;
 
-    virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id) = 0;
+//    virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id) = 0;
 
-    virtual unsigned int countJobShareConfig(std::string job_id) = 0;
+//    virtual unsigned int countJobShareConfig(std::string job_id) = 0;
 
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo) = 0;
 
@@ -261,9 +265,11 @@ public:
 
     virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo) = 0;
 
-    virtual boost::optional<unsigned int> getJobConfigCount(std::string job_id) = 0;
+    virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos) = 0;
 
-    virtual void setJobConfigCount(std::string job_id, int count) = 0;
+//    virtual boost::optional<unsigned int> getJobConfigCount(std::string job_id) = 0;
+
+//    virtual void setJobConfigCount(std::string job_id, int count) = 0;
 
     virtual bool checkConnectionStatus() = 0;
 

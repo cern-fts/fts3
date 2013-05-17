@@ -293,7 +293,7 @@ protected:
                         cfgAssigner.assign(cfgs);
 
                         bool optimize = false;
-                        if (enableOptimization.compare("true") == 0 && cfgs.empty()) {
+                        if (enableOptimization.compare("true") == 0) {
                             optimize = true;
                             opt_config = new OptimizerSample();
                             DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
@@ -305,7 +305,15 @@ protected:
                             opt_config = NULL;
                         }
 
-                        FileTransferScheduler scheduler(temp.get(), cfgs);
+                        FileTransferScheduler scheduler(
+                        		temp.get(),
+                        		cfgs,
+                        		tfh.getDestinations(source_hostname),
+                        		tfh.getSources(destin_hostname),
+                        		tfh.getDestinationsVos(source_hostname),
+                        		tfh.getSourcesVos(destin_hostname)
+
+                        	);
                         if (scheduler.schedule(optimize)) { /*SET TO READY STATE WHEN TRUE*/
                             SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
 			    
@@ -510,7 +518,6 @@ protected:
                             }
                             params.clear();
                         } else {
-                        	// todo
                         	tfh.remove(temp->SOURCE_SE, temp->DEST_SE);
                         }
                     }

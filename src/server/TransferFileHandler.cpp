@@ -20,7 +20,7 @@
  * TransferFileHandler.cpp
  *
  *  Created on: Feb 25, 2013
- *      Author: simonm
+ *      Author: Michal Simon
  */
 
 #include "TransferFileHandler.h"
@@ -46,10 +46,18 @@ TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& fi
 		list<TransferFiles*>::iterator it_tf;
 		// iterate over all files in a given VO
 		for (it_tf = tfs.begin(); it_tf != tfs.end(); ++it_tf) {
+
+			TransferFiles* tmp = *it_tf;
+
+			sourceToDestinations[tmp->SOURCE_SE].insert(tmp->DEST_SE);
+			sourceToVos[tmp->SOURCE_SE].insert(tmp->VO_NAME);
+			destinationToSources[tmp->DEST_SE].insert(tmp->SOURCE_SE);
+			destinationToVos[tmp->DEST_SE].insert(tmp->VO_NAME);
+
 			// create index (job ID + file index)
-			FileIndex index((*it_tf)->JOB_ID, (*it_tf)->FILE_INDEX);
+			FileIndex index((*it_tf)->JOB_ID, tmp->FILE_INDEX);
 			// file index to files mapping
-			fileIndexToFiles[index].push_back(*it_tf);
+			fileIndexToFiles[index].push_back(tmp);
 			// check if the mapping for the VO already exists
 			if (!unique[vo].count(index)) {
 				// if not creat it
@@ -191,6 +199,24 @@ void TransferFileHandler::remove(string source, string destination) {
 	notScheduled.insert(
 			make_pair(source, destination)
 		);
+}
+
+
+set<string> TransferFileHandler::getSources(string se) {
+	return destinationToSources[se];
+}
+
+set<string> TransferFileHandler::getDestinations(string se) {
+	return sourceToDestinations[se];
+}
+
+
+set<string> TransferFileHandler::getSourcesVos(string se) {
+	return destinationToVos[se];
+}
+
+set<string> TransferFileHandler::getDestinationsVos(string se) {
+	return sourceToVos[se];
 }
 
 } /* namespace cli */

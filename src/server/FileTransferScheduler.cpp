@@ -42,13 +42,58 @@ using namespace db;
 using namespace fts3::ws;
 
 
-FileTransferScheduler::FileTransferScheduler(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs) :
+FileTransferScheduler::FileTransferScheduler(
+		TransferFiles* file,
+		vector< shared_ptr<ShareConfig> >& cfgs,
+		set<string> inses,
+		set<string> outses,
+		set<string> invos,
+		set<string> outvos
+	) :
 		file (file),
 		cfgs (cfgs),
 		db (DBSingleton::instance().getDBObjectInstance()) {
 
 	srcSeName = file->SOURCE_SE;
 	destSeName = file->DEST_SE;
+
+	vector< shared_ptr<ShareConfig> >::iterator it;
+	for (it = cfgs.begin(); it != cfgs.end(); it++) {
+
+		shared_ptr<ShareConfig>& cfg = *it;
+
+		if (cfg->share_only) {
+
+			double tmp = 0;
+			int sum = 0;
+
+
+			if (cfg->source == Configuration::any) {
+				// calculate for destination
+				tmp = db->getSeIn(outses, cfg->destination);
+				sum = db->sumUpVoShares(cfg->source, cfg->destination, invos);
+			} else if (cfg->destination == Configuration::any) {
+				// calculate for source
+				tmp = db->getSeOut(cfg->source, inses);
+				sum = db->sumUpVoShares(cfg->source, cfg->destination, outvos);
+			}
+
+
+			if (sum == 0) {
+				// if sum == 0 it means that there was no share defined for submitting VOs
+				tmp = 0;
+
+			} else if (tmp > 1) {
+				// if tmp == 1 it means that there are no active transfer and auto-tuner allocated the first credit
+				// calculate the share
+				tmp = (tmp * cfg->active_transfers) / sum;
+			}
+			// round up the result
+			cfg->active_transfers = static_cast<int>(tmp + 0.5);
+			// todo add the credits that are already in use
+			cfg->share_only = false; // now the value has been set
+		}
+	}
 }
 
 FileTransferScheduler::~FileTransferScheduler() {

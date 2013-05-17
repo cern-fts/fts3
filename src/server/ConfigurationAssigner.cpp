@@ -118,8 +118,10 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 			if (ptr->active_transfers == auto_share) continue;
 			// set the share only status
 			ptr->share_only = link->auto_tuning == Configuration::share_only;
-			// assign the share configuration to transfer job
+			// add to out
 			out.push_back(ptr);
+			// add to DB
+			db->addFileShareConfig(file->FILE_ID, ptr->source, ptr->destination, ptr->vo);
 			// a configuration has been assigned
 			assign_count++;
 			// set the respective flags
@@ -147,17 +149,16 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
 			ptr->destination = destination;
 			ptr->vo = Configuration::pub;
 			ptr->active_transfers = 0;
-			ptr->share_only = link->auto_tuning == Configuration::share_only;
-			// add to out
-			out.push_back(ptr);
 		}
 
 		// if it is a auto-share don't assign a configuration
 		if (ptr->active_transfers == auto_share) continue;
 		// set the share only status
 		ptr->share_only = link->auto_tuning == Configuration::share_only;
-		// assign the share configuration to transfer job
+		// add to out
 		out.push_back(ptr);
+		// add to DB
+		db->addFileShareConfig(file->FILE_ID, ptr->source, ptr->destination, ptr->vo);
 		// a configuration has been assigned
 		assign_count++;
 		// set the respective flags

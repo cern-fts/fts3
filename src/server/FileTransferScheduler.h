@@ -61,7 +61,14 @@ public:
 	 *
 	 * @param file - the file for which the scheduling decision has to be taken
 	 */
-	FileTransferScheduler(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs);
+	FileTransferScheduler(
+				TransferFiles* file,
+				vector< shared_ptr<ShareConfig> >& cfgs,
+				set<string> inses = set<string>(),
+				set<string> outses = set<string>(),
+				set<string> invos = set<string>(),
+				set<string> outvos = set<string>()
+			);
 	FileTransferScheduler(const FileTransferScheduler&);
 
 	/**

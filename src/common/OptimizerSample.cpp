@@ -131,3 +131,75 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
 
     return allowed;
 }
+
+int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int
+		destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput) {
+
+    bool allowed = false;
+    std::vector<struct transfersStore>::iterator iter;
+    bool found = false;
+    int activeInStore = 0;
+
+
+    //check if this src/dest pair already exists
+    if (transfersStoreVector.empty()) {
+        struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe, throughput};
+        transfersStoreVector.push_back(initial);
+    } else {
+        for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter) {
+            if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            struct transfersStore initial = {numberOfFinishedAll,numberOfFinishedAll, numFinished, numFailed, currentActive, trSuccessRateForPair, sourceSe, destSe, throughput};
+            transfersStoreVector.push_back(initial);
+        }
+    }
+
+    for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter) {
+
+        if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0) {
+
+			if((*iter).numberOfFinishedAll != numberOfFinishedAll) { //one more tr finished
+					if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput){
+						(*iter).numOfActivePerPair += 2;
+					}else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput){
+							(*iter).numOfActivePerPair += 0;
+					}else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput){
+							(*iter).numOfActivePerPair -= 1;
+					}else if( trSuccessRateForPair < 98){
+							(*iter).numOfActivePerPair -= 2;
+					}
+					(*iter).numFinished = numFinished;
+					(*iter).numFailed = numFailed;
+					(*iter).successRate = trSuccessRateForPair;
+					(*iter).numberOfFinishedAll = numberOfFinishedAll;
+					(*iter).numberOfFailedAll = numberOfFailedAll;
+					(*iter).throughput = throughput;
+			} else if((*iter).numberOfFailedAll != numberOfFailedAll) {
+					(*iter).numOfActivePerPair -= 4;
+					(*iter).numFinished = numFinished;
+					(*iter).numFailed = numFailed;
+					(*iter).successRate = trSuccessRateForPair;
+					(*iter).numberOfFinishedAll = numberOfFinishedAll;
+					(*iter).numberOfFailedAll = numberOfFailedAll;
+					(*iter).throughput = throughput;
+			}
+
+			activeInStore = (*iter).numOfActivePerPair - currentActive;
+
+
+			if(activeInStore <= 0 && currentActive == 0)
+				activeInStore = 1;
+			else if (activeInStore < 0) {
+				activeInStore = 0;
+			}
+
+			break;
+        }
+    }
+
+    return activeInStore;
+}
