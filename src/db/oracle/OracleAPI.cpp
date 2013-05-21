@@ -2447,7 +2447,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                 " AND t_job.CANCEL_JOB is NULL"
                 " AND t_job.reuse_job='Y' "
                 " AND t_job.VO_NAME IN " + vos +
-                " AND t_job.job_state = 'SUBMITTED "
+                " AND t_job.job_state = 'SUBMITTED' "
                 " AND ROWNUM <=1 "
                 " ORDER BY t_job.priority DESC"
                 " , SYS_EXTRACT_UTC(t_job.submit_time)";
