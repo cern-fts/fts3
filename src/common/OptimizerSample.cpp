@@ -86,7 +86,7 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
 	   			if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput){
 					(*iter).numOfActivePerPair += 2;
 				}else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput){
-						(*iter).numOfActivePerPair += 1;
+						(*iter).numOfActivePerPair += 0;
 				}else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput){
 						(*iter).numOfActivePerPair -= 1;
 				}else if( trSuccessRateForPair < 98){
@@ -166,7 +166,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
 					if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput){
 						(*iter).numOfActivePerPair += 2;
 					}else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput){
-							(*iter).numOfActivePerPair += 1;
+							(*iter).numOfActivePerPair += 0;
 					}else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput){
 							(*iter).numOfActivePerPair -= 1;
 					}else if( trSuccessRateForPair < 98){
