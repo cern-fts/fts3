@@ -966,7 +966,7 @@ protected:
                     jobs2.clear();
                 }
             }
-            usleep(300000);
+            usleep(200000);
         } /*end while*/
     }
 
