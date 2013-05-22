@@ -1341,7 +1341,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "    t_job.job_finished IS NULL AND "
                     "    t_job.cancel_job IS NULL AND "
                     "    t_job.reuse_job='Y' AND "
-                    "    t_job.job_state = 'SUBMITTED' "      		   
+                    "    t_job.job_state = 'SUBMITTED' " 
                     "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
                     "LIMIT 1";
         }
@@ -1350,7 +1350,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "    t_job.job_finished IS NULL AND "
                     "    t_job.cancel_job IS NULL AND "
                     "    t_job.reuse_job='Y' AND "
-                    "    t_job.job_state = 'SUBMITTED' "		    
+                    "    t_job.job_state = 'SUBMITTED' AND"		    
                     "    t_job.vo_name IN " + vos + " "
                     "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
                     "LIMIT 1";
@@ -2058,7 +2058,6 @@ sql.begin();
 
 
 
-/* REUSE CASE*/
 void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs) {
     soci::session sql(*connectionPool);
 
@@ -2090,7 +2089,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs) {
                 startTime = timegm(&startTimeSt); //from db
                 timeout = extractTimeout(params);
 
-            	int terminateTime = timeout + 3500;
+            	int terminateTime = timeout + 3600;
 
             	if (isNull != soci::i_null && reuse == "Y") {
 
@@ -2098,7 +2097,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs) {
 
     				sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
 				if(count > 0)
-    					terminateTime *= count;
+    					terminateTime = count * 360;
             	}
 
                 diff = difftime(now2, startTime);
@@ -2259,12 +2258,24 @@ void MySqlAPI::revertToSubmitted() {
                            "      job_finished IS NULL AND file_id = :fileId",
                            soci::use(fileId);
                 }else{
-		  if(diff > 30000 && reuseJob == "Y") {
-		        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
-                        sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
-                           "WHERE file_state = 'READY' AND finish_time IS NULL AND "
-                           "      job_finished IS NULL AND file_id = :fileId",
-                           soci::use(fileId);
+		  if(reuseJob == "Y") {
+		       int count = 0;
+		       int terminateTime = 0;
+			
+    				sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
+				if(count > 0)
+    					terminateTime = count * 360;				
+		  
+		        if(diff > terminateTime){
+		        	FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
+
+				sql << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId);
+				
+                        	sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
+                           		"WHERE file_state = 'READY' AND finish_time IS NULL AND "
+                           		"      job_finished IS NULL AND file_id = :fileId",
+                           		soci::use(fileId);
+			}
 		  }
                 }
             } while (readyStmt.fetch());
