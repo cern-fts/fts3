@@ -58,7 +58,8 @@ Group: Applications/Internet
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 
 %description devel
-This package contains development files (e.g. header files) for File Transfer Service V3.
+This package contains development files 
+(e.g. header files) for File Transfer Service V3.
 
 %package server
 Summary: File Transfer Service version 3 server
