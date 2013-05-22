@@ -49,7 +49,7 @@ Requires(pre):  shadow-utils
 %description
 The File Transfer Service V3 is the successor of File Transfer Service V2.
 It is a service and a set of command line tools for managing third party
-transfers, most importandly the aim of FTS3 is to transfer the data produced
+transfers, most importantly the aim of FTS3 is to transfer the data produced
 by CERN's LHC into the computing GRID.
 
 %package devel
@@ -93,13 +93,13 @@ it exposes both a SOAP and a RESTful interface. The File
 Transfer Service allows also for querying and canceling
 transfer-jobs. The authentication and authorization is
 VOMS based. Furthermore, the service provides a mechanism that
-dynamically adjust transfer parameters for optimal bandwith
+dynamically adjust transfer parameters for optimal bandwidth
 utilization and allows for configuring so called VO-shares.
 
 %description libs
 FTS common libraries used across the client and
-server. This includes amongst others: configuration
-parsing, logging and error-jandling utilities, as
+server. This includes among others: configuration
+parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
 
 %description client
