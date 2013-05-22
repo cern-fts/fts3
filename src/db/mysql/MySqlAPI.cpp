@@ -3868,7 +3868,19 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
             	;
 	sql.commit();		
 	
-		updateJobTransferStatus(0, msg.job_id, dbState);
+		//check if session reuse has been issued
+		soci::indicator isNull;
+		std::string reuse("");
+		sql << " select reuse_job from t_job where job_id=:jobId", soci::use(msg.job_id), soci::into(reuse, isNull);
+		if (isNull != soci::i_null && reuse == "Y") {
+		  int countTr = 0;
+		  sql << " select count(*) from t_file where job_id=:jobId and file_state='STAGING' ", soci::use(msg.job_id), soci::into(countTr);
+		  if(countTr == 0){
+		  	updateJobTransferStatus(0, msg.job_id, "SUBMITTED");
+		  }	
+		}else{
+			updateJobTransferStatus(0, msg.job_id, dbState);
+		}
         }
 
         
