@@ -285,6 +285,7 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_ws_ifce_server.so
 %{_libdir}/libfts_delegation_api_simple.so
 %{_libdir}/libfts_delegation_api_cpp.so
+%{_mandir}/man1/fts*
 %doc README
 
 
