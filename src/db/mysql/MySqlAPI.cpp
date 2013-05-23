@@ -3447,7 +3447,7 @@ int MySqlAPI::getRetry(const std::string & jobId){
     		soci::into(nRetries)
     	;
 
-    	if (!nRetries) {
+    	if (nRetries == 0) {
 
     		sql <<
             	" SELECT retry "
@@ -4237,6 +4237,10 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 			ret.source_se = it->get<std::string>("source_se");
 			ret.dest_se = it->get<std::string>("dest_se");
 			ret.timestamp = _getTrTimestampUTC(); 
+			
+			if(ret.retry_max == 0){
+			  sql << " select retry from t_server_config", soci::into(ret.retry_max);
+			}
 		}
 
     } catch (std::exception& e) {

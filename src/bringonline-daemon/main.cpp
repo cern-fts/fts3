@@ -131,8 +131,8 @@ void fts3_initialize_db_backend() {
     std::string dbConnectString = theServerConfig().get<std::string > ("DbConnectString");
 
     try {
-        //use 1 hardcoded connection 
-        db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 2);
+        //use 4 hardcoded connection 
+        db::DBSingleton::instance().getDBObjectInstance()->init(dbUserName, dbPassword, dbConnectString, 4);
     } catch (Err& e) {
         throw;
     } catch (std::exception& ex) {
