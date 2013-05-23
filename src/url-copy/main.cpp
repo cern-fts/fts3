@@ -649,6 +649,7 @@ int main(int argc, char **argv) {
     std::string bytes_to_string("");
     struct stat statbufsrc;
     struct stat statbufdest;
+    struct stat statbufdestOver;    
     int ret = -1;
     double transferred_bytes = 0;
     UserProxyEnv* cert = NULL;
@@ -966,7 +967,23 @@ int main(int argc, char **argv) {
             if (overwrite) {
                 log << fileManagement->timestamp() << "INFO Overwrite is enabled" << '\n';
                 gfalt_set_replace_existing_file(params, TRUE, NULL);
-            }
+            }else{
+	        //if overwrite is not enabled, check if  exists and stop the transfer if it does
+	        log << fileManagement->timestamp() << "INFO Stat the dest surl to check if file already exists" << '\n';
+  	        errorMessage = ""; //reset
+                if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdestOver, &tmp_err) == 0) {                  
+                        double dest_sizeOver = (double) statbufdestOver.st_size;
+			if(dest_sizeOver > 0){
+                       		errorMessage = "Destination file already exists and overwrite is not enabled";
+                        	log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                        	errorScope = DESTINATION;
+                        	reasonClass = mapErrnoToString(gfal_posix_code_error());
+                        	errorPhase = TRANSFER_PREPARATION;  
+				retry = false;                      
+                                goto stop;					
+                        }    	       
+	        }
+	    }
 
             unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, timeout);
 	    timeout = experimentalTimeout;
@@ -1068,7 +1085,7 @@ int main(int argc, char **argv) {
                         }
                     } else if (strArray[4]!= "x" && boost::lexical_cast<double>(strArray[4]) != 0 && boost::lexical_cast<double>(strArray[4]) != statbufdest.st_size) {
                         std::stringstream error_;
-                        error_ << "User specified destination file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
+                        error_ << "User specified destination file size is " << strArray[4] << " but stat returned " << statbufdest.st_size;
                         errorMessage = error_.str();
                         log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
                         errorScope = DESTINATION;
