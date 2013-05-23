@@ -71,6 +71,10 @@ Requires: gfal2-plugin-http%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
 Requires: glue-schema
 Requires: glue-validator
+Requires(post): chkconfig
+Requires(preun): chkconfig
+Requires(postun): initscripts
+Requires(preun): initscripts
 
 #Requires: emi-resource-information-service (from EMI3)
 #Requires: emi-version (from EMI3)
