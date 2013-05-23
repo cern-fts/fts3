@@ -80,7 +80,7 @@ FileTransferScheduler::FileTransferScheduler(
 
 
 			if (sum == 0) {
-				// if sum == 0 it means that there was no share defined for submitting VOs
+				// if sum == 0 it means that there was no share defined for the submitting VO
 				tmp = 0;
 
 			} else if (tmp > 1) {
@@ -90,7 +90,6 @@ FileTransferScheduler::FileTransferScheduler(
 			}
 			// round up the result
 			cfg->active_transfers = static_cast<int>(tmp + 0.5);
-			// todo add the credits that are already in use
 			cfg->share_only = false; // now the value has been set
 		}
 	}

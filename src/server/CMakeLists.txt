@@ -116,6 +116,15 @@ target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_
 
 set(MAN_INPUT_DIR "${PROJECT_SOURCE_DIR}/doc/man/server")
 install(FILES "${MAN_INPUT_DIR}/fts_server.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_bdii_cache_updater.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_db_cleaner.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_msg_bulk.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_myosg_updater.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_url_copy.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_bringonline.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_info_publisher.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+install(FILES "${MAN_INPUT_DIR}/fts_msg_cron.8" DESTINATION ${MAN_INSTALL_DIR}/man8/)
+
 
 # ------------------------------------------------------------------------
 
