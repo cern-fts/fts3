@@ -109,26 +109,30 @@ vector<string> CGsiAdapter::getClientRoles() {
 
 string CGsiAdapter::initHostDn() {
 
-	// TODO check if other location is not used for hostcert.pem
-	// default path to host certificate
-	const string hostCert = "/etc/grid-security/hostcert.pem";
-	string dn;
-	
-    	struct stat buffer;
-    	if (stat(hostCert.c_str(), &buffer) != 0)
-  		return std::string("");	
-	
+    // TODO check if other location is not used for hostcert.pem
+    // default path to host certificate
+    const string hostCert = "/etc/grid-security/hostcert.pem";
+    string dn;
+
+    struct stat buffer;
+    if (stat(hostCert.c_str(), &buffer) != 0)
+        return std::string("");
+
     // check the server host certificate
-	FILE *fp = fopen(hostCert.c_str(), "r");
-	X509 *cert = PEM_read_X509(fp, 0, 0, 0);
+    FILE *fp = fopen(hostCert.c_str(), "r");
+    X509 *cert = NULL;
+    if (fp) {
+        cert = PEM_read_X509(fp, 0, 0, 0);
+        fclose(fp);
+    }
 
-	if (!cert) return string();
+    if (!cert)
+        return string();
 
-	dn = cert->name;
-	X509_free(cert);
-	fclose(fp);
+    dn = cert->name;
+    X509_free(cert);
 
-	return dn;
+    return dn;
 }
 
 } /* namespace ws */
