@@ -2,7 +2,7 @@
 #
 # APPNAME - <summary>
 #
-# chkconfig:    2345 80 20
+# chkconfig:    - 80 20
 # description:  Enable a run of fts server
 # processname:  fts_server
 
