@@ -132,10 +132,8 @@ destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numb
     return allowed;
 }
 
-int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int
-		destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput) {
+int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int, int, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput) {
 
-    bool allowed = false;
     std::vector<struct transfersStore>::iterator iter;
     bool found = false;
     int activeInStore = 0;
