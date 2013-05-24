@@ -48,6 +48,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 extern std::string stackTrace;
 bool stopThreads = false;
 const char *hostcert = "/etc/grid-security/hostcert.pem";
+const char *hostkey = "/etc/grid-security/hostkey.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
 /* -------------------------------------------------------------------------- */
@@ -144,46 +145,97 @@ static bool checkUrlCopy() {
     return false;
 }
 
-void checkInitDirs(){
-   
-   std::vector<fs::path> paths;   
-   vector<fs::path>::iterator iter;
+static std::string requiredToString(int mode)
+{
+    char strMode[] = "---";
+
+    if (mode & R_OK)
+        strMode[0] = 'r';
+    if (mode & W_OK)
+        strMode[1] = 'w';
+    if (mode & X_OK)
+        strMode[2] = 'x';
+
+    return strMode;
+}
+
+static void isPathSane(const std::string& path,
+        bool isDir = true,
+        int requiredMode = R_OK | W_OK,
+        bool changeOwner = true)
+{
+    std::ostringstream msg;
+
+    // If it does not exist, create
+    if (!fs::exists(path)) {
+        if (isDir) {
+            if (fs::create_directory(path)) {
+                if (changeOwner) {
+                    uid_t pw_uid = name_to_uid();
+                    int checkChown = chown(path.c_str(), pw_uid, getgid());
+                    if (checkChown != 0) {
+                        msg << "Failed to chmod for " << path;
+                        throw Err_System(msg.str());
+                    }
+                }
+            }
+            else {
+                msg << "Directory " << path
+                    << " does not exist and could not be created";
+                throw Err_System(msg.str());
+            }
+        }
+        else {
+            msg << "File " << path
+                << " does not exist";
+            throw Err_System(msg.str());
+        }
+    }
+    // It does exist, but it is not the kind of file we want
+    else if (isDir && !fs::is_directory(path)) {
+        msg << path
+            << " exists but it is not a directory";
+        throw Err_System(msg.str());
+    }
+    else if (!isDir && fs::is_directory(path)) {
+        msg << path
+            << " exists but it is a directory";
+            throw Err_System(msg.str());
+    }
+
+    // It exists, so check we have the right permissions
+    if (access(path.c_str(), requiredMode) != 0) {
+        msg << "Not enough permissions on " << path
+            << " (Required " << requiredToString(requiredMode) << ")";
+        throw Err_System(msg.str());
+    }
+}
+
+void checkInitDirs() {
     try {
-   
-   paths.push_back(fs::path("/etc/fts3"));
-   paths.push_back(fs::path("/var/log/fts3"));   
-   paths.push_back(fs::path("/var/lib/fts3"));      
-   paths.push_back(fs::path("/var/lib/fts3/monitoring"));         
-   paths.push_back(fs::path("/var/lib/fts3/status")); 
-   paths.push_back(fs::path("/var/lib/fts3/stalled")); 
-   paths.push_back(fs::path("/var/lib/fts3/logs")); 
-   
-   for (iter = paths.begin(); iter != paths.end(); ++iter) {
-      if ( !fs::exists(*iter) || !fs::is_directory(*iter)){
-	        if(fs::create_directory(*iter)){
-			uid_t pw_uid;
-                        pw_uid = name_to_uid();
-			std::string path = (*iter).string();
-                        int checkChown = chown(path.c_str(), pw_uid, getgid());
-			if(checkChown!=0){
-				FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for " << *iter << commit;
-			}
-		}else{
-        		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Directory " << *iter << " does not exist or is not owned by fts3 user" << commit;
-        		exit(1);          		
-		}
-      }          
-   }      
-    }catch (const fs::filesystem_error& ex){
+        isPathSane("/etc/fts3", true, R_OK, false);
+        isPathSane(hostcert, false, R_OK);
+        isPathSane(hostkey, false, R_OK);
+        isPathSane("/var/log/fts3");
+        isPathSane("/var/lib/fts3");
+        isPathSane("/var/lib/fts3/monitoring");
+        isPathSane("/var/lib/fts3/status");
+        isPathSane("/var/lib/fts3/stalled");
+        isPathSane("/var/lib/fts3/logs");
+    }
+    catch (const fs::filesystem_error& ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-        throw;    
-    }catch (Err& e) {
+        throw;
+    }
+    catch (Err& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         throw;
-    } catch (std::exception& ex) {
+    }
+    catch (std::exception& ex) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
         throw;
-    } catch (...) {
+    }
+    catch (...) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on with the filesystem required directories" << commit;
         throw;
     }
@@ -295,7 +347,7 @@ int main(int argc, char** argv) {
 	
     	FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 	
-	checkInitDirs();	
+    	checkInitDirs();
     }catch (Err& e) {
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
         return EXIT_FAILURE;
