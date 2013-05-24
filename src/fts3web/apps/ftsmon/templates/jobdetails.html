@@ -18,7 +18,8 @@ Job {{ transferJob.job_id }}
     Submitted by <span class="dn">'{{transferJob.user_dn}}'</span><br/>
     VO: <span class="vo">{{transferJob.vo_name}}</span><br/>
     Received by {{transferJob.submit_host}}<br/>
-    Overwrite flag: {{transferJob.overwrite_flag}}
+    Overwrite flag: {{transferJob.overwrite_flag}}<br/>
+    Reuse sessions: {{transferJob.reuse_job}}
   </p>
   
   {% if transferJob.reason %}
