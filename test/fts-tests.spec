@@ -1,6 +1,6 @@
 Name:    fts-tests
-Version: 0.0.1
-Release: 101%{?dist}
+Version: 0.0.2
+Release: 1%{?dist}
 Summary: Testing package for FTS3
 Group:   Application/Internet
 License: Apache 2
@@ -10,6 +10,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: cmake
 
+Requires: edg-gridftp-client
 Requires: fts-client
 Requires: globus-gass-copy-progs
 Requires: lcg-util

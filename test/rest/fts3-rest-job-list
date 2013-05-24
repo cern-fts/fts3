@@ -1,0 +1,28 @@
+#!/bin/bash
+source ../Macros
+
+DN=`voms-proxy-info -identity`
+echo "DN: $DN"
+echo "1. check user_dn"
+echo "Run: curl  --capath /etc/grid-security/certificates/ --cert $X509_USER_PROXY --key $X509_USER_PROXY --cacert $X509_USER_PROXY https://$FTS3_HOST:$FTS3_REST_PORT/jobs?user_dn=$DN"
+curl  --capath /etc/grid-security/certificates/ \
+	--cert $X509_USER_PROXY --key $X509_USER_PROXY \
+	--cacert $X509_USER_PROXY \
+	"https://$FTS3_HOST:$FTS3_REST_PORT/jobs?user_dn=$DN"
+
+if [ $? != 0 ]; then
+ TEST_FAILED "Exit code"
+fi
+
+echo "2. Check vo_name"
+echo "Run: curl  --capath /etc/grid-security/certificates/ --cert $X509_USER_PROXY --key $X509_USER_PROXY --cacert $X509_USER_PROXY https://$FTS3_HOST:$FTS3_REST_PORT/jobs?vo_name=$VO"
+curl  --capath /etc/grid-security/certificates/ \
+	--cert $X509_USER_PROXY --key $X509_USER_PROXY \
+	--cacert $X509_USER_PROXY \
+	https://$FTS3_HOST:$FTS3_REST_PORT/jobs?vo_name=$VO
+if [ $? != 0 ]; then
+ TEST_FAILED "Exit code"
+fi
+
+
+TEST_PASSED

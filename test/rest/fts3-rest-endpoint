@@ -1,0 +1,14 @@
+#!/bin/bash
+source ../Macros
+
+echo "Run: curl -s --capath /etc/grid-security/certificates/ --cert $X509_USER_PROXY --key $X509_USER_PROXY --cacert $X509_USER_PROXY https://$FTS3_HOST:$FTS3_REST_PORT/"
+curl -s --capath /etc/grid-security/certificates/ --cert $X509_USER_PROXY \
+     --key $X509_USER_PROXY --cacert $X509_USER_PROXY \
+	    https://$FTS3_HOST:$FTS3_REST_PORT/ > /dev/null
+
+if [ $? != 0 ]; then
+  TEST_FAILED "Exit code"
+fi
+
+TEST_PASSED
+

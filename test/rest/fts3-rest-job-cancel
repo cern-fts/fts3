@@ -1,0 +1,50 @@
+#!/bin/bash
+source ../Macros
+source rest-common
+
+
+echo "curl-job-cancel"
+copyToDPM  #"1MB"
+if [ $? != 0 ]; then
+  TEST_FAILED "Source file is not copied"
+fi
+
+get_source_file
+get_dest_file
+
+dest_file=$dest_file-cancel-`mktemp -u XXXXXX`
+
+echo "Source file=$source_file"
+echo "Dest file=$dest_file"
+echo "Curl submission"
+submit $source_file $dest_file
+if [ $? != 0 ]; then
+  echo "submit - Failed (Exit code)"
+  TEST_FAILED "submit - Failed (Exit code)"
+fi
+echo "JobID=$JID"
+
+echo "Cancel job $JID"
+job-cancel $JID
+res=$?
+echo $res
+if [ $res != 0 ]; then
+  TEST_FAILED "Error job canceling"
+fi
+get_status_result $JID
+res=$?
+echo $res
+if [ "$res" -eq 1 ]; then
+  TEST_FAILED "Error retrieving the status with get_status_result()"
+fi
+if [ "$res" -eq 99 ]; then
+   TEST_FAILED "Exit code  != 0"
+fi
+echo "Cancelling job status: $STATUS"
+if [ $STATUS != "CANCELED" && $STATUS != "FINISHED" ]; then
+	TEST_FAILED "Noncorrect status=$STATUS canceled job"
+fi
+edg-gridftp-rm $dest_file
+
+TEST_PASSED
+

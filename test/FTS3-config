@@ -7,6 +7,7 @@
 
 export FTS3_HOST=${TARGET_HOST-"`hostname -f`"}
 export FTS3_PORT=${FTS3_PORT-8443}
+export FTS3_REST_PORT=${FTS3_REST_PORT-8446}
 export BDII_HOST=${BDII_HOST-"certtb-bdii-top.cern.ch"}
 export LCG_GFAL_INFOSYS=${LCG_GFAL_INFOSYS-"$BDII_HOST:2170"}
 export FN="fsub"
