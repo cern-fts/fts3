@@ -34,7 +34,7 @@ class LoggerBase
 protected:
     /// Constructor.
 	LoggerBase();
-	mutable ThreadTraits::MUTEX_R _mutex;
+	//mutable ThreadTraits::MUTEX_R _mutex;
 
     /* ---------------------------------------------------------------------- */
 
@@ -145,7 +145,7 @@ public:
     /// Commits (writes) the actual log line.
 	void _commit()
     {
-        ThreadTraits::LOCK_R lock(_mutex);
+        //ThreadTraits::LOCK_R lock(_mutex);
         if ( ! _logLine.str().empty())
         {
 	   fprintf(stderr, "%s\n",_logLine.str().c_str());
