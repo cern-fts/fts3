@@ -933,15 +933,15 @@ protected:
                     requestIDs.clear(); /*clean the list*/
                 }
 
-                if (!jobs2.empty())
+                if (!jobs2.empty()){		    
                     executeUrlcopy(jobs2, false);
-
+		}
                 /* --- session reuse section ---*/
                 /*get jobs in submitted state and session reuse on*/
                 DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
-                if (!jobs2.empty())
+                if (!jobs2.empty()){
                     executeUrlcopy(jobs2, true);
-
+		}
                 if (!jobs2.empty()) {
                     std::vector<TransferJobs*>::const_iterator iter2;
                     for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
@@ -966,7 +966,7 @@ protected:
                     jobs2.clear();
                 }
             }
-            usleep(200000);
+            usleep(150000);
         } /*end while*/
     }
 
