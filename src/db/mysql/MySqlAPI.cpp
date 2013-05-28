@@ -1795,12 +1795,16 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                "      t_file.dest_se = :dst",
                soci::use(destin_hostname), soci::into(nActiveDest);
 	       
-	       
-        sql << " select throughput from t_file where source_se=:source and dest_se=:dst and FINISH_TIME = ( select max(FINISH_TIME) "
-    			      " from t_file  where source_se=:source and dest_se=:dst) LIMIT 1",
-			      soci::use(source_hostname), soci::use(destin_hostname),
-			      soci::use(source_hostname), soci::use(destin_hostname),
-			      soci::into(throughput, isNull);
+
+        sql <<
+        		" select throughput "
+        		" from t_file "
+        		" where source_se = :source "
+        		" and dest_se = :dest "
+        		" order by FINISH_TIME DESC "
+        		" LIMIT 1 ",
+        		soci::use(source_hostname), soci::use(destin_hostname),
+			    soci::into(throughput, isNull);
 
         if (isNull == soci::i_null){
 		throughput = 0.0;
@@ -1892,11 +1896,15 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
 	               "      t_file.dest_se = :dst",
 	               soci::use(destin_hostname), soci::into(nActiveDest);
 
-	        sql << " select throughput from t_file where source_se=:source and dest_se=:dst and FINISH_TIME = ( select max(FINISH_TIME) "
-	    			      " from t_file  where source_se=:source and dest_se=:dst) LIMIT 1",
-				      soci::use(source_hostname), soci::use(destin_hostname),
-				      soci::use(source_hostname), soci::use(destin_hostname),
-				      soci::into(throughput, isNull);
+	        sql <<
+	        		" select throughput "
+	        		" from t_file "
+	        		" where source_se = :source "
+	        		" and dest_se = :dest "
+	        		" order by FINISH_TIME DESC "
+	        		" LIMIT 1 ",
+	        		soci::use(source_hostname), soci::use(destin_hostname),
+				    soci::into(throughput, isNull);
 
 	        if (isNull == soci::i_null){
 	        	throughput = 0.0;
@@ -1989,11 +1997,15 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 	               "      t_file.source_se = :source ",
 	               soci::use(source_hostname), soci::into(nActiveSource);
 
-	        sql << " select throughput from t_file where source_se=:source and dest_se=:dst and FINISH_TIME = ( select max(FINISH_TIME) "
-	    			      " from t_file  where source_se=:source and dest_se=:dst) LIMIT 1",
-				      soci::use(source_hostname), soci::use(destin_hostname),
-				      soci::use(source_hostname), soci::use(destin_hostname),
-				      soci::into(throughput, isNull);
+	        sql <<
+	        		" select throughput "
+	        		" from t_file "
+	        		" where source_se = :source "
+	        		" and dest_se = :dest "
+	        		" order by FINISH_TIME DESC "
+	        		" LIMIT 1 ",
+	        		soci::use(source_hostname), soci::use(destin_hostname),
+				    soci::into(throughput, isNull);
 
 	        if (isNull == soci::i_null){
 	        	throughput = 0.0;
