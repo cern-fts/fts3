@@ -203,12 +203,18 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
     	std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     	soci::rowset<soci::row> rs = (
     			sql.prepare <<
-    						" SELECT DISTINCT t_file.source_se, t_file.dest_se, t_job.vo_name "
-    						" FROM t_job, t_file "
-				 	 	 	" WHERE t_file.job_id = t_job.job_id "
-				 	 	 	"	AND t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
-    						" 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
-    						" 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
+							" SELECT DISTINCT v_file.source_se, v_file.dest_se, t_job.vo_name "
+							" FROM t_job, ( "
+							"	SELECT DISTINCT source_se, dest_se, job_id "
+							"	FROM t_file "
+							" ) AS v_file "
+							" WHERE v_file.job_id = t_job.job_id "
+							"	AND t_job.job_finished IS NULL "
+							"	AND t_job.CANCEL_JOB IS NULL "
+							"	AND (t_job.reuse_job='N' OR t_job.reuse_job is NULL) "
+							"	AND t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED') "
+
+
     						<<
     						(vos == "*" ? "" : " AND t_job.vo_name IN " + vos)						
     		);
