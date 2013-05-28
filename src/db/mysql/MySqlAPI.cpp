@@ -227,18 +227,26 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
         // Query depends on vos
         std::string query;
-		query = "SELECT DISTINCT t_job.* FROM t_job, t_file "
-							"WHERE t_job.job_id = t_file.job_id AND "
-							"	   t_job.job_finished IS NULL AND "
-							"      t_job.cancel_job IS NULL AND "
-							"      t_file.source_se = :source AND t_file.dest_se = :dest AND "
-							"      (t_job.reuse_job = 'N' OR t_job.reuse_job IS NULL) AND "
-							"      t_job.job_state IN ('ACTIVE', 'READY', 'SUBMITTED') AND "
-							"      t_job.vo_name = :vo AND "
-							"      EXISTS ( SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
-							"ORDER BY t_job.priority DESC, t_job.submit_time ASC "
-							"LIMIT 5";
+		query =
+				"SELECT DISTINCT t_job.* FROM t_job "
+				"WHERE t_job.job_finished IS NULL AND "
+				"	t_job.cancel_job IS NULL AND "
+				"   (t_job.reuse_job = 'N' OR t_job.reuse_job IS NULL) AND "
+				"   t_job.job_state IN ('ACTIVE', 'READY', 'SUBMITTED') AND "
+				"   t_job.vo_name = :vo AND "
+				"   EXISTS ( "
+				"		SELECT NULL "
+				"		FROM t_file "
+				"		WHERE t_file.job_id = t_job.job_id AND "
+				"		    t_file.source_se = :source AND "
+				"			t_file.dest_se = :dest AND "
+				"			t_file.file_state = 'SUBMITTED'"
+				"	) "
+				"ORDER BY t_job.priority DESC, t_job.submit_time ASC "
+				"LIMIT 5";
 
+
+		std::set<std::string> jobIds;
 
         // Iterate through pairs, getting jobs IF the VO has not run out of credits
         // AND there are pending file transfers within the job
@@ -250,15 +258,19 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 			soci::rowset<TransferJobs> rs = (
 					sql.prepare <<
 						query,
+						soci::use(boost::get<2>(triplet)),
 						soci::use(boost::get<0>(triplet)),
-						soci::use(boost::get<1>(triplet)),
-						soci::use(boost::get<2>(triplet))
+						soci::use(boost::get<1>(triplet))
 				);
 
 			for (soci::rowset<TransferJobs>::const_iterator ji = rs.begin(); ji != rs.end(); ++ji) {
 
 				TransferJobs const & job = *ji;
-				jobs.push_back(new TransferJobs(job));
+
+				if (!jobIds.count(job.JOB_ID)) {
+					jobIds.insert(job.JOB_ID);
+					jobs.push_back(new TransferJobs(job));
+				}
 			}
 		}
     }
