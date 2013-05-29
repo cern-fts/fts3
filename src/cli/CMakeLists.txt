@@ -57,7 +57,7 @@ set(fts_cli_libs
     ${fts_cli_internal_libs}
     gridsite
     cgsi_plugin_cpp
-    boost_program_options${Boost_LIB_SUFFIX}
+    boost_program_options-mt
     fts_delegation_api_simple
 )
 
