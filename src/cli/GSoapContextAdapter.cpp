@@ -39,15 +39,23 @@ namespace fts3 { namespace cli {
 GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/) {
 	ctx->socket_flags = MSG_NOSIGNAL;
 	ctx->tcp_keep_alive = 1; // enable tcp keep alive
+        ctx->bind_flags |= SO_REUSEADDR;
+        ctx->max_keep_alive = 100; // at most 100 calls per keep-alive session  
+        ctx->recv_timeout = 120; // Timeout after 2 minutes stall on recv
+        ctx->send_timeout = 120; // Timeout after 2 minute stall on send
 
 	soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 	soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 }
 
 GSoapContextAdapter::~GSoapContextAdapter() {
-	soap_destroy(ctx);
-	soap_end(ctx);
-	soap_free(ctx);
+        soap_clr_omode(ctx, SOAP_IO_KEEPALIVE);
+        shutdown(ctx->socket,2);
+        shutdown(ctx->master,2);
+        soap_destroy(ctx);
+        soap_end(ctx);
+        soap_done(ctx);
+        soap_free(ctx);
 }
 
 void GSoapContextAdapter::init() {
@@ -56,7 +64,7 @@ void GSoapContextAdapter::init() {
 
     // initialize cgsi plugin
     if (endpoint.find("https") == 0) {
-    	err = soap_cgsi_init(ctx,  CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
+    	err = soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
     } else if (endpoint.find("httpg") == 0) {
     	err = soap_cgsi_init(ctx, CGSI_OPT_DISABLE_NAME_CHECK );
     }
