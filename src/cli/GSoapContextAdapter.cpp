@@ -39,6 +39,9 @@ namespace fts3 { namespace cli {
 GSoapContextAdapter::GSoapContextAdapter(string endpoint): endpoint(endpoint), ctx(soap_new2(SOAP_IO_KEEPALIVE, SOAP_IO_KEEPALIVE)/*soap_new1(SOAP_ENC_MTOM)*/) {
 	ctx->socket_flags = MSG_NOSIGNAL;
 	ctx->tcp_keep_alive = 1; // enable tcp keep alive
+
+	soap_set_imode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
+	soap_set_omode(ctx, SOAP_ENC_MTOM | SOAP_IO_CHUNK);
 }
 
 GSoapContextAdapter::~GSoapContextAdapter() {
