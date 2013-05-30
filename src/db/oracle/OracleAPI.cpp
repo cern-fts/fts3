@@ -3222,8 +3222,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     std::string query_stmt6 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
     			      " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";	
 			      
-    std::string query_stmt7 = " select throughput from t_file where source_se=:1 and dest_se=:2 and FINISH_TIME = ( select max(FINISH_TIME) "
-    			      " from t_file  where source_se=:3 and dest_se=:4) and rownum = 1";			      		      
+    std::string query_stmt7 = " select throughput from t_file where source_se=:1 and dest_se=:2 "
+    			      " and rownum = 1 order by FINISH_TIME DESC";			      		      
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;   
@@ -3250,9 +3250,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 	    	    
 	s7 = conn->createStatement(query_stmt7, tag7, pooledConnection);
         s7->setString(1, source_hostname);
-        s7->setString(2, destin_hostname);	
-        s7->setString(3, source_hostname);
-        s7->setString(4, destin_hostname);	
+        s7->setString(2, destin_hostname);	       	
         r7 = conn->createResultset(s7, pooledConnection);
         if (r7->next()) {
             throughput = r7->getDouble(1);
