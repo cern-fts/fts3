@@ -233,38 +233,43 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
         }
 
     std::string query_stmt =
-        " SELECT "
-        " 	t_job.job_id, "
-        " 	t_job.job_state, "
-        " 	t_job.vo_name,  "
-        " 	t_job.priority,  "
-        " 	t_job.source_se, "
-        " 	t_job.dest_se,  "
-        " 	t_job.agent_dn, "
-        " 	t_job.submit_host, "
-        " 	t_job.user_dn, "
-        " 	t_job.user_cred, "
-        " 	t_job.cred_id,  "
-        " 	t_job.space_token, "
-        " 	t_job.storage_class,  "
-        " 	t_job.job_params, "
-        " 	t_job.overwrite_flag, "
-        " 	t_job.source_space_token, "
-        " 	t_job.source_token_description,"
-        " 	t_job.copy_pin_lifetime, "
-        " 	t_job.checksum_method, "
-        " 	t_job.bring_online "
-        " FROM t_job, t_file"
-        " WHERE "
-        " 	t_job.job_id = t_file.job_id "
-        " 	AND t_job.job_finished is NULL"
-        " 	AND t_job.CANCEL_JOB is NULL"
-        " 	AND t_file.source_se=:1 and t_file.dest_se=:2 "
-        " 	AND t_job.VO_NAME=:3 "
-        " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
-        " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-        " 	AND exists(SELECT NULL FROM t_file WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'SUBMITTED') "
-        " 	AND rownum <=5  ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)";
+    		" SELECT "
+            " 	t_job.job_id, "
+            " 	t_job.job_state, "
+            " 	t_job.vo_name,  "
+            " 	t_job.priority,  "
+            " 	t_job.source_se, "
+            " 	t_job.dest_se,  "
+            " 	t_job.agent_dn, "
+            " 	t_job.submit_host, "
+            " 	t_job.user_dn, "
+            " 	t_job.user_cred, "
+            " 	t_job.cred_id,  "
+            " 	t_job.space_token, "
+            " 	t_job.storage_class,  "
+            " 	t_job.job_params, "
+            " 	t_job.overwrite_flag, "
+            " 	t_job.source_space_token, "
+            " 	t_job.source_token_description,"
+            " 	t_job.copy_pin_lifetime, "
+            " 	t_job.checksum_method, "
+    	    " 	t_job.bring_online "
+            " FROM t_job"
+            " WHERE "
+    	    " 	t_job.job_finished is NULL"
+            " 	AND t_job.CANCEL_JOB is NULL"
+    	    " 	AND t_job.VO_NAME=:1 "
+            " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
+            " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
+    	    " 	AND exists(	"
+    	    "		SELECT NULL "
+    	    "		FROM t_file "
+    	    "		WHERE t_file.job_id = t_job.job_id "
+    		"			AND t_file.source_se = :2 AND t_file.dest_se = :2 "
+    	    "			AND t_file.file_state = 'SUBMITTED'"
+    	    "	) "
+            " 	AND rownum <=5  "
+            " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -287,9 +292,9 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string >(
+                            r1->getString(3),
                             r1->getString(1),
-                            r1->getString(2),
-                            r1->getString(3)
+                            r1->getString(2)
                         )
                     );
                 }
