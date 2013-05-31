@@ -265,7 +265,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     	    "		SELECT NULL "
     	    "		FROM t_file "
     	    "		WHERE t_file.job_id = t_job.job_id "
-    		"			AND t_file.source_se = :2 AND t_file.dest_se = :2 "
+    		"			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
     	    "			AND t_file.file_state = 'SUBMITTED'"
     	    "	) "
             " 	AND rownum <=5  "
@@ -292,9 +292,9 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string >(
-                            r1->getString(3),
-                            r1->getString(1),
-                            r1->getString(2)
+                            r1->getString(3), //vo
+                            r1->getString(1), // source
+                            r1->getString(2)  // destination
                         )
                     );
                 }
@@ -312,9 +312,9 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 
                     boost::tuple< std::string, std::string, std::string>& triplet = *it;
 
-                    s->setString(1, boost::get<0>(triplet));
-                    s->setString(2, boost::get<1>(triplet));
-                    s->setString(3, boost::get<2>(triplet));
+                    s->setString(1, boost::get<0>(triplet)); // vo
+                    s->setString(2, boost::get<1>(triplet)); // source
+                    s->setString(3, boost::get<2>(triplet)); // destination
 
                     r = conn->createResultset(s, pooledConnection);
 
