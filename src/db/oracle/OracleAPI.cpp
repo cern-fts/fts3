@@ -1798,21 +1798,45 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
         "SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE not in ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ";
 
     std::string query =
-        "SELECT Num1, Num2, Num3, Num4 FROM "
-        // the total number of files within a job
-        "    (SELECT COUNT(DISTINCT file_index) AS Num1 FROM t_file WHERE job_id = :1), "
-        // the number of canceled files in the job, files counts as canceled if all replicas has been canceled
-        "    (SELECT COUNT(DISTINCT file_index) AS Num2 FROM t_file f1 WHERE job_id = :2 "
-        "																	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'CANCELED') "
-        "	), "
-        // the number of finished files in the job, file counts as finished if at least one replica went to the finished state
-        "    (SELECT COUNT(DISTINCT file_index) AS Num3 FROM t_file WHERE job_id = :3 AND file_state = 'FINISHED'), "
-        // the number of failed files in the job, file counts as failed if all the replicas went to failed state except replicas that were cancelled
-        "    (SELECT COUNT(DISTINCT f1.file_index) AS Num4 FROM t_file f1 WHERE f1.job_id = :4 "
-        "																	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND (f2.file_state <> 'FAILED' AND f2.file_state <> 'CANCELED')) "
-        "	) "
-        ;
-
+		" SELECT "
+		"	COUNT(file_index) AS NUM1, "
+		"	COUNT( "
+		"		CASE WHEN NOT EXISTS ( "
+		"				SELECT NULL "
+		"				FROM t_file "
+		"				WHERE job_id = tbl.job_id "
+		"					AND file_index = tbl.file_index "
+		"					AND file_state <> 'CANCELED' "
+		"		) "
+		"		THEN 1 END "
+		"	) AS NUM2, "
+		"	COUNT( "
+		"		CASE WHEN EXISTS ( "
+		"			SELECT NULL "
+		"			FROM t_file "
+		"			WHERE job_id = tbl.job_id "
+		"				AND file_index = tbl.file_index "
+		"				AND file_state = 'FINISHED' "
+		"		) "
+		"		THEN 1 END "
+		"	) AS NUM3, "
+		"	COUNT( "
+		"		CASE WHEN NOT EXISTS ( "
+		"			SELECT NULL "
+		"			FROM t_file "
+		"			WHERE job_id = tbl.job_id "
+		"				AND file_index = tbl.file_index "
+		"				AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
+		"		) "
+		"		THEN 1 END "
+		"	) AS NUM4 "
+		" FROM "
+		"	( "
+		"		SELECT DISTINCT job_id, file_index "
+		"		FROM t_file "
+		"		WHERE job_id = :1 "
+		"	) tbl "
+    	;
 
     std::string updateFileJobFinished =
         "UPDATE t_file "
@@ -1834,9 +1858,6 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
 
             st = conn->createStatement(query, "", pooledConnection);
             st->setString(1, job_id);
-            st->setString(2, job_id);
-            st->setString(3, job_id);
-            st->setString(4, job_id);
             r = conn->createResultset(st, pooledConnection);
             while (r->next())
                 {
