@@ -410,7 +410,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
 
             size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
             time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
-            logStream << fileManagement->timestamp() << "INFO bytes:" << trans << ", avg KB/sec :" << avg << ", inst KB/sec :" << inst << ", elapsed:" << elapsed << '\n';
+            logStream << fileManagement->timestamp() << "INFO bytes:" << trans << ", avg KB/sec:" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed << '\n';
         }
 
 }
