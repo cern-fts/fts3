@@ -29,7 +29,8 @@
 
 /// static locking mechanism for OpenSSL
 
-class StaticSslLocking {
+class StaticSslLocking
+{
 public:
 
     /// constructor
@@ -40,7 +41,7 @@ public:
 
     /// static mutex array
     static MUTEX_TYPE * poMutexes;
-  
+
     static void init_locks();
     static void kill_locks();
 
@@ -48,9 +49,9 @@ protected:
 
     /// callback for locking/unlocking a mutex in the array
     static void SslStaticLockCallback(int inMode,
-            int inMutex,
-            const char * ipsFile,
-            int inLine);
+                                      int inMutex,
+                                      const char * ipsFile,
+                                      int inLine);
 
     /// returns the id of the thread from which it is called
     static unsigned long SslThreadIdCallback();

@@ -26,15 +26,17 @@
  * This is the actual workhorse of the logging system.
  */
 
-void logger::writeLog(std::string message, bool console) {
+void logger::writeLog(std::string message, bool console)
+{
 
-    if (console == true && message.length() > 0) {
-        std::string timestapStr = timestamp();
-        timestapStr.erase(timestapStr.end() - 1);
-        std::cerr << "ERROR: " <<  timestapStr << " " <<  message << std::endl;
-    }
-    
-    writeMsg(message);    
+    if (console == true && message.length() > 0)
+        {
+            std::string timestapStr = timestamp();
+            timestapStr.erase(timestapStr.end() - 1);
+            std::cerr << "ERROR: " <<  timestapStr << " " <<  message << std::endl;
+        }
+
+    writeMsg(message);
 }
 
 
@@ -42,33 +44,39 @@ void logger::writeLog(std::string message, bool console) {
  * if looging messages to a file is enabled, append the message content(one line per message)
  */
 
-void logger::writeMsg(std::string message) {
+void logger::writeMsg(std::string message)
+{
 
-     std::string timestapStr = timestamp();
-     timestapStr.erase(timestapStr.end() - 1);
-     std::string msg =  timestapStr + " " + message;
-     bool isStartedMsg = (message.compare(0, 2, "ST")) == 0? true: false;
-     bool isCompletedMsg = (message.compare(0, 2, "CO")) == 0? true: false;     
-   
-   
-     if(getENABLEMSGLOG() == true){
-       if(isStartedMsg == true || isCompletedMsg == true){
-               appendMessageToLogFile(msg);
-       }	
-     }	       
+    std::string timestapStr = timestamp();
+    timestapStr.erase(timestapStr.end() - 1);
+    std::string msg =  timestapStr + " " + message;
+    bool isStartedMsg = (message.compare(0, 2, "ST")) == 0? true: false;
+    bool isCompletedMsg = (message.compare(0, 2, "CO")) == 0? true: false;
 
-     if(getENABLELOG() == true){
-       if(isStartedMsg == false && isCompletedMsg == false){
-               appendMessageToLogFile(msg);
-       }
-    }
+
+    if(getENABLEMSGLOG() == true)
+        {
+            if(isStartedMsg == true || isCompletedMsg == true)
+                {
+                    appendMessageToLogFile(msg);
+                }
+        }
+
+    if(getENABLELOG() == true)
+        {
+            if(isStartedMsg == false && isCompletedMsg == false)
+                {
+                    appendMessageToLogFile(msg);
+                }
+        }
 }
 
 
-void logger::writeMsgNoConfig(std::string message) {
-     std::string timestapStr = timestamp();
-     timestapStr.erase(timestapStr.end() - 1);
-     std::string msg =  timestapStr + " " + message;
-     appendMessageToLogFileNoConfig(msg);
+void logger::writeMsgNoConfig(std::string message)
+{
+    std::string timestapStr = timestamp();
+    timestapStr.erase(timestapStr.end() - 1);
+    std::string msg =  timestapStr + " " + message;
+    appendMessageToLogFileNoConfig(msg);
 }
 

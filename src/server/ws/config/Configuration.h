@@ -35,8 +35,10 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 using namespace boost;
@@ -52,242 +54,244 @@ using namespace fts3::common;
  * - retrieving the configuration from DB
  * - deleting the configuration from DB
  */
-class Configuration {
+class Configuration
+{
 
 public:
 
-	/**
-	 * Constructor
-	 *
-	 * For logging reasons the object needs the user's DN
-	 */
-	Configuration(string dn);
+    /**
+     * Constructor
+     *
+     * For logging reasons the object needs the user's DN
+     */
+    Configuration(string dn);
 
-	/**
-	 * Destructor, it updates the configuration audit traits
-	 */
-	virtual ~Configuration();
+    /**
+     * Destructor, it updates the configuration audit traits
+     */
+    virtual ~Configuration();
 
-	/**
-	 * Protocol parameters
-	 */
-	struct Protocol {
-		static const string BANDWIDTH;
-		static const string NOSTREAMS;
-		static const string TCP_BUFFER_SIZE;
-		static const string NOMINAL_THROUGHPUT;
-		static const string BLOCKSIZE;
-		static const string HTTP_TO;
-		static const string URLCOPY_PUT_TO;
-		static const string URLCOPY_PUTDONE_TO;
-		static const string URLCOPY_GET_TO;
-		static const string URLCOPY_GET_DONETO;
-		static const string URLCOPY_TX_TO;
-		static const string URLCOPY_TXMARKS_TO;
-		static const string URLCOPY_FIRST_TXMARK_TO;
-		static const string TX_TO_PER_MB;
-		static const string NO_TX_ACTIVITY_TO;
-		static const string PREPARING_FILES_RATIO;
-	};
+    /**
+     * Protocol parameters
+     */
+    struct Protocol
+    {
+        static const string BANDWIDTH;
+        static const string NOSTREAMS;
+        static const string TCP_BUFFER_SIZE;
+        static const string NOMINAL_THROUGHPUT;
+        static const string BLOCKSIZE;
+        static const string HTTP_TO;
+        static const string URLCOPY_PUT_TO;
+        static const string URLCOPY_PUTDONE_TO;
+        static const string URLCOPY_GET_TO;
+        static const string URLCOPY_GET_DONETO;
+        static const string URLCOPY_TX_TO;
+        static const string URLCOPY_TXMARKS_TO;
+        static const string URLCOPY_FIRST_TXMARK_TO;
+        static const string TX_TO_PER_MB;
+        static const string NO_TX_ACTIVITY_TO;
+        static const string PREPARING_FILES_RATIO;
+    };
 
-	/**
-	 * Returns a configuration in JSON format
-	 *
-	 * @return a string with JSON configuration
-	 */
-	virtual string json() = 0;
+    /**
+     * Returns a configuration in JSON format
+     *
+     * @return a string with JSON configuration
+     */
+    virtual string json() = 0;
 
-	/**
-	 * Saves the current configuration into the DB
-	 */
-	virtual void save() = 0;
+    /**
+     * Saves the current configuration into the DB
+     */
+    virtual void save() = 0;
 
-	/**
-	 * Removes the current configuration from the DB
-	 */
-	virtual void del() = 0;
+    /**
+     * Removes the current configuration from the DB
+     */
+    virtual void del() = 0;
 
-	/// the 'any' character used to describe the SE (or SE group) to 'any' relation
-	static const string any;
-	/// the 'wildcard' string, so called catch-all
-	static const string wildcard;
-	/// 'on' string
-	static const string on;
-	/// 'off' string
-	static const string off;
-	/// the public share
-	static const string pub;
-	/// 'share_only' string
-	static const string share_only;
-	/// value of a share pointing that auto should be used
-	static const int auto_share = -1;
+    /// the 'any' character used to describe the SE (or SE group) to 'any' relation
+    static const string any;
+    /// the 'wildcard' string, so called catch-all
+    static const string wildcard;
+    /// 'on' string
+    static const string on;
+    /// 'off' string
+    static const string off;
+    /// the public share
+    static const string pub;
+    /// 'share_only' string
+    static const string share_only;
+    /// value of a share pointing that auto should be used
+    static const int auto_share = -1;
 
 protected:
 
-	/// set of strings that are not allowed as SE or SE group name
-	set<string> notAllowed;
+    /// set of strings that are not allowed as SE or SE group name
+    set<string> notAllowed;
 
-	/// Pointer to the 'GenericDbIfce' singleton
-	GenericDbIfce* db;
+    /// Pointer to the 'GenericDbIfce' singleton
+    GenericDbIfce* db;
 
-	/**
-	 * Converts a STL map to JSON configuration string
-	 *
-	 * @param params - the parameters to be converted to JSON
-	 * @return string containing the JSON configuration
-	 */
-	static string json(map<string, int>& params);
+    /**
+     * Converts a STL map to JSON configuration string
+     *
+     * @param params - the parameters to be converted to JSON
+     * @return string containing the JSON configuration
+     */
+    static string json(map<string, int>& params);
 
-	/**
-	 * Converts a STL map to JSON configuration string,
-	 * 	if the optional is not initialized "auto" value is used
-	 *
-	 * @param params - the parameters to be converted to JSON
-	 * @return string containing the JSON configuration
-	 */
-	static string json(optional< map<string, int> >& params);
+    /**
+     * Converts a STL map to JSON configuration string,
+     * 	if the optional is not initialized "auto" value is used
+     *
+     * @param params - the parameters to be converted to JSON
+     * @return string containing the JSON configuration
+     */
+    static string json(optional< map<string, int> >& params);
 
-	/**
-	 * Converts a STL vector to JSON configuration string
-	 *
-	 * @param members - the vector members to be converted to JSON
-	 * @return string containing the JSON configuration
-	 */
-	static string json(vector<string>& members);
+    /**
+     * Converts a STL vector to JSON configuration string
+     *
+     * @param members - the vector members to be converted to JSON
+     * @return string containing the JSON configuration
+     */
+    static string json(vector<string>& members);
 
-	/**
-	 * Gets a map containing the protocol parameter names and the respective values.
-	 *	If auto-protocol has been used an uninitialized optional is returned.
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 *
-	 * @return map with protocol parameter names and their values
-	 */
-	optional< map<string, int> > getProtocolMap(string source, string destination);
+    /**
+     * Gets a map containing the protocol parameter names and the respective values.
+     *	If auto-protocol has been used an uninitialized optional is returned.
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     *
+     * @return map with protocol parameter names and their values
+     */
+    optional< map<string, int> > getProtocolMap(string source, string destination);
 
-	/**
-	 * Gets a map containing the protocol parameter names and the respective values
-	 *
-	 * @param cfg - link configuration object
-	 *
-	 * @return map with protocol parameter names and their values
-	 */
-	optional< map<string, int> > getProtocolMap(LinkConfig* cfg);
+    /**
+     * Gets a map containing the protocol parameter names and the respective values
+     *
+     * @param cfg - link configuration object
+     *
+     * @return map with protocol parameter names and their values
+     */
+    optional< map<string, int> > getProtocolMap(LinkConfig* cfg);
 
-	/**
-	 * Gets a map containing the VO names and the respective share value (for the given source-destination pair).
-	 *	If auto-protocol has been used an uninitialized optional is returned.
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 *
-	 * @return map with VOs and their share values
-	 */
-	map<string, int> getShareMap(string source, string destination);
+    /**
+     * Gets a map containing the VO names and the respective share value (for the given source-destination pair).
+     *	If auto-protocol has been used an uninitialized optional is returned.
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     *
+     * @return map with VOs and their share values
+     */
+    map<string, int> getShareMap(string source, string destination);
 
-	/**
-	 * Adds a SE to the DB (if not already added)
-	 *
-	 * @param se - SE name
-	 * @param active - the state of the SE (active ('on') by default)
-	 */
-	void addSe(string se, bool active = true);
+    /**
+     * Adds a SE to the DB (if not already added)
+     *
+     * @param se - SE name
+     * @param active - the state of the SE (active ('on') by default)
+     */
+    void addSe(string se, bool active = true);
 
-	/**
-	 * Changes the SE state to the default one ('on'),
-	 * 	should be used in case a SE configuration is being removed
-	 *
-	 * @param se - SE name
-	 */
-	void eraseSe(string se);
+    /**
+     * Changes the SE state to the default one ('on'),
+     * 	should be used in case a SE configuration is being removed
+     *
+     * @param se - SE name
+     */
+    void eraseSe(string se);
 
-	/**
-	 * Adds SE group and its members to the DB.
-	 *
-	 * @param group - SE group name
-	 * @param members - SE members of the group
-	 */
-	void addGroup(string group, vector<string>& members);
+    /**
+     * Adds SE group and its members to the DB.
+     *
+     * @param group - SE group name
+     * @param members - SE members of the group
+     */
+    void addGroup(string group, vector<string>& members);
 
-	/**
-	 * Checks if the group exists in the DB. Throws an exception if not.
-	 *
-	 * @param group - SE group name
-	 */
-	void checkGroup(string group);
+    /**
+     * Checks if the group exists in the DB. Throws an exception if not.
+     *
+     * @param group - SE group name
+     */
+    void checkGroup(string group);
 
-	/**
-	 * Gets link configuration object, and a flag stating whether the object exists in DB or not.
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 * @param active - the state
-	 * @param symbolic_name - the symbolic name describing the link
-	 */
-	pair< shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
+    /**
+     * Gets link configuration object, and a flag stating whether the object exists in DB or not.
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     * @param active - the state
+     * @param symbolic_name - the symbolic name describing the link
+     */
+    pair< shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
 
-	/**
-	 * Adds a link configuration to the DB.
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 * @param active - the state
-	 * @param symbolic_name - the symbolic name describing the link
-	 * @param protocol - the protocol parameters and the rrespective values
-	 */
-	void addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol);
+    /**
+     * Adds a link configuration to the DB.
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     * @param active - the state
+     * @param symbolic_name - the symbolic name describing the link
+     * @param protocol - the protocol parameters and the rrespective values
+     */
+    void addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol);
 
-	/**
-	 * Adds a share-only link configuration to the DB.
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 * @param active - the state
-	 * @param symbolic_name - the symbolic name describing the link
-	 * @param protocol - the protocol parameters and the rrespective values
-	 */
-	void addLinkCfg(string source, string destination, bool active, string symbolic_name);
+    /**
+     * Adds a share-only link configuration to the DB.
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     * @param active - the state
+     * @param symbolic_name - the symbolic name describing the link
+     * @param protocol - the protocol parameters and the rrespective values
+     */
+    void addLinkCfg(string source, string destination, bool active, string symbolic_name);
 
-	/**
-	 * Adds a share configuration to the DB.
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 * @param share - VO names and their shares
-	 */
-	void addShareCfg(string source, string destination, map<string, int>& share);
+    /**
+     * Adds a share configuration to the DB.
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     * @param share - VO names and their shares
+     */
+    void addShareCfg(string source, string destination, map<string, int>& share);
 
-	/**
-	 * Deletes the link configuration
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 */
-	void delLinkCfg(string source, string destination);
+    /**
+     * Deletes the link configuration
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     */
+    void delLinkCfg(string source, string destination);
 
-	/**
-	 * Deletes the share configuration
-	 *
-	 * @param source - the source (SE, SE group or 'any')
-	 * @param destination - the destination (SE, SE group or 'any')
-	 */
-	void delShareCfg(string source, string destination);
+    /**
+     * Deletes the share configuration
+     *
+     * @param source - the source (SE, SE group or 'any')
+     * @param destination - the destination (SE, SE group or 'any')
+     */
+    void delShareCfg(string source, string destination);
 
-	/// the whole configuration in JSON format
-	string all;
+    /// the whole configuration in JSON format
+    string all;
 
-	/// number of SQL updates triggered by configuration command
-	int updateCount;
-	/// number of SQL inserts triggered by configuration command
-	int insertCount;
-	/// number of SQL deletes triggered by configuration command
-	int deleteCount;
+    /// number of SQL updates triggered by configuration command
+    int updateCount;
+    /// number of SQL inserts triggered by configuration command
+    int insertCount;
+    /// number of SQL deletes triggered by configuration command
+    int deleteCount;
 
 private:
 
-	/// client's DN
-	string dn;
+    /// client's DN
+    string dn;
 };
 
 } /* namespace cli */

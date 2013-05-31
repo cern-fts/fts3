@@ -28,10 +28,13 @@
 #include <cstring>
 #include <fstream>
 
-namespace fts3 {
-namespace common {
+namespace fts3
+{
+namespace common
+{
 
-void TarArchiver::init(PosixTarHeader& header) {
+void TarArchiver::init(PosixTarHeader& header)
+{
     memset(&header,0,sizeof(PosixTarHeader));
     sprintf(header.magic,"ustar ");
     sprintf(header.mtime,"%011lo",time(NULL));
@@ -39,57 +42,69 @@ void TarArchiver::init(PosixTarHeader& header) {
     sprintf(header.gname,"%s","users");
 }
 
-void TarArchiver::setChecksum(PosixTarHeader& header) {
+void TarArchiver::setChecksum(PosixTarHeader& header)
+{
     unsigned int sum = 0;
     char *p = (char *) &header;
     char *q = p + sizeof(PosixTarHeader);
     while (p < header.checksum) sum += *p++ & 0xff;
-    for (int i = 0; i < 8; ++i) {
-		sum += ' ';
-		++p;
-    }
+    for (int i = 0; i < 8; ++i)
+        {
+            sum += ' ';
+            ++p;
+        }
     while (p < q) sum += *p++ & 0xff;
 
     sprintf(header.checksum,"%06o",sum);
 }
 
-void TarArchiver::setSize(PosixTarHeader& header, unsigned long fileSize) {
+void TarArchiver::setSize(PosixTarHeader& header, unsigned long fileSize)
+{
     sprintf(header.size,"%011llo", (long long unsigned int)fileSize);
 }
 
-void TarArchiver::setFilename(PosixTarHeader& header, string filename) {
+void TarArchiver::setFilename(PosixTarHeader& header, string filename)
+{
 
-	if(filename.empty() || filename.size() >= 100) {
-		//	TODO THROW("invalid archive name \"" << filename << "\"");
-	}
+    if(filename.empty() || filename.size() >= 100)
+        {
+            //	TODO THROW("invalid archive name \"" << filename << "\"");
+        }
 
-	snprintf(header.name, 100, "%s", filename.c_str());
+    snprintf(header.name, 100, "%s", filename.c_str());
 }
 
-void TarArchiver::endRecord(size_t len) {
+void TarArchiver::endRecord(size_t len)
+{
     char c='\0';
-    while((len%sizeof(PosixTarHeader))!=0) {
-    	out.write(&c,sizeof(char));
-    	++len;
-    }
+    while((len%sizeof(PosixTarHeader))!=0)
+        {
+            out.write(&c,sizeof(char));
+            ++len;
+        }
 }
 
-TarArchiver::TarArchiver(ostream& out):finished(false),out(out) {
+TarArchiver::TarArchiver(ostream& out):finished(false),out(out)
+{
 
-	if(sizeof(PosixTarHeader)!=512) {
-		// TODO	THROW(sizeof(PosixTarHeader));
-	}
+    if(sizeof(PosixTarHeader)!=512)
+        {
+            // TODO	THROW(sizeof(PosixTarHeader));
+        }
 }
 
-TarArchiver::~TarArchiver() {
+TarArchiver::~TarArchiver()
+{
 
-	if(!finished) {
-		// TODO cerr << "[warning]tar file was not finished."<< endl;
-	}
+    if(!finished)
+        {
+            // TODO cerr << "[warning]tar file was not finished."<< endl;
+        }
 }
 
 /** writes 2 empty blocks. Should be always called before closing the Tar file */
-void TarArchiver::finish() {
+void TarArchiver::finish()
+{
 
     finished = true;
     //The end of the archive is indicated by two blocks filled with binary zeros
@@ -100,10 +115,11 @@ void TarArchiver::finish() {
     out.flush();
 }
 
-void TarArchiver::putFile(istream& in, string nameInArchive) {
+void TarArchiver::putFile(istream& in, string nameInArchive)
+{
 
-	// buffer
-	char buff[BUFSIZ];
+    // buffer
+    char buff[BUFSIZ];
 
     // check file size
     in.seekg (0, ios::end);
@@ -124,11 +140,12 @@ void TarArchiver::putFile(istream& in, string nameInArchive) {
     out.write((const char*) &header, sizeof(PosixTarHeader));
 
     size_t nRead = 0;
-    while(!in.eof()) {
-    	in.read(buff, BUFSIZ);
-    	nRead = in.gcount();
-    	out.write(buff, nRead);
-    }
+    while(!in.eof())
+        {
+            in.read(buff, BUFSIZ);
+            nRead = in.gcount();
+            out.write(buff, nRead);
+        }
 
     // mark the end of file
     endRecord(len);

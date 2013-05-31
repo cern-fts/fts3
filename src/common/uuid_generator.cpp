@@ -28,17 +28,18 @@
 #include <uuid/uuid.h>
 
 
-string UuidGenerator::generateUUID() {
+string UuidGenerator::generateUUID()
+{
 
-	uuid_t id;
-	char c_str[37]={0};
+    uuid_t id;
+    char c_str[37]= {0};
 
-	uuid_generate(id);
-	// different algorithms:
-	//uuid_generate_random(id);
-	//uuid_generate_time(id);
-	uuid_unparse(id, c_str);
+    uuid_generate(id);
+    // different algorithms:
+    //uuid_generate_random(id);
+    //uuid_generate_time(id);
+    uuid_unparse(id, c_str);
 
-	string str = c_str;
-	return str;
+    string str = c_str;
+    return str;
 }

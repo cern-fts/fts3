@@ -33,8 +33,10 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/shared_ptr.hpp>
 
-namespace fts3 {
-namespace server {
+namespace fts3
+{
+namespace server
+{
 
 using namespace db;
 using namespace std;
@@ -43,61 +45,64 @@ using namespace boost;
 /**
  * Assigns share configurations to transfer-job
  */
-class ConfigurationAssigner {
+class ConfigurationAssigner
+{
 
-	enum {
-		SHARE = 0, //< the share tuple
-		CONTENT //< the content tuple
-	};
+    enum
+    {
+        SHARE = 0, //< the share tuple
+        CONTENT //< the content tuple
+    };
 
-	enum {
-		SOURCE = 0, //< source index in the tuple
-		DESTINATION, //< destination index in the tuple
-		VO //< VO index in the tuple
-	};
+    enum
+    {
+        SOURCE = 0, //< source index in the tuple
+        DESTINATION, //< destination index in the tuple
+        VO //< VO index in the tuple
+    };
 
-	/// share tuple (source, destination, VO) -> PK in DB
-	typedef tuple<string, string, string> share;
-	/// content tuple - defines if a configuration regards the source, the destination or both
-	typedef pair<bool, bool> content;
-	/// configuration type
-	typedef tuple< share, content > cfg_type;
+    /// share tuple (source, destination, VO) -> PK in DB
+    typedef tuple<string, string, string> share;
+    /// content tuple - defines if a configuration regards the source, the destination or both
+    typedef pair<bool, bool> content;
+    /// configuration type
+    typedef tuple< share, content > cfg_type;
 
 public:
 
-	/**
-	 * Constructor.
-	 *
-	 * @param file - a file that is being scheduled
-	 */
-	ConfigurationAssigner(TransferFiles* file);
-	ConfigurationAssigner(const fts3::server::ConfigurationAssigner&);
+    /**
+     * Constructor.
+     *
+     * @param file - a file that is being scheduled
+     */
+    ConfigurationAssigner(TransferFiles* file);
+    ConfigurationAssigner(const fts3::server::ConfigurationAssigner&);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~ConfigurationAssigner();
+    /**
+     * Destructor.
+     */
+    virtual ~ConfigurationAssigner();
 
-	/**
-	 * Gets the respective configurations without assigning them persistently in DB to transfer-job
-	 *
-	 * @return list of configurations
-	 */
-	void assign(vector< shared_ptr<ShareConfig> >& out);
+    /**
+     * Gets the respective configurations without assigning them persistently in DB to transfer-job
+     *
+     * @return list of configurations
+     */
+    void assign(vector< shared_ptr<ShareConfig> >& out);
 
 private:
 
-	/// file that is being scheduled
-	TransferFiles* file;
-	/// DB interface
-	GenericDbIfce* db;
+    /// file that is being scheduled
+    TransferFiles* file;
+    /// DB interface
+    GenericDbIfce* db;
 
-	/// number of share configuration that have been assigned to the job
-	int assign_count;
+    /// number of share configuration that have been assigned to the job
+    int assign_count;
 
-	void assignShareCfg(list<cfg_type> arg, vector< shared_ptr<ShareConfig> >& out);
+    void assignShareCfg(list<cfg_type> arg, vector< shared_ptr<ShareConfig> >& out);
 
-	static const int auto_share = -1;
+    static const int auto_share = -1;
 };
 
 } /* namespace server */

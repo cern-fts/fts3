@@ -1,17 +1,17 @@
 /********************************************//**
  * Copyright @ Members of the EMI Collaboration, 2010.
  * See www.eu-emi.eu for details on the copyright holders.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0 
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  ***********************************************/
 
@@ -20,7 +20,7 @@
  * @brief Se pair object model
  * @author Michail Salichos
  * @date 09/02/2012
- * 
+ *
  **/
 
 
@@ -32,29 +32,30 @@
 #include <map>
 
 
-class SePair{
+class SePair
+{
 
 public:
-	SePair(){}
-	~SePair(){}
-	
-    /** 
+    SePair() {}
+    ~SePair() {}
+
+    /**
      * The name of the channel to select on
      */
     std::string sePairName;
 
-    /** 
+    /**
      * The source site name of the channel. e.g. for CERN it should be "cern.ch".
      * In the case of a non-dedicated site to site link this should be "any".
      */
     std::string sourceSite;
 
-    /** 
+    /**
      * The destination site of the channel. As for sourceSite.
      */
     std::string destSite;
 
-    /** 
+    /**
      * The email contact for the responsbile of the channel.
      */
     std::string contact;
@@ -79,7 +80,7 @@ public:
      */
     int nominalThroughput;
 
-    /** 
+    /**
      * The operational state of the channel.
      * "Active" means running and accepting jobs.
      * "Drain" means servicing jobs, but not accepting new ones from clients.
@@ -87,13 +88,13 @@ public:
      * "Stopped" means neither accepting nor servicing jobs.
      */
     std::string state;
-    
+
     /**
      * The transfer share for each VO on this channel {VOName,Share}.
      */
     std::map<std::string, std::string> VOShares;
-    
-	/** The message concerning the last modification. */
+
+    /** The message concerning the last modification. */
     std::string message;
     /** The time of the last modification. */
     time_t lastModificationTime;
@@ -104,51 +105,51 @@ public:
     /** A {VOName, int} array of VO limits. */
     std::map<std::string, int> VOLimits;
     /** Number of seconds to mark activity on URL Copy. */
-     int urlCopyFirstTxmarkTo;	
+    int urlCopyFirstTxmarkTo;
     /** Flag to check destination directory. */
-    int targetDirCheck;	    
-    
-	/** The last time the channel was active. */
-	time_t lastActiveTime;
-	/** Don't use this. You have been warned! */
-	int seLimit;
-	/** 
-	 * Type of a channel: DEDICATED (point-to-point, 
-	 * seLimit is not considered)
-	 * or NONDEDICATED (start or cloud). 
-	 */
-	std::string channelType;
-	/** 
-	 * Default block size of a transfer, e.g. '1MB' or '1024kb'.
-	 * This parameter is passed to the globus FTP client. 
-	 */
-	std::string blockSize;
-	/** Timeouts are in seconds. */
-	int httpTimeout;
-	/** Possible values are: DEBUG, INFO (default), ERROR. */
-	std::string transferLogLevel;
-	/** Ratio of SRM activity to number of transfer slots. */
-	long preparingFilesRatio;
-	
-	/** Transfer type: URLCOPY|SRMCOPY. */
-	std::string transferType;
-		
-	int urlCopyPutTimeout;
-	int urlCopyPutDoneTimeout;
-	int urlCopyGetTimeout;
-	int urlCopyGetDoneTimeout;
-	int urlCopyTransferTimeout;
-	int urlCopyTransferMarkersTimeout;
-	/** Make dCache happy timeout. */
-	int urlCopyNoProgressTimeout;
-	/** Transfer timeout per megabyte. */
-	long urlCopyTransferTimeoutPerMB;		
-	
-	/** SRM copy direction: PUSH, PULL. */
-	std::string srmCopyDirection;
-	/** This is a global timeout. */
-	int srmCopyTimeout;
-	/** Timeout between status updates. */
-	int srmCopyRefreshTimeout;    
+    int targetDirCheck;
+
+    /** The last time the channel was active. */
+    time_t lastActiveTime;
+    /** Don't use this. You have been warned! */
+    int seLimit;
+    /**
+     * Type of a channel: DEDICATED (point-to-point,
+     * seLimit is not considered)
+     * or NONDEDICATED (start or cloud).
+     */
+    std::string channelType;
+    /**
+     * Default block size of a transfer, e.g. '1MB' or '1024kb'.
+     * This parameter is passed to the globus FTP client.
+     */
+    std::string blockSize;
+    /** Timeouts are in seconds. */
+    int httpTimeout;
+    /** Possible values are: DEBUG, INFO (default), ERROR. */
+    std::string transferLogLevel;
+    /** Ratio of SRM activity to number of transfer slots. */
+    long preparingFilesRatio;
+
+    /** Transfer type: URLCOPY|SRMCOPY. */
+    std::string transferType;
+
+    int urlCopyPutTimeout;
+    int urlCopyPutDoneTimeout;
+    int urlCopyGetTimeout;
+    int urlCopyGetDoneTimeout;
+    int urlCopyTransferTimeout;
+    int urlCopyTransferMarkersTimeout;
+    /** Make dCache happy timeout. */
+    int urlCopyNoProgressTimeout;
+    /** Transfer timeout per megabyte. */
+    long urlCopyTransferTimeoutPerMB;
+
+    /** SRM copy direction: PUSH, PULL. */
+    std::string srmCopyDirection;
+    /** This is a global timeout. */
+    int srmCopyTimeout;
+    /** Timeout between status updates. */
+    int srmCopyRefreshTimeout;
 
 };

@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 /** \file serverconfig.cpp Implementation of FTS3 server configuration. */
@@ -22,7 +22,7 @@ limitations under the License. */
 #include "serverconfigreader.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
+#include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 /* ---------------------------------------------------------------------- */
@@ -52,10 +52,10 @@ const std::string& ServerConfig::_get_str(const std::string& aVariable)
     _t_vars::iterator itr = _vars.find(aVariable);
 
     if (itr == _vars.end())
-    {
-    	FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Server config variable " + aVariable + " not defined."));
-	throw Err_Custom("Server config variable " + aVariable + " not defined.");
-    }
+        {
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Server config variable " + aVariable + " not defined."));
+            throw Err_Custom("Server config variable " + aVariable + " not defined.");
+        }
 
     // No worry, it will not be 0 pointer due to the exception
     return itr->second;
@@ -87,7 +87,7 @@ BOOST_FIXTURE_TEST_CASE (Config_ServerConfig_get_str, ServerConfig)
     BOOST_CHECK_EXCEPTION
     (
         val = _get_str ("notkey"),
-        Err_Custom, 
+        Err_Custom,
         Config_ServerConfig_get_str_CheckMessage
     );
 }
@@ -100,9 +100,9 @@ struct Mock_ServerConfigReader
 
     type_vars operator () (int, char**)
     {
-         type_vars ret;
-         ret["key"] = "val";
-         return ret;
+        type_vars ret;
+        ret["key"] = "val";
+        return ret;
     }
 };
 
@@ -136,24 +136,24 @@ void ServerConfig::read
 {
     _read<ServerConfigReader> (argc, argv);
 
-     //TODO, enable it later
+    //TODO, enable it later
     /*if (monitor)
-		cfgmonitor.start(
-				get<std::string>("configfile")
-			);*/
+    	cfgmonitor.start(
+    			get<std::string>("configfile")
+    		);*/
 }
 
 /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST 
-    
+#ifdef FTS3_COMPILE_WITH_UNITTEST
+
 void ServerConfig::read
 (
     const std::string& aFileName
 )
 {
-    static const int argc = 2; 
-    char *argv[argc];  
+    static const int argc = 2;
+    char *argv[argc];
     argv[0] = const_cast<char*> ("executable");
     std::string confpar = std::string("--configfile=") + aFileName;
     argv[1] = const_cast<char*> (confpar.c_str());
@@ -162,28 +162,32 @@ void ServerConfig::read
 
 #endif // FTS3_COMPILE_WITH_UNITTEST
 
-void ServerConfig::waitIfReading() {
-	mutex::scoped_lock lock(qm);
-	while (reading) qv.wait(lock);
-	getting++;
+void ServerConfig::waitIfReading()
+{
+    mutex::scoped_lock lock(qm);
+    while (reading) qv.wait(lock);
+    getting++;
 }
 
-void ServerConfig::notifyReaders() {
-	mutex::scoped_lock lock(qm);
-	getting--;
-	qv.notify_all(); // there is anyway only one thread to be notified
+void ServerConfig::notifyReaders()
+{
+    mutex::scoped_lock lock(qm);
+    getting--;
+    qv.notify_all(); // there is anyway only one thread to be notified
 }
 
-void ServerConfig::waitIfGetting() {
-	mutex::scoped_lock lock(qm);
-	while (getting > 0) qv.wait(lock);
-	reading = true;
+void ServerConfig::waitIfGetting()
+{
+    mutex::scoped_lock lock(qm);
+    while (getting > 0) qv.wait(lock);
+    reading = true;
 }
 
-void ServerConfig::notifyGetters() {
-	mutex::scoped_lock lock(qm);
-	reading = false;
-	qv.notify_all();
+void ServerConfig::notifyGetters()
+{
+    mutex::scoped_lock lock(qm);
+    reading = false;
+    qv.notify_all();
 }
 
 FTS3_CONFIG_NAMESPACE_END

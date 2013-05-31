@@ -42,20 +42,24 @@ const string JobParameterHandler::JOB_METADATA = "job_metadata";
 const string JobParameterHandler::RETRY = "retry";
 const string JobParameterHandler::RETRY_DELAY = "retry_delay";
 
-JobParameterHandler::JobParameterHandler() {
+JobParameterHandler::JobParameterHandler()
+{
 
 }
 
 
-JobParameterHandler::~JobParameterHandler() {
+JobParameterHandler::~JobParameterHandler()
+{
 
 }
 
-void JobParameterHandler::operator() (vector<string>& keys, vector<string>& values) {
+void JobParameterHandler::operator() (vector<string>& keys, vector<string>& values)
+{
 
-	// set the given parameters
-	for (vector<string>::iterator it_keys = keys.begin(), it_val = values.begin(); it_keys < keys.end(); it_keys++, it_val++) {
-		parameters[*it_keys] = *it_val;
-	}
+    // set the given parameters
+    for (vector<string>::iterator it_keys = keys.begin(), it_val = values.begin(); it_keys < keys.end(); it_keys++, it_val++)
+        {
+            parameters[*it_keys] = *it_val;
+        }
 }
 

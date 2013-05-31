@@ -21,13 +21,15 @@
 #include "StaticSslLocking.h"
 #include <iostream>
 
-struct CRYPTO_dynlock_value {
+struct CRYPTO_dynlock_value
+{
     MUTEX_TYPE mutex;
 };
 
 static MUTEX_TYPE *mutex_buf;
 
-static struct CRYPTO_dynlock_value *dyn_create_function(const char *, int) {
+static struct CRYPTO_dynlock_value *dyn_create_function(const char *, int)
+{
     struct CRYPTO_dynlock_value *value;
     value = (struct CRYPTO_dynlock_value*) malloc(sizeof (struct CRYPTO_dynlock_value));
     if (value)
@@ -35,30 +37,35 @@ static struct CRYPTO_dynlock_value *dyn_create_function(const char *, int) {
     return value;
 }
 
-static void dyn_lock_function(int mode, struct CRYPTO_dynlock_value *l, const char *, int) {
+static void dyn_lock_function(int mode, struct CRYPTO_dynlock_value *l, const char *, int)
+{
     if (mode & CRYPTO_LOCK)
         MUTEX_LOCK(l->mutex);
     else
         MUTEX_UNLOCK(l->mutex);
 }
 
-static void dyn_destroy_function(struct CRYPTO_dynlock_value *l, const char *, int) {
+static void dyn_destroy_function(struct CRYPTO_dynlock_value *l, const char *, int)
+{
     MUTEX_CLEANUP(l->mutex);
     free(l);
 }
 
-static void locking_function(int mode, int n, const char *, int) {
+static void locking_function(int mode, int n, const char *, int)
+{
     if (mode & CRYPTO_LOCK)
         MUTEX_LOCK(mutex_buf[n]);
     else
         MUTEX_UNLOCK(mutex_buf[n]);
 }
 
-static unsigned long id_function() {
+static unsigned long id_function()
+{
     return (unsigned long) THREAD_ID;
 }
 
-static int CRYPTO_thread_setup() {
+static int CRYPTO_thread_setup()
+{
     int i;
     mutex_buf = (MUTEX_TYPE*) malloc(static_cast<size_t>(CRYPTO_num_locks()) * sizeof (pthread_mutex_t));
     if (!mutex_buf)
@@ -73,7 +80,8 @@ static int CRYPTO_thread_setup() {
     return 0;
 }
 
-void CRYPTO_thread_cleanup() {
+void CRYPTO_thread_cleanup()
+{
     int i;
     if (!mutex_buf)
         return;
@@ -93,34 +101,40 @@ void CRYPTO_thread_cleanup() {
 MUTEX_TYPE * StaticSslLocking::poMutexes;
 
 
-void StaticSslLocking::SslStaticLockCallback(int inMode, int inMutex, const char * ipsFile, int inLine) {
+void StaticSslLocking::SslStaticLockCallback(int inMode, int inMutex, const char * ipsFile, int inLine)
+{
     (void) ipsFile;
     (void) inLine;
 
-    if (inMode & CRYPTO_LOCK) {
-        MUTEX_LOCK(StaticSslLocking::poMutexes [ inMutex ]);
-    } else {
-        MUTEX_UNLOCK(StaticSslLocking::poMutexes [ inMutex ]);
-    }
+    if (inMode & CRYPTO_LOCK)
+        {
+            MUTEX_LOCK(StaticSslLocking::poMutexes [ inMutex ]);
+        }
+    else
+        {
+            MUTEX_UNLOCK(StaticSslLocking::poMutexes [ inMutex ]);
+        }
 
 }
 
-unsigned long StaticSslLocking::SslThreadIdCallback() {
+unsigned long StaticSslLocking::SslThreadIdCallback()
+{
     return ( (unsigned long) THREAD_ID);
 }
 
-void StaticSslLocking::init_locks() {
+void StaticSslLocking::init_locks()
+{
 
     CRYPTO_thread_setup();
     /* LEAVE IT HERE JUST FOR REFERENCE OF STATIC USAGE
-            // If some other library already set these 
+            // If some other library already set these
             if ( CRYPTO_get_locking_callback() && CRYPTO_get_id_callback() ) {
                     fprintf( stdout, "OpenSSL locking callbacks are already in place?\n" );
                     fflush( stdout );
                     //return ;
             }
 
-            StaticSslLocking::poMutexes = new MUTEX_TYPE [ CRYPTO_num_locks ( ) ];	
+            StaticSslLocking::poMutexes = new MUTEX_TYPE [ CRYPTO_num_locks ( ) ];
 
             for ( int i = 0; i < CRYPTO_num_locks ( ); i++ ) {
 
@@ -129,17 +143,20 @@ void StaticSslLocking::init_locks() {
             }
 
             CRYPTO_set_id_callback ( StaticSslLocking::SslThreadIdCallback );
-            CRYPTO_set_locking_callback ( StaticSslLocking::SslStaticLockCallback );	
+            CRYPTO_set_locking_callback ( StaticSslLocking::SslStaticLockCallback );
      */
 }
 
-StaticSslLocking::StaticSslLocking() {
+StaticSslLocking::StaticSslLocking()
+{
 }
 
-StaticSslLocking::~StaticSslLocking() {
+StaticSslLocking::~StaticSslLocking()
+{
 }
 
-void StaticSslLocking::kill_locks() {
+void StaticSslLocking::kill_locks()
+{
 
     CRYPTO_thread_cleanup();
     /* LEAVE IT HERE JUST FOR REFERENCE OF STATIC USAGE
@@ -150,7 +167,7 @@ void StaticSslLocking::kill_locks() {
             CRYPTO_set_locking_callback ( NULL );
 
             for ( int i = 0; i < CRYPTO_num_locks ( ); i++ ) {
-                   if(StaticSslLocking::poMutexes) 
+                   if(StaticSslLocking::poMutexes)
                     MUTEX_CLEANUP ( StaticSslLocking::poMutexes [ i ] );
 
             }

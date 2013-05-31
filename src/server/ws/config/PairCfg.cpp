@@ -28,70 +28,78 @@
 
 #include <utility>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 PairCfg::PairCfg(string dn, string source, string destination) :
-		Configuration(dn),
-		source(source),
-		destination(destination) {
+    Configuration(dn),
+    source(source),
+    destination(destination)
+{
 
-	notAllowed.insert(any);
-	if (notAllowed.count(source) || notAllowed.count(destination))
-		throw Err_Custom("The source or destination name is not a valid!");
+    notAllowed.insert(any);
+    if (notAllowed.count(source) || notAllowed.count(destination))
+        throw Err_Custom("The source or destination name is not a valid!");
 
-	scoped_ptr<LinkConfig> cfg (
-			db->getLinkConfig(source, destination)
-		);
+    scoped_ptr<LinkConfig> cfg (
+        db->getLinkConfig(source, destination)
+    );
 
-	if (!cfg.get())
-		throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
+    if (!cfg.get())
+        throw Err_Custom("A configuration for " + source + " - " + destination + " pair does not exist!");
 
-	symbolic_name = cfg->symbolic_name;
-	active = cfg->state == on;
+    symbolic_name = cfg->symbolic_name;
+    active = cfg->state == on;
 
-	share = getShareMap(source, destination);
-	protocol = getProtocolMap(cfg.get());
+    share = getShareMap(source, destination);
+    protocol = getProtocolMap(cfg.get());
 }
 
-PairCfg::PairCfg(string dn, CfgParser& parser) : Configuration(dn) {
+PairCfg::PairCfg(string dn, CfgParser& parser) : Configuration(dn)
+{
 
-	notAllowed.insert(any);
+    notAllowed.insert(any);
 
-	symbolic_name_opt = parser.get_opt("symbolic_name");
-	share = parser.get< map<string, int> >("share");
-	if (!parser.isAuto("protocol"))
-		protocol = parser.get< map<string, int> >("protocol");
-	active = parser.get<bool>("active");
+    symbolic_name_opt = parser.get_opt("symbolic_name");
+    share = parser.get< map<string, int> >("share");
+    if (!parser.isAuto("protocol"))
+        protocol = parser.get< map<string, int> >("protocol");
+    active = parser.get<bool>("active");
 }
 
-PairCfg::~PairCfg() {
+PairCfg::~PairCfg()
+{
 }
 
-string PairCfg::json() {
+string PairCfg::json()
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	ss << "\"" << "symbolic_name" << "\":\"" << symbolic_name << "\",";
-	ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
-	ss << "\"" << "share" << "\":" << Configuration::json(share) << ",";
-	ss << "\"" << "protocol" << "\":" << Configuration::json(protocol);
+    ss << "\"" << "symbolic_name" << "\":\"" << symbolic_name << "\",";
+    ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
+    ss << "\"" << "share" << "\":" << Configuration::json(share) << ",";
+    ss << "\"" << "protocol" << "\":" << Configuration::json(protocol);
 
-	return ss.str();
+    return ss.str();
 }
 
-void PairCfg::save() {
-	// add link
-	addLinkCfg(source, destination, active, symbolic_name, protocol);
-	// add shres for the link
-	addShareCfg(source, destination, share);
+void PairCfg::save()
+{
+    // add link
+    addLinkCfg(source, destination, active, symbolic_name, protocol);
+    // add shres for the link
+    addShareCfg(source, destination, share);
 }
 
-void PairCfg::del() {
-	// delete shares
-	delShareCfg(source, destination);
-	// delete the link itself
-	delLinkCfg(source, destination);
+void PairCfg::del()
+{
+    // delete shares
+    delShareCfg(source, destination);
+    // delete the link itself
+    delLinkCfg(source, destination);
 }
 
 } /* namespace ws */

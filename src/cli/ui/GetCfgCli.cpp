@@ -26,27 +26,32 @@
 
 using namespace fts3::cli;
 
-GetCfgCli::GetCfgCli() {
+GetCfgCli::GetCfgCli()
+{
 
-	specific.add_options()
-					("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
-					;
+    specific.add_options()
+    ("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
+    ;
 }
 
-GetCfgCli::~GetCfgCli() {
+GetCfgCli::~GetCfgCli()
+{
 }
 
-string GetCfgCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] [STANDALONE_CFG | SOURCE DESTINATION]";
+string GetCfgCli::getUsageString(string tool)
+{
+    return "Usage: " + tool + " [options] [STANDALONE_CFG | SOURCE DESTINATION]";
 }
 
-string GetCfgCli::getName() {
+string GetCfgCli::getName()
+{
 
-	if (vm.count("name")) {
-		return vm["name"].as<string>();
-	}
+    if (vm.count("name"))
+        {
+            return vm["name"].as<string>();
+        }
 
-	return string();
+    return string();
 }
 
 //optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {

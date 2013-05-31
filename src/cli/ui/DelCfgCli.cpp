@@ -24,16 +24,20 @@
 
 #include "DelCfgCli.h"
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
-DelCfgCli::DelCfgCli() : SetCfgCli(false) {
-	// ...
+DelCfgCli::DelCfgCli() : SetCfgCli(false)
+{
+    // ...
 
 }
 
-DelCfgCli::~DelCfgCli() {
-	// ...
+DelCfgCli::~DelCfgCli()
+{
+    // ...
 }
 
 } /* namespace cli */

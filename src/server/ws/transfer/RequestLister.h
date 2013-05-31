@@ -36,7 +36,10 @@
 
 using namespace std;
 
-namespace fts3 { namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 /**
  * RequestLister class takes care of listing submitted requests.
@@ -44,79 +47,80 @@ namespace fts3 { namespace ws {
  * Depending on the request (listRequest or listRequest2)
  * different constructors should be used.
  */
-class RequestLister {
+class RequestLister
+{
 public:
 
-	/**
-	 * Constructor - creates a lister object that should be used
-	 * by listRequest requests.
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param inGivenStates - the states of interest that should be listed
-	 */
-	RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
+    /**
+     * Constructor - creates a lister object that should be used
+     * by listRequest requests.
+     *
+     * @param soap - the soap object that is serving the given request
+     * @param inGivenStates - the states of interest that should be listed
+     */
+    RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
 
-	/**
-	 * Constructor - creates a lister object that should be used
-	 * by listRequest2 requests.
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param inGivenStates - the states of interest that should be listed
-	 * @param dn - user DN
-	 * @param vo - user VO
-	 */
-	RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo);
+    /**
+     * Constructor - creates a lister object that should be used
+     * by listRequest2 requests.
+     *
+     * @param soap - the soap object that is serving the given request
+     * @param inGivenStates - the states of interest that should be listed
+     * @param dn - user DN
+     * @param vo - user VO
+     */
+    RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo);
 
-	/**
-	 * Retrieves job statuses from DB.
-	 *
-	 * The impltns__ArrayOf_USCOREtns3_USCOREJobStatus object is created using gSOAP
-	 * memory-allocation utility, it will be garbage collected! If there is a need
-	 * to delete it manually gSOAP dedicated functions should be used (in particular
-	 * 'soap_unlink'!).
-	 *
-	 * @return impltns__ArrayOf_USCOREtns3_USCOREJobStatus object containing statuses of interest
-	 */
-	impltns__ArrayOf_USCOREtns3_USCOREJobStatus* list(AuthorizationManager::Level lvl);
+    /**
+     * Retrieves job statuses from DB.
+     *
+     * The impltns__ArrayOf_USCOREtns3_USCOREJobStatus object is created using gSOAP
+     * memory-allocation utility, it will be garbage collected! If there is a need
+     * to delete it manually gSOAP dedicated functions should be used (in particular
+     * 'soap_unlink'!).
+     *
+     * @return impltns__ArrayOf_USCOREtns3_USCOREJobStatus object containing statuses of interest
+     */
+    impltns__ArrayOf_USCOREtns3_USCOREJobStatus* list(AuthorizationManager::Level lvl);
 
-	/**
-	 * Destructor
-	 */
-	virtual ~RequestLister();
+    /**
+     * Destructor
+     */
+    virtual ~RequestLister();
 
 private:
-	/**
-	 * Default constructor.
-	 *
-	 * Private, should not be used.
-	 */
-	RequestLister();
+    /**
+     * Default constructor.
+     *
+     * Private, should not be used.
+     */
+    RequestLister();
 
-	/**
-	 * Check weather the states given in impltns__ArrayOf_USCOREsoapenc_USCOREstring
-	 * are correct, if not a impltns__InvalidArgumentException is thrown
-	 *
-	 * @param inGivenStates - the states of interest that should be listed
-	 */
-	void checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
+    /**
+     * Check weather the states given in impltns__ArrayOf_USCOREsoapenc_USCOREstring
+     * are correct, if not a impltns__InvalidArgumentException is thrown
+     *
+     * @param inGivenStates - the states of interest that should be listed
+     */
+    void checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates);
 
-	/// the job statuses retrived from the DB
-	vector<JobStatus*> jobs;
+    /// the job statuses retrived from the DB
+    vector<JobStatus*> jobs;
 
-	/// the soap object that is serving the given request
-	::soap* soap;
+    /// the soap object that is serving the given request
+    ::soap* soap;
 
-	/// gSOAP cgsi context
-	CGsiAdapter cgsi;
+    /// gSOAP cgsi context
+    CGsiAdapter cgsi;
 
-	/// DN used for listing jobs
-	string dn;
+    /// DN used for listing jobs
+    string dn;
 
-	/// VO used for listing jobs
-	string vo;
+    /// VO used for listing jobs
+    string vo;
 
-	/// the states of interest
-	vector<string> inGivenStates;
+    /// the states of interest
+    vector<string> inGivenStates;
 
 };
 

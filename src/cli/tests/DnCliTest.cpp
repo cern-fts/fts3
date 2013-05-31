@@ -30,47 +30,51 @@
 using namespace fts3::cli;
 
 
-BOOST_AUTO_TEST_CASE (DnCli_Test1) {
-	// has to be const otherwise is deprecated
-	char* av[] = {
-			"prog_name",
-			"-s",
-			"https://fts3-server:8080",
-			"-u",
-			"userdn"
-		};
+BOOST_AUTO_TEST_CASE (DnCli_Test1)
+{
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "-u",
+        "userdn"
+    };
 
-	// argument count
-	int ac = 5;
+    // argument count
+    int ac = 5;
 
-	auto_ptr<DnCli> cli (
-			getCli<DnCli>(ac, av)
-		);
+    auto_ptr<DnCli> cli (
+        getCli<DnCli>(ac, av)
+    );
 
-	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(!cli->getUserDn().empty());
-	// the endpoint shouldn't be empty since it's starting with http
-	BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
+    // all 5 parameters should be available in vm variable
+    BOOST_CHECK(!cli->getUserDn().empty());
+    // the endpoint shouldn't be empty since it's starting with http
+    BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
 }
 
-BOOST_AUTO_TEST_CASE (DnCli_Test2) {
-	// has to be const otherwise is deprecated
-	char* av[] = {
-			"prog_name",
-			"-s",
-			"https://fts3-server:8080",
-			"--userdn",
-			"userdn"
-		};
+BOOST_AUTO_TEST_CASE (DnCli_Test2)
+{
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "--userdn",
+        "userdn"
+    };
 
-	int ac = 5;
+    int ac = 5;
 
-	auto_ptr<DnCli> cli (
-			getCli<DnCli>(ac, av)
-		);
+    auto_ptr<DnCli> cli (
+        getCli<DnCli>(ac, av)
+    );
 
-	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(!cli->getUserDn().empty());
-	// the endpoint shouldn't be empty since it's starting with http
-	BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
+    // all 5 parameters should be available in vm variable
+    BOOST_CHECK(!cli->getUserDn().empty());
+    // the endpoint shouldn't be empty since it's starting with http
+    BOOST_CHECK(cli->getUserDn().compare("userdn") == 0);
 }

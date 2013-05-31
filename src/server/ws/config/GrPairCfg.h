@@ -27,8 +27,10 @@
 
 #include "PairCfg.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 /**
  * SE group pair configuration,
@@ -36,46 +38,47 @@ namespace ws {
  *
  * 	@see PairCfg
  */
-class GrPairCfg : public PairCfg {
+class GrPairCfg : public PairCfg
+{
 
 public:
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration data from DB for the given source - destination pair.
-	 *
-	 * @param dn - client's DN
-	 * @param source - the source SE group
-	 * @param destination - the destination SE group
-	 */
-	GrPairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {}; // check if SE groups exist
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration data from DB for the given source - destination pair.
+     *
+     * @param dn - client's DN
+     * @param source - the source SE group
+     * @param destination - the destination SE group
+     */
+    GrPairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {}; // check if SE groups exist
 
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration from the given CfgParser
-	 *
-	 * @param dn - client's DN
-	 * @param parser - parser that has been used for for parsing JSON configuration
-	 */
-	GrPairCfg(string dn, CfgParser& parser);
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration from the given CfgParser
+     *
+     * @param dn - client's DN
+     * @param parser - parser that has been used for for parsing JSON configuration
+     */
+    GrPairCfg(string dn, CfgParser& parser);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~GrPairCfg();
+    /**
+     * Destructor.
+     */
+    virtual ~GrPairCfg();
 
-	/**
-	 * Creates a string containing current configuration in JSON format.
-	 *
-	 * @return string containing the configuration
-	 */
-	virtual string json();
+    /**
+     * Creates a string containing current configuration in JSON format.
+     *
+     * @return string containing the configuration
+     */
+    virtual string json();
 
-	/**
-	 * Saves the configuration into the DB.
-	 */
-	virtual void save();
+    /**
+     * Saves the configuration into the DB.
+     */
+    virtual void save();
 };
 
 } /* namespace ws */

@@ -28,7 +28,10 @@
 #include "CliBase.h"
 
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  * SrcDestCli provides the CLI for specifying source and destination SE
@@ -37,36 +40,37 @@ namespace fts3 { namespace cli {
  *  	- source (positional)
  *  	- destination (positional)
  */
-class SrcDestCli : virtual public CliBase {
+class SrcDestCli : virtual public CliBase
+{
 
 public:
 
-	/**
-	 * Default constructor.
-	 *
-	 * Creates source and destination command line options
-	 * (both are marked as positional options).
-	 */
-	SrcDestCli();
+    /**
+     * Default constructor.
+     *
+     * Creates source and destination command line options
+     * (both are marked as positional options).
+     */
+    SrcDestCli();
 
-	/**
-	 * Destructor
-	 */
-	virtual ~SrcDestCli();
+    /**
+     * Destructor
+     */
+    virtual ~SrcDestCli();
 
-	/**
-	 * Gets the source file name (string) for the job.
-	 *
-	 * @return source string if it was given as a CLI option, or an empty string if not
-	 */
-	string getSource();
+    /**
+     * Gets the source file name (string) for the job.
+     *
+     * @return source string if it was given as a CLI option, or an empty string if not
+     */
+    string getSource();
 
-	/**
-	 * Gets the destination file name (string) for the job.
-	 *
-	 * @return destination string if it was given as a CLI option, or an empty string if not
-	 */
-	string getDestination();
+    /**
+     * Gets the destination file name (string) for the job.
+     *
+     * @return destination string if it was given as a CLI option, or an empty string if not
+     */
+    string getDestination();
 };
 
 }

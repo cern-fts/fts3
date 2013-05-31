@@ -26,32 +26,38 @@
 
 #include "config/serverconfig.h"
 
-namespace fts3 {
-namespace infosys {
+namespace fts3
+{
+namespace infosys
+{
 
 using namespace config;
 
 const string BdiiCacheParser::bdii_cache_path = "/var/lib/fts3/bdii_cache.xml";
 
-BdiiCacheParser::BdiiCacheParser(string path) {
+BdiiCacheParser::BdiiCacheParser(string path)
+{
 
-	doc.load_file(path.c_str());
+    doc.load_file(path.c_str());
 }
 
-BdiiCacheParser::~BdiiCacheParser() {
+BdiiCacheParser::~BdiiCacheParser()
+{
 
 }
 
-string BdiiCacheParser::getSiteName(string se) {
+string BdiiCacheParser::getSiteName(string se)
+{
     xpath_node node = doc.select_single_node(xpath_entry(se).c_str());
     return node.node().child_value("sitename");
 }
 
-string BdiiCacheParser::xpath_entry(string se) {
-	static const string xpath_begin = "/entry[hostname='";
-	static const string xpath_end = "']";
+string BdiiCacheParser::xpath_entry(string se)
+{
+    static const string xpath_begin = "/entry[hostname='";
+    static const string xpath_end = "']";
 
-	return xpath_begin + se + xpath_end;
+    return xpath_begin + se + xpath_end;
 }
 
 } /* namespace infosys */

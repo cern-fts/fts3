@@ -37,49 +37,52 @@ using namespace pugi;
 
 using namespace fts3::common;
 
-namespace fts3 {
-namespace infosys {
+namespace fts3
+{
+namespace infosys
+{
 
 /**
  *
  */
-class BdiiCacheParser : public ThreadSafeInstanceHolder<BdiiCacheParser>  {
+class BdiiCacheParser : public ThreadSafeInstanceHolder<BdiiCacheParser>
+{
 
-	friend class ThreadSafeInstanceHolder<BdiiCacheParser>;
+    friend class ThreadSafeInstanceHolder<BdiiCacheParser>;
 
 public:
 
-	virtual ~BdiiCacheParser();
+    virtual ~BdiiCacheParser();
 
-	/**
-	 * Gets the site name for the given SE name
-	 *
-	 * @param se - name of the SE
-	 *
-	 * @return the site name
-	 */
-	string getSiteName(string se);
+    /**
+     * Gets the site name for the given SE name
+     *
+     * @param se - name of the SE
+     *
+     * @return the site name
+     */
+    string getSiteName(string se);
 
 private:
 
-	/**
-	 * Constructor
-	 */
-	BdiiCacheParser(string path = bdii_cache_path);
+    /**
+     * Constructor
+     */
+    BdiiCacheParser(string path = bdii_cache_path);
 
-	/// not implemented
-	BdiiCacheParser(BdiiCacheParser const&);
+    /// not implemented
+    BdiiCacheParser(BdiiCacheParser const&);
 
-	/// not implemented
-	BdiiCacheParser& operator=(BdiiCacheParser const&);
+    /// not implemented
+    BdiiCacheParser& operator=(BdiiCacheParser const&);
 
-	static string xpath_entry(string se);
+    static string xpath_entry(string se);
 
-	/// the xml document that is being parsed
-	xml_document doc;
+    /// the xml document that is being parsed
+    xml_document doc;
 
-	/// default path to BDII cache
-	static const string bdii_cache_path;
+    /// default path to BDII cache
+    static const string bdii_cache_path;
 };
 
 } /* namespace infosys */

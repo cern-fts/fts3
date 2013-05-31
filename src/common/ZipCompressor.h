@@ -29,22 +29,27 @@
 #include <iostream>
 #include <string>
 
-namespace fts3 { namespace common {
+namespace fts3
+{
+namespace common
+{
 
 using namespace std;
 
-class ZipCompressor {
+class ZipCompressor
+{
 
 public:
-	ZipCompressor(istream& in, ostream& out): out(out),in(in) {}
-	virtual ~ZipCompressor(){}
+    ZipCompressor(istream& in, ostream& out): out(out),in(in) {}
+    virtual ~ZipCompressor() {}
 
-	void compress();
+    void compress();
 
 private:
-	ostream& out; // a binary file e.g.
-	istream& in;
+    ostream& out; // a binary file e.g.
+    istream& in;
 };
 
-} /* namespace common */ } /* namespace fts3 */
+} /* namespace common */
+} /* namespace fts3 */
 #endif /* ZIPCOMPRESSOR_H_ */

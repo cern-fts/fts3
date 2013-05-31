@@ -36,7 +36,10 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
-namespace fts3 { namespace common {
+namespace fts3
+{
+namespace common
+{
 
 using namespace std;
 using namespace boost;
@@ -55,236 +58,263 @@ using namespace boost::property_tree;
  * Access to JSON array is supported.
  *
  */
-class CfgParser {
+class CfgParser
+{
 
 public:
 
-	enum CfgType {
-		NOT_A_CFG,
-		STANDALONE_SE_CFG,
-		STANDALONE_GR_CFG,
-		SE_PAIR_CFG,
-		GR_PAIR_CFG,
-		SHARE_ONLY_CFG
-	};
+    enum CfgType
+    {
+        NOT_A_CFG,
+        STANDALONE_SE_CFG,
+        STANDALONE_GR_CFG,
+        SE_PAIR_CFG,
+        GR_PAIR_CFG,
+        SHARE_ONLY_CFG
+    };
 
-	/**
-	 * Constructor.
-	 * Parses the given JSON configuration.
-	 *
-	 * @param configuration - the configuration in JSON format
-	 */
-	CfgParser(string configuration);
+    /**
+     * Constructor.
+     * Parses the given JSON configuration.
+     *
+     * @param configuration - the configuration in JSON format
+     */
+    CfgParser(string configuration);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~CfgParser();
+    /**
+     * Destructor.
+     */
+    virtual ~CfgParser();
 
-	/**
-	 * Gets the specific value from the JSON object
-	 *
-	 * Please not that in case of a map<string, int> negative values are not allowed, they will result
-	 * in throwing an exception. However, a 'auto' value is allowed that will be indicated by -1 value!
-	 *
-	 * @param path - path that specifies the value, e.g. 'share.in'
-	 * @param T - the expected type of the value (int, string, bool, vector and map are supported)
-	 *
-	 * @return the value
-	 */
-	template <typename T>
-	T get(string path);
+    /**
+     * Gets the specific value from the JSON object
+     *
+     * Please not that in case of a map<string, int> negative values are not allowed, they will result
+     * in throwing an exception. However, a 'auto' value is allowed that will be indicated by -1 value!
+     *
+     * @param path - path that specifies the value, e.g. 'share.in'
+     * @param T - the expected type of the value (int, string, bool, vector and map are supported)
+     *
+     * @return the value
+     */
+    template <typename T>
+    T get(string path);
 
-	/**
-	 * Gets the specific value for an optional object in JSON configuration
-	 *
-	 * @param path - path that specifies the value, e.g. 'share.in'
-	 *
-	 * @return an instance of optional which holds the value
-	 */
-	optional<string> get_opt(string path);
+    /**
+     * Gets the specific value for an optional object in JSON configuration
+     *
+     * @param path - path that specifies the value, e.g. 'share.in'
+     *
+     * @return an instance of optional which holds the value
+     */
+    optional<string> get_opt(string path);
 
-	/**
-	 * Checks if the given property was set to 'auto'
-	 *
-	 * @return true if the property of interest was set to 'auto', false otherwise
-	 */
-	bool isAuto(string path);
+    /**
+     * Checks if the given property was set to 'auto'
+     *
+     * @return true if the property of interest was set to 'auto', false otherwise
+     */
+    bool isAuto(string path);
 
-	/**
-	 *
-	 */
-	CfgType getCfgType() {
-		return type;
-	}
+    /**
+     *
+     */
+    CfgType getCfgType()
+    {
+        return type;
+    }
 
-	/// the auto value of a share
-	static const string auto_value;
+    /// the auto value of a share
+    static const string auto_value;
 
 private:
 
-	CfgType type;
+    CfgType type;
 
-	/**
-	 * Validates the ptree object. Checks if the configuration format is OK.
-	 *
-	 * @param pt - the ptree that has to be validated
-	 * @param allowed - a collection of fileds name in the cfg JASON
-	 * 					characteristic for a given type of configuration
-	 * @param path - the path in main ptree (by default root)
-	 *
-	 * @return true if it's a configuration of a given type, false otherwise
-	 */
-	bool validate(ptree pt, map< string, set <string> > allowed, string path = string());
+    /**
+     * Validates the ptree object. Checks if the configuration format is OK.
+     *
+     * @param pt - the ptree that has to be validated
+     * @param allowed - a collection of fileds name in the cfg JASON
+     * 					characteristic for a given type of configuration
+     * @param path - the path in main ptree (by default root)
+     *
+     * @return true if it's a configuration of a given type, false otherwise
+     */
+    bool validate(ptree pt, map< string, set <string> > allowed, string path = string());
 
-	/// The object that contains the parsed configuration
-	ptree pt;
+    /// The object that contains the parsed configuration
+    ptree pt;
 
-	/// the tokens used in standalone SE configuration
-	static const map<string, set <string> > standaloneSeCfgTokens;
-	/// the tokens used in standalone SE groupconfiguration
-	static const map<string, set <string> > standaloneGrCfgTokens;
-	/// the tokens used in se pair configuration
-	static const map<string, set <string> > sePairCfgTokens;
-	/// the tokens used in se group pair configuration
-	static const map<string, set <string> > grPairCfgTokens;
-	/// the tokens used  in a share-only configuration
-	static const map<string, set <string> > shareOnlyCfgTokens;
-	/// all the allowed tokens
-	static const set<string> allTokens;
+    /// the tokens used in standalone SE configuration
+    static const map<string, set <string> > standaloneSeCfgTokens;
+    /// the tokens used in standalone SE groupconfiguration
+    static const map<string, set <string> > standaloneGrCfgTokens;
+    /// the tokens used in se pair configuration
+    static const map<string, set <string> > sePairCfgTokens;
+    /// the tokens used in se group pair configuration
+    static const map<string, set <string> > grPairCfgTokens;
+    /// the tokens used  in a share-only configuration
+    static const map<string, set <string> > shareOnlyCfgTokens;
+    /// all the allowed tokens
+    static const set<string> allTokens;
 
-	/// initializes allowed JSON members for se config
-	static const map< string, set <string> > initStandaloneSeCfgTokens();
-	/// initializes allowed JSON members for se group config
-	static const map< string, set <string> > initStandaloneGrCfgTokens();
-	/// initializes allowed JSON members for se pair
-	static const map< string, set <string> > initSePairCfgTokens();
-	/// initializes allowed JSON members for se group pair
-	static const map< string, set <string> > initGrPairCfgTokens();
-	/// initializes allowed JSON members for share-only configuration
-	static const map<string, set <string> > initShareOnlyCfgTokens();
+    /// initializes allowed JSON members for se config
+    static const map< string, set <string> > initStandaloneSeCfgTokens();
+    /// initializes allowed JSON members for se group config
+    static const map< string, set <string> > initStandaloneGrCfgTokens();
+    /// initializes allowed JSON members for se pair
+    static const map< string, set <string> > initSePairCfgTokens();
+    /// initializes allowed JSON members for se group pair
+    static const map< string, set <string> > initGrPairCfgTokens();
+    /// initializes allowed JSON members for share-only configuration
+    static const map<string, set <string> > initShareOnlyCfgTokens();
 };
 
 template <typename T>
-T CfgParser::get(string path) {
+T CfgParser::get(string path)
+{
 
-	T v;
-	try {
+    T v;
+    try
+        {
 
-		v = pt.get<T>(path);
+            v = pt.get<T>(path);
 
-	} catch (ptree_bad_path& ex) {
-		throw Err_Custom("The " + path + " has to be specified!");
+        }
+    catch (ptree_bad_path& ex)
+        {
+            throw Err_Custom("The " + path + " has to be specified!");
 
-	} catch (ptree_bad_data& ex) {
-		// if the type of the value is wrong throw an exception
-		throw Err_Custom("Wrong value type of " + path);
-	}
+        }
+    catch (ptree_bad_data& ex)
+        {
+            // if the type of the value is wrong throw an exception
+            throw Err_Custom("Wrong value type of " + path);
+        }
 
-	return v;
+    return v;
 }
 
 template <>
-inline vector<string> CfgParser::get< vector<string> >(string path) {
+inline vector<string> CfgParser::get< vector<string> >(string path)
+{
 
-	vector<string> ret;
+    vector<string> ret;
 
-	optional<ptree&> value = pt.get_child_optional(path);
-	if (!value.is_initialized()) {
-		// the vector member was not specified in the configuration
-		throw Err_Custom("The " + path + " has to be specified!");
-	}
-	ptree& array = value.get();
+    optional<ptree&> value = pt.get_child_optional(path);
+    if (!value.is_initialized())
+        {
+            // the vector member was not specified in the configuration
+            throw Err_Custom("The " + path + " has to be specified!");
+        }
+    ptree& array = value.get();
 
-	// check if the node has a value,
-	// accordingly to boost it should be empty if array syntax was used in JSON
-	string wrong = array.get_value<string>();
-	if (!wrong.empty()) {
-		throw Err_Custom("Wrong value: '" + wrong + "'");
-	}
+    // check if the node has a value,
+    // accordingly to boost it should be empty if array syntax was used in JSON
+    string wrong = array.get_value<string>();
+    if (!wrong.empty())
+        {
+            throw Err_Custom("Wrong value: '" + wrong + "'");
+        }
 
-	ptree::iterator it;
-	for (it = array.begin(); it != array.end(); ++it) {
-		pair<string, ptree> v = *it;
+    ptree::iterator it;
+    for (it = array.begin(); it != array.end(); ++it)
+        {
+            pair<string, ptree> v = *it;
 
-		// check if the node has a name,
-		// accordingly to boost it should be empty if object weren't
-		// members of the array (our case)
-		if (!v.first.empty()) {
-			throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
-		}
+            // check if the node has a name,
+            // accordingly to boost it should be empty if object weren't
+            // members of the array (our case)
+            if (!v.first.empty())
+                {
+                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                }
 
-		// check if the node has children, it should only have a value!
-		if (!v.second.empty()) {
-			throw Err_Custom("Unexpected object in array '" + path + "' (only a list of values was expected)");
-		}
+            // check if the node has children, it should only have a value!
+            if (!v.second.empty())
+                {
+                    throw Err_Custom("Unexpected object in array '" + path + "' (only a list of values was expected)");
+                }
 
-		ret.push_back(v.second.get_value<string>());
-	}
+            ret.push_back(v.second.get_value<string>());
+        }
 
-	return ret;
+    return ret;
 }
 
 template <>
-inline map <string, int> CfgParser::get< map<string, int> >(string path) {
+inline map <string, int> CfgParser::get< map<string, int> >(string path)
+{
 
-	map<string, int> ret;
+    map<string, int> ret;
 
-	optional<ptree&> value = pt.get_child_optional(path);
-	if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
-	ptree& array = value.get();
+    optional<ptree&> value = pt.get_child_optional(path);
+    if (!value.is_initialized()) throw Err_Custom("The " + path + " has to be specified!");
+    ptree& array = value.get();
 
-	// check if the node has a value,
-	// accordingly to boost it should be empty if array syntax was used in JSON
-	string wrong = array.get_value<string>();
-	if (!wrong.empty()) {
-		throw Err_Custom("Wrong value: '" + wrong + "'");
-	}
+    // check if the node has a value,
+    // accordingly to boost it should be empty if array syntax was used in JSON
+    string wrong = array.get_value<string>();
+    if (!wrong.empty())
+        {
+            throw Err_Custom("Wrong value: '" + wrong + "'");
+        }
 
-	ptree::iterator it;
-	for (it = array.begin(); it != array.end(); ++it) {
-		pair<string, ptree> v = *it;
+    ptree::iterator it;
+    for (it = array.begin(); it != array.end(); ++it)
+        {
+            pair<string, ptree> v = *it;
 
-		// check if the node has a name,
-		// accordingly to boost it should be empty if object weren't
-		// members of the array (our case)
-		if (!v.first.empty()) {
-			throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
-		}
+            // check if the node has a name,
+            // accordingly to boost it should be empty if object weren't
+            // members of the array (our case)
+            if (!v.first.empty())
+                {
+                    throw Err_Custom("An array was expected, instead an object was found (at '" + path + "', name: '" + v.first + "')");
+                }
 
-		// check if there is a value,
-		// the value should be empty because only a 'key:value' object should be specified
-		if (!v.second.get_value<string>().empty()) {
-			throw Err_Custom("'{key:value}' object was expected, not just the value");
-		}
+            // check if there is a value,
+            // the value should be empty because only a 'key:value' object should be specified
+            if (!v.second.get_value<string>().empty())
+                {
+                    throw Err_Custom("'{key:value}' object was expected, not just the value");
+                }
 
-		// there should be only one child the 'key:value' object
-		if (v.second.size() != 1) {
-			throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
-		}
+            // there should be only one child the 'key:value' object
+            if (v.second.size() != 1)
+                {
+                    throw Err_Custom("In array '" + path + "' only ('{key:value}' objects were expected)");
+                }
 
-		pair<string, ptree> kv = v.second.front();
-		try {
-			// get the string value
-			string str_value = kv.second.get_value<string>();
-			// check if it's auto-value
-			if (str_value == auto_value) {
-				ret[kv.first] = -1;
-			} else {
-				// get the integer value
-				int value = kv.second.get_value<int>();
-				// make sure it's not negative
-				if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
-				// set the value
-				ret[kv.first] = value;
-			}
+            pair<string, ptree> kv = v.second.front();
+            try
+                {
+                    // get the string value
+                    string str_value = kv.second.get_value<string>();
+                    // check if it's auto-value
+                    if (str_value == auto_value)
+                        {
+                            ret[kv.first] = -1;
+                        }
+                    else
+                        {
+                            // get the integer value
+                            int value = kv.second.get_value<int>();
+                            // make sure it's not negative
+                            if (value < 0) throw Err_Custom("The value of " + kv.first + " cannot be negative!");
+                            // set the value
+                            ret[kv.first] = value;
+                        }
 
-		} catch(ptree_bad_data& ex) {
-			throw Err_Custom("Wrong value type of " + kv.first);
-		}
-	}
+                }
+            catch(ptree_bad_data& ex)
+                {
+                    throw Err_Custom("Wrong value type of " + kv.first);
+                }
+        }
 
-	return ret;
+    return ret;
 }
 
 }

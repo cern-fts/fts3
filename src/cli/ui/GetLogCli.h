@@ -29,7 +29,10 @@
 
 using namespace std;
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  * GetLogCli is the command line utility used for retrieving job log files.
@@ -39,27 +42,28 @@ namespace fts3 { namespace cli {
  *
  * @see JobIdCli
  */
-class GetLogCli : public JobIdCli {
+class GetLogCli : public JobIdCli
+{
 public:
 
-	/**
-	 * Default constructor.
-	 *
-	 * Creates the command line interface for retrieving log files.
-	 */
-	GetLogCli();
+    /**
+     * Default constructor.
+     *
+     * Creates the command line interface for retrieving log files.
+     */
+    GetLogCli();
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~GetLogCli();
+    /**
+     * Destructor.
+     */
+    virtual ~GetLogCli();
 
-	/**
-	 * Gets the destination path
-	 *
-	 * @return destination path
-	 */
-	string getPath();
+    /**
+     * Gets the destination path
+     *
+     * @return destination path
+     */
+    string getPath();
 };
 
 }

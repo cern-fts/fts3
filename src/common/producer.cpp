@@ -42,118 +42,127 @@ using namespace std;
 
 
 void getUniqueTempFileName(const std::string& basename,
-                                           std::string& tempname)
+                           std::string& tempname)
 {
     int iRes;
-    do 
-    {
-        std::string uuidGen = UuidGenerator::generateUUID();
-        time_t tmCurrent = time(NULL);
-        std::stringstream strmName;
-        strmName << basename << uuidGen << "_" << tmCurrent;
-        tempname = strmName.str();
+    do
+        {
+            std::string uuidGen = UuidGenerator::generateUUID();
+            time_t tmCurrent = time(NULL);
+            std::stringstream strmName;
+            strmName << basename << uuidGen << "_" << tmCurrent;
+            tempname = strmName.str();
 
-        struct stat st;
-        iRes = stat(tempname.c_str(),
-                    &st);
-    }
+            struct stat st;
+            iRes = stat(tempname.c_str(),
+                        &st);
+        }
     while( 0 == iRes );
 }
 
-void mktempfile(const std::string& basename, 
-            std::string& tempname)
+void mktempfile(const std::string& basename,
+                std::string& tempname)
 {
-   char *createTempFile = NULL;
-   char* temp= (char *) "_XXXXXX";
-   
-   do{
-   	createTempFile = mktemp(temp);
-   }while(createTempFile == NULL);
+    char *createTempFile = NULL;
+    char* temp= (char *) "_XXXXXX";
 
-   tempname = basename;
-   tempname.append(std::string(temp));
+    do
+        {
+            createTempFile = mktemp(temp);
+        }
+    while(createTempFile == NULL);
+
+    tempname = basename;
+    tempname.append(std::string(temp));
 
 }
 
 void runProducerMonitoring(struct message_monitoring msg)
 {
-		FILE *fp=NULL; 
-		std::string basename(MONITORING_DIR);
-	        std::string tempname;
+    FILE *fp=NULL;
+    std::string basename(MONITORING_DIR);
+    std::string tempname;
 
-	        getUniqueTempFileName(basename, tempname);
-       		if ((fp = fopen(tempname.c_str(), "w")) != NULL)
-       		{        					
-        		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp); 
-			if(writesBytes==0 || errno != 0){
-				writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-			} 			
-        		fclose(fp);
-			std::string renamedFile = tempname + "_ready";
-			int r = rename(tempname.c_str(), renamedFile.c_str());			
-			if(-1 == r)
-				rename(tempname.c_str(), renamedFile.c_str());									
-	       }		
-}
-
-
-void runProducerStatus(struct message msg){
-		FILE *fp=NULL; 
-		std::string basename(STATUS_DIR);
-	        std::string tempname;
-
-	        getUniqueTempFileName(basename, tempname);
-       		if ((fp = fopen(tempname.c_str(), "w")) != NULL)
-       		{        					
-        		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp); 
-			if(writesBytes==0 || errno != 0){
-				writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-			} 			
-        		fclose(fp);
-			std::string renamedFile = tempname + "_ready";
-			int r = rename(tempname.c_str(), renamedFile.c_str());			
-			if(-1 == r)
-				rename(tempname.c_str(), renamedFile.c_str());									
-	       }		
-}
-
-
-void runProducerStall(struct message_updater msg){
-		FILE *fp=NULL; 
-		std::string basename(STALLED_DIR);
-	        std::string tempname = basename + "_" + msg.job_id + "_" + boost::lexical_cast<string>( msg.file_id );
-       		if ((fp = fopen(tempname.c_str(), "w+")) != NULL)
-       		{        					
-        		size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-			if(writesBytes==0 || errno != 0){
-				writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-			} 
-        		fclose(fp);
-			std::string renamedFile = tempname + "_ready";
-			int r = rename(tempname.c_str(), renamedFile.c_str());			
-			if(-1 ==r)
-				rename(tempname.c_str(), renamedFile.c_str());						
-	       }		
-}
-
-
-void runProducerLog(struct message_log msg){
-                FILE *fp=NULL;
-                std::string basename(LOG_DIR);
-                std::string tempname;
-
-                getUniqueTempFileName(basename, tempname);
-                if ((fp = fopen(tempname.c_str(), "w")) != NULL)
+    getUniqueTempFileName(basename, tempname);
+    if ((fp = fopen(tempname.c_str(), "w")) != NULL)
+        {
+            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+            if(writesBytes==0 || errno != 0)
                 {
-                        size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-                        if(writesBytes==0 || errno != 0){
-                                writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-                        }
-                        fclose(fp);
-                        std::string renamedFile = tempname + "_ready";
-                        int r = rename(tempname.c_str(), renamedFile.c_str());
-			if(-1 == r)
-				rename(tempname.c_str(), renamedFile.c_str());			
-               }
+                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+                }
+            fclose(fp);
+            std::string renamedFile = tempname + "_ready";
+            int r = rename(tempname.c_str(), renamedFile.c_str());
+            if(-1 == r)
+                rename(tempname.c_str(), renamedFile.c_str());
+        }
+}
+
+
+void runProducerStatus(struct message msg)
+{
+    FILE *fp=NULL;
+    std::string basename(STATUS_DIR);
+    std::string tempname;
+
+    getUniqueTempFileName(basename, tempname);
+    if ((fp = fopen(tempname.c_str(), "w")) != NULL)
+        {
+            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+            if(writesBytes==0 || errno != 0)
+                {
+                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+                }
+            fclose(fp);
+            std::string renamedFile = tempname + "_ready";
+            int r = rename(tempname.c_str(), renamedFile.c_str());
+            if(-1 == r)
+                rename(tempname.c_str(), renamedFile.c_str());
+        }
+}
+
+
+void runProducerStall(struct message_updater msg)
+{
+    FILE *fp=NULL;
+    std::string basename(STALLED_DIR);
+    std::string tempname = basename + "_" + msg.job_id + "_" + boost::lexical_cast<string>( msg.file_id );
+    if ((fp = fopen(tempname.c_str(), "w+")) != NULL)
+        {
+            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+            if(writesBytes==0 || errno != 0)
+                {
+                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+                }
+            fclose(fp);
+            std::string renamedFile = tempname + "_ready";
+            int r = rename(tempname.c_str(), renamedFile.c_str());
+            if(-1 ==r)
+                rename(tempname.c_str(), renamedFile.c_str());
+        }
+}
+
+
+void runProducerLog(struct message_log msg)
+{
+    FILE *fp=NULL;
+    std::string basename(LOG_DIR);
+    std::string tempname;
+
+    getUniqueTempFileName(basename, tempname);
+    if ((fp = fopen(tempname.c_str(), "w")) != NULL)
+        {
+            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+            if(writesBytes==0 || errno != 0)
+                {
+                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
+                }
+            fclose(fp);
+            std::string renamedFile = tempname + "_ready";
+            int r = rename(tempname.c_str(), renamedFile.c_str());
+            if(-1 == r)
+                rename(tempname.c_str(), renamedFile.c_str());
+        }
 }
 

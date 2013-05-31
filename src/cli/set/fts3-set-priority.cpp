@@ -39,33 +39,41 @@ using namespace fts3::cli;
 /**
  * This is the entry point for the fts3-debug-set command line tool.
  */
-int main(int ac, char* av[]) {
-	try {
-		// create and initialize the command line utility
-		scoped_ptr<PriorityCli> cli (
-				getCli<PriorityCli>(ac, av)
-			);
+int main(int ac, char* av[])
+{
+    try
+        {
+            // create and initialize the command line utility
+            scoped_ptr<PriorityCli> cli (
+                getCli<PriorityCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		ctx.prioritySet(
-				cli->getJobId(),
-				cli->getPriority()
-			);
+            ctx.prioritySet(
+                cli->getJobId(),
+                cli->getPriority()
+            );
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
-    } catch(string& ex) {
-    	cout << ex << endl;
-    	return 1;
-    } catch(...) {
-        cerr << "Exception of unknown type!\n";
-        return 1;
-    }
+        }
+    catch(std::exception& e)
+        {
+            cerr << "error: " << e.what() << "\n";
+            return 1;
+        }
+    catch(string& ex)
+        {
+            cout << ex << endl;
+            return 1;
+        }
+    catch(...)
+        {
+            cerr << "Exception of unknown type!\n";
+            return 1;
+        }
 
     return 0;
 }

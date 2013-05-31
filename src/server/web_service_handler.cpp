@@ -1,23 +1,23 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "web_service_handler.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
-    #include <boost/assign/list_of.hpp>
+#include "unittest/testsuite.h"
+#include <boost/assign/list_of.hpp>
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_SERVER_NAMESPACE_START
@@ -28,7 +28,7 @@ FTS3_SERVER_NAMESPACE_START
 
 struct Test_ActiveObject
 {
-    Test_ActiveObject 
+    Test_ActiveObject
     (
         const std::string& label,
         const std::string& desc
@@ -70,11 +70,11 @@ struct Test_Handler
 
 struct Test_Acceptor
 {
-    Test_Acceptor 
+    Test_Acceptor
     (
-        const unsigned int port, 
+        const unsigned int port,
         const std::string& ip
-    ) 
+    )
     {
         Port = port;
         IP = ip;
@@ -100,7 +100,7 @@ std::string Test_Acceptor::IP;
 /* -------------------------------------------------------------------------- */
 
 struct Test_Traits
-{   
+{
     typedef Test_ActiveObject ActiveObjectType;
     typedef Test_Acceptor Acceptor;
     typedef Test_Handler Handler;
@@ -112,7 +112,7 @@ struct Test_WebServiceHandler :
     public WebServiceHandler <Test_Traits>
 {
     Test_WebServiceHandler()
-        : OwnType (Description()) 
+        : OwnType (Description())
     {
         _testHelper.loopOver = true ;
     }
@@ -132,7 +132,7 @@ struct Test_WebServiceHandler :
     {
         return 8080;
     }
-    
+
     static std::string IP()
     {
         return "localhost";

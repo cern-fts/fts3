@@ -46,66 +46,68 @@ using namespace boost;
  * from Submitted to Ready, or for waiting until free credits are available for
  * this type of transfer.
  */
-class FileTransferScheduler {
+class FileTransferScheduler
+{
 
-	enum {
-		SOURCE,
-		DESTINATION,
-		VO
-	};
+    enum
+    {
+        SOURCE,
+        DESTINATION,
+        VO
+    };
 
 public:
 
-	/**
-	 * Constructor
-	 *
-	 * @param file - the file for which the scheduling decision has to be taken
-	 */
-	FileTransferScheduler(
-				TransferFiles* file,
-				vector< shared_ptr<ShareConfig> >& cfgs,
-				set<string> inses = set<string>(),
-				set<string> outses = set<string>(),
-				set<string> invos = set<string>(),
-				set<string> outvos = set<string>()
-			);
-	FileTransferScheduler(const FileTransferScheduler&);
+    /**
+     * Constructor
+     *
+     * @param file - the file for which the scheduling decision has to be taken
+     */
+    FileTransferScheduler(
+        TransferFiles* file,
+        vector< shared_ptr<ShareConfig> >& cfgs,
+        set<string> inses = set<string>(),
+        set<string> outses = set<string>(),
+        set<string> invos = set<string>(),
+        set<string> outvos = set<string>()
+    );
+    FileTransferScheduler(const FileTransferScheduler&);
 
-	/**
-	 * Destructor
-	 */
-	~FileTransferScheduler();
+    /**
+     * Destructor
+     */
+    ~FileTransferScheduler();
 
-	/**
-	 * Makes the scheduling decision for the file that has been used to create the
-	 * object, changes the file status to ready is there are free credits
-	 *
-	 * @return returns true if file status has been changed to Ready, false otherwise
-	 */
-	bool schedule(bool optimize);
+    /**
+     * Makes the scheduling decision for the file that has been used to create the
+     * object, changes the file status to ready is there are free credits
+     *
+     * @return returns true if file status has been changed to Ready, false otherwise
+     */
+    bool schedule(bool optimize);
 
 private:
 
-	/// pointer to the file that has to be scheduled
-	TransferFiles* file;
-	/// name of the source SE
-	string srcSeName;
-	/// name of the destination SE
-	string destSeName;
+    /// pointer to the file that has to be scheduled
+    TransferFiles* file;
+    /// name of the source SE
+    string srcSeName;
+    /// name of the destination SE
+    string destSeName;
 
-	vector< shared_ptr<ShareConfig> >& cfgs;
+    vector< shared_ptr<ShareConfig> >& cfgs;
 
-	/// DB singleton instance
-	GenericDbIfce* db;
+    /// DB singleton instance
+    GenericDbIfce* db;
 
-	/**
-	 * Creates a could-not-allocate-credits error message
-	 *
-	 * @param cfg - the configuration that is not allowing to schedule a file transfer
-	 *
-	 * @return error message
-	 */
-	string getNoCreditsErrMsg(ShareConfig* cfg);
+    /**
+     * Creates a could-not-allocate-credits error message
+     *
+     * @param cfg - the configuration that is not allowing to schedule a file transfer
+     *
+     * @return error message
+     */
+    string getNoCreditsErrMsg(ShareConfig* cfg);
 };
 
 #endif /* FILETRANSFERSCHEDULER_H_ */

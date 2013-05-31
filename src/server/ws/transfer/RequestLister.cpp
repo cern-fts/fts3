@@ -36,72 +36,82 @@ using namespace fts3::ws;
 using namespace fts3::common;
 
 RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates):
-		soap(soap),
-		cgsi(soap) {
+    soap(soap),
+    cgsi(soap)
+{
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
-	checkGivenStates (inGivenStates);
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
+    checkGivenStates (inGivenStates);
 }
 
 RequestLister::RequestLister(::soap* soap, impltns__ArrayOf_USCOREsoapenc_USCOREstring *inGivenStates, string dn, string vo):
-		soap(soap),
-		cgsi(soap),
-		dn(dn),
-		vo(vo) {
+    soap(soap),
+    cgsi(soap),
+    dn(dn),
+    vo(vo)
+{
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
-	checkGivenStates (inGivenStates);
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << cgsi.getClientDn() << " is listing transfer job requests" << commit;
+    checkGivenStates (inGivenStates);
 }
 
-RequestLister::~RequestLister() {
+RequestLister::~RequestLister()
+{
 
 }
 
-impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationManager::Level lvl) {
+impltns__ArrayOf_USCOREtns3_USCOREJobStatus* RequestLister::list(AuthorizationManager::Level lvl)
+{
 
-	switch(lvl) {
-	case AuthorizationManager::PRV:
-		dn = cgsi.getClientDn();
-		vo = cgsi.getClientVo();
-		break;
-	case AuthorizationManager::VO:
-		vo = cgsi.getClientVo();
-		break;
-	}
+    switch(lvl)
+        {
+        case AuthorizationManager::PRV:
+            dn = cgsi.getClientDn();
+            vo = cgsi.getClientVo();
+            break;
+        case AuthorizationManager::VO:
+            vo = cgsi.getClientVo();
+            break;
+        }
 
-	DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo);
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
+    DBSingleton::instance().getDBObjectInstance()->listRequests(jobs, inGivenStates, "", dn, vo);
+    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Job's statuses have been read from the database" << commit;
 
-	// create the object
-	impltns__ArrayOf_USCOREtns3_USCOREJobStatus* result;
-	result = soap_new_impltns__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
+    // create the object
+    impltns__ArrayOf_USCOREtns3_USCOREJobStatus* result;
+    result = soap_new_impltns__ArrayOf_USCOREtns3_USCOREJobStatus(soap, -1);
 
-	// fill it with job statuses
-	vector<JobStatus*>::iterator it;
-	for (it = jobs.begin(); it < jobs.end(); ++it) {
-		GSoapJobStatus job_ptr (soap, **it);
-		result->item.push_back(job_ptr);
-		delete *it;
-	}
-	FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
+    // fill it with job statuses
+    vector<JobStatus*>::iterator it;
+    for (it = jobs.begin(); it < jobs.end(); ++it)
+        {
+            GSoapJobStatus job_ptr (soap, **it);
+            result->item.push_back(job_ptr);
+            delete *it;
+        }
+    FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The response has been created" << commit;
 
-	return result;
+    return result;
 }
 
-void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates) {
+void RequestLister::checkGivenStates(impltns__ArrayOf_USCOREsoapenc_USCOREstring* inGivenStates)
+{
 
-	if (!inGivenStates || inGivenStates->item.empty()) {
-		throw Err_Custom("No states were defined!");
-	}
+    if (!inGivenStates || inGivenStates->item.empty())
+        {
+            throw Err_Custom("No states were defined!");
+        }
 
-	JobStatusHandler& handler = JobStatusHandler::getInstance();
-	vector<string>::iterator it;
-	for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); ++it) {
-		if (*it == "Pending") continue; // TODO for now we are ignoring the legacy state 'Pending'
-		if(!handler.isStatusValid(*it)) {
-			throw Err_Custom("Unknown job status: " + *it);
-		}
-	}
+    JobStatusHandler& handler = JobStatusHandler::getInstance();
+    vector<string>::iterator it;
+    for (it = inGivenStates->item.begin(); it < inGivenStates->item.end(); ++it)
+        {
+            if (*it == "Pending") continue; // TODO for now we are ignoring the legacy state 'Pending'
+            if(!handler.isStatusValid(*it))
+                {
+                    throw Err_Custom("Unknown job status: " + *it);
+                }
+        }
 
-	this->inGivenStates = inGivenStates->item;
+    this->inGivenStates = inGivenStates->item;
 }

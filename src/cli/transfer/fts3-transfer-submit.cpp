@@ -37,43 +37,45 @@ using namespace fts3::common;
 /**
  * This is the entry point for the fts3-transfer-submit command line tool.
  */
-int main(int ac, char* av[]) {
+int main(int ac, char* av[])
+{
 
-	scoped_ptr<SubmitTransferCli> cli;
+    scoped_ptr<SubmitTransferCli> cli;
 
-	try {
-		// create and initialize the command line utility
-		cli.reset (
-				new SubmitTransferCli
-			);
+    try
+        {
+            // create and initialize the command line utility
+            cli.reset (
+                new SubmitTransferCli
+            );
 
-		cli->parse(ac, av);
+            cli->parse(ac, av);
 
-		// validate command line options, and return respective gSOAP context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gSOAP context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		string jobId("");
+            string jobId("");
 
 //		if (cli->useDelegation()) {
 
-			// delegate Proxy Certificate
-			ProxyCertificateDelegator handler (
-					cli->getService(),
-					cli->getDelegationId(),
-					cli->getExpirationTime(),
-					cli->printer()
-				);
+            // delegate Proxy Certificate
+            ProxyCertificateDelegator handler (
+                cli->getService(),
+                cli->getDelegationId(),
+                cli->getExpirationTime(),
+                cli->printer()
+            );
 
-			handler.delegate();
+            handler.delegate();
 
-			// submit the job
-			jobId = ctx.transferSubmit (
-					cli->getFiles(),
-					cli->getParams()/*,
+            // submit the job
+            jobId = ctx.transferSubmit (
+                        cli->getFiles(),
+                        cli->getParams()/*,
 					cli->useCheckSum()*/
-				);
+                    );
 //
 //		} else {
 //			// submit the job
@@ -84,32 +86,41 @@ int main(int ac, char* av[]) {
 //				);
 //		}
 
-		cli->printer().job_id(jobId);
+            cli->printer().job_id(jobId);
 
-		// check if the -b option has been used
-		if (cli->isBlocking()) {
+            // check if the -b option has been used
+            if (cli->isBlocking())
+                {
 
-			fts3::cli::JobStatus status;
-			// wait until the transfer is ready
-			do {
-				sleep(2);
-				status = ctx.getTransferJobStatus(jobId);
-			} while (!JobStatusHandler::getInstance().isTransferFinished(status.jobStatus));
-		}
+                    fts3::cli::JobStatus status;
+                    // wait until the transfer is ready
+                    do
+                        {
+                            sleep(2);
+                            status = ctx.getTransferJobStatus(jobId);
+                        }
+                    while (!JobStatusHandler::getInstance().isTransferFinished(status.jobStatus));
+                }
 
-    } catch(std::exception& ex) {
-    	if (cli.get())
-    		cli->printer().error_msg(ex.what());
-        return 1;
-    } catch(string& ex) {
-    	if (cli.get())
-    		cli->printer().gsoap_error_msg(ex);
-    	return 1;
-    } catch(...) {
-    	if (cli.get())
-    		cli->printer().error_msg("Exception of unknown type!");
-        return 1;
-    }
+        }
+    catch(std::exception& ex)
+        {
+            if (cli.get())
+                cli->printer().error_msg(ex.what());
+            return 1;
+        }
+    catch(string& ex)
+        {
+            if (cli.get())
+                cli->printer().gsoap_error_msg(ex);
+            return 1;
+        }
+    catch(...)
+        {
+            if (cli.get())
+                cli->printer().error_msg("Exception of unknown type!");
+            return 1;
+        }
 
     return 0;
 }

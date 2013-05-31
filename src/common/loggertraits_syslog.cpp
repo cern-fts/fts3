@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 /** \file loggertraits_syslog.cpp Implementation of LoggerTraits_Syslog class. */
@@ -21,8 +21,8 @@ limitations under the License. */
 #include <boost/preprocessor/stringize.hpp>
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
-    #include <errno.h>
+#include "unittest/testsuite.h"
+#include <errno.h>
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 /* ---------------------------------------------------------------------- */
@@ -38,8 +38,8 @@ void LoggerTraits_Syslog::openLog()
 {
     ::openlog
     (
-        BOOST_PP_STRINGIZE(FTS3_APPLICATION_LABEL), 
-        FTS3_COMMON_LOGGER_OPTION, 
+        BOOST_PP_STRINGIZE(FTS3_APPLICATION_LABEL),
+        FTS3_COMMON_LOGGER_OPTION,
         FTS3_COMMON_LOGGER_FACILITY
     );
 }
@@ -79,7 +79,7 @@ const std::string LoggerTraits_Syslog::initialLogLine()
 BOOST_FIXTURE_TEST_CASE (Common__LoggerTraits_SysLog, LoggerTraits_Syslog)
 {
     BOOST_TEST_MESSAGE ("\n**** This is a visual test. Ensure that the messages below"
-            "are visible (or not visible) in /var/log/syslog. TODO: automate it.\n");
+                        "are visible (or not visible) in /var/log/syslog. TODO: automate it.\n");
 
     openLog();
     sysLog(LOG_DEBUG, "MESSAGE MUST BE PRESENT");

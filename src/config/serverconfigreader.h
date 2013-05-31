@@ -89,18 +89,18 @@ protected:
         po::notify(_vm);
 
         if (_vm.count("help"))
-        {
-            DEPENDENCIES::stream() << desc << "\n";
-            return;
-            //DEPENDENCIES::exit(1);
-        }
+            {
+                DEPENDENCIES::stream() << desc << "\n";
+                return;
+                //DEPENDENCIES::exit(1);
+            }
 
         if (_vm.count("version"))
-        {
-            DEPENDENCIES::stream() << FTS3_SERVER_VERSION << "\n";
-            return;
-            //DEPENDENCIES::exit(1);
-        }
+            {
+                DEPENDENCIES::stream() << FTS3_SERVER_VERSION << "\n";
+                return;
+                //DEPENDENCIES::exit(1);
+            }
 
         bool isNoDaemon = _vm.count ("no-daemon");
         _vars["no-daemon"] = isNoDaemon ? "true" : "false";
@@ -123,21 +123,21 @@ protected:
         assert (in.get());
 
         try
-        {
-            po::store(po::parse_config_file(*in, desc), _vm);
-        }
+            {
+                po::store(po::parse_config_file(*in, desc), _vm);
+            }
         catch (std::exception& e)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Error in parsing config file: " << e.what() << commit;
-            throw;
-            //DEPENDENCIES::exit(1);
-        }
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Error in parsing config file: " << e.what() << commit;
+                throw;
+                //DEPENDENCIES::exit(1);
+            }
         catch (...)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown error when parsing config file." << commit;
-            throw;
-            //DEPENDENCIES::exit(1);
-        }
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unknown error when parsing config file." << commit;
+                throw;
+                //DEPENDENCIES::exit(1);
+            }
 
         po::notify(_vm);
         DEPENDENCIES::processVariables(*this);

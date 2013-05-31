@@ -41,195 +41,224 @@
 using namespace fts3::ws;
 
 ConfigurationHandler::ConfigurationHandler(string dn):
-		dn(dn),
-		db (DBSingleton::instance().getDBObjectInstance()),
-		cfg(0){
+    dn(dn),
+    db (DBSingleton::instance().getDBObjectInstance()),
+    cfg(0)
+{
 }
 
-ConfigurationHandler::~ConfigurationHandler() {
+ConfigurationHandler::~ConfigurationHandler()
+{
 
 }
 
-void ConfigurationHandler::parse(string configuration) {
+void ConfigurationHandler::parse(string configuration)
+{
 
-	to_lower(configuration);
+    to_lower(configuration);
 
-	CfgParser parser (configuration);
+    CfgParser parser (configuration);
 
-	switch(parser.getCfgType()) {
-	case CfgParser::STANDALONE_SE_CFG:
-		cfg.reset(
-				new StandaloneSeCfg(dn, parser)
-			);
-		break;
-	case CfgParser::STANDALONE_GR_CFG:
-		cfg.reset(
-				new StandaloneGrCfg(dn, parser)
-			);
-		break;
-	case CfgParser::SE_PAIR_CFG:
-		cfg.reset(
-				new SePairCfg(dn, parser)
-			);
-		break;
-	case CfgParser::GR_PAIR_CFG:
-		cfg.reset(
-				new GrPairCfg(dn, parser)
-			);
-		break;
-	case CfgParser::SHARE_ONLY_CFG:
-		cfg.reset(
-				new ShareOnlyCfg(dn, parser)
-			);
-		break;
-	case CfgParser::NOT_A_CFG:
-	default:
-		throw Err_Custom("Wrong configuration format!");
-	}
+    switch(parser.getCfgType())
+        {
+        case CfgParser::STANDALONE_SE_CFG:
+            cfg.reset(
+                new StandaloneSeCfg(dn, parser)
+            );
+            break;
+        case CfgParser::STANDALONE_GR_CFG:
+            cfg.reset(
+                new StandaloneGrCfg(dn, parser)
+            );
+            break;
+        case CfgParser::SE_PAIR_CFG:
+            cfg.reset(
+                new SePairCfg(dn, parser)
+            );
+            break;
+        case CfgParser::GR_PAIR_CFG:
+            cfg.reset(
+                new GrPairCfg(dn, parser)
+            );
+            break;
+        case CfgParser::SHARE_ONLY_CFG:
+            cfg.reset(
+                new ShareOnlyCfg(dn, parser)
+            );
+            break;
+        case CfgParser::NOT_A_CFG:
+        default:
+            throw Err_Custom("Wrong configuration format!");
+        }
 }
 
-void ConfigurationHandler::add() {
+void ConfigurationHandler::add()
+{
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is adding configuration" << commit;
-	cfg->save();
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is adding configuration" << commit;
+    cfg->save();
 }
 
-vector<string> ConfigurationHandler::get() {
+vector<string> ConfigurationHandler::get()
+{
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
-	vector<string> ret;
+    vector<string> ret;
 
-	// get all standalone configurations (SE names only)
-	vector<string> secfgs = db->getAllStandAlloneCfgs();
-	vector<string>::iterator it;
-	// add the configurations for the SEs to the response
-	for (it = secfgs.begin(); it != secfgs.end(); it++) {
-		// get the SE name
-		string se = *it;
-		// if it's a wildcard change it to 'any', due to the convention
-		if (se == Configuration::wildcard) se = Configuration::any;
-		// check if it's a group or a SE
-		if (db->checkGroupExists(*it)) {
-			cfg.reset(
-					new StandaloneGrCfg(dn, se)
-				);
-		} else {
-			cfg.reset(
-					new StandaloneSeCfg(dn, se)
-				);
-		}
+    // get all standalone configurations (SE names only)
+    vector<string> secfgs = db->getAllStandAlloneCfgs();
+    vector<string>::iterator it;
+    // add the configurations for the SEs to the response
+    for (it = secfgs.begin(); it != secfgs.end(); it++)
+        {
+            // get the SE name
+            string se = *it;
+            // if it's a wildcard change it to 'any', due to the convention
+            if (se == Configuration::wildcard) se = Configuration::any;
+            // check if it's a group or a SE
+            if (db->checkGroupExists(*it))
+                {
+                    cfg.reset(
+                        new StandaloneGrCfg(dn, se)
+                    );
+                }
+            else
+                {
+                    cfg.reset(
+                        new StandaloneSeCfg(dn, se)
+                    );
+                }
 
-		ret.push_back(cfg->json());
-	}
-	// get all share only configurations
-	vector<string> socfgs = db->getAllShareOnlyCfgs();
-	// add the configurations for the SEs to the response
-	for (it = socfgs.begin(); it != socfgs.end(); it++) {
-		// get the SE name
-		string se = *it;
-		// if it's a wildcard change it to 'any', due to the convention
-		if (se == Configuration::wildcard) se = Configuration::any;
-		// check if it's a group or a SE
-		cfg.reset(
-				new ShareOnlyCfg(dn, se)
-			);
-		ret.push_back(cfg->json());
-	}
-	// get all pair configuration (source-destination pairs only)
-	vector< std::pair<string, string> > paircfgs = db->getAllPairCfgs();
-	vector< std::pair<string, string> >::iterator it2;
-	// add the configurations for the pairs to the response
-	for (it2 = paircfgs.begin(); it2 != paircfgs.end(); it2++) {
+            ret.push_back(cfg->json());
+        }
+    // get all share only configurations
+    vector<string> socfgs = db->getAllShareOnlyCfgs();
+    // add the configurations for the SEs to the response
+    for (it = socfgs.begin(); it != socfgs.end(); it++)
+        {
+            // get the SE name
+            string se = *it;
+            // if it's a wildcard change it to 'any', due to the convention
+            if (se == Configuration::wildcard) se = Configuration::any;
+            // check if it's a group or a SE
+            cfg.reset(
+                new ShareOnlyCfg(dn, se)
+            );
+            ret.push_back(cfg->json());
+        }
+    // get all pair configuration (source-destination pairs only)
+    vector< std::pair<string, string> > paircfgs = db->getAllPairCfgs();
+    vector< std::pair<string, string> >::iterator it2;
+    // add the configurations for the pairs to the response
+    for (it2 = paircfgs.begin(); it2 != paircfgs.end(); it2++)
+        {
 
-		bool grPair = db->checkGroupExists(it2->first) && db->checkGroupExists(it2->second);
+            bool grPair = db->checkGroupExists(it2->first) && db->checkGroupExists(it2->second);
 
-		if (grPair) {
-			cfg.reset(
-					new GrPairCfg(dn, it2->first, it2->second)
-				);
-		} else {
-			cfg.reset(
-					new SePairCfg(dn, it2->first, it2->second)
-				);
-		}
+            if (grPair)
+                {
+                    cfg.reset(
+                        new GrPairCfg(dn, it2->first, it2->second)
+                    );
+                }
+            else
+                {
+                    cfg.reset(
+                        new SePairCfg(dn, it2->first, it2->second)
+                    );
+                }
 
-		ret.push_back(cfg->json());
-	}
+            ret.push_back(cfg->json());
+        }
 
-	return ret;
+    return ret;
 }
 
-vector<string> ConfigurationHandler::get(string name) {
+vector<string> ConfigurationHandler::get(string name)
+{
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
-	vector<string> ret;
+    vector<string> ret;
 
-	if (db->isShareOnly(name)) {
+    if (db->isShareOnly(name))
+        {
 
-		cfg.reset(
-				new ShareOnlyCfg(dn, name)
-			);
+            cfg.reset(
+                new ShareOnlyCfg(dn, name)
+            );
 
-	} else {
+        }
+    else
+        {
 
-		if (db->checkGroupExists(name)) {
-			cfg.reset(
-					new StandaloneGrCfg(dn, name)
-				);
-		} else {
-			cfg.reset(
-					new StandaloneSeCfg(dn, name)
-				);
-		}
-	}
+            if (db->checkGroupExists(name))
+                {
+                    cfg.reset(
+                        new StandaloneGrCfg(dn, name)
+                    );
+                }
+            else
+                {
+                    cfg.reset(
+                        new StandaloneSeCfg(dn, name)
+                    );
+                }
+        }
 
-	ret.push_back(cfg->json());
+    ret.push_back(cfg->json());
 
-	return ret;
+    return ret;
 }
 
-vector<string> ConfigurationHandler::getPair(string src, string dest) {
+vector<string> ConfigurationHandler::getPair(string src, string dest)
+{
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
-	vector<string> ret;
+    vector<string> ret;
 
-	bool grPair = db->checkGroupExists(src) && db->checkGroupExists(dest);
-	bool sePair = !db->checkGroupExists(src) && !db->checkGroupExists(dest);
+    bool grPair = db->checkGroupExists(src) && db->checkGroupExists(dest);
+    bool sePair = !db->checkGroupExists(src) && !db->checkGroupExists(dest);
 
-	if (grPair) {
-		cfg.reset(
-				new GrPairCfg(dn, src, dest)
-			);
-	} else if (sePair) {
-		cfg.reset(
-				new SePairCfg(dn, src, dest)
-			);
-	} else
-		throw Err_Custom("The source and destination have to be either two SEs or two SE groups!");
+    if (grPair)
+        {
+            cfg.reset(
+                new GrPairCfg(dn, src, dest)
+            );
+        }
+    else if (sePair)
+        {
+            cfg.reset(
+                new SePairCfg(dn, src, dest)
+            );
+        }
+    else
+        throw Err_Custom("The source and destination have to be either two SEs or two SE groups!");
 
-	ret.push_back(cfg->json());
+    ret.push_back(cfg->json());
 
-	return ret;
+    return ret;
 }
 
-vector<string> ConfigurationHandler::getPair(string symbolic) {
+vector<string> ConfigurationHandler::getPair(string symbolic)
+{
 
-	scoped_ptr< pair<string, string> > p (
-			db->getSourceAndDestination(symbolic)
-		);
+    scoped_ptr< pair<string, string> > p (
+        db->getSourceAndDestination(symbolic)
+    );
 
-	if (p.get())
-		return getPair(p->first, p->second);
-	else
-		throw Err_Custom("The symbolic name does not exist!");
+    if (p.get())
+        return getPair(p->first, p->second);
+    else
+        throw Err_Custom("The symbolic name does not exist!");
 }
 
-void ConfigurationHandler::del() {
+void ConfigurationHandler::del()
+{
 
-	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is deleting configuration" << commit;
-	cfg->del();
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is deleting configuration" << commit;
+    cfg->del();
 }
 

@@ -27,13 +27,16 @@
 
 #include "CliBase.h"
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
-class TransferCliBase : virtual public CliBase {
+class TransferCliBase : virtual public CliBase
+{
 public:
-	TransferCliBase();
-	virtual ~TransferCliBase();
+    TransferCliBase();
+    virtual ~TransferCliBase();
 };
 
 } /* namespace cli */

@@ -29,39 +29,42 @@
 
 #include <boost/python.hpp>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 namespace py = boost::python;
 
-class PyFile : public File {
+class PyFile : public File
+{
 
 public:
-	PyFile();
+    PyFile();
 
-	PyFile(File& file);
+    PyFile(File& file);
 
-	virtual ~PyFile();
+    virtual ~PyFile();
 
-	void setSources(py::list src);
-	py::list getSources();
+    void setSources(py::list src);
+    py::list getSources();
 
-	void setDestinations(py::list dest);
-	py::list getDestinations();
+    void setDestinations(py::list dest);
+    py::list getDestinations();
 
-	void setChecksums(py::list checksum);
-	py::list getChecksums();
+    void setChecksums(py::list checksum);
+    py::list getChecksums();
 
-	void setFileSize(long filesize);
-	py::object getFileSize();
+    void setFileSize(long filesize);
+    py::object getFileSize();
 
-	void setMetadata(py::str metadata);
-	py::object getMetadata();
+    void setMetadata(py::str metadata);
+    py::object getMetadata();
 
-	void setSelectionStrategy(py::str select);
-	py::object getSelectionStrategy();
+    void setSelectionStrategy(py::str select);
+    py::object getSelectionStrategy();
 
-	File getFileCpp();
+    File getFileCpp();
 };
 
 } /* namespace cli */

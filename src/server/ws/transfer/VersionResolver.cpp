@@ -30,10 +30,13 @@
 
 #include <sstream>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
-VersionResolver::VersionResolver() {
+VersionResolver::VersionResolver()
+{
 
     FILE *in;
     char buff[512];
@@ -41,9 +44,10 @@ VersionResolver::VersionResolver() {
     in = popen("rpm -q --qf '%{VERSION}' fts-server", "r");
 
     stringstream ss;
-    while (fgets(buff, sizeof (buff), in) != NULL) {
-        ss << buff;
-    }
+    while (fgets(buff, sizeof (buff), in) != NULL)
+        {
+            ss << buff;
+        }
 
     pclose(in);
 
@@ -53,24 +57,29 @@ VersionResolver::VersionResolver() {
     metadata = version; // TODO package name!
 }
 
-VersionResolver::~VersionResolver() {
+VersionResolver::~VersionResolver()
+{
 
 }
 
-string VersionResolver::getVersion() {
-	return version;
+string VersionResolver::getVersion()
+{
+    return version;
 }
 
-string VersionResolver::getInterface() {
-	return interface;
+string VersionResolver::getInterface()
+{
+    return interface;
 }
 
-string VersionResolver::getSchema() {
-	return schema;
+string VersionResolver::getSchema()
+{
+    return schema;
 }
 
-string VersionResolver::getMetadata() {
-	return metadata;
+string VersionResolver::getMetadata()
+{
+    return metadata;
 }
 
 } /* namespace server */

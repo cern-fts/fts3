@@ -1,17 +1,17 @@
 /********************************************//**
  * Copyright @ Members of the EMI Collaboration, 2010.
  * See www.eu-emi.eu for details on the copyright holders.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0 
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  ***********************************************/
 
@@ -20,7 +20,7 @@
  * @brief hanlde oracle connection
  * @author Michail Salichos
  * @date 09/02/2012
- * 
+ *
  **/
 
 #pragma once
@@ -37,74 +37,76 @@ using namespace oracle::occi;
  * OracleConnection class declaration
  **/
 
-class OracleConnection {
+class OracleConnection
+{
 public:
 
-/**
- * OracleConnection class ctr with parameters
- **/
+    /**
+     * OracleConnection class ctr with parameters
+     **/
 
     OracleConnection(const std::string username,const  std::string password, const std::string connectString, int pooledConn);
 
-/**
- * OracleConnection class ctr
- **/
+    /**
+     * OracleConnection class ctr
+     **/
     OracleConnection() {}
-    
-/**
- * OracleConnection class dctr
- **/    
+
+    /**
+     * OracleConnection class dctr
+     **/
     virtual ~OracleConnection();
 
 
-/**
- * OracleConnection get resultset
- **/
+    /**
+     * OracleConnection get resultset
+     **/
     oracle::occi::ResultSet* createResultset(oracle::occi::Statement* s,oracle::occi::Connection* conn);
-    
-/**
- * OracleConnection create a statement
- **/    
+
+    /**
+     * OracleConnection create a statement
+     **/
     oracle::occi::Statement* createStatement(std::string sql, std::string tag,oracle::occi::Connection* conn);
 
-/**
- * OracleConnection destroy a resultset
- **/    
+    /**
+     * OracleConnection destroy a resultset
+     **/
     void destroyResultset(oracle::occi::Statement* s, oracle::occi::ResultSet* r);
-    
-/**
- * OracleConnection destroy a statement
- **/        
+
+    /**
+     * OracleConnection destroy a statement
+     **/
     void destroyStatement(oracle::occi::Statement* s, std::string tag,oracle::occi::Connection* conn);
-    
-/**
- * OracleConnection commit row in the database
- **/        
+
+    /**
+     * OracleConnection commit row in the database
+     **/
     void commit(oracle::occi::Connection* conn);
-    
-/**
- * OracleConnection rollback in case of an error
- **/        
+
+    /**
+     * OracleConnection rollback in case of an error
+     **/
     void rollback(oracle::occi::Connection* conn);
-              
-    oracle::occi::Connection *getPooledConnection(); 
-    
-    void releasePooledConnection(oracle::occi::Connection *conn); 
-    
-/**
- * OracleConnection return the environment used in oracle
- **/        
-    inline oracle::occi::Environment* getEnv(){
-    	return env;
-	}	            
+
+    oracle::occi::Connection *getPooledConnection();
+
+    void releasePooledConnection(oracle::occi::Connection *conn);
+
+    /**
+     * OracleConnection return the environment used in oracle
+     **/
+    inline oracle::occi::Environment* getEnv()
+    {
+        return env;
+    }
 
 private:
     oracle::occi::Environment* env;
-    oracle::occi::StatelessConnectionPool *scPool;     
+    oracle::occi::StatelessConnectionPool *scPool;
     std::string username_;
     std::string password_;
     std::string connectString_;
     int maxConn;  //The maximum number of connections that can be opened the pool;
     int minConn;  //The number of connections initially created in a pool.
-    int incrConn; //The number of connections by which to increment the pool if all open connections are busy    
+    int incrConn; //The number of connections by which to increment the pool if all open connections are busy
 };

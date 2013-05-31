@@ -29,30 +29,35 @@
 
 using namespace fts3::cli;
 
-TransferStatusCli::TransferStatusCli() {
+TransferStatusCli::TransferStatusCli()
+{
 
-	// add fts3-transfer-status specific options
-	specific.add_options()
-			("list,l", "List status for all files.")
-			;
+    // add fts3-transfer-status specific options
+    specific.add_options()
+    ("list,l", "List status for all files.")
+    ;
 }
 
-TransferStatusCli::~TransferStatusCli() {
+TransferStatusCli::~TransferStatusCli()
+{
 }
 
-optional<GSoapContextAdapter&> TransferStatusCli::validate(bool init) {
+optional<GSoapContextAdapter&> TransferStatusCli::validate(bool init)
+{
 
-	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
-	if (getJobIds().empty()) {
-		printer().missing_parameter("Request ID");
-		return 0;
-	}
+    if (getJobIds().empty())
+        {
+            printer().missing_parameter("Request ID");
+            return 0;
+        }
 
-	return *ctx;
+    return *ctx;
 }
 
-bool TransferStatusCli::list() {
+bool TransferStatusCli::list()
+{
 
-	return vm.count("list");
+    return vm.count("list");
 }

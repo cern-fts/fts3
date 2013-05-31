@@ -5,9 +5,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,7 +16,7 @@
  *
  *  GLite Data Management - Simple data delegation API
  *
- *  Authors: 
+ *  Authors:
  *      Zoltan Farkas <Zoltan.Farkas@cern.ch>
  *      Akos Frohner <Akos.Frohner@cern.ch>
  *
@@ -55,16 +55,16 @@ typedef struct _glite_delegation_ctx		glite_delegation_ctx;
  */
 
 /**
- * \brief Allocates a new delegation context. 
+ * \brief Allocates a new delegation context.
  *
- * The context can be used to access only one service. 
- * 
+ * The context can be used to access only one service.
+ *
  * If the endpoint is not a URL (HTTP, HTTPS or HTTPG), then
  * service discovery is used to locate the real service endpoint.
- * In this case the 'endpoint' parameter is the input of the 
- * service discovery. 
+ * In this case the 'endpoint' parameter is the input of the
+ * service discovery.
  *
- * This mechanism is executed upon the first service specific usage 
+ * This mechanism is executed upon the first service specific usage
  * of the context. After that point methods using the same context,
  * from any other interface will return an error.
  *
@@ -81,7 +81,7 @@ glite_delegation_ctx *glite_delegation_new(const char *endpoint);
  */
 void glite_delegation_free(glite_delegation_ctx *ctx);
 
-/** 
+/**
  * Get the current endpoint.
  *
  * @param ctx The global context.
@@ -114,8 +114,8 @@ char *glite_delegation_get_error(glite_delegation_ctx *ctx);
  *
  * @return 0 if OK, -1 in case of error
  */
-int glite_delegation_delegate(glite_delegation_ctx *ctx, 
-    const char *delegationID, int expiration, int force);
+int glite_delegation_delegate(glite_delegation_ctx *ctx,
+                              const char *delegationID, int expiration, int force);
 
 /**
  * Get the expiration time.
@@ -128,7 +128,7 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
  * @return 0 if OK, -1 in case of error
  */
 int glite_delegation_info(glite_delegation_ctx *ctx,
-    const char *delegationID, time_t *expiration);
+                          const char *delegationID, time_t *expiration);
 
 /**
  * Destroy the delegated credential.
@@ -140,7 +140,7 @@ int glite_delegation_info(glite_delegation_ctx *ctx,
  * @return 0 if ok, -1 in case of error
  */
 int glite_delegation_destroy(glite_delegation_ctx *ctx,
-    const char *delegationID);
+                             const char *delegationID);
 
 /**
  * Get service interface version.

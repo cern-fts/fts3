@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 /** \file serverconfig.h Define FTS3 server configuration. */
@@ -35,7 +35,7 @@ FTS3_CONFIG_NAMESPACE_START
 
 /** \brief Class representing server configuration. Server configuration read once,
  * when the server starts. It provides read-only singleton access. */
-class ServerConfig 
+class ServerConfig
 {
 public:
     /// Constructor
@@ -47,7 +47,7 @@ public:
     virtual ~ServerConfig();
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** Read the configurations */
     void read
     (
@@ -58,7 +58,7 @@ public:
 
     /* ---------------------------------------------------------------------- */
 
-#ifdef FTS3_COMPILE_WITH_UNITTEST 
+#ifdef FTS3_COMPILE_WITH_UNITTEST
     /** Read the configurations from config file only */
     void read
     (
@@ -67,8 +67,8 @@ public:
 #endif // FTS3_COMPILE_WITH_UNITTEST
 
     /* ---------------------------------------------------------------------- */
-    
-    /** General getter of an option. It returns the option, converted to the 
+
+    /** General getter of an option. It returns the option, converted to the
      * desired type. Throws exception if the option is not found. */
     template <typename RET> RET get
     (
@@ -81,7 +81,7 @@ protected:
     typedef std::map<std::string, std::string> _t_vars;
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** Return the variable value as a string. */
     const std::string& _get_str
     (
@@ -89,37 +89,37 @@ protected:
     );
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** Read the configurations - using injected reader type. */
-    template <typename READER_TYPE> 
+    template <typename READER_TYPE>
     void _read
     (
         int argc, /**< The command line arguments (from main) */
         char** argv /**< The command line arguments (from main) */
     )
     {
-		READER_TYPE reader;
-		waitIfGetting();
-		_vars = reader(argc, argv);
-		readTime = time(0);
-		notifyGetters();
+        READER_TYPE reader;
+        waitIfGetting();
+        _vars = reader(argc, argv);
+        readTime = time(0);
+        notifyGetters();
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** Read the configurations from config file only - using injected reader.*/
-    template <typename READER_TYPE> 
+    template <typename READER_TYPE>
     void _read
     (
         const std::string& aFileName /**< Config file name */
     )
     {
-         READER_TYPE reader;
+        READER_TYPE reader;
         _vars = reader(aFileName);
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** The internal store of config variables. */
     _t_vars _vars;
 
@@ -132,36 +132,37 @@ protected:
     int getting;
 
     ///
-	mutex qm;
-	///
-	condition_variable qv;
+    mutex qm;
+    ///
+    condition_variable qv;
 
-	time_t readTime;
+    time_t readTime;
 
-	/**
-	 *
-	 */
-	void waitIfReading();
+    /**
+     *
+     */
+    void waitIfReading();
 
-	/**
-	 *
-	 */
-	void notifyReaders();
+    /**
+     *
+     */
+    void notifyReaders();
 
-	/**
-	 *
-	 */
-	void waitIfGetting();
+    /**
+     *
+     */
+    void waitIfGetting();
 
-	/**
-	 *
-	 */
-	void notifyGetters();
+    /**
+     *
+     */
+    void notifyGetters();
 
 public:
-	time_t getReadTime() {
-		return readTime;
-	}
+    time_t getReadTime()
+    {
+        return readTime;
+    }
 };
 
 /* ========================================================================== */
@@ -174,67 +175,74 @@ inline ServerConfig& theServerConfig()
 }
 
 template <typename RET>
-RET ServerConfig::get (const std::string& aVariable /**< A config variable name. */) {
+RET ServerConfig::get (const std::string& aVariable /**< A config variable name. */)
+{
 
-	waitIfReading();
-	const std::string& str = _get_str(aVariable);
-	notifyReaders();
+    waitIfReading();
+    const std::string& str = _get_str(aVariable);
+    notifyReaders();
 
-	return boost::lexical_cast<RET>(str);
+    return boost::lexical_cast<RET>(str);
 }
 
 template <>
-inline bool ServerConfig::get<bool> (const std::string& aVariable /**< A config variable name. */) {
+inline bool ServerConfig::get<bool> (const std::string& aVariable /**< A config variable name. */)
+{
 
-	waitIfReading();
-	std::string str = _get_str(aVariable);
-	notifyReaders();
+    waitIfReading();
+    std::string str = _get_str(aVariable);
+    notifyReaders();
 
-	boost::to_lower(str);
+    boost::to_lower(str);
 
-	// if the string is 'false' return false
-	if (str == "false") return false;
-	// otherwise return true (it may be 'true' or other string containing respective value)
-	else return true;
+    // if the string is 'false' return false
+    if (str == "false") return false;
+    // otherwise return true (it may be 'true' or other string containing respective value)
+    else return true;
 }
 
 template <>
-inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (const std::string& aVariable /**< A config variable name. */) {
+inline std::vector<std::string> ServerConfig::get< std::vector<std::string> > (const std::string& aVariable /**< A config variable name. */)
+{
 
-	waitIfReading();
-	const std::string& str = _get_str(aVariable);
-	notifyReaders();
+    waitIfReading();
+    const std::string& str = _get_str(aVariable);
+    notifyReaders();
 
-	boost::char_separator<char> sep(";");
-	boost::tokenizer< boost::char_separator<char> > tokens(str, sep);
-	boost::tokenizer< boost::char_separator<char> >::iterator it;
+    boost::char_separator<char> sep(";");
+    boost::tokenizer< boost::char_separator<char> > tokens(str, sep);
+    boost::tokenizer< boost::char_separator<char> >::iterator it;
 
-	std::vector<std::string> ret;
-	for (it = tokens.begin(); it != tokens.end(); ++it) {
-		ret.push_back(*it);
-	}
+    std::vector<std::string> ret;
+    for (it = tokens.begin(); it != tokens.end(); ++it)
+        {
+            ret.push_back(*it);
+        }
 
-	return ret;
+    return ret;
 }
 
 template <>
-inline std::map<std::string, std::string> ServerConfig::get< std::map<std::string, std::string> > (const std::string& aVariable) {
+inline std::map<std::string, std::string> ServerConfig::get< std::map<std::string, std::string> > (const std::string& aVariable)
+{
 
-	std::map<std::string, std::string> ret;
-	boost::regex re(aVariable);
+    std::map<std::string, std::string> ret;
+    boost::regex re(aVariable);
 
-	waitIfReading();
+    waitIfReading();
 
-	_t_vars::iterator it;
-	for (it = _vars.begin(); it != _vars.end(); ++it) {
-		if (boost::regex_match(it->first, re)) {
-			ret[it->first] = it->second;
-		}
-	}
+    _t_vars::iterator it;
+    for (it = _vars.begin(); it != _vars.end(); ++it)
+        {
+            if (boost::regex_match(it->first, re))
+                {
+                    ret[it->first] = it->second;
+                }
+        }
 
-	notifyReaders();
+    notifyReaders();
 
-	return ret;
+    return ret;
 }
 
 FTS3_CONFIG_NAMESPACE_END

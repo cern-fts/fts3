@@ -1,17 +1,17 @@
 /********************************************//**
  * Copyright @ Members of the EMI Collaboration, 2010.
  * See www.eu-emi.eu for details on the copyright holders.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0 
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  ***********************************************/
 
@@ -23,20 +23,21 @@
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-class MySqlAPI : public GenericDbIfce {
+class MySqlAPI : public GenericDbIfce
+{
 public:
     MySqlAPI();
     virtual ~MySqlAPI();
 
-/**
- * Intialize database connection  by providing information from fts3config file
- **/
- 
+    /**
+     * Intialize database connection  by providing information from fts3config file
+     **/
+
     virtual void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
-/**
- * Submit a transfer request to be stored in the database
- **/ 
+    /**
+     * Submit a transfer request to be stored in the database
+     **/
     virtual void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
                                 const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
                                 const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
@@ -62,10 +63,10 @@ public:
     virtual unsigned int updateFileStatus(TransferFiles* file, const std::string status);
 
     virtual void addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-            std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
+                       std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
 
     virtual void updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string SITE, std::string NAME, std::string STATE, std::string VERSION, std::string HOST,
-            std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
+                          std::string SE_TRANSFER_TYPE, std::string SE_TRANSFER_PROTOCOL, std::string SE_CONTROL_PROTOCOL, std::string GOCDB_ID);
 
     virtual void deleteSe(std::string NAME);
 
@@ -74,9 +75,9 @@ public:
     virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status);
 
     virtual void updateJObStatus(std::string jobId, const std::string status);
-    
+
     virtual void cancelJob(std::vector<std::string>& requestIDs);
-    
+
     virtual void getCancelJob(std::vector<int>& requestIDs);
 
 
@@ -106,47 +107,47 @@ public:
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
-    
+
     virtual void recordOptimizerUpdate(int active, double filesize, double throughput, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
     virtual bool updateOptimizer(int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
-    
+
     virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);
-    
+
     virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id);
-    
+
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
-    
+
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
-    
+
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
-    
+
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
-    
+
     virtual bool terminateReuseProcess(const std::string & jobId);
-    
+
     virtual void forceFailTransfers(std::map<int, std::string>& collectJobs);
-    
+
     virtual void setPid(const std::string & jobId, int fileId, int pid);
-    
+
     virtual void setPidV(int pid, std::map<int,std::string>& pids);
-    
+
     virtual void revertToSubmitted();
-    
+
     virtual void revertToSubmittedTerminate();
 
     virtual void backup();
-    
+
     virtual void forkFailedRevertState(const std::string & jobId, int fileId);
-    
+
     virtual void forkFailedRevertStateV(std::map<int,std::string>& pids);
-    
+
     virtual bool retryFromDead(std::vector<struct message_updater>& messages);
-    
+
     virtual void blacklistSe(std::string se, std::string vo, std::string status, int timeout, std::string msg, std::string adm_dn);
 
     virtual void blacklistDn(std::string dn, std::string msg, std::string adm_dn);
@@ -222,21 +223,21 @@ public:
     virtual void setPriority(std::string jobId, int priority);
 
     virtual bool checkConnectionStatus();
-    
+
     virtual void setRetry(int retry);
-    
-    virtual int getRetry(const std::string & jobId);     
-    
+
+    virtual int getRetry(const std::string & jobId);
+
     virtual void setRetryTimes(int retry, const std::string & jobId, int fileId);
-    
-    virtual int getRetryTimes(const std::string & jobId, int fileId);  
-    
-    virtual void setRetryTransfer(const std::string & jobId, int fileId); 
-    
+
+    virtual int getRetryTimes(const std::string & jobId, int fileId);
+
+    virtual void setRetryTransfer(const std::string & jobId, int fileId);
+
     virtual int getMaxTimeInQueue();
-    
-    virtual void setMaxTimeInQueue(int afterXHours); 
-    
+
+    virtual void setMaxTimeInQueue(int afterXHours);
+
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
     virtual std::vector<std::string> getAllStandAlloneCfgs();
@@ -244,45 +245,45 @@ public:
     virtual std::vector<std::string> getAllShareOnlyCfgs();
 
     virtual std::vector< std::pair<std::string, std::string> > getAllPairCfgs();
-    
-    virtual int activeProcessesForThisHost();    
+
+    virtual int activeProcessesForThisHost();
 
     virtual void setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files);
-    
+
     virtual std::vector< boost::tuple<std::string, std::string, int> >  getVOBringonlimeMax();
-    
+
     virtual std::vector<struct message_bringonline> getBringOnlineFiles(std::string voName, std::string hostName, int maxValue);
-    
+
     virtual void bringOnlineReportStatus(const std::string & state, const std::string & message, struct message_bringonline msg);
-    
+
     virtual void addToken(const std::string & job_id, int file_id, const std::string & token);
-    
+
     virtual void getCredentials(std::string & vo_name, const std::string & job_id, int file_id, std::string & dn, std::string & dlg_id);
 
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
     virtual void useFileReplica(std::string jobId, int fileId);
-    
-    virtual void setRetryTimestamp(const std::string& jobId, int fileId);    
+
+    virtual void setRetryTimestamp(const std::string& jobId, int fileId);
 
     virtual int countActiveTransfers(std::string source, std::string destination);
 
     virtual int getFailureRate(std::string source, std::string destination);
 
     virtual int getAvgThroughput(std::string source, std::string destination, int activeTransfers);
-    
-    virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize);    
+
+    virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize);
 
     virtual void cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs);
 
     virtual void cancelJobsInTheQueue(const std::string& dn, std::vector<std::string>& jobs);
 
     virtual void transferLogFile( const std::string& filePath, const std::string& jobId, int fileId, bool debug);
-    
-    virtual struct message_state getStateOfTransfer(const std::string& jobId, int fileId);    
-    
+
+    virtual struct message_state getStateOfTransfer(const std::string& jobId, int fileId);
+
     virtual void getFilesForJob(const std::string& jobId, std::vector<int>& files);
-    
+
     virtual void getFilesForJobInCancelState(const std::string& jobId, std::vector<int>& files);
 
     virtual void setFilesToWaiting(const std::string& se, const std::string& vo, int timeout);

@@ -30,7 +30,10 @@
 
 using namespace std;
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  * The command line utility for specyfying VO name
@@ -41,52 +44,53 @@ namespace fts3 { namespace cli {
  * 			(o option is also available in that case), allows for
  * 			specifying the VO name
   */
-class VoNameCli: virtual public CliBase {
+class VoNameCli: virtual public CliBase
+{
 public:
 
-	/**
-	 * Default Constructor.
-	 *
-	 * @param pos - if true VONAME is market as both: hidden and positional, otherwise it is a tool specific option
-	 *
-	 */
-	VoNameCli(bool pos = true);
+    /**
+     * Default Constructor.
+     *
+     * @param pos - if true VONAME is market as both: hidden and positional, otherwise it is a tool specific option
+     *
+     */
+    VoNameCli(bool pos = true);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~VoNameCli();
+    /**
+     * Destructor.
+     */
+    virtual ~VoNameCli();
 
-	/**
-	 * Validates command line options
-	 * 1. Checks the endpoint
-	 * 2. If -h or -V option were used respective informations are printed
-	 * 3. GSoapContexAdapter is created, and info about server requested
-	 * 4. Additional check regarding server are performed
-	 * 5. If verbal additional info is printed
-	 *
-	 * @return GSoapContexAdapter instance, or null if all activities
-	 * 				requested using program options have been done.
-	 */
-	virtual optional<GSoapContextAdapter&> validate(bool init = true);
+    /**
+     * Validates command line options
+     * 1. Checks the endpoint
+     * 2. If -h or -V option were used respective informations are printed
+     * 3. GSoapContexAdapter is created, and info about server requested
+     * 4. Additional check regarding server are performed
+     * 5. If verbal additional info is printed
+     *
+     * @return GSoapContexAdapter instance, or null if all activities
+     * 				requested using program options have been done.
+     */
+    virtual optional<GSoapContextAdapter&> validate(bool init = true);
 
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
+    /**
+     * Gives the instruction how to use the command line tool.
+     *
+     * @return a string with instruction on how to use the tool
+     */
+    string getUsageString(string tool);
 
-	/**
-	 * Gets the VO name.
-	 *
-	 * @return VO name if it was specified, empty string otherwise
-	 */
-	string getVoName();
+    /**
+     * Gets the VO name.
+     *
+     * @return VO name if it was specified, empty string otherwise
+     */
+    string getVoName();
 
 private:
 
-	bool pos;
+    bool pos;
 };
 
 }

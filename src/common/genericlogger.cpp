@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 /** \file genericlogger.cpp Implementation/tests of GenericLogger class. */
@@ -21,7 +21,7 @@ limitations under the License. */
 #include <boost/scoped_ptr.hpp>
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
+#include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 
@@ -30,7 +30,7 @@ FTS3_COMMON_NAMESPACE_START
 /* ========================================================================== */
 
 LoggerBase::LoggerBase()
-	: _isLogOn( true )
+    : _isLogOn( true )
 {
     // EMPTY
 }
@@ -57,8 +57,8 @@ LoggerBase::~LoggerBase()
 
 const std::string& LoggerBase::_separator()
 {
-	static std::string s(";");
-	return s;
+    static std::string s(";");
+    return s;
 }
 
 /* ========================================================================== */
@@ -74,12 +74,12 @@ struct Common__GenericLogger_TestTraits
     enum {DEBUG, ERR, INFO};
 
     /* --------------------------------------------------------------------- */
-    
+
     static void openLog()
     {
         openCalled = true;
     }
-    
+
     /* ---------------------------------------------------------------------- */
 
     static void closeLog()
@@ -88,7 +88,7 @@ struct Common__GenericLogger_TestTraits
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static void sysLog(const int aLogLevel, const char* aMessage)
     {
         syslogCalled = true;
@@ -96,7 +96,7 @@ struct Common__GenericLogger_TestTraits
         message = aMessage;
     }
     /* ---------------------------------------------------------------------- */
-    
+
     static const char* strerror(const int aErrno)
     {
         strerrorCalled = true;
@@ -105,9 +105,9 @@ struct Common__GenericLogger_TestTraits
         str << aErrno;
         return str.str().c_str();
     }
-    
+
     /* ---------------------------------------------------------------------- */
-    
+
     static void reset()
     {
         openCalled = false;
@@ -119,7 +119,7 @@ struct Common__GenericLogger_TestTraits
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     static const std::string initialLogLine()
     {
         return "randomstroLHFUDS";
@@ -146,7 +146,7 @@ int Common__GenericLogger_TestTraits::loglevel = -1;
 
 /// The test class: using Common__GenericLogger_TestTraits as mock.
 typedef GenericLogger <Common__GenericLogger_TestTraits>
-    GenericLogger_TestClass;
+GenericLogger_TestClass;
 
 /* -------------------------------------------------------------------------- */
 
@@ -159,7 +159,7 @@ struct GenericLogger_Constructor_Test
     {
         BOOST_CHECK (Common__GenericLogger_TestTraits::openCalled);
     }
-    
+
     /// Checks if GenericLogger destructor calls closeLog
     ~GenericLogger_Constructor_Test()
     {
@@ -176,7 +176,7 @@ struct GenericLogger_Constructor_Test
 
 BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_Constructor, GenericLogger_TestClass)
 {
-    // EMPTY 
+    // EMPTY
 }
 
 /* -------------------------------------------------------------------------- */
@@ -262,7 +262,7 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_commit_modifier, GenericLogger_Te
 BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_newLog_general, GenericLogger_TestClass)
 {
     Common__GenericLogger_TestTraits::reset();
-    // Anything but debug must be here, otherwise, we have troubles with the NULL 
+    // Anything but debug must be here, otherwise, we have troubles with the NULL
     // pointers...
     std::stringstream f_str;
     f_str << "thread:" << ThreadTraits::get_id() << _separator();
@@ -272,7 +272,7 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_newLog_general, GenericLogger_Tes
     _actLogLevel = Common__GenericLogger_TestTraits::INFO;
     BOOST_CHECK_NE (_logLine, f_str);
     // Start real test...
-    GenericLogger_TestClass& returnedClass = 
+    GenericLogger_TestClass& returnedClass =
         newLog<Common__GenericLogger_TestTraits::ERR> (NULL, NULL, 0);
     // Check if syslog was written with old content
     BOOST_CHECK ( Common__GenericLogger_TestTraits::syslogCalled );
@@ -295,8 +295,8 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_newLog_debug, GenericLogger_TestC
 
     std::stringstream f_str;
 
-    f_str << "thread:" << ThreadTraits::get_id() << _separator() << f_file << _separator() 
-        << f_function << _separator() << std::dec << f_lineno << _separator();
+    f_str << "thread:" << ThreadTraits::get_id() << _separator() << f_file << _separator()
+          << f_function << _separator() << std::dec << f_lineno << _separator();
 
     newLog<Common__GenericLogger_TestTraits::DEBUG> (f_file, f_function, f_lineno);
 
@@ -309,7 +309,7 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_newLog_debug, GenericLogger_TestC
 BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_modifier, GenericLogger_TestClass)
 {
     Common__GenericLogger_TestTraits::reset();
-    // Execute "commit" in modifoer style, and check if syslog was written. It 
+    // Execute "commit" in modifoer style, and check if syslog was written. It
     // proves that the modofier was executed.
     *this << commit;
     BOOST_CHECK ( Common__GenericLogger_TestTraits::syslogCalled );
@@ -331,7 +331,7 @@ BOOST_FIXTURE_TEST_CASE (Common__GenericLogger_stream_write, GenericLogger_TestC
     setLogOff();
     _logLine.str("");
     *this << f_str;
-    BOOST_CHECK (_logLine.str().empty()); 
+    BOOST_CHECK (_logLine.str().empty());
 }
 
 /* -------------------------------------------------------------------------- */

@@ -16,60 +16,61 @@ limitations under the License. */
 #include "threadpool.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
+#include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 /* ---------------------------------------------------------------------- */
 
 FTS3_SERVER_NAMESPACE_START
 
-namespace ThreadPool {
+namespace ThreadPool
+{
 
 ThreadPool::ThreadPool(const size_t queueSize, const size_t workerNum)
-	: Traced<ThreadPool>("ThreadPool"), _queue(queueSize)
+    : Traced<ThreadPool>("ThreadPool"), _queue(queueSize)
 {
-	int c = 1;
-	for (size_t i = 0; i < workerNum; ++i) _workers.push_back(new Worker(_thgrp, c++));
+    int c = 1;
+    for (size_t i = 0; i < workerNum; ++i) _workers.push_back(new Worker(_thgrp, c++));
 
-	FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ThreadPool number of worker threads: " << workerNum << commit;
+    FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << "ThreadPool number of worker threads: " << workerNum << commit;
 }
 
 ThreadPool::~ThreadPool()
 {
-	// EMPTY
+    // EMPTY
 }
 
 void ThreadPool::wait()
 {
-	_thgrp.join_all();
+    _thgrp.join_all();
 }
 
 void ThreadPool::stop()
 {
-FTS3_COMMON_MONITOR_START_CRITICAL
-	_thgrp.interrupt_all();
+    FTS3_COMMON_MONITOR_START_CRITICAL
+    _thgrp.interrupt_all();
 
-boost::ptr_vector<Worker>::iterator iter = _workers.begin();
- 
-while (iter != _workers.end())
-{
-    if (!boost::is_null(iter))
-    {    	
-        //iter->cancel();	
-	iter = _workers.erase(iter);					
-    }
-    else
-    {
-        ++iter;
-    }
-}
-FTS3_COMMON_MONITOR_END_CRITICAL
+    boost::ptr_vector<Worker>::iterator iter = _workers.begin();
+
+    while (iter != _workers.end())
+        {
+            if (!boost::is_null(iter))
+                {
+                    //iter->cancel();
+                    iter = _workers.erase(iter);
+                }
+            else
+                {
+                    ++iter;
+                }
+        }
+    FTS3_COMMON_MONITOR_END_CRITICAL
 }
 
 ThreadPool::element_type ThreadPool::pop(const Timeout& td)
 {
-	element_type t(_queue.pop(td));
-	return t;
+    element_type t(_queue.pop(td));
+    return t;
 }
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
@@ -108,19 +109,20 @@ private:
 bOOST_AUTO_TEST_CASE(ThreadPoolTest)
 {
     FTS3_CONFIG_NAMESPACE::theServerConfig().read(0, NULL);
-	// TODO
-	for (int i = 0; i < 10; ++i) {
-		TestOp::value_type val(TestOp::INVALID_VALUE);
-		TestOp op(val, TestOp::VALUE_1);
-		ThreadPool::ThreadPool::instance().enqueue(op);
-	}
+    // TODO
+    for (int i = 0; i < 10; ++i)
+        {
+            TestOp::value_type val(TestOp::INVALID_VALUE);
+            TestOp op(val, TestOp::VALUE_1);
+            ThreadPool::ThreadPool::instance().enqueue(op);
+        }
 
-	::sleep(1);
+    ::sleep(1);
 
-	/* Check if the initial value is correct */
-	//CPPUNIT_ASSERT_EQUAL(TestOp::val(TestOp::INVALID_VALUE), val);
-	/* Test if after invoking the task operation, the value changed */
-	//CPPUNIT_ASSERT_EQUAL(TestOp::val(TestOp::VALUE_1), val);
+    /* Check if the initial value is correct */
+    //CPPUNIT_ASSERT_EQUAL(TestOp::val(TestOp::INVALID_VALUE), val);
+    /* Test if after invoking the task operation, the value changed */
+    //CPPUNIT_ASSERT_EQUAL(TestOp::val(TestOp::VALUE_1), val);
 }
 #endif
 #endif // FTS3_COMPILE_WITH_UNITTESTS

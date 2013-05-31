@@ -39,43 +39,52 @@ using namespace fts3::common;
 /**
  * This is the entry point for the fts3-transfer-list command line tool.
  */
-int main(int ac, char* av[]) {
+int main(int ac, char* av[])
+{
 
-	scoped_ptr<ListTransferCli> cli;
+    scoped_ptr<ListTransferCli> cli;
 
-	try {
-		// create and initialize the command line utility
-		cli.reset(
-				getCli<ListTransferCli>(ac, av)
-			);
+    try
+        {
+            // create and initialize the command line utility
+            cli.reset(
+                getCli<ListTransferCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		vector<string> array = cli->getStatusArray();
-		vector<fts3::cli::JobStatus> statuses;
-		statuses = ctx.listRequests2(array, cli->getUserDn(), cli->getVoName());
+            vector<string> array = cli->getStatusArray();
+            vector<fts3::cli::JobStatus> statuses;
+            statuses = ctx.listRequests2(array, cli->getUserDn(), cli->getVoName());
 
-		vector<fts3::cli::JobStatus>::iterator it;
-		for (it = statuses.begin(); it < statuses.end(); it++) {
-			cli->printer().job_status(*it);
-		}
+            vector<fts3::cli::JobStatus>::iterator it;
+            for (it = statuses.begin(); it < statuses.end(); it++)
+                {
+                    cli->printer().job_status(*it);
+                }
 
-    } catch(std::exception& ex) {
-    	if (cli.get())
-    		cli->printer().error_msg(ex.what());
-        return 1;
-    } catch(string& ex) {
-    	if (cli.get())
-    		cli->printer().gsoap_error_msg(ex);
-    	return 1;
-    } catch(...) {
-    	if (cli.get())
-    		cli->printer().error_msg("Exception of unknown type!");
-        return 1;
-    }
+        }
+    catch(std::exception& ex)
+        {
+            if (cli.get())
+                cli->printer().error_msg(ex.what());
+            return 1;
+        }
+    catch(string& ex)
+        {
+            if (cli.get())
+                cli->printer().gsoap_error_msg(ex);
+            return 1;
+        }
+    catch(...)
+        {
+            if (cli.get())
+                cli->printer().error_msg("Exception of unknown type!");
+            return 1;
+        }
 
-	return 0;
+    return 0;
 }

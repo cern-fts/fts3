@@ -43,199 +43,232 @@ using namespace fts3::ws;
 
 
 FileTransferScheduler::FileTransferScheduler(
-		TransferFiles* file,
-		vector< shared_ptr<ShareConfig> >& cfgs,
-		set<string> inses,
-		set<string> outses,
-		set<string> invos,
-		set<string> outvos
-	) :
-		file (file),
-		cfgs (cfgs),
-		db (DBSingleton::instance().getDBObjectInstance()) {
+    TransferFiles* file,
+    vector< shared_ptr<ShareConfig> >& cfgs,
+    set<string> inses,
+    set<string> outses,
+    set<string> invos,
+    set<string> outvos
+) :
+    file (file),
+    cfgs (cfgs),
+    db (DBSingleton::instance().getDBObjectInstance())
+{
 
-	srcSeName = file->SOURCE_SE;
-	destSeName = file->DEST_SE;
+    srcSeName = file->SOURCE_SE;
+    destSeName = file->DEST_SE;
 
-	vector< shared_ptr<ShareConfig> >::iterator it;
-	for (it = cfgs.begin(); it != cfgs.end(); it++) {
+    vector< shared_ptr<ShareConfig> >::iterator it;
+    for (it = cfgs.begin(); it != cfgs.end(); it++)
+        {
 
-		shared_ptr<ShareConfig>& cfg = *it;
+            shared_ptr<ShareConfig>& cfg = *it;
 
-		if (cfg->share_only) {
+            if (cfg->share_only)
+                {
 
-			double tmp = 0;
-			int sum = 0;
-
-
-			if (cfg->source == Configuration::any) {
-				// calculate for destination
-				tmp = db->getSeIn(outses, cfg->destination);
-				sum = db->sumUpVoShares(cfg->source, cfg->destination, invos);
-			} else if (cfg->destination == Configuration::any) {
-				// calculate for source
-				tmp = db->getSeOut(cfg->source, inses);
-				sum = db->sumUpVoShares(cfg->source, cfg->destination, outvos);
-			}
+                    double tmp = 0;
+                    int sum = 0;
 
 
-			if (sum == 0) {
-				// if sum == 0 it means that there was no share defined for the submitting VO
-				tmp = 0;
+                    if (cfg->source == Configuration::any)
+                        {
+                            // calculate for destination
+                            tmp = db->getSeIn(outses, cfg->destination);
+                            sum = db->sumUpVoShares(cfg->source, cfg->destination, invos);
+                        }
+                    else if (cfg->destination == Configuration::any)
+                        {
+                            // calculate for source
+                            tmp = db->getSeOut(cfg->source, inses);
+                            sum = db->sumUpVoShares(cfg->source, cfg->destination, outvos);
+                        }
 
-			} else if (tmp > 1) {
-				// if tmp == 1 it means that there are no active transfer and auto-tuner allocated the first credit
-				// calculate the share
-				tmp = (tmp * cfg->active_transfers) / sum;
-			}
-			// round up the result
-			cfg->active_transfers = static_cast<int>(tmp + 0.5);
-			cfg->share_only = false; // now the value has been set
-		}
-	}
+
+                    if (sum == 0)
+                        {
+                            // if sum == 0 it means that there was no share defined for the submitting VO
+                            tmp = 0;
+
+                        }
+                    else if (tmp > 1)
+                        {
+                            // if tmp == 1 it means that there are no active transfer and auto-tuner allocated the first credit
+                            // calculate the share
+                            tmp = (tmp * cfg->active_transfers) / sum;
+                        }
+                    // round up the result
+                    cfg->active_transfers = static_cast<int>(tmp + 0.5);
+                    cfg->share_only = false; // now the value has been set
+                }
+        }
 }
 
-FileTransferScheduler::~FileTransferScheduler() {
+FileTransferScheduler::~FileTransferScheduler()
+{
 
 }
 
-bool FileTransferScheduler::schedule(bool optimize) {
+bool FileTransferScheduler::schedule(bool optimize)
+{
 
-	vector<int> notUsed;
+    vector<int> notUsed;
 
-	if(optimize && cfgs.empty()) {
-		bool allowed = db->isTrAllowed(srcSeName, destSeName);
-		// update file state to READY
-		if(allowed == true) {
-			unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-			if(updated == 0) return false;
-			// set all other files that were generated due to a multi-source/destination submission to NOT_USED
-			db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
-			if(!notUsed.empty()){
-				std::vector<int>::const_iterator iter;
-				for (iter = notUsed.begin(); iter != notUsed.end(); ++iter) {
-					SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-				}
-				notUsed.clear();
-			}
-			return true;
-		}
-		return false;
-	}
+    if(optimize && cfgs.empty())
+        {
+            bool allowed = db->isTrAllowed(srcSeName, destSeName);
+            // update file state to READY
+            if(allowed == true)
+                {
+                    unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+                    if(updated == 0) return false;
+                    // set all other files that were generated due to a multi-source/destination submission to NOT_USED
+                    db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
+                    if(!notUsed.empty())
+                        {
+                            std::vector<int>::const_iterator iter;
+                            for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                                {
+                                    SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                                }
+                            notUsed.clear();
+                        }
+                    return true;
+                }
+            return false;
+        }
 
-	vector< shared_ptr<ShareConfig> >::iterator it;
+    vector< shared_ptr<ShareConfig> >::iterator it;
 
-	for (it = cfgs.begin(); it != cfgs.end(); ++it) {
+    for (it = cfgs.begin(); it != cfgs.end(); ++it)
+        {
 
-		string source = (*it)->source;
-		string destination = (*it)->destination;
-		string vo = (*it)->vo;
+            string source = (*it)->source;
+            string destination = (*it)->destination;
+            string vo = (*it)->vo;
 
-		shared_ptr<ShareConfig>& cfg = *it;
+            shared_ptr<ShareConfig>& cfg = *it;
 
-		if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
+            if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
 
-		// check if the configuration allows this type of transfer-job
-		if (!cfg->active_transfers) {
-			// failed to allocate active transfers credits to transfer-job
-			string msg = getNoCreditsErrMsg(cfg.get());
-			// set file status to failed
-			db->updateFileTransferStatus(
-					file->JOB_ID,
-					file->FILE_ID,
-					JobStatusHandler::FTS3_STATUS_FAILED,
-					msg,
-					0,
-					0,
-					0
-				);
-			// set job states if necessary
-			db->updateJobTransferStatus(
-					file->FILE_ID,
-					file->JOB_ID,
-					JobStatusHandler::FTS3_STATUS_FAILED
-				);
-			// log it
-			FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;
-			// the file has been resolved as FAILED, it won't be scheduled
-			return false;
-		}
+            // check if the configuration allows this type of transfer-job
+            if (!cfg->active_transfers)
+                {
+                    // failed to allocate active transfers credits to transfer-job
+                    string msg = getNoCreditsErrMsg(cfg.get());
+                    // set file status to failed
+                    db->updateFileTransferStatus(
+                        file->JOB_ID,
+                        file->FILE_ID,
+                        JobStatusHandler::FTS3_STATUS_FAILED,
+                        msg,
+                        0,
+                        0,
+                        0
+                    );
+                    // set job states if necessary
+                    db->updateJobTransferStatus(
+                        file->FILE_ID,
+                        file->JOB_ID,
+                        JobStatusHandler::FTS3_STATUS_FAILED
+                    );
+                    // log it
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;
+                    // the file has been resolved as FAILED, it won't be scheduled
+                    return false;
+                }
 
-		int active_transfers = 0;
+            int active_transfers = 0;
 
-		if (source == Configuration::wildcard) {
-			active_transfers = db->countActiveOutboundTransfersUsingDefaultCfg(srcSeName, vo);
-			if (cfg->active_transfers - active_transfers > 0) continue;
-			return false;
-		}
+            if (source == Configuration::wildcard)
+                {
+                    active_transfers = db->countActiveOutboundTransfersUsingDefaultCfg(srcSeName, vo);
+                    if (cfg->active_transfers - active_transfers > 0) continue;
+                    return false;
+                }
 
-		if (destination == Configuration::wildcard) {
-			active_transfers = db->countActiveInboundTransfersUsingDefaultCfg(destSeName, vo);
-			if (cfg->active_transfers - active_transfers > 0) continue;
-			return false;
-		}
+            if (destination == Configuration::wildcard)
+                {
+                    active_transfers = db->countActiveInboundTransfersUsingDefaultCfg(destSeName, vo);
+                    if (cfg->active_transfers - active_transfers > 0) continue;
+                    return false;
+                }
 
-		active_transfers = db->countActiveTransfers(source, destination, vo);
-		if (cfg->active_transfers - active_transfers > 0) continue;
-		return false;
-	}
+            active_transfers = db->countActiveTransfers(source, destination, vo);
+            if (cfg->active_transfers - active_transfers > 0) continue;
+            return false;
+        }
 
-	// update file state to READY
-	unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-	if(updated == 0)
-		return false;
-	// set all other files that were generated due to a multi-source/destination submission to NOT_USED
-	db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
-	if(!notUsed.empty()){
-		std::vector<int>::const_iterator iter;
-		for (iter = notUsed.begin(); iter != notUsed.end(); ++iter) {
-			SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-		}
-		notUsed.clear();
-	}
+    // update file state to READY
+    unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+    if(updated == 0)
+        return false;
+    // set all other files that were generated due to a multi-source/destination submission to NOT_USED
+    db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
+    if(!notUsed.empty())
+        {
+            std::vector<int>::const_iterator iter;
+            for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                {
+                    SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                }
+            notUsed.clear();
+        }
 
-	return true;
+    return true;
 }
 
-string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg) {
-	stringstream ss;
+string FileTransferScheduler::getNoCreditsErrMsg(ShareConfig* cfg)
+{
+    stringstream ss;
 
-	ss << "Failed to allocate active transfer credits to transfer job due to ";
+    ss << "Failed to allocate active transfer credits to transfer job due to ";
 
-	if (cfg->source == Configuration::wildcard || cfg->destination == Configuration::wildcard) {
+    if (cfg->source == Configuration::wildcard || cfg->destination == Configuration::wildcard)
+        {
 
-		ss << "the default standalone SE configuration.";
+            ss << "the default standalone SE configuration.";
 
-	} else if (cfg->source != Configuration::any && cfg->destination != Configuration::any) {
+        }
+    else if (cfg->source != Configuration::any && cfg->destination != Configuration::any)
+        {
 
-		ss << "a pair configuration (" << cfg->source << " -> " << cfg->destination << ").";
+            ss << "a pair configuration (" << cfg->source << " -> " << cfg->destination << ").";
 
-	} else if (cfg->source != Configuration::any) {
+        }
+    else if (cfg->source != Configuration::any)
+        {
 
-		ss << "a standalone out-bound configuration (" << cfg->source << ").";
+            ss << "a standalone out-bound configuration (" << cfg->source << ").";
 
-	} else if (cfg->destination != Configuration::any) {
+        }
+    else if (cfg->destination != Configuration::any)
+        {
 
-		ss << "a standalone in-bound configuration (" << cfg->destination << ").";
+            ss << "a standalone in-bound configuration (" << cfg->destination << ").";
 
-	} else {
+        }
+    else
+        {
 
-		ss << "configuration constraints.";
-	}
+            ss << "configuration constraints.";
+        }
 
-	ss << "Only the following VOs are allowed: ";
+    ss << "Only the following VOs are allowed: ";
 
-	vector<ShareConfig*> cfgs = db->getShareConfig(cfg->source, cfg->destination);
-	vector<ShareConfig*>::iterator it;
+    vector<ShareConfig*> cfgs = db->getShareConfig(cfg->source, cfg->destination);
+    vector<ShareConfig*>::iterator it;
 
-	for (it = cfgs.begin(); it != cfgs.end(); ++it) {
-		shared_ptr<ShareConfig> ptr (*it);
-		if (ptr->active_transfers) {
-			if (it != cfgs.begin()) ss << ", ";
-			ss << ptr->vo;
-		}
-	}
+    for (it = cfgs.begin(); it != cfgs.end(); ++it)
+        {
+            shared_ptr<ShareConfig> ptr (*it);
+            if (ptr->active_transfers)
+                {
+                    if (it != cfgs.begin()) ss << ", ";
+                    ss << ptr->vo;
+                }
+        }
 
-	return ss.str();
+    return ss.str();
 }
 

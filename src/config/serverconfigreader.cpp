@@ -22,9 +22,9 @@ limitations under the License. */
 #include <fstream>
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
-    #include <boost/algorithm/string/find.hpp>
-    #include <cstdio>
+#include "unittest/testsuite.h"
+#include <boost/algorithm/string/find.hpp>
+#include <cstdio>
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 /* ---------------------------------------------------------------------- */
@@ -45,17 +45,17 @@ FTS3_CONFIG_NAMESPACE_START
 
 po::options_description ServerConfigReader::_defineGenericOptions()
 {
-	po::options_description generic("Generic options");
-	generic.add_options()
-	    ("help,h", "Display this help page")
-        ("version,v", "Display server version")
-        ("no-daemon,n", "Do not daemonize")
+    po::options_description generic("Generic options");
+    generic.add_options()
+    ("help,h", "Display this help page")
+    ("version,v", "Display server version")
+    ("no-daemon,n", "Do not daemonize")
 
-        (
-            "configfile,f",
-            po::value<std::string>( &(_vars["configfile"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT),
-            "FTS3 server config file"
-        );
+    (
+        "configfile,f",
+        po::value<std::string>( &(_vars["configfile"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_CONFIGFILE_DEFAULT),
+        "FTS3 server config file"
+    );
 
     return generic;
 }
@@ -64,119 +64,119 @@ po::options_description ServerConfigReader::_defineGenericOptions()
 
 po::options_description ServerConfigReader::_defineConfigOptions()
 {
-	po::options_description config("Configuration");
+    po::options_description config("Configuration");
 
     config.add_options()
-	(
-            "Port,p",
-            po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT),
-            "File transfer listening port"
-        )
-	(
-            "DbThreadsNum,D",
-            po::value<std::string>( &(_vars["DbThreadsNum"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT),
-            "Number of db connections in the db threads pool"
-        )
-	(
-            "MaxNumberOfProcesses,M",
-            po::value<std::string>( &(_vars["MaxNumberOfProcesses"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT),
-            "Maximum processes resource limit"
-        )		
-        (
-            "IP,i",
-            po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
-            "IP address that the server is bound to"
-        )
+    (
+        "Port,p",
+        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_PORT_DEFAULT),
+        "File transfer listening port"
+    )
+    (
+        "DbThreadsNum,D",
+        po::value<std::string>( &(_vars["DbThreadsNum"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTHREADS_DEFAULT),
+        "Number of db connections in the db threads pool"
+    )
+    (
+        "MaxNumberOfProcesses,M",
+        po::value<std::string>( &(_vars["MaxNumberOfProcesses"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_MAXPROCESSES_DEFAULT),
+        "Maximum processes resource limit"
+    )
+    (
+        "IP,i",
+        po::value<std::string>( &(_vars["IP"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_IP_DEFAULT),
+        "IP address that the server is bound to"
+    )
 
-	    (
-            "DbConnectString,s",
-            po::value<std::string>( &(_vars["DbConnectString"]) )->default_value(""),
-            "Connect string for the used database account"
-        )
+    (
+        "DbConnectString,s",
+        po::value<std::string>( &(_vars["DbConnectString"]) )->default_value(""),
+        "Connect string for the used database account"
+    )
 
-	    (
-            "DbType,d",
-            po::value<std::string>( &(_vars["DbType"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT),
-            "Database backend type. Allowed values: oracle"
-        )
+    (
+        "DbType,d",
+        po::value<std::string>( &(_vars["DbType"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_DBTYPE_DEFAULT),
+        "Database backend type. Allowed values: oracle"
+    )
 
-        (
-            "DbUserName,u",
-            po::value<std::string>( &(_vars["DbUserName"]) )->default_value(""),
-            "Database account user name"
-        )
+    (
+        "DbUserName,u",
+        po::value<std::string>( &(_vars["DbUserName"]) )->default_value(""),
+        "Database account user name"
+    )
 
-        (
-            "DbPassword,w",
-            po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
-            "Database account password"
-        )
-        (
-            "Infosys",
-            po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),
-            "Set infosys"
-        )
-        (
-            "BDIIKeepAlive",
-            po::value<std::string>( &(_vars["BDIIKeepAlive"]) )->default_value("true"),
-            "Sets the keep alive property of the BDII"
-        )
-        (
-        	"MyOSG,m",
-        	po::value<std::string>( &(_vars["MyOSG"]) )->default_value("false"),
-        	"Set the MyOSG URL (or flase meaning MyOSG wont be used)"
-        )
-        (
-        	"InfoProviders",
-        	po::value<std::string>( &(_vars["InfoProviders"]) )->default_value("glue1"),
-        	"The list of info providers ( e.g.: glue1:myosg:glue2)"
-        )
-        (
-            "InfoPublisher,P",
-            po::value<std::string>( &(_vars["InfoPublisher"]) )->default_value("false"),
-            "Set this VM to be the info provider for Glue2"
-        )	
-        (
-            "Alias,a",
-            po::value<std::string>( &(_vars["Alias"]) )->default_value(""),
-            "Set the alias for FTS 3 endpoint"
-        )
-        (
-            "Optimizer,o",
-            po::value<std::string>( &(_vars["Optimizer"]) )->default_value("true"),
-            "Control auto-tunning activation"
-        )		
-        (
-            "CleanRecordsHost,C",
-            po::value<std::string>( &(_vars["CleanRecordsHost"]) )->default_value("false"),
-            "Set to true when this host will be cleaning old records from the database"
-        )
-        (
-            "HttpKeepAlive,k",
-            po::value<std::string>( &(_vars["HttpKeepAlive"]) )->default_value("true"),
-            "Control HTTP Keep alive in gsoap"
-        )	
-        (
-            "TransferLogDirectory,l",
-            po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
-            "Directory where the individual transfer logs are written"
-        )
-		(
-			"AuthorizedVO,v",
-			po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
-			"List of authorized VOs"
-		)
-		(
-			"roles.*",
-			po::value<std::string>(),
-			"Authorization rights definition."
-		)
-        (
-			"SiteName",
-			po::value<std::string>( &(_vars["SiteName"]) ),
-			"Site name running the FTS3 service"
-        )
-		;
+    (
+        "DbPassword,w",
+        po::value<std::string>( &(_vars["DbPassword"]) )->default_value(""),
+        "Database account password"
+    )
+    (
+        "Infosys",
+        po::value<std::string>( &(_vars["Infosys"]) )->default_value("lcg-bdii.cern.ch:2170"),
+        "Set infosys"
+    )
+    (
+        "BDIIKeepAlive",
+        po::value<std::string>( &(_vars["BDIIKeepAlive"]) )->default_value("true"),
+        "Sets the keep alive property of the BDII"
+    )
+    (
+        "MyOSG,m",
+        po::value<std::string>( &(_vars["MyOSG"]) )->default_value("false"),
+        "Set the MyOSG URL (or flase meaning MyOSG wont be used)"
+    )
+    (
+        "InfoProviders",
+        po::value<std::string>( &(_vars["InfoProviders"]) )->default_value("glue1"),
+        "The list of info providers ( e.g.: glue1:myosg:glue2)"
+    )
+    (
+        "InfoPublisher,P",
+        po::value<std::string>( &(_vars["InfoPublisher"]) )->default_value("false"),
+        "Set this VM to be the info provider for Glue2"
+    )
+    (
+        "Alias,a",
+        po::value<std::string>( &(_vars["Alias"]) )->default_value(""),
+        "Set the alias for FTS 3 endpoint"
+    )
+    (
+        "Optimizer,o",
+        po::value<std::string>( &(_vars["Optimizer"]) )->default_value("true"),
+        "Control auto-tunning activation"
+    )
+    (
+        "CleanRecordsHost,C",
+        po::value<std::string>( &(_vars["CleanRecordsHost"]) )->default_value("false"),
+        "Set to true when this host will be cleaning old records from the database"
+    )
+    (
+        "HttpKeepAlive,k",
+        po::value<std::string>( &(_vars["HttpKeepAlive"]) )->default_value("true"),
+        "Control HTTP Keep alive in gsoap"
+    )
+    (
+        "TransferLogDirectory,l",
+        po::value<std::string>( &(_vars["TransferLogDirectory"]) )->default_value(FTS3_CONFIG_SERVERCONFIG_TRANSFERLOGFIRECTOTY_DEFAULT),
+        "Directory where the individual transfer logs are written"
+    )
+    (
+        "AuthorizedVO,v",
+        po::value<std::string>( &(_vars["AuthorizedVO"]) )->default_value(std::string()),
+        "List of authorized VOs"
+    )
+    (
+        "roles.*",
+        po::value<std::string>(),
+        "Authorization rights definition."
+    )
+    (
+        "SiteName",
+        po::value<std::string>( &(_vars["SiteName"]) ),
+        "Site name running the FTS3 service"
+    )
+    ;
 
     return config;
 }
@@ -185,14 +185,14 @@ po::options_description ServerConfigReader::_defineConfigOptions()
 
 po::options_description ServerConfigReader::_defineHiddenOptions()
 {
-	po::options_description hidden("Hidden options");
+    po::options_description hidden("Hidden options");
 
     hidden.add_options()
-        (
-            "ThreadNum,t",
-            po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT),
-            "Number of worker threads."
-        );
+    (
+        "ThreadNum,t",
+        po::value<int>()->default_value(FTS3_CONFIG_SERVERCONFIG_THREADNUM_DEFAULT),
+        "Number of worker threads."
+    );
 
     return hidden;
 }
@@ -244,12 +244,12 @@ struct ReadConfigFile_SystemTraits
         );
 
         if (!(*in))
-        {
-            std::stringstream msg;
-            msg << "Error opening file " << aName;
-            FTS3_COMMON_EXCEPTION_THROW ( FTS3_COMMON_NAMESPACE::Err_System (msg.str()) );
-            throw;
-        }
+            {
+                std::stringstream msg;
+                msg << "Error opening file " << aName;
+                FTS3_COMMON_EXCEPTION_THROW ( FTS3_COMMON_NAMESPACE::Err_System (msg.str()) );
+                throw;
+            }
 
         return in;
     }
@@ -298,9 +298,9 @@ BOOST_FIXTURE_TEST_CASE
 ServerConfigReader::type_return ServerConfigReader::operator() (int argc, char** argv)
 {
 
-	po::options_description generic = _defineGenericOptions();
-	po::options_description config = _defineConfigOptions();
-	po::options_description hidden = _defineHiddenOptions();
+    po::options_description generic = _defineGenericOptions();
+    po::options_description config = _defineConfigOptions();
+    po::options_description hidden = _defineHiddenOptions();
 
     // Option group in the command line
     po::options_description cmdline_options;
@@ -695,9 +695,9 @@ void ServerConfigReader::storeAsString
     assert(isFound);
 
     if (isFound)
-    {
-		_vars[aName] = boost::lexical_cast<std::string>(_vm[aName].as<int>());
-    }
+        {
+            _vars[aName] = boost::lexical_cast<std::string>(_vm[aName].as<int>());
+        }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -731,18 +731,21 @@ void ServerConfigReader::storeValuesAsStrings ()
 
 void ServerConfigReader::storeRoles ()
 {
-	po::variables_map::iterator it;
-	for (it = _vm.begin(); it != _vm.end(); it++) {
-		if (it->first.find("roles.") == 0) {
-			_vars[it->first] = it->second.as<std::string>();
-		}
-	}
+    po::variables_map::iterator it;
+    for (it = _vm.begin(); it != _vm.end(); it++)
+        {
+            if (it->first.find("roles.") == 0)
+                {
+                    _vars[it->first] = it->second.as<std::string>();
+                }
+        }
 }
 
-void ServerConfigReader::validateRequired (std::string key) {
+void ServerConfigReader::validateRequired (std::string key)
+{
 
-	if (!_vm.count("SiteName"))
-		throw Err_Custom("The required configuration option: '" + key + "' has not been found!");
+    if (!_vm.count("SiteName"))
+        throw Err_Custom("The required configuration option: '" + key + "' has not been found!");
 }
 
 /* ========================================================================== */

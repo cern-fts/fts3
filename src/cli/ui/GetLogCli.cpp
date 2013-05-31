@@ -26,24 +26,28 @@
 
 using namespace fts3::cli;
 
-GetLogCli::GetLogCli() {
+GetLogCli::GetLogCli()
+{
 
-	// add commandline options specific for fts3-transfer-submit
-	specific.add_options()
-			("path,p", "Destination path for the log files.")
-			;
+    // add commandline options specific for fts3-transfer-submit
+    specific.add_options()
+    ("path,p", "Destination path for the log files.")
+    ;
 }
 
-GetLogCli::~GetLogCli() {
+GetLogCli::~GetLogCli()
+{
 }
 
-string GetLogCli::getPath() {
+string GetLogCli::getPath()
+{
 
-	// check whether jobid has been given as a parameter
-	if (vm.count("path")) {
-		return vm["path"].as<string>();
-	}
+    // check whether jobid has been given as a parameter
+    if (vm.count("path"))
+        {
+            return vm["path"].as<string>();
+        }
 
-	return string();
+    return string();
 }
 

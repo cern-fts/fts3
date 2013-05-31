@@ -32,30 +32,35 @@
 #include "TransferFiles.h"
 
 
-struct SourceAndDestSE {
+struct SourceAndDestSE
+{
     std::string sourceStorageElement;
     std::string destinationStorageElement;
 };
 
-struct ConfigAudit {
+struct ConfigAudit
+{
     time_t      when;
     std::string userDN;
     std::string config;
     std::string action;
 };
 
-struct ReasonOccurrences {
+struct ReasonOccurrences
+{
     unsigned    count;
     std::string reason;
 };
 
-struct SePairThroughput {
+struct SePairThroughput
+{
     struct SourceAndDestSE storageElements;
     double                 averageThroughput;
     long                   duration;
 };
 
-struct JobVOAndSites {
+struct JobVOAndSites
+{
     std::string vo;
     std::string sourceSite;
     std::string destinationSite;
@@ -64,7 +69,8 @@ struct JobVOAndSites {
 /**
  * MonitoringDbIfce class declaration
  **/
-class MonitoringDbIfce {
+class MonitoringDbIfce
+{
 public:
     virtual ~MonitoringDbIfce() {};
 
@@ -79,7 +85,7 @@ public:
                                          std::vector<SourceAndDestSE>& pairs) = 0;
 
     virtual unsigned numberOfJobsInState(const SourceAndDestSE& pair,
-                                           const std::string& state) = 0;
+                                         const std::string& state) = 0;
 
     virtual void getConfigAudit(const std::string& actionLike,
                                 std::vector<ConfigAudit>& audit) = 0;
@@ -94,11 +100,11 @@ public:
                             std::vector<TransferJobs>& jobs) = 0;
 
     virtual unsigned numberOfTransfersInState(const std::string& vo,
-                                              const std::vector<std::string>& state) = 0;
+            const std::vector<std::string>& state) = 0;
 
     virtual unsigned numberOfTransfersInState(const std::string& vo,
-                                              const SourceAndDestSE& pair,
-                                              const std::vector<std::string>& state) = 0;
+            const SourceAndDestSE& pair,
+            const std::vector<std::string>& state) = 0;
 
     virtual void getUniqueReasons(std::vector<ReasonOccurrences>& reasons) = 0;
 

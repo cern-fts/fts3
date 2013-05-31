@@ -32,7 +32,10 @@
 
 using namespace std;
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  * JobIDCli is the command line utility used for retreiving job IDs.
@@ -42,36 +45,37 @@ namespace fts3 { namespace cli {
  *
  * @see CliBase
  */
-class JobIdCli: public TransferCliBase {
+class JobIdCli: public TransferCliBase
+{
 public:
 
-	/**
-	 * Default constructor.
-	 *
-	 * Creates the command line interface for retrieving job IDs. Job ID is
-	 * market as both: hidden and positional
-	 */
-	JobIdCli();
+    /**
+     * Default constructor.
+     *
+     * Creates the command line interface for retrieving job IDs. Job ID is
+     * market as both: hidden and positional
+     */
+    JobIdCli();
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~JobIdCli();
+    /**
+     * Destructor.
+     */
+    virtual ~JobIdCli();
 
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
+    /**
+     * Gives the instruction how to use the command line tool.
+     *
+     * @return a string with instruction on how to use the tool
+     */
+    string getUsageString(string tool);
 
-	/**
-	 * Gets a vector with job IDs.
-	 *
-	 * @return if job IDs were given as command line parameters a
-	 * 			vector containing job IDs otherwise an empty vector
-	 */
-	vector<string> getJobIds();
+    /**
+     * Gets a vector with job IDs.
+     *
+     * @return if job IDs were given as command line parameters a
+     * 			vector containing job IDs otherwise an empty vector
+     */
+    vector<string> getJobIds();
 };
 
 }

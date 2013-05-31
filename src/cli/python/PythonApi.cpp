@@ -32,47 +32,58 @@
 #include <map>
 
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 using namespace boost;
 using namespace std;
 
-PythonApi::PythonApi(py::str endpoint) : ctx(py::extract<string>(endpoint)) {
-	ctx.init();
+PythonApi::PythonApi(py::str endpoint) : ctx(py::extract<string>(endpoint))
+{
+    ctx.init();
 }
 
-PythonApi::~PythonApi() {
+PythonApi::~PythonApi()
+{
 }
 
-py::str PythonApi::submit(Job job) {
-	return ctx.transferSubmit(job.getFilesCpp(), job.getJobParametersCpp()/*, job.useChecksumCpp()*/).c_str();
+py::str PythonApi::submit(Job job)
+{
+    return ctx.transferSubmit(job.getFilesCpp(), job.getJobParametersCpp()/*, job.useChecksumCpp()*/).c_str();
 }
 
-void PythonApi::cancel(py::str id) {
+void PythonApi::cancel(py::str id)
+{
 
-	vector<string> c_ids;
-	c_ids.push_back(py::extract<string>(id));
-	ctx.cancel(c_ids);
+    vector<string> c_ids;
+    c_ids.push_back(py::extract<string>(id));
+    ctx.cancel(c_ids);
 }
 
-void PythonApi::cancelAll(py::list ids) {
+void PythonApi::cancelAll(py::list ids)
+{
 
-	vector<string> c_ids;
+    vector<string> c_ids;
 
-	boost::python::ssize_t size = len(ids);
-	for (int i = 0; i < size; i++) {
-		c_ids.push_back(py::extract<string>(ids[i]));
-	}
+    boost::python::ssize_t size = len(ids);
+    for (int i = 0; i < size; i++)
+        {
+            c_ids.push_back(py::extract<string>(ids[i]));
+        }
 
-	ctx.cancel(c_ids);
+    ctx.cancel(c_ids);
 }
 
-py::str PythonApi::getStatus(py::str id) {
-	JobStatus s = ctx.getTransferJobStatus(py::extract<string>(id));
-	return s.jobStatus.c_str();
+py::str PythonApi::getStatus(py::str id)
+{
+    JobStatus s = ctx.getTransferJobStatus(py::extract<string>(id));
+    return s.jobStatus.c_str();
 }
 
-py::str PythonApi::getVersion() {
+py::str PythonApi::getVersion()
+{
     return ctx.getVersion().c_str();
 }
 

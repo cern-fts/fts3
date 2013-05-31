@@ -22,9 +22,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <iostream>    
-#include <fstream>   
-#include <stdlib.h>   
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
 #include <vector>
 #include <decaf/lang/Thread.h>
 #include <decaf/lang/Runnable.h>
@@ -61,67 +61,75 @@ using namespace std;
 	If the child hangs or for any reason die, transparently it's restarting it and restoring all mesgs
 */
 
-void DoServer() {
+void DoServer()
+{
 
     activemq::library::ActiveMQCPP::initializeLibrary();
 
-    //initialize here to avoid race conditions  
+    //initialize here to avoid race conditions
     concurrent_queue::getInstance();
 
-    MsgPipe pipeMsg1;   
+    MsgPipe pipeMsg1;
     MsgProducer producer;
 
     // Start the pipe thread.
     Thread pipeThread(&pipeMsg1);
     pipeThread.start();
-   
+
     // Start the producer thread.
     Thread producerThread(&producer);
     producerThread.start();
 
 
     // Wait for the threads to complete.
-    pipeThread.join(); 
+    pipeThread.join();
     producerThread.join();
 
-    pipeMsg1.cleanup();  
-    producer.cleanup();    
+    pipeMsg1.cleanup();
+    producer.cleanup();
 
     activemq::library::ActiveMQCPP::shutdownLibrary();
 
 }
 
-int main() {
+int main()
+{
 
-int d =  daemon(0,0);
-if(d < 0)
-	std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;  
+    int d =  daemon(0,0);
+    if(d < 0)
+        std::cerr << "Can't set daemon, will continue attached to tty" << std::endl;
 
     int result = fork();
 
-    if (result == 0) {
-        DoServer();
-    }
-
-    if (result < 0) {
-        exit(1);
-    }
-
-    for (;;) {
-        int status = 0;
-        waitpid(-1, &status, 0);
-
-        if (!WIFSTOPPED(status)) {	             
-            result = fork();
-            if (result == 0) {
-                DoServer();
-            }	   
-            if (result < 0) {
-                exit(1);
-            }
+    if (result == 0)
+        {
+            DoServer();
         }
-        sleep(10);
-    }
+
+    if (result < 0)
+        {
+            exit(1);
+        }
+
+    for (;;)
+        {
+            int status = 0;
+            waitpid(-1, &status, 0);
+
+            if (!WIFSTOPPED(status))
+                {
+                    result = fork();
+                    if (result == 0)
+                        {
+                            DoServer();
+                        }
+                    if (result < 0)
+                        {
+                            exit(1);
+                        }
+                }
+            sleep(10);
+        }
 
     return 0;
 }

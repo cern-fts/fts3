@@ -25,7 +25,7 @@ limitations under the License. */
 #include "loggertraits_syslog.h"
 
 #ifndef FTS3_COMMON_LOGGER_SUPPORTED_LOG_LEVELS
-    #error FTS3_COMMON_LOGGER_SUPPORTED_LOG_LEVELS is not defined!
+#error FTS3_COMMON_LOGGER_SUPPORTED_LOG_LEVELS is not defined!
 #endif
 
 FTS3_COMMON_NAMESPACE_START

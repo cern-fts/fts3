@@ -27,46 +27,51 @@
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
-class GSoapJobStatus {
+class GSoapJobStatus
+{
 
 public:
-	template <typename STATUS>
-	GSoapJobStatus(soap* ctx, STATUS& status) {
+    template <typename STATUS>
+    GSoapJobStatus(soap* ctx, STATUS& status)
+    {
 
-		me = soap_new_tns3__JobStatus(ctx, -1);
+        me = soap_new_tns3__JobStatus(ctx, -1);
 
-		me->clientDN = soap_new_std__string(ctx, -1);
-		*me->clientDN = status.clientDN;
+        me->clientDN = soap_new_std__string(ctx, -1);
+        *me->clientDN = status.clientDN;
 
-		me->jobID = soap_new_std__string(ctx, -1);
-		*me->jobID = status.jobID;
+        me->jobID = soap_new_std__string(ctx, -1);
+        *me->jobID = status.jobID;
 
-		me->jobStatus = soap_new_std__string(ctx, -1);
-		*me->jobStatus = status.jobStatus;
+        me->jobStatus = soap_new_std__string(ctx, -1);
+        *me->jobStatus = status.jobStatus;
 
-		me->reason = soap_new_std__string(ctx, -1);
-		*me->reason = status.reason;
+        me->reason = soap_new_std__string(ctx, -1);
+        *me->reason = status.reason;
 
-		me->voName = soap_new_std__string(ctx, -1);
-		*me->voName = status.voName;
+        me->voName = soap_new_std__string(ctx, -1);
+        *me->voName = status.voName;
 
-		me->submitTime = status.submitTime;
-		me->numFiles = status.numFiles;
-		me->priority = status.priority;
-	}
+        me->submitTime = status.submitTime;
+        me->numFiles = status.numFiles;
+        me->priority = status.priority;
+    }
 
 
-	virtual ~GSoapJobStatus() {};
+    virtual ~GSoapJobStatus() {};
 
-	operator tns3__JobStatus*() const {
-		return me;
-	}
+    operator tns3__JobStatus*() const
+    {
+        return me;
+    }
 
 private:
-	tns3__JobStatus* me;
+    tns3__JobStatus* me;
 };
 
 } /* namespace ws */

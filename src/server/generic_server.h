@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 #pragma once
@@ -31,7 +31,7 @@ using namespace FTS3_CONFIG_NAMESPACE;
 /* -------------------------------------------------------------------------- */
 
 /** Class representing the FTS3 server logic. */
-template <typename TRAITS> 
+template <typename TRAITS>
 class GenericServer
 {
 
@@ -40,33 +40,33 @@ public:
     void start()
     {
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
-        processUpdaterDBHandler.executeTransfer_p();            
-    
+        processUpdaterDBHandler.executeTransfer_p();
+
         typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
-        processUpdaterHandler.executeTransfer_p();       
+        processUpdaterHandler.executeTransfer_p();
 
         typename TRAITS::ProcessLogServiceType processLogHandler;
-        processLogHandler.executeTransfer_p(); 
-    
+        processLogHandler.executeTransfer_p();
+
         typename TRAITS::ProcessServiceType processHandler;
-        processHandler.executeTransfer_p();    
-    
+        processHandler.executeTransfer_p();
+
         unsigned int port = theServerConfig().get<unsigned int>("Port");
-	const std::string& ip = theServerConfig().get<std::string>("IP");
-                	
-	typename TRAITS::TransferWebServiceType handler_t;
+        const std::string& ip = theServerConfig().get<std::string>("IP");
+
+        typename TRAITS::TransferWebServiceType handler_t;
         handler_t.listen_p(port, ip);
-		         
+
         typename TRAITS::ProcessQueueType queueHandler;
-        queueHandler.executeTransfer_p();		
-	
-        TRAITS::ThreadPoolType::instance().wait();	
+        queueHandler.executeTransfer_p();
+
+        TRAITS::ThreadPoolType::instance().wait();
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** Stop the service. */
-    void stop() 
+    void stop()
     {
         TRAITS::ThreadPoolType::instance().stop();
         theLogger() << commit;

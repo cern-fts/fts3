@@ -27,7 +27,10 @@
 
 #include "CliBase.h"
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  * The command line utility for getting user DN
@@ -35,27 +38,28 @@ namespace fts3 { namespace cli {
  * The class provides:
  * 		- userdn (u), allows specifying user DN
  */
-class DnCli : virtual public CliBase {
+class DnCli : virtual public CliBase
+{
 public:
 
-	/**
-	 * Default constructor.
-	 *
-	 * Creates the DN command line interface.
-	 */
-	DnCli();
+    /**
+     * Default constructor.
+     *
+     * Creates the DN command line interface.
+     */
+    DnCli();
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~DnCli();
+    /**
+     * Destructor.
+     */
+    virtual ~DnCli();
 
-	/**
-	 * Gets the user DN, specified by the user.
-	 *
-	 * @return user DN
-	 */
-	string getUserDn();
+    /**
+     * Gets the user DN, specified by the user.
+     *
+     * @return user DN
+     */
+    string getUserDn();
 };
 
 }

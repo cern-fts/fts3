@@ -29,23 +29,27 @@ using namespace std;
 
 using namespace fts3::cli;
 
-DnCli::DnCli() {
+DnCli::DnCli()
+{
 
-	// add fts3-transfer-status specific options
-	specific.add_options()
-			("userdn,u", value<string>(), "Restrict to specific user DN.")
-			;
+    // add fts3-transfer-status specific options
+    specific.add_options()
+    ("userdn,u", value<string>(), "Restrict to specific user DN.")
+    ;
 }
 
-DnCli::~DnCli() {
+DnCli::~DnCli()
+{
 }
 
-string DnCli::getUserDn() {
+string DnCli::getUserDn()
+{
 
-	if (vm.count("userdn")) {
-		return vm["userdn"].as<string>();
-	}
+    if (vm.count("userdn"))
+        {
+            return vm["userdn"].as<string>();
+        }
 
-	return string();
+    return string();
 }
 

@@ -22,34 +22,34 @@ limitations under the License. */
 #include "common/dev.h"
 
 #ifndef FTS3_CLI_NAMESPACE_START
-  /** Start FTS3 cli namespace. Example:
-      \code
-      FTS3_CLI_NAMESPACE_START
-          code....
-          ...
-      FTS3_CLI_NAMESPACE_END
-      \endcode
-  */
-  #define FTS3_CLI_NAMESPACE_START \
+/** Start FTS3 cli namespace. Example:
+    \code
+    FTS3_CLI_NAMESPACE_START
+        code....
+        ...
+    FTS3_CLI_NAMESPACE_END
+    \endcode
+*/
+#define FTS3_CLI_NAMESPACE_START \
     FTS3_NAMESPACE_START \
     namespace cli {
 #endif
 
 #ifndef FTS3_CLI_NAMESPACE_END
-  /** End FTS3 cli namespace. Example:
-      \code
-      FTS3_CLI_NAMESPACE_START
-          code....
-          ...
-      FTS3_CLI_NAMESPACE_END
-      \endcode
-  */
-  #define FTS3_CLI_NAMESPACE_END \
+/** End FTS3 cli namespace. Example:
+    \code
+    FTS3_CLI_NAMESPACE_START
+        code....
+        ...
+    FTS3_CLI_NAMESPACE_END
+    \endcode
+*/
+#define FTS3_CLI_NAMESPACE_END \
     FTS3_NAMESPACE_END }
 #endif
 
 #ifndef FTS3_CLI_NAMESPACE
-  /** Defines FTS3 cli namespace name. */
-  #define FTS3_CLI_NAMESPACE fts3::cli
+/** Defines FTS3 cli namespace name. */
+#define FTS3_CLI_NAMESPACE fts3::cli
 #endif
 

@@ -23,7 +23,8 @@
 #include <boost/python.hpp>
 #include <db/generic/MonitoringDbIfce.h>
 
-class MonitoringDbWrapper {
+class MonitoringDbWrapper
+{
 public:
     MonitoringDbWrapper();
     ~MonitoringDbWrapper();

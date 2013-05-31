@@ -17,7 +17,7 @@
  *  limitations under the License.
  *
  * The logging mechanishm to log file and console
- *  
+ *
  */
 
 
@@ -30,11 +30,12 @@
 
 using namespace std;
 
-class logger {
+class logger
+{
 public:
     static void writeLog(std::string message, bool console = false);
     static void writeMsg(std::string message);
-    static void writeMsgNoConfig(std::string message);    
+    static void writeMsgNoConfig(std::string message);
 };
 
 #endif

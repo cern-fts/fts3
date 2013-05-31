@@ -24,11 +24,12 @@
 
 #include <iostream>
 
-class logger {
+class logger
+{
 public:
 
     logger( std::ostream& os_);
-     ~logger() {}
+    ~logger() {}
 
     template<class T>
     friend logger& operator<<( logger& log, const T& output );
@@ -40,12 +41,14 @@ private:
 logger::logger( std::ostream& os_) : os(os_) {}
 
 template<class T>
-logger& operator<<( logger& log, const T& output ) {
-  if(log.os.good()){
-    	log.os << output;
-	log.os.flush();     	
-  }
- return log;
+logger& operator<<( logger& log, const T& output )
+{
+    if(log.os.good())
+        {
+            log.os << output;
+            log.os.flush();
+        }
+    return log;
 }
 
 #endif

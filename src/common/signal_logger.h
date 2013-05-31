@@ -37,14 +37,16 @@
 /**
  * SignalLogger class
  */
-class SignalLogger {
+class SignalLogger
+{
 public:
 
     /**
      * instance
      * return singleton instance
      */
-    static SignalLogger& instance(){
+    static SignalLogger& instance()
+    {
         static SignalLogger s_instance;
         return s_instance;
     }
@@ -56,12 +58,12 @@ public:
      * @param signame [IN] signal name
      */
     void registerSignal(const int signum,const std::string& signame);
-    
+
     /*void setLogStream(std::ostream& logStream){
     	logStream_ = &logStream;
     }
-	*/
-	
+    */
+
     static void log_stack(int sig);
 
     /**
@@ -75,7 +77,8 @@ private:
      * SignalInfo
      * helper class to register and deregister signal handlers
      */
-    class SignalInfo {
+    class SignalInfo
+    {
     public:
         /**
          * constructor
@@ -92,7 +95,8 @@ private:
          * signame
          * @return signal name
          */
-        const std::string& signame() const{
+        const std::string& signame() const
+        {
             return m_signame;
         }
         /**
@@ -125,7 +129,8 @@ private:
     /**
      * constructor
      */
-    SignalLogger(){
+    SignalLogger()
+    {
     }
 
     // map of SignalInfo objects

@@ -27,8 +27,10 @@
 
 #include "Configuration.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 /**
  * The share-only configuration
@@ -36,68 +38,69 @@ namespace ws {
  *
  * 	@see Configuration
  */
-class ShareOnlyCfg : public Configuration {
+class ShareOnlyCfg : public Configuration
+{
 
 public:
 
-	/**
-	 * Constructor. Retrieves the configuration data from DB.
-	 *
-	 * @param dn - client's DN
-	 */
-	ShareOnlyCfg(string dn, string name);
+    /**
+     * Constructor. Retrieves the configuration data from DB.
+     *
+     * @param dn - client's DN
+     */
+    ShareOnlyCfg(string dn, string name);
 
-	/**
-	 * Constructor. Retrieves the configuration data from the given CfgParser.
-	 *
-	 * @param dn - client's DN
-	 * @param parser - the JSON configuration parser
-	 */
-	ShareOnlyCfg(string dn, CfgParser& parser);
+    /**
+     * Constructor. Retrieves the configuration data from the given CfgParser.
+     *
+     * @param dn - client's DN
+     * @param parser - the JSON configuration parser
+     */
+    ShareOnlyCfg(string dn, CfgParser& parser);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~ShareOnlyCfg();
+    /**
+     * Destructor.
+     */
+    virtual ~ShareOnlyCfg();
 
-	/**
-	 * Creates a string containing the JSON configuration common for all 'standalone' configurations
-	 */
-	virtual string json();
+    /**
+     * Creates a string containing the JSON configuration common for all 'standalone' configurations
+     */
+    virtual string json();
 
-	/**
-	 * Saves the current configuration into the DB
-	 */
-	virtual void save();
+    /**
+     * Saves the current configuration into the DB
+     */
+    virtual void save();
 
-	/**
-	 * Removes the configuration from the DB
-	 */
-	virtual void del();
+    /**
+     * Removes the configuration from the DB
+     */
+    virtual void del();
 
 private:
 
-	/**
-	 * Initializes the object from DB
-	 */
-	void init(string se);
+    /**
+     * Initializes the object from DB
+     */
+    void init(string se);
 
-	/**
-	 * Make sure that shares sum up to 100%
-	 */
-	void checkShare(map<string, int>& share);
+    /**
+     * Make sure that shares sum up to 100%
+     */
+    void checkShare(map<string, int>& share);
 
-	/// active state
-	bool active;
+    /// active state
+    bool active;
 
-	/// SE name
-	string se;
+    /// SE name
+    string se;
 
-	/// inbound share
-	map<string, int> in_share;
+    /// inbound share
+    map<string, int> in_share;
 
-	map<string, int> out_share;
-	/// outbound protocol
+    map<string, int> out_share;
+    /// outbound protocol
 };
 
 } /* namespace ws */

@@ -24,19 +24,22 @@
 
 MonitoringDbWrapper MonitoringDbWrapper::instance;
 
-MonitoringDbWrapper::MonitoringDbWrapper() {
+MonitoringDbWrapper::MonitoringDbWrapper()
+{
     fts3::config::theServerConfig().read(0, NULL);
     db = db::DBSingleton::instance().getMonitoringDBInstance();
 }
 
 
 
-MonitoringDbWrapper::~MonitoringDbWrapper() {
+MonitoringDbWrapper::~MonitoringDbWrapper()
+{
     // Nothing
 }
 
 
-MonitoringDbWrapper& MonitoringDbWrapper::getInstance(void) {
+MonitoringDbWrapper& MonitoringDbWrapper::getInstance(void)
+{
     return instance;
 }
 
@@ -44,19 +47,22 @@ MonitoringDbWrapper& MonitoringDbWrapper::getInstance(void) {
 
 void MonitoringDbWrapper::init(const std::string& username,
                                const std::string& password,
-                               const std::string& connectString, int pooledConn) {
+                               const std::string& connectString, int pooledConn)
+{
     db->init(username, password, connectString, pooledConn);
 }
 
 
 
-void MonitoringDbWrapper::setNotBefore(time_t notBefore) {
+void MonitoringDbWrapper::setNotBefore(time_t notBefore)
+{
     db->setNotBefore(notBefore);
 }
 
 
 
-boost::python::list MonitoringDbWrapper::getVONames(void) {
+boost::python::list MonitoringDbWrapper::getVONames(void)
+{
     std::vector<std::string> vos;
     db->getVONames(vos);
 
@@ -69,7 +75,8 @@ boost::python::list MonitoringDbWrapper::getVONames(void) {
 
 
 
-boost::python::list MonitoringDbWrapper::getSourceAndDestSEForVO(const std::string& vo) {
+boost::python::list MonitoringDbWrapper::getSourceAndDestSEForVO(const std::string& vo)
+{
     std::vector<SourceAndDestSE> srcAndDest;
     db->getSourceAndDestSEForVO(vo, srcAndDest);
 
@@ -83,13 +90,15 @@ boost::python::list MonitoringDbWrapper::getSourceAndDestSEForVO(const std::stri
 
 
 unsigned MonitoringDbWrapper::numberOfJobsInState(const SourceAndDestSE& pair,
-                                                  const std::string& state) {
+        const std::string& state)
+{
     return db->numberOfJobsInState(pair, state);
 }
 
 
 
-boost::python::list MonitoringDbWrapper::getConfigAudit(const std::string& actionLike) {
+boost::python::list MonitoringDbWrapper::getConfigAudit(const std::string& actionLike)
+{
     std::vector<ConfigAudit> audit;
     db->getConfigAudit(actionLike, audit);
 
@@ -116,7 +125,8 @@ boost::python::list MonitoringDbWrapper::getTransferFiles(const std::string& job
 
 
 
-TransferJobs MonitoringDbWrapper::getJob(const std::string& jobId) {
+TransferJobs MonitoringDbWrapper::getJob(const std::string& jobId)
+{
     TransferJobs tjob;
     db->getJob(jobId, tjob);
     return tjob;
@@ -125,7 +135,8 @@ TransferJobs MonitoringDbWrapper::getJob(const std::string& jobId) {
 
 
 boost::python::list MonitoringDbWrapper::filterJobs(const boost::python::list& inVos,
-                                                    const boost::python::list& inStates) {
+        const boost::python::list& inStates)
+{
     std::vector<TransferJobs> tjobs;
     std::vector<std::string>  vosStr;
     std::vector<std::string>  statesStr;
@@ -150,7 +161,8 @@ boost::python::list MonitoringDbWrapper::filterJobs(const boost::python::list& i
 
 
 unsigned MonitoringDbWrapper::numberOfTransfersInState(const std::string& vo,
-                                                       const boost::python::list& states) {
+        const boost::python::list& states)
+{
     std::vector<std::string> strStates;
     strStates.reserve(static_cast<size_t>(boost::python::len(states)));
 
@@ -163,8 +175,9 @@ unsigned MonitoringDbWrapper::numberOfTransfersInState(const std::string& vo,
 
 
 unsigned MonitoringDbWrapper::numberOfTransfersInState(const std::string& vo,
-                                                       const SourceAndDestSE& pair,
-                                                       const boost::python::list& states) {
+        const SourceAndDestSE& pair,
+        const boost::python::list& states)
+{
     std::vector<std::string> strStates;
     strStates.reserve(static_cast<size_t>(boost::python::len(states)));
 
@@ -176,7 +189,8 @@ unsigned MonitoringDbWrapper::numberOfTransfersInState(const std::string& vo,
 
 
 
-boost::python::list MonitoringDbWrapper::getUniqueReasons(void) {
+boost::python::list MonitoringDbWrapper::getUniqueReasons(void)
+{
     std::vector<ReasonOccurrences> reasons;
     db->getUniqueReasons(reasons);
 
@@ -189,13 +203,15 @@ boost::python::list MonitoringDbWrapper::getUniqueReasons(void) {
 
 
 
-unsigned MonitoringDbWrapper::averageDurationPerSePair(const SourceAndDestSE& pair) {
+unsigned MonitoringDbWrapper::averageDurationPerSePair(const SourceAndDestSE& pair)
+{
     return db->averageDurationPerSePair(pair);
 }
 
 
 
-boost::python::list MonitoringDbWrapper::averageThroughputPerSePair(void) {
+boost::python::list MonitoringDbWrapper::averageThroughputPerSePair(void)
+{
     std::vector<SePairThroughput> pairThroughput;
     db->averageThroughputPerSePair(pairThroughput);
 
@@ -208,7 +224,8 @@ boost::python::list MonitoringDbWrapper::averageThroughputPerSePair(void) {
 
 
 
-JobVOAndSites MonitoringDbWrapper::getJobVOAndSites(const std::string& jobId) {
+JobVOAndSites MonitoringDbWrapper::getJobVOAndSites(const std::string& jobId)
+{
     JobVOAndSites voandsites;
     db->getJobVOAndSites(jobId, voandsites);
     return voandsites;

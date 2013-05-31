@@ -36,8 +36,10 @@
 
 #include "common/ThreadSafeInstanceHolder.h"
 
-namespace fts3 {
-namespace infosys {
+namespace fts3
+{
+namespace infosys
+{
 
 using namespace std;
 using namespace boost;
@@ -45,43 +47,44 @@ using namespace boost;
 /**
  *
  */
-class SiteNameRetriever: public ThreadSafeInstanceHolder<SiteNameRetriever>   {
+class SiteNameRetriever: public ThreadSafeInstanceHolder<SiteNameRetriever>
+{
 
-	friend class ThreadSafeInstanceHolder<SiteNameRetriever>;
+    friend class ThreadSafeInstanceHolder<SiteNameRetriever>;
 
 public:
 
-	virtual ~SiteNameRetriever();
+    virtual ~SiteNameRetriever();
 
-	string getSiteName(string se);
+    string getSiteName(string se);
 
 private:
 
-	SiteNameRetriever() {};
-	SiteNameRetriever(SiteNameRetriever const&);
-	SiteNameRetriever& operator=(SiteNameRetriever const&);
+    SiteNameRetriever() {};
+    SiteNameRetriever(SiteNameRetriever const&);
+    SiteNameRetriever& operator=(SiteNameRetriever const&);
 
-	// glue1 attributes
-	static const char* ATTR_GLUE1_SERVICE;
-	static const char* ATTR_GLUE1_SERVICE_URI;
-	static const char* ATTR_GLUE1_LINK;
-	static const char* ATTR_GLUE1_SITE;
-	static const char* ATTR_GLUE1_HOSTINGORG;
+    // glue1 attributes
+    static const char* ATTR_GLUE1_SERVICE;
+    static const char* ATTR_GLUE1_SERVICE_URI;
+    static const char* ATTR_GLUE1_LINK;
+    static const char* ATTR_GLUE1_SITE;
+    static const char* ATTR_GLUE1_HOSTINGORG;
 
-	static const string FIND_SE_SITE_GLUE1(string se);
-	static const char* FIND_SE_SITE_ATTR_GLUE1[];
+    static const string FIND_SE_SITE_GLUE1(string se);
+    static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
-	// glue2 attribute
-	static const char* ATTR_GLUE2_SERVICE;
-	static const char* ATTR_GLUE2_SITE;
+    // glue2 attribute
+    static const char* ATTR_GLUE2_SERVICE;
+    static const char* ATTR_GLUE2_SITE;
 
-	static const string FIND_SE_SITE_GLUE2(string se);
-	static const char* FIND_SE_SITE_ATTR_GLUE2[];
+    static const string FIND_SE_SITE_GLUE2(string se);
+    static const char* FIND_SE_SITE_ATTR_GLUE2[];
 
-	string getFromBdii(string se);
+    string getFromBdii(string se);
 
-	mutex m;
-	map<string, string> seToSite;
+    mutex m;
+    map<string, string> seToSite;
 };
 
 } /* namespace infosys */

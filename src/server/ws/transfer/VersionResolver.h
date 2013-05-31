@@ -30,29 +30,32 @@
 
 #include <string>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace fts3::common;
 using namespace std;
 
-class VersionResolver  : public ThreadSafeInstanceHolder<VersionResolver> {
+class VersionResolver  : public ThreadSafeInstanceHolder<VersionResolver>
+{
 
 public:
-	VersionResolver();
-	virtual ~VersionResolver();
+    VersionResolver();
+    virtual ~VersionResolver();
 
-	string getVersion();
-	string getInterface();
-	string getSchema();
-	string getMetadata();
+    string getVersion();
+    string getInterface();
+    string getSchema();
+    string getMetadata();
 
 private:
 
-	string version;
-	string interface;
-	string schema;
-	string metadata;
+    string version;
+    string interface;
+    string schema;
+    string metadata;
 };
 
 } /* namespace server */

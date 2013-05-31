@@ -32,7 +32,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-namespace fts3 { namespace common {
+namespace fts3
+{
+namespace common
+{
 
 using namespace boost::assign;
 
@@ -45,253 +48,290 @@ const map<string, set <string> > CfgParser::shareOnlyCfgTokens = CfgParser::init
 const string CfgParser::auto_value = "auto";
 
 const set<string> CfgParser::allTokens =
-		list_of
-		("se")
-		("group")
-		("members")
-		("active")
-		("in")
-		("out")
-		("share")
-		("protocol")
-		("symbolic_name")
-		("source_se")
-		("destination_se")
-		("source_group")
-		("destination_group")
-		;
+    list_of
+    ("se")
+    ("group")
+    ("members")
+    ("active")
+    ("in")
+    ("out")
+    ("share")
+    ("protocol")
+    ("symbolic_name")
+    ("source_se")
+    ("destination_se")
+    ("source_group")
+    ("destination_group")
+    ;
 
-const map< string, set <string> > CfgParser::initStandaloneSeCfgTokens() {
+const map< string, set <string> > CfgParser::initStandaloneSeCfgTokens()
+{
 
-	set<string> root = list_of
-			("se")
-			("active")
-			("in")
-			("out")
-			;
+    set<string> root = list_of
+                       ("se")
+                       ("active")
+                       ("in")
+                       ("out")
+                       ;
 
-	set<string> cfg = list_of
-			("share")
-			("protocol")
-			;
+    set<string> cfg = list_of
+                      ("share")
+                      ("protocol")
+                      ;
 
-	return map_list_of
-			(string(), root)
-			("in", cfg)
-			("out", cfg)
-			;
+    return map_list_of
+           (string(), root)
+           ("in", cfg)
+           ("out", cfg)
+           ;
 }
 
-const map< string, set <string> > CfgParser::initStandaloneGrCfgTokens() {
+const map< string, set <string> > CfgParser::initStandaloneGrCfgTokens()
+{
 
-	set<string> root = list_of
-			("group")
-			("members")
-			("active")
-			("in")
-			("out")
-			;
+    set<string> root = list_of
+                       ("group")
+                       ("members")
+                       ("active")
+                       ("in")
+                       ("out")
+                       ;
 
-	set<string> cfg = list_of
-			("share")
-			("protocol")
-			;
+    set<string> cfg = list_of
+                      ("share")
+                      ("protocol")
+                      ;
 
-	return map_list_of
-			(string(), root)
-			("in", cfg)
-			("out", cfg)
-			;
+    return map_list_of
+           (string(), root)
+           ("in", cfg)
+           ("out", cfg)
+           ;
 }
 
-const map< string, set <string> > CfgParser::initSePairCfgTokens() {
+const map< string, set <string> > CfgParser::initSePairCfgTokens()
+{
 
-	set<string> root = list_of
-			("symbolic_name")
-			("active")
-			("source_se")
-			("destination_se")
-			("share")
-			("protocol")
-			;
+    set<string> root = list_of
+                       ("symbolic_name")
+                       ("active")
+                       ("source_se")
+                       ("destination_se")
+                       ("share")
+                       ("protocol")
+                       ;
 
-	return map_list_of
-			(string(), root)
-			;
+    return map_list_of
+           (string(), root)
+           ;
 }
 
-const map< string, set <string> > CfgParser::initGrPairCfgTokens() {
+const map< string, set <string> > CfgParser::initGrPairCfgTokens()
+{
 
-	set<string> root = list_of
-			("symbolic_name")
-			("active")
-			("source_group")
-			("destination_group")
-			("share")
-			("protocol")
-			;
+    set<string> root = list_of
+                       ("symbolic_name")
+                       ("active")
+                       ("source_group")
+                       ("destination_group")
+                       ("share")
+                       ("protocol")
+                       ;
 
-	return map_list_of
-			(string(), root)
-			;
+    return map_list_of
+           (string(), root)
+           ;
 }
 
-const map<string, set <string> > CfgParser::initShareOnlyCfgTokens() {
+const map<string, set <string> > CfgParser::initShareOnlyCfgTokens()
+{
 
-	set<string> root = list_of
-			("se")
-			("active")
-			("in")
-			("out")
-			;
+    set<string> root = list_of
+                       ("se")
+                       ("active")
+                       ("in")
+                       ("out")
+                       ;
 
-	return map_list_of
-			(string(), root)
-			;
+    return map_list_of
+           (string(), root)
+           ;
 }
 
-CfgParser::CfgParser(string configuration) {
+CfgParser::CfgParser(string configuration)
+{
 
-	// break into lines to give later better feedback to users
-	replace_all(configuration, ",", ",\n");
+    // break into lines to give later better feedback to users
+    replace_all(configuration, ",", ",\n");
 
-	// store the lines in a vector
-	vector<string> lines;
-	char_separator<char> sep("\n");
-	tokenizer< char_separator<char> > tokens(configuration, sep);
-	tokenizer< char_separator<char> >::iterator it;
+    // store the lines in a vector
+    vector<string> lines;
+    char_separator<char> sep("\n");
+    tokenizer< char_separator<char> > tokens(configuration, sep);
+    tokenizer< char_separator<char> >::iterator it;
 
-	// put the configuration into a stream
-	stringstream ss;
+    // put the configuration into a stream
+    stringstream ss;
 
-	for(it = tokens.begin(); it != tokens.end(); it++) {
-		string s = *it;
-		trim(s);
-		if (!s.empty()) {
-			lines.push_back(s);
-			ss << s << endl;
-		}
-	}
+    for(it = tokens.begin(); it != tokens.end(); it++)
+        {
+            string s = *it;
+            trim(s);
+            if (!s.empty())
+                {
+                    lines.push_back(s);
+                    ss << s << endl;
+                }
+        }
 
-	try {
-		// parse
-		read_json(ss, pt);
+    try
+        {
+            // parse
+            read_json(ss, pt);
 
-	} catch(json_parser_error& ex) {
-		// handle errors in JSON format
-		string msg =
-				ex.message() +
-				"(around: '" + lines[ex.line() - 1] + "')"
-				;
+        }
+    catch(json_parser_error& ex)
+        {
+            // handle errors in JSON format
+            string msg =
+                ex.message() +
+                "(around: '" + lines[ex.line() - 1] + "')"
+                ;
 
-		throw Err_Custom(msg);
-	}
+            throw Err_Custom(msg);
+        }
 
-	if (validate(pt, shareOnlyCfgTokens)) {
-		type = SHARE_ONLY_CFG;
-		return;
-	}
+    if (validate(pt, shareOnlyCfgTokens))
+        {
+            type = SHARE_ONLY_CFG;
+            return;
+        }
 
-	if (validate(pt, standaloneSeCfgTokens)) {
-		type = STANDALONE_SE_CFG;
-		return;
-	}
+    if (validate(pt, standaloneSeCfgTokens))
+        {
+            type = STANDALONE_SE_CFG;
+            return;
+        }
 
-	if (validate(pt, standaloneGrCfgTokens)) {
-		type = STANDALONE_GR_CFG;
-		return;
-	}
+    if (validate(pt, standaloneGrCfgTokens))
+        {
+            type = STANDALONE_GR_CFG;
+            return;
+        }
 
-	if (validate(pt, sePairCfgTokens)) {
-		type = SE_PAIR_CFG;
-		return;
-	}
+    if (validate(pt, sePairCfgTokens))
+        {
+            type = SE_PAIR_CFG;
+            return;
+        }
 
-	if (validate(pt, grPairCfgTokens)) {
-		type = GR_PAIR_CFG;
-		return;
-	}
+    if (validate(pt, grPairCfgTokens))
+        {
+            type = GR_PAIR_CFG;
+            return;
+        }
 
-	type = NOT_A_CFG;
+    type = NOT_A_CFG;
 }
 
-CfgParser::~CfgParser() {
+CfgParser::~CfgParser()
+{
 
 }
 
-bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path) {
+bool CfgParser::validate(ptree pt, map< string, set <string> > allowed, string path)
+{
 
-	// get the allowed names
-	set<string> names;
-	const map< string, set<string> >::const_iterator m_it = allowed.find(path);
-	if (m_it != allowed.end()) {
-		names = m_it->second;
-	}
+    // get the allowed names
+    set<string> names;
+    const map< string, set<string> >::const_iterator m_it = allowed.find(path);
+    if (m_it != allowed.end())
+        {
+            names = m_it->second;
+        }
 
-	ptree::iterator it;
-	for (it = pt.begin(); it != pt.end(); it++) {
-		pair<string, ptree> p = *it;
+    ptree::iterator it;
+    for (it = pt.begin(); it != pt.end(); it++)
+        {
+            pair<string, ptree> p = *it;
 
-		// if it's an array entry just continue
-		if (p.first.empty()) continue;
+            // if it's an array entry just continue
+            if (p.first.empty()) continue;
 
-		// validate the name
-		if (!names.count(p.first)) {
-			if (!allTokens.count(p.first)) {
-				string msg = "unexpected identifier: " + p.first;
-				if (!path.empty()) msg += " in " + path + " object";
-				throw Err_Custom(msg);
-			}
-			return false;
-		}
+            // validate the name
+            if (!names.count(p.first))
+                {
+                    if (!allTokens.count(p.first))
+                        {
+                            string msg = "unexpected identifier: " + p.first;
+                            if (!path.empty()) msg += " in " + path + " object";
+                            throw Err_Custom(msg);
+                        }
+                    return false;
+                }
 
-		if (p.second.empty()) {
-			// check if it should be an object or a value
-			if(allowed.find(p.first) != allowed.end()) {
-				throw Err_Custom("A member object was expected in " + p.first);
-			}
-		} else {
-			// validate the child
-			if (!validate(p.second, allowed, p.first)) {
-				return false;
-			}
-		}
-	}
+            if (p.second.empty())
+                {
+                    // check if it should be an object or a value
+                    if(allowed.find(p.first) != allowed.end())
+                        {
+                            throw Err_Custom("A member object was expected in " + p.first);
+                        }
+                }
+            else
+                {
+                    // validate the child
+                    if (!validate(p.second, allowed, p.first))
+                        {
+                            return false;
+                        }
+                }
+        }
 
-	return true;
+    return true;
 }
 
-optional<string> CfgParser::get_opt(string path) {
+optional<string> CfgParser::get_opt(string path)
+{
 
-	optional<string> v;
-	try {
+    optional<string> v;
+    try
+        {
 
-		v = pt.get_optional<string>(path);
+            v = pt.get_optional<string>(path);
 
-	} catch (ptree_bad_data& ex) {
-		// if the type of the value is wrong throw an exception
-		throw Err_Custom("Wrong value type of " + path);
-	}
+        }
+    catch (ptree_bad_data& ex)
+        {
+            // if the type of the value is wrong throw an exception
+            throw Err_Custom("Wrong value type of " + path);
+        }
 
-	return v;
+    return v;
 }
 
-bool CfgParser::isAuto(string path) {
+bool CfgParser::isAuto(string path)
+{
 
-	string v;
-	try {
+    string v;
+    try
+        {
 
-		v = pt.get<string>(path);
+            v = pt.get<string>(path);
 
-	} catch (ptree_bad_path& ex) {
-		// if the path is not correct throw en exception
-		throw Err_Custom("The " + path + " has to be specified!");
-	} catch (ptree_bad_data& ex) {
-		// if the type of the value is wrong throw an exception
-		throw Err_Custom("Wrong value type of " + path);
-	}
+        }
+    catch (ptree_bad_path& ex)
+        {
+            // if the path is not correct throw en exception
+            throw Err_Custom("The " + path + " has to be specified!");
+        }
+    catch (ptree_bad_data& ex)
+        {
+            // if the type of the value is wrong throw an exception
+            throw Err_Custom("Wrong value type of " + path);
+        }
 
-	return v == auto_value;
+    return v == auto_value;
 }
 
 }

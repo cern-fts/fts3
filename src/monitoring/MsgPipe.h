@@ -15,8 +15,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- *  
- * 
+ *
+ *
  */
 
 
@@ -60,13 +60,14 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 
 
-class MsgPipe : public Runnable {
-private:    
+class MsgPipe : public Runnable
+{
+private:
     std::string errorMessage;
 
 public:
-   MsgPipe();
-   virtual ~MsgPipe();
-   virtual void run();
-   void cleanup();	     
+    MsgPipe();
+    virtual ~MsgPipe();
+    virtual void run();
+    void cleanup();
 };

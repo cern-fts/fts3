@@ -58,21 +58,24 @@ void split( const string& s, char del,
 
     string::size_type pos;
     string::size_type offset = startPos;
-    while ( ( pos = line.find( del, offset ) ) != string::npos ) {
-        offset = 0;
+    while ( ( pos = line.find( del, offset ) ) != string::npos )
+        {
+            offset = 0;
 
-        string val = line.substr( 0, pos );
-        if ( useEmpty || !stripWhiteSpace( val ).empty() ) {
-            target.push_back( val );
+            string val = line.substr( 0, pos );
+            if ( useEmpty || !stripWhiteSpace( val ).empty() )
+                {
+                    target.push_back( val );
+                }
+            line.erase( 0, pos+1 );
         }
-        line.erase( 0, pos+1 );
-    }
 
-    if ( line.length() > 0 ) {
-        target.push_back( line );
-    }
+    if ( line.length() > 0 )
+        {
+            target.push_back( line );
+        }
 }
 
 
 }
-#endif 
+#endif

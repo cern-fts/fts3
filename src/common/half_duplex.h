@@ -16,7 +16,7 @@
  *  limitations under the License.
  *
  * Various constants to be used globally
- *  
+ *
  */
 
 #include <stdio.h>

@@ -22,18 +22,21 @@
 
 FTS3_SERVER_NAMESPACE_START
 
-GSoapRequestHandler::GSoapRequestHandler(GSoapAcceptor& acceptor): ctx(acceptor.getSoapContext()),acceptor(acceptor) {
+GSoapRequestHandler::GSoapRequestHandler(GSoapAcceptor& acceptor): ctx(acceptor.getSoapContext()),acceptor(acceptor)
+{
 
 }
 
-GSoapRequestHandler::~GSoapRequestHandler() {
-	if(ctx)
-		acceptor.recycleSoapContext(ctx);
-}
-
-void GSoapRequestHandler::handle() {
+GSoapRequestHandler::~GSoapRequestHandler()
+{
     if(ctx)
-    	fts3_serve(ctx);
+        acceptor.recycleSoapContext(ctx);
+}
+
+void GSoapRequestHandler::handle()
+{
+    if(ctx)
+        fts3_serve(ctx);
 }
 
 FTS3_SERVER_NAMESPACE_END

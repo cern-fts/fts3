@@ -23,7 +23,8 @@
 
 using namespace FTS3_COMMON_NAMESPACE;
 
-class MySqlMonitoring: public MonitoringDbIfce {
+class MySqlMonitoring: public MonitoringDbIfce
+{
 public:
     MySqlMonitoring();
     ~MySqlMonitoring();

@@ -29,67 +29,77 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace boost;
 
-StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se(name) {
+StandaloneSeCfg::StandaloneSeCfg(string dn, string name) : StandaloneCfg(dn), se(name)
+{
 
-	if (notAllowed.count(se))
-		throw Err_Custom("The SE name is not a valid!");
+    if (notAllowed.count(se))
+        throw Err_Custom("The SE name is not a valid!");
 
-	// replace any with wildcard
-	if (se == any) se = wildcard;
+    // replace any with wildcard
+    if (se == any) se = wildcard;
 
-	// get SE active state
-	Se* seobj = 0;
-	db->getSe(seobj, se);
-	if (seobj) {
-		active = seobj->STATE == on;
-		delete seobj;
-	} else
-		throw Err_Custom("The SE: " + name + " does not exist!");
+    // get SE active state
+    Se* seobj = 0;
+    db->getSe(seobj, se);
+    if (seobj)
+        {
+            active = seobj->STATE == on;
+            delete seobj;
+        }
+    else
+        throw Err_Custom("The SE: " + name + " does not exist!");
 
-	init(se);
+    init(se);
 }
 
-StandaloneSeCfg::StandaloneSeCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser)  {
+StandaloneSeCfg::StandaloneSeCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser)
+{
 
-	se = parser.get<string>("se");
-	all = json();
+    se = parser.get<string>("se");
+    all = json();
 
-	if (notAllowed.count(se))
-		throw Err_Custom("The SE name is not a valid!");
+    if (notAllowed.count(se))
+        throw Err_Custom("The SE name is not a valid!");
 
-	// replace any with wildcard
-	if (se == any) se = wildcard;
+    // replace any with wildcard
+    if (se == any) se = wildcard;
 }
 
-StandaloneSeCfg::~StandaloneSeCfg() {
+StandaloneSeCfg::~StandaloneSeCfg()
+{
 
 }
 
-string StandaloneSeCfg::json() {
+string StandaloneSeCfg::json()
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	ss << "{";
-	ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";
-	ss << StandaloneCfg::json();
-	ss << "}";
+    ss << "{";
+    ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";
+    ss << StandaloneCfg::json();
+    ss << "}";
 
-	return ss.str();
+    return ss.str();
 }
 
-void StandaloneSeCfg::save() {
-	addSe(se, active);
-	StandaloneCfg::save(se);
+void StandaloneSeCfg::save()
+{
+    addSe(se, active);
+    StandaloneCfg::save(se);
 }
 
-void StandaloneSeCfg::del() {
-	eraseSe(se);
-	StandaloneCfg::del(se);
+void StandaloneSeCfg::del()
+{
+    eraseSe(se);
+    StandaloneCfg::del(se);
 }
 
 } /* namespace common */

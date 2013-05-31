@@ -31,24 +31,28 @@
 #include <string>
 #include <list>
 
-namespace fts3 { namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 
-class InternalLogRetriever {
+class InternalLogRetriever
+{
 
 public:
-	InternalLogRetriever(string endpoint);
-	virtual ~InternalLogRetriever();
+    InternalLogRetriever(string endpoint);
+    virtual ~InternalLogRetriever();
 
-	list<string> getInternalLogs(string jobId);
+    list<string> getInternalLogs(string jobId);
 
 private:
-	///
-	string endpoint;
+    ///
+    string endpoint;
 
-	///
-	soap* ctx;
+    ///
+    soap* ctx;
 };
 
 }

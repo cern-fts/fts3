@@ -29,80 +29,94 @@
 #include <string>
 #include <fstream>
 
-namespace fts3 { namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 
-class LogFileStreamer {
+class LogFileStreamer
+{
 
 private:
 
-	class OutputHandler {
+    class OutputHandler
+    {
 
-	public:
+    public:
 
-		// constructors
-		OutputHandler(string logname, string dir = "/tmp/"): logname(logname), resp(0), isempty(false), dir(dir) {}
-		OutputHandler(log__GetLogInternalResponse& resp, string dir = "/tmp/"): resp(&resp), isempty(false), dir(dir) {}
-		~OutputHandler() {}
+        // constructors
+        OutputHandler(string logname, string dir = "/tmp/"): logname(logname), resp(0), isempty(false), dir(dir) {}
+        OutputHandler(log__GetLogInternalResponse& resp, string dir = "/tmp/"): resp(&resp), isempty(false), dir(dir) {}
+        ~OutputHandler() {}
 
-		// fields with lognames
-		string logname;
-		log__GetLogInternalResponse* resp;
-		bool isempty;
-		string dir;
+        // fields with lognames
+        string logname;
+        log__GetLogInternalResponse* resp;
+        bool isempty;
+        string dir;
 
-		//
-		string getLogName () {
+        //
+        string getLogName ()
+        {
 
-			static vector<string> lognames;
-			if (lognames.empty() && resp) {
-				if (resp->logs) {
-					lognames = resp->logs->lognames;
-				}
-			}
+            static vector<string> lognames;
+            if (lognames.empty() && resp)
+                {
+                    if (resp->logs)
+                        {
+                            lognames = resp->logs->lognames;
+                        }
+                }
 
-			if (!lognames.empty()) {
-					logname = lognames.front();
-					lognames.erase(lognames.begin());
-					isempty = lognames.empty();
-			} else {
-				isempty = true;
-			}
+            if (!lognames.empty())
+                {
+                    logname = lognames.front();
+                    lognames.erase(lognames.begin());
+                    isempty = lognames.empty();
+                }
+            else
+                {
+                    isempty = true;
+                }
 
-			return dir + logname;
-		}
+            return dir + logname;
+        }
 
-		bool empty() {
-			return isempty;
-		}
-	};
+        bool empty()
+        {
+            return isempty;
+        }
+    };
 
 public:
 
-    static void* getOutputHandler(string logname) {
-		return (void*) new OutputHandler(logname);
-	}
+    static void* getOutputHandler(string logname)
+    {
+        return (void*) new OutputHandler(logname);
+    }
 
-	static void* getOutputHandler(log__GetLogInternalResponse& resp) {
-		return (void*) new OutputHandler(resp);
-	}
+    static void* getOutputHandler(log__GetLogInternalResponse& resp)
+    {
+        return (void*) new OutputHandler(resp);
+    }
 
-	// read callbacks
+    // read callbacks
 
-	static void readClose(soap* ctx, void* handle);
+    static void readClose(soap* ctx, void* handle);
 
-	static void* readOpen(soap* ctx, void* handle, const char* id, const char* type, const char* description);
+    static void* readOpen(soap* ctx, void* handle, const char* id, const char* type, const char* description);
 
-	static size_t read(soap* ctx, void* handle, char* buff, size_t len);
+    static size_t read(soap* ctx, void* handle, char* buff, size_t len);
 
-	// write callbacks
+    // write callbacks
 
-	static void* writeOpen(soap* ctx, void* handle, const char *id, const char *type, const char *description, soap_mime_encoding encoding);
+    static void* writeOpen(soap* ctx, void* handle, const char *id, const char *type, const char *description, soap_mime_encoding encoding);
 
-	static void writeClose(soap* ctx, void *handle);
+    static void writeClose(soap* ctx, void *handle);
 
-	static int write(soap* ctx, void *handle, const char *buff, size_t len);
+    static int write(soap* ctx, void *handle, const char *buff, size_t len);
 };
 
 }

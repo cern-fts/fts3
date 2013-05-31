@@ -36,7 +36,8 @@ using namespace FTS3_COMMON_NAMESPACE;
 /**
  * Oracle concrete implementation of the Monitoring API
  **/
-class OracleMonitoring: public MonitoringDbIfce {
+class OracleMonitoring: public MonitoringDbIfce
+{
 public:
     OracleMonitoring();
     ~OracleMonitoring();

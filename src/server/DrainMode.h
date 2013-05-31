@@ -27,7 +27,10 @@
 
 #include "common/ThreadSafeInstanceHolder.h"
 
-namespace fts3 { namespace common {
+namespace fts3
+{
+namespace common
+{
 
 
 /**
@@ -39,64 +42,67 @@ namespace fts3 { namespace common {
  * not synchronized since its an atomic value and theres no
  * risk of run condition.
  */
-class DrainMode : public ThreadSafeInstanceHolder<DrainMode> {
+class DrainMode : public ThreadSafeInstanceHolder<DrainMode>
+{
 
-	friend class ThreadSafeInstanceHolder<DrainMode>;
+    friend class ThreadSafeInstanceHolder<DrainMode>;
 
 public:
 
-	/**
-	 * Assign operator for converting boolean value into FtsDrain
-	 *
-	 * @param drain - the value tht has to be converted
-	 *
-	 * @return reference to this
-	 */
-	DrainMode& operator= (const bool drain) {
-		this->drain = drain;
-		return *this;
-	}
+    /**
+     * Assign operator for converting boolean value into FtsDrain
+     *
+     * @param drain - the value tht has to be converted
+     *
+     * @return reference to this
+     */
+    DrainMode& operator= (const bool drain)
+    {
+        this->drain = drain;
+        return *this;
+    }
 
-	/**
-	 * boolean casting
-	 * 	casts the FtsDrain instance to bool value
-	 *
-	 * 	@return true if drain mode is on, otherwise false
-	 */
-	operator bool() const {
-		return drain;
-	}
+    /**
+     * boolean casting
+     * 	casts the FtsDrain instance to bool value
+     *
+     * 	@return true if drain mode is on, otherwise false
+     */
+    operator bool() const
+    {
+        return drain;
+    }
 
-	/**
-	 * Destructor
-	 */
-	virtual ~DrainMode(){};
+    /**
+     * Destructor
+     */
+    virtual ~DrainMode() {};
 
 private:
 
-	/**
-	 * Default constructor
-	 *
-	 * Private, should not be used
-	 */
-	DrainMode(): drain(false) {} ;
+    /**
+     * Default constructor
+     *
+     * Private, should not be used
+     */
+    DrainMode(): drain(false) {} ;
 
-	/**
-	 * Copying constructor
-	 *
-	 * Private, should not be used
-	 */
-	DrainMode(DrainMode const&);
+    /**
+     * Copying constructor
+     *
+     * Private, should not be used
+     */
+    DrainMode(DrainMode const&);
 
-	/**
-	 * Assignment operator
-	 *
-	 * Private, should not be used
-	 */
-	DrainMode& operator=(DrainMode const&);
+    /**
+     * Assignment operator
+     *
+     * Private, should not be used
+     */
+    DrainMode& operator=(DrainMode const&);
 
-	/// drain value for the system (true means the drain mode is on)
-	bool drain;
+    /// drain value for the system (true means the drain mode is on)
+    bool drain;
 };
 
 }

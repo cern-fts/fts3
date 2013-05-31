@@ -22,8 +22,8 @@
 #define THREAD_ABSTRACTION_LAYER
 
 
-/** 
- *  * defines a set of common posix thread macros 
+/**
+ *  * defines a set of common posix thread macros
  *   */
 
 #include <pthread.h>

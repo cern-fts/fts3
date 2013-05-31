@@ -38,63 +38,77 @@ using namespace fts3::common;
 /**
  * This is the entry point for the fts3-config-set command line tool.
  */
-int main(int ac, char* av[]) {
+int main(int ac, char* av[])
+{
 
-	try {
-		// create and initialize the command line utility
-		auto_ptr<SetCfgCli> cli (
-				getCli<SetCfgCli>(ac, av)
-			);
+    try
+        {
+            // create and initialize the command line utility
+            auto_ptr<SetCfgCli> cli (
+                getCli<SetCfgCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
 
-		if (!opt.is_initialized()) return 0;
+            if (!opt.is_initialized()) return 0;
 
-		GSoapContextAdapter& ctx = opt.get();
+            GSoapContextAdapter& ctx = opt.get();
 
-		optional<bool> drain = cli->drain();
-		if (drain.is_initialized()) {
-			ctx.doDrain(drain.get());
-		}
+            optional<bool> drain = cli->drain();
+            if (drain.is_initialized())
+                {
+                    ctx.doDrain(drain.get());
+                }
 
-		optional<int> retry = cli->retry();
-		if (retry.is_initialized()) {
-			ctx.retrySet(*retry);
-		}
+            optional<int> retry = cli->retry();
+            if (retry.is_initialized())
+                {
+                    ctx.retrySet(*retry);
+                }
 
-		optional<unsigned> queueTimeout = cli->queueTimeout();
-		if (queueTimeout.is_initialized()) {
-			ctx.queueTimeoutSet(*queueTimeout);
-		}
+            optional<unsigned> queueTimeout = cli->queueTimeout();
+            if (queueTimeout.is_initialized())
+                {
+                    ctx.queueTimeoutSet(*queueTimeout);
+                }
 
-		map<string, int> bring_online = cli->getBringOnline();
-		if (!bring_online.empty()) {
-			ctx.setBringOnline(bring_online);
-			// if bring online was used normal config was not!
-			return 0;
-		}
+            map<string, int> bring_online = cli->getBringOnline();
+            if (!bring_online.empty())
+                {
+                    ctx.setBringOnline(bring_online);
+                    // if bring online was used normal config was not!
+                    return 0;
+                }
 
-		config__Configuration *config = soap_new_config__Configuration(ctx, -1);
-		config->cfg = cli->getConfigurations();
-		if (config->cfg.empty()) return 0;
+            config__Configuration *config = soap_new_config__Configuration(ctx, -1);
+            config->cfg = cli->getConfigurations();
+            if (config->cfg.empty()) return 0;
 
-		implcfg__setConfigurationResponse resp;
-		ctx.setConfiguration(config, resp);
+            implcfg__setConfigurationResponse resp;
+            ctx.setConfiguration(config, resp);
 
-    } catch(string& ex) {
-    	cout << ex << endl;
-    	return 1;
-    } catch(Err& ex) {
-    	cout << ex.what() << endl;
-    	return 1;
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
-    } catch(...) {
-        cerr << "Exception of unknown type!\n";
-        return 1;
-    }
+        }
+    catch(string& ex)
+        {
+            cout << ex << endl;
+            return 1;
+        }
+    catch(Err& ex)
+        {
+            cout << ex.what() << endl;
+            return 1;
+        }
+    catch(std::exception& e)
+        {
+            cerr << "error: " << e.what() << "\n";
+            return 1;
+        }
+    catch(...)
+        {
+            cerr << "Exception of unknown type!\n";
+            return 1;
+        }
 
-	return 0;
+    return 0;
 }

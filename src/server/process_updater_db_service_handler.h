@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 #pragma once
@@ -53,7 +53,8 @@ template
 <
 typename TRAITS
 >
-class ProcessUpdaterDBServiceHandler : public TRAITS::ActiveObjectType {
+class ProcessUpdaterDBServiceHandler : public TRAITS::ActiveObjectType
+{
 protected:
 
     using TRAITS::ActiveObjectType::_enqueue;
@@ -69,73 +70,88 @@ public:
     /** Constructor. */
     ProcessUpdaterDBServiceHandler
     (
-            const std::string& desc = "" /**< Description of this service handler
+        const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
-            ) :
-    TRAITS::ActiveObjectType("ProcessUpdaterDBServiceHandler", desc) {    	
+    ) :
+        TRAITS::ActiveObjectType("ProcessUpdaterDBServiceHandler", desc)
+    {
     }
 
     /* ---------------------------------------------------------------------- */
 
     /** Destructor */
-    virtual ~ProcessUpdaterDBServiceHandler() {
+    virtual ~ProcessUpdaterDBServiceHandler()
+    {
     }
 
     /* ---------------------------------------------------------------------- */
 
     void executeTransfer_p
     (
-            ) {
+    )
+    {
 
         boost::function<void() > op = boost::bind(&ProcessUpdaterDBServiceHandler::executeTransfer_a, this);
         this->_enqueue(op);
     }
 
 protected:
-     std::vector<struct message_updater> messages;
+    std::vector<struct message_updater> messages;
 
     /* ---------------------------------------------------------------------- */
-    void executeTransfer_a() {           
-        while (stopThreads==false) { /*need to receive more than one messages at a time*/
-	 try{	   
-            ThreadSafeList::get_instance().checkExpiredMsg(messages);	    
+    void executeTransfer_a()
+    {
+        while (stopThreads==false)   /*need to receive more than one messages at a time*/
+            {
+                try
+                    {
+                        ThreadSafeList::get_instance().checkExpiredMsg(messages);
 
-            if (!messages.empty()) {
-                bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages);
-		if(updated){
-                	ThreadSafeList::get_instance().deleteMsg(messages);
-			std::vector<struct message_updater>::const_iterator iter;
-			for (iter = messages.begin(); iter != messages.end(); ++iter) {
-				SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
-			}
-                	messages.clear();
-		}
+                        if (!messages.empty())
+                            {
+                                bool updated = DBSingleton::instance().getDBObjectInstance()->retryFromDead(messages);
+                                if(updated)
+                                    {
+                                        ThreadSafeList::get_instance().deleteMsg(messages);
+                                        std::vector<struct message_updater>::const_iterator iter;
+                                        for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                            {
+                                                SingleTrStateInstance::instance().sendStateMessage((*iter).job_id, (*iter).file_id);
+                                            }
+                                        messages.clear();
+                                    }
+                            }
+
+                        /*set to fail all old queued jobs which have exceeded max queue time*/
+                        std::vector<std::string> jobs;
+                        DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
+                        if(!jobs.empty())
+                            {
+                                std::vector<std::string>::const_iterator iter2;
+                                for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
+                                    {
+                                        SingleTrStateInstance::instance().sendStateMessage((*iter2), -1);
+                                    }
+                                jobs.clear();
+                            }
+                        messages.clear();
+                        sleep(1);
+                    }
+                catch (...)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                        sleep(1);
+                    }
             }
-	    	    
-	    /*set to fail all old queued jobs which have exceeded max queue time*/
-	    std::vector<std::string> jobs;
-	    DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
-	    if(!jobs.empty()){
-	    	std::vector<std::string>::const_iterator iter2;
-			for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2) {
-				SingleTrStateInstance::instance().sendStateMessage((*iter2), -1);
-			}
-			jobs.clear();
-	    }
-	    messages.clear();
-            sleep(1);
-        }catch (...) {
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-	        sleep(1);	
-            }            
     }
-  }
 
     /* ---------------------------------------------------------------------- */
-    struct TestHelper {
+    struct TestHelper
+    {
 
         TestHelper()
-        : loopOver(false) {
+            : loopOver(false)
+        {
         }
 
         bool loopOver;

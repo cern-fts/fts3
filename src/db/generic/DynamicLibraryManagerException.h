@@ -1,17 +1,17 @@
 /********************************************//**
  * Copyright @ Members of the EMI Collaboration, 2010.
  * See www.eu-emi.eu for details on the copyright holders.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0 
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  ***********************************************/
 
@@ -20,7 +20,7 @@
  * @brief dynamic library manager custom exception
  * @author Michail Salichos
  * @date 09/02/2012
- * 
+ *
  **/
 
 
@@ -30,15 +30,17 @@
 #include <stdexcept>
 #include <string>
 
-/* 
+/*
  * Exception thrown by DynamicLibraryManager when a failure occurs.
  * Use getCause() to know what function caused the failure.
  *
  */
-class DynamicLibraryManagerException {
+class DynamicLibraryManagerException
+{
 public:
 
-    enum Cause {
+    enum Cause
+    {
         /// Failed to load the dynamic library
         loadingFailed = 0,
         /// Symbol not found in the dynamic library
@@ -47,12 +49,13 @@ public:
 
     /*
      * Failed to load the dynamic library or Symbol not found in the dynamic library.
-     */ 
+     */
     DynamicLibraryManagerException(const std::string &libraryName,
-            const std::string &errorDetail,
-            Cause cause);
+                                   const std::string &errorDetail,
+                                   Cause cause);
 
-    ~DynamicLibraryManagerException() throw () {
+    ~DynamicLibraryManagerException() throw ()
+    {
     }
 
     Cause getCause() const;

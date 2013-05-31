@@ -24,74 +24,82 @@
 
 #include "StandaloneGrCfg.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
-StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), group(name) {
+StandaloneGrCfg::StandaloneGrCfg(string dn, string name) : StandaloneCfg(dn), group(name)
+{
 
-	notAllowed.insert(any);
-	if (notAllowed.count(group))
-		throw Err_Custom("The SE name is not a valid!");
+    notAllowed.insert(any);
+    if (notAllowed.count(group))
+        throw Err_Custom("The SE name is not a valid!");
 
-	if (!db->checkGroupExists(group))
-		throw Err_Custom("The SE group: " + group + " does not exist!");
+    if (!db->checkGroupExists(group))
+        throw Err_Custom("The SE group: " + group + " does not exist!");
 
-	active = true; // TODO so far it is not possible to set the active state for a group to 'off' (false)
+    active = true; // TODO so far it is not possible to set the active state for a group to 'off' (false)
 
-	// init shares and protocols
-	init(name);
+    // init shares and protocols
+    init(name);
 
-	// get group members
-	db->getGroupMembers(name, members);
+    // get group members
+    db->getGroupMembers(name, members);
 }
 
-StandaloneGrCfg::StandaloneGrCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser) {
+StandaloneGrCfg::StandaloneGrCfg(string dn, CfgParser& parser) : StandaloneCfg(dn, parser)
+{
 
-	notAllowed.insert(any);
+    notAllowed.insert(any);
 
-	group = parser.get<string>("group");
-	members = parser.get< vector<string> >("members");
+    group = parser.get<string>("group");
+    members = parser.get< vector<string> >("members");
 
-	all = json();
+    all = json();
 
-	if (notAllowed.count(group))
-		throw Err_Custom("The SE name is not a valid!");
+    if (notAllowed.count(group))
+        throw Err_Custom("The SE name is not a valid!");
 }
 
-StandaloneGrCfg::~StandaloneGrCfg() {
+StandaloneGrCfg::~StandaloneGrCfg()
+{
 }
 
-string StandaloneGrCfg::json() {
+string StandaloneGrCfg::json()
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	ss << "{";
-	ss << "\"" << "group" << "\":\"" << group << "\",";
-	ss << "\"" << "members" << "\":" << Configuration::json(members) << ",";
-	ss << StandaloneCfg::json();
-	ss << "}";
+    ss << "{";
+    ss << "\"" << "group" << "\":\"" << group << "\",";
+    ss << "\"" << "members" << "\":" << Configuration::json(members) << ",";
+    ss << StandaloneCfg::json();
+    ss << "}";
 
-	return ss.str();
+    return ss.str();
 }
 
-void StandaloneGrCfg::save() {
+void StandaloneGrCfg::save()
+{
 
-	addGroup(group, members);
-	StandaloneCfg::save(group);
+    addGroup(group, members);
+    StandaloneCfg::save(group);
 }
 
-void StandaloneGrCfg::del() {
+void StandaloneGrCfg::del()
+{
 
-	// check if pair configuration uses the group
-	if (db->isGrInPair(group))
-		throw Err_Custom("The group is used in a group-pair configuration, you need first to remove the pair!");
+    // check if pair configuration uses the group
+    if (db->isGrInPair(group))
+        throw Err_Custom("The group is used in a group-pair configuration, you need first to remove the pair!");
 
-	// delete group
-	StandaloneCfg::del(group);
+    // delete group
+    StandaloneCfg::del(group);
 
-	// remove group members
-	db->deleteMembersFromGroup(group, members);
-	deleteCount++;
+    // remove group members
+    db->deleteMembersFromGroup(group, members);
+    deleteCount++;
 }
 
 } /* namespace common */

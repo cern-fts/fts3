@@ -16,7 +16,7 @@
  *  limitations under the License.
  *
  *  Message producer: read messages from the queue and send to the broker
- * 
+ *
  */
 
 
@@ -47,7 +47,8 @@ using namespace decaf::util::concurrent;
 using namespace cms;
 using namespace std;
 
-class MsgProducer : public Runnable, public ExceptionListener {
+class MsgProducer : public Runnable, public ExceptionListener
+{
 private:
 
     Connection* connection;
@@ -56,8 +57,8 @@ private:
     Destination* destination_transfer_completed;
     MessageProducer* producer_transfer_started;
     MessageProducer* producer_transfer_completed;
-    MessageProducer* producer_transfer_state;   
-    Destination* destination_transfer_state;     
+    MessageProducer* producer_transfer_state;
+    Destination* destination_transfer_state;
 
     std::string brokerURI;
     std::string broker;
@@ -72,7 +73,7 @@ private:
     bool connectionIsOK;
     bool getConnection();
     void readConfig();
-    
+
 public:
     MsgProducer();
     virtual ~MsgProducer();

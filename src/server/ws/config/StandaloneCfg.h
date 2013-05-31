@@ -30,8 +30,10 @@
 #include <string>
 #include <map>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 using namespace fts3::common;
@@ -42,80 +44,81 @@ using namespace fts3::common;
  *
  * 	@see Configuration
  */
-class StandaloneCfg : public Configuration {
+class StandaloneCfg : public Configuration
+{
 
 public:
 
-	/**
-	 * Constructor. Retrieves the configuration data from DB.
-	 *
-	 * @param dn - client's DN
-	 */
-	StandaloneCfg(string dn) : Configuration(dn) {}
+    /**
+     * Constructor. Retrieves the configuration data from DB.
+     *
+     * @param dn - client's DN
+     */
+    StandaloneCfg(string dn) : Configuration(dn) {}
 
-	/**
-	 * Constructor. Retrieves the configuration data from the given CfgParser.
-	 *
-	 * @param dn - client's DN
-	 * @param parser - the JSON configuration parser
-	 */
-	StandaloneCfg(string dn, CfgParser& parser);
+    /**
+     * Constructor. Retrieves the configuration data from the given CfgParser.
+     *
+     * @param dn - client's DN
+     * @param parser - the JSON configuration parser
+     */
+    StandaloneCfg(string dn, CfgParser& parser);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~StandaloneCfg();
+    /**
+     * Destructor.
+     */
+    virtual ~StandaloneCfg();
 
-	/**
-	 * Creates a string containing the JSON configuration common for all 'standalone' configurations
-	 */
-	virtual string json();
+    /**
+     * Creates a string containing the JSON configuration common for all 'standalone' configurations
+     */
+    virtual string json();
 
-	/**
-	 * Saves the current configuration into the DB
-	 */
-	virtual void save() = 0;
+    /**
+     * Saves the current configuration into the DB
+     */
+    virtual void save() = 0;
 
-	/**
-	 * Removes the configuration from the DB
-	 */
-	virtual void del() = 0;
+    /**
+     * Removes the configuration from the DB
+     */
+    virtual void del() = 0;
 
 protected:
 
-	/**
-	 * Saves the standalone configuration
-	 *
-	 * @param name - SE or SE group name
-	 */
-	virtual void save(string name);
+    /**
+     * Saves the standalone configuration
+     *
+     * @param name - SE or SE group name
+     */
+    virtual void save(string name);
 
-	/**
-	 * Removes the standalone configuration from DB
-	 */
-	virtual void del(string name);
+    /**
+     * Removes the standalone configuration from DB
+     */
+    virtual void del(string name);
 
-	/**
-	 * Initializes the in/out shares and protocol parameters
-	 *
-	 * @param name - SE or SE group name
-	 */
-	void init(string name);
+    /**
+     * Initializes the in/out shares and protocol parameters
+     *
+     * @param name - SE or SE group name
+     */
+    void init(string name);
 
-	/// active state
-	bool active;
+    /// active state
+    bool active;
 
 private:
 
-	/// inbound share
-	map<string, int> in_share;
-	/// inbound protocol
-	optional< map<string, int> > in_protocol;
+    /// inbound share
+    map<string, int> in_share;
+    /// inbound protocol
+    optional< map<string, int> > in_protocol;
 
-	/// outbound share
-	map<string, int> out_share;
-	/// outbound protocol
-	optional< map<string, int> > out_protocol;
+    /// outbound share
+    map<string, int> out_share;
+    /// outbound protocol
+    optional< map<string, int> > out_protocol;
 };
 
 } /* namespace common */

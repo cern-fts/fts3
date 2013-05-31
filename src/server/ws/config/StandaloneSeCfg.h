@@ -29,8 +29,10 @@
 
 #include <string>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 using namespace fts3::common;
@@ -41,56 +43,57 @@ using namespace fts3::common;
  *
  * @see StandaloneCfg
  */
-class StandaloneSeCfg : public StandaloneCfg {
+class StandaloneSeCfg : public StandaloneCfg
+{
 
 public:
 
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration data from the DB for the given SE name.
-	 *
-	 * @param dn - client's DN
-	 * @param name - SE name
-	 */
-	StandaloneSeCfg(string dn, string name);
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration data from the DB for the given SE name.
+     *
+     * @param dn - client's DN
+     * @param name - SE name
+     */
+    StandaloneSeCfg(string dn, string name);
 
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration data from the given CfgParser
-	 *
-	 * @param dn - client's DN
-	 * @param parser - the parser object
-	 */
-	StandaloneSeCfg(string dn, CfgParser& parser);
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration data from the given CfgParser
+     *
+     * @param dn - client's DN
+     * @param parser - the parser object
+     */
+    StandaloneSeCfg(string dn, CfgParser& parser);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~StandaloneSeCfg();
+    /**
+     * Destructor.
+     */
+    virtual ~StandaloneSeCfg();
 
-	/**
-	 * Creates a string containing the JSON configuration common for a SE group 'standalone' configurations
-	 */
-	virtual string json();
+    /**
+     * Creates a string containing the JSON configuration common for a SE group 'standalone' configurations
+     */
+    virtual string json();
 
-	/**
-	 * Saves the current configuration into the DB
-	 */
-	virtual void save();
+    /**
+     * Saves the current configuration into the DB
+     */
+    virtual void save();
 
-	/**
-	 * Removes the configuration from the DB
-	 */
-	virtual void del();
+    /**
+     * Removes the configuration from the DB
+     */
+    virtual void del();
 
 private:
 
-	/**
-	 * SE name
-	 */
-	string se;
+    /**
+     * SE name
+     */
+    string se;
 };
 
 } /* namespace common */

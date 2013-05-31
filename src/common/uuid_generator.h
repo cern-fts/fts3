@@ -38,37 +38,38 @@ using namespace std;
  *
  * Its main goal is the generate uuids.
  */
-class UuidGenerator {
+class UuidGenerator
+{
 
 public:
 
-	/**
-	 * Generates uuid
-	 *
-	 * @return uuid (string)
-	 */
-	static string generateUUID();
+    /**
+     * Generates uuid
+     *
+     * @return uuid (string)
+     */
+    static string generateUUID();
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~UuidGenerator();
+    /**
+     * Destructor.
+     */
+    virtual ~UuidGenerator();
 
 private:
-	/**
-	 * Default constructor (private).
-	 */
-	UuidGenerator();
+    /**
+     * Default constructor (private).
+     */
+    UuidGenerator();
 
-	/**
-	 * Copy constructor (private).
-	 */
-	UuidGenerator (UuidGenerator const&);
+    /**
+     * Copy constructor (private).
+     */
+    UuidGenerator (UuidGenerator const&);
 
-	/**
-	 * Copy assignment operator (private).
-	 */
-	UuidGenerator& operator=(UuidGenerator const&);
+    /**
+     * Copy assignment operator (private).
+     */
+    UuidGenerator& operator=(UuidGenerator const&);
 };
 
 

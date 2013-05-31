@@ -31,8 +31,10 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace boost;
 
@@ -61,341 +63,398 @@ const string Configuration::pub = "public";
 const string Configuration::share_only = "all";
 
 Configuration::Configuration(string dn) :
-		dn(dn),
-		db (DBSingleton::instance().getDBObjectInstance()),
-		insertCount(0),
-		updateCount(0),
-		deleteCount(0) {
+    dn(dn),
+    db (DBSingleton::instance().getDBObjectInstance()),
+    insertCount(0),
+    updateCount(0),
+    deleteCount(0)
+{
 
-	notAllowed.insert(wildcard);
+    notAllowed.insert(wildcard);
 
 }
 
-Configuration::~Configuration() {
+Configuration::~Configuration()
+{
 
-	if (deleteCount)
-		db->auditConfiguration(dn, all, "delete");
+    if (deleteCount)
+        db->auditConfiguration(dn, all, "delete");
 
-	if (insertCount)
-		db->auditConfiguration(dn, all, "insert");
+    if (insertCount)
+        db->auditConfiguration(dn, all, "insert");
 
-	if (updateCount)
-		db->auditConfiguration(dn, all, "update");
+    if (updateCount)
+        db->auditConfiguration(dn, all, "update");
 }
 
-string Configuration::json(map<string, int>& params) {
+string Configuration::json(map<string, int>& params)
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	ss << "[";
+    ss << "[";
 
-	map<string, int>::iterator it;
-	for (it = params.begin(); it != params.end();) {
-		if (it->second == auto_share) {
-			// it is auto
-			ss << "{\"" << it->first << "\":\"" << CfgParser::auto_value << "\"}";
-		} else {
-			// it is a normal value
-			ss << "{\"" << it->first << "\":" << it->second << "}";
-		}
-		it++;
-		if (it != params.end()) ss << ",";
-	}
+    map<string, int>::iterator it;
+    for (it = params.begin(); it != params.end();)
+        {
+            if (it->second == auto_share)
+                {
+                    // it is auto
+                    ss << "{\"" << it->first << "\":\"" << CfgParser::auto_value << "\"}";
+                }
+            else
+                {
+                    // it is a normal value
+                    ss << "{\"" << it->first << "\":" << it->second << "}";
+                }
+            it++;
+            if (it != params.end()) ss << ",";
+        }
 
-	ss << "]";
+    ss << "]";
 
-	return ss.str();
+    return ss.str();
 }
 
-string Configuration::json(optional< map<string, int> >& params) {
+string Configuration::json(optional< map<string, int> >& params)
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	if (!params.is_initialized()) {
-		ss << "\"" << CfgParser::auto_value << "\"";
-		return ss.str();
-	}
+    if (!params.is_initialized())
+        {
+            ss << "\"" << CfgParser::auto_value << "\"";
+            return ss.str();
+        }
 
-	return json(params.get());
+    return json(params.get());
 }
 
-string Configuration::json(vector<string>& members) {
+string Configuration::json(vector<string>& members)
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	ss << "[";
+    ss << "[";
 
-	vector<string>::iterator it;
-	for (it = members.begin(); it != members.end();) {
-		ss << "\"" << *it << "\"";
-		it++;
-		if (it != members.end()) ss << ",";
-	}
+    vector<string>::iterator it;
+    for (it = members.begin(); it != members.end();)
+        {
+            ss << "\"" << *it << "\"";
+            it++;
+            if (it != members.end()) ss << ",";
+        }
 
-	ss << "]";
+    ss << "]";
 
-	return ss.str();
+    return ss.str();
 }
 
-void Configuration::addSe(string se, bool active) {
+void Configuration::addSe(string se, bool active)
+{
 
-	// make sure SE includes protocol! TODO
-	static const regex re(".+://[a-zA-Z0-9\\.-]+");
+    // make sure SE includes protocol! TODO
+    static const regex re(".+://[a-zA-Z0-9\\.-]+");
 
-	if (se != wildcard && !regex_match(se, re))
-		throw Err_Custom("The SE name should be complaint with the following convention: 'protocol://hostname' !");
+    if (se != wildcard && !regex_match(se, re))
+        throw Err_Custom("The SE name should be complaint with the following convention: 'protocol://hostname' !");
 
-	//check if SE exists
-	Se* ptr = 0;
-	db->getSe(ptr, se);
-	if (!ptr) {
-		// if not add it to the DB
-		db->addSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
-		insertCount++;
-	} else
-		db->updateSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
-		delete ptr;
+    //check if SE exists
+    Se* ptr = 0;
+    db->getSe(ptr, se);
+    if (!ptr)
+        {
+            // if not add it to the DB
+            db->addSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
+            insertCount++;
+        }
+    else
+        db->updateSe(string(), string(), string(), se, active ? on : off, string(), string(), string(), string(), string(), string());
+    delete ptr;
 }
 
-void Configuration::eraseSe(string se) {
-	db->updateSe(string(), string(), string(), se, on, string(), string(), string(), string(), string(), string());
-	updateCount++;
+void Configuration::eraseSe(string se)
+{
+    db->updateSe(string(), string(), string(), se, on, string(), string(), string(), string(), string(), string());
+    updateCount++;
 }
 
-void Configuration::addGroup(string group, vector<string>& members) {
+void Configuration::addGroup(string group, vector<string>& members)
+{
 
-	if (db->checkGroupExists(group)) {
-		// if the group exists remove it!
-		vector<string> tmp;
-		db->getGroupMembers(group, tmp);
-		db->deleteMembersFromGroup(group, tmp);
-		deleteCount++;
-	}
+    if (db->checkGroupExists(group))
+        {
+            // if the group exists remove it!
+            vector<string> tmp;
+            db->getGroupMembers(group, tmp);
+            db->deleteMembersFromGroup(group, tmp);
+            deleteCount++;
+        }
 
-	vector<string>::iterator it;
-	for (it = members.begin(); it != members.end(); it++) {
-		addSe(*it);
-		if (db->checkIfSeIsMemberOfAnotherGroup(*it))
-			throw Err_Custom("The SE: " + *it + " is already a member of another SE group!");
-	}
+    vector<string>::iterator it;
+    for (it = members.begin(); it != members.end(); it++)
+        {
+            addSe(*it);
+            if (db->checkIfSeIsMemberOfAnotherGroup(*it))
+                throw Err_Custom("The SE: " + *it + " is already a member of another SE group!");
+        }
 
-	db->addMemberToGroup(group, members);
-	insertCount++;
+    db->addMemberToGroup(group, members);
+    insertCount++;
 }
 
-void Configuration::checkGroup(string group) {
-	// check if the group exists
-	if (!db->checkGroupExists(group)) {
-		throw Err_Custom(
-				"The group: " +  group + " does not exist!"
-			);
-	}
+void Configuration::checkGroup(string group)
+{
+    // check if the group exists
+    if (!db->checkGroupExists(group))
+        {
+            throw Err_Custom(
+                "The group: " +  group + " does not exist!"
+            );
+        }
 }
 
-pair< shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name) {
+pair< shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name)
+{
 
-	scoped_ptr< pair<string, string> > p (
-			db->getSourceAndDestination(symbolic_name)
-		);
+    scoped_ptr< pair<string, string> > p (
+        db->getSourceAndDestination(symbolic_name)
+    );
 
-	if (p.get()) {
-		if (source != p->first || destination != p->second)
-			throw Err_Custom("A 'pair' with the same symbolic name exists already!");
-	}
+    if (p.get())
+        {
+            if (source != p->first || destination != p->second)
+                throw Err_Custom("A 'pair' with the same symbolic name exists already!");
+        }
 
-	shared_ptr<LinkConfig> cfg (
-			db->getLinkConfig(source, destination)
-		);
+    shared_ptr<LinkConfig> cfg (
+        db->getLinkConfig(source, destination)
+    );
 
-	bool update = true;
-	if (!cfg.get()) {
-		cfg.reset(new LinkConfig);
-		update = false;
-	}
+    bool update = true;
+    if (!cfg.get())
+        {
+            cfg.reset(new LinkConfig);
+            update = false;
+        }
 
-	cfg->source = source;
-	cfg->destination = destination;
-	cfg->state = active ? on : off;
-	cfg->symbolic_name = symbolic_name;
+    cfg->source = source;
+    cfg->destination = destination;
+    cfg->state = active ? on : off;
+    cfg->symbolic_name = symbolic_name;
 
-	return make_pair(cfg, update);
+    return make_pair(cfg, update);
 }
 
-void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol) {
+void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol)
+{
 
-	pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+    pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
-	// not used for now therefore set to 0
-	cfg.first->NO_TX_ACTIVITY_TO = 0;
+    // not used for now therefore set to 0
+    cfg.first->NO_TX_ACTIVITY_TO = 0;
 
-	if (protocol.is_initialized()) {
+    if (protocol.is_initialized())
+        {
 
-		int value = protocol.get()[Protocol::NOSTREAMS];
-		cfg.first->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
+            int value = protocol.get()[Protocol::NOSTREAMS];
+            cfg.first->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
 
-		value = protocol.get()[Protocol::TCP_BUFFER_SIZE];
-		cfg.first->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
+            value = protocol.get()[Protocol::TCP_BUFFER_SIZE];
+            cfg.first->TCP_BUFFER_SIZE = value ? value : DEFAULT_BUFFSIZE;
 
-		value = protocol.get()[Protocol::URLCOPY_TX_TO];
-		cfg.first->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
+            value = protocol.get()[Protocol::URLCOPY_TX_TO];
+            cfg.first->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
 
-		cfg.first->auto_tuning = off;
+            cfg.first->auto_tuning = off;
 
-	} else {
+        }
+    else
+        {
 
-		cfg.first->NOSTREAMS = 0;
-		cfg.first->TCP_BUFFER_SIZE = 0;
-		cfg.first->URLCOPY_TX_TO = 0;
-		cfg.first->auto_tuning = on;
-	}
+            cfg.first->NOSTREAMS = 0;
+            cfg.first->TCP_BUFFER_SIZE = 0;
+            cfg.first->URLCOPY_TX_TO = 0;
+            cfg.first->auto_tuning = on;
+        }
 
-	if (cfg.second) {
-		db->updateLinkConfig(cfg.first.get());
-		updateCount++;
-	} else {
-		db->addLinkConfig(cfg.first.get());
-		insertCount++;
-	}
+    if (cfg.second)
+        {
+            db->updateLinkConfig(cfg.first.get());
+            updateCount++;
+        }
+    else
+        {
+            db->addLinkConfig(cfg.first.get());
+            insertCount++;
+        }
 }
 
-void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name) {
+void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name)
+{
 
-	pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+    pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
-	// not used in case of share-only configuration therefore set to 0
-	cfg.first->NO_TX_ACTIVITY_TO = 0;
-	cfg.first->NOSTREAMS = 0;
-	cfg.first->TCP_BUFFER_SIZE = 0;
-	cfg.first->URLCOPY_TX_TO = 0;
+    // not used in case of share-only configuration therefore set to 0
+    cfg.first->NO_TX_ACTIVITY_TO = 0;
+    cfg.first->NOSTREAMS = 0;
+    cfg.first->TCP_BUFFER_SIZE = 0;
+    cfg.first->URLCOPY_TX_TO = 0;
 
-	// mark it as share only
-	cfg.first->auto_tuning = share_only;
+    // mark it as share only
+    cfg.first->auto_tuning = share_only;
 
-	if (cfg.second) {
-		db->updateLinkConfig(cfg.first.get());
-		updateCount++;
-	} else {
-		db->addLinkConfig(cfg.first.get());
-		insertCount++;
-	}
+    if (cfg.second)
+        {
+            db->updateLinkConfig(cfg.first.get());
+            updateCount++;
+        }
+    else
+        {
+            db->addLinkConfig(cfg.first.get());
+            insertCount++;
+        }
 }
 
-void Configuration::addShareCfg(string source, string destination, map<string, int>& share) {
-	// set with VOs that need an update
-	set<string> update;
-	// find all share configuration for source and destination
-	vector<ShareConfig*> vec = db->getShareConfig(source, destination);
-	vector<ShareConfig*>::iterator iv;
-	// loop over share configuration
-	for (iv = vec.begin(); iv != vec.end(); iv++) {
-		scoped_ptr<ShareConfig> cfg (*iv);
-		if (share.find(cfg->vo) == share.end()) {
-			// if the VO was not in the new configuration remove the record
-			db->deleteShareConfig(source, destination, cfg->vo);
-			deleteCount++;
-		} else {
-			// otherwise schedule it for update
-			update.insert(cfg->vo);
-		}
-	}
-	// save the configuration in DB
-	map<string, int>::iterator it;
-	for (it = share.begin(); it != share.end(); it++) {
-		// create new share configuration
-		scoped_ptr<ShareConfig> cfg(new ShareConfig);
-		cfg->source = source;
-		cfg->destination = destination;
-		cfg->vo = it->first;
-		cfg->active_transfers = it->second;
-		// check if the configuration should use insert or update
-		if (update.count(it->first)) {
-			db->updateShareConfig(cfg.get());
-			updateCount++;
-		} else {
-			db->addShareConfig(cfg.get());
-			insertCount++;
-		}
-	}
+void Configuration::addShareCfg(string source, string destination, map<string, int>& share)
+{
+    // set with VOs that need an update
+    set<string> update;
+    // find all share configuration for source and destination
+    vector<ShareConfig*> vec = db->getShareConfig(source, destination);
+    vector<ShareConfig*>::iterator iv;
+    // loop over share configuration
+    for (iv = vec.begin(); iv != vec.end(); iv++)
+        {
+            scoped_ptr<ShareConfig> cfg (*iv);
+            if (share.find(cfg->vo) == share.end())
+                {
+                    // if the VO was not in the new configuration remove the record
+                    db->deleteShareConfig(source, destination, cfg->vo);
+                    deleteCount++;
+                }
+            else
+                {
+                    // otherwise schedule it for update
+                    update.insert(cfg->vo);
+                }
+        }
+    // save the configuration in DB
+    map<string, int>::iterator it;
+    for (it = share.begin(); it != share.end(); it++)
+        {
+            // create new share configuration
+            scoped_ptr<ShareConfig> cfg(new ShareConfig);
+            cfg->source = source;
+            cfg->destination = destination;
+            cfg->vo = it->first;
+            cfg->active_transfers = it->second;
+            // check if the configuration should use insert or update
+            if (update.count(it->first))
+                {
+                    db->updateShareConfig(cfg.get());
+                    updateCount++;
+                }
+            else
+                {
+                    db->addShareConfig(cfg.get());
+                    insertCount++;
+                }
+        }
 }
 
-optional< map<string, int> > Configuration::getProtocolMap(string source, string destination) {
+optional< map<string, int> > Configuration::getProtocolMap(string source, string destination)
+{
 
-	scoped_ptr<LinkConfig> cfg (
-			db->getLinkConfig(source, destination)
-		);
+    scoped_ptr<LinkConfig> cfg (
+        db->getLinkConfig(source, destination)
+    );
 
-	if (cfg->auto_tuning == on) return optional< map<string, int> >();
+    if (cfg->auto_tuning == on) return optional< map<string, int> >();
 
-	return getProtocolMap(cfg.get());
+    return getProtocolMap(cfg.get());
 }
 
-optional< map<string, int> > Configuration::getProtocolMap(LinkConfig* cfg) {
+optional< map<string, int> > Configuration::getProtocolMap(LinkConfig* cfg)
+{
 
-	map<string, int> ret;
-	ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;
-	ret[Protocol::TCP_BUFFER_SIZE] = cfg->TCP_BUFFER_SIZE;
-	ret[Protocol::URLCOPY_TX_TO] = cfg->URLCOPY_TX_TO;
-	ret[Protocol::NO_TX_ACTIVITY_TO] = cfg->NO_TX_ACTIVITY_TO;
+    map<string, int> ret;
+    ret[Protocol::NOSTREAMS] = cfg->NOSTREAMS;
+    ret[Protocol::TCP_BUFFER_SIZE] = cfg->TCP_BUFFER_SIZE;
+    ret[Protocol::URLCOPY_TX_TO] = cfg->URLCOPY_TX_TO;
+    ret[Protocol::NO_TX_ACTIVITY_TO] = cfg->NO_TX_ACTIVITY_TO;
 
-	return ret;
+    return ret;
 }
 
-map<string, int> Configuration::getShareMap(string source, string destination) {
+map<string, int> Configuration::getShareMap(string source, string destination)
+{
 
-	vector<ShareConfig*> vec = db->getShareConfig(source, destination);
+    vector<ShareConfig*> vec = db->getShareConfig(source, destination);
 
-	if (vec.empty()) {
-		throw Err_Custom(
-				"A configuration for source: '" + source + "' and destination: '" + destination + "' does not exist!"
-			);
-	}
+    if (vec.empty())
+        {
+            throw Err_Custom(
+                "A configuration for source: '" + source + "' and destination: '" + destination + "' does not exist!"
+            );
+        }
 
-	map<string, int> ret;
+    map<string, int> ret;
 
-	vector<ShareConfig*>::iterator it;
-	for (it = vec.begin(); it != vec.end(); it++) {
-		scoped_ptr<ShareConfig> cfg(*it);
-		ret[cfg->vo] = cfg->active_transfers;
-	}
+    vector<ShareConfig*>::iterator it;
+    for (it = vec.begin(); it != vec.end(); it++)
+        {
+            scoped_ptr<ShareConfig> cfg(*it);
+            ret[cfg->vo] = cfg->active_transfers;
+        }
 
-	return ret;
+    return ret;
 }
 
-void Configuration::delLinkCfg(string source, string destination) {
+void Configuration::delLinkCfg(string source, string destination)
+{
 
-	scoped_ptr<LinkConfig> cfg (
-			db->getLinkConfig(source, destination)
-		);
+    scoped_ptr<LinkConfig> cfg (
+        db->getLinkConfig(source, destination)
+    );
 
-	if (!cfg.get()) {
+    if (!cfg.get())
+        {
 
-		if (source == wildcard || destination == wildcard) {
-			throw Err_Custom("The default configuration does not exist!");
-		}
+            if (source == wildcard || destination == wildcard)
+                {
+                    throw Err_Custom("The default configuration does not exist!");
+                }
 
-		string msg;
-		if (destination == any) {
-			msg += "A standalone configuration for " + source;
-		} else if (source == any) {
-			msg += "A standloane configuration for " + destination;
-		} else {
-			msg += "A pair configuration for " + source + " and " + destination;
-		}
+            string msg;
+            if (destination == any)
+                {
+                    msg += "A standalone configuration for " + source;
+                }
+            else if (source == any)
+                {
+                    msg += "A standloane configuration for " + destination;
+                }
+            else
+                {
+                    msg += "A pair configuration for " + source + " and " + destination;
+                }
 
-		msg += " does not exist!";
+            msg += " does not exist!";
 
-		throw Err_Custom(msg);
-	}
+            throw Err_Custom(msg);
+        }
 
 
-	db->deleteLinkConfig(source, destination);
-	deleteCount++;
+    db->deleteLinkConfig(source, destination);
+    deleteCount++;
 }
 
-void Configuration::delShareCfg(string source, string destination) {
+void Configuration::delShareCfg(string source, string destination)
+{
 
-	db->deleteShareConfig(source, destination);
-	deleteCount++;
+    db->deleteShareConfig(source, destination);
+    deleteCount++;
 }
 
 }

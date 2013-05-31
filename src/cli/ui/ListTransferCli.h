@@ -30,7 +30,10 @@
 #include "VoNameCli.h"
 #include "TransferCliBase.h"
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  * Command line utility for specifying the list of states of interest
@@ -38,43 +41,44 @@ namespace fts3 { namespace cli {
  * 		- state, positional parameter, allows for specifying several
  * 			states of interest
  */
-class ListTransferCli : public DnCli, public VoNameCli, public TransferCliBase {
+class ListTransferCli : public DnCli, public VoNameCli, public TransferCliBase
+{
 public:
 
-	/**
-	 * Default constructor.
-	 *
-	 * Creates the transfer-list specific command line options. State is
-	 * market as both: hidden and positional
-	 */
-	ListTransferCli();
+    /**
+     * Default constructor.
+     *
+     * Creates the transfer-list specific command line options. State is
+     * market as both: hidden and positional
+     */
+    ListTransferCli();
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~ListTransferCli();
+    /**
+     * Destructor.
+     */
+    virtual ~ListTransferCli();
 
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
+    /**
+     * Gives the instruction how to use the command line tool.
+     *
+     * @return a string with instruction on how to use the tool
+     */
+    string getUsageString(string tool);
 
-	/**
-	 * Gets a pointer to impl__ArrayOf_USCOREsoapenc_USCOREstring object.
-	 * The object contains set of statuses of interest. This are the statuses
-	 * that the user passed using command line options. If no statuses were
-	 * passed, the set is determined depending on the version of the FTS3 service.
-	 * The object is created using gSOAP memory-allocation utility, and will
-	 * be garbage collected. If there is a need to delete it manually gSOAP dedicated
-	 * functions should be used (in particular 'soap_unlink'!)
-	 *
-	 * @param soap - soap object corresponding to FTS3 service
-	 *
-	 * @return  impl__ArrayOf_USCOREsoapenc_USCOREstring
-	 */
-	vector<string> getStatusArray();
+    /**
+     * Gets a pointer to impl__ArrayOf_USCOREsoapenc_USCOREstring object.
+     * The object contains set of statuses of interest. This are the statuses
+     * that the user passed using command line options. If no statuses were
+     * passed, the set is determined depending on the version of the FTS3 service.
+     * The object is created using gSOAP memory-allocation utility, and will
+     * be garbage collected. If there is a need to delete it manually gSOAP dedicated
+     * functions should be used (in particular 'soap_unlink'!)
+     *
+     * @param soap - soap object corresponding to FTS3 service
+     *
+     * @return  impl__ArrayOf_USCOREsoapenc_USCOREstring
+     */
+    vector<string> getStatusArray();
 
 };
 

@@ -33,38 +33,47 @@ using namespace fts3::cli;
 /**
  * This is the entry point for the fts3-transfer-cancel command line tool.
  */
-int main(int ac, char* av[]) {
+int main(int ac, char* av[])
+{
 
-	try {
-		// create and initialize the command line utility
-		auto_ptr<VoNameCli> cli (
-				getCli<VoNameCli>(ac, av)
-			);
+    try
+        {
+            // create and initialize the command line utility
+            auto_ptr<VoNameCli> cli (
+                getCli<VoNameCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		impltns__listVOManagersResponse resp;
-		ctx.listVoManagers(cli->getVoName(), resp);
+            impltns__listVOManagersResponse resp;
+            ctx.listVoManagers(cli->getVoName(), resp);
 
-		vector<string> &vec = resp._listVOManagersReturn->item;
-		vector<string>::iterator it;
+            vector<string> &vec = resp._listVOManagersReturn->item;
+            vector<string>::iterator it;
 
-		for (it = vec.begin(); it < vec.end(); it++) {
-			cout << *it << endl;
-		}
+            for (it = vec.begin(); it < vec.end(); it++)
+                {
+                    cout << *it << endl;
+                }
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
-    } catch(string& ex) {
-    	cout << ex << endl;
-    	return 1;
-    } catch(...) {
-        cerr << "Exception of unknown type!\n";
-        return 1;
-    }
-	return 0;
+        }
+    catch(std::exception& e)
+        {
+            cerr << "error: " << e.what() << "\n";
+            return 1;
+        }
+    catch(string& ex)
+        {
+            cout << ex << endl;
+            return 1;
+        }
+    catch(...)
+        {
+            cerr << "Exception of unknown type!\n";
+            return 1;
+        }
+    return 0;
 }

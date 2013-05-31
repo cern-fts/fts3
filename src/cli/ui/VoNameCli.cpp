@@ -26,53 +26,64 @@
 
 using namespace fts3::cli;
 
-VoNameCli::VoNameCli(bool pos): pos(pos) {
+VoNameCli::VoNameCli(bool pos): pos(pos)
+{
 
-	if (pos) {
-		// add hidden options (not printed in help)
-		hidden.add_options()
-				("voname", value<string>(), "Specify VO name.")
-				;
+    if (pos)
+        {
+            // add hidden options (not printed in help)
+            hidden.add_options()
+            ("voname", value<string>(), "Specify VO name.")
+            ;
 
-		// the positional parameter goes to voname
-		p.add("voname", 1);
+            // the positional parameter goes to voname
+            p.add("voname", 1);
 
-	} else {
-        // add fts3-transfer-status specific options
-        specific.add_options()
-                        ("voname,o", value<string>(), "Restrict to specific VO")
-                        ;
-	}
+        }
+    else
+        {
+            // add fts3-transfer-status specific options
+            specific.add_options()
+            ("voname,o", value<string>(), "Restrict to specific VO")
+            ;
+        }
 }
 
-VoNameCli::~VoNameCli() {
+VoNameCli::~VoNameCli()
+{
 }
 
-optional<GSoapContextAdapter&> VoNameCli::validate(bool init) {
+optional<GSoapContextAdapter&> VoNameCli::validate(bool init)
+{
 
-	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
-	if (pos) {
-		if (getVoName().empty()) {
-			cout << "The VO name has to be specified" << endl;
-			return 0;
-		}
-	}
+    if (pos)
+        {
+            if (getVoName().empty())
+                {
+                    cout << "The VO name has to be specified" << endl;
+                    return 0;
+                }
+        }
 
-	return *ctx;
+    return *ctx;
 }
 
-string VoNameCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] VONAME";
+string VoNameCli::getUsageString(string tool)
+{
+    return "Usage: " + tool + " [options] VONAME";
 }
 
-string VoNameCli::getVoName() {
+string VoNameCli::getVoName()
+{
 
-	// check whether jobid has been given as a parameter
-	if (vm.count("voname")) {
-		return vm["voname"].as<string>();
-	}
+    // check whether jobid has been given as a parameter
+    if (vm.count("voname"))
+        {
+            return vm["voname"].as<string>();
+        }
 
-	return string();
+    return string();
 }
 

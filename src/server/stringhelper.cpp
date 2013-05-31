@@ -33,9 +33,10 @@ namespace StringHelper
 string getValue( const string& s, char del )
 {
     string::size_type pos = s.find( del );
-    if ( pos != string::npos && pos+1 < s.length() ) {
-        return s.substr( pos + 1 );
-    }
+    if ( pos != string::npos && pos+1 < s.length() )
+        {
+            return s.substr( pos + 1 );
+        }
     return "";
 }
 
@@ -43,33 +44,38 @@ string getValue( const string& s, char del )
 string getValueBefore( const string& s, char del )
 {
     string::size_type pos = s.find( del );
-    if ( pos != string::npos ) {
-        return s.substr( 0, pos );
-    }
+    if ( pos != string::npos )
+        {
+            return s.substr( 0, pos );
+        }
     return s;
 }
 
 
 string stripWhiteSpace( const string& s )
 {
-    if ( s.empty() ) {
-        return s;
-    }
+    if ( s.empty() )
+        {
+            return s;
+        }
 
     int pos = 0;
     string line = s;
     int len = (int) line.length();
-    while ( pos < len && isspace( line[static_cast<size_t>(pos)] ) ) {
-        ++pos;
-    }
+    while ( pos < len && isspace( line[static_cast<size_t>(pos)] ) )
+        {
+            ++pos;
+        }
     line.erase( 0, static_cast<size_t>(pos) );
     pos = static_cast<int>(line.length()) - 1;
-    while ( pos > -1 && isspace( line[static_cast<size_t>(pos)] ) ) {
-        --pos;
-    }
-    if ( pos != -1 ) {
-        line.erase( static_cast<size_t>(pos+1) );
-    }
+    while ( pos > -1 && isspace( line[static_cast<size_t>(pos)] ) )
+        {
+            --pos;
+        }
+    if ( pos != -1 )
+        {
+            line.erase( static_cast<size_t>(pos+1) );
+        }
     return line;
 }
 
@@ -79,17 +85,20 @@ bool startwith_nocase( const string& s1, const string& s2 )
     string::const_iterator p1 = s1.begin();
     string::const_iterator p2 = s2.begin();
 
-    while ( p1 != s1.end() && p2 != s2.end() ) {
-        if ( toupper( *p1 ) != toupper( *p2 ) ) {
+    while ( p1 != s1.end() && p2 != s2.end() )
+        {
+            if ( toupper( *p1 ) != toupper( *p2 ) )
+                {
+                    return false;
+                }
+            ++p1;
+            ++p2;
+        }
+
+    if ( p1 == s1.end() && p2 != s2.end() )
+        {
             return false;
         }
-        ++p1;
-        ++p2;
-    }
-
-    if ( p1 == s1.end() && p2 != s2.end() ) {
-        return false;
-    }
 
     return true;
 }
@@ -98,9 +107,10 @@ bool startwith_nocase( const string& s1, const string& s2 )
 string toLowerCase( const string& s )
 {
     string result = "";
-    for ( string::size_type i = 0; i < s.length(); ++i ) {
-        result += tolower( s[i] );
-    }
+    for ( string::size_type i = 0; i < s.length(); ++i )
+        {
+            result += tolower( s[i] );
+        }
 
     return result;
 }
@@ -109,9 +119,10 @@ string toLowerCase( const string& s )
 string toUpperCase( const string& s )
 {
     string result = "";
-    for ( string::size_type i = 0; i < s.length(); ++i ) {
-        result += toupper( s[i] );
-    }
+    for ( string::size_type i = 0; i < s.length(); ++i )
+        {
+            result += toupper( s[i] );
+        }
 
     return result;
 }
@@ -122,10 +133,11 @@ string replaceAll( string& in,
                    const string& newString )
 {
     size_t pos;
-    while ( (pos = in.find( oldString )) != string::npos ) {
-        in =
-            in.replace( pos, oldString.length(), newString );
-    }
+    while ( (pos = in.find( oldString )) != string::npos )
+        {
+            in =
+                in.replace( pos, oldString.length(), newString );
+        }
 
     return in;
 }

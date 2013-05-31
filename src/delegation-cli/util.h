@@ -5,9 +5,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,11 +66,11 @@ typedef struct _glite_uri			glite_uri;
  */
 struct _glite_uri
 {
-	int				hierarchical; /**< specifies wheter the URI is hierarhical or not. */
-	char				*scheme; /**< the URI scheme */
-	char				*endpoint; /**< the authority */
-	char				*path; /**< the path part of the URI */
-	char				*query; /**< the query part of the URI */
+    int				hierarchical; /**< specifies wheter the URI is hierarhical or not. */
+    char				*scheme; /**< the URI scheme */
+    char				*endpoint; /**< the authority */
+    char				*path; /**< the path part of the URI */
+    char				*query; /**< the query part of the URI */
 };
 
 /**
@@ -78,46 +78,46 @@ struct _glite_uri
  * @{
  */
 
-/** 
+/**
  * \brief Retrieve the value of "key" from either the environment or from
- * glite.conf. 
+ * glite.conf.
  *
  * @param key [IN] the key of which the value we are looking for.
  *
  * @return the associated value.
- * 
+ *
  */
 const char *glite_conf_value(const char *key);
 
 /**
- * \brief Get the value of GLITE_LOCATION. 
+ * \brief Get the value of GLITE_LOCATION.
  *
  * @return the value of GLITE_LOCATION. Never returns NULL.
  */
 const char *glite_location(void);
 
-/** 
+/**
  * \brief Get the value of GLITE_LOCATION_VAR.
  *
- * @return the value of GLITE_LOCATION_VAR. 
+ * @return the value of GLITE_LOCATION_VAR.
  */
 const char *glite_location_var(void);
 
 /**
  * \brief Get the directory where logfiles should be stored.
- * 
+ *
  * @return the directory where logfiles should be stored.
- */   
+ */
 const char *glite_location_log(void);
 
-/** 
+/**
  * \brief Get the value of GLITE_TMP.
  *
  * @return the value of GLITE_TMP. Never returns NULL.
  */
 const char *glite_tmp(void);
 
-/** 
+/**
  * Get the value of any glite package.
  *
  * @return the value of GLITE_<pkg>_<var> from either the environment,
@@ -147,7 +147,7 @@ char *glite_config_file(const char *file, int look_in_home);
  */
 glite_uri *glite_uri_new(const char *uri_str);
 
-/** 
+/**
  * \brief Destroy a parsed URI.
  *
  * @param uri the existing URI.
@@ -166,32 +166,32 @@ void glite_freeStringArray(int nitems, char *array[]);
  * \brief Look up a service with a given type using Service Discovery.
  *
  * Checks wheter an appropriate service exists, and gives back its name.
- * @param type [IN] the type we are interested in. 
+ * @param type [IN] the type we are interested in.
  * @param name [IN] the name of the service, or the service site or host name.
  * @param error [OUT] an array for the error messages.
  *
- * @return 
+ * @return
  */
 char *glite_discover_service(const char *type, const char *name, char **error);
-                                                                                                                                                      
-                                                                                                                                                      
+
+
 /**
  * \brief Look up a service with a given type using Service Discovery, using the
  * version as hint.
- * 
+ *
  * Checks wheter an appropriate service exists, and gives back its name. In case
  * multiple results are returned, select the one with the closest match with
  * the given interface version. The rule applied to find the closest is:
- * 1. same version 
- * 2. same major version number, greater minor 
- * 3. same major and minor, greater patch 
+ * 1. same version
+ * 2. same major version number, greater minor
+ * 3. same major and minor, greater patch
  * 4.(fallback) the first result returned.
- * @param type [IN] the type we are interested in. 
+ * @param type [IN] the type we are interested in.
  * @param name [IN] the name of the service, or the service site or host name.
  * @param version [IN] the service interface version hint.
  * @param error [OUT] an array for the error messages.
  *
- * @return 
+ * @return
  */
 char *glite_discover_service_by_version(const char *type, const char *name, const char * version, char **error);
 
@@ -199,11 +199,11 @@ char *glite_discover_service_by_version(const char *type, const char *name, cons
  * \brief Look up a service endpoint.
  *
  * Checks wheter an appropriate service exists, and gives back its endpoint.
- * @param type [IN] the type we are interested in. 
+ * @param type [IN] the type we are interested in.
  * @param name [IN] the name of the service.
  * @param error [OUT] an array for the error messages.
  *
- * @return 
+ * @return
  */
 char *glite_discover_endpoint(const char *type, const char *name, char **error);
 
@@ -212,19 +212,19 @@ char *glite_discover_endpoint(const char *type, const char *name, char **error);
  * version as hint.
  *
  * Checks wheter an appropriate service exists, using the version as hint, and gives back its endpoint.
- * @param type [IN] the type we are interested in. 
+ * @param type [IN] the type we are interested in.
  * @param name [IN] the name of the service, or it's site or host name
  * @param version [IN] the service interface version hint.
  * @param error [OUT] an array for the error messages.
  *
- * @return 
+ * @return
  */
 char *glite_discover_endpoint_by_version(const char *type, const char *name, const char * version, char **error);
 
 /**
  * \brief Query version of a service.
  * Checks wheter an appropriate service exists, and gives back its version.
- * @param type [IN] the type we are interested in. 
+ * @param type [IN] the type we are interested in.
  * @param name [IN] the name of the service.
  * @param error [OUT] an array for the error messages.
  *
@@ -258,7 +258,7 @@ int glite_check_versions(const char *client_ver, const char *service_ver);
 /**
  * \brief Get details about a service
  * Checks wheter an appropriate service exists, and gives back its details.
- * @param type [IN] the type we are interested in. 
+ * @param type [IN] the type we are interested in.
  * @param name [IN] the name of the service.
  * @param error [OUT] an array for the error messages.
  *
@@ -270,7 +270,7 @@ SDServiceDetails *glite_discover_getservicedetails(const char *type, const char 
 /**
  * \brief Get details about a service, using the service interfcae version as hint.
  * Checks wheter an appropriate service exists, using the version as hint, and gives back its details.
- * @param type [IN] the type we are interested in. 
+ * @param type [IN] the type we are interested in.
  * @param name [IN] the name of the service, or it's site or host name
  * @param version [IN] the service interface version hint.
  * @param error [OUT] an array for the error messages.
@@ -283,11 +283,11 @@ SDServiceDetails *glite_discover_getservicedetails_by_version(const char *type, 
 /**
  * \brief Select the entry from a list using the version as hint.
  *
- * Select the entry that best matches the given version. If no match is found, the one with the 
+ * Select the entry that best matches the given version. If no match is found, the one with the
  * same major number and greater minor number is returned. As fallback solution, the first
  * entry is returned.
  *
- * @return 
+ * @return
  */
 const SDService * select_service_by_version(const SDServiceList * list, const char * version);
 
@@ -296,7 +296,7 @@ const SDService * select_service_by_version(const SDServiceList * list, const ch
  *
  * Checks the user's VOMS certificate (if available) and retrieves the list of VOs of the client.
  *
- * @return 
+ * @return
  */
 SDVOList *check_voms_proxy(void);
 

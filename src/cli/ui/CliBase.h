@@ -36,7 +36,10 @@
 #include <vector>
 
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 using namespace boost::program_options;
 using namespace boost::property_tree;
@@ -56,202 +59,205 @@ using namespace boost;
  *  has to implement 'getUsageString()', which returns an instruction on how
  *  to use the given command line tool.
  */
-class CliBase {
+class CliBase
+{
 
 public:
 
-	///
-	static const string error;
-	///
-	static const string result;
-	///
-	static const string parameter_error;
+    ///
+    static const string error;
+    ///
+    static const string result;
+    ///
+    static const string parameter_error;
 
-	/**
-	 * Default constructor.
-	 *
-	 * Initializes service discovery parameters. Moreover creates the basic
-	 * command line options, and marks them as visible.
-	 */
-	CliBase();
+    /**
+     * Default constructor.
+     *
+     * Initializes service discovery parameters. Moreover creates the basic
+     * command line options, and marks them as visible.
+     */
+    CliBase();
 
-	/**
-	 * Destructor
-	 */
-	virtual ~CliBase();
+    /**
+     * Destructor
+     */
+    virtual ~CliBase();
 
-	/**
-	 * Initializes the object with command line options.
-	 *
-	 * Parses the command line options that were passed to the command line tool.
-	 * In addition check whether the format of the FTS3 service is correct. If
-	 * The FTS3 service is not specified the object tries to discover it.
-	 *
-	 * @param ac - argument count
-	 * @param av - argument array
-	 */
-	virtual void parse(int ac, char* av[]);
+    /**
+     * Initializes the object with command line options.
+     *
+     * Parses the command line options that were passed to the command line tool.
+     * In addition check whether the format of the FTS3 service is correct. If
+     * The FTS3 service is not specified the object tries to discover it.
+     *
+     * @param ac - argument count
+     * @param av - argument array
+     */
+    virtual void parse(int ac, char* av[]);
 
-	/**
-	 * Validates command line options
-	 * 1. Checks the endpoint
-	 * 2. If -h or -V option were used respective informations are printed
-	 * 3. GSoapContexAdapter is created, and info about server requested
-	 * 4. Additional check regarding server are performed
-	 * 5. If verbal additional info is printed
-	 *
-	 * @return GSoapContexAdapter instance, or null if all activities
-	 * 				requested using program options have been done.
-	 */
-	virtual optional<GSoapContextAdapter&> validate(bool init = true);
+    /**
+     * Validates command line options
+     * 1. Checks the endpoint
+     * 2. If -h or -V option were used respective informations are printed
+     * 3. GSoapContexAdapter is created, and info about server requested
+     * 4. Additional check regarding server are performed
+     * 5. If verbal additional info is printed
+     *
+     * @return GSoapContexAdapter instance, or null if all activities
+     * 				requested using program options have been done.
+     */
+    virtual optional<GSoapContextAdapter&> validate(bool init = true);
 
-	/**
-	 * Prints help message if the -h option has been used.
-	 *
-	 * @param tool - the name of the executive that has been called (in most cases argv[0])
-	 *
-	 * @return true if the help message has been printed
-	 */
-	virtual bool printHelp(string tool);
+    /**
+     * Prints help message if the -h option has been used.
+     *
+     * @param tool - the name of the executive that has been called (in most cases argv[0])
+     *
+     * @return true if the help message has been printed
+     */
+    virtual bool printHelp(string tool);
 
-	/**
-	 * Prints version if the -V option has been used.
-	 *
-	 * @return true if the version has been printed
-	 */
-	bool printVersion();
+    /**
+     * Prints version if the -V option has been used.
+     *
+     * @return true if the version has been printed
+     */
+    bool printVersion();
 
-	/**
-	 * Checks whether the -v option was used.
-	 *
-	 * @return true if -v option has been used
-	 */
-	bool isVerbose();
+    /**
+     * Checks whether the -v option was used.
+     *
+     * @return true if -v option has been used
+     */
+    bool isVerbose();
 
-	/**
-	 * Checks whether the -q option was used.
-	 *
-	 * @return true if -q option has been used
-	 */
-	bool isQuite();
+    /**
+     * Checks whether the -q option was used.
+     *
+     * @return true if -q option has been used
+     */
+    bool isQuite();
 
-	/**
-	 * Gets the FTS3 service string
-	 *
-	 * @return FTS3 service string
-	 */
-	string getService();
+    /**
+     * Gets the FTS3 service string
+     *
+     * @return FTS3 service string
+     */
+    string getService();
 
-	/**
-	 * Pure virtual method, it aim is to give the instruction how to use the command line tool.
-	 *
-	 * @param tool - name of the fts3 tool that is using this utility (e.g. 'fts3-transfer-submit')
-	 *
-	 * @return implementing class should return a string with instruction on how to use the tool
-	 */
-	virtual string getUsageString(string tool);
+    /**
+     * Pure virtual method, it aim is to give the instruction how to use the command line tool.
+     *
+     * @param tool - name of the fts3 tool that is using this utility (e.g. 'fts3-transfer-submit')
+     *
+     * @return implementing class should return a string with instruction on how to use the tool
+     */
+    virtual string getUsageString(string tool);
 
-	MsgPrinter& printer() {
-		return msgPrinter;
-	}
+    MsgPrinter& printer()
+    {
+        return msgPrinter;
+    }
 
 protected:
 
-	/**
-	 * check if it's possible to use fts3 server config file to discover the endpoint
-	 *
-	 * @return true
-	 */
-	virtual bool useSrvConfig() {
-		return true;
-	}
+    /**
+     * check if it's possible to use fts3 server config file to discover the endpoint
+     *
+     * @return true
+     */
+    virtual bool useSrvConfig()
+    {
+        return true;
+    }
 
-	/**
-	 * Discovers the FTS3 service (if the -s option has not been used).
-	 *
-	 * Uses ServiceDiscoveryIfce to find a FTS3 service.
-	 *
-	 * @return FTS3 service string
-	 */
-	string discoverService();
+    /**
+     * Discovers the FTS3 service (if the -s option has not been used).
+     *
+     * Uses ServiceDiscoveryIfce to find a FTS3 service.
+     *
+     * @return FTS3 service string
+     */
+    string discoverService();
 
-	/**
-	 * a map containing parsed options
-	 */
-	variables_map vm;
+    /**
+     * a map containing parsed options
+     */
+    variables_map vm;
 
-	/**
-	 * basic command line options provided by CliBase
-	 */
-	options_description basic;
+    /**
+     * basic command line options provided by CliBase
+     */
+    options_description basic;
 
-	/**
-	 * command line options that are printed if -h option has been used
-	 */
-	options_description visible;
+    /**
+     * command line options that are printed if -h option has been used
+     */
+    options_description visible;
 
-	/**
-	 * all command line options, inheriting class should add its options to 'cli_option'
-	 */
-	options_description all;
+    /**
+     * all command line options, inheriting class should add its options to 'cli_option'
+     */
+    options_description all;
 
-	/**
-	 * command line parameters that are passed without any switch option e.g. -p
-	 */
-	positional_options_description p;
+    /**
+     * command line parameters that are passed without any switch option e.g. -p
+     */
+    positional_options_description p;
 
-	/**
-	 * command line options specific for fts3-transfer-status
-	 */
-	options_description specific;
+    /**
+     * command line options specific for fts3-transfer-status
+     */
+    options_description specific;
 
-	/**
-	 * hidden command line options (not printed in help)
-	 */
-	options_description hidden;
+    /**
+     * hidden command line options (not printed in help)
+     */
+    options_description hidden;
 
-	/**
-	 * command line option specific for a command
-	 */
-	options_description command_specific;
+    /**
+     * command line option specific for a command
+     */
+    options_description command_specific;
 
-	/**
-	 * the FTS3 service endpoint
-	 */
-	string endpoint;
+    /**
+     * the FTS3 service endpoint
+     */
+    string endpoint;
 
-	/**
-	 * the name of the utility
-	 */
-	string toolname;
+    /**
+     * the name of the utility
+     */
+    string toolname;
 
-	/**
-	 * gsoap context
-	 */
-	GSoapContextAdapter* ctx;
+    /**
+     * gsoap context
+     */
+    GSoapContextAdapter* ctx;
 
 private:
 
-	/**
-	 *
-	 */
-	string getCliVersion();
+    /**
+     *
+     */
+    string getCliVersion();
 
-	string version;
-	string interface;
+    string version;
+    string interface;
 
-	///@{
-	/**
-	 * string values used for discovering the FTS3 service
-	 */
-	string FTS3_CA_SD_TYPE;
-	string FTS3_SD_ENV;
-	string FTS3_SD_TYPE;
-	string FTS3_IFC_VERSION;
-	string FTS3_INTERFACE_VERSION;
-	///@}
+    ///@{
+    /**
+     * string values used for discovering the FTS3 service
+     */
+    string FTS3_CA_SD_TYPE;
+    string FTS3_SD_ENV;
+    string FTS3_SD_TYPE;
+    string FTS3_IFC_VERSION;
+    string FTS3_INTERFACE_VERSION;
+    ///@}
 
-	MsgPrinter msgPrinter;
+    MsgPrinter msgPrinter;
 };
 
 /**
@@ -261,11 +267,12 @@ private:
  * 	2. parsing parameters accordingly to the options created in step 1.
  */
 template<typename CLI>
-CLI* getCli(int ac, char* av[]) {
+CLI* getCli(int ac, char* av[])
+{
 
-	CliBase* ret = new CLI; // done to ensure it's used only with classes derived from CliBase
-	ret->parse(ac, av);
-	return dynamic_cast<CLI*>(ret);
+    CliBase* ret = new CLI; // done to ensure it's used only with classes derived from CliBase
+    ret->parse(ac, av);
+    return dynamic_cast<CLI*>(ret);
 }
 
 }

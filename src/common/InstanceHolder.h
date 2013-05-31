@@ -30,7 +30,10 @@
 
 using namespace boost;
 
-namespace fts3 { namespace common {
+namespace fts3
+{
+namespace common
+{
 
 
 /**
@@ -51,61 +54,64 @@ namespace fts3 { namespace common {
  *
  */
 template <typename T>
-class InstanceHolder {
+class InstanceHolder
+{
 
 public:
 
-	/**
-	 * Gets a references to T. Note that the method is not thread safe.
-	 * If a thread-safe implementation is needed, the one provided by
-	 * ThreadSafeInstanceHolder should be used.
-	 *
-	 * @return reference to T
-	 *
-	 * @see ThreadSafeInstanceHolder
-	 */
-	static T& getInstance() {
-		// thread safe lazy loading
-	    if (instance.get() == 0) {
-            instance.reset(new T);
-	    }
-	    return *instance;
-	}
+    /**
+     * Gets a references to T. Note that the method is not thread safe.
+     * If a thread-safe implementation is needed, the one provided by
+     * ThreadSafeInstanceHolder should be used.
+     *
+     * @return reference to T
+     *
+     * @see ThreadSafeInstanceHolder
+     */
+    static T& getInstance()
+    {
+        // thread safe lazy loading
+        if (instance.get() == 0)
+            {
+                instance.reset(new T);
+            }
+        return *instance;
+    }
 
 
-	/**
-	 * Destructor (empty).
-	 */
-	virtual ~InstanceHolder() {};
+    /**
+     * Destructor (empty).
+     */
+    virtual ~InstanceHolder() {};
 
 protected:
 
-	/**
-	 * Default constructor (empty).
-	 *
-	 * Private
-	 */
-	InstanceHolder() {};
+    /**
+     * Default constructor (empty).
+     *
+     * Private
+     */
+    InstanceHolder() {};
 
-	/**
-	 * The single instance
-	 */
-	static scoped_ptr<T> instance;
+    /**
+     * The single instance
+     */
+    static scoped_ptr<T> instance;
 
 private:
-	/**
-	 * Copying constructor.
-	 *
-	 * Private, should not be used
-	 */
-	InstanceHolder(InstanceHolder const&);
+    /**
+     * Copying constructor.
+     *
+     * Private, should not be used
+     */
+    InstanceHolder(InstanceHolder const&);
 
-	/**
-	 * Assignment operator.
-	 *
-	 * Private, should not be used
-	 */
-	InstanceHolder& operator= (InstanceHolder const&);
+    /**
+     * Assignment operator.
+     *
+     * Private, should not be used
+     */
+    InstanceHolder& operator= (InstanceHolder const&);
 };
 
 // initialize single instance pointer with 0

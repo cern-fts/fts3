@@ -44,217 +44,245 @@ using namespace boost::assign;
 using namespace fts3::cli;
 using namespace fts3::common;
 
-SubmitTransferCli::SubmitTransferCli() {
+SubmitTransferCli::SubmitTransferCli()
+{
 
-	/// 8 housrs in seconds
-	static const int eight_hours = 28800;
+    /// 8 housrs in seconds
+    static const int eight_hours = 28800;
 
-	// by default we don't use checksum
-	checksum = false;
+    // by default we don't use checksum
+    checksum = false;
 
-	// add commandline options specific for fts3-transfer-submit
-	specific.add_options()
-			("blocking,b", "Blocking mode, wait until the operation completes.")
-			("file,f", value<string>(&bulk_file), "Name of a configuration file.")
-			("gparam,g", value<string>(), "Gridftp parameters.")
-			("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
+    // add commandline options specific for fts3-transfer-submit
+    specific.add_options()
+    ("blocking,b", "Blocking mode, wait until the operation completes.")
+    ("file,f", value<string>(&bulk_file), "Name of a configuration file.")
+    ("gparam,g", value<string>(), "Gridftp parameters.")
+    ("interval,i", value<int>(), "Interval between two poll operations in blocking mode.")
 //			("myproxysrv,m", value<string>(), "MyProxy server to use.")
 //			("password,p", value<string>(), "MyProxy password to send with the job")
-			("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
-			("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
-			("overwrite,o", "Overwrite files.")
-			("dest-token,t", value<string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
-			("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
-			("compare-checksum,K", "Compare checksums between source and destination.")
-			("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
-			("bring-online", value<int>()->implicit_value(eight_hours)->default_value(-1), "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
-			("lan-connection", "use LAN as ConnectionType (default = WAN)")
-			("fail-nearline", "fail the transfer if the file is nearline")
-			("reuse,r", "enable session reuse for the transfer job")
-			("job-metadata", value<string>(), "transfer-job metadata")
-			("file-metadata", value<string>(), "file metadata")
-			("file-size", value<double>(), "file size (in Bytes)")
-			("new-bulk-format", "New JSON format for bulk submission will be used")
-			("retry", value<int>(), "Number of retries")
-			("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
-			;
+    ("id,I", value<string>(), "Delegation with ID as the delegation identifier.")
+    ("expire,e", value<long>(), "Expiration time of the delegation in minutes.")
+    ("overwrite,o", "Overwrite files.")
+    ("dest-token,t", value<string>(),  "The destination space token or its description (for SRM 2.2 transfers).")
+    ("source-token,S", value<string>(), "The source space token or its description (for SRM 2.2 transfers).")
+    ("compare-checksum,K", "Compare checksums between source and destination.")
+    ("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
+    ("bring-online", value<int>()->implicit_value(eight_hours)->default_value(-1), "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
+    ("lan-connection", "use LAN as ConnectionType (default = WAN)")
+    ("fail-nearline", "fail the transfer if the file is nearline")
+    ("reuse,r", "enable session reuse for the transfer job")
+    ("job-metadata", value<string>(), "transfer-job metadata")
+    ("file-metadata", value<string>(), "file metadata")
+    ("file-size", value<double>(), "file size (in Bytes)")
+    ("new-bulk-format", "New JSON format for bulk submission will be used")
+    ("retry", value<int>(), "Number of retries")
+    ("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
+    ;
 
-	// add hidden options
-	hidden.add_options()
-			("checksum", value<string>(), "Specify checksum algorithm and value (ALGORITHM:1234af).")
-			;
+    // add hidden options
+    hidden.add_options()
+    ("checksum", value<string>(), "Specify checksum algorithm and value (ALGORITHM:1234af).")
+    ;
 
-	// add positional (those used without an option switch) command line options
-	p.add("checksum", 1);
-
-}
-
-SubmitTransferCli::~SubmitTransferCli() {
+    // add positional (those used without an option switch) command line options
+    p.add("checksum", 1);
 
 }
 
-void SubmitTransferCli::parse(int ac, char* av[]) {
+SubmitTransferCli::~SubmitTransferCli()
+{
 
-	// do the basic initialization
-	CliBase::parse(ac, av);
-
-	// check whether to use delegation
-	if (vm.count("id")) {
-		delegate = true;
-	}
 }
 
-optional<GSoapContextAdapter&> SubmitTransferCli::validate(bool init) {
+void SubmitTransferCli::parse(int ac, char* av[])
+{
 
-	// do the standard validation
-	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    // do the basic initialization
+    CliBase::parse(ac, av);
 
-	// perform standard checks in order to determine if the job was well specified
-	if(!performChecks()) return optional<GSoapContextAdapter&>();
-
-	// prepare job elements
-	if (!createJobElements()) return optional<GSoapContextAdapter&>();
-
-	return *ctx;
+    // check whether to use delegation
+    if (vm.count("id"))
+        {
+            delegate = true;
+        }
 }
 
-string SubmitTransferCli::getDelegationId() {
+optional<GSoapContextAdapter&> SubmitTransferCli::validate(bool init)
+{
 
-	// check if destination was passed via command line options
-	if (vm.count("id")) {
-		return vm["id"].as<string>();
-	}
-	return "";
+    // do the standard validation
+    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+
+    // perform standard checks in order to determine if the job was well specified
+    if(!performChecks()) return optional<GSoapContextAdapter&>();
+
+    // prepare job elements
+    if (!createJobElements()) return optional<GSoapContextAdapter&>();
+
+    return *ctx;
 }
 
-long SubmitTransferCli::getExpirationTime() {
+string SubmitTransferCli::getDelegationId()
+{
 
-	if (vm.count("expire")) {
-		return vm["expire"].as<long>();
-	}
-	return 0;
+    // check if destination was passed via command line options
+    if (vm.count("id"))
+        {
+            return vm["id"].as<string>();
+        }
+    return "";
+}
+
+long SubmitTransferCli::getExpirationTime()
+{
+
+    if (vm.count("expire"))
+        {
+            return vm["expire"].as<long>();
+        }
+    return 0;
 }
 
 
-optional<string> SubmitTransferCli::getMetadata() {
+optional<string> SubmitTransferCli::getMetadata()
+{
 
-	if (vm.count("job-metadata")) {
-		return vm["job-metadata"].as<string>();
-	}
-	return optional<string>();
+    if (vm.count("job-metadata"))
+        {
+            return vm["job-metadata"].as<string>();
+        }
+    return optional<string>();
 }
 
 
-bool SubmitTransferCli::createJobElements() {
+bool SubmitTransferCli::createJobElements()
+{
 
-	// first check if the -f option was used, try to open the file with bulk-job description
-	ifstream ifs(bulk_file.c_str());
-    if (ifs) {
+    // first check if the -f option was used, try to open the file with bulk-job description
+    ifstream ifs(bulk_file.c_str());
+    if (ifs)
+        {
 
-    	if (vm.count("new-bulk-format")) {
+            if (vm.count("new-bulk-format"))
+                {
 
-    		BulkSubmissionParser bulk(ifs);
-			files = bulk.getFiles();
+                    BulkSubmissionParser bulk(ifs);
+                    files = bulk.getFiles();
 
-    	} else {
+                }
+            else
+                {
 
-			// Parse the file
-			int lineCount = 0;
-			string line;
-			// define the seperator characters (space) for tokenizing each line
-			char_separator<char> sep(" ");
-			// read and parse the lines one by one
-			do {
-				lineCount++;
-				getline(ifs, line);
+                    // Parse the file
+                    int lineCount = 0;
+                    string line;
+                    // define the seperator characters (space) for tokenizing each line
+                    char_separator<char> sep(" ");
+                    // read and parse the lines one by one
+                    do
+                        {
+                            lineCount++;
+                            getline(ifs, line);
 
-				// split the line into tokens
-				tokenizer< char_separator<char> > tokens(line, sep);
-				tokenizer< char_separator<char> >::iterator it;
+                            // split the line into tokens
+                            tokenizer< char_separator<char> > tokens(line, sep);
+                            tokenizer< char_separator<char> >::iterator it;
 
-				// we are expecting up to 3 elements in each line
-				// source, destination and optionally the checksum
-				File file;
+                            // we are expecting up to 3 elements in each line
+                            // source, destination and optionally the checksum
+                            File file;
 
-				// the first part should be the source
-				it = tokens.begin();
-				if (it != tokens.end())
-					file.sources.push_back(*it);
-				else
-					// if the line was empty continue
-					continue;
+                            // the first part should be the source
+                            it = tokens.begin();
+                            if (it != tokens.end())
+                                file.sources.push_back(*it);
+                            else
+                                // if the line was empty continue
+                                continue;
 
-				// the second part should be the destination
-				it++;
-				if (it != tokens.end())
-					file.destinations.push_back(*it);
-				else {
-					// only one element is still not enough to define a job
-					printer().bulk_submission_error(lineCount, "destination is missing");
-					continue;
-				}
+                            // the second part should be the destination
+                            it++;
+                            if (it != tokens.end())
+                                file.destinations.push_back(*it);
+                            else
+                                {
+                                    // only one element is still not enough to define a job
+                                    printer().bulk_submission_error(lineCount, "destination is missing");
+                                    continue;
+                                }
 
-				// the third part should be the checksum (but its optional)
-				it++;
-				if (it != tokens.end()) {
+                            // the third part should be the checksum (but its optional)
+                            it++;
+                            if (it != tokens.end())
+                                {
 
-					string checksum_str = *it;					
+                                    string checksum_str = *it;
 
-					checksum = true;
-					file.checksums.push_back(checksum_str);
-				}
+                                    checksum = true;
+                                    file.checksums.push_back(checksum_str);
+                                }
 
-				files.push_back(file);
+                            files.push_back(file);
 
-			} while (!ifs.eof());
+                        }
+                    while (!ifs.eof());
 
-    	}
+                }
 
-    } else {
+        }
+    else
+        {
 
-    	// the -f was not used, so use the values passed via CLI
+            // the -f was not used, so use the values passed via CLI
 
-    	// first, if the checksum algorithm has been given check if the
-    	// format is correct (ALGORITHM:1234af)
-    	vector<string> checksums;
-    	if (vm.count("checksum")) {
-    		checksums.push_back(vm["checksum"].as<string>());
-			this->checksum = true;
-    	}
+            // first, if the checksum algorithm has been given check if the
+            // format is correct (ALGORITHM:1234af)
+            vector<string> checksums;
+            if (vm.count("checksum"))
+                {
+                    checksums.push_back(vm["checksum"].as<string>());
+                    this->checksum = true;
+                }
 
-    	// check if size of the file has been specified
-    	optional<double> filesize;
-    	if (vm.count("file-size")) {
-    		filesize = vm["file-size"].as<double>();
-    	}
+            // check if size of the file has been specified
+            optional<double> filesize;
+            if (vm.count("file-size"))
+                {
+                    filesize = vm["file-size"].as<double>();
+                }
 
-    	// check if there are some file metadata
-    	optional<string> file_metadata;
-    	if (vm.count("file-metadata")) {
-    		file_metadata = vm["file-metadata"].as<string>();
-    	}
+            // check if there are some file metadata
+            optional<string> file_metadata;
+            if (vm.count("file-metadata"))
+                {
+                    file_metadata = vm["file-metadata"].as<string>();
+                }
 
-    	// then if the source and destination have been given create a Task
-    	if (!getSource().empty() && !getDestination().empty()) {
+            // then if the source and destination have been given create a Task
+            if (!getSource().empty() && !getDestination().empty())
+                {
 
-    		files.push_back (
-    				File (list_of(getSource()), list_of(getDestination()), checksums, filesize, file_metadata)
-    			);
-    	}
-    }
+                    files.push_back (
+                        File (list_of(getSource()), list_of(getDestination()), checksums, filesize, file_metadata)
+                    );
+                }
+        }
 
     return true;
 }
 
-vector<File> SubmitTransferCli::getFiles() {
+vector<File> SubmitTransferCli::getFiles()
+{
 
-	return files;
+    return files;
 }
 
-bool SubmitTransferCli::performChecks() {
+bool SubmitTransferCli::performChecks()
+{
 
-	// in FTS3 delegation is supported by default
-	delegate = true;
+    // in FTS3 delegation is supported by default
+    delegate = true;
 
 //	// if the user specified the password set the value of 'password' variable
 //    if (vm.count("password")) {
@@ -270,26 +298,30 @@ bool SubmitTransferCli::performChecks() {
 //    	}
 //    }
 
-	// the job cannot be specified twice
-	if ((!getSource().empty() || !getDestination().empty()) && vm.count("file")) {
-		printer().error_msg("You may not specify a transfer on the command line if the -f option is used.");
-		return false;
-	}
+    // the job cannot be specified twice
+    if ((!getSource().empty() || !getDestination().empty()) && vm.count("file"))
+        {
+            printer().error_msg("You may not specify a transfer on the command line if the -f option is used.");
+            return false;
+        }
 
-	if (vm.count("file-size") && vm.count("file")) {
-		printer().error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
-		return false;
-	}
+    if (vm.count("file-size") && vm.count("file"))
+        {
+            printer().error_msg("If a bulk submission has been used file size has to be specified inside the bulk file separately for each file and no using '--file-size' option!");
+            return false;
+        }
 
-	if (vm.count("file-metadata") && vm.count("file")) {
-		printer().error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
-		return false;
-	}
+    if (vm.count("file-metadata") && vm.count("file"))
+        {
+            printer().error_msg("If a bulk submission has been used file metadata have to be specified inside the bulk file separately for each file and no using '--file-metadata' option!");
+            return false;
+        }
 
     return true;
 }
 
-string SubmitTransferCli::askForPassword() {
+string SubmitTransferCli::askForPassword()
+{
 
     termios stdt;
     // get standard command line settings
@@ -297,11 +329,12 @@ string SubmitTransferCli::askForPassword() {
     termios newt = stdt;
     // turn off echo while typing
     newt.c_lflag &= ~ECHO;
-    if (tcsetattr(STDIN_FILENO, TCSANOW, &newt)) {
-    	cout << "submit: could not set terminal attributes" << endl;
-    	tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
-    	return "";
-    }
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &newt))
+        {
+            cout << "submit: could not set terminal attributes" << endl;
+            tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
+            return "";
+        }
 
     string pass1, pass2;
 
@@ -315,95 +348,114 @@ string SubmitTransferCli::askForPassword() {
     tcsetattr(STDIN_FILENO, TCSANOW, &stdt);
 
     // compare passwords
-    if (pass1.compare(pass2)) {
-    	cout << "Entered MyProxy passwords do not match." << endl;
-    	return "";
-    }
+    if (pass1.compare(pass2))
+        {
+            cout << "Entered MyProxy passwords do not match." << endl;
+            return "";
+        }
 
     return pass1;
 }
 
-map<string, string> SubmitTransferCli::getParams() {
+map<string, string> SubmitTransferCli::getParams()
+{
 
-	map<string, string> parameters;
+    map<string, string> parameters;
 
-	// check if the parameters were set using CLI, and if yes set them
+    // check if the parameters were set using CLI, and if yes set them
 
-	if (vm.count("compare-checksum")) {
-		parameters[JobParameterHandler::CHECKSUM_METHOD] = "compare";
-	}
+    if (vm.count("compare-checksum"))
+        {
+            parameters[JobParameterHandler::CHECKSUM_METHOD] = "compare";
+        }
 
-	if (vm.count("overwrite")) {
-		parameters[JobParameterHandler::OVERWRITEFLAG] = "Y";
-	}
+    if (vm.count("overwrite"))
+        {
+            parameters[JobParameterHandler::OVERWRITEFLAG] = "Y";
+        }
 
-	if (vm.count("lan-connection")) {
-		parameters[JobParameterHandler::LAN_CONNECTION] = "Y";
-	}
+    if (vm.count("lan-connection"))
+        {
+            parameters[JobParameterHandler::LAN_CONNECTION] = "Y";
+        }
 
-	if (vm.count("fail-nearline")) {
-		parameters[JobParameterHandler::FAIL_NEARLINE] = "Y";
-	}
+    if (vm.count("fail-nearline"))
+        {
+            parameters[JobParameterHandler::FAIL_NEARLINE] = "Y";
+        }
 
-	if (vm.count("gparam")) {
-		parameters[JobParameterHandler::GRIDFTP] = vm["gparam"].as<string>();
-	}
+    if (vm.count("gparam"))
+        {
+            parameters[JobParameterHandler::GRIDFTP] = vm["gparam"].as<string>();
+        }
 
-	if (vm.count("id")) {
-		parameters[JobParameterHandler::DELEGATIONID] = vm["id"].as<string>();
-	}
+    if (vm.count("id"))
+        {
+            parameters[JobParameterHandler::DELEGATIONID] = vm["id"].as<string>();
+        }
 
-	if (vm.count("dest-token")) {
-		parameters[JobParameterHandler::SPACETOKEN] = vm["dest-token"].as<string>();
-	}
+    if (vm.count("dest-token"))
+        {
+            parameters[JobParameterHandler::SPACETOKEN] = vm["dest-token"].as<string>();
+        }
 
-	if (vm.count("source-token")) {
-		parameters[JobParameterHandler::SPACETOKEN_SOURCE] = vm["source-token"].as<string>();
-	}
+    if (vm.count("source-token"))
+        {
+            parameters[JobParameterHandler::SPACETOKEN_SOURCE] = vm["source-token"].as<string>();
+        }
 
-	if (vm.count("copy-pin-lifetime")) {
-		int val = vm["copy-pin-lifetime"].as<int>();
-		if (val < -1) throw string("The 'copy-pin-lifetime' value has to be positive!");
-		parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<string>(val);
-	}
+    if (vm.count("copy-pin-lifetime"))
+        {
+            int val = vm["copy-pin-lifetime"].as<int>();
+            if (val < -1) throw string("The 'copy-pin-lifetime' value has to be positive!");
+            parameters[JobParameterHandler::COPY_PIN_LIFETIME] = lexical_cast<string>(val);
+        }
 
-	if (vm.count("bring-online")) {
-		int val = vm["bring-online"].as<int>();
-		if (val < -1) throw string("The 'bring-online' value has to be positive!");
-		parameters[JobParameterHandler::BRING_ONLINE] = lexical_cast<string>(val);
-	}
+    if (vm.count("bring-online"))
+        {
+            int val = vm["bring-online"].as<int>();
+            if (val < -1) throw string("The 'bring-online' value has to be positive!");
+            parameters[JobParameterHandler::BRING_ONLINE] = lexical_cast<string>(val);
+        }
 
-	if (vm.count("reuse")) {
-		parameters[JobParameterHandler::REUSE] = "Y";
-	}
+    if (vm.count("reuse"))
+        {
+            parameters[JobParameterHandler::REUSE] = "Y";
+        }
 
-	if (vm.count("job-metadata")) {
-		parameters[JobParameterHandler::JOB_METADATA] = vm["job-metadata"].as<string>();
-	}
+    if (vm.count("job-metadata"))
+        {
+            parameters[JobParameterHandler::JOB_METADATA] = vm["job-metadata"].as<string>();
+        }
 
-	if (vm.count("retry")) {
-		int val = vm["retry"].as<int>();
-		if (val < 0) throw string("The 'retry' value has to be positive!");
-		parameters[JobParameterHandler::RETRY] = lexical_cast<string>(val);
-	}
+    if (vm.count("retry"))
+        {
+            int val = vm["retry"].as<int>();
+            if (val < 0) throw string("The 'retry' value has to be positive!");
+            parameters[JobParameterHandler::RETRY] = lexical_cast<string>(val);
+        }
 
-	if (vm.count("retry-delay")) {
-		int val = vm["retry-delay"].as<int>();
-		if (val < 0) throw string("The 'retry-delay' value has to be positive!");
-		parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<string>(val);
-	}
+    if (vm.count("retry-delay"))
+        {
+            int val = vm["retry-delay"].as<int>();
+            if (val < 0) throw string("The 'retry-delay' value has to be positive!");
+            parameters[JobParameterHandler::RETRY_DELAY] = lexical_cast<string>(val);
+        }
 
-	return parameters;
+    return parameters;
 }
 
-string SubmitTransferCli::getPassword() {
-	return password;
+string SubmitTransferCli::getPassword()
+{
+    return password;
 }
 
-bool SubmitTransferCli::isBlocking() {
-	return vm.count("blocking");
+bool SubmitTransferCli::isBlocking()
+{
+    return vm.count("blocking");
 }
 
-string SubmitTransferCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] SOURCE DEST [CHECKSUM]";
+string SubmitTransferCli::getUsageString(string tool)
+{
+    return "Usage: " + tool + " [options] SOURCE DEST [CHECKSUM]";
 }

@@ -21,7 +21,7 @@
 
 namespace fts3
 {
-    struct SOAP_ENV__Fault;
+struct SOAP_ENV__Fault;
 }
 
 using namespace fts3;

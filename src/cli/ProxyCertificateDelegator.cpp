@@ -33,44 +33,53 @@
 
 #include <iostream>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 
 ProxyCertificateDelegator::ProxyCertificateDelegator(string endpoint, string delegationId, long userRequestedDelegationExpTime, MsgPrinter& printer):
-		delegationId(delegationId),
-		endpoint(endpoint),
-		userRequestedDelegationExpTime(userRequestedDelegationExpTime),
-		printer(printer) {
+    delegationId(delegationId),
+    endpoint(endpoint),
+    userRequestedDelegationExpTime(userRequestedDelegationExpTime),
+    printer(printer)
+{
 
     dctx = glite_delegation_new(endpoint.c_str());
-    if (dctx == NULL) {
-        throw string("delegation: could not initialize a delegation context");
-    }
+    if (dctx == NULL)
+        {
+            throw string("delegation: could not initialize a delegation context");
+        }
 
 }
 
-ProxyCertificateDelegator::~ProxyCertificateDelegator() {
+ProxyCertificateDelegator::~ProxyCertificateDelegator()
+{
 
     glite_delegation_free(dctx);
 }
 
-long ProxyCertificateDelegator::isCertValid(string filename) {
+long ProxyCertificateDelegator::isCertValid(string filename)
+{
 
-	// find user proxy certificate
-	FILE* fp;
-	if (!filename.empty()) {
-		fp = fopen(filename.c_str(), "r");
-	} else {
-		char* user_proxy = GRSTx509FindProxyFileName();
-		fp = fopen(user_proxy , "r");
-		free (user_proxy);
-	}
+    // find user proxy certificate
+    FILE* fp;
+    if (!filename.empty())
+        {
+            fp = fopen(filename.c_str(), "r");
+        }
+    else
+        {
+            char* user_proxy = GRSTx509FindProxyFileName();
+            fp = fopen(user_proxy , "r");
+            free (user_proxy);
+        }
 
-	// if file could not be opened return 0
-	if (!fp) return 0;
+    // if file could not be opened return 0
+    if (!fp) return 0;
 
-	// read the certificate
+    // read the certificate
     X509 *cert = PEM_read_X509(fp, 0, 0, 0);
     fclose(fp);
 
@@ -84,105 +93,123 @@ long ProxyCertificateDelegator::isCertValid(string filename) {
     return time;
 }
 
-void ProxyCertificateDelegator::delegate() {
+void ProxyCertificateDelegator::delegate()
+{
 
-	// the default is to delegate, but not renew
+    // the default is to delegate, but not renew
     bool renewDelegation = false, needDelegation = true;
 
     // get local proxy run time
     time_t localProxyTimeLeft = isCertValid(string());
     printer.delegation_local_expiration(
-    		(long int)((localProxyTimeLeft) / 3600),
-    		(long int)((localProxyTimeLeft) % 3600 / 60)
-    	);
+        (long int)((localProxyTimeLeft) / 3600),
+        (long int)((localProxyTimeLeft) % 3600 / 60)
+    );
 
     // checking if there is already a delegated credenial
     time_t expTime;
     int err = glite_delegation_info(dctx, delegationId.c_str(), &expTime);
 
-    if (!err) {   // there is already a delegated proxy on the server
+    if (!err)     // there is already a delegated proxy on the server
+        {
 
-    	time_t timeLeftOnServer = expTime - time(0);
+            time_t timeLeftOnServer = expTime - time(0);
 
-    	printer.delegation_service_proxy(
-    			(long int)((timeLeftOnServer) / 3600),
-    			(long int)((timeLeftOnServer) % 3600 / 60)
-    		);
+            printer.delegation_service_proxy(
+                (long int)((timeLeftOnServer) / 3600),
+                (long int)((timeLeftOnServer) % 3600 / 60)
+            );
 
-        if (timeLeftOnServer > REDELEGATION_TIME_LIMIT) {
-            // don;t bother redelegating
-        	printer.delegation_msg(
-        			"Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours."
-        		);
-            needDelegation = false;
+            if (timeLeftOnServer > REDELEGATION_TIME_LIMIT)
+                {
+                    // don;t bother redelegating
+                    printer.delegation_msg(
+                        "Not bothering to do delegation, since the server already has a delegated credential for this user lasting longer than 4 hours."
+                    );
+                    needDelegation = false;
+                    renewDelegation = false;
+                }
+            else
+                {
+                    // think about redelegating
+                    if (localProxyTimeLeft > timeLeftOnServer)
+                        {
+                            // we improve the situation (the new proxy will last longer)
+                            printer.delegation_msg(
+                                "Will redo delegation since the credential on the server has left that 4 hours validity left."
+                            );
+                            needDelegation = true;
+                            renewDelegation = true; // renew rather than put
+                        }
+                    else
+                        {
+                            // we cannot improve the proxy on the server
+                            printer.delegation_msg(
+                                "Delegated proxy on server has less than 6 hours left.\nBut the local proxy has less time left than the one on the server, so cannot be used to refresh it!"
+                            );
+                            needDelegation=false;
+                        }
+                }
+        }
+    else
+        {
+            // no proxy on server: do standard delegation
+            printer.delegation_msg("No proxy found on server. Requesting standard delegation.");
+            needDelegation = true;
             renewDelegation = false;
-        } else {
-            // think about redelegating
-            if (localProxyTimeLeft > timeLeftOnServer) {
-                // we improve the situation (the new proxy will last longer)
-            	printer.delegation_msg(
-            			"Will redo delegation since the credential on the server has left that 4 hours validity left."
-            		);
-                needDelegation = true;
-                renewDelegation = true; // renew rather than put
-            } else {
-                // we cannot improve the proxy on the server
-            	printer.delegation_msg(
-            			"Delegated proxy on server has less than 6 hours left.\nBut the local proxy has less time left than the one on the server, so cannot be used to refresh it!"
-            		);
-                needDelegation=false;
-            }
-        }
-    } else {
-        // no proxy on server: do standard delegation
-    	printer.delegation_msg("No proxy found on server. Requesting standard delegation.");
-        needDelegation = true;
-        renewDelegation = false;
-    }
-
-    if (needDelegation) {
-
-    	long requestProxyDelegationTime;
-
-        if (userRequestedDelegationExpTime == 0) {
-            requestProxyDelegationTime = (int)localProxyTimeLeft - 60; // 60 seconds off current proxy
-            if (requestProxyDelegationTime > MAXIMUM_TIME_FOR_DELEGATION_REQUEST ) {
-                requestProxyDelegationTime = MAXIMUM_TIME_FOR_DELEGATION_REQUEST;
-            }
-            if (requestProxyDelegationTime <= 0) {
-                // using a proxy with less than 1 minute to go
-            	throw string ("Your local proxy has less than 1 minute to run, Please renew it before submitting a job.");
-            }
-        } else {
-            requestProxyDelegationTime = userRequestedDelegationExpTime;
         }
 
-        printer.delegation_request_duration(
-        		(int)((requestProxyDelegationTime) / 3600),
-        		(int)((requestProxyDelegationTime) % 3600 / 60)
-        	);
+    if (needDelegation)
+        {
 
-        err = glite_delegation_delegate(
-        		dctx, delegationId.c_str(),
-        		(int)(requestProxyDelegationTime/60),
-                renewDelegation
-        	);
+            long requestProxyDelegationTime;
 
-        if (err == -1) {
-        	printer.delegation_request_success(false);
-        	string errMsg = glite_delegation_get_error(dctx);
+            if (userRequestedDelegationExpTime == 0)
+                {
+                    requestProxyDelegationTime = (int)localProxyTimeLeft - 60; // 60 seconds off current proxy
+                    if (requestProxyDelegationTime > MAXIMUM_TIME_FOR_DELEGATION_REQUEST )
+                        {
+                            requestProxyDelegationTime = MAXIMUM_TIME_FOR_DELEGATION_REQUEST;
+                        }
+                    if (requestProxyDelegationTime <= 0)
+                        {
+                            // using a proxy with less than 1 minute to go
+                            throw string ("Your local proxy has less than 1 minute to run, Please renew it before submitting a job.");
+                        }
+                }
+            else
+                {
+                    requestProxyDelegationTime = userRequestedDelegationExpTime;
+                }
+
+            printer.delegation_request_duration(
+                (int)((requestProxyDelegationTime) / 3600),
+                (int)((requestProxyDelegationTime) % 3600 / 60)
+            );
+
+            err = glite_delegation_delegate(
+                      dctx, delegationId.c_str(),
+                      (int)(requestProxyDelegationTime/60),
+                      renewDelegation
+                  );
+
+            if (err == -1)
+                {
+                    printer.delegation_request_success(false);
+                    string errMsg = glite_delegation_get_error(dctx);
 //        	printer.delegation_request_error(errMsg);
 
 //            // TODO don't use string value to discover the error (???) do we need retry? yes we do!
-            if (errMsg.find("key values mismatch") != string::npos) {
-            	printer.delegation_request_retry();
-            	return delegate();
-            }
-            throw string(errMsg);
-        }
+                    if (errMsg.find("key values mismatch") != string::npos)
+                        {
+                            printer.delegation_request_retry();
+                            return delegate();
+                        }
+                    throw string(errMsg);
+                }
 
-        printer.delegation_request_success(true);
-    }
+            printer.delegation_request_success(true);
+        }
 }
 
 }

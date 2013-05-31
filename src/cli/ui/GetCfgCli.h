@@ -28,50 +28,54 @@
 #include "VoNameCli.h"
 #include "SrcDestCli.h"
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  *
  */
-class GetCfgCli: public SrcDestCli {
+class GetCfgCli: public SrcDestCli
+{
 
 public:
 
-	/**
-	 *
-	 */
-	GetCfgCli();
+    /**
+     *
+     */
+    GetCfgCli();
 
-	/**
-	 *
-	 */
-	virtual ~GetCfgCli();
+    /**
+     *
+     */
+    virtual ~GetCfgCli();
 
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
+    /**
+     * Gives the instruction how to use the command line tool.
+     *
+     * @return a string with instruction on how to use the tool
+     */
+    string getUsageString(string tool);
 
-	/**
-	 * Gets the SE name specified by user.
-	 *
-	 * return SE or SE group name if it was specified, otherwise an empty string
-	 */
-	string getName();
+    /**
+     * Gets the SE name specified by user.
+     *
+     * return SE or SE group name if it was specified, otherwise an empty string
+     */
+    string getName();
 
-	/**
-	 * Validates command line options
-	 * 1. Checks the endpoint
-	 * 2. If -h or -V option were used respective informations are printed
-	 * 3. GSoapContexAdapter is created, and info about server requested
-	 * 4. Additional check regarding server are performed
-	 * 5. If verbal additional info is printed
-	 *
-	 * @return GSoapContexAdapter instance, or null if all activities
-	 * 				requested using program options have been done.
-	 */
+    /**
+     * Validates command line options
+     * 1. Checks the endpoint
+     * 2. If -h or -V option were used respective informations are printed
+     * 3. GSoapContexAdapter is created, and info about server requested
+     * 4. Additional check regarding server are performed
+     * 5. If verbal additional info is printed
+     *
+     * @return GSoapContexAdapter instance, or null if all activities
+     * 				requested using program options have been done.
+     */
 //	virtual optional<GSoapContextAdapter&> validate(bool init = true);
 };
 

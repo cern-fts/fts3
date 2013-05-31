@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 #pragma once
@@ -35,40 +35,41 @@ FTS3_COMMON_NAMESPACE_START
 /* -------------------------------------------------------------------------- */
 
 /** Print the elements of a vector into a stream. Each elements go to a separate line. */
-template<class T> inline std::ostream& operator << 
+template<class T> inline std::ostream& operator <<
 (
     std::ostream& os, /**< Stream to be written into. */
     const std::vector<T>& x /**< Vector to be streamed. */)
 {
-	std::copy(x.begin(), x.end(), std::ostream_iterator<const T>(os, "\n"));
-	return os;
+    std::copy(x.begin(), x.end(), std::ostream_iterator<const T>(os, "\n"));
+    return os;
 }
 
 /* -------------------------------------------------------------------------- */
 
-/** Read the elements of a vector from a stream. Insert the elements to the end 
+/** Read the elements of a vector from a stream. Insert the elements to the end
  * of the vector. Vector elements must be "readable" as well. */
-template<class T> inline std::istream& operator >> 
+template<class T> inline std::istream& operator >>
 (
     std::istream& is, /**< Stream to be reade from. */
     std::vector<T>& x /**< Elements are added here. */)
 {
-	std::copy(std::istream_iterator<T>(is), std::istream_iterator<T>(), std::back_inserter(x));
-	return is;
+    std::copy(std::istream_iterator<T>(is), std::istream_iterator<T>(), std::back_inserter(x));
+    return is;
 }
 
-namespace ctl {
+namespace ctl
+{
 
 /* -------------------------------------------------------------------------- */
 
 template <class Container>
 struct _PtrContainerComparator : std::binary_function<typename Container::value_type, typename Container::value_type, bool>
 {
-	bool operator() (const typename Container::value_type lhs, const typename Container::value_type rhs) const
-	{
-		if (lhs == rhs) return true;
-		return lhs && rhs ? *rhs == *lhs : false;
-	}
+    bool operator() (const typename Container::value_type lhs, const typename Container::value_type rhs) const
+    {
+        if (lhs == rhs) return true;
+        return lhs && rhs ? *rhs == *lhs : false;
+    }
 };
 
 /* -------------------------------------------------------------------------- */

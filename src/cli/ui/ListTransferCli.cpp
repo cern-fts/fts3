@@ -28,38 +28,44 @@
 using namespace fts3::cli;
 using namespace fts3::common;
 
-ListTransferCli::ListTransferCli(): VoNameCli(false) {
+ListTransferCli::ListTransferCli(): VoNameCli(false)
+{
 
-	// add hidden options (not printed in help)
-	CliBase::hidden.add_options()
-			("state", value< vector<string> >(), "Specify states for querying.")
-			;
+    // add hidden options (not printed in help)
+    CliBase::hidden.add_options()
+    ("state", value< vector<string> >(), "Specify states for querying.")
+    ;
 
-	// all positional parameters go to state
-	CliBase::p.add("state", -1);
+    // all positional parameters go to state
+    CliBase::p.add("state", -1);
 }
 
-ListTransferCli::~ListTransferCli() {
+ListTransferCli::~ListTransferCli()
+{
 }
 
-string ListTransferCli::getUsageString(string tool) {
+string ListTransferCli::getUsageString(string tool)
+{
 
-	return "Usage: " + tool + " [options] [STATE...]";
+    return "Usage: " + tool + " [options] [STATE...]";
 }
 
-vector<string> ListTransferCli::getStatusArray() {
+vector<string> ListTransferCli::getStatusArray()
+{
 
-	vector<string> array;
+    vector<string> array;
 
-	if (CliBase::vm.count("state")) {
-		array = CliBase::vm["state"].as< vector<string> >();
-	}
+    if (CliBase::vm.count("state"))
+        {
+            array = CliBase::vm["state"].as< vector<string> >();
+        }
 
-	if (array.empty()) {
-		array.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
-		array.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
-		array.push_back(JobStatusHandler::FTS3_STATUS_READY);
-	}
+    if (array.empty())
+        {
+            array.push_back(JobStatusHandler::FTS3_STATUS_SUBMITTED);
+            array.push_back(JobStatusHandler::FTS3_STATUS_ACTIVE);
+            array.push_back(JobStatusHandler::FTS3_STATUS_READY);
+        }
 
-	return array;
+    return array;
 }

@@ -30,8 +30,10 @@
 #include <string>
 #include <vector>
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 using namespace fts3::common;
@@ -42,57 +44,58 @@ using namespace fts3::common;
  *
  * @see StandaloneCfg
  */
-class StandaloneGrCfg : public StandaloneCfg {
+class StandaloneGrCfg : public StandaloneCfg
+{
 
 public:
 
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration data from the DB.
-	 *
-	 * @param dn - client's DN
-	 * @param name - SE group name
-	 */
-	StandaloneGrCfg(string dn, string name);
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration data from the DB.
+     *
+     * @param dn - client's DN
+     * @param name - SE group name
+     */
+    StandaloneGrCfg(string dn, string name);
 
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration data from the given CfgParser for the given SE group
-	 *
-	 * @param dn - client's DN
-	 * @param parser - an object that has been used for parsing the JSON configuration
-	 */
-	StandaloneGrCfg(string dn, CfgParser& parser);
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration data from the given CfgParser for the given SE group
+     *
+     * @param dn - client's DN
+     * @param parser - an object that has been used for parsing the JSON configuration
+     */
+    StandaloneGrCfg(string dn, CfgParser& parser);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~StandaloneGrCfg();
+    /**
+     * Destructor.
+     */
+    virtual ~StandaloneGrCfg();
 
-	/**
-	 * Creates a string containing the JSON configuration common for a SE group 'standalone' configurations
-	 */
-	virtual string json();
+    /**
+     * Creates a string containing the JSON configuration common for a SE group 'standalone' configurations
+     */
+    virtual string json();
 
 
-	/**
-	 * Saves the current configuration into the DB
-	 */
-	virtual void save();
+    /**
+     * Saves the current configuration into the DB
+     */
+    virtual void save();
 
-	/**
-	 * Removes the configuration from the DB
-	 */
-	virtual void del();
+    /**
+     * Removes the configuration from the DB
+     */
+    virtual void del();
 
 private:
 
-	/// SE group name
-	string group;
-	/// SE group members
-	vector<string> members;
+    /// SE group name
+    string group;
+    /// SE group members
+    vector<string> members;
 };
 
 } /* namespace common */

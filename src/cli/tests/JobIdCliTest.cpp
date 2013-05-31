@@ -33,32 +33,34 @@
 using namespace std;
 using namespace fts3::cli;
 
-BOOST_AUTO_TEST_CASE (JobIDCli_Test1) {
+BOOST_AUTO_TEST_CASE (JobIDCli_Test1)
+{
 
-	// has to be const otherwise is deprecated
-	char* av[] = {
-			"prog_name",
-			"-s",
-			"https://fts3-server:8080",
-			"ID1",
-			"ID2",
-			"ID3"
-		};
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "ID1",
+        "ID2",
+        "ID3"
+    };
 
-	int ac = 6;
+    int ac = 6;
 
-	auto_ptr<JobIdCli> cli (
-			getCli<JobIdCli>(ac, av)
-		);
+    auto_ptr<JobIdCli> cli (
+        getCli<JobIdCli>(ac, av)
+    );
 
-	cli->validate(false);
+    cli->validate(false);
 
-	const vector<string>& ids = cli->getJobIds();
+    const vector<string>& ids = cli->getJobIds();
 
-	// the vector should have 3 elements
-	BOOST_CHECK(ids.size() == 3);
-	// check if the values are correct
-	BOOST_CHECK(ids[0] == "ID1");
-	BOOST_CHECK(ids[1] == "ID2");
-	BOOST_CHECK(ids[2] == "ID3");
+    // the vector should have 3 elements
+    BOOST_CHECK(ids.size() == 3);
+    // check if the values are correct
+    BOOST_CHECK(ids[0] == "ID1");
+    BOOST_CHECK(ids[1] == "ID2");
+    BOOST_CHECK(ids[2] == "ID3");
 }

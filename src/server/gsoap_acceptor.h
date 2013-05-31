@@ -33,11 +33,12 @@ using namespace FTS3_COMMON_NAMESPACE;
 class GSoapRequestHandler;
 
 
-class GSoapAcceptor: public MonitorObject {
+class GSoapAcceptor: public MonitorObject
+{
 
 public:
     GSoapAcceptor(const unsigned int port, const std::string& ip);
-   GSoapAcceptor(const fts3::server::GSoapAcceptor&);
+    GSoapAcceptor(const fts3::server::GSoapAcceptor&);
     virtual ~GSoapAcceptor();
 
     soap* getSoapContext();

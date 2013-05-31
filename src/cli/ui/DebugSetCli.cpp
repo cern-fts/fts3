@@ -29,79 +29,88 @@ using namespace fts3::cli;
 const string DebugSetCli::ON = "on";
 const string DebugSetCli::OFF = "off";
 
-DebugSetCli::DebugSetCli() {
+DebugSetCli::DebugSetCli()
+{
 
-	// add hidden options
-	hidden.add_options()
-			("opt1", value<string>())
-			("opt2", value<string>())
-			("opt3", value<string>())
-			;
+    // add hidden options
+    hidden.add_options()
+    ("opt1", value<string>())
+    ("opt2", value<string>())
+    ("opt3", value<string>())
+    ;
 
-	// add positional (those used without an option switch) command line options
-	p.add("opt1", 1);
-	p.add("opt2", 1);
-	p.add("opt3", 1);
+    // add positional (those used without an option switch) command line options
+    p.add("opt1", 1);
+    p.add("opt2", 1);
+    p.add("opt3", 1);
 }
 
-DebugSetCli::~DebugSetCli() {
+DebugSetCli::~DebugSetCli()
+{
 
 }
 
-optional<GSoapContextAdapter&> DebugSetCli::validate(bool init) {
+optional<GSoapContextAdapter&> DebugSetCli::validate(bool init)
+{
 
-	// do the standard validation
-	if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
+    // do the standard validation
+    if (!CliBase::validate(init).is_initialized()) return optional<GSoapContextAdapter&>();
 
-	vector<string> opts;
+    vector<string> opts;
 
-	if (vm.count("opt1")) {
-		opts.push_back(
-				vm["opt1"].as<string>()
-			);
-	}
+    if (vm.count("opt1"))
+        {
+            opts.push_back(
+                vm["opt1"].as<string>()
+            );
+        }
 
-	if (vm.count("opt2")) {
-		opts.push_back(
-				vm["opt2"].as<string>()
-			);
-	}
+    if (vm.count("opt2"))
+        {
+            opts.push_back(
+                vm["opt2"].as<string>()
+            );
+        }
 
-	if (vm.count("opt3")) {
-		opts.push_back(
-				vm["opt3"].as<string>()
-			);
-	}
+    if (vm.count("opt3"))
+        {
+            opts.push_back(
+                vm["opt3"].as<string>()
+            );
+        }
 
-	// make sure that at least one SE and debug mode were specified
-	if (opts.size() < 2) {
-		cout << "SE name and debug mode has to be specified (on/off)!" << endl;
-		return 0;
-	}
+    // make sure that at least one SE and debug mode were specified
+    if (opts.size() < 2)
+        {
+            cout << "SE name and debug mode has to be specified (on/off)!" << endl;
+            return 0;
+        }
 
-	// index of debug mode (the last parameter)
-	size_t mode_index = opts.size() - 1;
-	// value of debug mode
-	string mode_str = opts[mode_index];
-	// it should be either ON
-	if (mode_str == ON) mode = true;
-	// or OFF
-	else if (mode_str == OFF) mode = false;
-	// otherwise it's an error
-	else {
-		cout << "Debug mode has to be specified (on/off)!" << endl;
-		return 0;
-	}
+    // index of debug mode (the last parameter)
+    size_t mode_index = opts.size() - 1;
+    // value of debug mode
+    string mode_str = opts[mode_index];
+    // it should be either ON
+    if (mode_str == ON) mode = true;
+    // or OFF
+    else if (mode_str == OFF) mode = false;
+    // otherwise it's an error
+    else
+        {
+            cout << "Debug mode has to be specified (on/off)!" << endl;
+            return 0;
+        }
 
-	// source is always the first one
-	source = opts[0];
+    // source is always the first one
+    source = opts[0];
 
-	// if mode is the second parameter the destination was not specified!
-	if (mode_index > 1) destination = opts[1];
+    // if mode is the second parameter the destination was not specified!
+    if (mode_index > 1) destination = opts[1];
 
-	return *ctx;
+    return *ctx;
 }
 
-string DebugSetCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] (SE | SOURCE DESTINATION) MODE";
+string DebugSetCli::getUsageString(string tool)
+{
+    return "Usage: " + tool + " [options] (SE | SOURCE DESTINATION) MODE";
 }

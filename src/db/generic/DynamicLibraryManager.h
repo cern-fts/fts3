@@ -1,17 +1,17 @@
 /********************************************//**
  * Copyright @ Members of the EMI Collaboration, 2010.
  * See www.eu-emi.eu for details on the copyright holders.
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); 
- * you may not use this file except in compliance with the License. 
- * You may obtain a copy of the License at 
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0 
- * 
- * Unless required by applicable law or agreed to in writing, software 
- * distributed under the License is distributed on an "AS IS" BASIS, 
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
- * See the License for the specific language governing permissions and 
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  ***********************************************/
 
@@ -20,7 +20,7 @@
  * @brief hanlde dynamic library loading
  * @author Michail Salichos
  * @date 09/02/2012
- * 
+ *
  **/
 
 
@@ -34,52 +34,53 @@
 class DynamicLibraryManager
 {
 public:
-  typedef void *Symbol;
-  typedef void *LibraryHandle;
+    typedef void *Symbol;
+    typedef void *LibraryHandle;
 
 
-  DynamicLibraryManager( const std::string &libraryFileName );
+    DynamicLibraryManager( const std::string &libraryFileName );
 
 
-  ~DynamicLibraryManager();
+    ~DynamicLibraryManager();
 
 
-/**
- * Find symbol inside the dynamic loaded library
- **/
-  Symbol findSymbol( const std::string &symbol );
+    /**
+     * Find symbol inside the dynamic loaded library
+     **/
+    Symbol findSymbol( const std::string &symbol );
 
 
-  inline bool isLibraryLoaded(){
-  	return m_libraryHandle != NULL? true: false; 
-  }
+    inline bool isLibraryLoaded()
+    {
+        return m_libraryHandle != NULL? true: false;
+    }
 
-  /// Return last error message
-  std::string getLastError(void);
-
-private:
-
-  void loadLibrary( const std::string &libraryName );
-
-
-  void releaseLibrary();
-
-  LibraryHandle doLoadLibrary( const std::string &libraryName );
-
-  void doReleaseLibrary();
-
-  Symbol doFindSymbol( const std::string &symbol );
-
-  /// Prevents the use of the copy constructor.
-  DynamicLibraryManager( const DynamicLibraryManager &copy );
-
-  /// Prevents the use of the copy operator.
-  void operator =( const DynamicLibraryManager &copy );
-  
+    /// Return last error message
+    std::string getLastError(void);
 
 private:
-  LibraryHandle m_libraryHandle;
-  std::string m_libraryName;
+
+    void loadLibrary( const std::string &libraryName );
+
+
+    void releaseLibrary();
+
+    LibraryHandle doLoadLibrary( const std::string &libraryName );
+
+    void doReleaseLibrary();
+
+    Symbol doFindSymbol( const std::string &symbol );
+
+    /// Prevents the use of the copy constructor.
+    DynamicLibraryManager( const DynamicLibraryManager &copy );
+
+    /// Prevents the use of the copy operator.
+    void operator =( const DynamicLibraryManager &copy );
+
+
+private:
+    LibraryHandle m_libraryHandle;
+    std::string m_libraryName;
 };
 
 

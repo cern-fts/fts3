@@ -28,103 +28,112 @@
 
 #include <string>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 using namespace std;
 
-class BlacklistCli : public CliBase {
+class BlacklistCli : public CliBase
+{
 
 public:
 
-	static const string ON;
-	static const string OFF;
+    static const string ON;
+    static const string OFF;
 
-	static const string SE;
-	static const string DN;
+    static const string SE;
+    static const string DN;
 
-	/**
-	 * Default Constructor.
-	 *
-	 * Creates the debud-set specific command line option: on/off.
-	 */
-	BlacklistCli();
+    /**
+     * Default Constructor.
+     *
+     * Creates the debud-set specific command line option: on/off.
+     */
+    BlacklistCli();
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~BlacklistCli();
+    /**
+     * Destructor.
+     */
+    virtual ~BlacklistCli();
 
-	/**
-	 * Validates command line options.
-	 *	Checks that the debug mode was set correctly.
-	 *
-	 * @return GSoapContexAdapter instance, or null if all activities
-	 * 				requested using program options have been done.
-	 */
-	virtual optional<GSoapContextAdapter&> validate(bool init = true);
+    /**
+     * Validates command line options.
+     *	Checks that the debug mode was set correctly.
+     *
+     * @return GSoapContexAdapter instance, or null if all activities
+     * 				requested using program options have been done.
+     */
+    virtual optional<GSoapContextAdapter&> validate(bool init = true);
 
-	/**
-	 * Prints help message if the -h option has been used.
-	 *
-	 * @param tool - the name of the executive that has been called (in most cases argv[0])
-	 *
-	 * @return true if the help message has been printed
-	 */
-	virtual bool printHelp(string tool);
+    /**
+     * Prints help message if the -h option has been used.
+     *
+     * @param tool - the name of the executive that has been called (in most cases argv[0])
+     *
+     * @return true if the help message has been printed
+     */
+    virtual bool printHelp(string tool);
 
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
+    /**
+     * Gives the instruction how to use the command line tool.
+     *
+     * @return a string with instruction on how to use the tool
+     */
+    string getUsageString(string tool);
 
-	/**
-	 * Gets the debug mode.
-	 *
-	 * @return true is the debug mode is on, false if the debud mode is off
-	 */
-	bool getBlkMode() {
-		return mode == ON;
-	}
+    /**
+     * Gets the debug mode.
+     *
+     * @return true is the debug mode is on, false if the debud mode is off
+     */
+    bool getBlkMode()
+    {
+        return mode == ON;
+    }
 
-	string getSubjectName() {
-		return subject;
-	}
+    string getSubjectName()
+    {
+        return subject;
+    }
 
-	string getSubjectType() {
-		return type;
-	}
+    string getSubjectType()
+    {
+        return type;
+    }
 
-	string getVo() {
-		return vo;
-	}
+    string getVo()
+    {
+        return vo;
+    }
 
-	string getStatus() {
-		return status;
-	}
+    string getStatus()
+    {
+        return status;
+    }
 
-	int getTimeout() {
-		return timeout;
-	}
+    int getTimeout()
+    {
+        return timeout;
+    }
 
 private:
 
-	/// blacklist mode, either ON or OFF
-	string mode;
+    /// blacklist mode, either ON or OFF
+    string mode;
 
-	/// the DN or SE that is the subject of blacklisting
-	string subject;
+    /// the DN or SE that is the subject of blacklisting
+    string subject;
 
-	/// type of the subject, either SE or DN
-	string type;
+    /// type of the subject, either SE or DN
+    string type;
 
-	string vo;
+    string vo;
 
-	string status;
+    string status;
 
-	int timeout;
+    int timeout;
 };
 
 } /* namespace cli */

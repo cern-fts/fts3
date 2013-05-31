@@ -32,20 +32,22 @@
 using namespace fts3::cli;
 using namespace std;
 
-BOOST_AUTO_TEST_CASE (VONameCli_Test) {
+BOOST_AUTO_TEST_CASE (VONameCli_Test)
+{
 
-        // has to be const otherwise is deprecated
-        char* av[] = {
-        		"prog_name",
-        		"voname"
-        	};
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "voname"
+    };
 
-    	int ac = 2;
+    int ac = 2;
 
-    	auto_ptr<VoNameCli> cli (
-    			getCli<VoNameCli>(ac, av)
-    		);
+    auto_ptr<VoNameCli> cli (
+        getCli<VoNameCli>(ac, av)
+    );
 
-        BOOST_CHECK(cli->getVoName() == "voname");
+    BOOST_CHECK(cli->getVoName() == "voname");
 }
 

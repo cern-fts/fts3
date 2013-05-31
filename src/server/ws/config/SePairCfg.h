@@ -27,8 +27,10 @@
 
 #include "PairCfg.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 /**
  * SE pair configuration,
@@ -36,46 +38,47 @@ namespace ws {
  *
  * 	@see PairCfg
  */
-class SePairCfg : public PairCfg {
+class SePairCfg : public PairCfg
+{
 
 public:
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration data from the DB from the given source-destination pair.
-	 *
-	 * @param dn - client's DN
-	 * @param source - the source SE
-	 * @param destination - the destination SE
-	 */
-	SePairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {};
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration data from the DB from the given source-destination pair.
+     *
+     * @param dn - client's DN
+     * @param source - the source SE
+     * @param destination - the destination SE
+     */
+    SePairCfg(string dn, string source, string destination) : PairCfg(dn, source, destination) {};
 
-	/**
-	 * Constructor.
-	 *
-	 * Retrieves the configuration data from the given CfgParser.
-	 *
-	 * @param dn - client's DN
-	 * @param parser - the parser used for parsing JSON configuration
-	 */
-	SePairCfg(string dn, CfgParser& parser);
+    /**
+     * Constructor.
+     *
+     * Retrieves the configuration data from the given CfgParser.
+     *
+     * @param dn - client's DN
+     * @param parser - the parser used for parsing JSON configuration
+     */
+    SePairCfg(string dn, CfgParser& parser);
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~SePairCfg();
+    /**
+     * Destructor.
+     */
+    virtual ~SePairCfg();
 
-	/**
-	 * Creates a string containing current configuration in JSON format.
-	 *
-	 * @return string containing the configuration.
-	 */
-	virtual string json();
+    /**
+     * Creates a string containing current configuration in JSON format.
+     *
+     * @return string containing the configuration.
+     */
+    virtual string json();
 
-	/**
-	 * Saves the configuration into the DB.
-	 */
-	virtual void save();
+    /**
+     * Saves the configuration into the DB.
+     */
+    virtual void save();
 };
 
 } /* namespace ws */

@@ -24,114 +24,127 @@
 
 #include "ShareOnlyCfg.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
-ShareOnlyCfg::ShareOnlyCfg(string dn, string name) : Configuration(dn), se(name) {
+ShareOnlyCfg::ShareOnlyCfg(string dn, string name) : Configuration(dn), se(name)
+{
 
-	if (notAllowed.count(se))
-		throw Err_Custom("The SE name is not a valid!");
+    if (notAllowed.count(se))
+        throw Err_Custom("The SE name is not a valid!");
 
-	// replace any with wildcard
-	if (se == any) se = wildcard;
+    // replace any with wildcard
+    if (se == any) se = wildcard;
 
-	// get SE active state
-	Se* seobj = 0;
-	db->getSe(seobj, se);
-	if (seobj) {
-		active = seobj->STATE == on;
-		delete seobj;
-	} else
-		throw Err_Custom("The SE: " + name + " does not exist!");
+    // get SE active state
+    Se* seobj = 0;
+    db->getSe(seobj, se);
+    if (seobj)
+        {
+            active = seobj->STATE == on;
+            delete seobj;
+        }
+    else
+        throw Err_Custom("The SE: " + name + " does not exist!");
 
-	init(se);
+    init(se);
 }
 
-ShareOnlyCfg::ShareOnlyCfg(string dn, CfgParser& parser) : Configuration(dn) {
+ShareOnlyCfg::ShareOnlyCfg(string dn, CfgParser& parser) : Configuration(dn)
+{
 
-	se = parser.get<string>("se");
+    se = parser.get<string>("se");
 
-	if (notAllowed.count(se))
-		throw Err_Custom("The SE name is not a valid!");
+    if (notAllowed.count(se))
+        throw Err_Custom("The SE name is not a valid!");
 
-	// replace any with wildcard
-	if (se == any) se = wildcard;
+    // replace any with wildcard
+    if (se == any) se = wildcard;
 
-	active = parser.get<bool>("active");
+    active = parser.get<bool>("active");
 
-	in_share = parser.get< map<string, int> >("in");
-	checkShare(in_share);
-	out_share = parser.get< map<string, int> >("out");
-	checkShare(out_share);
+    in_share = parser.get< map<string, int> >("in");
+    checkShare(in_share);
+    out_share = parser.get< map<string, int> >("out");
+    checkShare(out_share);
 
-	all = json();
+    all = json();
 }
 
-ShareOnlyCfg::~ShareOnlyCfg() {
+ShareOnlyCfg::~ShareOnlyCfg()
+{
 
 }
 
-string ShareOnlyCfg::json() {
+string ShareOnlyCfg::json()
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	ss << "{";
-	ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";
-	ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
-	ss << "\"" << "in" << "\":" << Configuration::json(in_share) << ",";
-	ss << "\"" << "out" << "\":" << Configuration::json(out_share);
-	ss << "}";
+    ss << "{";
+    ss << "\"" << "se" << "\":\"" << (se == wildcard ? any : se) << "\",";
+    ss << "\"" << "active" << "\":" << (active ? "true" : "false") << ",";
+    ss << "\"" << "in" << "\":" << Configuration::json(in_share) << ",";
+    ss << "\"" << "out" << "\":" << Configuration::json(out_share);
+    ss << "}";
 
-	return ss.str();
+    return ss.str();
 }
 
-void ShareOnlyCfg::save() {
-	addSe(se, active);
+void ShareOnlyCfg::save()
+{
+    addSe(se, active);
 
-	// add the in-link
-	addLinkCfg(any, se, active, any + "-" + se);
-	// add the shares for the in-link
-	addShareCfg(any, se, in_share);
+    // add the in-link
+    addLinkCfg(any, se, active, any + "-" + se);
+    // add the shares for the in-link
+    addShareCfg(any, se, in_share);
 
-	// add the out-link
-	addLinkCfg(se, any, active, se + "-" + any);
-	// add the shares for out-link
-	addShareCfg(se, any, out_share);
+    // add the out-link
+    addLinkCfg(se, any, active, se + "-" + any);
+    // add the shares for out-link
+    addShareCfg(se, any, out_share);
 }
 
-void ShareOnlyCfg::del() {
+void ShareOnlyCfg::del()
+{
 
-	// erase changes in SE state
-	eraseSe(se);
+    // erase changes in SE state
+    eraseSe(se);
 
-	// delete the shares for the in-link
-	delShareCfg(any, se);
-	// delete the in-link
-	delLinkCfg(any, se);
+    // delete the shares for the in-link
+    delShareCfg(any, se);
+    // delete the in-link
+    delLinkCfg(any, se);
 
-	// delete the shares for the out-link
-	delShareCfg(se, any);
-	// delete the out-link
-	delLinkCfg(se, any);
+    // delete the shares for the out-link
+    delShareCfg(se, any);
+    // delete the out-link
+    delLinkCfg(se, any);
 }
 
-void ShareOnlyCfg::init(string se) {
+void ShareOnlyCfg::init(string se)
+{
 
-	// get SE's in and out shares
-	in_share = getShareMap(any, se);
-	out_share = getShareMap(se, any);
+    // get SE's in and out shares
+    in_share = getShareMap(any, se);
+    out_share = getShareMap(se, any);
 }
 
-void ShareOnlyCfg::checkShare(map<string, int>& share) {
+void ShareOnlyCfg::checkShare(map<string, int>& share)
+{
 
-	int sum = 0;
-	map<string, int>::iterator it;
+    int sum = 0;
+    map<string, int>::iterator it;
 
-	for (it = share.begin(); it != share.end(); it++) {
-		sum += it->second;
-	}
+    for (it = share.begin(); it != share.end(); it++)
+        {
+            sum += it->second;
+        }
 
-	if (sum != 100) throw Err_Custom("In a share-only configuration the sum of all share has to be equal to 100%");
+    if (sum != 100) throw Err_Custom("In a share-only configuration the sum of all share has to be equal to 100%");
 }
 
 } /* namespace ws */

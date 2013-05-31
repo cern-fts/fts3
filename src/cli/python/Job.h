@@ -35,71 +35,74 @@
 #include <map>
 #include <vector>
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 namespace py = boost::python;
 
-class Job {
+class Job
+{
 
 public:
 
-	Job(PyFile file);
+    Job(PyFile file);
 
-	Job(py::list files);
+    Job(py::list files);
 
-	virtual ~Job();
+    virtual ~Job();
 
-	std::vector<File> getFilesCpp();
-	std::map<std::string, std::string> getJobParametersCpp();
-	bool useChecksumCpp();
+    std::vector<File> getFilesCpp();
+    std::map<std::string, std::string> getJobParametersCpp();
+    bool useChecksumCpp();
 
-	py::list files();
+    py::list files();
 
-	void setDelegationId(py::str id);
-	py::object getDelegationId();
+    void setDelegationId(py::str id);
+    py::object getDelegationId();
 
-	void setGridParam(py::str param);
-	py::object getGridParam();
+    void setGridParam(py::str param);
+    py::object getGridParam();
 
-	void setExpirationTime(long expiration);
-	py::object getExpirationTime();
+    void setExpirationTime(long expiration);
+    py::object getExpirationTime();
 
-	void setOverwrite(bool overwrite);
-	py::object overwrite();
+    void setOverwrite(bool overwrite);
+    py::object overwrite();
 
-	void setDestinationToken(py::str token);
-	py::object getDestinationToken();
+    void setDestinationToken(py::str token);
+    py::object getDestinationToken();
 
-	void setCompareChecksum(bool cmp);
-	py::object compareChecksum();
+    void setCompareChecksum(bool cmp);
+    py::object compareChecksum();
 
-	void setCopyPinLifetime(int pin);
-	py::object getCopyPinLifetime();
+    void setCopyPinLifetime(int pin);
+    py::object getCopyPinLifetime();
 
-	void setLanConnection(bool conn);
-	py::object lanConnection();
+    void setLanConnection(bool conn);
+    py::object lanConnection();
 
-	void setFailNearline(bool fail);
-	py::object failNearline();
+    void setFailNearline(bool fail);
+    py::object failNearline();
 
-	void setSessionReuse(bool reuse);
-	py::object sessionReuse();
+    void setSessionReuse(bool reuse);
+    py::object sessionReuse();
 
 private:
 
-	bool wrongChecksumFormat(std::string checksum);
+    bool wrongChecksumFormat(std::string checksum);
 
-	void add(PyFile file);
+    void add(PyFile file);
 
-	///
-	std::vector<File> elements;
-	///
-	std::map<std::string, std::string> parameters;
-	///
-	bool checksum;
-	///
-	long expiration;
+    ///
+    std::vector<File> elements;
+    ///
+    std::map<std::string, std::string> parameters;
+    ///
+    bool checksum;
+    ///
+    long expiration;
 };
 
 } /* namespace cli */

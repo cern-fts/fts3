@@ -41,34 +41,35 @@ using namespace boost;
 
 class ServerConfig;
 
-class FileMonitor {
+class FileMonitor
+{
 
 public:
-	FileMonitor(ServerConfig* sc);
-	virtual ~FileMonitor();
+    FileMonitor(ServerConfig* sc);
+    virtual ~FileMonitor();
 
-	void start(string path);
-	void stop();
+    void start(string path);
+    void stop();
 
-	static void run (FileMonitor* const me);
+    static void run (FileMonitor* const me);
 
 private:
 
-	string getDir(string path);
-	string getFile(string path);
+    string getDir(string path);
+    string getFile(string path);
 
-	ServerConfig* sc;
+    ServerConfig* sc;
 
-	string file;
-	bool running;
+    string file;
+    bool running;
 
-	int fd;
-	int wd;
+    int fd;
+    int wd;
 
-	scoped_ptr<thread> monitor_thread;
+    scoped_ptr<thread> monitor_thread;
 
-	static const int EVENT_SIZE = sizeof (inotify_event);
-	static const int EVENT_BUF_LEN = 1024 * (EVENT_SIZE + 16);
+    static const int EVENT_SIZE = sizeof (inotify_event);
+    static const int EVENT_BUF_LEN = 1024 * (EVENT_SIZE + 16);
 };
 
 FTS3_CONFIG_NAMESPACE_END

@@ -29,15 +29,16 @@
 #include <string>
 
 
-class LinkConfig {
+class LinkConfig
+{
 public:
-	LinkConfig(){};
-	~LinkConfig(){};
+    LinkConfig() {};
+    ~LinkConfig() {};
 
-	std::string source;
-	std::string destination;
-	std::string state;
-	std::string symbolic_name;
+    std::string source;
+    std::string destination;
+    std::string state;
+    std::string symbolic_name;
 
     int NOSTREAMS;
     int TCP_BUFFER_SIZE;

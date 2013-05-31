@@ -24,17 +24,21 @@
 
 #include "TransferCliBase.h"
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
-TransferCliBase::TransferCliBase() {
-	// add basic command line options
+TransferCliBase::TransferCliBase()
+{
+    // add basic command line options
     basic.add_options()
-			("json,j", "The output should be printed in JSON format")
-			;
+    ("json,j", "The output should be printed in JSON format")
+    ;
 }
 
-TransferCliBase::~TransferCliBase() {
+TransferCliBase::~TransferCliBase()
+{
 
 }
 

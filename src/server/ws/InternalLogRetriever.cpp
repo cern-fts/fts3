@@ -33,22 +33,24 @@
 
 using namespace fts3::ws;
 
-InternalLogRetriever::InternalLogRetriever(string endpoint): endpoint(endpoint), ctx(soap_new1(SOAP_ENC_MTOM)) {
-	// TODO Auto-generated constructor stub
+InternalLogRetriever::InternalLogRetriever(string endpoint): endpoint(endpoint), ctx(soap_new1(SOAP_ENC_MTOM))
+{
+    // TODO Auto-generated constructor stub
 
     int  err = 0;
 
     // initialize cgsi plugin
-   	err = soap_cgsi_init(ctx,  CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
+    err = soap_cgsi_init(ctx,  CGSI_OPT_DISABLE_NAME_CHECK | CGSI_OPT_SSL_COMPATIBLE);
     soap_set_omode(ctx, SOAP_ENC_MTOM);
 
 //	ctx->fmimewriteopen = LogFileStreamer::writeOpen;
 //	ctx->fmimewriteclose = LogFileStreamer::writeClose;
 //	ctx->fmimewrite = LogFileStreamer::write;
 
-    if (err) {
-    	// TODO
-    }
+    if (err)
+        {
+            // TODO
+        }
 
     // set the namespaces
 //	if (soap_set_namespaces(ctx, fts3_namespaces)) {
@@ -56,19 +58,21 @@ InternalLogRetriever::InternalLogRetriever(string endpoint): endpoint(endpoint),
 //	}
 }
 
-InternalLogRetriever::~InternalLogRetriever() {
-	soap_destroy(ctx);
-	soap_end(ctx);
-	soap_free(ctx);
+InternalLogRetriever::~InternalLogRetriever()
+{
+    soap_destroy(ctx);
+    soap_end(ctx);
+    soap_free(ctx);
 }
 
-list<string> InternalLogRetriever::getInternalLogs(string jobId) {
+list<string> InternalLogRetriever::getInternalLogs(string jobId)
+{
 
-	log__GetLogInternalResponse resp;
+    log__GetLogInternalResponse resp;
 //	ctx->user = LogFileStreamer::getOutputHandler(resp);
-	soap_call_log__GetLogInternal(ctx, endpoint.c_str(), 0, jobId, resp);
+    soap_call_log__GetLogInternal(ctx, endpoint.c_str(), 0, jobId, resp);
 
-	list<string> ret (resp.logs->lognames.begin(), resp.logs->lognames.end());
-	return ret;
+    list<string> ret (resp.logs->lognames.begin(), resp.logs->lognames.end());
+    return ret;
 }
 

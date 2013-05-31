@@ -38,40 +38,49 @@ using namespace fts3::cli;
 /**
  * This is the entry point for the fts3-get-log command line tool.
  */
-int main(int ac, char* av[]) {
+int main(int ac, char* av[])
+{
 
-	try {
-		// create and initialize the command line utility
-		auto_ptr<JobIdCli> cli (
-				getCli<JobIdCli>(ac, av)
-			);
+    try
+        {
+            // create and initialize the command line utility
+            auto_ptr<JobIdCli> cli (
+                getCli<JobIdCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		vector<string> jobs = cli->getJobIds();
-		vector<string>::iterator it;
+            vector<string> jobs = cli->getJobIds();
+            vector<string>::iterator it;
 
-		for (it = jobs.begin(); it != jobs.end(); it++) {
-			string out = "/home/simonm/out.tar.gz";
-			ctx.getLog(out, *it);
-		}
+            for (it = jobs.begin(); it != jobs.end(); it++)
+                {
+                    string out = "/home/simonm/out.tar.gz";
+                    ctx.getLog(out, *it);
+                }
 
-		return 0;
+            return 0;
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
-    } catch(string& ex) {
-    	cout << ex << endl;
-    	return 1;
-    } catch(...) {
-        cerr << "Exception of unknown type!\n";
-        return 1;
-    }
+        }
+    catch(std::exception& e)
+        {
+            cerr << "error: " << e.what() << "\n";
+            return 1;
+        }
+    catch(string& ex)
+        {
+            cout << ex << endl;
+            return 1;
+        }
+    catch(...)
+        {
+            cerr << "Exception of unknown type!\n";
+            return 1;
+        }
 
-	return 0;
+    return 0;
 }
 

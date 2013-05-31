@@ -38,7 +38,10 @@
 #include <boost/regex.hpp>
 #include <boost/tuple/tuple.hpp>
 
-namespace fts3 { namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 using namespace fts3::common;
@@ -51,148 +54,151 @@ using namespace boost;
  * different constructors should be used
  *
  */
-class JobSubmitter {
+class JobSubmitter
+{
 
-	enum {
-		SHARE,
-		CONTENT
-	};
+    enum
+    {
+        SHARE,
+        CONTENT
+    };
 
-	enum {
-		SOURCE = 0,
-		DESTINATION,
-		VO
-	};
+    enum
+    {
+        SOURCE = 0,
+        DESTINATION,
+        VO
+    };
 
 public:
-	/**
-	 * Constructor - creates a submitter object that should be used
-	 * by submitTransfer and submitTransfer2 requests
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param job - the job that has to be submitted
-	 * @param delegation - should be true if delegation is being used
-	 */
-	JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation);
+    /**
+     * Constructor - creates a submitter object that should be used
+     * by submitTransfer and submitTransfer2 requests
+     *
+     * @param soap - the soap object that is serving the given request
+     * @param job - the job that has to be submitted
+     * @param delegation - should be true if delegation is being used
+     */
+    JobSubmitter(soap* soap, tns3__TransferJob *job, bool delegation);
 
-	/**
-	 * Constructor - creates a submitter object that should be used
-	 * by submitTransfer3 requests
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param job - the job that has to be submitted
-	 */
-	JobSubmitter(soap* soap, tns3__TransferJob2 *job);
+    /**
+     * Constructor - creates a submitter object that should be used
+     * by submitTransfer3 requests
+     *
+     * @param soap - the soap object that is serving the given request
+     * @param job - the job that has to be submitted
+     */
+    JobSubmitter(soap* soap, tns3__TransferJob2 *job);
 
-	/**
-	 * Constructor - creates a submitter object that should be used
-	 * by submitTransfer4 requests
-	 *
-	 * @param soap - the soap object that is serving the given request
-	 * @param job - the job that has to be submitted
-	 */
-	JobSubmitter(soap* ctx, tns3__TransferJob3 *job);
+    /**
+     * Constructor - creates a submitter object that should be used
+     * by submitTransfer4 requests
+     *
+     * @param soap - the soap object that is serving the given request
+     * @param job - the job that has to be submitted
+     */
+    JobSubmitter(soap* ctx, tns3__TransferJob3 *job);
 
-	/**
-	 * Destructor
-	 */
-	virtual ~JobSubmitter();
+    /**
+     * Destructor
+     */
+    virtual ~JobSubmitter();
 
-	/**
-	 * submits the job
-	 */
-	string submit();
+    /**
+     * submits the job
+     */
+    string submit();
 
 private:
 
-	/// DB instance
-	GenericDbIfce* db;
+    /// DB instance
+    GenericDbIfce* db;
 
-	/**
-	 * Default constructor.
-	 *
-	 * Private, should not be used.
-	 */
-	JobSubmitter() {};
+    /**
+     * Default constructor.
+     *
+     * Private, should not be used.
+     */
+    JobSubmitter() {};
 
-	/// job ID
-	string id;
-	/// user DN
-	string dn;
-	/// user VO
-	string vo;
-	/// delegation ID
-	string delegationId;
-	/// used only for compatibility reason
-	string sourceSpaceTokenDescription;
-	/// user password
-	string cred;
-	/// copy lifetime pin
-	int copyPinLifeTime;
+    /// job ID
+    string id;
+    /// user DN
+    string dn;
+    /// user VO
+    string vo;
+    /// delegation ID
+    string delegationId;
+    /// used only for compatibility reason
+    string sourceSpaceTokenDescription;
+    /// user password
+    string cred;
+    /// copy lifetime pin
+    int copyPinLifeTime;
 
-	/// maps job parameter values to their names
-	JobParameterHandler params;
+    /// maps job parameter values to their names
+    JobParameterHandler params;
 
-	/**
-	 * the job elements that have to be submitted (each job is a tuple of source,
-	 * destination, and optionally checksum)
-	 */
-	vector<job_element_tupple> jobs;
+    /**
+     * the job elements that have to be submitted (each job is a tuple of source,
+     * destination, and optionally checksum)
+     */
+    vector<job_element_tupple> jobs;
 
-	/**
-	 * The common initialization for both parameterized constructors
-	 *
-	 * @param jobParams - job parameters
-	 */
-	void init(tns3__TransferParams *jobParams);
+    /**
+     * The common initialization for both parameterized constructors
+     *
+     * @param jobParams - job parameters
+     */
+    void init(tns3__TransferParams *jobParams);
 
-	/**
-	 * Checks:
-	 * - if the SE has been blacklisted (if yes an exception is thrown)
-	 * - if the SE is in BDII and the state is either 'production' or 'online'
-	 *   (if it is in BDII but the state is wrong an exception is thrown)
-	 * - if the SE is in BDII and the submitted VO is on the VOsAllowed list
-	 *   (if it is in BDII but the VO is not on the list an exception is thrown)
-	 * - if the SE is in the OSG and if is's active and not disabled
-	 *   (it it is in BDII but the conditions are not met an exception is thrown)
-	 */
-	void checkSe(string se, string vo);
+    /**
+     * Checks:
+     * - if the SE has been blacklisted (if yes an exception is thrown)
+     * - if the SE is in BDII and the state is either 'production' or 'online'
+     *   (if it is in BDII but the state is wrong an exception is thrown)
+     * - if the SE is in BDII and the submitted VO is on the VOsAllowed list
+     *   (if it is in BDII but the VO is not on the list an exception is thrown)
+     * - if the SE is in the OSG and if is's active and not disabled
+     *   (it it is in BDII but the conditions are not met an exception is thrown)
+     */
+    void checkSe(string se, string vo);
 
-	/**
-	 * Checks whether the right protocol has been used
-	 *
-	 * @file - source or destination file
-	 * @return true if right protol has been used
-	 */
-	bool checkProtocol(string file);
+    /**
+     * Checks whether the right protocol has been used
+     *
+     * @file - source or destination file
+     * @return true if right protol has been used
+     */
+    bool checkProtocol(string file);
 
-	/**
-	 * Checks if the file is given as a logical file name
-	 *
-	 * @param - file name
-	 * @return true if its a logical file name
-	 */
-	bool checkIfLfn(string file);
+    /**
+     * Checks if the file is given as a logical file name
+     *
+     * @param - file name
+     * @return true if its a logical file name
+     */
+    bool checkIfLfn(string file);
 
-	list< pair<string, string> > pairSourceAndDestination(vector<string> sources, vector<string> destinations, string selectionStrategy);
+    list< pair<string, string> > pairSourceAndDestination(vector<string> sources, vector<string> destinations, string selectionStrategy);
 
-	///
-	static const regex fileUrlRegex;
+    ///
+    static const regex fileUrlRegex;
 
-	static const string false_str;
+    static const string false_str;
 
 
-	static const string srm_protocol;
+    static const string srm_protocol;
 
-	bool srm_source;
+    bool srm_source;
 
-	/**
-	 *
-	 */
-	string fileUrlToSeName(string url);
+    /**
+     *
+     */
+    string fileUrlToSeName(string url);
 
-	string sourceSe;
-	string destinationSe;
+    string sourceSe;
+    string destinationSe;
 
 };
 

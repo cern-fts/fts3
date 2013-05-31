@@ -26,31 +26,36 @@
 
 using namespace fts3::cli;
 
-JobIdCli::JobIdCli() {
+JobIdCli::JobIdCli()
+{
 
-	// add hidden options (not printed in help)
-	hidden.add_options()
-			("jobid", value< vector<string> >(), "Specify job ID.")
-			;
+    // add hidden options (not printed in help)
+    hidden.add_options()
+    ("jobid", value< vector<string> >(), "Specify job ID.")
+    ;
 
-	// all positional parameters go to jobid
-	p.add("jobid", -1);
+    // all positional parameters go to jobid
+    p.add("jobid", -1);
 }
 
-JobIdCli::~JobIdCli() {
+JobIdCli::~JobIdCli()
+{
 }
 
 
-string JobIdCli::getUsageString(string tool) {
-	return "Usage: " + tool + " [options] JOBID [JOBID...]";
+string JobIdCli::getUsageString(string tool)
+{
+    return "Usage: " + tool + " [options] JOBID [JOBID...]";
 }
 
-vector<string> JobIdCli::getJobIds() {
+vector<string> JobIdCli::getJobIds()
+{
 
-	// check whether jobid has been given as a parameter
-	if (vm.count("jobid")) {
-		return vm["jobid"].as< vector<string> >();
-	}
+    // check whether jobid has been given as a parameter
+    if (vm.count("jobid"))
+        {
+            return vm["jobid"].as< vector<string> >();
+        }
 
-	return vector<string>();
+    return vector<string>();
 }

@@ -33,177 +33,205 @@ using namespace fts3::ws;
 
 //ThreadTraits::MUTEX _mutex;
 
-int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, struct delegation__getProxyReqResponse &_param_4) {
+int fts3::delegation__getProxyReq(struct soap* soap, std::string _delegationID, struct delegation__getProxyReqResponse &_param_4)
+{
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getProxyReq' request" << commit;
 //	ThreadTraits::LOCK lock(_mutex);
-	try {
-		AuthorizationManager::getInstance().authorize(
-				soap,
-				AuthorizationManager::DELEG,
-				AuthorizationManager::dummy
-			);
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+                soap,
+                AuthorizationManager::DELEG,
+                AuthorizationManager::dummy
+            );
 
-		GSoapDelegationHandler handler(soap);
-		_param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
+            GSoapDelegationHandler handler(soap);
+            _param_4._getProxyReqReturn = handler.getProxyReq(_delegationID);
 
-	} catch (Err& ex) {
+        }
+    catch (Err& ex)
+        {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-		soap_receiver_fault(soap, ex.what(), "DelegationException");
-		return SOAP_FAULT;
-	}
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(soap, ex.what(), "DelegationException");
+            return SOAP_FAULT;
+        }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNewProxyReqResponse &_param_5) {
+int fts3::delegation__getNewProxyReq(struct soap* soap, struct delegation__getNewProxyReqResponse &_param_5)
+{
 
 //	ThreadTraits::LOCK lock(_mutex);
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getNewProxyReq' request" << commit;
 
-	try {
-		AuthorizationManager::getInstance().authorize(
-				soap,
-				AuthorizationManager::DELEG,
-				AuthorizationManager::dummy
-			);
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+                soap,
+                AuthorizationManager::DELEG,
+                AuthorizationManager::dummy
+            );
 
-		GSoapDelegationHandler handler(soap);
-		_param_5.getNewProxyReqReturn = handler.getNewProxyReq();
+            GSoapDelegationHandler handler(soap);
+            _param_5.getNewProxyReqReturn = handler.getNewProxyReq();
 
-	} catch (Err& ex) {
+        }
+    catch (Err& ex)
+        {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-		soap_receiver_fault(soap, ex.what(), "DelegationException");
-		return SOAP_FAULT;
-	}
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(soap, ex.what(), "DelegationException");
+            return SOAP_FAULT;
+        }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID, struct delegation__renewProxyReqResponse &_param_6) {
+int fts3::delegation__renewProxyReq(struct soap* soap, std::string _delegationID, struct delegation__renewProxyReqResponse &_param_6)
+{
 
 //	ThreadTraits::LOCK lock(_mutex);
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__renewProxyReq' request" << commit;
 
-	try {
-		AuthorizationManager::getInstance().authorize(
-				soap,
-				AuthorizationManager::DELEG,
-				AuthorizationManager::dummy
-			);
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+                soap,
+                AuthorizationManager::DELEG,
+                AuthorizationManager::dummy
+            );
 
-		GSoapDelegationHandler handler(soap);
-		_param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
+            GSoapDelegationHandler handler(soap);
+            _param_6._renewProxyReqReturn = handler.renewProxyReq(_delegationID);
 
-	} catch(Err& ex) {
+        }
+    catch(Err& ex)
+        {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-		soap_receiver_fault(soap, ex.what(), "DelegationException");
-		return SOAP_FAULT;
-	}
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(soap, ex.what(), "DelegationException");
+            return SOAP_FAULT;
+        }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std::string _proxy, struct delegation__putProxyResponse &_param_7) {
+int fts3::delegation__putProxy(struct soap* soap, std::string _delegationID, std::string _proxy, struct delegation__putProxyResponse &_param_7)
+{
 //	ThreadTraits::LOCK lock(_mutex);
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__putProxy' request" << commit;
 
-	try {
-		AuthorizationManager::getInstance().authorize(
-				soap,
-				AuthorizationManager::DELEG,
-				AuthorizationManager::dummy
-			);
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+                soap,
+                AuthorizationManager::DELEG,
+                AuthorizationManager::dummy
+            );
 
-		GSoapDelegationHandler handler(soap);
-		handler.putProxy(_delegationID, _proxy);
+            GSoapDelegationHandler handler(soap);
+            handler.putProxy(_delegationID, _proxy);
 
-	} catch (Err& ex) {
-		string msg = ex.what();
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << msg << commit;
-		if (msg.find("key values mismatch") != string::npos) {
-			FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Exception was not propagated to the client" << commit;
-			return SOAP_OK;
-		}
-		soap_receiver_fault(soap, ex.what(), "DelegationException");
-		return SOAP_FAULT;
-	}
+        }
+    catch (Err& ex)
+        {
+            string msg = ex.what();
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << msg << commit;
+            if (msg.find("key values mismatch") != string::npos)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Exception was not propagated to the client" << commit;
+                    return SOAP_OK;
+                }
+            soap_receiver_fault(soap, ex.what(), "DelegationException");
+            return SOAP_FAULT;
+        }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegationID, struct delegation__getTerminationTimeResponse &_param_8) {
+int fts3::delegation__getTerminationTime(struct soap* soap, std::string _delegationID, struct delegation__getTerminationTimeResponse &_param_8)
+{
 //	ThreadTraits::LOCK lock(_mutex);
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getTerminationTime' request" << commit;
 
-	try {
-		AuthorizationManager::getInstance().authorize(
-				soap,
-				AuthorizationManager::DELEG,
-				AuthorizationManager::dummy
-			);
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+                soap,
+                AuthorizationManager::DELEG,
+                AuthorizationManager::dummy
+            );
 
-		GSoapDelegationHandler handler(soap);
-		_param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
+            GSoapDelegationHandler handler(soap);
+            _param_8._getTerminationTimeReturn = handler.getTerminationTime(_delegationID);
 
-	} catch (Err& ex) {
+        }
+    catch (Err& ex)
+        {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-		soap_receiver_fault(soap, ex.what(), "DelegationException");
-		return SOAP_FAULT;
-	}
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(soap, ex.what(), "DelegationException");
+            return SOAP_FAULT;
+        }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, struct delegation__destroyResponse &_param_9) {
+int fts3::delegation__destroy(struct soap* soap, std::string _delegationID, struct delegation__destroyResponse &_param_9)
+{
 //	ThreadTraits::LOCK lock(_mutex);
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__destroy' request" << commit;
 
-	try {
-		AuthorizationManager::getInstance().authorize(
-				soap,
-				AuthorizationManager::DELEG,
-				AuthorizationManager::dummy
-			);
+    try
+        {
+            AuthorizationManager::getInstance().authorize(
+                soap,
+                AuthorizationManager::DELEG,
+                AuthorizationManager::dummy
+            );
 
-		GSoapDelegationHandler handler(soap);
-		handler.destroy(_delegationID);
+            GSoapDelegationHandler handler(soap);
+            handler.destroy(_delegationID);
 
-	} catch(Err& ex) {
+        }
+    catch(Err& ex)
+        {
 
-		FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
-		soap_receiver_fault(soap, ex.what(), "DelegationException");
-		return SOAP_FAULT;
-	}
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(soap, ex.what(), "DelegationException");
+            return SOAP_FAULT;
+        }
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__getVersion(struct soap* soap, struct delegation__getVersionResponse &_param_1) {
+int fts3::delegation__getVersion(struct soap* soap, struct delegation__getVersionResponse &_param_1)
+{
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getVersion' request" << commit;
-	_param_1.getVersionReturn = "3.7.6-1";
+    _param_1.getVersionReturn = "3.7.6-1";
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__getInterfaceVersion(struct soap* soap, struct delegation__getInterfaceVersionResponse &_param_2) {
+int fts3::delegation__getInterfaceVersion(struct soap* soap, struct delegation__getInterfaceVersionResponse &_param_2)
+{
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getInterfaceVersion' request" << commit;
-	_param_2.getInterfaceVersionReturn = "3.7.0";
+    _param_2.getInterfaceVersionReturn = "3.7.0";
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
-int fts3::delegation__getServiceMetadata(struct soap* soap, std::string _key, struct delegation__getServiceMetadataResponse &_param_3) {
+int fts3::delegation__getServiceMetadata(struct soap* soap, std::string _key, struct delegation__getServiceMetadataResponse &_param_3)
+{
 
 //	FTS3_COMMON_LOGGER_NEWLOG (INFO) << "Handling 'delegation__getServiceMetadata' request" << commit;
-	_param_3._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
+    _param_3._getServiceMetadataReturn = "glite-data-fts-service-3.7.6-1";
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 

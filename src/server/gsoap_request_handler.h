@@ -27,7 +27,7 @@ limitations under the License. */
 
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
-    #include "unittest/testsuite.h"
+#include "unittest/testsuite.h"
 #endif // FTS3_COMPILE_WITH_UNITTESTS
 
 FTS3_SERVER_NAMESPACE_START
@@ -36,7 +36,8 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 class GSoapAcceptor;
 
-class GSoapRequestHandler {
+class GSoapRequestHandler
+{
 
 public:
     GSoapRequestHandler(GSoapAcceptor& acceptor);

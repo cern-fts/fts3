@@ -24,14 +24,18 @@
 bool concurrent_queue::instanceFlag = false;
 concurrent_queue* concurrent_queue::single = NULL;
 
-concurrent_queue* concurrent_queue::getInstance() {
-    if (!instanceFlag) {
-        single = new concurrent_queue();
-        instanceFlag = true;
-        return single;
-    } else {
-        return single;
-    }
+concurrent_queue* concurrent_queue::getInstance()
+{
+    if (!instanceFlag)
+        {
+            single = new concurrent_queue();
+            instanceFlag = true;
+            return single;
+        }
+    else
+        {
+            return single;
+        }
 }
 
 
@@ -43,72 +47,80 @@ concurrent_queue* concurrent_queue::getInstance() {
  *  wait = 0  => don't block, return null if the queue is empty
  *  wait > 0  => block for <block> seconds
  */
-std::string concurrent_queue::pop(int wait){
-                std::string ret;
-                pthread_mutex_lock(&lock);
+std::string concurrent_queue::pop(int wait)
+{
+    std::string ret;
+    pthread_mutex_lock(&lock);
 
-                /**
-                 * If the queue is empty
-                 *   if we're in non-blocking mode, just return
-                 *   otherwise wait on the condition to be triggered. The condition gets triggered
-                 *     either when something is added, in which case the while condition fails and
-                 *     the value gets returned, or the queue is changed into non-blocking mode and returns
-                 **/
+    /**
+     * If the queue is empty
+     *   if we're in non-blocking mode, just return
+     *   otherwise wait on the condition to be triggered. The condition gets triggered
+     *     either when something is added, in which case the while condition fails and
+     *     the value gets returned, or the queue is changed into non-blocking mode and returns
+     **/
 
-                while(the_queue.empty()){
-                        if(wait == 0 || blck == 0){
-                                pthread_mutex_unlock(&lock);
-                                return NULL;
-                        }
-
-                        pthread_cond_wait(&cv, &lock);
+    while(the_queue.empty())
+        {
+            if(wait == 0 || blck == 0)
+                {
+                    pthread_mutex_unlock(&lock);
+                    return NULL;
                 }
 
-        	//we know there is at least one item, so dequeue one and return
-                ret = the_queue.front();
-                the_queue.pop();
-
-                pthread_mutex_unlock(&lock);
-
-                return ret;
+            pthread_cond_wait(&cv, &lock);
         }
+
+    //we know there is at least one item, so dequeue one and return
+    ret = the_queue.front();
+    the_queue.pop();
+
+    pthread_mutex_unlock(&lock);
+
+    return ret;
+}
 
 //push on the queue
-void concurrent_queue::push( std::string  val ){
-                pthread_mutex_lock(&lock);
-		if( the_queue.size() < MAX_NUM_MSGS_MON)
-                	the_queue.push(val);
-                pthread_mutex_unlock(&lock);
-                pthread_cond_signal(&cv);
-        }
+void concurrent_queue::push( std::string  val )
+{
+    pthread_mutex_lock(&lock);
+    if( the_queue.size() < MAX_NUM_MSGS_MON)
+        the_queue.push(val);
+    pthread_mutex_unlock(&lock);
+    pthread_cond_signal(&cv);
+}
 
-unsigned int concurrent_queue::size(){
-                //pthread_mutex_lock(&lock);
-                unsigned int ret = (unsigned int)the_queue.size();
-                //pthread_mutex_unlock(&lock);
-                return ret;
-        }
+unsigned int concurrent_queue::size()
+{
+    //pthread_mutex_lock(&lock);
+    unsigned int ret = (unsigned int)the_queue.size();
+    //pthread_mutex_unlock(&lock);
+    return ret;
+}
 
-bool concurrent_queue::empty(){
-                pthread_mutex_lock(&lock);
-                bool ret = the_queue.empty();
-                pthread_mutex_unlock(&lock);
-                return ret;
-        }
+bool concurrent_queue::empty()
+{
+    pthread_mutex_lock(&lock);
+    bool ret = the_queue.empty();
+    pthread_mutex_unlock(&lock);
+    return ret;
+}
 
 //set in blocking mode, so a call to pop without args waits until something is added to the queue
-void concurrent_queue::block(){
-                pthread_mutex_lock(&lock);
-                blck = 1;
-                pthread_mutex_unlock(&lock);
-                pthread_cond_broadcast(&cv);
-        }
+void concurrent_queue::block()
+{
+    pthread_mutex_lock(&lock);
+    blck = 1;
+    pthread_mutex_unlock(&lock);
+    pthread_cond_broadcast(&cv);
+}
 
 //set in non-blocking mode, so a call to pop returns immediately, returning NULL if the queue is empty
 //also tells all currently blocking pop calls to return immediately
-void concurrent_queue::nonblock(){
-                pthread_mutex_lock(&lock);
-                blck = 0;
-                pthread_mutex_unlock(&lock);
-                pthread_cond_broadcast(&cv);
-        }
+void concurrent_queue::nonblock()
+{
+    pthread_mutex_lock(&lock);
+    blck = 0;
+    pthread_mutex_unlock(&lock);
+    pthread_cond_broadcast(&cv);
+}

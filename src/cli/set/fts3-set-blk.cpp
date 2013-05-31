@@ -33,50 +33,61 @@ using namespace fts3::cli;
 /**
  * This is the entry point for the fts3-debug-set command line tool.
  */
-int main(int ac, char* av[]) {
-	try {
-		// create and initialize the command line utility
-		auto_ptr<BlacklistCli> cli (
-				getCli<BlacklistCli>(ac, av)
-			);
+int main(int ac, char* av[])
+{
+    try
+        {
+            // create and initialize the command line utility
+            auto_ptr<BlacklistCli> cli (
+                getCli<BlacklistCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		string type = cli->getSubjectType();
+            string type = cli->getSubjectType();
 
-		if (type == "se") {
+            if (type == "se")
+                {
 
-			ctx.blacklistSe(
-					cli->getSubjectName(),
-					cli->getVo(),
-					cli->getStatus(),
-					cli->getTimeout(),
-					cli->getBlkMode()
-				);
+                    ctx.blacklistSe(
+                        cli->getSubjectName(),
+                        cli->getVo(),
+                        cli->getStatus(),
+                        cli->getTimeout(),
+                        cli->getBlkMode()
+                    );
 
-		} else if (type == "dn") {
+                }
+            else if (type == "dn")
+                {
 
-			ctx.blacklistDn(
-					cli->getSubjectName(),
-					cli->getStatus(),
-					cli->getTimeout(),
-					cli->getBlkMode()
-				);
-		}
+                    ctx.blacklistDn(
+                        cli->getSubjectName(),
+                        cli->getStatus(),
+                        cli->getTimeout(),
+                        cli->getBlkMode()
+                    );
+                }
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
-    } catch(string& ex) {
-    	cout << ex << endl;
-    	return 1;
-    } catch(...) {
-        cerr << "Exception of unknown type!\n";
-        return 1;
-    }
+        }
+    catch(std::exception& e)
+        {
+            cerr << "error: " << e.what() << "\n";
+            return 1;
+        }
+    catch(string& ex)
+        {
+            cout << ex << endl;
+            return 1;
+        }
+    catch(...)
+        {
+            cerr << "Exception of unknown type!\n";
+            return 1;
+        }
 
     return 0;
 }

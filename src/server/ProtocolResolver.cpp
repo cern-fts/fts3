@@ -39,190 +39,211 @@ using namespace fts3::common;
 using namespace boost::assign;
 
 ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs) :
-		db(DBSingleton::instance().getDBObjectInstance()),
-		file(file),
-		cfgs(cfgs) {
+    db(DBSingleton::instance().getDBObjectInstance()),
+    file(file),
+    cfgs(cfgs)
+{
 
-	vector< shared_ptr<ShareConfig> >::iterator it;
+    vector< shared_ptr<ShareConfig> >::iterator it;
 
-	// loop over the assigned configurations
-	for (it = cfgs.begin(); it != cfgs.end(); ++it) {
+    // loop over the assigned configurations
+    for (it = cfgs.begin(); it != cfgs.end(); ++it)
+        {
 
-		// get the source and destination
-		string source = (*it)->source;
-		string destination = (*it)->destination;
-		// create source-destination pair
-		pair<string, string> entry = pair<string, string>(source, destination);
+            // get the source and destination
+            string source = (*it)->source;
+            string destination = (*it)->destination;
+            // create source-destination pair
+            pair<string, string> entry = pair<string, string>(source, destination);
 
-		// check if it is default configuration for destination SE
-		if (destination == Configuration::wildcard && source == Configuration::any) {
-			link[DESTINATION_WILDCARD] = entry;
-			continue;
-		}
-		// check if it is default configuration for source SE
-		if (source == Configuration::wildcard && destination == Configuration::any) {
-			link[SOURCE_WILDCARD] = entry;
-			continue;
-		}
+            // check if it is default configuration for destination SE
+            if (destination == Configuration::wildcard && source == Configuration::any)
+                {
+                    link[DESTINATION_WILDCARD] = entry;
+                    continue;
+                }
+            // check if it is default configuration for source SE
+            if (source == Configuration::wildcard && destination == Configuration::any)
+                {
+                    link[SOURCE_WILDCARD] = entry;
+                    continue;
+                }
 
-		// check if we are dealing with groups or SEs
-		if (isGr(source) || isGr(destination)) {
-			// check if it's standalone group configuration of the destination
-			if (destination != Configuration::any && source == Configuration::any) {
-				link[DESTINATION_GROUP] = entry;
-				continue;
-			}
-			// check if it's standalone group configuration of the source
-			if (source != Configuration::any && destination == Configuration::any) {
-				link[SOURCE_GROUP] = entry;
-				continue;
-			}
-			// if it's neither of the above it has to be a pair
-			link[GROUP_PAIR] = entry;
+            // check if we are dealing with groups or SEs
+            if (isGr(source) || isGr(destination))
+                {
+                    // check if it's standalone group configuration of the destination
+                    if (destination != Configuration::any && source == Configuration::any)
+                        {
+                            link[DESTINATION_GROUP] = entry;
+                            continue;
+                        }
+                    // check if it's standalone group configuration of the source
+                    if (source != Configuration::any && destination == Configuration::any)
+                        {
+                            link[SOURCE_GROUP] = entry;
+                            continue;
+                        }
+                    // if it's neither of the above it has to be a pair
+                    link[GROUP_PAIR] = entry;
 
-		} else {
-			// check if it's standalone SE configuration of the destination
-			if (destination != Configuration::any && source == Configuration::any) {
-				link[DESTINATION_SE] = entry;
-				continue;
-			}
-			// check if it's standalone SE configuration of the source
-			if (source != Configuration::any && destination == Configuration::any) {
-				link[SOURCE_SE] = entry;
-				continue;
-			}
-			// if it's neither of the above it has to be a pair
-			link[SE_PAIR] = entry;
-		}
-	}
+                }
+            else
+                {
+                    // check if it's standalone SE configuration of the destination
+                    if (destination != Configuration::any && source == Configuration::any)
+                        {
+                            link[DESTINATION_SE] = entry;
+                            continue;
+                        }
+                    // check if it's standalone SE configuration of the source
+                    if (source != Configuration::any && destination == Configuration::any)
+                        {
+                            link[SOURCE_SE] = entry;
+                            continue;
+                        }
+                    // if it's neither of the above it has to be a pair
+                    link[SE_PAIR] = entry;
+                }
+        }
 }
 
-ProtocolResolver::~ProtocolResolver() {
+ProtocolResolver::~ProtocolResolver()
+{
 
 }
 
-bool ProtocolResolver::isGr(string name) {
-	return db->checkGroupExists(name);
+bool ProtocolResolver::isGr(string name)
+{
+    return db->checkGroupExists(name);
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< pair<string, string> > link) {
+optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< pair<string, string> > link)
+{
 
-	if (!link) return optional<protocol>();
+    if (!link) return optional<protocol>();
 
-	string source = (*link).first;
-	string destination = (*link).second;
+    string source = (*link).first;
+    string destination = (*link).second;
 
-	shared_ptr<LinkConfig> cfg (
-			db->getLinkConfig(source, destination)
-		);
+    shared_ptr<LinkConfig> cfg (
+        db->getLinkConfig(source, destination)
+    );
 
-	protocol ret;
+    protocol ret;
 
-	get<AUTO_TUNING>(ret) = cfg->auto_tuning == Configuration::on || cfg->auto_tuning == Configuration::share_only;
-	get<NOSTREAMS>(ret) = cfg->NOSTREAMS;
-	get<NO_TX_ACTIVITY_TO>(ret) = cfg->NO_TX_ACTIVITY_TO;
-	get<TCP_BUFFER_SIZE>(ret) = cfg->TCP_BUFFER_SIZE;
-	get<URLCOPY_TX_TO>(ret) = cfg->URLCOPY_TX_TO;
+    get<AUTO_TUNING>(ret) = cfg->auto_tuning == Configuration::on || cfg->auto_tuning == Configuration::share_only;
+    get<NOSTREAMS>(ret) = cfg->NOSTREAMS;
+    get<NO_TX_ACTIVITY_TO>(ret) = cfg->NO_TX_ACTIVITY_TO;
+    get<TCP_BUFFER_SIZE>(ret) = cfg->TCP_BUFFER_SIZE;
+    get<URLCOPY_TX_TO>(ret) = cfg->URLCOPY_TX_TO;
 
-	return ret;
+    return ret;
 }
 
-optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination) {
+optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination)
+{
 
-	if (!source) return destination;
-	if (!destination) return source;
+    if (!source) return destination;
+    if (!destination) return source;
 
-	protocol ret;
+    protocol ret;
 
-	get<AUTO_TUNING>(ret) = get<AUTO_TUNING>(*source) && get<AUTO_TUNING>(*destination);
+    get<AUTO_TUNING>(ret) = get<AUTO_TUNING>(*source) && get<AUTO_TUNING>(*destination);
 
-	// we care about the parameters only if the auto tuning is not enabled
-	if (!get<AUTO_TUNING>(ret)) {
+    // we care about the parameters only if the auto tuning is not enabled
+    if (!get<AUTO_TUNING>(ret))
+        {
 
-		// for sure both source and destination were not set to auto!
+            // for sure both source and destination were not set to auto!
 
-		// if the source is set to auto return the destination
-		if (get<AUTO_TUNING>(*source)) return destination;
+            // if the source is set to auto return the destination
+            if (get<AUTO_TUNING>(*source)) return destination;
 
-		// if the destination is set to auto return the source
-		if (get<AUTO_TUNING>(*destination)) return source;
+            // if the destination is set to auto return the source
+            if (get<AUTO_TUNING>(*destination)) return source;
 
-		// neither the source or the destination were set to auto merge the protocol parameters
+            // neither the source or the destination were set to auto merge the protocol parameters
 
-		get<NOSTREAMS>(ret) =
-				get<NOSTREAMS>(*source) < get<NOSTREAMS>(*destination) ?
-				get<NOSTREAMS>(*source) : get<NOSTREAMS>(*destination)
-				;
+            get<NOSTREAMS>(ret) =
+                get<NOSTREAMS>(*source) < get<NOSTREAMS>(*destination) ?
+                get<NOSTREAMS>(*source) : get<NOSTREAMS>(*destination)
+                ;
 
-		get<NO_TX_ACTIVITY_TO>(ret) =
-				get<NO_TX_ACTIVITY_TO>(*source) < get<NO_TX_ACTIVITY_TO>(*destination) ?
-				get<NO_TX_ACTIVITY_TO>(*source) : get<NO_TX_ACTIVITY_TO>(*destination)
-				;
+            get<NO_TX_ACTIVITY_TO>(ret) =
+                get<NO_TX_ACTIVITY_TO>(*source) < get<NO_TX_ACTIVITY_TO>(*destination) ?
+                get<NO_TX_ACTIVITY_TO>(*source) : get<NO_TX_ACTIVITY_TO>(*destination)
+                ;
 
-		get<TCP_BUFFER_SIZE>(ret) =
-				get<TCP_BUFFER_SIZE>(*source) < get<TCP_BUFFER_SIZE>(*destination) ?
-				get<TCP_BUFFER_SIZE>(*source) : get<TCP_BUFFER_SIZE>(*destination)
-				;
+            get<TCP_BUFFER_SIZE>(ret) =
+                get<TCP_BUFFER_SIZE>(*source) < get<TCP_BUFFER_SIZE>(*destination) ?
+                get<TCP_BUFFER_SIZE>(*source) : get<TCP_BUFFER_SIZE>(*destination)
+                ;
 
-		get<URLCOPY_TX_TO>(ret) =
-				get<URLCOPY_TX_TO>(*source) < get<URLCOPY_TX_TO>(*destination) ?
-				get<URLCOPY_TX_TO>(*source) : get<URLCOPY_TX_TO>(*destination)
-				;
-	}
+            get<URLCOPY_TX_TO>(ret) =
+                get<URLCOPY_TX_TO>(*source) < get<URLCOPY_TX_TO>(*destination) ?
+                get<URLCOPY_TX_TO>(*source) : get<URLCOPY_TX_TO>(*destination)
+                ;
+        }
 
-	return ret;
+    return ret;
 }
 
-optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l) {
-	// look for the first link
-	list<LinkType>::iterator it;
-	for (it = l.begin(); it != l.end(); ++it) {
-		// return the first existing link
-		if (link[*it]) return link[*it];
-	}
-	// if nothing was found return empty link
-	return optional< pair<string, string> >();
+optional< pair<string, string> > ProtocolResolver::getFirst(list<LinkType> l)
+{
+    // look for the first link
+    list<LinkType>::iterator it;
+    for (it = l.begin(); it != l.end(); ++it)
+        {
+            // return the first existing link
+            if (link[*it]) return link[*it];
+        }
+    // if nothing was found return empty link
+    return optional< pair<string, string> >();
 }
 
-bool ProtocolResolver::resolve() {
+bool ProtocolResolver::resolve()
+{
 
-	// check if there's a SE pair configuration
-	prot = getProtocolCfg(link[SE_PAIR]);
-	
-	if (prot.is_initialized()) return true;
+    // check if there's a SE pair configuration
+    prot = getProtocolCfg(link[SE_PAIR]);
 
-	// check if there is a SE group pair configuration
-	prot = getProtocolCfg(link[GROUP_PAIR]);
-	if (prot.is_initialized()) return true;
+    if (prot.is_initialized()) return true;
 
-	// get the first existing standalone source link from the list
-	optional< pair<string, string> > source_link = getFirst(
-			list_of (SOURCE_SE) (SOURCE_GROUP) (SOURCE_WILDCARD)
-		);
-	// get the first existing standalone destination link from the list
-	optional< pair<string, string> > destination_link = getFirst(
-			list_of (DESTINATION_SE) (DESTINATION_GROUP) (DESTINATION_WILDCARD)
-		);
+    // check if there is a SE group pair configuration
+    prot = getProtocolCfg(link[GROUP_PAIR]);
+    if (prot.is_initialized()) return true;
 
-	// merge the configuration of the most specific standlone source and destination links
-	prot = merge(
-			getProtocolCfg(source_link),
-			getProtocolCfg(destination_link)
-		);
+    // get the first existing standalone source link from the list
+    optional< pair<string, string> > source_link = getFirst(
+                list_of (SOURCE_SE) (SOURCE_GROUP) (SOURCE_WILDCARD)
+            );
+    // get the first existing standalone destination link from the list
+    optional< pair<string, string> > destination_link = getFirst(
+                list_of (DESTINATION_SE) (DESTINATION_GROUP) (DESTINATION_WILDCARD)
+            );
 
-	if (isAuto()) {
-		autotune();
-	}
+    // merge the configuration of the most specific standlone source and destination links
+    prot = merge(
+               getProtocolCfg(source_link),
+               getProtocolCfg(destination_link)
+           );
 
-	return prot.is_initialized();
+    if (isAuto())
+        {
+            autotune();
+        }
+
+    return prot.is_initialized();
 }
 
-void ProtocolResolver::autotune() {
+void ProtocolResolver::autotune()
+{
 
-	string source = file->SOURCE_SE;
-	string destination = file->DEST_SE;
+    string source = file->SOURCE_SE;
+    string destination = file->DEST_SE;
 
-	OptimizerSample opt_config;
+    OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->initOptimizer(source, destination, 0);
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
     get<TCP_BUFFER_SIZE>(*prot) = opt_config.getBufSize();
@@ -230,24 +251,29 @@ void ProtocolResolver::autotune() {
     get<URLCOPY_TX_TO>(*prot) = opt_config.getTimeout();
 }
 
-bool ProtocolResolver::isAuto() {
-	return get<AUTO_TUNING>(*prot);
+bool ProtocolResolver::isAuto()
+{
+    return get<AUTO_TUNING>(*prot);
 }
 
-int ProtocolResolver::getNoStreams() {
-	return get<NOSTREAMS>(*prot);
+int ProtocolResolver::getNoStreams()
+{
+    return get<NOSTREAMS>(*prot);
 }
 
-int ProtocolResolver::getNoTxActiveTo() {
-	return get<NO_TX_ACTIVITY_TO>(*prot);
+int ProtocolResolver::getNoTxActiveTo()
+{
+    return get<NO_TX_ACTIVITY_TO>(*prot);
 }
 
-int ProtocolResolver::getTcpBufferSize() {
-	return get<TCP_BUFFER_SIZE>(*prot);
+int ProtocolResolver::getTcpBufferSize()
+{
+    return get<TCP_BUFFER_SIZE>(*prot);
 }
 
-int ProtocolResolver::getUrlCopyTxTo() {
-	return get<URLCOPY_TX_TO>(*prot);
+int ProtocolResolver::getUrlCopyTxTo()
+{
+    return get<URLCOPY_TX_TO>(*prot);
 }
 
 FTS3_SERVER_NAMESPACE_END

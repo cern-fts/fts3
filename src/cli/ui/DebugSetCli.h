@@ -30,83 +30,90 @@
 #include <string>
 #include <vector>
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  *
  */
-class DebugSetCli : public CliBase {
+class DebugSetCli : public CliBase
+{
 
-	static const string ON;
-	static const string OFF;
+    static const string ON;
+    static const string OFF;
 
 public:
 
-	/**
-	 * Default Constructor.
-	 *
-	 * Creates the debud-set specific command line option: on/off.
-	 */
-	DebugSetCli();
+    /**
+     * Default Constructor.
+     *
+     * Creates the debud-set specific command line option: on/off.
+     */
+    DebugSetCli();
 
-	/**
-	 * Destructor.
-	 */
-	virtual ~DebugSetCli();
+    /**
+     * Destructor.
+     */
+    virtual ~DebugSetCli();
 
-	/**
-	 * Validates command line options.
-	 *	Checks that the debug mode was set correctly.
-	 *
-	 * @return GSoapContexAdapter instance, or null if all activities
-	 * 				requested using program options have been done.
-	 */
-	virtual optional<GSoapContextAdapter&> validate(bool init = true);
+    /**
+     * Validates command line options.
+     *	Checks that the debug mode was set correctly.
+     *
+     * @return GSoapContexAdapter instance, or null if all activities
+     * 				requested using program options have been done.
+     */
+    virtual optional<GSoapContextAdapter&> validate(bool init = true);
 
-	/**
-	 * Gives the instruction how to use the command line tool.
-	 *
-	 * @return a string with instruction on how to use the tool
-	 */
-	string getUsageString(string tool);
+    /**
+     * Gives the instruction how to use the command line tool.
+     *
+     * @return a string with instruction on how to use the tool
+     */
+    string getUsageString(string tool);
 
-	/**
-	 * Gets the debug mode.
-	 *
-	 * @return true is the debug mode is on, false if the debud mode is off
-	 */
-	bool getDebugMode() {
-		return mode;
-	}
+    /**
+     * Gets the debug mode.
+     *
+     * @return true is the debug mode is on, false if the debud mode is off
+     */
+    bool getDebugMode()
+    {
+        return mode;
+    }
 
-	/**
-	 * Gets the source file name (string) for the job.
-	 *
-	 * @return source string if it was given as a CLI option, or an empty string if not
-	 */
-	string getSource() {
-		return source;
-	}
+    /**
+     * Gets the source file name (string) for the job.
+     *
+     * @return source string if it was given as a CLI option, or an empty string if not
+     */
+    string getSource()
+    {
+        return source;
+    }
 
-	/**
-	 * Gets the destination file name (string) for the job.
-	 *
-	 * @return destination string if it was given as a CLI option, or an empty string if not
-	 */
-	string getDestination() {
-		return destination;
-	}
+    /**
+     * Gets the destination file name (string) for the job.
+     *
+     * @return destination string if it was given as a CLI option, or an empty string if not
+     */
+    string getDestination()
+    {
+        return destination;
+    }
 
 private:
 
-	/// debug mode
-	bool mode;
+    /// debug mode
+    bool mode;
 
-	/// source
-	string source;
+    /// source
+    string source;
 
-	// destination
-	string destination;
+    // destination
+    string destination;
 };
 
 }

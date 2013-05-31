@@ -38,89 +38,105 @@ using namespace fts3::common;
 /**
  * This is the entry point for the fts3-transfer-status command line tool.
  */
-int main(int ac, char* av[]) {
+int main(int ac, char* av[])
+{
 
-	scoped_ptr<TransferStatusCli> cli;
+    scoped_ptr<TransferStatusCli> cli;
 
-	try {
-		// create and initialize the command line utility
-		cli.reset (
-				getCli<TransferStatusCli>(ac, av)
-			);
+    try
+        {
+            // create and initialize the command line utility
+            cli.reset (
+                getCli<TransferStatusCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		// get job IDs that have to be check
-		vector<string> jobIds = cli->getJobIds();
-		// iterate over job IDs
-		vector<string>::iterator it;
-		for (it = jobIds.begin(); it < jobIds.end(); it++) {
+            // get job IDs that have to be check
+            vector<string> jobIds = cli->getJobIds();
+            // iterate over job IDs
+            vector<string>::iterator it;
+            for (it = jobIds.begin(); it < jobIds.end(); it++)
+                {
 
-			string jobId = *it;
+                    string jobId = *it;
 
-			if (cli->isVerbose()) {
-				// do the request
-				JobSummary summary = ctx.getTransferJobSummary2(jobId);
-				// print the response
-				cli->printer().job_summary(summary);
-			} else {
-				// do the request
-				fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
-		    	// print the response
-		    	if (!status.jobStatus.empty()) {
-		    		cli->printer().status(status);
-		    	}
-			}
+                    if (cli->isVerbose())
+                        {
+                            // do the request
+                            JobSummary summary = ctx.getTransferJobSummary2(jobId);
+                            // print the response
+                            cli->printer().job_summary(summary);
+                        }
+                    else
+                        {
+                            // do the request
+                            fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
+                            // print the response
+                            if (!status.jobStatus.empty())
+                                {
+                                    cli->printer().status(status);
+                                }
+                        }
 
-			// TODO test!
-			// check if the -l option has been used
-			if (cli->list()) {
+                    // TODO test!
+                    // check if the -l option has been used
+                    if (cli->list())
+                        {
 
-				// do the request
-				impltns__getFileStatusResponse resp;
-				ctx.getFileStatus(jobId, resp);
+                            // do the request
+                            impltns__getFileStatusResponse resp;
+                            ctx.getFileStatus(jobId, resp);
 
-				if (resp._getFileStatusReturn) {
+                            if (resp._getFileStatusReturn)
+                                {
 
-					std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
-					std::vector<tns3__FileTransferStatus * >::iterator it;
+                                    std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
+                                    std::vector<tns3__FileTransferStatus * >::iterator it;
 
-					// print the response
-					for (it = vect.begin(); it < vect.end(); it++) {
-						tns3__FileTransferStatus* stat = *it;
+                                    // print the response
+                                    for (it = vect.begin(); it < vect.end(); it++)
+                                        {
+                                            tns3__FileTransferStatus* stat = *it;
 
-						vector<string> values =
-								list_of
-								(*stat->sourceSURL)
-								(*stat->destSURL)
-								(*stat->transferFileState)
-								(lexical_cast<string>(stat->numFailures))
-								(*stat->reason)
-								(lexical_cast<string>(stat->duration))
-								;
+                                            vector<string> values =
+                                                list_of
+                                                (*stat->sourceSURL)
+                                                (*stat->destSURL)
+                                                (*stat->transferFileState)
+                                                (lexical_cast<string>(stat->numFailures))
+                                                (*stat->reason)
+                                                (lexical_cast<string>(stat->duration))
+                                                ;
 
-						cli->printer().file_list(values);
-					}
-				}
-			}
-		}
+                                            cli->printer().file_list(values);
+                                        }
+                                }
+                        }
+                }
 
-    } catch(std::exception& ex) {
-    	if (cli.get())
-    		cli->printer().error_msg(ex.what());
-        return 1;
-    } catch(string& ex) {
-    	if (cli.get())
-    		cli->printer().gsoap_error_msg(ex);
-    	return 1;
-    } catch(...) {
-    	if (cli.get())
-    		cli->printer().error_msg("Exception of unknown type!");
-        return 1;
-    }
+        }
+    catch(std::exception& ex)
+        {
+            if (cli.get())
+                cli->printer().error_msg(ex.what());
+            return 1;
+        }
+    catch(string& ex)
+        {
+            if (cli.get())
+                cli->printer().gsoap_error_msg(ex);
+            return 1;
+        }
+    catch(...)
+        {
+            if (cli.get())
+                cli->printer().error_msg("Exception of unknown type!");
+            return 1;
+        }
 
-	return 0;
+    return 0;
 }

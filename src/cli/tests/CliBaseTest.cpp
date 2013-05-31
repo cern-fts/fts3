@@ -35,77 +35,85 @@ using namespace fts3::cli;
  * and implements its pure virtual method so the class
  * can be instantiated and tested
  */
-class CliBaseTester : public CliBase {
+class CliBaseTester : public CliBase
+{
 
-	// implement the pure vitual method
-	string getUsageString(string tool) {return tool;};
+    // implement the pure vitual method
+    string getUsageString(string tool)
+    {
+        return tool;
+    };
 };
 
-BOOST_AUTO_TEST_CASE (CliBase_Test1) {
+BOOST_AUTO_TEST_CASE (CliBase_Test1)
+{
 
-	// has to be const otherwise is deprecated
-	char* av[] = {
-			"prog_name",
-			"-h",
-			"-q",
-			"-v",
-			"-s",
-			"https://fts3-server:8080",
-			"-V"
-		};
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-h",
+        "-q",
+        "-v",
+        "-s",
+        "https://fts3-server:8080",
+        "-V"
+    };
 
-	// argument count
-	int ac = 7;
+    // argument count
+    int ac = 7;
 
-	auto_ptr<CliBaseTester> cli (
-			getCli<CliBaseTester>(ac, av)
-		);
+    auto_ptr<CliBaseTester> cli (
+        getCli<CliBaseTester>(ac, av)
+    );
 
-	cli->mute();
+    cli->mute();
 
-	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(cli->printHelp(string()));
-	BOOST_CHECK(cli->isQuite());
-	BOOST_CHECK(cli->isVerbose());
-	BOOST_CHECK(cli->printVersion());
+    // all 5 parameters should be available in vm variable
+    BOOST_CHECK(cli->printHelp(string()));
+    BOOST_CHECK(cli->isQuite());
+    BOOST_CHECK(cli->isVerbose());
+    BOOST_CHECK(cli->printVersion());
 
-	// the endpoint shouldn't be empty since it's starting with http
-	BOOST_CHECK(!cli->getService().empty());
+    // the endpoint shouldn't be empty since it's starting with http
+    BOOST_CHECK(!cli->getService().empty());
 
-	cli->unmute();
+    cli->unmute();
 }
 
-BOOST_AUTO_TEST_CASE (CliBase_Test2) {
+BOOST_AUTO_TEST_CASE (CliBase_Test2)
+{
 
-	// has to be const otherwise is deprecated
-	char* av[] = {
-			"prog_name",
-			"--help",
-			"--quite",
-			"--verbose",
-			"--service",
-			"https://fts3-server:8080",
-			"--version"
-		};
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "--help",
+        "--quite",
+        "--verbose",
+        "--service",
+        "https://fts3-server:8080",
+        "--version"
+    };
 
-	// argument count
-	int ac = 7;
+    // argument count
+    int ac = 7;
 
-	auto_ptr<CliBaseTester> cli (
-			getCli<CliBaseTester>(ac, av)
-		);
+    auto_ptr<CliBaseTester> cli (
+        getCli<CliBaseTester>(ac, av)
+    );
 
-	cli->mute();
+    cli->mute();
 
-	// all 5 parameters should be available in vm variable
-	BOOST_CHECK(cli->printHelp(string()));
-	BOOST_CHECK(cli->isQuite());
-	BOOST_CHECK(cli->isVerbose());
-	BOOST_CHECK(cli->printVersion());
-	// the endpoint should be empty since it's not starting with http, https, httpd
-	BOOST_CHECK(!cli->getService().empty());
+    // all 5 parameters should be available in vm variable
+    BOOST_CHECK(cli->printHelp(string()));
+    BOOST_CHECK(cli->isQuite());
+    BOOST_CHECK(cli->isVerbose());
+    BOOST_CHECK(cli->printVersion());
+    // the endpoint should be empty since it's not starting with http, https, httpd
+    BOOST_CHECK(!cli->getService().empty());
 
-	cli->unmute();
+    cli->unmute();
 }
 
 

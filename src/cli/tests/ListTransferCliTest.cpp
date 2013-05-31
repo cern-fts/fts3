@@ -29,79 +29,85 @@
 using namespace fts3::cli;
 
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test1) {
+BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test1)
+{
 
-        // has to be const otherwise is deprecated
-        char* av[] = {
-        		"prog_name",
-    			"-s",
-    			"https://fts3-server:8080",
-        		"-o",
-        		"vo"
-        	};
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "-o",
+        "vo"
+    };
 
-    	// argument count
-    	int ac = 5;
+    // argument count
+    int ac = 5;
 
-    	auto_ptr<ListTransferCli> cli (
-    			getCli<ListTransferCli>(ac, av)
-    		);
+    auto_ptr<ListTransferCli> cli (
+        getCli<ListTransferCli>(ac, av)
+    );
 
-        BOOST_CHECK(cli->getVoName().compare("vo") == 0);
+    BOOST_CHECK(cli->getVoName().compare("vo") == 0);
 }
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test2) {
+BOOST_AUTO_TEST_CASE (ListTransferCli_VO_Test2)
+{
 
-        // has to be const otherwise is deprecated
-        char* av[] = {
-        		"prog_name",
-    			"-s",
-    			"https://fts3-server:8080",
-        		"--voname",
-        		"vo"
-        	};
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "--voname",
+        "vo"
+    };
 
-    	// argument count
-    	int ac = 5;
+    // argument count
+    int ac = 5;
 
-    	auto_ptr<ListTransferCli> cli (
-    			getCli<ListTransferCli>(ac, av)
-    		);
+    auto_ptr<ListTransferCli> cli (
+        getCli<ListTransferCli>(ac, av)
+    );
 
-        BOOST_CHECK(cli->getVoName() == "vo");
+    BOOST_CHECK(cli->getVoName() == "vo");
 }
 
-BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test) {
+BOOST_AUTO_TEST_CASE (ListTransferCli_Status_Test)
+{
 
-	// has to be const otherwise is deprecated
-	char* av[] = {
-			"prog_name",
-			"-s",
-			"https://fts3-server:8080",
-			"status1",
-			"status2",
-			"status3",
-			"status4",
-			"status5",
-			"status6"
-		};
+    // has to be const otherwise is deprecated
+    char* av[] =
+    {
+        "prog_name",
+        "-s",
+        "https://fts3-server:8080",
+        "status1",
+        "status2",
+        "status3",
+        "status4",
+        "status5",
+        "status6"
+    };
 
-	// argument count
-	int ac = 9;
+    // argument count
+    int ac = 9;
 
-	auto_ptr<ListTransferCli> cli (
-			getCli<ListTransferCli>(ac, av)
-		);
+    auto_ptr<ListTransferCli> cli (
+        getCli<ListTransferCli>(ac, av)
+    );
 
-	cli->validate(false);
+    cli->validate(false);
 
-	const vector<string>& statuses = cli->getStatusArray();
-	BOOST_CHECK(statuses.size() == 6);
-	BOOST_CHECK(statuses[0] == "status1");
-	BOOST_CHECK(statuses[1] == "status2");
-	BOOST_CHECK(statuses[2] == "status3");
-	BOOST_CHECK(statuses[3] == "status4");
-	BOOST_CHECK(statuses[4] == "status5");
-	BOOST_CHECK(statuses[5] == "status6");
+    const vector<string>& statuses = cli->getStatusArray();
+    BOOST_CHECK(statuses.size() == 6);
+    BOOST_CHECK(statuses[0] == "status1");
+    BOOST_CHECK(statuses[1] == "status2");
+    BOOST_CHECK(statuses[2] == "status3");
+    BOOST_CHECK(statuses[3] == "status4");
+    BOOST_CHECK(statuses[4] == "status5");
+    BOOST_CHECK(statuses[5] == "status6");
 }
 

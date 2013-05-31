@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
    See www.eu-emi.eu for details on the copyright holders.
 
-   Licensed under the Apache License, Version 2.0 (the "License"); 
-   you may not use this file except in compliance with the License. 
-   You may obtain a copy of the License at 
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-   http://www.apache.org/licenses/LICENSE-2.0 
+   http://www.apache.org/licenses/LICENSE-2.0
 
-   Unless required by applicable law or agreed to in writing, software 
-   distributed under the License is distributed on an "AS IS" BASIS, 
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-   See the License for the specific language governing permissions and 
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
    limitations under the License. */
 
 #pragma once
@@ -22,7 +22,7 @@
  */
 
 #ifndef __FTS3_COMMON_THREADTRAITS_H_GUARD__
-  #error File is included from elsewhere that threadtraits.h
+#error File is included from elsewhere that threadtraits.h
 #endif
 
 // Disable warnings triggered by the CppUnit headers
@@ -42,7 +42,7 @@
 #include <boost/thread/condition.hpp>
 
 #ifndef BOOST_HAS_THREADS
-  #error Threaded version of Boost is required.
+#error Threaded version of Boost is required.
 #endif
 
 #include <boost/version.hpp>
@@ -50,20 +50,21 @@
 FTS3_COMMON_NAMESPACE_START
 
 /** Strategy implementing common threading constructs, on top of Boost threads. */
-struct ThreadTraits {
-	typedef boost::mutex              MUTEX;
-	typedef boost::condition          CONDITION;
-	typedef boost::recursive_mutex	  MUTEX_R;
-	typedef boost::recursive_mutex::scoped_lock LOCK_R;
-	typedef boost::mutex::scoped_lock LOCK;
-	typedef boost::thread_group       THREAD_GROUP;
-	typedef boost::thread             THREAD;
+struct ThreadTraits
+{
+    typedef boost::mutex              MUTEX;
+    typedef boost::condition          CONDITION;
+    typedef boost::recursive_mutex	  MUTEX_R;
+    typedef boost::recursive_mutex::scoped_lock LOCK_R;
+    typedef boost::mutex::scoped_lock LOCK;
+    typedef boost::thread_group       THREAD_GROUP;
+    typedef boost::thread             THREAD;
 
 #if (BOOST_VERSION >= 103500)
-	static boost::thread::id get_id()
-	{
-		return boost::this_thread::get_id();
-	}
+    static boost::thread::id get_id()
+    {
+        return boost::this_thread::get_id();
+    }
 #else
     static int get_id()
     {

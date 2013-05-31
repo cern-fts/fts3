@@ -32,25 +32,29 @@
 
 
 
-namespace fts3 { namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 namespace py = boost::python;
 
-class PythonApi {
+class PythonApi
+{
 
 public:
-	PythonApi(py::str endpoint);
-	virtual ~PythonApi();
+    PythonApi(py::str endpoint);
+    virtual ~PythonApi();
 
-	py::str submit(Job job); // deleg only
-	void cancel(py::str id);
-	void cancelAll(py::list ids);
-	py::str getStatus(py::str id);
+    py::str submit(Job job); // deleg only
+    void cancel(py::str id);
+    void cancelAll(py::list ids);
+    py::str getStatus(py::str id);
 
-	py::str getVersion(void);
+    py::str getVersion(void);
 
 private:
-	GSoapContextAdapter ctx;
+    GSoapContextAdapter ctx;
 };
 
 }

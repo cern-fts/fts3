@@ -34,41 +34,44 @@
 
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace std;
 using namespace boost;
 using namespace db;
 
-class Blacklister {
+class Blacklister
+{
 
 public:
 
-	Blacklister(soap* ctx, string name, string status, int timeout, bool blk);
+    Blacklister(soap* ctx, string name, string status, int timeout, bool blk);
 
-	Blacklister(soap* ctx, string name, string vo, string status, int timeout, bool blk);
+    Blacklister(soap* ctx, string name, string vo, string status, int timeout, bool blk);
 
-	virtual ~Blacklister();
+    virtual ~Blacklister();
 
-	void executeRequest();
+    void executeRequest();
 
 private:
 
-	void handleSeBlacklisting();
-	void handleDnBlacklisting();
+    void handleSeBlacklisting();
+    void handleDnBlacklisting();
 
-	void handleJobsInTheQueue();
+    void handleJobsInTheQueue();
 
-	string adminDn;
+    string adminDn;
 
-	optional<string> vo;
-	string name;
-	string status;
-	int timeout;
-	bool blk;
+    optional<string> vo;
+    string name;
+    string status;
+    int timeout;
+    bool blk;
 
-	GenericDbIfce* db;
+    GenericDbIfce* db;
 
 };
 

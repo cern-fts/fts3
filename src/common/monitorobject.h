@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 #pragma once
@@ -25,12 +25,12 @@ FTS3_COMMON_NAMESPACE_START
 /* -------------------------------------------------------------------------- */
 
 /** \brief Implements the Monitor pattern that enables concurrent access
- * for the method of an object. 
+ * for the method of an object.
  *
  * The classes that need concurrent access
  * must derive from MonitorObject, and protect the method bodies with the
  * constructs provided by this class. Only those methods must be protected that
- * need synchronization. The best practice if the protection covers the entire 
+ * need synchronization. The best practice if the protection covers the entire
  * method body like the example:
  *
  * \code
@@ -52,25 +52,26 @@ class MonitorObject
 {
 public:
     // Constructor (empty).
-	MonitorObject() {};
+    MonitorObject() {};
 
     // Destructor (empty).
-	virtual ~MonitorObject() {};
-	
+    virtual ~MonitorObject() {};
+
     // Traits used for synchronization.
-	typedef ThreadTraits synch_traits;
-	
+    typedef ThreadTraits synch_traits;
+
 protected:
-    // Lock used to protect a critical section. Do not use it directly, only with 
+    // Lock used to protect a critical section. Do not use it directly, only with
     // FTS3_COMMON_MONITOR_* macros.
-	mutable synch_traits::MUTEX _monitor_lock;
-	
+    mutable synch_traits::MUTEX _monitor_lock;
+
     // Lock used to protect a static critical section (protects from all the objects
     // of a gven class). Do not use it directly, only with FTS3_COMMON_MONITOR_* macros.
-	static synch_traits::MUTEX& _static_monitor_lock() {
-		static synch_traits::MUTEX m;
-		return m;
-	}
+    static synch_traits::MUTEX& _static_monitor_lock()
+    {
+        static synch_traits::MUTEX m;
+        return m;
+    }
 };
 
 /* -------------------------------------------------------------------------- */
@@ -83,7 +84,7 @@ protected:
 /// In runtime, the lock is always released at the end of the scope of the critical section.
 #define FTS3_COMMON_MONITOR_START_CRITICAL { ThreadTraits::LOCK FTS3_COMMON_MONITOR_LOCK(this->_monitor_lock);
 
-/// Opens a "static" critical section (locks all the objects of a given class). 
+/// Opens a "static" critical section (locks all the objects of a given class).
 #define FTS3_COMMON_MONITOR_START_STATIC_CRITICAL { ThreadTraits::LOCK FTS3_COMMON_MONITOR_LOCK(_static_monitor_lock());
 
 /// Closes a critical (protected) section. Used for static sections as well.

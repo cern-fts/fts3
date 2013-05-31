@@ -24,46 +24,52 @@
 
 #include "GrPairCfg.h"
 
-namespace fts3 {
-namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
-GrPairCfg::GrPairCfg(string dn, CfgParser& parser) : PairCfg(dn, parser) {
+GrPairCfg::GrPairCfg(string dn, CfgParser& parser) : PairCfg(dn, parser)
+{
 
-	source = parser.get<string>("source_group");
-	destination = parser.get<string>("destination_group");
+    source = parser.get<string>("source_group");
+    destination = parser.get<string>("destination_group");
 
-	if (notAllowed.count(source) || notAllowed.count(destination))
-		throw Err_Custom("The source or destination name is not a valid!");
+    if (notAllowed.count(source) || notAllowed.count(destination))
+        throw Err_Custom("The source or destination name is not a valid!");
 
-	if (symbolic_name_opt)
-		symbolic_name = *symbolic_name_opt;
-	else
-		symbolic_name = source + "-" + destination;
+    if (symbolic_name_opt)
+        symbolic_name = *symbolic_name_opt;
+    else
+        symbolic_name = source + "-" + destination;
 
 
-	all = json();
+    all = json();
 }
 
-GrPairCfg::~GrPairCfg() {
+GrPairCfg::~GrPairCfg()
+{
 }
 
-string GrPairCfg::json() {
+string GrPairCfg::json()
+{
 
-	stringstream ss;
+    stringstream ss;
 
-	ss << "{";
-	ss << "\"" << "source_group" << "\":\"" << source << "\",";
-	ss << "\"" << "destination_group" << "\":\"" << destination << "\",";
-	ss << PairCfg::json();
-	ss << "}";
+    ss << "{";
+    ss << "\"" << "source_group" << "\":\"" << source << "\",";
+    ss << "\"" << "destination_group" << "\":\"" << destination << "\",";
+    ss << PairCfg::json();
+    ss << "}";
 
-	return ss.str();
+    return ss.str();
 }
 
-void GrPairCfg::save() {
-	checkGroup(source);
-	checkGroup(destination);
-	PairCfg::save();
+void GrPairCfg::save()
+{
+    checkGroup(source);
+    checkGroup(destination);
+    PairCfg::save();
 }
 
 } /* namespace ws */

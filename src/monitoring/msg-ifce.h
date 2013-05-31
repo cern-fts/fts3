@@ -16,8 +16,8 @@
  *  limitations under the License.
  *
  */
- 
- 
+
+
 #ifndef MSG_IFCE_H
 
 #include <iostream>
@@ -32,35 +32,37 @@
 using namespace std;
 
 template <class T>
-std::string to_string(T t, std::ios_base & (*f)(std::ios_base&)) {
+std::string to_string(T t, std::ios_base & (*f)(std::ios_base&))
+{
     std::ostringstream oss;
     oss << f << t;
     return oss.str();
 }
 
-typedef struct {
+typedef struct
+{
     std::string agent_fqdn;
-    std::string transfer_id; 
-    std::string endpoint; 
-    std::string source_srm_version; 
-    std::string destination_srm_version; 
+    std::string transfer_id;
+    std::string endpoint;
+    std::string source_srm_version;
+    std::string destination_srm_version;
     std::string vo;
     std::string source_url;
     std::string dest_url;
     std::string source_hostname;
     std::string dest_hostname;
-    std::string source_site_name; 
-    std::string dest_site_name; 
+    std::string source_site_name;
+    std::string dest_site_name;
     std::string t_channel;
     std::string timestamp_transfer_started; //epoch-seconds
     std::string timestamp_transfer_completed; //epoch-seconds
     std::string timestamp_checksum_source_started; //epoch-seconds
-    std::string timestamp_checksum_source_ended; //epoch-seconds    
+    std::string timestamp_checksum_source_ended; //epoch-seconds
     std::string timestamp_checksum_dest_started; //epoch-seconds
-    std::string timestamp_checksum_dest_ended; //epoch-seconds    
+    std::string timestamp_checksum_dest_ended; //epoch-seconds
     std::string transfer_timeout;
     std::string checksum_timeout;
-    std::string transfer_error_code; 
+    std::string transfer_error_code;
     std::string transfer_error_scope; //source/destination
     std::string transfer_error_message; //text error message
     std::string failure_phase; // (preparation, transfer, checksum, etc)
@@ -72,28 +74,29 @@ typedef struct {
     std::string block_size;
     std::string file_size;
     std::string time_spent_in_srm_preparation_start; //epoc
-    std::string time_spent_in_srm_preparation_end; //epoc    
+    std::string time_spent_in_srm_preparation_end; //epoc
     std::string time_spent_in_srm_finalization_start; //epoc
-    std::string time_spent_in_srm_finalization_end; //epoc      
+    std::string time_spent_in_srm_finalization_end; //epoc
     std::string srm_space_token_source;
     std::string srm_space_token_dest;
     std::string tr_timestamp_start;
     std::string tr_timestamp_complete;
-    std::string channel_type;    
-    
+    std::string channel_type;
+
 } transfer_completed;
 
-class msg_ifce {
+class msg_ifce
+{
 private:
-  
+
     static bool instanceFlag;
     static msg_ifce *single;
     std::string errorMessage;
     char * queue_name;
     char * connection_hostname;
-    bool read_initial_config();  
+    bool read_initial_config();
     msg_ifce(); /*private constructor*/
-    
+
 public:
     /*static vector<std::string>  getData( const char * id);*/
     std::string getTimestamp();

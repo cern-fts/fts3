@@ -32,49 +32,57 @@
 using namespace fts3::ws;
 
 
-void* LogFileStreamer::readOpen(soap* ctx, void* handle, const char* id, const char* type, const char* description) {
-	return handle;
+void* LogFileStreamer::readOpen(soap* ctx, void* handle, const char* id, const char* type, const char* description)
+{
+    return handle;
 }
 
-size_t LogFileStreamer::read(soap* ctx, void* handle, char* buff, size_t len) {
+size_t LogFileStreamer::read(soap* ctx, void* handle, char* buff, size_t len)
+{
 
-	fstream* file = (fstream*) handle;
-	if (file->eof()) return 0;
+    fstream* file = (fstream*) handle;
+    if (file->eof()) return 0;
 
-	file->read(buff, len);
-	return file->gcount();
+    file->read(buff, len);
+    return file->gcount();
 }
 
-void LogFileStreamer::readClose(soap* ctx, void* handle) {
-	fstream* file = (fstream*) handle;
-	if (file) {
-		file->close();
-		delete file;
-	}
+void LogFileStreamer::readClose(soap* ctx, void* handle)
+{
+    fstream* file = (fstream*) handle;
+    if (file)
+        {
+            file->close();
+            delete file;
+        }
 }
 
-void* LogFileStreamer::writeOpen(soap* ctx, void* handle, const char *id, const char *type, const char *description, soap_mime_encoding encoding) {
+void* LogFileStreamer::writeOpen(soap* ctx, void* handle, const char *id, const char *type, const char *description, soap_mime_encoding encoding)
+{
 
-	OutputHandler* oh = (OutputHandler*)ctx->user;
-	string out = oh->getLogName();
-	if (oh->empty()) delete oh;
+    OutputHandler* oh = (OutputHandler*)ctx->user;
+    string out = oh->getLogName();
+    if (oh->empty()) delete oh;
 
-	fstream* file = new fstream(out.c_str(), ios::out | ios::trunc);
-	return (void*) file;
+    fstream* file = new fstream(out.c_str(), ios::out | ios::trunc);
+    return (void*) file;
 }
 
-int LogFileStreamer::write(soap* ctx, void *handle, const char *buff, size_t len) {
+int LogFileStreamer::write(soap* ctx, void *handle, const char *buff, size_t len)
+{
 
-	fstream* file = (fstream*) handle;
-	file->write(buff, len);
-	return SOAP_OK;
+    fstream* file = (fstream*) handle;
+    file->write(buff, len);
+    return SOAP_OK;
 }
 
-void LogFileStreamer::writeClose(soap* ctx, void *handle) {
-	fstream* file = (fstream*) handle;
-	if (file) {
-		file->flush();
-		file->close();
-		delete file;
-	}
+void LogFileStreamer::writeClose(soap* ctx, void *handle)
+{
+    fstream* file = (fstream*) handle;
+    if (file)
+        {
+            file->flush();
+            file->close();
+            delete file;
+        }
 }

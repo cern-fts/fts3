@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 #pragma once
@@ -30,7 +30,7 @@ using FTS3_COMMON_NAMESPACE::Pointer;
 
 /** \bried Handle web service events.
  *
- * There are two classes of handling tasks: handling inoming connection, and 
+ * There are two classes of handling tasks: handling inoming connection, and
  * handling method calls. The basic workflow:
  *
  * - Accept a connection
@@ -39,83 +39,83 @@ using FTS3_COMMON_NAMESPACE::Pointer;
  *
  * The event handler should be used as Active Object.
  */
-template 
+template
 <
-    typename TRAITS
+typename TRAITS
 >
 class WebServiceHandler : public TRAITS::ActiveObjectType
 {
 protected:
 
-    using TRAITS::ActiveObjectType::_enqueue; 
+    using TRAITS::ActiveObjectType::_enqueue;
 
 public:
-    
+
     /* ---------------------------------------------------------------------- */
 
     typedef WebServiceHandler <TRAITS> OwnType;
-	
+
     /* ---------------------------------------------------------------------- */
-    
+
     /** Constructor. */
-	WebServiceHandler
+    WebServiceHandler
     (
         const std::string& desc = "" /**< Description of this service handler
             (goes to log) */
-    ) : 
-        TRAITS::ActiveObjectType ("WebServiceHandler", desc) 
+    ) :
+        TRAITS::ActiveObjectType ("WebServiceHandler", desc)
     {}
 
     /* ---------------------------------------------------------------------- */
-	
+
     /** Destructor */
-    virtual ~WebServiceHandler() 
+    virtual ~WebServiceHandler()
     {}
-	
+
     /* ---------------------------------------------------------------------- */
-	
+
     void listen_p
     (
-        const unsigned int port, 
+        const unsigned int port,
         const std::string& ip
     )
-	{
-		boost::function<void()> op = boost::bind(&WebServiceHandler::_listen_a, this, port, ip);
-		this->_enqueue(op);
-	}
+    {
+        boost::function<void()> op = boost::bind(&WebServiceHandler::_listen_a, this, port, ip);
+        this->_enqueue(op);
+    }
 
 protected:
-    
+
     /* ---------------------------------------------------------------------- */
 
     /** Active counterpart of listen_p (doing the job) */
     void _listen_a
     (
-        const unsigned int port, 
+        const unsigned int port,
         const std::string& ip
     )
-	{
+    {
         typename TRAITS::Acceptor acceptor (port, ip);
 
-		while(stopThreads==false) 
-        {
-            typename Pointer<typename TRAITS::Handler>::Shared handler = acceptor.accept();
-
-            if (handler.get())
+        while(stopThreads==false)
             {
-		        boost::function<void()> op = boost::bind(&WebServiceHandler::_handle_a, this, handler);
-		        this->_enqueue(op);
-            }
+                typename Pointer<typename TRAITS::Handler>::Shared handler = acceptor.accept();
 
-            if (_testHelper.loopOver)
-            {
-                return;
+                if (handler.get())
+                    {
+                        boost::function<void()> op = boost::bind(&WebServiceHandler::_handle_a, this, handler);
+                        this->_enqueue(op);
+                    }
+
+                if (_testHelper.loopOver)
+                    {
+                        return;
+                    }
             }
-		}
     }
 
     /* ---------------------------------------------------------------------- */
-    
+
     /** Active counterpart of _handle_a (doing the job) */
     void _handle_a
     (
@@ -124,8 +124,8 @@ protected:
     {
         //assert (handler.get());
         if(handler)
-        	handler->handle();
-	}
+            handler->handle();
+    }
 
     /* ---------------------------------------------------------------------- */
     struct TestHelper
@@ -135,7 +135,7 @@ protected:
         {}
 
         bool loopOver;
-    } 
+    }
     _testHelper;
 };
 

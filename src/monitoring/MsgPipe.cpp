@@ -15,8 +15,8 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  *
- *  
- * 
+ *
+ *
  */
 
 
@@ -42,21 +42,24 @@ extern bool stopThreads;
 
 namespace fs = boost::filesystem;
 
-void handler(int sig) {
+void handler(int sig)
+{
     sig = 0;
     stopThreads = true;
     std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
     std::string ret;
-    while(myQueue.empty()){ 	
-                ret = myQueue.front();
-                myQueue.pop();
-		send_message(ret);
-    }
+    while(myQueue.empty())
+        {
+            ret = myQueue.front();
+            myQueue.pop();
+            send_message(ret);
+        }
     sleep(5);
     exit(0);
 }
 
-MsgPipe::MsgPipe(){ 
+MsgPipe::MsgPipe()
+{
     //register sig handler to cleanup resources upon exiting
     signal(SIGFPE, handler);
     signal(SIGILL, handler);
@@ -65,53 +68,66 @@ MsgPipe::MsgPipe(){
     signal(SIGABRT, handler);
     signal(SIGTERM, handler);
     signal(SIGINT, handler);
-    signal(SIGQUIT, handler);	 
+    signal(SIGQUIT, handler);
 }
 
-MsgPipe::~MsgPipe() {   
+MsgPipe::~MsgPipe()
+{
 }
 
 
-void MsgPipe::run() {
-   
+void MsgPipe::run()
+{
+
     std::vector<struct message_monitoring> messages;
     std::vector<struct message_monitoring>::const_iterator iter;
-    
-    while (stopThreads==false){
-     try{
-     
-	if(fs::is_empty(fs::path(MONITORING_DIR))){
-			sleep(1);
-			continue;
-	}        	   
-				     
-        runConsumerMonitoring(messages);
-	if(!messages.empty()){
-		for (iter = messages.begin(); iter != messages.end(); ++iter){			
-			concurrent_queue::getInstance()->push( (*iter).msg );			
-		}
-	messages.clear();
-	}	
-        sleep(1);							    
-      } catch (const fs::filesystem_error& ex) {
-      	       cleanup();
-	       logger::writeLog(ex.what());
-	       sleep(1);		
-      } catch (...) {
-               errorMessage = "Exception thrown in msg pipe";
-	       cleanup();
-	       logger::writeLog(errorMessage);
-	       sleep(1);
+
+    while (stopThreads==false)
+        {
+            try
+                {
+
+                    if(fs::is_empty(fs::path(MONITORING_DIR)))
+                        {
+                            sleep(1);
+                            continue;
+                        }
+
+                    runConsumerMonitoring(messages);
+                    if(!messages.empty())
+                        {
+                            for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                {
+                                    concurrent_queue::getInstance()->push( (*iter).msg );
+                                }
+                            messages.clear();
+                        }
+                    sleep(1);
+                }
+            catch (const fs::filesystem_error& ex)
+                {
+                    cleanup();
+                    logger::writeLog(ex.what());
+                    sleep(1);
+                }
+            catch (...)
+                {
+                    errorMessage = "Exception thrown in msg pipe";
+                    cleanup();
+                    logger::writeLog(errorMessage);
+                    sleep(1);
+                }
         }
-    }
 }
 
-void MsgPipe::cleanup() {
- std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
- std::string ret;
- while(myQueue.empty()){ 	
-                ret = myQueue.front();
-                myQueue.pop();
-		send_message(ret);
- }
+void MsgPipe::cleanup()
+{
+    std::queue<std::string> myQueue = concurrent_queue::getInstance()->the_queue;
+    std::string ret;
+    while(myQueue.empty())
+        {
+            ret = myQueue.front();
+            myQueue.pop();
+            send_message(ret);
+        }
 }

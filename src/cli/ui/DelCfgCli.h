@@ -27,16 +27,19 @@
 
 #include "SetCfgCli.h"
 
-namespace fts3 {
-namespace cli {
+namespace fts3
+{
+namespace cli
+{
 
 /**
  * It's a wraper for SetCfgCli that turns off specific options!
  */
-class DelCfgCli : public SetCfgCli {
+class DelCfgCli : public SetCfgCli
+{
 public:
-	DelCfgCli();
-	virtual ~DelCfgCli();
+    DelCfgCli();
+    virtual ~DelCfgCli();
 };
 
 } /* namespace cli */

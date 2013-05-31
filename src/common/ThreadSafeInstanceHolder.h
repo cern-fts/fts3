@@ -32,7 +32,10 @@
 
 using namespace boost;
 
-namespace fts3 { namespace common {
+namespace fts3
+{
+namespace common
+{
 
 /**
  * The ThreadSafeInstanceHolder ensures a thread safe access to the hold instance.
@@ -43,56 +46,60 @@ namespace fts3 { namespace common {
  * @see InstanceHolder, MonitorObject
  */
 template <typename T>
-class ThreadSafeInstanceHolder: public MonitorObject, public InstanceHolder<T> {
+class ThreadSafeInstanceHolder: public MonitorObject, public InstanceHolder<T>
+{
 
 public:
 
-	/**
-	 * Gets a references to T, is thread safe.
-	 *
-	 * @return reference to T
-	 */
-	static T& getInstance() {
-		// thread safe lazy loading
-	    if (InstanceHolder<T>::instance.get() == 0) {
-	        FTS3_COMMON_MONITOR_START_STATIC_CRITICAL
-	        if (InstanceHolder<T>::instance.get() == 0) {
-	        	InstanceHolder<T>::instance.reset(new T);
-	        }
-	        FTS3_COMMON_MONITOR_END_CRITICAL
-	    }
-	    return *InstanceHolder<T>::instance;
-	}
+    /**
+     * Gets a references to T, is thread safe.
+     *
+     * @return reference to T
+     */
+    static T& getInstance()
+    {
+        // thread safe lazy loading
+        if (InstanceHolder<T>::instance.get() == 0)
+            {
+                FTS3_COMMON_MONITOR_START_STATIC_CRITICAL
+                if (InstanceHolder<T>::instance.get() == 0)
+                    {
+                        InstanceHolder<T>::instance.reset(new T);
+                    }
+                FTS3_COMMON_MONITOR_END_CRITICAL
+            }
+        return *InstanceHolder<T>::instance;
+    }
 
 
-	/**
-	 * Destructor (empty).
-	 */
-	virtual ~ThreadSafeInstanceHolder() {};
+    /**
+     * Destructor (empty).
+     */
+    virtual ~ThreadSafeInstanceHolder() {};
 
 protected:
 
-	/**
-	 * Default constructor (empty).
-	 *
-	 * Private
-	 */
-	ThreadSafeInstanceHolder() {};
+    /**
+     * Default constructor (empty).
+     *
+     * Private
+     */
+    ThreadSafeInstanceHolder() {};
 
 private:
-	/**
-	 * Copying constructor.
-	 *
-	 * Private, should not be used
-	 */
-	ThreadSafeInstanceHolder(ThreadSafeInstanceHolder const&);
+    /**
+     * Copying constructor.
+     *
+     * Private, should not be used
+     */
+    ThreadSafeInstanceHolder(ThreadSafeInstanceHolder const&);
 
-	/**
-	 * Assignment operator.
-	 *
-	 * Private, should not be used
-	 */
-	ThreadSafeInstanceHolder& operator=(ThreadSafeInstanceHolder const&);
+    /**
+     * Assignment operator.
+     *
+     * Private, should not be used
+     */
+    ThreadSafeInstanceHolder& operator=(ThreadSafeInstanceHolder const&);
 };
 
 }

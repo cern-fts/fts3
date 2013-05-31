@@ -1,16 +1,16 @@
 /* Copyright @ Members of the EMI Collaboration, 2010.
 See www.eu-emi.eu for details on the copyright holders.
 
-Licensed under the Apache License, Version 2.0 (the "License"); 
-you may not use this file except in compliance with the License. 
-You may obtain a copy of the License at 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0 
+    http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software 
-distributed under the License is distributed on an "AS IS" BASIS, 
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-See the License for the specific language governing permissions and 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
 limitations under the License. */
 
 /** \file error.h Interface of FTS3 error handling component. */
@@ -26,7 +26,7 @@ limitations under the License. */
 
 /* -------------------------------------------------------------------------- */
 
-/// Write an error to the log, but do not throw! Parameter is an FTS3 Error 
+/// Write an error to the log, but do not throw! Parameter is an FTS3 Error
 /// class (Inherited from Err).
 #define FTS3_COMMON_EXCEPTION_LOGERROR(aError) \
 { \
@@ -35,7 +35,7 @@ limitations under the License. */
 
 /* -------------------------------------------------------------------------- */
 
-/// Throw an FTS 3 exception, and log the error. Parameter is an FTS3 Error 
+/// Throw an FTS 3 exception, and log the error. Parameter is an FTS3 Error
 /// class (Inherited from Err).
 #define FTS3_COMMON_EXCEPTION_THROW(aError) \
 { \
@@ -50,34 +50,34 @@ FTS3_COMMON_NAMESPACE_START
 class Err: public std::exception
 {
 public:
-    enum ErrorType 
+    enum ErrorType
     {
         e_defaultReport,
         e_detailedReport
     };
-        
+
     /* ---------------------------------------------------------------------- */
-    
+
     void log(const char* aFile, const char* aFunc, const int aLineNo);
-    
+
     /* ---------------------------------------------------------------------- */
-    
+
     virtual const char* what() const throw();
 
 protected:
-    
+
     /* ---------------------------------------------------------------------- */
-    
-    virtual void _logSystemError() 
+
+    virtual void _logSystemError()
     {
         // EMPTY
     };
-    
+
     /* ---------------------------------------------------------------------- */
-    
-    virtual std::string _description() const 
-    { 
-        return ""; 
+
+    virtual std::string _description() const
+    {
+        return "";
     };
 };
 
@@ -89,15 +89,15 @@ class Error : virtual public Err
 {
 private:
     virtual const char* what() const throw()
-    { 
-        return Err::what(); 
+    {
+        return Err::what();
     };
 
 protected:
-    
+
     /* ---------------------------------------------------------------------- */
-    
-    virtual void _logSystemError() 
+
+    virtual void _logSystemError()
     {
         // EMPTY
     };
@@ -109,15 +109,15 @@ protected:
 class Err_System : public Error<true>
 {
 public:
-	Err_System(const std::string& userDesc = "System Error.") 
-        : _userDesc(userDesc) 
+    Err_System(const std::string& userDesc = "System Error.")
+        : _userDesc(userDesc)
     {
         // EMPTY
     };
 
     /* ---------------------------------------------------------------------- */
-	
-    virtual ~Err_System() throw() 
+
+    virtual ~Err_System() throw()
     {
         // EMPTY
     };
@@ -126,15 +126,15 @@ public:
     {
         return _userDesc.c_str();
     };
-	
+
 private:
-    
+
     /* ---------------------------------------------------------------------- */
-    
+
     virtual std::string _description() const;
-    
+
     /* ---------------------------------------------------------------------- */
-    
+
     std::string _userDesc;
 };
 
@@ -144,30 +144,30 @@ private:
 class Err_Custom : public Error<false, Err::e_detailedReport>
 {
 public:
-    Err_Custom(const std::string& aDesc) 
-        : _desc(aDesc) 
+    Err_Custom(const std::string& aDesc)
+        : _desc(aDesc)
     {
         // EMPTY
     };
 
     /* ---------------------------------------------------------------------- */
-    
-    virtual ~Err_Custom() throw() 
+
+    virtual ~Err_Custom() throw()
     {
         // EMPTY
     };
-    
+
     /* ---------------------------------------------------------------------- */
-    virtual std::string _description() const; 
+    virtual std::string _description() const;
 
     virtual const char* what() const throw()
     {
         return _desc.c_str();
     }
 private:
-    
+
     /* ---------------------------------------------------------------------- */
-    
+
     std::string _desc;
 };
 

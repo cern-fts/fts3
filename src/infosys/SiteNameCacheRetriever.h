@@ -35,50 +35,53 @@
 
 #include "common/ThreadSafeInstanceHolder.h"
 
-namespace fts3 {
-namespace infosys {
+namespace fts3
+{
+namespace infosys
+{
 
 using namespace std;
 using namespace boost;
 using namespace boost::property_tree;
 
-class SiteNameCacheRetriever: public ThreadSafeInstanceHolder<SiteNameCacheRetriever> {
+class SiteNameCacheRetriever: public ThreadSafeInstanceHolder<SiteNameCacheRetriever>
+{
 
-	friend class ThreadSafeInstanceHolder<SiteNameCacheRetriever>;
+    friend class ThreadSafeInstanceHolder<SiteNameCacheRetriever>;
 
 public:
 
-	virtual ~SiteNameCacheRetriever();
+    virtual ~SiteNameCacheRetriever();
 
-	void get(map<string, string>& cache);
+    void get(map<string, string>& cache);
 
 private:
 
-	SiteNameCacheRetriever() {};
-	SiteNameCacheRetriever(SiteNameCacheRetriever const&);
-	SiteNameCacheRetriever& operator=(SiteNameCacheRetriever const&);
+    SiteNameCacheRetriever() {};
+    SiteNameCacheRetriever(SiteNameCacheRetriever const&);
+    SiteNameCacheRetriever& operator=(SiteNameCacheRetriever const&);
 
-	void fromGlue1(map<string, string>& cache);
-	void fromGlue2(map<string, string>& cache);
+    void fromGlue1(map<string, string>& cache);
+    void fromGlue2(map<string, string>& cache);
 
-	// glue1
-	static const char* ATTR_GLUE1_SERVICE;
-	static const char* ATTR_GLUE1_LINK;
-	static const char* ATTR_GLUE1_SITE;
+    // glue1
+    static const char* ATTR_GLUE1_SERVICE;
+    static const char* ATTR_GLUE1_LINK;
+    static const char* ATTR_GLUE1_SITE;
 
-	static const string FIND_SE_SITE_GLUE1;
-	static const char* FIND_SE_SITE_ATTR_GLUE1[];
+    static const string FIND_SE_SITE_GLUE1;
+    static const char* FIND_SE_SITE_ATTR_GLUE1[];
 
-	// glue2
-	static const char* ATTR_GLUE2_FK;
-	static const char* ATTR_GLUE2_ENDPOINT;
-	static const char* ATTR_GLUE2_SITE;
+    // glue2
+    static const char* ATTR_GLUE2_FK;
+    static const char* ATTR_GLUE2_ENDPOINT;
+    static const char* ATTR_GLUE2_SITE;
 
-	static const string FIND_SE_FK_GLUE2;
-	static const char* FIND_SE_FK_ATTR_GLUE2[];
+    static const string FIND_SE_FK_GLUE2;
+    static const char* FIND_SE_FK_ATTR_GLUE2[];
 
-	static const string FIND_FK_SITE_GLUE2(string fk);
-	static const char* FIND_FK_SITE_ATTR_GLUE2[];
+    static const string FIND_FK_SITE_GLUE2(string fk);
+    static const char* FIND_FK_SITE_ATTR_GLUE2[];
 
 };
 

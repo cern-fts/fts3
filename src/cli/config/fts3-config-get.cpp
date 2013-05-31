@@ -37,39 +37,48 @@ using namespace fts3::cli;
 /**
  * This is the entry point for the fts3-config-set command line tool.
  */
-int main(int ac, char* av[]) {
+int main(int ac, char* av[])
+{
 
-	try {
-		// create and initialize the command line utility
-		auto_ptr<GetCfgCli> cli (
-				getCli<GetCfgCli>(ac, av)
-			);
+    try
+        {
+            // create and initialize the command line utility
+            auto_ptr<GetCfgCli> cli (
+                getCli<GetCfgCli>(ac, av)
+            );
 
-		// validate command line options, and return respective gsoap context
-		optional<GSoapContextAdapter&> opt = cli->validate();
-		if (!opt.is_initialized()) return 0;
-		GSoapContextAdapter& ctx = opt.get();
+            // validate command line options, and return respective gsoap context
+            optional<GSoapContextAdapter&> opt = cli->validate();
+            if (!opt.is_initialized()) return 0;
+            GSoapContextAdapter& ctx = opt.get();
 
-		implcfg__getConfigurationResponse resp;
-		ctx.getConfiguration(cli->getSource(), cli->getDestination(), string(), cli->getName(), resp);
+            implcfg__getConfigurationResponse resp;
+            ctx.getConfiguration(cli->getSource(), cli->getDestination(), string(), cli->getName(), resp);
 
-		vector<string> &cfgs = resp.configuration->cfg;
-		vector<string>::iterator it;
+            vector<string> &cfgs = resp.configuration->cfg;
+            vector<string>::iterator it;
 
-		for (it = cfgs.begin(); it < cfgs.end(); it++) {
-			cout << *it << endl;
-		}
+            for (it = cfgs.begin(); it < cfgs.end(); it++)
+                {
+                    cout << *it << endl;
+                }
 
-    } catch(std::exception& e) {
-        cerr << "error: " << e.what() << "\n";
-        return 1;
-    } catch(string& ex) {
-    	cout << ex << endl;
-    	return 1;
-    } catch(...) {
-        cerr << "Exception of unknown type!\n";
-        return 1;
-    }
+        }
+    catch(std::exception& e)
+        {
+            cerr << "error: " << e.what() << "\n";
+            return 1;
+        }
+    catch(string& ex)
+        {
+            cout << ex << endl;
+            return 1;
+        }
+    catch(...)
+        {
+            cerr << "Exception of unknown type!\n";
+            return 1;
+        }
 
-	return 0;
+    return 0;
 }

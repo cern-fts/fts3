@@ -27,37 +27,43 @@
 
 using namespace fts3::cli;
 
-SrcDestCli::SrcDestCli() {
+SrcDestCli::SrcDestCli()
+{
 
-	// add commandline options specific for fts3-transfer-submit
-	specific.add_options()
-			("source", value<string>(), "Specify source site name.")
-			("destination", value<string>(), "Specify destination site name.")
-			;
+    // add commandline options specific for fts3-transfer-submit
+    specific.add_options()
+    ("source", value<string>(), "Specify source site name.")
+    ("destination", value<string>(), "Specify destination site name.")
+    ;
 
-	// add positional (those used without an option switch) command line options
-	p.add("source", 1);
-	p.add("destination", 1);
+    // add positional (those used without an option switch) command line options
+    p.add("source", 1);
+    p.add("destination", 1);
 }
 
-SrcDestCli::~SrcDestCli() {
+SrcDestCli::~SrcDestCli()
+{
 
 }
 
-string SrcDestCli::getSource() {
+string SrcDestCli::getSource()
+{
 
-	// check if source was passed via command line options
-	if (vm.count("source")) {
-		return vm["source"].as<string>();
-	}
-	return "";
+    // check if source was passed via command line options
+    if (vm.count("source"))
+        {
+            return vm["source"].as<string>();
+        }
+    return "";
 }
 
-string SrcDestCli::getDestination() {
+string SrcDestCli::getDestination()
+{
 
-	// check if destination was passed via command line options
-	if (vm.count("destination")) {
-		return vm["destination"].as<string>();
-	}
-	return "";
+    // check if destination was passed via command line options
+    if (vm.count("destination"))
+        {
+            return vm["destination"].as<string>();
+        }
+    return "";
 }

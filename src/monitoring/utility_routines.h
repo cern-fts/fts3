@@ -16,7 +16,7 @@
  *  limitations under the License.
  *
  */
- 
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -34,7 +34,8 @@ using namespace std;
 convert a number to string, given the base
  */
 template <class T>
-std::string _to_string(T t, std::ios_base & (*)(std::ios_base&)) {
+std::string _to_string(T t, std::ios_base & (*)(std::ios_base&))
+{
     std::ostringstream oss;
     oss << fixed << t;
     return oss.str();
@@ -134,8 +135,9 @@ int GetIntVal(std::string strConvert);
 /*remove any non-ascii characters from a string*/
 std::string ReplaceNonPrintableCharacters(std::string s);
 
-inline bool caseInsCharCompareN(char a, char b) {
-   return(toupper(a) == toupper(b));
+inline bool caseInsCharCompareN(char a, char b)
+{
+    return(toupper(a) == toupper(b));
 }
 
 bool caseInsCompare(const string& s1, const string& s2);
@@ -145,11 +147,11 @@ bool send_message(std::string & text);
 
 //get timestamp in calendar time
 inline std::string  timestamp()
-	{
-	    time_t ltime; /* calendar time */
-	    ltime=time(NULL); /* get current cal time */
-	    return asctime( localtime(&ltime));
-	}
+{
+    time_t ltime; /* calendar time */
+    ltime=time(NULL); /* get current cal time */
+    return asctime( localtime(&ltime));
+}
 
 
 bool getResolveAlias();

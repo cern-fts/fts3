@@ -32,29 +32,36 @@ std::string stackTrace("");
  * log_stack
  * log program stack as warnings
  */
-void SignalLogger::log_stack(int sig){ 
-    if(sig ==15){ //SIGTERM  
-	raise(SIGINT);
-    }
-    if(sig ==10){ //SIGUSR1  
-        raise(SIGUSR1);
-    }    
-    else{   
-        signal(sig, SIG_DFL);
-    	const int stack_size = 25;
-    	void * array[stack_size]={0};
-    	int nSize = backtrace(array, stack_size);
-    	char ** symbols = backtrace_symbols(array, nSize);
-    	for (register int i = 0; i < nSize; ++i){
-		if(symbols && symbols[i]){
-			stackTrace+=std::string(symbols[i]) + '\n';
-		}
-    	}
-	if(symbols){
-    		free(symbols);	
-	}
-	kill(getpid(), SIGINT); //SIGINT
-    }
+void SignalLogger::log_stack(int sig)
+{
+    if(sig ==15)  //SIGTERM
+        {
+            raise(SIGINT);
+        }
+    if(sig ==10)  //SIGUSR1
+        {
+            raise(SIGUSR1);
+        }
+    else
+        {
+            signal(sig, SIG_DFL);
+            const int stack_size = 25;
+            void * array[stack_size]= {0};
+            int nSize = backtrace(array, stack_size);
+            char ** symbols = backtrace_symbols(array, nSize);
+            for (register int i = 0; i < nSize; ++i)
+                {
+                    if(symbols && symbols[i])
+                        {
+                            stackTrace+=std::string(symbols[i]) + '\n';
+                        }
+                }
+            if(symbols)
+                {
+                    free(symbols);
+                }
+            kill(getpid(), SIGINT); //SIGINT
+        }
 }
 
 //------------------------------------------------------------------------------
@@ -67,21 +74,25 @@ void SignalLogger::log_stack(int sig){
  * @param signum [IN] signal number
  * @param signame [IN] signal name
  */
-void SignalLogger::registerSignal(const int signum,const std::string& signame){
+void SignalLogger::registerSignal(const int signum,const std::string& signame)
+{
     SignalInfoMap::const_iterator it = m_map.find(signum);
-    if (m_map.end() == it){
-        m_map.insert(std::make_pair<int,SignalInfo *>(signum,new SignalInfo(signum,signame)));
-    }
+    if (m_map.end() == it)
+        {
+            m_map.insert(std::make_pair<int,SignalInfo *>(signum,new SignalInfo(signum,signame)));
+        }
 }
 
 /**
  * destructor
  */
-SignalLogger::~SignalLogger(){
-    for (SignalInfoMap::iterator it = m_map.begin();it != m_map.end();++it){
-        SignalInfo * info = it->second;
-        delete info;
-    }
+SignalLogger::~SignalLogger()
+{
+    for (SignalInfoMap::iterator it = m_map.begin(); it != m_map.end(); ++it)
+        {
+            SignalInfo * info = it->second;
+            delete info;
+        }
     m_map.clear();
 }
 
@@ -93,7 +104,8 @@ SignalLogger::~SignalLogger(){
 SignalLogger::SignalInfo::SignalInfo(int signum,const std::string& signame) :
     m_signum(signum),
     m_signame(signame),
-    m_set(true){
+    m_set(true)
+{
     struct sigaction sa;
     sa.sa_handler = SignalLogger::handleSignal;
     sigemptyset(&sa.sa_mask);
@@ -105,17 +117,20 @@ SignalLogger::SignalInfo::SignalInfo(int signum,const std::string& signame) :
  * deregister
  * deregister handler
  */
-void SignalLogger::SignalInfo::deregister(){
-    if (m_set){
-        m_set = false;
-        sigaction(m_signum, &m_old, 0);
-    }
+void SignalLogger::SignalInfo::deregister()
+{
+    if (m_set)
+        {
+            m_set = false;
+            sigaction(m_signum, &m_old, 0);
+        }
 }
 
 /**
  * destructor
  */
-SignalLogger::SignalInfo::~SignalInfo(){
+SignalLogger::SignalInfo::~SignalInfo()
+{
     deregister();
 }
 
@@ -123,7 +138,8 @@ SignalLogger::SignalInfo::~SignalInfo(){
  * handleSignal
  * actual signal handler function (registered by SignalInfo objects)
  */
-void SignalLogger::handleSignal(int signum){
+void SignalLogger::handleSignal(int signum)
+{
     instance().logSignal(signum);
 }
 
@@ -131,12 +147,14 @@ void SignalLogger::handleSignal(int signum){
  * logSignal
  * actual signal logging
  */
-void SignalLogger::logSignal(int signum){
-     
+void SignalLogger::logSignal(int signum)
+{
+
     SignalInfoMap::iterator it = m_map.find(signum);
-    if (m_map.end() != it){
-        SignalInfo * info = it->second;
-        info->deregister();        
-        log_stack(signum);
-    }
+    if (m_map.end() != it)
+        {
+            SignalInfo * info = it->second;
+            info->deregister();
+            log_stack(signum);
+        }
 }

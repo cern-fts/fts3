@@ -36,8 +36,10 @@
 
 #include <boost/optional.hpp>
 
-namespace fts3 {
-namespace server {
+namespace fts3
+{
+namespace server
+{
 
 using namespace std;
 using namespace boost;
@@ -45,51 +47,52 @@ using namespace db;
 
 typedef pair<string, int> FileIndex;
 
-class TransferFileHandler {
+class TransferFileHandler
+{
 
 public:
 
-	TransferFileHandler(map< string, list<TransferFiles*> >& files);
-	virtual ~TransferFileHandler();
+    TransferFileHandler(map< string, list<TransferFiles*> >& files);
+    virtual ~TransferFileHandler();
 
-	TransferFiles* get(string vo);
+    TransferFiles* get(string vo);
 
-	set<string>::iterator begin();
-	set<string>::iterator end();
+    set<string>::iterator begin();
+    set<string>::iterator end();
 
-	bool empty();
+    bool empty();
 
-	void remove(string source, string destination);
+    void remove(string source, string destination);
 
-	set<string> getSources(string se);
-	set<string> getDestinations(string se);
+    set<string> getSources(string se);
+    set<string> getDestinations(string se);
 
-	set<string> getSourcesVos(string se);
-	set<string> getDestinationsVos(string se);
+    set<string> getSourcesVos(string se);
+    set<string> getDestinationsVos(string se);
 
 private:
 
-	TransferFiles* getFile(FileIndex index);
+    TransferFiles* getFile(FileIndex index);
 
-	optional<FileIndex> getIndex(string vo);
+    optional<FileIndex> getIndex(string vo);
 
-	map< FileIndex, list<TransferFiles*> > fileIndexToFiles;
+    map< FileIndex, list<TransferFiles*> > fileIndexToFiles;
 
-	map< string, list<FileIndex> > voToFileIndexes;
+    map< string, list<FileIndex> > voToFileIndexes;
 
-	set<string> vos;
+    set<string> vos;
 
-	set< pair<string, string> > notScheduled;
+    set< pair<string, string> > notScheduled;
 
-	void freeList(list<TransferFiles*>& l);
+    void freeList(list<TransferFiles*>& l);
 
-	/// DB interface
-	GenericDbIfce* db;
+    /// DB interface
+    GenericDbIfce* db;
 
-	map< string, set<string> > sourceToDestinations;
-	map< string, set<string> > sourceToVos;
-	map< string, set<string> > destinationToSources;
-	map< string, set<string> > destinationToVos;
+    map< string, set<string> > sourceToDestinations;
+    map< string, set<string> > sourceToVos;
+    map< string, set<string> > destinationToSources;
+    map< string, set<string> > destinationToVos;
 
 };
 

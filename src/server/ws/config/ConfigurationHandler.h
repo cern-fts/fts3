@@ -45,7 +45,10 @@
 
 #include "Configuration.h"
 
-namespace fts3 { namespace ws {
+namespace fts3
+{
+namespace ws
+{
 
 using namespace boost;
 using namespace boost::assign;
@@ -58,103 +61,105 @@ using namespace db;
  * The ConfigurationHandler class is used for handling
  * Configuration WebServices' requests
  */
-class ConfigurationHandler {
+class ConfigurationHandler
+{
 
 public:
 
-	/**
-	 * Constructor
-	 *
-	 * initializes the regular expression objects and the 'parameterNameToId' map
-	 */
-	ConfigurationHandler(string dn);
+    /**
+     * Constructor
+     *
+     * initializes the regular expression objects and the 'parameterNameToId' map
+     */
+    ConfigurationHandler(string dn);
 
-	/**
-	 * Destructor
-	 */
-	virtual ~ConfigurationHandler();
+    /**
+     * Destructor
+     */
+    virtual ~ConfigurationHandler();
 
-	/**
-	 * Parses the configuration string (JSON format)
-	 * 	Throws an Err_Custom if the given configuration is in wrong format.
-	 *
-	 * It has to be called before 'add'!
-	 *
-	 * 	@param configuration - string containing the configuration in JSON format
-	 */
-	void parse(string configuration);
+    /**
+     * Parses the configuration string (JSON format)
+     * 	Throws an Err_Custom if the given configuration is in wrong format.
+     *
+     * It has to be called before 'add'!
+     *
+     * 	@param configuration - string containing the configuration in JSON format
+     */
+    void parse(string configuration);
 
-	/**
-	 * Adds a configuration to the DB.
-	 * 	First the 'parse' method has to be called
-	 *
-	 * @see parse
-	 */
-	void add();
+    /**
+     * Adds a configuration to the DB.
+     * 	First the 'parse' method has to be called
+     *
+     * @see parse
+     */
+    void add();
 
-	/**
-	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
-	 *
-	 * @return vector containing single configuration entries in JSON format
-	 */
-	vector<string> get();
+    /**
+     * Gets the whole configuration regarding all SEs and all SE groups from the DB.
+     *
+     * @return vector containing single configuration entries in JSON format
+     */
+    vector<string> get();
 
-	/**
-	 * Gets the whole configuration regarding all SEs and all SE groups from the DB.
-	 * 	The configuration can also be restricted to a given SE and/or VO.
-	 *
-	 * @param se - SE name
-	 *
-	 * @return vector containing single configuration entries in JSON format
-	 */
-	vector<string> get(string name);
+    /**
+     * Gets the whole configuration regarding all SEs and all SE groups from the DB.
+     * 	The configuration can also be restricted to a given SE and/or VO.
+     *
+     * @param se - SE name
+     *
+     * @return vector containing single configuration entries in JSON format
+     */
+    vector<string> get(string name);
 
-	/**
-	 *
-	 */
-	vector<string> getPair(string src, string dest);
+    /**
+     *
+     */
+    vector<string> getPair(string src, string dest);
 
-	/**
-	 *
-	 */
-	vector<string> getPair(string symbolic);
+    /**
+     *
+     */
+    vector<string> getPair(string symbolic);
 
-	/**
-	 * Deletes the configuration specified by the argument
-	 * 	Only share and protocol specific configurations will be deleted.
-	 *
-	 * @param cfg - the configuration that should be deleted
-	 */
-	void del ();
+    /**
+     * Deletes the configuration specified by the argument
+     * 	Only share and protocol specific configurations will be deleted.
+     *
+     * @param cfg - the configuration that should be deleted
+     */
+    void del ();
 
-	/**
-	 * Gets protocol configuration for the SE or SE group,
-	 * 	First the 'parse' method has to be called
-	 *
-	 * @return a shared_ptr pointing on a SeProtocolConfig object
-	 *
-	 * @see parse
-	 */
-	shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
+    /**
+     * Gets protocol configuration for the SE or SE group,
+     * 	First the 'parse' method has to be called
+     *
+     * @return a shared_ptr pointing on a SeProtocolConfig object
+     *
+     * @see parse
+     */
+    shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
 
-	/**
-	 * Gets the SE / SE group name
-	 *
-	 * @return se name
-	 */
-	string getName() {
-		return "dummy"; // TODO it's used for authorization! should be the se name or symbolic name (?)
-	}
+    /**
+     * Gets the SE / SE group name
+     *
+     * @return se name
+     */
+    string getName()
+    {
+        return "dummy"; // TODO it's used for authorization! should be the se name or symbolic name (?)
+    }
 
 private:
 
-	/// Pointer to the 'GenericDbIfce' singleton
-	GenericDbIfce* db;
+    /// Pointer to the 'GenericDbIfce' singleton
+    GenericDbIfce* db;
 
-	/// user DN
-	string dn;
+    /// user DN
+    string dn;
 
-	scoped_ptr<Configuration> cfg;
+    scoped_ptr<Configuration> cfg;
 };
 
 }

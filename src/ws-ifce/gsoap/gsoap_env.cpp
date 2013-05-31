@@ -14,4 +14,4 @@ See the License for the specific language governing permissions and
 limitations under the License. */
 
 #include "stdsoap2.h" // autogen
-struct Namespace namespaces[] ={{NULL, NULL}}; // autogen
+struct Namespace namespaces[] = {{NULL, NULL}}; // autogen
