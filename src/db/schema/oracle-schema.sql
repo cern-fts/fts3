@@ -678,6 +678,7 @@ CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 CREATE INDEX file_finish_time ON t_file(finish_time);
 CREATE INDEX file_file_index ON t_file(file_index);
 CREATE INDEX file_job_id_file_index ON t_file(job_id, file_index);
+CREATE INDEX file_job_id_file_index ON t_file(job_id, file_index);
 CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
 CREATE INDEX file_file_throughput ON t_file(throughput);
 CREATE INDEX file_file_src_dest ON t_file(source_se, dest_se);
