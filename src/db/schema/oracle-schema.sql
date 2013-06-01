@@ -587,7 +587,7 @@ CREATE TABLE t_file (
 
 
 --
--- t_job_share_config the se configuration to be used by the job
+-- t_file_share_config the se configuration to be used by the job
 --
 CREATE TABLE t_file_share_config (
    file_id			INTEGER 		NOT NULL
@@ -677,7 +677,6 @@ CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
 CREATE INDEX file_finish_time ON t_file(finish_time);
 CREATE INDEX file_file_index ON t_file(file_index);
-CREATE INDEX file_job_id_file_index ON t_file(job_id, file_index);
 CREATE INDEX file_job_id_file_index ON t_file(job_id, file_index);
 CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
 CREATE INDEX file_file_throughput ON t_file(throughput);

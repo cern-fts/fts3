@@ -20,4 +20,5 @@ DELETE FROM t_config_audit;
 DELETE FROM t_optimize;
 DELETE FROM t_optimizer_evolution;
 DELETE FROM t_server_config;
+DELETE FROM T_FILE_SHARE_CONFIG;
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
