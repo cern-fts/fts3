@@ -574,7 +574,7 @@ CREATE TABLE t_file (
   
   
 -- 
--- t_job_share_config the se configuration to be used by the job
+-- t_file_share_config the se configuration to be used by the job
 --
 CREATE TABLE t_file_share_config (
   file_id         INTEGER       NOT NULL,

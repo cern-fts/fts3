@@ -2,7 +2,7 @@ TRUNCATE t_job_backup;
 TRUNCATE t_file_backup;
 TRUNCATE t_stage_req;
 TRUNCATE t_file;
-TRUNCATE t_job_share_config;
+TRUNCATE t_file_share_config;
 TRUNCATE t_job;
 TRUNCATE t_vo_acl;
 TRUNCATE t_se_pair_acl;

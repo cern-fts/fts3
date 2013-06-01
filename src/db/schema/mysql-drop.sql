@@ -3,7 +3,7 @@ DROP TABLE t_file_backup;
 DROP TABLE t_schema_vers;
 DROP TABLE t_stage_req;
 DROP TABLE t_file;
-DROP TABLE t_job_share_config;
+DROP TABLE t_file_share_config;
 DROP TABLE t_job;
 DROP TABLE t_vo_acl;
 DROP TABLE t_se_pair_acl;
