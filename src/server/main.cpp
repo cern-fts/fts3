@@ -39,9 +39,11 @@ limitations under the License. */
 #include <boost/filesystem.hpp>
 #include "name_to_uid.h"
 #include <sys/resource.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread.hpp>
 
 namespace fs = boost::filesystem;
-
+using boost::thread;
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -54,9 +56,17 @@ const char *configfile = "/etc/fts3/fts3config";
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
+static void taskTimer(int time)
+{
+    boost::this_thread::sleep(boost::posix_time::seconds(time));
+    exit(0);
+}
+
+
 static void setLimits()
 {
     struct rlimit rl;
+    struct rlimit rlOpen;
     int maxNumberOfProcesses = theServerConfig().get<int> ("MaxNumberOfProcesses");
     if(maxNumberOfProcesses != -1)
         {
@@ -64,9 +74,18 @@ static void setLimits()
             rl.rlim_max = maxNumberOfProcesses;
             if (setrlimit(RLIMIT_NPROC, &rl) == -1)
                 {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit nproc failed" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NPROC failed" << commit;
                 }
         }
+	
+           rlOpen.rlim_cur = 3072;
+           rlOpen.rlim_max = 3072;
+           if (setrlimit(RLIMIT_NOFILE, &rlOpen) == -1)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NOFILE failed" << commit;
+                }	
+	
+	
 }
 
 static int fexists(const char *filename)
@@ -94,6 +113,7 @@ void _handle_sigint(int)
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     stopThreads = true;
+    boost::thread bt(taskTimer, 20);    
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
     sleep(4);
     theServer().stop();

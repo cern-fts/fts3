@@ -37,8 +37,8 @@ start() {
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure   
-    # start 15 threads in the pool
-    fts_server -t 15 
+    # start 70 threads in the pool
+    fts_server -t 70 
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
