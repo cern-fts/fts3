@@ -532,10 +532,10 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "		SELECT NULL "
                                                          "		FROM t_file f2 "
                                                          "		WHERE "
-                                                         "			f2.job_id = f1.job_id AND "
+                                                         "			f2.job_id = f1.job_id AND f2.job_id = :jobId AND "
                                                          "			f2.file_index = f1.file_index AND "
-                                                         "			(f2.file_state = 'READY' OR f2.file_state = 'ACTIVE' OR f2.file_state = 'FINISHED' OR f2.file_state = 'CANCELED') "
-                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 20 ",soci::use(tTime), soci::use(jobId)
+                                                         "			f2.file_state IN ('READY', 'ACTIVE', 'FINISHED', 'CANCELED') "
+                                                         "	 ) ORDER BY f1.file_id ASC ",soci::use(tTime), soci::use(jobId), soci::use(jobId)
 
 
                                                      );
