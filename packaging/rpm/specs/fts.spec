@@ -14,7 +14,8 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # following commands to generate the tarball:
 #  svn export http://svnweb.cern.ch/guest/fts3/trunk
 #  tar -czvf fts-0.0.1-60.tar.gz fts-00160
-Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
+#Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %if 0%{?el5}
