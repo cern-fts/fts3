@@ -2,4 +2,12 @@ https://lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
 srm://nohost:8446/srm/managervs?SFN=/fake/path.$ID
 gsiftp://lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
 srm://nohost222:8446/srm/managervs?SFN=/fake/path.$ID
+https://1lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
+srm://1nohost:8446/srm/managervs?SFN=/fake/path.$ID
+gsiftp://1lxfsra10a01.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
+srm://1nohost222:8446/srm/managervs?SFN=/fake/path.$ID
+https://lxfsra10a012.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
+srm://nohost2:8446/srm/managervs?SFN=/fake/path.$ID
+gsiftp://lxfs2ra10a01.cern.ch/dpm/cern.ch/home/dteam/copy.$ID
+srm://nohost2222:8446/srm/managervs?SFN=/fake/path.$ID
 

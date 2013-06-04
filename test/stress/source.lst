@@ -3,3 +3,13 @@ https://lxfsra04a04.cern.ch/dpm/cern.ch/home/dteam/does-not-exist
 srm://nohost:8446/srm/managervs?SFN=/fake/path
 https://lxfsra04203.cern.ch/dpm/cern.ch/home/dteam/does-not-exist
 gsiftp://nohost:8446/srm/managervs?SFN=/fake/path
+https://lxfsra104a04.cern.ch/dpm/cern.ch/home/dteam/vector-sample.txt
+https://lxfsra014a04.cern.ch/dpm/cern.ch/home/dteam/does-not-exist
+srm://nohos1t:8446/srm/managervs?SFN=/fake/path
+https://lxfs1ra04203.cern.ch/dpm/cern.ch/home/dteam/does-not-exist
+gsiftp://noho1st:8446/srm/managervs?SFN=/fake/path
+https://lxfs2ra04a04.cern.ch/dpm/cern.ch/home/dteam/vector-sample.txt
+https://lxfsr2a04a04.cern.ch/dpm/cern.ch/home/dteam/does-not-exist
+srm://noho2st:8446/srm/managervs?SFN=/fake/path
+https://lxf2sra04203.cern.ch/dpm/cern.ch/home/dteam/does-not-exist
+gsiftp://noh2ost:8446/srm/managervs?SFN=/fake/path
