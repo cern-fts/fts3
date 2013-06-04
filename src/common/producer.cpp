@@ -62,15 +62,18 @@ void getUniqueTempFileName(const std::string& basename,
 
 void mktempfile(const std::string& basename,
                 std::string& tempname)
-{
-    char *createTempFile = NULL;
+{    
     char* temp= (char *) "_XXXXXX";
+    int fd = -1;
 
     do
         {
-            createTempFile = mktemp(temp);
+            fd = mkstemp(temp);
         }
-    while(createTempFile == NULL);
+    while(fd == -1);
+    
+    if(fd != -1)
+    	close(fd);
 
     tempname = basename;
     tempname.append(std::string(temp));
