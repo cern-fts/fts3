@@ -180,9 +180,6 @@ if [ $1 -eq 0 ] ; then
     /sbin/chkconfig --del fts-myosg-updater
     /sbin/service fts-bdii-cache-updater stop >/dev/null 2>&1
     /sbin/chkconfig --del fts-bdii-cache-updater
-    if [ -f /dev/shm/fts3mqupdater ]; then rm -rf /dev/shm/fts3mqupdater; fi
-    if [ -f /dev/shm/fts3mqmon ]; then rm -rf /dev/shm/fts3mqmon; fi
-    if [ -f /dev/shm/fts3mq ]; then rm -rf /dev/shm/fts3mq; fi
 fi
 exit 0
 
