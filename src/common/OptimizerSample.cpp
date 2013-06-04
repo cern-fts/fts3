@@ -148,7 +148,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
             return true;
         }
-    else if (currentActive <= 5)     //allow no more than 4 per pair if we do not have enough samples
+    else if (currentActive <= 4)     //allow no more than 4 per pair if we do not have enough samples
         {
             return true;
         }
