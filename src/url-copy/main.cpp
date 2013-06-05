@@ -616,6 +616,33 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
         }
 }
 
+void myunexpected() {
+	   if (propagated == false) {
+	            propagated = true;
+	    errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
+	    errorMessage += " Source: " + source_url;
+	    errorMessage += " Dest: " + dest_url;
+	    logStream << fileManagement->timestamp() << errorMessage << '\n';
+	   
+	    abnormalTermination("FAILED", errorMessage, "Abort");
+	    }
+}
+	
+void myterminate() {
+	   if (propagated == false) {
+	            propagated = true;
+	    errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
+	    errorMessage += " Source: " + source_url;
+	    errorMessage += " Dest: " + dest_url;   
+	    logStream << fileManagement->timestamp() << errorMessage << '\n';
+	
+	    abnormalTermination("FAILED", errorMessage, "Abort");
+	    }
+}
+
+
+
+
 __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
@@ -642,6 +669,9 @@ int main(int argc, char **argv)
     // register signal SIGINT & SIGUSR1signal handler
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
+    
+    set_terminate(myterminate);
+    set_unexpected(myunexpected);
 
     for (register int i(1); i < argc; ++i)
         {
