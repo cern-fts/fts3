@@ -51,9 +51,15 @@ std::string SiteName::getSiteName(std::string& hostname)
 
     if(base_scheme) free(base_scheme);
     if(base_host)   free(base_host);
-    if(base_path)	free(base_path);
+    if(base_path)   free(base_path);
 
-    return SiteNameRetriever::getInstance().getSiteName(se);
+    std::string site =  SiteNameRetriever::getInstance().getSiteName(se);
+    if(site.length() == 0)
+    	return std::string("");	
+    else if(site.length() > 0 && site != "null")
+    	return site;
+    else
+        return std::string("");	
 }
 
 
