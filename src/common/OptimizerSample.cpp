@@ -159,13 +159,13 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
             return true;
         }
-    else if(currentActive < activeInStore)
-        {
-    	    return true;
-        }
     else if (currentActive <= (trSuccessRateForPair >= 98? MAXTR: LOWTR ) ) 
         {
             return true;
+        }	
+    else if(currentActive < activeInStore)
+        {
+    	    return true;
         }
     else
         {
