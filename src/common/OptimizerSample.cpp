@@ -110,17 +110,19 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 {
                                     (*iter).numOfActivePerPair += 2;
                                 }
-                           else if( trSuccessRateForPair >= 98 && throughput > 20)
-                                {
-                                    (*iter).numOfActivePerPair += 1;
-                                }				
                             else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
                                 {
-                                    (*iter).numOfActivePerPair += 0;
+				    if(throughput > 20)
+                                    	(*iter).numOfActivePerPair += 1;
+				    else
+                                    	(*iter).numOfActivePerPair += 0;				    
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
                                 {
-                                    (*iter).numOfActivePerPair -= 1;
+				    if(throughput > 20)
+                                    	(*iter).numOfActivePerPair += 0;				    
+				    else
+                                    	(*iter).numOfActivePerPair -= 1;
                                 }
                             else if( trSuccessRateForPair < 98)
                                 {
@@ -135,7 +137,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
                         {
-                            (*iter).numOfActivePerPair -= 4;
+                            (*iter).numOfActivePerPair -= 3;
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
                             (*iter).successRate = trSuccessRateForPair;
@@ -208,21 +210,23 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
 
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)   //one more tr finished
                         {
-                            if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput)
+                             if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput)
                                 {
                                     (*iter).numOfActivePerPair += 2;
                                 }
-                            else if( trSuccessRateForPair >= 98 && throughput > 20)
-                                {
-                                    (*iter).numOfActivePerPair += 1;
-                                }					
                             else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
                                 {
-                                    (*iter).numOfActivePerPair += 0;
+				    if(throughput > 20)
+                                    	(*iter).numOfActivePerPair += 1;
+				    else
+                                    	(*iter).numOfActivePerPair += 0;				    
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
                                 {
-                                    (*iter).numOfActivePerPair -= 1;
+				    if(throughput > 20)
+                                    	(*iter).numOfActivePerPair += 0;				    
+				    else
+                                    	(*iter).numOfActivePerPair -= 1;
                                 }
                             else if( trSuccessRateForPair < 98)
                                 {
@@ -237,7 +241,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
                         {
-                            (*iter).numOfActivePerPair -= 4;
+                            (*iter).numOfActivePerPair -= 3;
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
                             (*iter).successRate = trSuccessRateForPair;
