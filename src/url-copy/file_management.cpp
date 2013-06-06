@@ -95,8 +95,13 @@ void FileManagement::setSourceUrl(std::string& source_url)
     this->source_url = source_url;
     //source
     parse_url(source_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    shost = std::string(base_scheme) + "://" + std::string(base_host);
-    shostFile = std::string(base_host);
+    if(base_scheme && base_host){
+    	shost = std::string(base_scheme) + "://" + std::string(base_host);
+    	shostFile = std::string(base_host);
+    }else{
+    	shost = std::string("invalid") + "://" + std::string("invalid");
+    	shostFile = std::string("invalid");    
+    }    
     if (base_scheme)
         free(base_scheme);
     if (base_host)
@@ -110,8 +115,13 @@ void FileManagement::setDestUrl(std::string& dest_url)
     this->dest_url = dest_url;
     //dest
     parse_url(dest_url.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-    dhost = std::string(base_scheme) + "://" + std::string(base_host);
-    dhostFile = std::string(base_host);
+    if(base_scheme && base_host){
+    	dhost = std::string(base_scheme) + "://" + std::string(base_host);
+    	dhostFile = std::string(base_host);
+    }else{
+        dhost = std::string("invalid") + "://" + std::string("invalid");
+    	dhostFile = std::string("invalid");
+    }
     if (base_scheme)
         free(base_scheme);
     if (base_host)
