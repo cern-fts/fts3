@@ -683,6 +683,7 @@ CREATE INDEX file_file_throughput ON t_file(throughput);
 CREATE INDEX file_file_src_dest ON t_file(source_se, dest_se);
 CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se, job_id);
 CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
+CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
 
 
 CREATE INDEX optimize_active         ON t_optimize(active);

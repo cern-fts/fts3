@@ -1226,7 +1226,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
     try
         {
-            soci::rowset<soci::row> rs = (select.prepare << "SELECT t_file.pid, t_job.job_id FROM t_file, t_job "
+            soci::rowset<soci::row> rs = (select.prepare << "SELECT t_file.pid, t_file.job_id FROM t_file, t_job "
                                           "WHERE t_file.job_id = t_job.job_id AND "
                                           "      t_file.FILE_STATE = 'CANCELED' AND "
                                           "      t_file.PID IS NOT NULL AND "
