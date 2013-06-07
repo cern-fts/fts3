@@ -719,6 +719,17 @@ protected:
                                 urls.push_back(url.str());
                                 url.str("");
                             }
+			    
+			if(!tempUrl){
+                       		/** cleanup resources */
+                        	for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                            		delete *iter2;
+                        	jobs2.clear();
+                        	for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                            		delete *queueiter;
+                        	voQueues[vo].clear();
+                        	fileIds.clear();
+			}
 
                         sourceSiteName = siteResolver.getSiteName(surl);
                         destSiteName = siteResolver.getSiteName(durl);
@@ -952,11 +963,15 @@ protected:
                                                         for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
                                                             {
                                                                 struct message_updater msg;
-                                                                strcpy(msg.job_id, std::string(job_id).c_str());
-                                                                msg.file_id = iterFileIds->first;
-                                                                msg.process_id = (int) pr->getPid();
-                                                                msg.timestamp = milliseconds_since_epoch();
-                                                                ThreadSafeList::get_instance().push_back(msg);
+								if(std::string(job_id).length() < 38){
+                                                                	strcpy(msg.job_id, std::string(job_id).c_str());
+                                                                	msg.file_id = iterFileIds->first;
+                                                                	msg.process_id = (int) pr->getPid();
+                                                                	msg.timestamp = milliseconds_since_epoch();
+                                                                	ThreadSafeList::get_instance().push_back(msg);
+								}else{
+									FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
+								}
                                                             }
                                                     }
                                                 delete pr;

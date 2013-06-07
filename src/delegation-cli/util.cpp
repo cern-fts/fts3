@@ -139,7 +139,7 @@ const SDService * select_service_by_version(const SDServiceList * list, const ch
                             // Check if the major version is the same
                             if(req_version.major == srv_versions[i].major)
                                 {
-                                    if((req_version.minor == srv_versions[i].minor) &&
+                                    if(srv_versions && (req_version.minor == srv_versions[i].minor) &&
                                             (req_version.patch == srv_versions[i].patch))
                                         {
                                             // exact match: choose it

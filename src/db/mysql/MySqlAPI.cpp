@@ -86,9 +86,9 @@ static int extractTimeout(std::string & str)
 
 
 
-MySqlAPI::MySqlAPI()
+MySqlAPI::MySqlAPI(): connectionPool(NULL)
 {
-    char chname[MAXHOSTNAMELEN];
+    char chname[MAXHOSTNAMELEN]={0};
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
 }

@@ -31,7 +31,7 @@ class Cred
 {
 public:
 
-    Cred()
+    Cred(): termination_time(0)
     {
     }
 

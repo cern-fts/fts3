@@ -96,6 +96,11 @@ int main(int argc, char** argv)
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BDII cache: " << ex.what() << commit;
             return EXIT_FAILURE;
         }
-
+    catch (...)
+        {
+            std::string msg = "Fatal error (unknown origin), exiting...";
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << msg << commit;
+            return EXIT_FAILURE;
+        }
     return ret;
 }

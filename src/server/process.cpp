@@ -67,7 +67,7 @@ static int fexists(const char *filename)
 
 
 ExecuteProcess::ExecuteProcess(const string& app, const string& arguments, int fdlog)
-    : _jobId(""), _fileId(""), m_app(app), m_arguments(arguments), m_fdlog(fdlog)
+    : _jobId(""), _fileId(""), m_app(app), m_arguments(arguments), m_fdlog(fdlog), pid(0)
 {
 }
 
@@ -362,6 +362,7 @@ int ExecuteProcess::execProcessShell()
             if (path == NULL || path[0] == '\0')
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to getenv PATH" << commit;
+		    return -1;
                 }
 
             copy = (char *) malloc(strlen(path) + 1);

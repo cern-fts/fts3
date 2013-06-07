@@ -8825,12 +8825,12 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
         "	) "
         ;
 
-    oracle::occi::Statement* s1 = 0;
-    oracle::occi::ResultSet* r1 = 0;
-    oracle::occi::Statement* s2 = 0;
-    oracle::occi::ResultSet* r2 = 0;
-    oracle::occi::Statement* s3 = 0;
-    oracle::occi::Statement* s4 = 0;
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::ResultSet* r2 = NULL;
+    oracle::occi::Statement* s3 = NULL;
+    oracle::occi::Statement* s4 = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
 
     try
@@ -8888,9 +8888,9 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
                     while (r2->next())
                         {
 
-                            int fileId = r1->getInt(1);
-                            std::string jobId = r1->getString(2);
-                            int fileIndex = r1->getInt(3);
+                            int fileId = r2->getInt(1);
+                            std::string jobId = r2->getString(2);
+                            int fileIndex = r2->getInt(3);
 
                             jobs.insert(
                                 jobId

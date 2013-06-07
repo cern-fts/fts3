@@ -87,6 +87,9 @@ void daemonize()
         FTS3_COMMON_EXCEPTION_THROW(Err_System());
     umask(0);
     int fileDesc = open("/dev/null", O_RDWR);/* stdin */
+    if(fileDesc < 0)
+            FTS3_COMMON_EXCEPTION_THROW(Err_System());
+    
     int d1 = dup(fileDesc);  /* stdout */
     if(d1 < 0)
         FTS3_COMMON_EXCEPTION_THROW(Err_System());

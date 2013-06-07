@@ -471,7 +471,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
         {
             logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
         }
-    if (reuseFile.length() > 0)
+    if (reuseFile.length() > 0 && readFile.length() > 0)
         unlink(readFile.c_str());
 
     cancelTransfer();
@@ -816,7 +816,8 @@ int main(int argc, char **argv)
                     urlsFile.push_back(line);
                 }
             infile.close();
-            unlink(readFile.c_str());
+	    if(readFile.length() > 0)
+            	unlink(readFile.c_str());
         }
 
     //cancelation point
@@ -1399,7 +1400,7 @@ stop:
             cert = NULL;
         }
 
-    if (reuseFile.length() > 0)
+    if (reuseFile.length() > 0 && readFile.length() > 0)
         unlink(readFile.c_str());
 
 

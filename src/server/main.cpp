@@ -28,7 +28,6 @@ limitations under the License. */
 #include "ws/delegation/GSoapDelegationHandler.h"
 #include <fstream>
 #include "server.h"
-#include "daemonize.h"
 #include "signal_logger.h"
 #include "StaticSslLocking.h"
 #include <iomanip>
@@ -160,6 +159,8 @@ static bool checkUrlCopy()
     std::vector<std::string>::iterator iter;
     char *token=NULL;
     const char *path = getenv("PATH");
+    if(path)
+    {
     char *copy = (char *) malloc(strlen(path) + 1);
     strcpy(copy, path);
     token = strtok(copy, ":");
@@ -183,6 +184,7 @@ static bool checkUrlCopy()
         }
 
     free(copy);
+    }
     return false;
 }
 

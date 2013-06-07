@@ -175,13 +175,14 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
             // remove it from the list
             fileIndexToFiles[index].pop_front();
         }
-
+ if(ret)
+   {
     if (notScheduled.count(make_pair(ret->SOURCE_SE, ret->DEST_SE)))
         {
             delete ret;
             return 0;
         }
-
+   }
     return ret;
 }
 

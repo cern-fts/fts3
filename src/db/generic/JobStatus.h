@@ -34,7 +34,7 @@ class JobStatus
 {
 
 public:
-    JobStatus():numFiles(0), priority(3) {}
+    JobStatus():fileIndex(0), submitTime(0), numFiles(0), priority(3) {}
     ~JobStatus() {}
 
     /**
