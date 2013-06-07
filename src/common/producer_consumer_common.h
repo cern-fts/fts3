@@ -51,25 +51,25 @@ void mktempfile(const std::string& basename, std::string& tempname);
 //for monitoring
 void runConsumerMonitoring(std::vector<struct message_monitoring>& messages);
 
-void runProducerMonitoring(struct message_monitoring);
+void runProducerMonitoring(struct message_monitoring &msg);
 
 
 //for receiving the status from url_copy
 void runConsumerStatus(std::vector<struct message>& messages);
 
-void runProducerStatus(struct message msg);
+void runProducerStatus(struct message &msg);
 
 
 //for checking is the process is stalled
 void runConsumerStall(std::vector<struct message_updater>& messages);
 
-void runProducerStall(struct message_updater msg);
+void runProducerStall(struct message_updater &msg);
 
 
 //for checking the log file path
 void runConsumerLog(std::vector<struct message_log>& messages);
 
-void runProducerLog(struct message_log msg);
+void runProducerLog(struct message_log &msg);
 
 
 

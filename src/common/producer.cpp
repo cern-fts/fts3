@@ -80,7 +80,7 @@ void mktempfile(const std::string& basename,
 
 }
 
-void runProducerMonitoring(struct message_monitoring msg)
+void runProducerMonitoring(message_monitoring &msg)
 {
     FILE *fp=NULL;
     std::string basename(MONITORING_DIR);
@@ -103,7 +103,7 @@ void runProducerMonitoring(struct message_monitoring msg)
 }
 
 
-void runProducerStatus(struct message msg)
+void runProducerStatus(message &msg)
 {
     FILE *fp=NULL;
     std::string basename(STATUS_DIR);
@@ -126,7 +126,7 @@ void runProducerStatus(struct message msg)
 }
 
 
-void runProducerStall(struct message_updater msg)
+void runProducerStall(message_updater &msg)
 {
     FILE *fp=NULL;
     std::string basename(STALLED_DIR);
@@ -147,7 +147,7 @@ void runProducerStall(struct message_updater msg)
 }
 
 
-void runProducerLog(struct message_log msg)
+void runProducerLog(message_log &msg)
 {
     FILE *fp=NULL;
     std::string basename(LOG_DIR);
