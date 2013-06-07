@@ -5,7 +5,7 @@
 
 Name: fts
 Version: 3.0.0
-Release: 13%{?dist}
+Release: 14%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -291,5 +291,5 @@ rm -rf %{buildroot}
 
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-13%{?dist}
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-14%{?dist}
   - First EPEL release
