@@ -38,7 +38,7 @@ start() {
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure   
     # start 70 threads in the pool
-    fts_server -t 70 
+    fts_server -t 30 
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
