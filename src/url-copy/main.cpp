@@ -1153,6 +1153,10 @@ int main(int argc, char **argv)
                                         goto stop;
                                     }
                             }
+			 else
+			    {
+			    	g_clear_error(&tmp_err); //don't do anything
+			    }
                     }
 
                 unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, timeout);
