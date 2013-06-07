@@ -112,14 +112,14 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
                                 {
-				    if(throughput > 20)
+				    if(throughput > 10)
                                     	(*iter).numOfActivePerPair += 1;
 				    else
                                     	(*iter).numOfActivePerPair += 0;				    
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
                                 {
-				    if(throughput > 20)
+				    if(throughput > 10)
                                     	(*iter).numOfActivePerPair += 1;				    
 				    else
                                     	(*iter).numOfActivePerPair -= 1;
@@ -220,14 +220,14 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
                                 {
-				    if(throughput > 20)
+				    if(throughput > 10)
                                     	(*iter).numOfActivePerPair += 1;
 				    else
                                     	(*iter).numOfActivePerPair += 0;				    
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
                                 {
-				    if(throughput > 20)
+				    if(throughput > 10)
                                     	(*iter).numOfActivePerPair += 1;				    
 				    else
                                     	(*iter).numOfActivePerPair -= 1;
