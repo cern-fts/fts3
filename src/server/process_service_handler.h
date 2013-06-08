@@ -729,6 +729,7 @@ protected:
                             		delete *queueiter;
                         	voQueues[vo].clear();
                         	fileIds.clear();
+				return;
 			}
 
                         sourceSiteName = siteResolver.getSiteName(surl);
