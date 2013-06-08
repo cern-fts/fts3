@@ -1427,7 +1427,7 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
                     query.append(", ");
                 }
             query.append(" SITE='");
-            query.append(SE_TYPE);
+            query.append(SITE);
             query.append("'");
             fields++;
         }
