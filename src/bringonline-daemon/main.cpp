@@ -33,7 +33,6 @@ limitations under the License. */
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "queue_updater.h"
-#include "config/FileMonitor.h"
 #include <boost/filesystem.hpp>
 #include "name_to_uid.h"
 #include <sys/resource.h>
