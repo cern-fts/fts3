@@ -99,8 +99,8 @@ int getDir (string dir, vector<string> &files)
             if(found!=std::string::npos)
                 {
                     std::string copyFilename = dir + fileName;
-                    int st = stat(copyFilename.c_str(), &st);
-                    if(st==0 && st.st_size > 0)
+                    int stCheck = stat(copyFilename.c_str(), &st);
+                    if(stCheck==0 && st.st_size > 0)
                         files.push_back(copyFilename);
                 }
         }
