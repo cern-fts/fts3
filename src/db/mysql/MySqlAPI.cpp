@@ -272,7 +272,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                 "			t_file.dest_se = :dest AND "
                 "			t_file.file_state = 'SUBMITTED'"
                 "	) "
-                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 50 ";
+                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 10 ";
 
 
             std::set<std::string> jobIds;
@@ -534,7 +534,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "			f2.job_id = f1.job_id AND f2.job_id = :jobId AND "
                                                          "			f2.file_index = f1.file_index AND "
                                                          "			f2.file_state IN ('READY', 'ACTIVE', 'FINISHED', 'CANCELED') "
-                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 50 ",soci::use(tTime), soci::use(jobId), soci::use(jobId)
+                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 100 ",soci::use(tTime), soci::use(jobId), soci::use(jobId)
 
 
                                                      );
