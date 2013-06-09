@@ -220,14 +220,14 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
                                 {
-				    if(throughput > 10)
+				    if(throughput > 5)
                                     	(*iter).numOfActivePerPair += 1;
 				    else
                                     	(*iter).numOfActivePerPair += 0;				    
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
                                 {
-				    if(throughput > 10)
+				    if(throughput > 5)
                                     	(*iter).numOfActivePerPair += 1;				    
 				    else
                                     	(*iter).numOfActivePerPair -= 1;
