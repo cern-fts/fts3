@@ -86,7 +86,7 @@ int FileManagement::getLogStream(std::ofstream& logStream)
     else
         {
             chmod(log.c_str(), (mode_t) 0644);	    
-            return errno==0? 0: errno;
+            return 0;
         }
 }
 
