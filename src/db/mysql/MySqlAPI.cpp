@@ -272,8 +272,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                 "			t_file.dest_se = :dest AND "
                 "			t_file.file_state = 'SUBMITTED'"
                 "	) "
-                "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
-                "LIMIT 5";
+                "ORDER BY t_job.priority DESC, t_job.submit_time ASC ";
 
 
             std::set<std::string> jobIds;
@@ -2015,7 +2014,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 " select throughput "
                 " from t_file "
                 " where source_se = :source "
-                " and dest_se = :dest "
+                " and dest_se = :dest and throughput is not NULL and throughput != 0 "
                 " order by FINISH_TIME DESC "
                 " LIMIT 1 ",
                 soci::use(source_hostname), soci::use(destin_hostname),
@@ -2030,7 +2029,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                                             "WHERE "
                                             "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                             "      file_state IN ('FAILED','FINISHED') AND "
-                                            "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))",
+                                            "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '30' minute))",
                                             soci::use(source_hostname), soci::use(destin_hostname));
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin();

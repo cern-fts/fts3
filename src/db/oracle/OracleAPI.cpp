@@ -268,7 +268,6 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     		"			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
     	    "			AND t_file.file_state = 'SUBMITTED'"
     	    "	) "
-            " 	AND rownum <=5  "
             " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)";
 
     oracle::occi::Statement* s = NULL;
@@ -3590,20 +3589,20 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     std::string query_stmt2 = " select count(*) from  t_file where t_file.file_state in ('READY','ACTIVE') and t_file.dest_se=:1";
 
     std::string query_stmt3 = " select file_state from  (select file_state from t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
-                              " and file_state in ('FAILED','FINISHED') and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour)) order by "
+                              " and file_state in ('FAILED','FINISHED') and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '30' minute)) order by "
                               " SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc) WHERE ROWNUM < 20 ";
 
     std::string query_stmt4 = " select count(*) from  t_file where  t_file.source_se=:1 and t_file.dest_se=:2 "
                               " and file_state in ('READY','ACTIVE') ";
 
     std::string query_stmt5 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
-                              " and file_state = 'FINISHED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";
+                              " and file_state = 'FINISHED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '30' minute))";
 
     std::string query_stmt6 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
-                              " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))";
-
-    std::string query_stmt7 = " select throughput from t_file where source_se=:1 and dest_se=:2 "
-                              " and rownum = 1 order by FINISH_TIME DESC";
+                              " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '30' minute))";
+			      
+    std::string query_stmt7 = " select throughput from (select throughput from  t_file where source_se=:1 and dest_se=:2 and throughput is not NULL "
+    			      " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
