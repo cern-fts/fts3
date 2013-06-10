@@ -49,8 +49,11 @@ Job {{ transferJob.job_id }}
       {% for t in transferFiles %}
         <tr class="{% cycle 'odd' 'even' %}">
           <td>
-            <img alt="[+]" src="{{ STATIC_URL }}plus.gif"  title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
+            <img alt="[+]" src="{{ STATIC_URL }}plus.gif" title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
             {{ t.file_id }}
+            {% if t.retry > 0 %}
+            <img alt="[R]" src="{{ STATIC_URL}}retried.png" title="Retried {{ t.retry }} times"/>
+            {% endif %}
           </td>
           <td>{{ t.transferHost }}</td>
           <td>{{ t.source_surl }}</td>
