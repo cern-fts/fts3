@@ -228,11 +228,11 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                                              sql.prepare <<
                                              " SELECT DISTINCT v_file.source_se, v_file.dest_se, t_job.vo_name "
                                              " FROM t_job, ( "
-                                             "	SELECT DISTINCT source_se, dest_se, job_id "
-                                             "	FROM t_file "
+                                             "	SELECT DISTINCT source_se, dest_se "
+                                             "	FROM t_file WHERE file_state='SUBMITTED' "
                                              " ) AS v_file "
-                                             " WHERE v_file.job_id = t_job.job_id "
-                                             "	AND t_job.job_finished IS NULL "
+                                             " WHERE "
+                                             "	t_job.job_finished IS NULL "
                                              "	AND t_job.CANCEL_JOB IS NULL "
                                              "	AND (t_job.reuse_job='N' OR t_job.reuse_job is NULL) "
                                              "	AND t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED') "
@@ -534,7 +534,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "			f2.job_id = f1.job_id AND f2.job_id = :jobId AND "
                                                          "			f2.file_index = f1.file_index AND "
                                                          "			f2.file_state IN ('READY', 'ACTIVE', 'FINISHED', 'CANCELED') "
-                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 100 ",soci::use(tTime), soci::use(jobId), soci::use(jobId)
+                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 50 ",soci::use(tTime), soci::use(jobId), soci::use(jobId)
 
 
                                                      );
@@ -1846,12 +1846,12 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
 
             // check the number of updated > 0 (2853)
 
-            sql.begin();
+            //sql.begin();
 
-            sql << " delete from t_optimize USING t_optimize, t_optimize as vtable WHERE (t_optimize.auto_number < vtable.auto_number) AND "
-                " (t_optimize.nostreams=vtable.nostreams AND t_optimize.active=vtable.active and t_optimize.throughput=vtable.throughput)";
+            //sql << " delete from t_optimize USING t_optimize, t_optimize as vtable WHERE (t_optimize.auto_number < vtable.auto_number) AND "
+            //    " (t_optimize.nostreams=vtable.nostreams AND t_optimize.active=vtable.active and t_optimize.throughput=vtable.throughput)";
 
-            sql.commit();
+            //sql.commit();
 
             // Historical data
             if (affected_rows)

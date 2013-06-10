@@ -220,9 +220,11 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
         " SELECT distinct t_file.source_se, t_file.dest_se, t_job.vo_name "
         " FROM t_job, t_file "
         " WHERE t_file.job_id = t_job.job_id "
-        "	AND t_job.job_finished is NULL AND t_job.CANCEL_JOB is NULL "
+        "	AND t_job.job_finished is NULL "
+	"	AND t_job.CANCEL_JOB is NULL "
         " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
-        " 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') ";
+        " 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
+	"	AND t_file.file_state='SUBMITTED' ";
 
     if (vos != "*")
         {
