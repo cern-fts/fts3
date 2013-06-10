@@ -2743,7 +2743,27 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
     if (allVos)
         {
             query_stmt = "SELECT /* FIRST_ROWS(1) */ "
-                         " t_job.job_id, "
+                         " job_id, "
+                         " job_state, "
+                         " vo_name,  "
+                         " priority,  "
+                         " source_se, "
+                         " dest_se,  "
+                         " agent_dn, "
+                         " submit_host, "
+                         " user_dn, "
+                         " user_cred, "
+                         " cred_id,  "
+                         " space_token, "
+                         " storage_class,  "
+                         " job_params, "
+                         " overwrite_flag, "
+                         " source_space_token, "
+                         " source_token_description,"
+                         " copy_pin_lifetime, "
+                         " checksum_method "
+			 " from ( select /* FIRST_ROWS(1) */ "
+			 " t_job.job_id, "
                          " t_job.job_state, "
                          " t_job.vo_name,  "
                          " t_job.priority,  "
@@ -2761,21 +2781,40 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                          " t_job.source_space_token, "
                          " t_job.source_token_description,"
                          " t_job.copy_pin_lifetime, "
-                         " t_job.checksum_method "
+                         " t_job.checksum_method "			 
                          " FROM t_job "
                          " WHERE t_job.job_finished is NULL"
                          " AND t_job.CANCEL_JOB is NULL"
                          " AND t_job.reuse_job='Y' "
-                         " AND t_job.job_state = 'SUBMITTED' "
-                         " AND ROWNUM <=1 "
+                         " AND t_job.job_state = 'SUBMITTED' "                       
                          " ORDER BY t_job.priority DESC"
-                         " , SYS_EXTRACT_UTC(t_job.submit_time)";
+                         " , SYS_EXTRACT_UTC(t_job.submit_time) ) WHERE ROWNUM <=1 ";
         }
     else
         {
             tag += "1";
             query_stmt = "SELECT /* FIRST_ROWS(1) */ "
-                         " t_job.job_id, "
+                         " job_id, "
+                         " job_state, "
+                         " vo_name,  "
+                         " priority,  "
+                         " source_se, "
+                         " dest_se,  "
+                         " agent_dn, "
+                         " submit_host, "
+                         " user_dn, "
+                         " user_cred, "
+                         " cred_id,  "
+                         " space_token, "
+                         " storage_class,  "
+                         " job_params, "
+                         " overwrite_flag, "
+                         " source_space_token, "
+                         " source_token_description,"
+                         " copy_pin_lifetime, "
+                         " checksum_method "
+			 " from ( select /* FIRST_ROWS(1) */ "
+			 " t_job.job_id, "
                          " t_job.job_state, "
                          " t_job.vo_name,  "
                          " t_job.priority,  "
@@ -2793,17 +2832,16 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                          " t_job.source_space_token, "
                          " t_job.source_token_description,"
                          " t_job.copy_pin_lifetime, "
-                         " t_job.checksum_method "
+                         " t_job.checksum_method "			 
                          " FROM t_job "
                          " WHERE t_job.job_finished is NULL"
                          " AND t_job.CANCEL_JOB is NULL"
+			 " AND t_job.VO_NAME IN " + vos +			 
                          " AND t_job.reuse_job='Y' "
-                         " AND t_job.VO_NAME IN " + vos +
-                         " AND t_job.job_state = 'SUBMITTED' "
-                         " AND ROWNUM <=1 "
+                         " AND t_job.job_state = 'SUBMITTED' "                       
                          " ORDER BY t_job.priority DESC"
-                         " , SYS_EXTRACT_UTC(t_job.submit_time)";
-        }
+                         " , SYS_EXTRACT_UTC(t_job.submit_time) ) WHERE ROWNUM <=1 ";
+        }		
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -8009,13 +8047,13 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
         " select distinct(t_file.SOURCE_SE) from t_file, t_job where t_job.job_id = t_file.job_id "
         " and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.file_state = 'STAGING' and t_file.STAGING_START is null and t_file.SOURCE_SURL like 'srm%' ";
     std::string query2 =
-        " select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
+        " select SOURCE_SURL, job_id, file_id, COPY_PIN_LIFETIME, BRING_ONLINE from (select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
         " and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.STAGING_START is null and t_file.file_state = 'STAGING' "
-        " and t_file.source_se=:1 and rownum<=:2 and t_job.vo_name=:3  and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:4 ORDER BY t_file.file_id ";
+        " and t_file.source_se=:1 and t_job.vo_name=:2  and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:3 ORDER BY t_file.file_id ) WHERE rownum<=:4 ";
     std::string query3 =
-        " select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
+        " select SOURCE_SURL, job_id, file_id, COPY_PIN_LIFETIME, BRING_ONLINE from (select t_file.SOURCE_SURL, t_file.job_id, t_file.file_id, t_job.COPY_PIN_LIFETIME, t_job.BRING_ONLINE from t_file, t_job where t_job.job_id = t_file.job_id "
         " and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.STAGING_START is null and t_file.file_state = 'STAGING' and t_file.source_se=:1 "
-        " and rownum<=:2  and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:3  ORDER BY t_file.file_id ";
+        " and t_file.SOURCE_SURL like 'srm%' and SUBMIT_HOST=:2  ORDER BY t_file.file_id) WHERE rownum<=:3 ";
     std::string query4 =
         " select count(*) from t_file, t_job where t_job.job_id = t_file.job_id "
         " and (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) and t_file.file_state = 'STAGING' and t_file.STAGING_START is not null "
@@ -8062,6 +8100,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                         }
                     conn->destroyResultset(s4, r4);
                     conn->destroyStatement(s4, tag4, pooledConnection);
+		    s4=NULL;
+		    r4=NULL;
 
                     if(currentStagingFilesConfig > 0 )
                         {
@@ -8074,9 +8114,9 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 
                     s2 = conn->createStatement(query2, tag2, pooledConnection);
                     s2->setString(1, hostName);
-                    s2->setInt(2, maxConfig);
-                    s2->setString(3, voName);
-                    s2->setString(4,ftsHostName);
+                    s2->setString(2, voName);
+                    s2->setString(3,ftsHostName);
+                    s2->setInt(4, maxConfig);		    
                     r2 = conn->createResultset(s2, pooledConnection);
                     while (r2->next())
                         {
@@ -8091,6 +8131,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                         }
                     conn->destroyResultset(s2, r2);
                     conn->destroyStatement(s2, tag2, pooledConnection);
+		    s2=NULL;
+		    r2=NULL;
                 }
             else
                 {
@@ -8119,8 +8161,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                                 }
 
                             s3->setString(1, hostV);
-                            s3->setInt(2, maxNoConfig);
-                            s3->setString(3,ftsHostName);
+                            s3->setString(2,ftsHostName);
+                            s3->setInt(3, maxNoConfig);			    
                             r3 = conn->createResultset(s3, pooledConnection);
                             while (r3->next())
                                 {
@@ -8136,9 +8178,13 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                             conn->destroyResultset(s3, r3);
                         }
                     conn->destroyStatement(s5, tag5, pooledConnection);
+		    s5=NULL;
                     conn->destroyResultset(s1, r1);
                     conn->destroyStatement(s1, tag1, pooledConnection);
+		    s1=NULL;
+		    r1=NULL;
                     conn->destroyStatement(s3, tag3, pooledConnection);
+		    s3=NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
