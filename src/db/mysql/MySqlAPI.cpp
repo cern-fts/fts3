@@ -521,24 +521,24 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "    j.source_space_token, j.space_token, j.job_metadata, "
                                                          "    j.copy_pin_lifetime, j.bring_online "
                                                          "FROM t_file f1, t_job j "
-                                                         "WHERE "
+                                                         "WHERE j.job_id = :jobId AND"
                                                          "    f1.job_id = j.job_id AND "
                                                          "    f1.job_finished IS NULL AND "
                                                          "    f1.file_state = 'SUBMITTED' AND "
-                                                         " 	 (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) AND "
-                                                         "    j.job_id = :jobId AND "
+                                                         " 	 (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) "
+                                                         "     AND "
                                                          "	 NOT EXISTS ( "
                                                          "		SELECT NULL "
                                                          "		FROM t_file f2 "
                                                          "		WHERE "
-                                                         "			f2.job_id = f1.job_id AND f2.job_id = :jobId AND "
+                                                         "			f2.job_id = :jobId AND f2.job_id = f1.job_id AND "
                                                          "			f2.file_index = f1.file_index AND "
-                                                         "			f2.file_state IN ('READY', 'ACTIVE', 'FINISHED', 'CANCELED') "
-                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 50 ",soci::use(tTime), soci::use(jobId), soci::use(jobId)
+                                                         "			f2.file_state='READY' "
+                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 50 ",soci::use(jobId), soci::use(tTime), soci::use(jobId)
 
 
                                                      );
-
+    
 
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
