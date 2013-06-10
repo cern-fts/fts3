@@ -760,19 +760,19 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         "		f1.source_se, f1.dest_se  "
         "FROM t_file f1, t_job j "
         "WHERE "
+        "	j.job_id = :1 AND "	
         "	f1.job_id = j.job_id AND "
         "    	f1.job_finished is NULL AND "
         "	j.job_finished is NULL AND "
-        "	j.job_id = :1 AND "
         "	f1.file_state ='SUBMITTED' AND "
         " 	f1.retry_timestamp is NULL OR f1.retry_timestamp < :2 AND "
         "	NOT EXISTS ( "
         "		SELECT NULL "
         "		FROM t_file f2 "
         "		WHERE "
-        "			f2.job_id = f1.job_id AND f2.job_id=:3 AND "
+        "			f2.job_id=:3 AND f2.job_id = f1.job_id AND "
         "			f2.file_index = f1.file_index AND "
-        "			f2.file_state IN ('READY', 'ACTIVE', 'FINISHED', 'CANCELED') "
+        "			f2.file_state= 'READY' "
         "	) ORDER BY f1.file_id ASC) WHERE ROWNUM <= 100 ORDER BY file_id ASC";
 
     oracle::occi::Statement* s = NULL;
