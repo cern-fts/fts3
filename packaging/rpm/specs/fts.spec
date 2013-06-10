@@ -67,7 +67,7 @@ Group: System Environment/Daemons
 Requires: bdii
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: gfal2-plugin-gridftp%{?_isa} >= 2.1.0
-Requires: gfal2-plugin-http%{?_isa} >= 2.1.0
+#Requires: gfal2-plugin-http%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
 Requires: glue-schema
 Requires: glue-validator
