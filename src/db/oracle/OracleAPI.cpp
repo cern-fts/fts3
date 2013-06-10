@@ -253,8 +253,9 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " 	source_token_description,"
             " 	copy_pin_lifetime, "
             " 	checksum_method, "
-    	    " 	bring_online "
-	    "   from ( select "
+    	    " 	bring_online, "
+	    "   submit_time "
+	    "   from ( select /*+ FIRST_ROWS(20) */  "
             " 	t_job.job_id, "
             " 	t_job.job_state, "
             " 	t_job.vo_name,  "
@@ -274,7 +275,8 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
             " 	t_job.source_token_description,"
             " 	t_job.copy_pin_lifetime, "
             " 	t_job.checksum_method, "
-    	    " 	t_job.bring_online "
+    	    " 	t_job.bring_online, "
+	    "   t_job.submit_time "
             " FROM t_job "
             " WHERE "
     	    " 	t_job.job_finished is NULL"
@@ -289,7 +291,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
     		"			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
     	    "			AND t_file.file_state = 'SUBMITTED'"
     	    "	) "
-            " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= 20 ";
+            " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= 20 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -747,7 +749,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         " 		SPACE_TOKEN, copy_pin_lifetime, bring_online, "
         "		user_filesize, file_metadata, job_metadata, file_index, BRINGONLINE_TOKEN,"
         "		source_se, dest_se  "
-	"		from (select "	
+	"		from (select  /*+ FIRST_ROWS(100) */  "	
         "		f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
         " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
         "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
@@ -769,7 +771,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         "			f2.job_id = f1.job_id AND f2.job_id=:3 AND "
         "			f2.file_index = f1.file_index AND "
         "			f2.file_state IN ('READY', 'ACTIVE', 'FINISHED', 'CANCELED') "
-        "	) ORDER BY f1.file_id ASC) WHERE ROWNUM <= 100";
+        "	) ORDER BY f1.file_id ASC) WHERE ROWNUM <= 100 ORDER BY file_id ASC";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
