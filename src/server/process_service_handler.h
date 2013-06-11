@@ -1071,7 +1071,7 @@ protected:
 
                         /*force-fail stalled ACTIVE transfers*/
                         counter++;
-                        if (counter == 3) //change it to 300
+                        if (counter == 300)
                             {
                                 std::map<int, std::string> collectJobs;
                                 DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
