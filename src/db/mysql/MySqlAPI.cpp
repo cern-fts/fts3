@@ -5162,19 +5162,12 @@ void MySqlAPI::checkSanityState()
                                                                 "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
                                                             sql.commit();
                                                         }
-                                                    else   //check for NOT_USED and STAGING STATES ???
+                                                    else   // otherwise it is FINISHEDDIRTY
                                                         {
-                                                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state in ('STAGING', 'NOT_USED') ", soci::use(*i), soci::into(allNotUsedStaging);
-                                                            if(allNotUsedStaging == 0)
-                                                                {
-                                                                    sql << "UPDATE t_job SET "
-                                                                        "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-                                                                        "    reason = :failed "
-                                                                        "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
-                                                                }
-                                                            else    //NOT_USED branch
-                                                                {
-                                                                }
+															sql << "UPDATE t_job SET "
+																"    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+																"    reason = :failed "
+																"    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
                                                         }
                                                 }
                                         }
