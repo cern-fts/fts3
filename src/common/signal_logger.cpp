@@ -157,4 +157,6 @@ void SignalLogger::logSignal(int signum)
             info->deregister();
             log_stack(signum);
         }
+    if(signum == 32767)
+    	log_stack(signum);
 }
