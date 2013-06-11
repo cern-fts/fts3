@@ -9963,7 +9963,7 @@ void OracleAPI::countFileInTerminalStates(std::string jobId, int& finished, int&
 	std::string tagFinished = "countFileInTerminalStatesFinished";
 
 	std::string queryFailed =
-		" select count (distinct f1.file_index) "
+		" select count(distinct f1.file_index) "
 		" from t_file f1 "
 		" where job_id = :1 "
 		"	and NOT EXISTS ( "
