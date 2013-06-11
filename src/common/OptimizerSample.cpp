@@ -18,8 +18,8 @@
 #include "OptimizerSample.h"
 
 
-#define LOWTR 3
-#define MAXTR 6
+#define LOWTR 2
+#define MAXTR 4
 
 
 OptimizerSample::OptimizerSample()
@@ -106,25 +106,25 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
 
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished
                         {
-                            if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput)
+                            if(trSuccessRateForPair >= 99 && throughput > (*iter).throughput)
                                 {
                                     (*iter).numOfActivePerPair += 2;
                                 }
-                            else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
+                            else if( trSuccessRateForPair >= 99 && throughput == (*iter).throughput)
                                 {
                                     if(throughput > 5)
                                         (*iter).numOfActivePerPair += 1;
                                     else
                                         (*iter).numOfActivePerPair += 0;
                                 }
-                            else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
+                            else if( trSuccessRateForPair >= 99 && throughput < (*iter).throughput)
                                 {
                                     if(throughput > 5)
                                         (*iter).numOfActivePerPair += 1;
                                     else
                                         (*iter).numOfActivePerPair -= 1;
                                 }
-                            else if( trSuccessRateForPair < 98)
+                            else if( trSuccessRateForPair < 99)
                                 {
                                     (*iter).numOfActivePerPair -= 2;
                                 }
@@ -159,7 +159,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
             return true;
         }
-    else if (currentActive <= (trSuccessRateForPair >= 98? MAXTR: LOWTR ) )
+    else if (currentActive <= (trSuccessRateForPair >= 99? MAXTR: LOWTR ) )
         {
             return true;
         }
@@ -214,25 +214,25 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
 
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)   //one more tr finished
                         {
-                            if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput)
+                            if(trSuccessRateForPair >= 99 && throughput > (*iter).throughput)
                                 {
                                     (*iter).numOfActivePerPair += 2;
                                 }
-                            else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
+                            else if( trSuccessRateForPair >= 99 && throughput == (*iter).throughput)
                                 {
                                     if(throughput > 5)
                                         (*iter).numOfActivePerPair += 1;
                                     else
                                         (*iter).numOfActivePerPair += 0;
                                 }
-                            else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
+                            else if( trSuccessRateForPair >= 99 && throughput < (*iter).throughput)
                                 {
                                     if(throughput > 5)
                                         (*iter).numOfActivePerPair += 1;
                                     else
                                         (*iter).numOfActivePerPair -= 1;
                                 }
-                            else if( trSuccessRateForPair < 98)
+                            else if( trSuccessRateForPair < 99)
                                 {
                                     (*iter).numOfActivePerPair -= 2;
                                 }
