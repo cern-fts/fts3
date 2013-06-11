@@ -9966,6 +9966,7 @@ void OracleAPI::countFileInTerminalStates(std::string jobId, int& finished, int&
 		" select count(distinct f1.file_index) "
 		" from t_file f1 "
 		" where job_id = :1 "
+		"	and f1.file_state = 'FAILED' "
 		"	and NOT EXISTS ( "
 		"		select null "
 		"		from t_file f2 "
