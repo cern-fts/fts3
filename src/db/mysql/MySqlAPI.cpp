@@ -5105,9 +5105,9 @@ void MySqlAPI::checkSanityState()
     std::vector<std::string> ret;
     unsigned int numberOfFiles = 0;
     unsigned int terminalState = 0;
-    unsigned int allFinished = 0;
-    unsigned int allFailed = 0;
-    unsigned int allCanceled = 0;
+    int allFinished = 0;
+    int allFailed = 0;
+    int allCanceled = 0;
     unsigned int allNotUsedStaging = 0;
     unsigned int numberOfFilesRevert = 0;
     std::string canceledMessage = "Transfer canceled by the user";
