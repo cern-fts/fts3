@@ -13,7 +13,7 @@ BuildArch: noarch
 
 #Requires: cx_Oracle%{?_isa}
 Requires: MySQL-python%{?_isa}
-Requires: Django
+Requires: Django >= 1.3.7
 Requires: httpd%{?_isa}
 Requires: mod_wsgi%{?_isa}
 Requires: python%{?_isa}
