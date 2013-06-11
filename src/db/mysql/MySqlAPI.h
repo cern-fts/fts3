@@ -296,6 +296,8 @@ public:
 
     virtual void checkSanityState();
 
+    virtual void countFileInTerminalStates(std::string jobId, int& finished, int& cancelled, int& failed);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

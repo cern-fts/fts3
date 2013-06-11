@@ -5113,6 +5113,7 @@ void MySqlAPI::checkSanityState()
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
 
+
     try
         {
             soci::rowset<std::string> rs = (
@@ -5123,12 +5124,14 @@ void MySqlAPI::checkSanityState()
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
+
                     if(numberOfFiles > 0)
                         {
-                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state in ('FAILED', 'FINISHED', 'CANCELED') ", soci::use(*i), soci::into(terminalState);
+                    		countFileInTerminalStates(*i, allFinished, allCanceled, allFailed);
+                    		terminalState = allFinished + allCanceled + allFailed;
+
                             if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
                                 {
-                                    sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state ='CANCELED' ", soci::use(*i), soci::into(allCanceled);
                                     if(allCanceled > 0)
                                         {
                                             sql.begin();
@@ -5138,9 +5141,8 @@ void MySqlAPI::checkSanityState()
                                                 "    WHERE job_id = :jobId ", soci::use(canceledMessage), soci::use(*i);
                                             sql.commit();
                                         }
-                                    else   //non canceled, check other states "FINISHED" FAILED"
+                                    else   //non canceled, check other states: "FINISHED" and FAILED"
                                         {
-                                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state ='FINISHED' ", soci::use(*i), soci::into(allFinished);
                                             if(numberOfFiles == allFinished)  /*all files finished*/
                                                 {
                                                     sql.begin();
@@ -5151,7 +5153,6 @@ void MySqlAPI::checkSanityState()
                                                 }
                                             else
                                                 {
-                                                    sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state ='FAILED' ", soci::use(*i), soci::into(allFailed);
                                                     if(numberOfFiles == allFailed)  /*all files failed*/
                                                         {
                                                             sql.begin();
@@ -5161,7 +5162,7 @@ void MySqlAPI::checkSanityState()
                                                                 "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
                                                             sql.commit();
                                                         }
-                                                    else   //check for NOT_USED and STAGING STATES
+                                                    else   //check for NOT_USED and STAGING STATES ???
                                                         {
                                                             sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state in ('STAGING', 'NOT_USED') ", soci::use(*i), soci::into(allNotUsedStaging);
                                                             if(allNotUsedStaging == 0)
@@ -5204,6 +5205,59 @@ void MySqlAPI::checkSanityState()
                     numberOfFilesRevert = 0;
                 }
 
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& canceled, int& failed)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+    		sql <<
+    			" select count(*)  "
+                " from t_file "
+                " where job_id = :jobId "
+                "	and  file_state = 'FINISHED' ",
+                soci::use(jobId),
+                soci::into(finished)
+    		;
+
+    		sql <<
+    			" select count(distinct f1.file_index) "
+    			" from t_file f1 "
+    			" where job_id = :jobId "
+    			"	and NOT EXISTS ( "
+    			"		select null "
+    			"		from t_file f2 "
+    			"		where job_id = :jobId "
+    			"			and f2.file_index = f1.file_index "
+    			"			and f2.file_state <> 'CANCELED' "
+    			" 	) ",
+    			soci::use(jobId),
+    			soci::use(jobId),
+    			soci::into(canceled)
+    		;
+
+    		sql <<
+    			" select count (distinct f1.file_index) "
+				" from t_file f1 "
+				" where job_id = :jobId "
+				"	and NOT EXISTS ( "
+				"		select null "
+				"		from t_file f2 "
+				"		where job_id = :jobId "
+				"			and f2.file_index = f1.file_index "
+				"			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
+				" 	) ",
+				soci::use(jobId),
+				soci::use(jobId),
+				soci::into(failed)
+    		;
         }
     catch (std::exception& e)
         {

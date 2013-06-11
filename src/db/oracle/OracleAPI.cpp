@@ -9950,6 +9950,148 @@ void OracleAPI::checkSanityState()
     conn->releasePooledConnection(pooledConnection);
 }
 
+void OracleAPI::countFileInTerminalStates(std::string jobId, int& finished, int& canceled, int& failed)
+{
+
+	std::string queryFinished =
+		" select count(*)  "
+		" from t_file "
+		" where job_id = :1 "
+		"	and  file_state = 'FINISHED' "
+	;
+
+	std::string tagFinished = "countFileInTerminalStatesFinished";
+
+	std::string queryFailed =
+		" select count (distinct f1.file_index) "
+		" from t_file f1 "
+		" where job_id = :1 "
+		"	and NOT EXISTS ( "
+		"		select null "
+		"		from t_file f2 "
+		"		where job_id = :2 "
+		"			and f2.file_index = f1.file_index "
+		"			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
+		" 	) "
+	;
+
+	std::string tagFailed = "countFileInTerminalStatesFailed";
+
+	std::string queryCanceled =
+		" select count(distinct f1.file_index) "
+		" from t_file f1 "
+		" where job_id = :1 "
+		"	and NOT EXISTS ( "
+		"		select null "
+		"		from t_file f2 "
+		"		where job_id = :2 "
+		"			and f2.file_index = f1.file_index "
+		"			and f2.file_state <> 'CANCELED' "
+		" 	) "
+	;
+
+	std::string tagCanceled = "countFileInTerminalStatesCanceled";
+
+    oracle::occi::Statement* s1 = 0;
+    oracle::occi::ResultSet* r1 = 0;
+    oracle::occi::Statement* s2 = 0;
+    oracle::occi::ResultSet* r2 = 0;
+    oracle::occi::Statement* s3 = 0;
+    oracle::occi::ResultSet* r3 = 0;
+
+    oracle::occi::Connection* pooledConnection = NULL;
+
+	    try
+	        {
+	            pooledConnection = conn->getPooledConnection();
+	            if (!pooledConnection) return;
+
+	            s1 = conn->createStatement(queryFinished, tagFinished, pooledConnection);
+	            s1->setString(1, jobId);
+	            r1 = conn->createResultset(s1, pooledConnection);
+
+	            if (r1->next())
+	                {
+	            		finished = r1->getInt(1);
+	                }
+
+	            conn->destroyResultset(s1, r1);
+	            conn->destroyStatement(s1, tagFinished, pooledConnection);
+
+
+	            s2 = conn->createStatement(queryFailed, tagFailed, pooledConnection);
+	            s2->setString(1, jobId);
+	            s2->setString(2, jobId);
+	            r2 = conn->createResultset(s2, pooledConnection);
+
+	            if (r2->next())
+	                {
+	            		failed = r2->getInt(1);
+	                }
+
+	            conn->destroyResultset(s2, r2);
+	            conn->destroyStatement(s2, tagFailed, pooledConnection);
+
+
+	            s3 = conn->createStatement(queryCanceled, tagCanceled, pooledConnection);
+	            s3->setString(1, jobId);
+	            s3->setString(2, jobId);
+	            r3 = conn->createResultset(s3, pooledConnection);
+
+	            if (r3->next())
+	                {
+	            		canceled = r3->getInt(1);
+	                }
+
+	            conn->destroyResultset(s3, r3);
+	            conn->destroyStatement(s3, tagCanceled, pooledConnection);
+
+
+	        }
+	    catch (oracle::occi::SQLException const &e)
+	        {
+
+	            conn->rollback(pooledConnection);
+	            if(s1 && r1)
+	                conn->destroyResultset(s1, r1);
+	            if (s1)
+	                conn->destroyStatement(s1, tagFinished, pooledConnection);
+
+	            if(s2 && r2)
+	                conn->destroyResultset(s2, r2);
+	            if (s2)
+	                conn->destroyStatement(s2, tagFailed, pooledConnection);
+
+	            if(s3 && r3)
+	                conn->destroyResultset(s3, r3);
+	            if (s3)
+	                conn->destroyStatement(s3, tagCanceled, pooledConnection);
+
+	            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+	        }
+	    catch (...)
+	        {
+	            conn->rollback(pooledConnection);
+	            if(s1 && r1)
+	                conn->destroyResultset(s1, r1);
+	            if (s1)
+	                conn->destroyStatement(s1, tagFinished, pooledConnection);
+
+	            if(s2 && r2)
+	                conn->destroyResultset(s2, r2);
+	            if (s2)
+	                conn->destroyStatement(s2, tagFailed, pooledConnection);
+
+	            if(s3 && r3)
+	                conn->destroyResultset(s3, r3);
+	            if (s3)
+	                conn->destroyStatement(s3, tagCanceled, pooledConnection);
+
+	            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+	        }
+	    conn->releasePooledConnection(pooledConnection);
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()

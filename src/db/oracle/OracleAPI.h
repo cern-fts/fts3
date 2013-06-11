@@ -306,6 +306,8 @@ public:
 
     virtual void checkSanityState();
 
+    virtual void countFileInTerminalStates(std::string jobId, int& finished, int& cancelled, int& failed);
+
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;
