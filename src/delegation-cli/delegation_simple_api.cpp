@@ -331,15 +331,18 @@ int glite_delegation_delegate(glite_delegation_ctx *ctx,
         }
 
     /* generating a certificate from the request */
-    if(certreq){
-    	ret = GRSTx509MakeProxyCert(&certtxt, stderr, certreq,
-                                localproxy, localproxy, expiration);
-    }else{
+    if(certreq)
+        {
+            ret = GRSTx509MakeProxyCert(&certtxt, stderr, certreq,
+                                        localproxy, localproxy, expiration);
+        }
+    else
+        {
             glite_delegation_set_error(ctx, (char *) "glite_delegation_delegate: "
                                        "GRSTx509MakeProxyCert call failed");
-            return -1;    
-    	
-    }
+            return -1;
+
+        }
     if (ret != GRST_RET_OK)
         {
             glite_delegation_set_error(ctx, (char *) "glite_delegation_delegate: "

@@ -55,11 +55,11 @@ std::string SiteName::getSiteName(std::string& hostname)
 
     std::string site =  SiteNameRetriever::getInstance().getSiteName(se);
     if(site.length() == 0)
-    	return std::string("");	
+        return std::string("");
     else if(site.length() > 0 && site != "null")
-    	return site;
+        return site;
     else
-        return std::string("");	
+        return std::string("");
 }
 
 

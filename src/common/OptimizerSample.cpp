@@ -112,17 +112,17 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
                                 {
-				    if(throughput > 5)
-                                    	(*iter).numOfActivePerPair += 1;
-				    else
-                                    	(*iter).numOfActivePerPair += 0;				    
+                                    if(throughput > 5)
+                                        (*iter).numOfActivePerPair += 1;
+                                    else
+                                        (*iter).numOfActivePerPair += 0;
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
                                 {
-				    if(throughput > 5)
-                                    	(*iter).numOfActivePerPair += 1;				    
-				    else
-                                    	(*iter).numOfActivePerPair -= 1;
+                                    if(throughput > 5)
+                                        (*iter).numOfActivePerPair += 1;
+                                    else
+                                        (*iter).numOfActivePerPair -= 1;
                                 }
                             else if( trSuccessRateForPair < 98)
                                 {
@@ -159,13 +159,13 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
             return true;
         }
-    else if (currentActive <= (trSuccessRateForPair >= 98? MAXTR: LOWTR ) ) 
+    else if (currentActive <= (trSuccessRateForPair >= 98? MAXTR: LOWTR ) )
         {
             return true;
-        }	
+        }
     else if(currentActive < activeInStore)
         {
-    	    return true;
+            return true;
         }
     else
         {
@@ -214,23 +214,23 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
 
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)   //one more tr finished
                         {
-                             if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput)
+                            if(trSuccessRateForPair >= 98 && throughput > (*iter).throughput)
                                 {
                                     (*iter).numOfActivePerPair += 2;
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput == (*iter).throughput)
                                 {
-				    if(throughput > 5)
-                                    	(*iter).numOfActivePerPair += 1;
-				    else
-                                    	(*iter).numOfActivePerPair += 0;				    
+                                    if(throughput > 5)
+                                        (*iter).numOfActivePerPair += 1;
+                                    else
+                                        (*iter).numOfActivePerPair += 0;
                                 }
                             else if( trSuccessRateForPair >= 98 && throughput < (*iter).throughput)
                                 {
-				    if(throughput > 5)
-                                    	(*iter).numOfActivePerPair += 1;				    
-				    else
-                                    	(*iter).numOfActivePerPair -= 1;
+                                    if(throughput > 5)
+                                        (*iter).numOfActivePerPair += 1;
+                                    else
+                                        (*iter).numOfActivePerPair -= 1;
                                 }
                             else if( trSuccessRateForPair < 98)
                                 {

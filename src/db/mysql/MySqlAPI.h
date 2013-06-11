@@ -294,6 +294,8 @@ public:
 
     virtual void revertNotUsedFiles();
 
+    virtual void checkSanityState();
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

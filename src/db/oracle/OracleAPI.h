@@ -304,6 +304,8 @@ public:
 
     virtual void revertNotUsedFiles();
 
+    virtual void checkSanityState();
+
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;

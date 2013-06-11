@@ -221,10 +221,10 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
         " FROM t_job, t_file "
         " WHERE t_file.job_id = t_job.job_id "
         "	AND t_job.job_finished is NULL "
-	"	AND t_job.CANCEL_JOB is NULL "
+        "	AND t_job.CANCEL_JOB is NULL "
         " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
         " 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
-	"	AND t_file.file_state='SUBMITTED' ";
+        "	AND t_file.file_state='SUBMITTED' ";
 
     if (vos != "*")
         {
@@ -235,65 +235,65 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
         }
 
     std::string query_stmt =
-    		" SELECT "
-            " 	job_id, "
-            " 	job_state, "
-            " 	vo_name,  "
-            " 	priority,  "
-            " 	source_se, "
-            " 	dest_se,  "
-            " 	agent_dn, "
-            " 	submit_host, "
-            " 	user_dn, "
-            " 	user_cred, "
-            " 	cred_id,  "
-            " 	space_token, "
-            " 	storage_class,  "
-            " 	job_params, "
-            " 	overwrite_flag, "
-            " 	source_space_token, "
-            " 	source_token_description,"
-            " 	copy_pin_lifetime, "
-            " 	checksum_method, "
-    	    " 	bring_online, "
-	    "   submit_time "
-	    "   from ( select /*+ FIRST_ROWS(20) */  "
-            " 	t_job.job_id, "
-            " 	t_job.job_state, "
-            " 	t_job.vo_name,  "
-            " 	t_job.priority,  "
-            " 	t_job.source_se, "
-            " 	t_job.dest_se,  "
-            " 	t_job.agent_dn, "
-            " 	t_job.submit_host, "
-            " 	t_job.user_dn, "
-            " 	t_job.user_cred, "
-            " 	t_job.cred_id,  "
-            " 	t_job.space_token, "
-            " 	t_job.storage_class,  "
-            " 	t_job.job_params, "
-            " 	t_job.overwrite_flag, "
-            " 	t_job.source_space_token, "
-            " 	t_job.source_token_description,"
-            " 	t_job.copy_pin_lifetime, "
-            " 	t_job.checksum_method, "
-    	    " 	t_job.bring_online, "
-	    "   t_job.submit_time "
-            " FROM t_job "
-            " WHERE "
-    	    " 	t_job.job_finished is NULL"
-            " 	AND t_job.CANCEL_JOB is NULL"
-    	    " 	AND t_job.VO_NAME=:1 "
-            " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
-            " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-    	    " 	AND exists(	"
-    	    "		SELECT NULL "
-    	    "		FROM t_file "
-    	    "		WHERE t_file.job_id = t_job.job_id "
-    		"			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
-    	    "			AND t_file.file_state = 'SUBMITTED'"
-    	    "	) "
-            " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= 20 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
+        " SELECT "
+        " 	job_id, "
+        " 	job_state, "
+        " 	vo_name,  "
+        " 	priority,  "
+        " 	source_se, "
+        " 	dest_se,  "
+        " 	agent_dn, "
+        " 	submit_host, "
+        " 	user_dn, "
+        " 	user_cred, "
+        " 	cred_id,  "
+        " 	space_token, "
+        " 	storage_class,  "
+        " 	job_params, "
+        " 	overwrite_flag, "
+        " 	source_space_token, "
+        " 	source_token_description,"
+        " 	copy_pin_lifetime, "
+        " 	checksum_method, "
+        " 	bring_online, "
+        "   submit_time "
+        "   from ( select /*+ FIRST_ROWS(20) */  "
+        " 	t_job.job_id, "
+        " 	t_job.job_state, "
+        " 	t_job.vo_name,  "
+        " 	t_job.priority,  "
+        " 	t_job.source_se, "
+        " 	t_job.dest_se,  "
+        " 	t_job.agent_dn, "
+        " 	t_job.submit_host, "
+        " 	t_job.user_dn, "
+        " 	t_job.user_cred, "
+        " 	t_job.cred_id,  "
+        " 	t_job.space_token, "
+        " 	t_job.storage_class,  "
+        " 	t_job.job_params, "
+        " 	t_job.overwrite_flag, "
+        " 	t_job.source_space_token, "
+        " 	t_job.source_token_description,"
+        " 	t_job.copy_pin_lifetime, "
+        " 	t_job.checksum_method, "
+        " 	t_job.bring_online, "
+        "   t_job.submit_time "
+        " FROM t_job "
+        " WHERE "
+        " 	t_job.job_finished is NULL"
+        " 	AND t_job.CANCEL_JOB is NULL"
+        " 	AND t_job.VO_NAME=:1 "
+        " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
+        " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
+        " 	AND exists(	"
+        "		SELECT NULL "
+        "		FROM t_file "
+        "		WHERE t_file.job_id = t_job.job_id "
+        "			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
+        "			AND t_file.file_state = 'SUBMITTED'"
+        "	) "
+        " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= 20 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -745,13 +745,13 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
 
     std::string select =
         "SELECT "
-       "		source_surl, dest_surl, job_id, vo_name, "
+        "		source_surl, dest_surl, job_id, vo_name, "
         " 		file_id, overwrite_flag, USER_DN, CRED_ID, "
         "		checksum, CHECKSUM_METHOD, SOURCE_SPACE_TOKEN, "
         " 		SPACE_TOKEN, copy_pin_lifetime, bring_online, "
         "		user_filesize, file_metadata, job_metadata, file_index, BRINGONLINE_TOKEN,"
         "		source_se, dest_se  "
-	"		from (select  /*+ FIRST_ROWS(100) */  "	
+        "		from (select  /*+ FIRST_ROWS(100) */  "
         "		f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
         " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
         "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
@@ -760,7 +760,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         "		f1.source_se, f1.dest_se  "
         "FROM t_file f1, t_job j "
         "WHERE "
-        "	j.job_id = :1 AND "	
+        "	j.job_id = :1 AND "
         "	f1.job_id = j.job_id AND "
         "    	f1.job_finished is NULL AND "
         "	j.job_finished is NULL AND "
@@ -791,9 +791,9 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                     time_t timed = time(NULL);
                     TransferJobs* temp = (TransferJobs*) * iter;
                     std::string job_id = std::string(temp->JOB_ID);
-                    s->setString(1, job_id);		    
+                    s->setString(1, job_id);
                     s->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); //submit_time
-		    s->setString(3, job_id);		    
+                    s->setString(3, job_id);
                     r = conn->createResultset(s, pooledConnection);
                     while (r->next())
                         {
@@ -1830,45 +1830,45 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
         "SET JOB_STATE=:1 WHERE job_id = :2 AND JOB_STATE not in ('FINISHEDDIRTY','CANCELED','FINISHED','FAILED') ";
 
     std::string query =
-		" SELECT "
-		"	COUNT(file_index) AS NUM1, "
-		"	COUNT( "
-		"		CASE WHEN NOT EXISTS ( "
-		"				SELECT NULL "
-		"				FROM t_file "
-		"				WHERE job_id = tbl.job_id "
-		"					AND file_index = tbl.file_index "
-		"					AND file_state <> 'CANCELED' "
-		"		) "
-		"		THEN 1 END "
-		"	) AS NUM2, "
-		"	COUNT( "
-		"		CASE WHEN EXISTS ( "
-		"			SELECT NULL "
-		"			FROM t_file "
-		"			WHERE job_id = tbl.job_id "
-		"				AND file_index = tbl.file_index "
-		"				AND file_state = 'FINISHED' "
-		"		) "
-		"		THEN 1 END "
-		"	) AS NUM3, "
-		"	COUNT( "
-		"		CASE WHEN NOT EXISTS ( "
-		"			SELECT NULL "
-		"			FROM t_file "
-		"			WHERE job_id = tbl.job_id "
-		"				AND file_index = tbl.file_index "
-		"				AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
-		"		) "
-		"		THEN 1 END "
-		"	) AS NUM4 "
-		" FROM "
-		"	( "
-		"		SELECT DISTINCT job_id, file_index "
-		"		FROM t_file "
-		"		WHERE job_id = :1 "
-		"	) tbl "
-    	;
+        " SELECT "
+        "	COUNT(file_index) AS NUM1, "
+        "	COUNT( "
+        "		CASE WHEN NOT EXISTS ( "
+        "				SELECT NULL "
+        "				FROM t_file "
+        "				WHERE job_id = tbl.job_id "
+        "					AND file_index = tbl.file_index "
+        "					AND file_state <> 'CANCELED' "
+        "		) "
+        "		THEN 1 END "
+        "	) AS NUM2, "
+        "	COUNT( "
+        "		CASE WHEN EXISTS ( "
+        "			SELECT NULL "
+        "			FROM t_file "
+        "			WHERE job_id = tbl.job_id "
+        "				AND file_index = tbl.file_index "
+        "				AND file_state = 'FINISHED' "
+        "		) "
+        "		THEN 1 END "
+        "	) AS NUM3, "
+        "	COUNT( "
+        "		CASE WHEN NOT EXISTS ( "
+        "			SELECT NULL "
+        "			FROM t_file "
+        "			WHERE job_id = tbl.job_id "
+        "				AND file_index = tbl.file_index "
+        "				AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
+        "		) "
+        "		THEN 1 END "
+        "	) AS NUM4 "
+        " FROM "
+        "	( "
+        "		SELECT DISTINCT job_id, file_index "
+        "		FROM t_file "
+        "		WHERE job_id = :1 "
+        "	) tbl "
+        ;
 
     std::string updateFileJobFinished =
         "UPDATE t_file "
@@ -2764,8 +2764,8 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                          " source_token_description,"
                          " copy_pin_lifetime, "
                          " checksum_method "
-			 " from ( select /* FIRST_ROWS(1) */ "
-			 " t_job.job_id, "
+                         " from ( select /* FIRST_ROWS(1) */ "
+                         " t_job.job_id, "
                          " t_job.job_state, "
                          " t_job.vo_name,  "
                          " t_job.priority,  "
@@ -2783,12 +2783,12 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                          " t_job.source_space_token, "
                          " t_job.source_token_description,"
                          " t_job.copy_pin_lifetime, "
-                         " t_job.checksum_method "			 
+                         " t_job.checksum_method "
                          " FROM t_job "
                          " WHERE t_job.job_finished is NULL"
                          " AND t_job.CANCEL_JOB is NULL"
                          " AND t_job.reuse_job='Y' "
-                         " AND t_job.job_state = 'SUBMITTED' "                       
+                         " AND t_job.job_state = 'SUBMITTED' "
                          " ORDER BY t_job.priority DESC"
                          " , SYS_EXTRACT_UTC(t_job.submit_time) ) WHERE ROWNUM <=1 ";
         }
@@ -2815,8 +2815,8 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                          " source_token_description,"
                          " copy_pin_lifetime, "
                          " checksum_method "
-			 " from ( select /* FIRST_ROWS(1) */ "
-			 " t_job.job_id, "
+                         " from ( select /* FIRST_ROWS(1) */ "
+                         " t_job.job_id, "
                          " t_job.job_state, "
                          " t_job.vo_name,  "
                          " t_job.priority,  "
@@ -2834,16 +2834,16 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                          " t_job.source_space_token, "
                          " t_job.source_token_description,"
                          " t_job.copy_pin_lifetime, "
-                         " t_job.checksum_method "			 
+                         " t_job.checksum_method "
                          " FROM t_job "
                          " WHERE t_job.job_finished is NULL"
                          " AND t_job.CANCEL_JOB is NULL"
-			 " AND t_job.VO_NAME IN " + vos +			 
+                         " AND t_job.VO_NAME IN " + vos +
                          " AND t_job.reuse_job='Y' "
-                         " AND t_job.job_state = 'SUBMITTED' "                       
+                         " AND t_job.job_state = 'SUBMITTED' "
                          " ORDER BY t_job.priority DESC"
                          " , SYS_EXTRACT_UTC(t_job.submit_time) ) WHERE ROWNUM <=1 ";
-        }		
+        }
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -3670,9 +3670,9 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
     std::string query_stmt6 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
                               " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '30' minute))";
-			      
+
     std::string query_stmt7 = " select throughput from (select throughput from  t_file where source_se=:1 and dest_se=:2 and throughput is not NULL "
-    			      " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
+                              " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
@@ -4761,7 +4761,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages)
                 {
                     s->setString(1, (*iter).job_id);
                     s->setInt(2, (*iter).file_id);
-		    s->setString(3, ftsHostName);
+                    s->setString(3, ftsHostName);
                     r = conn->createResultset(s, pooledConnection);
                     if(r->next())
                         {
@@ -8102,8 +8102,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                         }
                     conn->destroyResultset(s4, r4);
                     conn->destroyStatement(s4, tag4, pooledConnection);
-		    s4=NULL;
-		    r4=NULL;
+                    s4=NULL;
+                    r4=NULL;
 
                     if(currentStagingFilesConfig > 0 )
                         {
@@ -8118,7 +8118,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                     s2->setString(1, hostName);
                     s2->setString(2, voName);
                     s2->setString(3,ftsHostName);
-                    s2->setInt(4, maxConfig);		    
+                    s2->setInt(4, maxConfig);
                     r2 = conn->createResultset(s2, pooledConnection);
                     while (r2->next())
                         {
@@ -8133,8 +8133,8 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                         }
                     conn->destroyResultset(s2, r2);
                     conn->destroyStatement(s2, tag2, pooledConnection);
-		    s2=NULL;
-		    r2=NULL;
+                    s2=NULL;
+                    r2=NULL;
                 }
             else
                 {
@@ -8164,7 +8164,7 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
 
                             s3->setString(1, hostV);
                             s3->setString(2,ftsHostName);
-                            s3->setInt(3, maxNoConfig);			    
+                            s3->setInt(3, maxNoConfig);
                             r3 = conn->createResultset(s3, pooledConnection);
                             while (r3->next())
                                 {
@@ -8180,13 +8180,13 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                             conn->destroyResultset(s3, r3);
                         }
                     conn->destroyStatement(s5, tag5, pooledConnection);
-		    s5=NULL;
+                    s5=NULL;
                     conn->destroyResultset(s1, r1);
                     conn->destroyStatement(s1, tag1, pooledConnection);
-		    s1=NULL;
-		    r1=NULL;
+                    s1=NULL;
+                    r1=NULL;
                     conn->destroyStatement(s3, tag3, pooledConnection);
-		    s3=NULL;
+                    s3=NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -9595,8 +9595,6 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
         }
     catch (...)
         {
-
-
             conn->rollback(pooledConnection);
             if(s && r)
                 conn->destroyResultset(s, r);
@@ -9669,6 +9667,286 @@ void OracleAPI::revertNotUsedFiles()
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
+    conn->releasePooledConnection(pooledConnection);
+}
+
+void OracleAPI::checkSanityState()
+{
+    std::string tag[] = {"sanity1", "sanity2", "sanity3", "sanity4", "sanity5", "sanity6", "sanity7", "sanity8", "sanity9", "sanity10", "sanity11", "sanity12","sanity13","sanity14"};
+    oracle::occi::Statement* s[14] = {NULL};
+    oracle::occi::ResultSet* r[14] = {NULL};
+    oracle::occi::Connection* pooledConnection = NULL;
+    std::string sql[] =
+    {
+        "SELECT job_id from t_job where job_state in ('ACTIVE','READY','SUBMITTED','STAGING') ",
+        "SELECT COUNT(*) FROM t_file where job_id=:1 ",
+        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state in ('FAILED', 'FINISHED', 'CANCELED') ",
+        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state ='CANCELED' ",
+        "UPDATE t_job SET job_state = 'CANCELED', job_finished = :1, finish_time = :2, reason = :3 WHERE job_id = :4 ",
+        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state ='FINISHED' ",
+        "UPDATE t_job SET job_state = 'FINISHED', job_finished = :1, finish_time = :2 WHERE job_id = :3",
+        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state ='FAILED' ",
+        "UPDATE t_job SET job_state = 'FAILED', job_finished = :1, finish_time = :2, reason = :3 WHERE job_id = :4",
+        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state in ('STAGING', 'NOT_USED') ",
+        "UPDATE t_job SET job_state = 'FINISHEDDIRTY', job_finished = :1, finish_time = :2, reason = :3 WHERE job_id = :4",
+        "SELECT job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') ",
+        "SELECT COUNT(*) FROM t_file where job_id=:1 AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING')",
+        "UPDATE t_job SET job_state = 'ACTIVE', job_finished = NULL, finish_time = NULL, reason = NULL WHERE job_id = :1"
+    };
+
+    std::vector<std::string> ret;
+    std::vector<std::string> retRevert;
+    unsigned int numberOfFiles = 0;
+    unsigned int terminalState = 0;
+    unsigned int allFinished = 0;
+    unsigned int allFailed = 0;
+    unsigned int allCanceled = 0;
+    unsigned int allNotUsedStaging = 0;
+    unsigned int numberOfFilesRevert = 0;
+    std::string canceledMessage = "Transfer canceled by the user";
+    std::string failed = "One or more files failed. Please have a look at the details for more information";
+    time_t timed = time(NULL);
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return;
+
+            s[0] = conn->createStatement(sql[0], tag[0], pooledConnection);
+            r[0] = conn->createResultset(s[0], pooledConnection);
+            while (r[0]->next())
+                {
+                    ret.push_back(r[0]->getString(1));
+                }
+            conn->destroyResultset(s[0], r[0]);
+            conn->destroyStatement(s[0], tag[0], pooledConnection);
+            s[0] = NULL;
+            r[0] = NULL;
+
+            s[1] = conn->createStatement(sql[1], tag[1], pooledConnection);
+            s[2] = conn->createStatement(sql[2], tag[2], pooledConnection);
+            s[3] = conn->createStatement(sql[3], tag[3], pooledConnection);
+            s[4] = conn->createStatement(sql[4], tag[4], pooledConnection);
+            s[5] = conn->createStatement(sql[5], tag[5], pooledConnection);
+            s[6] = conn->createStatement(sql[6], tag[6], pooledConnection);
+            s[7] = conn->createStatement(sql[7], tag[7], pooledConnection);
+            s[8] = conn->createStatement(sql[8], tag[8], pooledConnection);
+            s[9] = conn->createStatement(sql[9], tag[9], pooledConnection);
+            s[10] = conn->createStatement(sql[10], tag[10], pooledConnection);
+
+            vector< std::string >::const_iterator it;
+            for (it = ret.begin(); it != ret.end(); ++it)
+                {
+
+                    s[1]->setString(1, *it);
+                    r[1] = conn->createResultset(s[1], pooledConnection);
+                    while (r[1]->next())
+                        {
+                            numberOfFiles = r[1]->getInt(1);
+                        }
+                    conn->destroyResultset(s[1], r[1]);
+                    r[1]=NULL;
+
+                    if(numberOfFiles > 0)
+                        {
+                            s[2]->setString(1, *it);
+                            r[2] = conn->createResultset(s[2], pooledConnection);
+                            while (r[2]->next())
+                                {
+                                    terminalState = r[2]->getInt(1);
+                                }
+                            conn->destroyResultset(s[2], r[2]);
+                            r[2] = NULL;
+
+                            if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
+                                {
+                                    s[3]->setString(1, *it);
+                                    r[3] = conn->createResultset(s[3], pooledConnection);
+                                    while (r[3]->next())
+                                        {
+                                            allCanceled = r[3]->getInt(1);
+                                        }
+                                    conn->destroyResultset(s[3], r[3]);
+                                    r[3] = NULL;
+
+                                    if(allCanceled > 0)
+                                        {
+                                            s[4]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+                                            s[4]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+                                            s[4]->setString(3,canceledMessage);
+                                            s[4]->setString(4, *it);
+                                            s[4]->executeUpdate();
+                                            conn->commit(pooledConnection);
+                                        }
+                                    else
+                                        {
+                                            s[5]->setString(1, *it);
+                                            r[5] = conn->createResultset(s[5], pooledConnection);
+                                            while (r[5]->next())
+                                                {
+                                                    allFinished = r[5]->getInt(1);
+                                                }
+                                            conn->destroyResultset(s[5], r[5]);
+                                            r[5] = NULL;
+
+                                            if(numberOfFiles == allFinished)  /*all files finished*/
+                                                {
+                                                    s[6]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+                                                    s[6]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+                                                    s[6]->setString(3, *it);
+                                                    s[6]->executeUpdate();
+                                                    conn->commit(pooledConnection);
+                                                }
+                                            else
+                                                {
+                                                    s[7]->setString(1, *it);
+                                                    r[7] = conn->createResultset(s[7], pooledConnection);
+                                                    while (r[7]->next())
+                                                        {
+                                                            allFailed = r[7]->getInt(1);
+                                                        }
+                                                    conn->destroyResultset(s[7], r[7]);
+                                                    r[7] = NULL;
+
+                                                    if(numberOfFiles == allFailed)
+                                                        {
+                                                            s[8]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+                                                            s[8]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+                                                            s[8]->setString(3,canceledMessage);
+                                                            s[8]->setString(4, *it);
+                                                            s[8]->executeUpdate();
+                                                            conn->commit(pooledConnection);
+                                                        }
+                                                    else
+                                                        {
+                                                            s[9]->setString(1, *it);
+                                                            r[9] = conn->createResultset(s[9], pooledConnection);
+                                                            while (r[9]->next())
+                                                                {
+                                                                    allNotUsedStaging = r[9]->getInt(1);
+                                                                }
+                                                            conn->destroyResultset(s[9], r[9]);
+                                                            r[9] = NULL;
+
+                                                            if(allNotUsedStaging == 0)
+                                                                {
+                                                                    s[10]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+                                                                    s[10]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+                                                                    s[10]->setString(3,failed);
+                                                                    s[10]->setString(4, *it);
+                                                                    s[10]->executeUpdate();
+                                                                    conn->commit(pooledConnection);
+                                                                }
+                                                            else
+                                                                {
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+
+                        }
+                    //reset
+                    numberOfFiles = 0;
+                }
+
+            conn->destroyStatement(s[1], tag[1], pooledConnection);
+            s[1] = NULL;
+            conn->destroyStatement(s[2], tag[2], pooledConnection);
+            s[2] = NULL;
+            conn->destroyStatement(s[3], tag[3], pooledConnection);
+            s[3] = NULL;
+            conn->destroyStatement(s[4], tag[4], pooledConnection);
+            s[4] = NULL;
+            conn->destroyStatement(s[5], tag[5], pooledConnection);
+            s[5] = NULL;
+            conn->destroyStatement(s[6], tag[6], pooledConnection);
+            s[6] = NULL;
+            conn->destroyStatement(s[7], tag[7], pooledConnection);
+            s[7] = NULL;
+            conn->destroyStatement(s[8], tag[8], pooledConnection);
+            s[8] = NULL;
+            conn->destroyStatement(s[9], tag[9], pooledConnection);
+            s[9] = NULL;
+            conn->destroyStatement(s[10], tag[10], pooledConnection);
+            s[10] = NULL;
+
+            s[11] = conn->createStatement(sql[11], tag[11], pooledConnection);
+            r[11] = conn->createResultset(s[11], pooledConnection);
+            while (r[11]->next())
+                {
+                    retRevert.push_back(r[11]->getString(1));
+                }
+            conn->destroyResultset(s[11], r[11]);
+            conn->destroyStatement(s[11], tag[11], pooledConnection);
+            s[11] = NULL;
+            r[11] = NULL;
+
+            s[12] = conn->createStatement(sql[12], tag[12], pooledConnection);
+            s[13] = conn->createStatement(sql[13], tag[13], pooledConnection);
+
+            vector< std::string >::const_iterator itRevert;
+            for (itRevert = retRevert.begin(); itRevert != retRevert.end(); ++itRevert)
+                {
+                    s[12]->setString(1, *itRevert);
+                    r[12] = conn->createResultset(s[12], pooledConnection);
+                    while (r[12]->next())
+                        {
+                            numberOfFilesRevert = r[12]->getInt(1);
+                        }
+                    conn->destroyResultset(s[12], r[12]);
+                    r[12] = NULL;
+
+                    if(numberOfFilesRevert > 0)
+                        {
+                            s[13]->setString(1, *itRevert);
+                            s[13]->executeUpdate();
+                            conn->commit(pooledConnection);
+                        }
+
+                    //reset
+                    numberOfFilesRevert = 0;
+                }
+
+            conn->destroyStatement(s[12], tag[12], pooledConnection);
+            conn->destroyStatement(s[13], tag[13], pooledConnection);
+            s[13] = NULL;
+            s[12] = NULL;
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            for(int index=0; index<14; index++)
+                {
+                    if(r[index] && s[index])
+                        conn->destroyResultset(s[index], r[index]);
+                }
+            for(int index2=0; index2<14; index2++)
+                {
+                    if (s[index2])
+                        conn->destroyStatement(s[index2], tag[index2], pooledConnection);
+                }
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+
+            for(int index=0; index<14; index++)
+                {
+                    if(r[index] && s[index])
+                        conn->destroyResultset(s[index], r[index]);
+                }
+            for(int index2=0; index2<14; index2++)
+                {
+                    if (s[index2])
+                        conn->destroyStatement(s[index2], tag[index2], pooledConnection);
+                }
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+
+    ret.clear();
+    retRevert.clear();
     conn->releasePooledConnection(pooledConnection);
 }
 

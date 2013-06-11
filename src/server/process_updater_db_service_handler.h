@@ -101,6 +101,8 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
+        static unsigned int counter = 0;
+
         while (stopThreads==false)   /*need to receive more than one messages at a time*/
             {
                 try
@@ -135,6 +137,13 @@ protected:
                                 jobs.clear();
                             }
                         messages.clear();
+
+                        counter++;
+                        if (counter == 120)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->checkSanityState();
+                                counter = 0;
+                            }
                         sleep(1);
                     }
                 catch (...)

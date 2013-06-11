@@ -249,7 +249,7 @@ static unsigned int adjustStreamsBasedOnSize(off_t sizeInBytes, unsigned int cur
         {
             return 1;
         }
-    else if(sizeInBytes <= 10485760) 
+    else if(sizeInBytes <= 10485760)
         {
             return 2;
         }
@@ -616,28 +616,32 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
         }
 }
 
-void myunexpected() {
-	   if (propagated == false) {
-	            propagated = true;
-	    errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
-	    errorMessage += " Source: " + source_url;
-	    errorMessage += " Dest: " + dest_url;
-	    logStream << fileManagement->timestamp() << errorMessage << '\n';
-	   
-	    abnormalTermination("FAILED", errorMessage, "Abort");
-	    }
+void myunexpected()
+{
+    if (propagated == false)
+        {
+            propagated = true;
+            errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
+            errorMessage += " Source: " + source_url;
+            errorMessage += " Dest: " + dest_url;
+            logStream << fileManagement->timestamp() << errorMessage << '\n';
+
+            abnormalTermination("FAILED", errorMessage, "Abort");
+        }
 }
-	
-void myterminate() {
-	   if (propagated == false) {
-	            propagated = true;
-	    errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
-	    errorMessage += " Source: " + source_url;
-	    errorMessage += " Dest: " + dest_url;   
-	    logStream << fileManagement->timestamp() << errorMessage << '\n';
-	
-	    abnormalTermination("FAILED", errorMessage, "Abort");
-	    }
+
+void myterminate()
+{
+    if (propagated == false)
+        {
+            propagated = true;
+            errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
+            errorMessage += " Source: " + source_url;
+            errorMessage += " Dest: " + dest_url;
+            logStream << fileManagement->timestamp() << errorMessage << '\n';
+
+            abnormalTermination("FAILED", errorMessage, "Abort");
+        }
 }
 
 
@@ -669,7 +673,7 @@ int main(int argc, char **argv)
     // register signal SIGINT & SIGUSR1signal handler
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
-    
+
     set_terminate(myterminate);
     set_unexpected(myunexpected);
 
@@ -816,8 +820,8 @@ int main(int argc, char **argv)
                     urlsFile.push_back(line);
                 }
             infile.close();
-	    if(readFile.length() > 0)
-            	unlink(readFile.c_str());
+            if(readFile.length() > 0)
+                unlink(readFile.c_str());
         }
 
     //cancelation point
@@ -1154,10 +1158,10 @@ int main(int argc, char **argv)
                                         goto stop;
                                     }
                             }
-			 else
-			    {
-			    	g_clear_error(&tmp_err); //don't do anything
-			    }
+                        else
+                            {
+                                g_clear_error(&tmp_err); //don't do anything
+                            }
                     }
 
                 unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, timeout);

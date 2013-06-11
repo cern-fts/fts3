@@ -362,9 +362,9 @@ int ExecuteProcess::execProcessShell()
             if (path == NULL || path[0] == '\0')
                 {
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to getenv PATH" << commit;
-            	    if(argv)
-                	delete [] argv;		    
-		    return -1;
+                    if(argv)
+                        delete [] argv;
+                    return -1;
                 }
 
             copy = (char *) malloc(strlen(path) + 1);

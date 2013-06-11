@@ -719,18 +719,19 @@ protected:
                                 urls.push_back(url.str());
                                 url.str("");
                             }
-			    
-			if(!tempUrl){
-                       		/** cleanup resources */
-                        	for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                            		delete *iter2;
-                        	jobs2.clear();
-                        	for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
-                            		delete *queueiter;
-                        	voQueues[vo].clear();
-                        	fileIds.clear();
-				return;
-			}
+
+                        if(!tempUrl)
+                            {
+                                /** cleanup resources */
+                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                                    delete *iter2;
+                                jobs2.clear();
+                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                                    delete *queueiter;
+                                voQueues[vo].clear();
+                                fileIds.clear();
+                                return;
+                            }
 
                         sourceSiteName = siteResolver.getSiteName(surl);
                         destSiteName = siteResolver.getSiteName(durl);
@@ -847,7 +848,7 @@ protected:
                                         if (ch != 0)
                                             {
                                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << proxy_file << commit;
-                                            }					
+                                            }
                                         uid_t pw_uid;
                                         pw_uid = name_to_uid();
                                         int checkChown = chown(proxy_file.c_str(), pw_uid, getgid());
@@ -968,15 +969,18 @@ protected:
                                                         for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
                                                             {
                                                                 struct message_updater msg;
-								if(std::string(job_id).length() < 38){
-                                                                	strcpy(msg.job_id, std::string(job_id).c_str());
-                                                                	msg.file_id = iterFileIds->first;
-                                                                	msg.process_id = (int) pr->getPid();
-                                                                	msg.timestamp = milliseconds_since_epoch();
-                                                                	ThreadSafeList::get_instance().push_back(msg);
-								}else{
-									FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
-								}
+                                                                if(std::string(job_id).length() < 38)
+                                                                    {
+                                                                        strcpy(msg.job_id, std::string(job_id).c_str());
+                                                                        msg.file_id = iterFileIds->first;
+                                                                        msg.process_id = (int) pr->getPid();
+                                                                        msg.timestamp = milliseconds_since_epoch();
+                                                                        ThreadSafeList::get_instance().push_back(msg);
+                                                                    }
+                                                                else
+                                                                    {
+                                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
+                                                                    }
                                                             }
                                                     }
                                                 delete pr;
@@ -1067,7 +1071,7 @@ protected:
 
                         /*force-fail stalled ACTIVE transfers*/
                         counter++;
-                        if (counter == 300)
+                        if (counter == 3) //change it to 300
                             {
                                 std::map<int, std::string> collectJobs;
                                 DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);

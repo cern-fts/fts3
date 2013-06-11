@@ -139,14 +139,17 @@ void SingleTrStateInstance::constructJSONMsg(struct message_state* state)
     json_message << "}";
 
     struct message_monitoring message;
-    
-    if(json_message.str().length() < 3000){
-    	strcpy(message.msg, std::string(json_message.str()).c_str());
-    	message.timestamp = milliseconds_since_epoch();
-    	runProducerMonitoring( message );
-    }else{
-        FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Message cannot be sent, check length: " << json_message.str().length() << commit;
-    }
+
+    if(json_message.str().length() < 3000)
+        {
+            strcpy(message.msg, std::string(json_message.str()).c_str());
+            message.timestamp = milliseconds_since_epoch();
+            runProducerMonitoring( message );
+        }
+    else
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "Message cannot be sent, check length: " << json_message.str().length() << commit;
+        }
 }
 
 

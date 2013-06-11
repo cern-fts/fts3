@@ -88,7 +88,7 @@ static int extractTimeout(std::string & str)
 
 MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
 {
-    char chname[MAXHOSTNAMELEN]={0};
+    char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
 }
@@ -538,7 +538,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
 
 
                                                      );
-    
+
 
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
@@ -5095,6 +5095,120 @@ std::vector<std::string> MySqlAPI::getAllShareOnlyCfgs()
         }
 
     return ret;
+}
+
+void MySqlAPI::checkSanityState()
+{
+    //TERMINAL STATES:  "FINISHED" FAILED" "CANCELED"
+    soci::session sql(*connectionPool);
+
+    std::vector<std::string> ret;
+    unsigned int numberOfFiles = 0;
+    unsigned int terminalState = 0;
+    unsigned int allFinished = 0;
+    unsigned int allFailed = 0;
+    unsigned int allCanceled = 0;
+    unsigned int allNotUsedStaging = 0;
+    unsigned int numberOfFilesRevert = 0;
+    std::string canceledMessage = "Transfer canceled by the user";
+    std::string failed = "One or more files failed. Please have a look at the details for more information";
+
+    try
+        {
+            soci::rowset<std::string> rs = (
+                                               sql.prepare <<
+                                               " select job_id from t_job where job_state in ('ACTIVE','READY','SUBMITTED','STAGING') "
+                                           );
+
+            for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
+                    if(numberOfFiles > 0)
+                        {
+                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state in ('FAILED', 'FINISHED', 'CANCELED') ", soci::use(*i), soci::into(terminalState);
+                            if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
+                                {
+                                    sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state ='CANCELED' ", soci::use(*i), soci::into(allCanceled);
+                                    if(allCanceled > 0)
+                                        {
+                                            sql.begin();
+                                            sql << "UPDATE t_job SET "
+                                                "    job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                "    reason = :canceledMessage "
+                                                "    WHERE job_id = :jobId ", soci::use(canceledMessage), soci::use(*i);
+                                            sql.commit();
+                                        }
+                                    else   //non canceled, check other states "FINISHED" FAILED"
+                                        {
+                                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state ='FINISHED' ", soci::use(*i), soci::into(allFinished);
+                                            if(numberOfFiles == allFinished)  /*all files finished*/
+                                                {
+                                                    sql.begin();
+                                                    sql << "UPDATE t_job SET "
+                                                        "    job_state = 'FINISHED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP() "
+                                                        "    WHERE job_id = :jobId", soci::use(*i);
+                                                    sql.commit();
+                                                }
+                                            else
+                                                {
+                                                    sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state ='FAILED' ", soci::use(*i), soci::into(allFailed);
+                                                    if(numberOfFiles == allFailed)  /*all files failed*/
+                                                        {
+                                                            sql.begin();
+                                                            sql << "UPDATE t_job SET "
+                                                                "    job_state = 'FAILED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                                "    reason = :failed "
+                                                                "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
+                                                            sql.commit();
+                                                        }
+                                                    else   //check for NOT_USED and STAGING STATES
+                                                        {
+                                                            sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId and file_state in ('STAGING', 'NOT_USED') ", soci::use(*i), soci::into(allNotUsedStaging);
+                                                            if(allNotUsedStaging == 0)
+                                                                {
+                                                                    sql << "UPDATE t_job SET "
+                                                                        "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                                        "    reason = :failed "
+                                                                        "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
+                                                                }
+                                                            else    //NOT_USED branch
+                                                                {
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                    //reset
+                    numberOfFiles = 0;
+                }
+
+            //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
+            soci::rowset<std::string> rs2 = (
+                                                sql.prepare <<
+                                                " select job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') "
+                                            );
+            for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
+                {
+                    sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
+                    if(numberOfFilesRevert > 0)
+                        {
+                            sql.begin();
+                            sql << "UPDATE t_job SET "
+                                "    job_state = 'ACTIVE', job_finished = NULL, finish_time = NULL, "
+                                "    reason = NULL "
+                                "    WHERE job_id = :jobId", soci::use(*i2);
+                            sql.commit();
+                        }
+                    //reset
+                    numberOfFilesRevert = 0;
+                }
+
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
 }
 
 // the class factories

@@ -75,15 +75,15 @@ static void setLimits()
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NPROC failed" << commit;
                 }
         }
-	
-           rlOpen.rlim_cur = 3072;
-           rlOpen.rlim_max = 3072;
-           if (setrlimit(RLIMIT_NOFILE, &rlOpen) == -1)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NOFILE failed" << commit;
-                }	
-	
-	
+
+    rlOpen.rlim_cur = 3072;
+    rlOpen.rlim_max = 3072;
+    if (setrlimit(RLIMIT_NOFILE, &rlOpen) == -1)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NOFILE failed" << commit;
+        }
+
+
 }
 
 static int fexists(const char *filename)
@@ -111,7 +111,7 @@ void _handle_sigint(int)
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     stopThreads = true;
-    boost::thread bt(taskTimer, 20);    
+    boost::thread bt(taskTimer, 20);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
     sleep(4);
     theServer().stop();
@@ -159,31 +159,31 @@ static bool checkUrlCopy()
     char *token=NULL;
     const char *path = getenv("PATH");
     if(path)
-    {
-    char *copy = (char *) malloc(strlen(path) + 1);
-    strcpy(copy, path);
-    token = strtok(copy, ":");
-    if(token)
-        pathV.push_back(std::string(token));
-    while ((token = strtok(0, ":")) != NULL)
         {
-            pathV.push_back(std::string(token));
-        }
-
-    for (iter = pathV.begin(); iter < pathV.end(); ++iter)
-        {
-            p = *iter + "/fts_url_copy";
-            if (fexists(p.c_str()) == 0)
+            char *copy = (char *) malloc(strlen(path) + 1);
+            strcpy(copy, path);
+            token = strtok(copy, ":");
+            if(token)
+                pathV.push_back(std::string(token));
+            while ((token = strtok(0, ":")) != NULL)
                 {
-                    free(copy);
-                    copy = NULL;
-                    pathV.clear();
-                    return true;
+                    pathV.push_back(std::string(token));
                 }
-        }
 
-    free(copy);
-    }
+            for (iter = pathV.begin(); iter < pathV.end(); ++iter)
+                {
+                    p = *iter + "/fts_url_copy";
+                    if (fexists(p.c_str()) == 0)
+                        {
+                            free(copy);
+                            copy = NULL;
+                            pathV.clear();
+                            return true;
+                        }
+                }
+
+            free(copy);
+        }
     return false;
 }
 
