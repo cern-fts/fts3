@@ -9673,21 +9673,16 @@ void OracleAPI::revertNotUsedFiles()
 void OracleAPI::checkSanityState()
 {
     std::string tag[] = {"sanity1", "sanity2", "sanity3", "sanity4", "sanity5", "sanity6", "sanity7", "sanity8", "sanity9", "sanity10", "sanity11", "sanity12","sanity13","sanity14"};
-    oracle::occi::Statement* s[14] = {NULL};
-    oracle::occi::ResultSet* r[14] = {NULL};
+    oracle::occi::Statement* s[9] = {NULL};
+    oracle::occi::ResultSet* r[9] = {NULL};
     oracle::occi::Connection* pooledConnection = NULL;
     std::string sql[] =
     {
         "SELECT job_id from t_job where job_state in ('ACTIVE','READY','SUBMITTED','STAGING') ",
-        "SELECT COUNT(*) FROM t_file where job_id=:1 ",
-        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state in ('FAILED', 'FINISHED', 'CANCELED') ",
-        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state ='CANCELED' ",
+        "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:1 ",
         "UPDATE t_job SET job_state = 'CANCELED', job_finished = :1, finish_time = :2, reason = :3 WHERE job_id = :4 ",
-        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state ='FINISHED' ",
         "UPDATE t_job SET job_state = 'FINISHED', job_finished = :1, finish_time = :2 WHERE job_id = :3",
-        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state ='FAILED' ",
         "UPDATE t_job SET job_state = 'FAILED', job_finished = :1, finish_time = :2, reason = :3 WHERE job_id = :4",
-        "SELECT COUNT(*) FROM t_file where job_id=:1 and file_state in ('STAGING', 'NOT_USED') ",
         "UPDATE t_job SET job_state = 'FINISHEDDIRTY', job_finished = :1, finish_time = :2, reason = :3 WHERE job_id = :4",
         "SELECT job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') ",
         "SELECT COUNT(*) FROM t_file where job_id=:1 AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING')",
@@ -9698,9 +9693,9 @@ void OracleAPI::checkSanityState()
     std::vector<std::string> retRevert;
     unsigned int numberOfFiles = 0;
     unsigned int terminalState = 0;
-    unsigned int allFinished = 0;
-    unsigned int allFailed = 0;
-    unsigned int allCanceled = 0;
+    int allFinished = 0;
+    int allFailed = 0;
+    int allCanceled = 0;
     unsigned int allNotUsedStaging = 0;
     unsigned int numberOfFilesRevert = 0;
     std::string canceledMessage = "Transfer canceled by the user";
@@ -9728,11 +9723,6 @@ void OracleAPI::checkSanityState()
             s[3] = conn->createStatement(sql[3], tag[3], pooledConnection);
             s[4] = conn->createStatement(sql[4], tag[4], pooledConnection);
             s[5] = conn->createStatement(sql[5], tag[5], pooledConnection);
-            s[6] = conn->createStatement(sql[6], tag[6], pooledConnection);
-            s[7] = conn->createStatement(sql[7], tag[7], pooledConnection);
-            s[8] = conn->createStatement(sql[8], tag[8], pooledConnection);
-            s[9] = conn->createStatement(sql[9], tag[9], pooledConnection);
-            s[10] = conn->createStatement(sql[10], tag[10], pooledConnection);
 
             vector< std::string >::const_iterator it;
             for (it = ret.begin(); it != ret.end(); ++it)
@@ -9749,97 +9739,49 @@ void OracleAPI::checkSanityState()
 
                     if(numberOfFiles > 0)
                         {
-                            s[2]->setString(1, *it);
-                            r[2] = conn->createResultset(s[2], pooledConnection);
-                            while (r[2]->next())
-                                {
-                                    terminalState = r[2]->getInt(1);
-                                }
-                            conn->destroyResultset(s[2], r[2]);
-                            r[2] = NULL;
+							countFileInTerminalStates(*it, allFinished, allCanceled, allFailed);
+							terminalState = allFinished + allCanceled + allFailed;
 
                             if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
                                 {
-                                    s[3]->setString(1, *it);
-                                    r[3] = conn->createResultset(s[3], pooledConnection);
-                                    while (r[3]->next())
-                                        {
-                                            allCanceled = r[3]->getInt(1);
-                                        }
-                                    conn->destroyResultset(s[3], r[3]);
-                                    r[3] = NULL;
-
                                     if(allCanceled > 0)
                                         {
-                                            s[4]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
-                                            s[4]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
-                                            s[4]->setString(3,canceledMessage);
-                                            s[4]->setString(4, *it);
-                                            s[4]->executeUpdate();
+                                            s[2]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+                                            s[2]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+                                            s[2]->setString(3,canceledMessage);
+                                            s[2]->setString(4, *it);
+                                            s[2]->executeUpdate();
                                             conn->commit(pooledConnection);
                                         }
                                     else
                                         {
-                                            s[5]->setString(1, *it);
-                                            r[5] = conn->createResultset(s[5], pooledConnection);
-                                            while (r[5]->next())
+                                           if(numberOfFiles == allFinished)  /*all files finished*/
                                                 {
-                                                    allFinished = r[5]->getInt(1);
-                                                }
-                                            conn->destroyResultset(s[5], r[5]);
-                                            r[5] = NULL;
-
-                                            if(numberOfFiles == allFinished)  /*all files finished*/
-                                                {
-                                                    s[6]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
-                                                    s[6]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
-                                                    s[6]->setString(3, *it);
-                                                    s[6]->executeUpdate();
+                                                    s[3]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+                                                    s[3]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+                                                    s[3]->setString(3, *it);
+                                                    s[3]->executeUpdate();
                                                     conn->commit(pooledConnection);
                                                 }
                                             else
                                                 {
-                                                    s[7]->setString(1, *it);
-                                                    r[7] = conn->createResultset(s[7], pooledConnection);
-                                                    while (r[7]->next())
-                                                        {
-                                                            allFailed = r[7]->getInt(1);
-                                                        }
-                                                    conn->destroyResultset(s[7], r[7]);
-                                                    r[7] = NULL;
-
                                                     if(numberOfFiles == allFailed)
                                                         {
-                                                            s[8]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
-                                                            s[8]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
-                                                            s[8]->setString(3,canceledMessage);
-                                                            s[8]->setString(4, *it);
-                                                            s[8]->executeUpdate();
+                                                            s[4]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+                                                            s[4]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+                                                            s[4]->setString(3,canceledMessage);
+                                                            s[4]->setString(4, *it);
+                                                            s[4]->executeUpdate();
                                                             conn->commit(pooledConnection);
                                                         }
                                                     else
                                                         {
-                                                            s[9]->setString(1, *it);
-                                                            r[9] = conn->createResultset(s[9], pooledConnection);
-                                                            while (r[9]->next())
-                                                                {
-                                                                    allNotUsedStaging = r[9]->getInt(1);
-                                                                }
-                                                            conn->destroyResultset(s[9], r[9]);
-                                                            r[9] = NULL;
-
-                                                            if(allNotUsedStaging == 0)
-                                                                {
-                                                                    s[10]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
-                                                                    s[10]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
-                                                                    s[10]->setString(3,failed);
-                                                                    s[10]->setString(4, *it);
-                                                                    s[10]->executeUpdate();
-                                                                    conn->commit(pooledConnection);
-                                                                }
-                                                            else
-                                                                {
-                                                                }
+															s[5]->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
+															s[5]->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv()));
+															s[5]->setString(3,failed);
+															s[5]->setString(4, *it);
+															s[5]->executeUpdate();
+															conn->commit(pooledConnection);
                                                         }
                                                 }
                                         }
@@ -9860,47 +9802,37 @@ void OracleAPI::checkSanityState()
             s[4] = NULL;
             conn->destroyStatement(s[5], tag[5], pooledConnection);
             s[5] = NULL;
+
+            s[6] = conn->createStatement(sql[6], tag[6], pooledConnection);
+            r[6] = conn->createResultset(s[6], pooledConnection);
+            while (r[6]->next())
+                {
+                    retRevert.push_back(r[6]->getString(1));
+                }
+            conn->destroyResultset(s[6], r[6]);
             conn->destroyStatement(s[6], tag[6], pooledConnection);
             s[6] = NULL;
-            conn->destroyStatement(s[7], tag[7], pooledConnection);
-            s[7] = NULL;
-            conn->destroyStatement(s[8], tag[8], pooledConnection);
-            s[8] = NULL;
-            conn->destroyStatement(s[9], tag[9], pooledConnection);
-            s[9] = NULL;
-            conn->destroyStatement(s[10], tag[10], pooledConnection);
-            s[10] = NULL;
+            r[6] = NULL;
 
-            s[11] = conn->createStatement(sql[11], tag[11], pooledConnection);
-            r[11] = conn->createResultset(s[11], pooledConnection);
-            while (r[11]->next())
-                {
-                    retRevert.push_back(r[11]->getString(1));
-                }
-            conn->destroyResultset(s[11], r[11]);
-            conn->destroyStatement(s[11], tag[11], pooledConnection);
-            s[11] = NULL;
-            r[11] = NULL;
-
-            s[12] = conn->createStatement(sql[12], tag[12], pooledConnection);
-            s[13] = conn->createStatement(sql[13], tag[13], pooledConnection);
+            s[7] = conn->createStatement(sql[7], tag[7], pooledConnection);
+            s[8] = conn->createStatement(sql[8], tag[8], pooledConnection);
 
             vector< std::string >::const_iterator itRevert;
             for (itRevert = retRevert.begin(); itRevert != retRevert.end(); ++itRevert)
                 {
-                    s[12]->setString(1, *itRevert);
-                    r[12] = conn->createResultset(s[12], pooledConnection);
-                    while (r[12]->next())
+                    s[7]->setString(1, *itRevert);
+                    r[7] = conn->createResultset(s[7], pooledConnection);
+                    while (r[7]->next())
                         {
-                            numberOfFilesRevert = r[12]->getInt(1);
+                            numberOfFilesRevert = r[7]->getInt(1);
                         }
-                    conn->destroyResultset(s[12], r[12]);
+                    conn->destroyResultset(s[7], r[7]);
                     r[12] = NULL;
 
                     if(numberOfFilesRevert > 0)
                         {
-                            s[13]->setString(1, *itRevert);
-                            s[13]->executeUpdate();
+                            s[8]->setString(1, *itRevert);
+                            s[8]->executeUpdate();
                             conn->commit(pooledConnection);
                         }
 
@@ -9908,20 +9840,20 @@ void OracleAPI::checkSanityState()
                     numberOfFilesRevert = 0;
                 }
 
-            conn->destroyStatement(s[12], tag[12], pooledConnection);
-            conn->destroyStatement(s[13], tag[13], pooledConnection);
-            s[13] = NULL;
-            s[12] = NULL;
+            conn->destroyStatement(s[7], tag[7], pooledConnection);
+            conn->destroyStatement(s[8], tag[8], pooledConnection);
+            s[7] = NULL;
+            s[8] = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
             conn->rollback(pooledConnection);
-            for(int index=0; index<14; index++)
+            for(int index=0; index<9; index++)
                 {
                     if(r[index] && s[index])
                         conn->destroyResultset(s[index], r[index]);
                 }
-            for(int index2=0; index2<14; index2++)
+            for(int index2=0; index2<9; index2++)
                 {
                     if (s[index2])
                         conn->destroyStatement(s[index2], tag[index2], pooledConnection);
@@ -9932,12 +9864,12 @@ void OracleAPI::checkSanityState()
         {
             conn->rollback(pooledConnection);
 
-            for(int index=0; index<14; index++)
+            for(int index=0; index<9; index++)
                 {
                     if(r[index] && s[index])
                         conn->destroyResultset(s[index], r[index]);
                 }
-            for(int index2=0; index2<14; index2++)
+            for(int index2=0; index2<9; index2++)
                 {
                     if (s[index2])
                         conn->destroyStatement(s[index2], tag[index2], pooledConnection);
