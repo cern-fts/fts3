@@ -3,6 +3,8 @@
 
 %global _hardened_build 1
 
+%global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
+
 Name: fts
 Version: 3.0.1
 Release: 1%{?dist}
