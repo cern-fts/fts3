@@ -5123,7 +5123,7 @@ void MySqlAPI::checkSanityState()
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
+                    sql << "SELECT COUNT(DISTINCT file_index) FROM t_file where job_id=:jobId ", soci::use(*i), soci::into(numberOfFiles);
 
                     if(numberOfFiles > 0)
                         {
@@ -5230,7 +5230,7 @@ void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& 
     		sql <<
     			" select count(distinct f1.file_index) "
     			" from t_file f1 "
-    			" where job_id = :jobId "
+    			" where f1.job_id = :jobId "
     			"	and NOT EXISTS ( "
     			"		select null "
     			"		from t_file f2 "
@@ -5244,9 +5244,9 @@ void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& 
     		;
 
     		sql <<
-    			" select count (distinct f1.file_index) "
+    			" select count(distinct f1.file_index) "
 				" from t_file f1 "
-				" where job_id = :jobId "
+				" where f1.job_id = :jobId "
 				"	and NOT EXISTS ( "
 				"		select null "
 				"		from t_file f2 "
