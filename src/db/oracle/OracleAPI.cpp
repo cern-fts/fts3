@@ -9827,7 +9827,7 @@ void OracleAPI::checkSanityState()
                             numberOfFilesRevert = r[7]->getInt(1);
                         }
                     conn->destroyResultset(s[7], r[7]);
-                    r[12] = NULL;
+                    r[7] = NULL;
 
                     if(numberOfFilesRevert > 0)
                         {
