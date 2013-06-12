@@ -54,7 +54,7 @@ public:
      *
      * @param dn - client's DN
      */
-    StandaloneCfg(string dn) : Configuration(dn) {}
+    StandaloneCfg(string dn) : Configuration(dn), active(true) {}
 
     /**
      * Constructor. Retrieves the configuration data from the given CfgParser.
