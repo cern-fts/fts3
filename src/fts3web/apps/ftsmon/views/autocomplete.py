@@ -2,12 +2,17 @@ import datetime
 import simplejson
 from django.db.models import Q
 from django.http import HttpResponse
-from ftsweb.models import Job, File
+from ftsweb.models import Job, File, JobArchive, FileArchive
 
 
 
-def uniqueSources(httpRequest):
-    query = File.objects.values('source_se').distinct('source_se')
+def uniqueSources(httpRequest, archive):
+    if archive:
+        model = FileArchive
+    else:
+        model = File
+        
+    query = model.objects.values('source_se').distinct('source_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(source_se__icontains = httpRequest.GET['term'])
     
@@ -18,8 +23,13 @@ def uniqueSources(httpRequest):
 
 
 
-def uniqueDestinations(httpRequest):    
-    query = File.objects.values('dest_se').distinct('dest_se')
+def uniqueDestinations(httpRequest, archive):
+    if archive:
+        model = FileArchive
+    else:
+        model = File
+    
+    query = model.objects.values('dest_se').distinct('dest_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(dest_se__icontains = httpRequest.GET['term'])
     
@@ -30,8 +40,13 @@ def uniqueDestinations(httpRequest):
 
 
 
-def uniqueVos(httpRequest):    
-    query = Job.objects.values('vo_name').distinct('vo_name')
+def uniqueVos(httpRequest, archive):
+    if archive:
+        model = JobArchive
+    else:
+        model = Job
+    
+    query = model.objects.values('vo_name').distinct('vo_name')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(vo_name__icontains = httpRequest.GET['term'])
     

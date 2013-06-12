@@ -3,7 +3,7 @@ from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from ftsmon import forms
-from ftsweb.models import Job, File
+from ftsweb.models import Job, File, JobArchive, FileArchive
 import datetime
 import json
 import time
@@ -49,52 +49,52 @@ class MetadataFilter:
     
 
 
-def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING'],
-             additionalTitle = None):
+def setupFilters(filterForm):
+    # Default values
+    filters = {'state': None,
+               'hours': None,
+               'vo': None,
+               'source_se': None,
+               'dest_se': None,
+               'metadata': None
+              }
     
-    # If jobId is in the request, redirect directly
-    if httpRequest.method == 'GET' and 'jobId' in httpRequest.GET:
-        return redirect(to = "jobs/%s" % httpRequest.GET['jobId'])
+    # Process filter form
+    if filterForm.is_valid():
+        if filterForm['time_window'].value():
+            filters['hours'] = int(filterForm['time_window'].value())
+            
+        for key in ('state', 'vo', 'source_se', 'dest_se', 'metadata'):
+            if filterForm[key].value():
+                filters[key] = filterForm[key].value()
+    
+    return filters
 
-    # Initialize forms
-    searchJobForm = forms.JobSearchForm(httpRequest.GET)
-    filterForm    = forms.FilterForm(httpRequest.GET)
+
+
+def jobListing(httpRequest, jobModel = Job, filters = None):
+    # Initial query
+    jobs = jobModel.objects.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'})
     
     # Time filter
-    hours = 12
-    if filterForm.is_valid() and filterForm['time_window'].value():
-        hours = int(filterForm['time_window'].value())
-    notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = hours)
-        
-    if additionalTitle is None:
-        additionalTitle = '(from the last %dh)' % (hours)
-        
-    # Initial query
-    jobs = Job.objects.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))
-    jobs = jobs.extra(select = {'nullFinished': 'coalesce(t_job.finish_time, CURRENT_TIMESTAMP)'})
+    if filters['hours']:
+        notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['hours'])
+        jobs = jobs.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))
     
-    # Filter
-    metadataFilter = None
-    if filterForm.is_valid():
-        if filterForm['state'].value():
-            states = filterForm['state'].value()
+    # Filters
+    if filters['vo']:
+        jobs = jobs.filter(vo_name = filters['vo'])
         
-        if filterForm['vo'].value():
-            jobs = jobs.filter(vo_name = filterForm['vo'].value())
-        
-        if filterForm['source_se'].value():
-            jobs = jobs.filter(file__source_se = filterForm['source_se'].value())\
-                       .values('job_id').annotate(nSourceMatches = Count('file__file_id'))
+    if filters['source_se']:
+        jobs = jobs.filter(file__source_se = filters['source_se'])\
+                   .values('job_id').annotate(nSourceMatches = Count('file__file_id'))
 
-        if filterForm['dest_se'].value():
-            jobs = jobs.filter(file__dest_se = filterForm['dest_se'].value())\
-                       .values('job_id').annotate(nDestMatches = Count('file__file_id'))
-                       
-        if filterForm['metadata'].value():
-            metadataFilter = MetadataFilter(filterForm['metadata'].value())
-            
-                        
-    jobs = jobs.filter(job_state__in = states)
+    if filters['dest_se']:
+        jobs = jobs.filter(file__dest_se = filters['dest_se'])\
+                   .values('job_id').annotate(nDestMatches = Count('file__file_id'))
+
+    if filters['state']:
+        jobs = jobs.filter(job_state__in = filters['state'])
     
     # Push needed fields
     jobs = jobs.values('job_id', 'submit_host', 'submit_time', 'job_state', 'finish_time',
@@ -105,21 +105,57 @@ def jobIndex(httpRequest, states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANC
     jobs = jobs.order_by('-nullFinished', '-submit_time')[:1000]
     
     # Wrap with a metadata filterer
-    if metadataFilter:
+    if filters['metadata']:
+        metadataFilter = MetadataFilter(filters['metadata'])
         jobs = filter(metadataFilter, jobs)
 
-    # Paginate
+    # Return list
+    return jobs
+
+
+
+def jobIndex(httpRequest):
+    states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING']
+    
+    # If jobId is in the request, redirect directly
+    if httpRequest.method == 'GET' and 'jobId' in httpRequest.GET:
+        return redirect(to = "jobs/%s" % httpRequest.GET['jobId'])
+    
+    filterForm = forms.FilterForm(httpRequest.GET)
+    filters = setupFilters(filterForm)
+    
+    # Set some defaults for filters if they are empty
+    if not filters['hours']:
+        filters['hours'] = 12;
+    if not filters['state']:
+        filters['state'] = states
+    
+    jobs = jobListing(httpRequest, filters = filters)    
     paginator = Paginator(jobs, 50)
-        
-    # Render
     return render(httpRequest, 'jobindex.html',
                   {'filterForm': filterForm,
                    'jobs':       _getPage(paginator, httpRequest),
                    'paginator':  paginator,
-                   'additionalTitle': additionalTitle,
+                   'hours': filters['hours'],
                    'request':    httpRequest})
-  
-  
+
+
+
+def archiveJobIndex(httpRequest):
+    filterForm = forms.FilterForm(httpRequest.GET)
+    filters = setupFilters(filterForm)
+    filters['hours'] = None
+    
+    jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)    
+    paginator = Paginator(jobs, 50)
+    return render(httpRequest, 'jobarchive.html',
+                  {'filterForm': filterForm,
+                   'jobs':       _getPage(paginator, httpRequest),
+                   'paginator':  paginator,
+                   'additionalTitle': '',
+                   'request':    httpRequest})
+
+
 
 def queue(httpRequest):
   transfers = File.objects.filter(file_state__in = ['SUBMITTED', 'READY'])
@@ -132,11 +168,24 @@ def queue(httpRequest):
 
 
 
-def jobDetails(httpRequest, jobId):
+def _getJob(jobModel, fileModel, jobId):
     try:
-        job = Job.objects.get(job_id = jobId)
-        files = File.objects.filter(job = jobId)
-    except Job.DoesNotExist:
+        job   = jobModel.objects.get(job_id = jobId)
+        files = fileModel.objects.filter(job = jobId)
+        return (job, files)
+    except jobModel.DoesNotExist:
+        return (None, None)
+
+
+
+def jobDetails(httpRequest, jobId):
+    # Try t_job and t_file first
+    (job, files) = _getJob(Job, File, jobId)
+    # Otherwise, try the archive
+    if not job:
+        (job, files) = _getJob(JobArchive, FileArchive, jobId)
+        
+    if not job:
         raise Http404
     
     return render(httpRequest, 'jobdetails.html',

@@ -6,7 +6,7 @@
   {% else %}
   <div id="filters">
   {% endif %}
-    <form method="GET" action="{% url ftsmon.views.jobIndex %}">
+    <form method="GET">
       <p>
         <label for="filter_source_se">Source SE:</label>
         <input type="text" id="filter_source_se" name="source_se" class="text_field"
@@ -46,6 +46,7 @@
           </span>
         {% endif %}
       </p>
+      {% if not noTime %}
       <p>
         <label for="filter_timewindow">Time window:</label>
         <input type="text" id="filter_timewindow" name="time_window" class="text_field"
@@ -58,21 +59,22 @@
           </span>
         {% endif %}
       </p>
+      {% endif %}
       <p>
         <input type="submit"/>
       </p>      
     </form>
   </div>
   <p>
-    <a href="#" onclick="javascript:clearTimeout(autoRefresh); $('#filters').toggle('slide', {'direction':'up'})">
+    <a href="#" onclick="javascript:$('#filters').toggle('slide', {'direction':'up'}); clearTimeout(autoRefresh);">
       [Filters]
     </a>
   </p>
   
   <script type="text/javascript">
-  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources %}"});
-  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations %}"});
-  $("#filter_vo").autocomplete({source: "{% url ftsmon.views.uniqueVos %}"});
+  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources archive %}"});
+  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations archive %}"});
+  $("#filter_vo").autocomplete({source: "{% url ftsmon.views.uniqueVos archive %}"});
   
   function split(val) {
 	  return val.split(/,\s*/);

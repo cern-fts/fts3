@@ -9,9 +9,12 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^stats$', 'statistics'),
     url(r'^configuration$', 'configurationAudit'),
     
-    url(r'^json/uniqueSources', 'uniqueSources'),
-    url(r'^json/uniqueDestinations', 'uniqueDestinations'),
-    url(r'^json/uniqueVos', 'uniqueVos'),
+    url(r'^json/uniqueSources/$', 'uniqueSources', {'archive': None}),
+    url(r'^json/uniqueDestinations/$', 'uniqueDestinations', {'archive': None}),
+    url(r'^json/uniqueVos/$', 'uniqueVos', {'archive': None}),
+    url(r'^json/uniqueSources/(?P<archive>[a-z]*?)$', 'uniqueSources'),
+    url(r'^json/uniqueDestinations/(?P<archive>[a-z]*)$', 'uniqueDestinations'),
+    url(r'^json/uniqueVos/(?P<archive>[a-z]*)$', 'uniqueVos'),
     
     url(r'^plot/pie', 'pie'),
     
@@ -19,5 +22,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^optimizer/detailed$', 'optimizerDetailed'),
     
     url(r'^errors/$', 'showErrors'),
-    url(r'^errors/(?P<reason>.+)$', 'transfersWithError')
+    url(r'^errors/(?P<reason>.+)$', 'transfersWithError'),
+    
+    url(r'archive/$', 'archiveJobIndex')
 )

@@ -1,7 +1,9 @@
 from django.db import models
 from settings.database import DATABASES
 
-class Job(models.Model):
+
+
+class JobBase(models.Model):
     job_id          = models.CharField(max_length = 36, primary_key = True)
     job_state       = models.CharField(max_length = 32)
     source_se       = models.CharField(max_length = 255)
@@ -38,16 +40,27 @@ class Job(models.Model):
     retry_delay     = models.IntegerField()
     
     class Meta:
-        db_table = 't_job'
+        abstract = True
         
     def isFinished(self):
         return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 
 
 
-class File(models.Model):
+class Job(JobBase):
+    class Meta:
+        db_table = 't_job'
+
+
+
+class JobArchive(JobBase):
+    class Meta:
+        db_table = 't_job_backup'
+
+
+
+class FileBase(models.Model):
     file_id      = models.IntegerField(primary_key = True)
-    job          = models.ForeignKey('Job', db_column = 'job_id')
     source_se    = models.CharField(max_length = 255)
     dest_se      = models.CharField(max_length = 255)
     symbolicName = models.CharField(max_length = 255)
@@ -83,7 +96,21 @@ class File(models.Model):
     log_debug       = models.IntegerField(db_column = 't_log_file_debug')
     
     class Meta:
-        db_table = 't_file'
+        abstract = True
+
+
+
+class File(FileBase):
+    job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+')
+    class Meta:
+        db_table = 't_file' 
+
+
+
+class FileArchive(FileBase):
+    job = models.ForeignKey('JobArchive', db_column = 'job_id', related_name = '+')        
+    class Meta:
+        db_table = 't_file_backup'
 
 
 
@@ -118,6 +145,7 @@ class Optimize(models.Model):
     
     class Meta:
         db_table = 't_optimize'
+
 
 
 class OptimizerEvolution(models.Model):

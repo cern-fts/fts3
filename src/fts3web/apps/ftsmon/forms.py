@@ -70,7 +70,7 @@ class FilterForm(forms.Form):
     state       = StateField(required = False)
     vo          = forms.CharField(required = False)
     metadata    = JsonField(required = False)
-    time_window = forms.IntegerField(required = False) 
+    time_window = forms.IntegerField(required = False)
     
     def is_empty(self):
         if self['source_se'].data or self['dest_se'].data or\
