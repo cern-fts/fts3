@@ -82,17 +82,6 @@ Requires(preun): initscripts
 #Requires: emi-version (from EMI3)
 #Requires: fetch-crl3 (metapackage)
 
-
-%package libs
-Summary: File Transfer Service version 3 libs
-Group: System Environment/Libraries
-Requires: python%{?_isa}
-
-%package client
-Summary: File Transfer Service version 3 client
-Group: Applications/Internet
-Requires: fts-libs%{?_isa} = %{version}-%{release}
-
 %description server
 The FTS server is a service which accepts transfer jobs,
 it exposes both a SOAP and a RESTful interface. The File
@@ -102,11 +91,29 @@ VOMS based. Furthermore, the service provides a mechanism that
 dynamically adjust transfer parameters for optimal bandwidth
 utilization and allows for configuring so called VO-shares.
 
+%package libs
+Summary: File Transfer Service version 3 libs
+Group: System Environment/Libraries
+
 %description libs
 FTS common libraries used across the client and
 server. This includes among others: configuration
 parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
+
+%package python
+Summary: File Transfer Service version 3 libs
+Group: System Environment/Libraries
+Requires: fts-libs%{?_isa} = %{version}-%{release}
+Requires: python%{?_isa}
+
+%description python
+FTS python bindings
+
+%package client
+Summary: File Transfer Service version 3 client
+Group: Applications/Internet
+Requires: fts-libs%{?_isa} = %{version}-%{release}
 
 %description client
 A set of command line tools for submitting, querying
@@ -148,6 +155,10 @@ exit 0
 %post libs -p /sbin/ldconfig
 
 %postun libs -p /sbin/ldconfig
+
+%post python -p /sbin/ldconfig
+
+%postun python -p /sbin/ldconfig
 
 %post devel -p /sbin/ldconfig
 
@@ -250,10 +261,6 @@ rm -rf %{buildroot}
 
 %files libs
 %defattr(-,root,root,-)
-%dir %attr(0755,fts3,root) %{python_sitearch}/fts
-%{python_sitearch}/fts/*.py*
-%{python_sitearch}/fts/ftsdb.so*
-%{python_sitearch}/fts/libftspython.so*
 %{_libdir}/libfts_common.so.*
 %{_libdir}/libfts_config.so.*
 %{_libdir}/libfts_infosys.so.*
@@ -269,6 +276,13 @@ rm -rf %{buildroot}
 %{_libdir}/libfts_delegation_api_cpp.so.*
 %doc README
 %doc LICENSE
+
+%files python
+%defattr(-,root,root,-)
+%dir %attr(0755,fts3,root) %{python_sitearch}/fts
+%{python_sitearch}/fts/*.py*
+%{python_sitearch}/fts/ftsdb.so*
+%{python_sitearch}/fts/libftspython.so*
 
 %files devel
 %defattr(-,root,root,-)
