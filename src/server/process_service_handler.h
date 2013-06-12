@@ -358,7 +358,7 @@ protected:
                                                         protocolExists = resolver.resolve();
                                                         if (protocolExists)
                                                             {
-
+                                                                manualConfigExists = true;
                                                                 protocol.NOSTREAMS = resolver.getNoStreams();
                                                                 protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
                                                                 protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
@@ -417,6 +417,11 @@ protected:
                                                 if (debug == true)
                                                     {
                                                         params.append(" -F ");
+                                                    }
+
+                                                if (manualConfigExists)
+                                                    {
+                                                        params.append(" -N ");
                                                     }
 
                                                 if (proxy_file.length() > 0)
@@ -481,6 +486,11 @@ protected:
                                                                 params.append(" -e ");
                                                                 params.append(to_string(protocol.NOSTREAMS));
                                                             }
+                                                        else
+                                                            {
+                                                                params.append(" -e ");
+                                                                params.append(to_string(DEFAULT_NOSTREAMS));
+                                                            }
                                                     }
 
                                                 if (optimize && manualConfigExists == false)
@@ -495,6 +505,11 @@ protected:
                                                                 params.append(" -f ");
                                                                 params.append(to_string(protocol.TCP_BUFFER_SIZE));
                                                             }
+                                                        else
+                                                            {
+                                                                params.append(" -f ");
+                                                                params.append(to_string(DEFAULT_BUFFSIZE));
+                                                            }
                                                     }
 
                                                 if (optimize && manualConfigExists == false)
@@ -508,6 +523,11 @@ protected:
                                                             {
                                                                 params.append(" -h ");
                                                                 params.append(to_string(protocol.URLCOPY_TX_TO));
+                                                            }
+                                                        else
+                                                            {
+                                                                params.append(" -h ");
+                                                                params.append(to_string(DEFAULT_TIMEOUT));
                                                             }
                                                     }
                                                 if (std::string(temp->SOURCE_SPACE_TOKEN).length() > 0)
@@ -757,7 +777,10 @@ protected:
                                 delete opt_config;
                                 opt_config = NULL;
                             }
-
+                        else
+                            {
+                                manualConfigExists = true;
+                            }
 
                         FileTransferScheduler scheduler(tempUrl, cfgs);
                         if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
@@ -774,7 +797,7 @@ protected:
                                         protocolExists = resolver.resolve();
                                         if (protocolExists)
                                             {
-
+                                                manualConfigExists = true;
                                                 protocol.NOSTREAMS = resolver.getNoStreams();
                                                 protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
                                                 protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
@@ -839,6 +862,12 @@ protected:
                                         params.append(" -F ");
                                     }
 
+                                if (manualConfigExists)
+                                    {
+                                        params.append(" -N ");
+                                    }
+
+
                                 if (proxy_file.length() > 0)
                                     {
                                         params.append(" -proxy ");
@@ -889,6 +918,11 @@ protected:
                                                 params.append(" -e ");
                                                 params.append(to_string(protocol.NOSTREAMS));
                                             }
+                                        else
+                                            {
+                                                params.append(" -e ");
+                                                params.append(to_string(DEFAULT_NOSTREAMS));
+                                            }
                                     }
                                 if (optimize && manualConfigExists == false)
                                     {
@@ -902,6 +936,11 @@ protected:
                                                 params.append(" -f ");
                                                 params.append(to_string(protocol.TCP_BUFFER_SIZE));
                                             }
+                                        else
+                                            {
+                                                params.append(" -f ");
+                                                params.append(to_string(DEFAULT_BUFFSIZE));
+                                            }
                                     }
                                 if (optimize && manualConfigExists == false)
                                     {
@@ -914,6 +953,11 @@ protected:
                                             {
                                                 params.append(" -h ");
                                                 params.append(to_string(protocol.URLCOPY_TX_TO));
+                                            }
+                                        else
+                                            {
+                                                params.append(" -h ");
+                                                params.append(to_string(DEFAULT_TIMEOUT));
                                             }
                                     }
                                 if (std::string(source_space_token).length() > 0)

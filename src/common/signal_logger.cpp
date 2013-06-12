@@ -158,5 +158,5 @@ void SignalLogger::logSignal(int signum)
             log_stack(signum);
         }
     if(signum == 32767)
-    	log_stack(signum);
+        log_stack(signum);
 }

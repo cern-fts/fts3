@@ -125,6 +125,7 @@ static std::string file_Metadata("");
 static std::string job_Metadata(""); //a
 static std::string globalErrorMessage("");
 static std::string infosys("");
+static bool manualConfig = false;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
@@ -680,6 +681,8 @@ int main(int argc, char **argv)
     for (register int i(1); i < argc; ++i)
         {
             std::string temp(argv[i]);
+            if (temp.compare("-N") == 0)
+                manualConfig = true;
             if (temp.compare("-M") == 0)
                 infosys = std::string(argv[i + 1]);
             if (temp.compare("-L") == 0)
@@ -1165,14 +1168,16 @@ int main(int argc, char **argv)
                     }
 
                 unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, timeout);
-                timeout = experimentalTimeout;
+                if(!manualConfig)
+                    timeout = experimentalTimeout;
                 gfalt_set_timeout(params, timeout, NULL);
                 timeout_to_string = to_string<unsigned int>(timeout, std::dec);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
                 log << fileManagement->timestamp() << "INFO Timeout:" << timeout << '\n'; //h
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, nbstreams);
-                nbstreams = experimentalNstreams;
+                if(!manualConfig)
+                    nbstreams = experimentalNstreams;
                 gfalt_set_nbstreams(params, experimentalNstreams, NULL);
                 nstream_to_string = to_string<unsigned int>(experimentalNstreams, std::dec);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());

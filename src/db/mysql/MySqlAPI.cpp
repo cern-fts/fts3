@@ -5127,8 +5127,8 @@ void MySqlAPI::checkSanityState()
 
                     if(numberOfFiles > 0)
                         {
-                    		countFileInTerminalStates(*i, allFinished, allCanceled, allFailed);
-                    		terminalState = allFinished + allCanceled + allFailed;
+                            countFileInTerminalStates(*i, allFinished, allCanceled, allFailed);
+                            terminalState = allFinished + allCanceled + allFailed;
 
                             if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
                                 {
@@ -5164,10 +5164,10 @@ void MySqlAPI::checkSanityState()
                                                         }
                                                     else   // otherwise it is FINISHEDDIRTY
                                                         {
-															sql << "UPDATE t_job SET "
-																"    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
-																"    reason = :failed "
-																"    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
+                                                            sql << "UPDATE t_job SET "
+                                                                "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                                                                "    reason = :failed "
+                                                                "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
                                                         }
                                                 }
                                         }
@@ -5211,47 +5211,47 @@ void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& 
 
     try
         {
-    		sql <<
-    			" select count(*)  "
+            sql <<
+                " select count(*)  "
                 " from t_file "
                 " where job_id = :jobId "
                 "	and  file_state = 'FINISHED' ",
                 soci::use(jobId),
                 soci::into(finished)
-    		;
+                ;
 
-    		sql <<
-    			" select count(distinct f1.file_index) "
-    			" from t_file f1 "
-    			" where f1.job_id = :jobId "
-    			"	and NOT EXISTS ( "
-    			"		select null "
-    			"		from t_file f2 "
-    			"		where job_id = :jobId "
-    			"			and f2.file_index = f1.file_index "
-    			"			and f2.file_state <> 'CANCELED' "
-    			" 	) ",
-    			soci::use(jobId),
-    			soci::use(jobId),
-    			soci::into(canceled)
-    		;
+            sql <<
+                " select count(distinct f1.file_index) "
+                " from t_file f1 "
+                " where f1.job_id = :jobId "
+                "	and NOT EXISTS ( "
+                "		select null "
+                "		from t_file f2 "
+                "		where job_id = :jobId "
+                "			and f2.file_index = f1.file_index "
+                "			and f2.file_state <> 'CANCELED' "
+                " 	) ",
+                soci::use(jobId),
+                soci::use(jobId),
+                soci::into(canceled)
+                ;
 
-    		sql <<
-    			" select count(distinct f1.file_index) "
-				" from t_file f1 "
-				" where f1.job_id = :jobId "
-    			"	and f1.file_state = 'FAILED' "
-				"	and NOT EXISTS ( "
-				"		select null "
-				"		from t_file f2 "
-				"		where job_id = :jobId "
-				"			and f2.file_index = f1.file_index "
-				"			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
-				" 	) ",
-				soci::use(jobId),
-				soci::use(jobId),
-				soci::into(failed)
-    		;
+            sql <<
+                " select count(distinct f1.file_index) "
+                " from t_file f1 "
+                " where f1.job_id = :jobId "
+                "	and f1.file_state = 'FAILED' "
+                "	and NOT EXISTS ( "
+                "		select null "
+                "		from t_file f2 "
+                "		where job_id = :jobId "
+                "			and f2.file_index = f1.file_index "
+                "			and f2.file_state NOT IN ('CANCELED', 'FAILED') "
+                " 	) ",
+                soci::use(jobId),
+                soci::use(jobId),
+                soci::into(failed)
+                ;
         }
     catch (std::exception& e)
         {

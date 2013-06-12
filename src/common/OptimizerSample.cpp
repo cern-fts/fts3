@@ -19,7 +19,7 @@
 
 
 #define LOWTR 2
-#define MAXTR 4
+#define MAXTR 3
 
 
 OptimizerSample::OptimizerSample()
