@@ -89,7 +89,7 @@ public:
         this->_enqueue(op);
     }
 
-    bool updateDatabase(struct message msg)
+    bool updateDatabase(const struct message& msg)
     {
         bool updated = true;
         try
