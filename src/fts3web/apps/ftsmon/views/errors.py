@@ -20,10 +20,13 @@ def showErrors(httpRequest):
                    'request': httpRequest})
 
 
-def transfersWithError(httpRequest, reason):
-    if reason[0] == '"':
-        reason = reason[1:-1]
+def transfersWithError(httpRequest):
+    if 'reason' not in httpRequest.GET or \
+        not httpRequest.GET['reason']:
+        return redirect('ftsmon.views.showErrors')
     
+    reason = httpRequest.GET['reason']
+
     notbefore = datetime.utcnow() - timedelta(hours = 12)
     transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)\
                             .order_by('file_id')

@@ -22,7 +22,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^optimizer/detailed$', 'optimizerDetailed'),
     
     url(r'^errors/$', 'showErrors'),
-    url(r'^errors/(?P<reason>.+)$', 'transfersWithError'),
+    url(r'^errors/list$', 'transfersWithError'),
     
     url(r'archive/$', 'archiveJobIndex')
 )
