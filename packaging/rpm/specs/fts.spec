@@ -92,7 +92,7 @@ dynamically adjust transfer parameters for optimal bandwidth
 utilization and allows for configuring so called VO-shares.
 
 %package libs
-Summary: File Transfer Service version 3 libs
+Summary: File Transfer Service version 3 libraries
 Group: System Environment/Libraries
 
 %description libs
@@ -102,13 +102,13 @@ parsing, logging and error-handling utilities, as
 well as, common definitions and interfaces
 
 %package python
-Summary: File Transfer Service version 3 libs
+Summary: File Transfer Service version 3 python bindings
 Group: System Environment/Libraries
 Requires: fts-libs%{?_isa} = %{version}-%{release}
 Requires: python%{?_isa}
 
 %description python
-FTS python bindings
+FTS python bindings for client libraries and DB API
 
 %package client
 Summary: File Transfer Service version 3 client
@@ -283,6 +283,8 @@ rm -rf %{buildroot}
 %{python_sitearch}/fts/*.py*
 %{python_sitearch}/fts/ftsdb.so*
 %{python_sitearch}/fts/libftspython.so*
+%doc README
+%doc LICENSE
 
 %files devel
 %defattr(-,root,root,-)
