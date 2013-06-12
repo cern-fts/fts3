@@ -31,7 +31,7 @@ class SeGroup
 {
 
 public:
-    SeGroup() {}
+    SeGroup(): active(0) {}
     ~SeGroup() {}
     std::string symbolicName;
     std::string groupName;

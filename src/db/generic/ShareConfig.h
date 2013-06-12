@@ -30,7 +30,7 @@
 class ShareConfig
 {
 public:
-    ShareConfig() {};
+    ShareConfig(): active_transfers(0), share_only(false) {};
     ~ShareConfig() {};
 
     std::string source;

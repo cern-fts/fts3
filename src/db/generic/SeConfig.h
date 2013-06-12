@@ -31,7 +31,7 @@ class SeConfig
 {
 
 public:
-    SeConfig() {}
+    SeConfig(): active(0) {}
     ~SeConfig() {}
     std::string source;
     std::string destination;
