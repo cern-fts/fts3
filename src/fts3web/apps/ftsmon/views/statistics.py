@@ -164,7 +164,6 @@ def statistics(httpRequest):
     
     # Success rate (last hour)
     lastHour = _getCountPerState(STATES, timedelta(hours = 1))
-    print lastHour
     if lastHour['total'] > 0:
         overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
     else:
