@@ -3,7 +3,7 @@
 
 Name: fts-oracle
 Version: 3.0.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
 License: ASL 2.0
@@ -74,5 +74,5 @@ rm -rf %{buildroot}
 %doc LICENSE
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.1-2%{?dist}
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.1-3%{?dist}
   - First EPEL release
