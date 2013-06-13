@@ -2029,7 +2029,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                                             "WHERE "
                                             "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                                             "      file_state IN ('FAILED','FINISHED') AND "
-                                            "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '30' minute))",
+                                            "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '5' minute))",
                                             soci::use(source_hostname), soci::use(destin_hostname));
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin();
@@ -2050,14 +2050,14 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                "      file_state = 'FINISHED' AND (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '30' minute)) ",
+                "      file_state = 'FINISHED' AND (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '5' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(nFinishedAll);
 
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                "      file_state = 'FAILED' AND (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '30' minute)) ",
+                "      file_state = 'FAILED' AND (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '5' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(nFailedAll);
 
