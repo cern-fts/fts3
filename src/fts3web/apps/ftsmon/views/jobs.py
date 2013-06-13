@@ -86,12 +86,10 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
         jobs = jobs.filter(vo_name = filters['vo'])
         
     if filters['source_se']:
-        jobs = jobs.filter(file__source_se = filters['source_se'])\
-                   .values('job_id').annotate(nSourceMatches = Count('file__file_id'))
+        jobs = jobs.filter(source_se = filters['source_se'])
 
     if filters['dest_se']:
-        jobs = jobs.filter(file__dest_se = filters['dest_se'])\
-                   .values('job_id').annotate(nDestMatches = Count('file__file_id'))
+        jobs = jobs.filter(dest_se = filters['dest_se'])
 
     if filters['state']:
         jobs = jobs.filter(job_state__in = filters['state'])

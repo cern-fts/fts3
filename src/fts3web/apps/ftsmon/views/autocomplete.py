@@ -2,15 +2,15 @@ import datetime
 import simplejson
 from django.db.models import Q
 from django.http import HttpResponse
-from ftsweb.models import Job, File, JobArchive, FileArchive
+from ftsweb.models import Job, JobArchive
 
 
 
 def uniqueSources(httpRequest, archive):
     if archive:
-        model = FileArchive
+        model = JobArchive
     else:
-        model = File
+        model = Job
         
     query = model.objects.values('source_se').distinct('source_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
@@ -25,9 +25,9 @@ def uniqueSources(httpRequest, archive):
 
 def uniqueDestinations(httpRequest, archive):
     if archive:
-        model = FileArchive
+        model = JobArchive
     else:
-        model = File
+        model = Job
     
     query = model.objects.values('dest_se').distinct('dest_se')
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
