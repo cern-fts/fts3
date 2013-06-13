@@ -43,25 +43,34 @@ def _getTransferAndSubmissionPerHost():
     hostnames = []
         
     submissions = {}
-    for j in Job.objects.values('submit_host').annotate(count = Count('submit_host')):
+    query = Job.objects.values('submit_host').annotate(count = Count('submit_host'))
+    for j in query:
         submissions[j['submit_host']] = j['count']
         hostnames.append(j['submit_host'])
         
     transfers = {}
-    for t in File.objects.values('transferHost').annotate(count = Count('transferHost')):
+    query = File.objects.values('transferHost').annotate(count = Count('transferHost'))
+    for t in query:
         # Submitted do not have a transfer host!
         if t['transferHost']:
             transfers[t['transferHost']] = t['count']
             if t['transferHost'] not in hostnames:
                 hostnames.append(t['transferHost'])
+                
+    active = {}
+    query = File.objects.filter(file_state = 'ACTIVE').values('transferHost').annotate(count = Count('transferHost'))
+    for t in query:
+        active[t['transferHost']] = t['count']
         
     servers = []
     for h in hostnames:
         if h in submissions: s = submissions[h]
         else:                s = 0
         if h in transfers:   t = transfers[h]
-        else:                t = 0   
-        servers.append({'hostname': h, 'submissions': s, 'transfers': t})
+        else:                t = 0
+        if h in active:      a = active[h]
+        else:                a = 0
+        servers.append({'hostname': h, 'submissions': s, 'transfers': t, 'active': a})
         
     return servers
 

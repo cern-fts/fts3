@@ -53,7 +53,8 @@ Statistics
           <tr>
             <th>Server</th>
             <th>Submissions received</th>
-            <th>Transfers executed</th>
+            <th>Transfers picked</th>
+            <th>Transfers running</th>
           </tr>
         </thead>
         <tbody class="centered">
@@ -62,6 +63,7 @@ Statistics
               <td>{{ s.hostname }}</td>
               <td>{{ s.submissions }}</td>
               <td>{{ s.transfers }}</td>
+              <td>{{ s.active }}</td>
             </tr>
           {% endfor %}
         </tbody>
