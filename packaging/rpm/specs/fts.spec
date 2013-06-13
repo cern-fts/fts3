@@ -289,8 +289,6 @@ rm -rf %{buildroot}
 %files devel
 %defattr(-,root,root,-)
 %{_bindir}/fts*
-%{python_sitearch}/fts/ftsdb.so
-%{python_sitearch}/fts/libftspython.so
 %{_libdir}/libfts_common.so
 %{_libdir}/libfts_config.so
 %{_libdir}/libfts_infosys.so
