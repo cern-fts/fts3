@@ -82,7 +82,6 @@ tr.even {
 #toolbox {
   background: #406080;
   text-align: left;
-  position: relative;
   height: 1.5em;
 }
 
@@ -106,13 +105,14 @@ tr.even {
   padding-left: 1em;
 }
 
-#toolbox form {
-  display: inline;
+#jobSearchForm {
   position: absolute;
-  right: 0;
+  top: 2em;
+  right: 2.5%;
+  background: #8D99A6;
 }
 
-#toolbox form input {
+#jobSearchForm form input {
   border: solid 1px;
 }
 

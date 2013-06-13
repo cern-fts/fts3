@@ -40,12 +40,12 @@
         <a href="{% url ftsmon.views.configurationAudit %}">Configuration audit</a>
         <a href="{% url ftsmon.views.archiveJobIndex %}">Archive</a>
       </div>
-      <div id="jobSearchForm">
-        <form method="get" action="{% url ftsmon.views.jobIndex %}">
-          <input type="text" name="jobId" size="64"/>
-          <input type="submit" value="Search job"/>
-        </form>
-      </div>
+    </div>
+    <div id="jobSearchForm">
+      <form method="get" action="{% url ftsmon.views.jobIndex %}">
+        <input type="text" name="jobId" size="40"/>
+        <input type="submit" value="Search job"/>
+      </form>
     </div>
       
     <div id="content">
