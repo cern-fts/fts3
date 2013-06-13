@@ -9884,7 +9884,7 @@ void OracleAPI::checkSanityState()
 
 void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId, int& finished, int& canceled, int& failed)
 {
-	if (!pooledConnection) return;
+    if (!pooledConnection) return;
 
     std::string queryFinished =
         " select count(*)  "
