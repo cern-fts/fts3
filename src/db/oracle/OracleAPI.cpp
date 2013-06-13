@@ -6670,7 +6670,7 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
             s1->setString(4, vo);
             r = conn->createResultset(s1, pooledConnection);
 
-            if (r->next())
+            if (!r->next())
                 {
                     s2 = conn->createStatement(insert, tag2, pooledConnection);
                     s2->setInt(1, file_id);
