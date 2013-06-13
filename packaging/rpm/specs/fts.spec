@@ -44,7 +44,7 @@ BuildRequires:  is-interface-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  openldap-devel
 BuildRequires:  pugixml-devel
-BuildRequires:  python-devel
+BuildRequires:  python2-devel
 BuildRequires:  voms-devel
 Requires(pre):  shadow-utils
 
