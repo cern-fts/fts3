@@ -346,8 +346,6 @@ public:
     virtual void revertNotUsedFiles() = 0;
 
     virtual void checkSanityState() = 0;
-
-    virtual void countFileInTerminalStates(std::string jobId, int& finished, int& cancelled, int& failed) = 0;
 };
 
 

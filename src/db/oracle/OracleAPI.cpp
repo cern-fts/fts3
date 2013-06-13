@@ -9739,7 +9739,7 @@ void OracleAPI::checkSanityState()
 
                     if(numberOfFiles > 0)
                         {
-                            countFileInTerminalStates(*it, allFinished, allCanceled, allFailed);
+                            countFileInTerminalStates(pooledConnection, *it, allFinished, allCanceled, allFailed);
                             terminalState = allFinished + allCanceled + allFailed;
 
                             if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
@@ -9882,8 +9882,9 @@ void OracleAPI::checkSanityState()
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::countFileInTerminalStates(std::string jobId, int& finished, int& canceled, int& failed)
+void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId, int& finished, int& canceled, int& failed)
 {
+	if (!pooledConnection) return;
 
     std::string queryFinished =
         " select count(*)  "
@@ -9932,13 +9933,8 @@ void OracleAPI::countFileInTerminalStates(std::string jobId, int& finished, int&
     oracle::occi::Statement* s3 = 0;
     oracle::occi::ResultSet* r3 = 0;
 
-    oracle::occi::Connection* pooledConnection = NULL;
-
     try
         {
-            pooledConnection = conn->getPooledConnection();
-            if (!pooledConnection) return;
-
             s1 = conn->createStatement(queryFinished, tagFinished, pooledConnection);
             s1->setString(1, jobId);
             r1 = conn->createResultset(s1, pooledConnection);
@@ -10022,7 +10018,6 @@ void OracleAPI::countFileInTerminalStates(std::string jobId, int& finished, int&
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
-    conn->releasePooledConnection(pooledConnection);
 }
 
 // the class factories
