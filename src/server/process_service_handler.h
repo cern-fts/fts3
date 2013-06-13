@@ -1068,6 +1068,7 @@ protected:
                                             delete *iter2;
                                         jobs2.clear();
                                     }
+				sleep(1);
                                 return;
                             }
 
