@@ -612,8 +612,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
 
             // Insert src/dest pair
             std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;
-            double filesize;
-            int fileIndex;
+            double filesize = 0.0;
+            int fileIndex = 0;
             soci::statement pairStmt = (
                                            sql.prepare <<
                                            "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se) "
@@ -1596,7 +1596,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
     try
         {
 
-            int numberOfSamples;
+            int numberOfSamples = 0;
 
             sql <<
                 " SELECT COUNT(*) "
@@ -1995,10 +1995,10 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
     bool allowed = false;
     try
         {
-            int nActiveSource, nActiveDest;
+            int nActiveSource=0, nActiveDest=0;
             double nFailedLastHour=0, nFinishedLastHour=0;
-            int nActive;
-            double nFailedAll, nFinishedAll, throughput;
+            int nActive=0;
+            double nFailedAll=0.0, nFinishedAll=0.0, throughput=0.0;
             soci::indicator isNull;
 
 
@@ -2093,10 +2093,10 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
 
     try
         {
-            int nActiveSource, nActiveDest;
+            int nActiveSource=0, nActiveDest=0;
             double nFailedLastHour=0, nFinishedLastHour=0;
-            int nActive;
-            double nFailedAll, nFinishedAll, throughput;
+            int nActive=0;
+            double nFailedAll=0, nFinishedAll=0, throughput=0;
             soci::indicator isNull;
 
             std::set<std::string>::iterator it;
@@ -2202,10 +2202,10 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 
     try
         {
-            int nActiveSource, nActiveDest;
+            int nActiveSource=0, nActiveDest=0;
             double nFailedLastHour=0, nFinishedLastHour=0;
-            int nActive;
-            double nFailedAll, nFinishedAll, throughput;
+            int nActive=0;
+            double nFailedAll=0, nFinishedAll=0, throughput=0;
             soci::indicator isNull;
 
             std::set<std::string>::iterator it;
