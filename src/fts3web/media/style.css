@@ -67,6 +67,15 @@ th {
   padding: 0.2em 1em 0.2em 1em;
 }
 
+a.hashTarget {
+  color: black;
+}
+
+a.hashTarget.highlight {
+  font-weight: bold;
+  color: #A00;
+}
+
 /* Table even/odd rows */
 tr.odd {
   background: white;

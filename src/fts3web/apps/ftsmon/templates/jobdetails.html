@@ -49,11 +49,13 @@ Job {{ transferJob.job_id }}
       {% for t in transferFiles %}
         <tr class="{% cycle 'odd' 'even' %}">
           <td>
-            <img alt="[+]" src="{{ STATIC_URL }}plus.gif" title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
-            {{ t.file_id }}
-            {% if t.retry > 0 %}
-            <img alt="[R]" src="{{ STATIC_URL}}retried.png" title="Retried {{ t.retry }} times"/>
-            {% endif %}
+            <a class="hashTarget" id="{{ t.file_id }}">
+	            <img alt="[+]" src="{{ STATIC_URL }}plus.gif" title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
+	            {{ t.file_id }}
+	            {% if t.retry > 0 %}
+	            <img alt="[R]" src="{{ STATIC_URL}}retried.png" title="Retried {{ t.retry }} times"/>
+	            {% endif %}
+            </a>
           </td>
           <td>{{ t.transferHost }}</td>
           <td>{{ t.source_surl }}</td>
@@ -89,4 +91,16 @@ Job {{ transferJob.job_id }}
       {% endfor %}
     </tbody>
   </table>
+  <!--  Highlight selected file id -->
+  <script>
+  $(window).bind('hashchange', function() {
+    var hash = window.location.hash.slice(1);
+    var fileIdElm = document.getElementById(hash);
+    fileIdElm.className += ' highlight';
+  });
+  
+  if (window.location.hash) {
+    $(window).trigger('hashchange');
+  }
+  </script>
 {% endblock %}
