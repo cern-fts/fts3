@@ -1009,7 +1009,7 @@ bool MySqlAPI::updateFileTransferStatus(std::string job_id, int file_id, std::st
                 {
                     soci::row const& r = *it;
                     std::string st = r.get<std::string>("file_state");
-                    staging = st == "STAGING";
+                    staging = (st == "STAGING");
                 }
 
             soci::statement stmt(sql);
@@ -1092,6 +1092,8 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
             int numberOfFilesFinished = 0;
             int numberOfFilesFailed = 0;
 
+            sql.begin();
+
             sql << "SELECT nFiles, nCanceled, nFinished, nFailed FROM "
                 // the total number of files within a job
                 "    (SELECT COUNT(DISTINCT file_index) AS nFiles FROM t_file WHERE job_id = :jobId) as DTableTotal, "
@@ -1112,8 +1114,6 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
             int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
-
-            sql.begin();
 
             if (jobFinished)
                 {
