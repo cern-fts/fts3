@@ -91,10 +91,11 @@ def _getStateCountPerVo():
 
 
 
-def _getAllPairs(source = None, dest = None):
+def _getAllPairs(notBefore, source = None, dest = None):
     pairs = []
     
-    query = File.objects.values('source_se', 'dest_se')
+    query = File.objects.filter(finish_time__gte = notBefore)\
+                        .values('source_se', 'dest_se')
     if source:
         query = query.filter(source_se = source)
     if dest:
@@ -106,11 +107,11 @@ def _getAllPairs(source = None, dest = None):
 
 
 
-def _getAveragePerPair(pairs):
+def _getAveragePerPair(notBefore, pairs):
     avg = {}
     
     for (source, dest) in pairs:
-        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES)\
+        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES, finish_time__lt = notBefore)\
                               .filter(source_se = source,
                                       dest_se = dest)\
                               .aggregate(Avg('tx_duration'), Avg('throughput'))
@@ -140,9 +141,12 @@ def _getFilesInStatePerPair(pairs, states):
 
 
 
-def _getStatsPerPair(source_se = None, dest_se = None):
-    allPairs      = _getAllPairs(source_se, dest_se)
-    avgsPerPair   = _getAveragePerPair(allPairs)
+def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(minutes = 5)):
+    
+    notBefore = datetime.now() - timewindow
+    
+    allPairs      = _getAllPairs(notBefore, source_se, dest_se)
+    avgsPerPair   = _getAveragePerPair(notBefore, allPairs)
     activePerPair = _getFilesInStatePerPair(allPairs, ACTIVE_STATES) 
         
     pairs = []
