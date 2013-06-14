@@ -3927,7 +3927,21 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     		"      t_file.dest_se = :1"
     		;
 
-    std::string query3 =
+    std::string query3 = // TODO
+    		" select throughput "
+    		" from ("
+    		"	select throughput "
+    		"	from  t_file "
+    		"	where source_se = :1 "
+    		"		and dest_se = :2 "
+    		"		and throughput is not NULL "
+    		" 		and throughput != 0  "
+    		"	order by FINISH_TIME DESC"
+    		" ) "
+    		" where rownum = 1"
+    		;
+
+
             " select throughput "
             " from t_file "
             " where source_se = :1 "
