@@ -50,7 +50,7 @@ Job {{ transferJob.job_id }}
         <tr class="{% cycle 'odd' 'even' %}">
           <td>
             <a class="hashTarget" id="{{ t.file_id }}">
-	            <img alt="[+]" src="{{ STATIC_URL }}plus.gif" title="Show details"  onclick="$('#{{t.file_id}}').toggle()"/>
+	            <img alt="[+]" src="{{ STATIC_URL }}plus.gif" title="Show details"  onclick="$('#detailed{{t.file_id}}').toggle()"/>
 	            {{ t.file_id }}
 	            {% if t.retry > 0 %}
 	            <img alt="[R]" src="{{ STATIC_URL}}retried.png" title="Retried {{ t.retry }} times"/>
@@ -67,7 +67,7 @@ Job {{ transferJob.job_id }}
           <td>{{ t.finish_time }}</td>
           <td>{{ t.file_metadata }}</td>
         </tr>
-        <tr class="details" id="{{t.file_id}}">
+        <tr class="details" id="detailed{{t.file_id}}">
           <td colspan="10">
             <ul>
               <li><b>Attempts:</b> {{ t.retry }}</li>
