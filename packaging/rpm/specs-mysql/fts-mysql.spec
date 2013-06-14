@@ -2,8 +2,8 @@
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Name: fts-mysql
-Version: 3.0.1
-Release: 7%{?dist}
+Version: 3.0.2
+Release: 2%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet 
 License: ASL 2.0
@@ -76,5 +76,5 @@ rm -rf %{buildroot}
 
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.1-7%{?dist}
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.2-2%{?dist}
   - First EPEL release
