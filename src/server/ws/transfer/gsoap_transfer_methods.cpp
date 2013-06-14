@@ -190,7 +190,7 @@ int fts3::impltns__listRequests(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOR
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
@@ -215,7 +215,7 @@ int fts3::impltns__listRequests2(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCO
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
@@ -280,7 +280,7 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
@@ -344,7 +344,7 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
@@ -387,7 +387,7 @@ int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID, struct im
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
@@ -453,7 +453,7 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID, struct i
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
@@ -523,7 +523,7 @@ int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID, struct 
     catch(Err& ex)
         {
 
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, ex.what(), "TransferException");
             return SOAP_FAULT;
         }
