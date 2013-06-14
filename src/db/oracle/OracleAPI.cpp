@@ -2077,7 +2077,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 
     std::string query = " select t_file.pid, t_file.job_id from t_file, t_job where t_file.job_id=t_job.job_id and "
                         " t_file.FILE_STATE='CANCELED' and t_file.PID IS NOT NULL AND t_job.CANCEL_JOB IS NULL and t_file.TRANSFERHOST=:1 ";
-    std::string update = "update t_job SET CANCEL_JOB='Y' where job_id=:1 ";
+    std::string update = "update t_job SET CANCEL_JOB='Y' where job_id=:1 AND cancel_job IS NULL ";
 
 
     oracle::occi::Statement* s = NULL;

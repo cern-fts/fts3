@@ -1234,7 +1234,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                                           soci::use(hostname));
 
             std::string jobId;
-            soci::statement updateStmt = (select.prepare << "UPDATE t_job SET cancel_job='Y' WHERE job_id = :jobId",
+            soci::statement updateStmt = (select.prepare << "UPDATE t_job SET cancel_job='Y' WHERE job_id = :jobId AND cancel_job IS NULL",
                                           soci::use(jobId));
 
             update.begin();
