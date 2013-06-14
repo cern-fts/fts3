@@ -6631,89 +6631,45 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member)
 
 void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo)
 {
-    const std::string tag1 = "addJobShareConfig1";
-    const std::string tag2 = "addJobShareConfig2";
+    const std::string tag = "addJobShareConfig";
+			 
+    std::string insert = " insert into t_file_share_config (file_id, source, destination, vo) "
+    			 " select :1, :2, :3, :4 from dual where not exists(select file_id, source, destination, vo "
+			 " from t_file_share_config WHERE file_id = :1 AND source = :2 AND destination = :3 AND vo = :4)";			 
 
-    std::string query =
-        " SELECT file_id "
-        " FROM t_file_share_config "
-        " WHERE file_id = :1 "
-        "	AND source = :2 "
-        "	AND destination = :3 "
-        "	AND vo = :4 ";
-
-
-    std::string insert =
-        "insert into t_file_share_config("
-        "	file_id,"
-        "	source,"
-        "	destination,"
-        "	vo"
-        ") values(:1,:2,:3,:4)";
-
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = 0;
-    oracle::occi::ResultSet* r = 0;
-
+    oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
     try
         {
-
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
 
-            s1 = conn->createStatement(query, tag1, pooledConnection);
-            s1->setInt(1, file_id);
-            s1->setString(2, source);
-            s1->setString(3, destination);
-            s1->setString(4, vo);
-            r = conn->createResultset(s1, pooledConnection);
-
-            if (!r->next())
-                {
-                    s2 = conn->createStatement(insert, tag2, pooledConnection);
-                    s2->setInt(1, file_id);
-                    s2->setString(2, source);
-                    s2->setString(3, destination);
-                    s2->setString(4, vo);
-                    if (s2->executeUpdate() != 0)
-                        conn->commit(pooledConnection);
-                    conn->destroyStatement(s2, tag2, pooledConnection);
-                }
-
-            conn->destroyResultset(s1, r);
-            conn->destroyStatement(s1, tag1, pooledConnection);
-
+            s = conn->createStatement(insert, tag, pooledConnection);
+            s->setInt(1, file_id);
+            s->setString(2, source);
+            s->setString(3, destination);
+            s->setString(4, vo);
+	    s->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s, tag, pooledConnection);
         }
     catch (oracle::occi::SQLException const &e)
         {
-
             conn->rollback(pooledConnection);
 
-            if(s1 && r)
-                conn->destroyResultset(s1, r);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if(s2)
-                conn->destroyStatement(s2, tag2, pooledConnection);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
 
             conn->releasePooledConnection(pooledConnection);
             throw Err_Custom(e.what());
         }
     catch (...)
         {
-
             conn->rollback(pooledConnection);
 
-            if(s1 && r)
-                conn->destroyResultset(s1, r);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if(s2)
-                conn->destroyStatement(s2, tag2, pooledConnection);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
 
             conn->releasePooledConnection(pooledConnection);
             throw Err_Custom("Unknown exception");

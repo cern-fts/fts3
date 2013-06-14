@@ -126,6 +126,7 @@ static std::string job_Metadata(""); //a
 static std::string globalErrorMessage("");
 static std::string infosys("");
 static bool manualConfig = false;
+static bool autoTunned = false;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
@@ -681,6 +682,8 @@ int main(int argc, char **argv)
     for (register int i(1); i < argc; ++i)
         {
             std::string temp(argv[i]);
+            if (temp.compare("-O") == 0)
+                autoTunned = true;
             if (temp.compare("-N") == 0)
                 manualConfig = true;
             if (temp.compare("-M") == 0)
@@ -1168,7 +1171,7 @@ int main(int argc, char **argv)
                     }
 
                 unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, timeout);
-                if(!manualConfig)
+                if(!manualConfig || autoTunned || timeout==0)
                     timeout = experimentalTimeout;
                 gfalt_set_timeout(params, timeout, NULL);
                 timeout_to_string = to_string<unsigned int>(timeout, std::dec);
@@ -1176,7 +1179,7 @@ int main(int argc, char **argv)
                 log << fileManagement->timestamp() << "INFO Timeout:" << timeout << '\n'; //h
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, nbstreams);
-                if(!manualConfig)
+                if(!manualConfig || autoTunned || nbstreams==0)
                     nbstreams = experimentalNstreams;
                 gfalt_set_nbstreams(params, experimentalNstreams, NULL);
                 nstream_to_string = to_string<unsigned int>(experimentalNstreams, std::dec);

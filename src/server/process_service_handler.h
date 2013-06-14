@@ -422,6 +422,7 @@ protected:
                                         if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
                                             {
                                                 SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
+                                                bool isAutoTuned = false;
 
                                                 if (optimize && cfgs.empty())
                                                     {
@@ -454,6 +455,7 @@ protected:
 
                                                         if (resolver.isAuto())
                                                             {
+                                                                isAutoTuned = true;
                                                                 DBSingleton::instance().getDBObjectInstance()->setAllowed(
                                                                     temp->JOB_ID,
                                                                     temp->FILE_ID,
@@ -498,6 +500,11 @@ protected:
                                                 if (manualConfigExists)
                                                     {
                                                         params.append(" -N ");
+                                                    }
+
+                                                if (isAutoTuned)
+                                                    {
+                                                        params.append(" -O ");
                                                     }
 
                                                 if (proxy_file.length() > 0)
@@ -880,6 +887,7 @@ protected:
                         FileTransferScheduler scheduler(tempUrl, cfgs);
                         if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
                             {
+                                bool isAutoTuned = false;
                                 std::stringstream internalParams;
                                 if (optimize && manualConfigExists == false)
                                     {
@@ -912,6 +920,7 @@ protected:
 
                                         if (resolver.isAuto())
                                             {
+                                                isAutoTuned = true;
                                                 DBSingleton::instance().getDBObjectInstance()->setAllowed(
                                                     job_id,
                                                     -1,
@@ -962,6 +971,10 @@ protected:
                                         params.append(" -N ");
                                     }
 
+                                if (isAutoTuned)
+                                    {
+                                        params.append(" -O ");
+                                    }
 
                                 if (proxy_file.length() > 0)
                                     {
