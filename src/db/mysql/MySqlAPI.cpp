@@ -397,6 +397,8 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
             soci::indicator ind;
             int fileIndex=0;
 
+            sql.begin();
+
             sql <<
                 " SELECT file_index "
                 " FROM t_file "
@@ -408,8 +410,6 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
             // make sure it's not NULL
             if (ind == soci::i_ok)
                 {
-                    sql.begin();
-
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'SUBMITTED' "
@@ -419,10 +419,9 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                         soci::use(jobId),
                         soci::use(fileIndex)
                         ;
-
-                    sql.commit();
                 }
 
+            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -2816,25 +2815,10 @@ void MySqlAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 
     try
         {
-
-            int count = 0;
-
-            sql <<
-                " SELECT COUNT(*) FROM t_bad_dns WHERE dn = :dn ",
-                soci::use(dn),
-                soci::into(count)
-                ;
-
             sql.begin();
-
-            if (!count)
-                {
-
-                    sql << "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) "
-                        "               VALUES (:dn, :message, UTC_TIMESTAMP(), :admin)",
-                        soci::use(dn), soci::use(msg), soci::use(adm_dn);
-                }
-
+            sql << "INSERT IGNORE INTO t_bad_dns (dn, message, addition_time, admin_dn) "
+                "               VALUES (:dn, :message, UTC_TIMESTAMP(), :admin)",
+                soci::use(dn), soci::use(msg), soci::use(adm_dn);
             sql.commit();
         }
     catch (std::exception& e)

@@ -4914,16 +4914,13 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
 
 void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 {
+    std::string insert = "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) "
+                         "  SELECT :1, :2, :3, :4 FROM DUAL "
+                         "  WHERE NOT EXISTS (SELECT dn FROM t_bad_dns WHERE dn = :1";
 
-    std::string select = "SELECT COUNT(*) FROM t_bad_dns WHERE dn = :1";
-    std::string insert = "INSERT INTO t_bad_dns (dn, message, addition_time, admin_dn) VALUES (:1, :2, :3, :4)";
-
-    std::string selectTag = "blacklistDnSelect";
     std::string insertTag = "blacklistDnInsert";
 
     oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
 
     oracle::occi::Connection* pooledConnection = NULL;
 
@@ -4935,30 +4932,14 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 
             time_t timed = time(NULL);
 
-            s1 = conn->createStatement(select, selectTag, pooledConnection);
+            s1 = conn->createStatement(insert, insertTag, pooledConnection);
             s1->setString(1, dn);
-            r1 = conn->createResultset(s1, pooledConnection);
-
-            int count = 0;
-            while(r1->next())
-                {
-                    count = r1->getInt(1);
-                }
-
-            conn->destroyResultset(s1, r1);
-            conn->destroyStatement(s1, selectTag, pooledConnection);
-
-            if (!count)
-                {
-                    s2 = conn->createStatement(insert, insertTag, pooledConnection);
-                    s2->setString(1, dn);
-                    s2->setString(2, msg);
-                    s2->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
-                    s2->setString(4, adm_dn);
-                    s2->executeUpdate();
-                    conn->commit(pooledConnection);
-                    conn->destroyStatement(s2, insertTag, pooledConnection);
-                }
+            s1->setString(2, msg);
+            s1->setTimestamp(3, conv->toTimestamp(timed, conn->getEnv()));
+            s1->setString(4, adm_dn);
+            s1->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s1, insertTag, pooledConnection);
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -4966,12 +4947,8 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 
             conn->rollback(pooledConnection);
 
-            if(s1 && r1)
-                conn->destroyResultset(s1, r1);
             if (s1)
-                conn->destroyStatement(s1, selectTag, pooledConnection);
-            if (s2)
-                conn->destroyStatement(s2, insertTag, pooledConnection);
+                conn->destroyStatement(s1, insertTag, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
@@ -4980,12 +4957,8 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 
             conn->rollback(pooledConnection);
 
-            if(s1 && r1)
-                conn->destroyResultset(s1, r1);
             if (s1)
-                conn->destroyStatement(s1, selectTag, pooledConnection);
-            if (s2)
-                conn->destroyStatement(s2, insertTag, pooledConnection);
+                conn->destroyStatement(s1, insertTag, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
