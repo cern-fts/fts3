@@ -175,7 +175,7 @@ bool MySqlAPI::getInOutOfSe(const std::string & sourceSe, const std::string & de
 {
     soci::session sql(*connectionPool);
 
-    unsigned nSE;
+    unsigned nSE = 0;
     sql << "SELECT COUNT(*) FROM t_se "
         "WHERE (t_se.name = :source OR t_se.name = :dest) AND "
         "      t_se.state = 'off'",
@@ -395,7 +395,7 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
         {
 
             soci::indicator ind;
-            int fileIndex;
+            int fileIndex=0;
 
             sql <<
                 " SELECT file_index "
@@ -581,10 +581,11 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
 
     soci::session sql(*connectionPool);
 
-    sql.begin();
+
 
     try
         {
+	    sql.begin();
             soci::indicator reuseIndicator = soci::i_ok;
             if (reuse.empty())
                 reuseIndicator = soci::i_null;
@@ -1264,10 +1265,11 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
-    sql.begin();
+ 
 
     try
         {
+   	    sql.begin();
             sql << "INSERT INTO t_credential_cache "
                 "    (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES "
                 "    (:dlgId, :dn, :certRequest, :privKey, :vomsAttrs)",
@@ -1385,10 +1387,11 @@ void MySqlAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std:
 void MySqlAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time)
 {
     soci::session sql(*connectionPool);
-    sql.begin();
+
 
     try
         {
+	    sql.begin();
             struct tm tTime;
             gmtime_r(&termination_time, &tTime);
 
@@ -1927,7 +1930,7 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
 
             if (foundRecords == 0)
                 {
-                    int timeout, nStreams, bufferSize;
+                    int timeout=0, nStreams=0, bufferSize=0;
 
                     soci::statement stmt = (sql.prepare << "INSERT INTO t_optimize (source_se, dest_se, timeout, nostreams, buffer, file_id) "
                                             "                VALUES (:source, :dest, :timeout, :nostreams, :buffer, 0)",
@@ -2302,7 +2305,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 void MySqlAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params)
 {
     soci::session sql(*connectionPool);
-    sql.begin();
+
     try
         {
             sql.begin();
@@ -2332,11 +2335,11 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
     try
         {
             std::string jobId, params, tHost,reuse;
-            int fileId, pid, timeout;
+            int fileId=0, pid=0, timeout=0;
             struct tm startTimeSt;
             time_t now2 = convertToUTC(0);
             time_t startTime;
-            double diff;
+            double diff = 0.0;
             soci::indicator isNull;
 
             soci::statement stmt = (
@@ -2499,8 +2502,9 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
     try
         {
             sql.begin();
+	    
             std::string jobId;
-            int fileId;
+            int fileId=0;
             soci::statement stmt = (sql.prepare << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId AND file_id = :fileId",
                                     soci::use(pid), soci::use(jobId), soci::use(fileId));
 
@@ -2529,7 +2533,7 @@ void MySqlAPI::revertToSubmitted()
     try
         {
             struct tm startTime;
-            int fileId;
+            int fileId=0;
             std::string jobId, reuseJob;
             time_t now2 = convertToUTC(0);
             sql.begin();
@@ -2686,7 +2690,7 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
 
     try
         {
-            int fileId;
+            int fileId=0;
             std::string jobId;
 
             sql.begin();
@@ -3215,7 +3219,7 @@ bool MySqlAPI::isThereLinkConfig(std::string source, std::string destination)
     bool exists = false;
     try
         {
-            int count;
+            int count = 0;
             sql << "SELECT COUNT(*) FROM t_link_config WHERE "
                 "  source = :source AND destination = :dest",
                 soci::use(source), soci::use(destination),
