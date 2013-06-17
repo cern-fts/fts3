@@ -1,6 +1,3 @@
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
-
 %global _hardened_build 1
 
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
@@ -17,7 +14,6 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 #  svn export http://svnweb.cern.ch/guest/fts3/trunk
 #  tar -czvf fts-0.0.1-60.tar.gz fts-00160
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %if 0%{?el5}
 BuildRequires:  activemq-cpp-library
@@ -135,7 +131,6 @@ make %{?_smp_mflags}
 
 %install
 cd build
-rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_var}/lib/fts3
 mkdir -p %{buildroot}%{_var}/lib/fts3/monitoring
 mkdir -p %{buildroot}%{_var}/lib/fts3/status
@@ -145,24 +140,13 @@ mkdir -p %{buildroot}%{_var}/log/fts3
 make install DESTDIR=%{buildroot}
 mkdir -p %{buildroot}%{python_sitearch}/fts
 
+
 %pre server
 getent group fts3 >/dev/null || groupadd -r fts3
 getent passwd fts3 >/dev/null || \
     useradd -r -g fts3 -d /var/log/fts3 -s /sbin/nologin \
     -c "fts3 urlcopy user" fts3
 exit 0
-
-%post libs -p /sbin/ldconfig
-
-%postun libs -p /sbin/ldconfig
-
-%post python -p /sbin/ldconfig
-
-%postun python -p /sbin/ldconfig
-
-%post devel -p /sbin/ldconfig
-
-%postun devel -p /sbin/ldconfig
 
 %post server
 /sbin/chkconfig --add fts-server
@@ -210,13 +194,12 @@ fi
 exit 0
 
 
-%clean
-rm -rf %{buildroot}
+%post libs -p /sbin/ldconfig
 
+%postun libs -p /sbin/ldconfig
 
 
 %files server
-%defattr(-,root,root,-)
 %dir %{_sysconfdir}/fts3
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3
 %dir %attr(0755,fts3,root) %{_var}/lib/fts3/monitoring
@@ -246,7 +229,6 @@ rm -rf %{buildroot}
 %{_mandir}/man8/fts*
 
 %files client
-%defattr(-,root,root,-)
 %{_bindir}/fts-config-set
 %{_bindir}/fts-config-get
 %{_bindir}/fts-config-del
@@ -260,7 +242,6 @@ rm -rf %{buildroot}
 %{_mandir}/man1/fts*
 
 %files libs
-%defattr(-,root,root,-)
 %{_libdir}/libfts_common.so.*
 %{_libdir}/libfts_config.so.*
 %{_libdir}/libfts_infosys.so.*
@@ -278,8 +259,7 @@ rm -rf %{buildroot}
 %doc LICENSE
 
 %files python
-%defattr(-,root,root,-)
-%dir %attr(0755,fts3,root) %{python_sitearch}/fts
+%dir %attr(0755,root,root) %{python_sitearch}/fts
 %{python_sitearch}/fts/*.py*
 %{python_sitearch}/fts/ftsdb.so*
 %{python_sitearch}/fts/libftspython.so*
@@ -287,7 +267,6 @@ rm -rf %{buildroot}
 %doc LICENSE
 
 %files devel
-%defattr(-,root,root,-)
 %{_bindir}/fts*
 %{_libdir}/libfts_common.so
 %{_libdir}/libfts_config.so
