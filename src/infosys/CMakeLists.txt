@@ -25,6 +25,8 @@ include_directories (${fts_include_dir})
 include_directories (.)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/config/)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/config/)
+include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/infosys/)
 
 file(GLOB fts_infosys_sources "*.cpp")
 
