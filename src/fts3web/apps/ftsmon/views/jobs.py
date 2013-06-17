@@ -118,7 +118,7 @@ def jobIndex(httpRequest):
     
     jobs = jobListing(httpRequest, filters = filters)    
     paginator = Paginator(jobs, 50)
-    return render(httpRequest, 'jobindex.html',
+    return render(httpRequest, 'jobs/list.html',
                   {'filterForm': filterForm,
                    'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
@@ -134,7 +134,7 @@ def archiveJobIndex(httpRequest):
     
     jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)    
     paginator = Paginator(jobs, 50)
-    return render(httpRequest, 'jobarchive.html',
+    return render(httpRequest, 'jobs/archive.html',
                   {'filterForm': filterForm,
                    'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
@@ -163,7 +163,7 @@ def jobDetails(httpRequest, jobId):
     if not job:
         raise Http404
     
-    return render(httpRequest, 'jobdetails.html',
+    return render(httpRequest, 'jobs/details.html',
                   {'transferJob': job,
                    'transferFiles': files,
                    'request': httpRequest})
@@ -174,7 +174,7 @@ def staging(httpRequest):
   transfers = File.objects.filter(file_state = 'STAGING')
   transfers = transfers.order_by('-job__submit_time', '-file_id')
   paginator = Paginator(transfers, 50)
-  return render(httpRequest, 'staging.html',
+  return render(httpRequest, 'jobs/staging.html',
                 {'transfers': getPage(paginator, httpRequest),
                  'paginator': paginator,
                  'request': httpRequest})

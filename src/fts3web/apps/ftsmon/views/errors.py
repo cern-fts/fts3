@@ -15,7 +15,7 @@ def showErrors(httpRequest):
                        .order_by('-count')\
                        
     # Render
-    return render(httpRequest, 'errors.html',
+    return render(httpRequest, 'errors/errorCount.html',
                   {'errors': errors,
                    'request': httpRequest})
 
@@ -32,7 +32,7 @@ def transfersWithError(httpRequest):
                             .order_by('file_id')
     
     # Render
-    return render(httpRequest, 'transfersWithError.html',
+    return render(httpRequest, 'errors/transfersWithError.html',
                   {'transfers': transfers,
                    'reason': reason,
                    'request': httpRequest

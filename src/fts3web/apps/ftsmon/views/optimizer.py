@@ -48,7 +48,7 @@ def optimizer(httpRequest):
 		
 	extra_args = filterForm.args()	
 	
-	return render(httpRequest, 'optimizer.html',
+	return render(httpRequest, 'optimizer/optimizer.html',
 					{'request': httpRequest,
 					'filterForm': filterForm,
 					'optimizations': optimizations,
@@ -97,7 +97,7 @@ def optimizerDetailed(httpRequest):
 	optimizerHistory = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se,
 														 datetime__gte = notBefore).order_by('-datetime').all()[:50]
 	
-	return render(httpRequest, 'optimizerDetailed.html',
+	return render(httpRequest, 'optimizer/details.html',
 					{'request': httpRequest,
 					 'source_se': source_se,
 					 'dest_se': dest_se,

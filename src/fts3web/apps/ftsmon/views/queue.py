@@ -13,7 +13,7 @@ def queueByPairs(httpRequest):
     pairs = pairs.order_by('source_se', 'dest_se', 'job__vo_name')
     
     paginator = Paginator(pairs, 50)
-    return render(httpRequest, 'queue.html',
+    return render(httpRequest, 'queue/queue.html',
                   {'pairsPerVo': getPage(paginator, httpRequest),
                    'paginator': paginator,
                    'request': httpRequest})
@@ -33,7 +33,7 @@ def queueDetailed(httpRequest):
                             'vo': vo_name})
     
     paginator = Paginator(transfers, 50)
-    return render(httpRequest, 'queueDetailed.html',
+    return render(httpRequest, 'queue/details.html',
                   {'transfers': getPage(paginator, httpRequest),
                    'paginator': paginator,
                    'request': httpRequest,
