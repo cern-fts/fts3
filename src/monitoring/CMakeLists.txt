@@ -27,6 +27,8 @@ include_directories (.)
 
 set(fts_msg_ifce_SOURCES msg-ifce.cpp utility_routines.cpp Logger.cpp)
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
+add_dependencies(fts_msg_ifce fts_common)
+target_link_libraries(fts_msg_ifce -lfts_common)
 set_target_properties(fts_msg_ifce	 	PROPERTIES
 						LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/monitoring
