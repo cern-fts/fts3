@@ -4022,13 +4022,13 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             ret += nActiveDest;
 
             std::set<std::string>::iterator it;
-	    
+
             s2 = conn->createStatement(query2, tag2, pooledConnection);
             s3 = conn->createStatement(query3, tag3, pooledConnection);
             s4 = conn->createStatement(query4, tag4, pooledConnection);
-            s5 = conn->createStatement(query5, tag5, pooledConnection);	
+            s5 = conn->createStatement(query5, tag5, pooledConnection);
             s6 = conn->createStatement(query6, tag6, pooledConnection);
-            s7 = conn->createStatement(query7, tag7, pooledConnection);	    	        
+            s7 = conn->createStatement(query7, tag7, pooledConnection);
 
             for (it = source.begin(); it != source.end(); ++it)
                 {
@@ -4133,11 +4133,11 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             conn->destroyStatement(s4, tag4, pooledConnection);
             s4 = 0;
             conn->destroyStatement(s5, tag5, pooledConnection);
-            s5 = NULL;	    
+            s5 = NULL;
             conn->destroyStatement(s6, tag6, pooledConnection);
-            s6 = NULL;	
+            s6 = NULL;
             conn->destroyStatement(s7, tag7, pooledConnection);
-            s7 = NULL;	        
+            s7 = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {

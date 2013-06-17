@@ -46,7 +46,7 @@ using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
-bool stopThreads = false;
+extern bool stopThreads;
 const char *hostcert = "/etc/grid-security/hostcert.pem";
 const char *hostkey = "/etc/grid-security/hostkey.pem";
 const char *configfile = "/etc/fts3/fts3config";

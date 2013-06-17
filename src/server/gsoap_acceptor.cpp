@@ -28,7 +28,7 @@
 #include <sys/socket.h>
 #include <fstream>
 
-extern bool  stopThreads;
+bool  stopThreads;
 
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace FTS3_CONFIG_NAMESPACE;
