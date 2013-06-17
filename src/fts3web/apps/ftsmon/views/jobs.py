@@ -1,25 +1,13 @@
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator
 from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
 from ftsmon import forms
 from ftsweb.models import Job, File, JobArchive, FileArchive
+from utils import getPage
 import datetime
 import json
 import time
-
-
-def _getPage(paginator, request):
-    try:
-        if 'page' in request.GET: 
-            page = paginator.page(request.GET.get('page'))
-        else:
-            page = paginator.page(1)
-    except PageNotAnInteger:
-        page = paginator.page(1)
-    except EmptyPage:
-        page = paginator.page(paginator.num_pages)
-    return page
 
 
 
@@ -132,7 +120,7 @@ def jobIndex(httpRequest):
     paginator = Paginator(jobs, 50)
     return render(httpRequest, 'jobindex.html',
                   {'filterForm': filterForm,
-                   'jobs':       _getPage(paginator, httpRequest),
+                   'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
                    'hours': filters['hours'],
                    'request':    httpRequest})
@@ -148,21 +136,10 @@ def archiveJobIndex(httpRequest):
     paginator = Paginator(jobs, 50)
     return render(httpRequest, 'jobarchive.html',
                   {'filterForm': filterForm,
-                   'jobs':       _getPage(paginator, httpRequest),
+                   'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
                    'additionalTitle': '',
                    'request':    httpRequest})
-
-
-
-def queue(httpRequest):
-  transfers = File.objects.filter(file_state__in = ['SUBMITTED', 'READY'])
-  transfers = transfers.order_by('-job__submit_time', '-file_id')
-  paginator = Paginator(transfers, 50)
-  return render(httpRequest, 'queue.html',
-                {'transfers': _getPage(paginator, httpRequest),
-                 'paginator': paginator,
-                 'request': httpRequest})
 
 
 
@@ -198,7 +175,7 @@ def staging(httpRequest):
   transfers = transfers.order_by('-job__submit_time', '-file_id')
   paginator = Paginator(transfers, 50)
   return render(httpRequest, 'staging.html',
-                {'transfers': _getPage(paginator, httpRequest),
+                {'transfers': getPage(paginator, httpRequest),
                  'paginator': paginator,
                  'request': httpRequest})
 

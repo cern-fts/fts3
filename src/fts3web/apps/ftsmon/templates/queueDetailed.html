@@ -1,0 +1,59 @@
+
+{% extends "base.html" %}
+{% load filesize %}
+
+{% block title %}
+Queue
+{% endblock %}
+
+{% block content %}
+
+  <h2>
+    Showing queued transfers {{ transfers.start_index }} to {{ transfers.end_index }} out of {{ paginator.count}}
+    {% if transfers.has_previous %}
+      <a href="?page=1&{{ extra_args }}">&lt;&lt;</a>
+      <a href="?page={{ transfers.previous_page_number }}&{{ extra_args }}">&lt;</a>
+    {% else %}
+      &lt; &lt;&lt;
+    {% endif %} | 
+    {% if transfers.has_next %}
+      <a href="?page={{ transfers.next_page_number }}&{{ extra_args }}">&gt;</a>
+      <a href="?page={{ paginator.num_pages }}&{{ extra_args }}">&gt;&gt;</a>
+    {% else %}
+      &gt; &gt;&gt;
+    {% endif %}
+  </h2>
+
+  <table class="queueList">
+    <thead>
+      <tr>
+        <th>FILE ID</th>
+        <th>FILE STATE</th>
+        <th>JOB ID</th>
+        <th>SUBMISSION TIME</th>
+        <th>VO</th>
+        <th>SOURCE URL</th>
+        <th>DEST URL</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transfers.object_list %}
+        <tr class="{% cycle 'odd' 'even' %}">
+          <td>{{ t.file_id }}</td>
+          <td class="{{ t.file_state }}">
+            {{ t.file_state }}
+          </td>
+          <td>
+            <a href="{% url ftsmon.views.jobDetails t.job.job_id %}">
+              {{ t.job.job_id }}
+            </a>
+          </td>
+          <td>{{ t.job.submit_time }}</td>
+          <td>{{ t.job.vo_name }}</td>
+          <td>{{ t.source_surl }}</td>
+          <td>{{ t.dest_surl }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
