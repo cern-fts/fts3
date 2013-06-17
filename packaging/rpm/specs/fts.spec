@@ -125,7 +125,7 @@ administering purposes.
 %build
 mkdir build
 cd build
-%cmake -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
+%cmake -DMAINBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
 make %{?_smp_mflags}
 
 

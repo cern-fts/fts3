@@ -42,7 +42,7 @@ Development files for File Transfer Service V3 oracle plug-in
 %build
 mkdir build
 cd build
-%cmake -DORACLEBUILD=ON -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='' ..
+%cmake -DORACLEBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
 make %{?_smp_mflags}
 
 
