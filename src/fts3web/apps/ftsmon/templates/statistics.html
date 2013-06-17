@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load filters %}
+{% load urlLog %}
 
 {% block title %}
 Statistics
@@ -60,7 +61,10 @@ Statistics
         <tbody class="centered">
           {% for s in servers %}
             <tr class="{% cycle 'odd' 'even' %}">
-              <td>{{ s.hostname }}</td>
+              <td>
+                {{ s.hostname }}
+                [<a href="{% urlServerLog s %}">Logs</a>]
+              </td>
               <td>{{ s.submissions }}</td>
               <td>{{ s.transfers }}</td>
               <td>{{ s.active }}</td>

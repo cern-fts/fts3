@@ -275,7 +275,7 @@ table.optimizer tr td {
   border: none;
 }
 
-.ui-tabs-nav a {
+.ui-tabs-anchor {
   color: black;
 }
 
@@ -307,6 +307,10 @@ table.optimizer tr td {
 .ui-tabs div.ui-tabs-panel {
   border: none;
   background: #E5E5E5;
+}
+
+.ui-widget-content a {
+	color: blue;
 }
 
 /* Config audit */
