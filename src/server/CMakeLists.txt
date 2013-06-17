@@ -46,6 +46,7 @@ set(fts_server_gsoap_transfer_sources
 #    "${PROJECT_SOURCE_DIR}/src/server/ws/gsoap.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/CGsiAdapter.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/InternalLogRetriever.cpp"
+    "${PROJECT_SOURCE_DIR}/src/server/ws/SingleTrStateInstance.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/AuthorizationManager.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/gsoap_transfer_methods.cpp"
     "${PROJECT_SOURCE_DIR}/src/server/ws/transfer/RequestLister.cpp"

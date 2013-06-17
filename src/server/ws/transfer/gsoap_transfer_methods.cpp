@@ -51,7 +51,7 @@
 #include <cgsi_plugin.h>
 #include "ws-ifce/gsoap/fts3.nsmap"
 
-#include "SingleTrStateInstance.h"
+#include "ws/SingleTrStateInstance.h"
 
 using namespace boost;
 using namespace db;

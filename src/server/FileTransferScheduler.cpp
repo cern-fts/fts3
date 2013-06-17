@@ -35,7 +35,7 @@
 #include "common/logger.h"
 #include "common/JobStatusHandler.h"
 
-#include "SingleTrStateInstance.h"
+#include "ws/SingleTrStateInstance.h"
 
 
 using namespace db;

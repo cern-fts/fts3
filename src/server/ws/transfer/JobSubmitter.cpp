@@ -49,7 +49,7 @@
 
 #include "parse_url.h"
 
-#include "SingleTrStateInstance.h"
+#include "ws/SingleTrStateInstance.h"
 
 using namespace db;
 using namespace config;

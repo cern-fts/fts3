@@ -38,7 +38,7 @@ limitations under the License. */
 #include "definitions.h"
 #include "queue_updater.h"
 #include <boost/algorithm/string.hpp>
-#include "SingleTrStateInstance.h"
+#include "ws/SingleTrStateInstance.h"
 
 extern bool stopThreads;
 

@@ -29,7 +29,7 @@
 
 #include "ws/CGsiAdapter.h"
 
-#include "SingleTrStateInstance.h"
+#include "ws/SingleTrStateInstance.h"
 
 #include <vector>
 #include <set>

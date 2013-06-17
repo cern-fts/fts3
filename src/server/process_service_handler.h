@@ -57,7 +57,7 @@ limitations under the License. */
 #include <sys/resource.h>
 #include <sys/sysinfo.h>
 #include <boost/algorithm/string/replace.hpp>
-#include "SingleTrStateInstance.h"
+#include "ws/SingleTrStateInstance.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
