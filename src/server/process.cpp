@@ -67,7 +67,8 @@ static int fexists(const char *filename)
 
 
 ExecuteProcess::ExecuteProcess(const string& app, const string& arguments, int fdlog)
-    : _jobId(""), _fileId(""), m_app(app), m_arguments(arguments), m_fdlog(fdlog), pid(0)
+    : _jobId(""), _fileId(""), m_app(app), m_arguments(arguments), pid(0),
+    m_fdlog(fdlog)
 {
 }
 

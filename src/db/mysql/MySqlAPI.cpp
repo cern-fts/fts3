@@ -584,7 +584,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
 
     try
         {
-	    sql.begin();
+            sql.begin();
             soci::indicator reuseIndicator = soci::i_ok;
             if (reuse.empty())
                 reuseIndicator = soci::i_null;
@@ -1264,11 +1264,11 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
- 
+
 
     try
         {
-   	    sql.begin();
+            sql.begin();
             sql << "INSERT INTO t_credential_cache "
                 "    (dlg_id, dn, cert_request, priv_key, voms_attrs) VALUES "
                 "    (:dlgId, :dn, :certRequest, :privKey, :vomsAttrs)",
@@ -1390,7 +1390,7 @@ void MySqlAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std:
 
     try
         {
-	    sql.begin();
+            sql.begin();
             struct tm tTime;
             gmtime_r(&termination_time, &tTime);
 
@@ -2123,9 +2123,9 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
                         " select throughput "
                         " from t_file "
                         " where source_se = :source "
-						" 	and dest_se = :dest "
-						"	and throughput is not NULL "
-						"	and throughput != 0 "
+                        " 	and dest_se = :dest "
+                        "	and throughput is not NULL "
+                        "	and throughput != 0 "
                         " order by FINISH_TIME DESC "
                         " LIMIT 1 ",
                         soci::use(source_hostname), soci::use(destin_hostname),
@@ -2505,7 +2505,7 @@ void MySqlAPI::setPidV(int pid, std::map<int, std::string>& pids)
     try
         {
             sql.begin();
-	    
+
             std::string jobId;
             int fileId=0;
             soci::statement stmt = (sql.prepare << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId AND file_id = :fileId",
@@ -3525,10 +3525,10 @@ void MySqlAPI::addFileShareConfig(int file_id, std::string source, std::string d
     try
         {
             sql.begin();
-	    
+
             sql << " insert into t_file_share_config (file_id, source, destination, vo) "
-    			 " select :fileId, :source, :dest, :vo from dual where not exists(select file_id, source, destination, vo "
-			 " from t_file_share_config WHERE file_id = :fileId AND source = :source AND destination = :dest AND vo = :vo)",
+                " select :fileId, :source, :dest, :vo from dual where not exists(select file_id, source, destination, vo "
+                " from t_file_share_config WHERE file_id = :fileId AND source = :source AND destination = :dest AND vo = :vo)",
                 soci::use(file_id),
                 soci::use(source),
                 soci::use(destination),
@@ -5034,8 +5034,6 @@ bool MySqlAPI::isShareOnly(std::string se)
     bool ret = true;
     try
         {
-            struct tm termTime;
-
             sql <<
                 " select * from t_link_config "
                 " where source = :source and destination = '*' and auto_tuning = 'all'",

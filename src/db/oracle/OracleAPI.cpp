@@ -3897,9 +3897,9 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
 int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> & destination)
 {
-	int ret = 0;
+    int ret = 0;
 
-	return ret;
+    return ret;
 }
 
 int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string & destination)
@@ -3907,7 +3907,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     // total number of allowed active for the source (both currently in use and free credits)
     int ret = 0;
 
-	const std::string tag1 = "getSeIn1";
+    const std::string tag1 = "getSeIn1";
     const std::string tag2 = "getSeIn2";
     const std::string tag3 = "getSeIn3";
     const std::string tag4 = "getSeIn4";
@@ -3916,70 +3916,61 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     const std::string tag7 = "getSeIn7";
 
     std::string query1 =
-    		"SELECT COUNT(*) FROM t_file "
-    		"WHERE t_file.file_state in ('READY','ACTIVE') AND "
-    		"      t_file.source_se = :1 "
-    		;
+        "SELECT COUNT(*) FROM t_file "
+        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
+        "      t_file.source_se = :1 "
+        ;
 
     std::string query2 =
-    		"SELECT COUNT(*) FROM t_file "
-    		"WHERE t_file.file_state in ('READY','ACTIVE') AND "
-    		"      t_file.dest_se = :1"
-    		;
+        "SELECT COUNT(*) FROM t_file "
+        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
+        "      t_file.dest_se = :1"
+        ;
 
     std::string query3 = // TODO
-    		" select throughput "
-    		" from ("
-    		"	select throughput "
-    		"	from  t_file "
-    		"	where source_se = :1 "
-    		"		and dest_se = :2 "
-    		"		and throughput is not NULL "
-    		" 		and throughput != 0  "
-    		"	order by FINISH_TIME DESC"
-    		" ) "
-    		" where rownum = 1"
-    		;
-
-
-            " select throughput "
-            " from t_file "
-            " where source_se = :1 "
-            " 	and dest_se = :1 "
-    		" 	and ROWNUM <= 1 "
-            " order by FINISH_TIME DESC "
-    		;
+        " select throughput "
+        " from ("
+        "	select throughput "
+        "	from  t_file "
+        "	where source_se = :1 "
+        "		and dest_se = :2 "
+        "		and throughput is not NULL "
+        " 		and throughput != 0  "
+        "	order by FINISH_TIME DESC"
+        " ) "
+        " where rownum = 1"
+        ;
 
     std::string query4 =
-    		"SELECT file_state "
-    		"FROM t_file "
-    		"WHERE "
-    		"      t_file.source_se = :1 AND t_file.dest_se = :1 AND "
-    		"      file_state IN ('FAILED','FINISHED') AND "
-    		"      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))"
-    		;
+        "SELECT file_state "
+        "FROM t_file "
+        "WHERE "
+        "      t_file.source_se = :1 AND t_file.dest_se = :1 AND "
+        "      file_state IN ('FAILED','FINISHED') AND "
+        "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))"
+        ;
 
     std::string query5 =
-    		"SELECT COUNT(*) "
-    		"FROM t_file "
-    		"WHERE "
-    		"      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
-    		"      file_state in ('READY','ACTIVE')"
-    		;
+        "SELECT COUNT(*) "
+        "FROM t_file "
+        "WHERE "
+        "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
+        "      file_state in ('READY','ACTIVE')"
+        ;
 
     std::string query6 =
-    		"SELECT COUNT(*) FROM t_file "
-    		"WHERE "
-    		"      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
-    		"      file_state = 'FINISHED'"
-    		;
+        "SELECT COUNT(*) FROM t_file "
+        "WHERE "
+        "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
+        "      file_state = 'FINISHED'"
+        ;
 
     std::string query7 =
-    		"SELECT COUNT(*) FROM t_file "
-    		"WHERE "
-    		"      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
-    		"      file_state = 'FAILED'"
-    		;
+        "SELECT COUNT(*) FROM t_file "
+        "WHERE "
+        "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
+        "      file_state = 'FAILED'"
+        ;
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
@@ -4000,10 +3991,10 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
 
     try
         {
-			int nActiveSource = 0, nActiveDest = 0;
-			double nFailedLastHour = 0, nFinishedLastHour = 0;
-			int nActive = 0;
-			double nFailedAll = 0, nFinishedAll = 0, throughput = 0;
+            int nActiveSource = 0, nActiveDest = 0;
+            double nFailedLastHour = 0, nFinishedLastHour = 0;
+            int nActive = 0;
+            double nFailedAll = 0, nFinishedAll = 0, throughput = 0;
 
 
             pooledConnection = conn->getPooledConnection();
@@ -4018,9 +4009,10 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             s1->setString(1, destin_hostname);
             r1 = conn->createResultset(s1, pooledConnection);
 
-            if (r1->next()) {
-            	nActiveDest = r1->getInt(1);
-            }
+            if (r1->next())
+                {
+                    nActiveDest = r1->getInt(1);
+                }
 
             conn->destroyResultset(s1, r1);
             conn->destroyStatement(s1, tag1, pooledConnection);
@@ -4030,107 +4022,96 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             ret += nActiveDest;
 
             std::set<std::string>::iterator it;
+	    
+            s2 = conn->createStatement(query2, tag2, pooledConnection);
+            s3 = conn->createStatement(query3, tag3, pooledConnection);
+            s4 = conn->createStatement(query4, tag4, pooledConnection);
+            s5 = conn->createStatement(query5, tag5, pooledConnection);	
+            s6 = conn->createStatement(query6, tag6, pooledConnection);
+            s7 = conn->createStatement(query7, tag7, pooledConnection);	    	        
 
-            for (it = source.begin(); it != source.end(); it++)
-				{
-            		std::string source_hostname = *it;
+            for (it = source.begin(); it != source.end(); ++it)
+                {
+                    std::string source_hostname = *it;
 
-            		// get number of active for the source
+                    // get number of active for the source
+                    s2->setString(1, source_hostname);
+                    r2 = conn->createResultset(s2, pooledConnection);
 
-					s2 = conn->createStatement(query2, tag2, pooledConnection);
-					s2->setString(1, source_hostname);
-					r2 = conn->createResultset(s2, pooledConnection);
+                    if (r2->next())
+                        {
+                            nActiveSource = r2->getInt(1);
+                        }
 
-					if (r2->next()) {
-						nActiveSource = r2->getInt(1);
-					}
+                    conn->destroyResultset(s2, r2);
+                    r2 = NULL;
 
-					conn->destroyResultset(s2, r2);
-					conn->destroyStatement(s2, tag2, pooledConnection);
-					s2 = 0;
-					r2 = 0;
+                    // get the throughput
+                    s3->setString(1, destin_hostname);
+                    s3->setString(2, source_hostname);
+                    r3 = conn->createResultset(s3, pooledConnection);
 
-					// get the throughput
+                    if (r3->next())
+                        {
+                            throughput = r3->getInt(1);
+                        }
 
-		            s3 = conn->createStatement(query3, tag3, pooledConnection);
-		            s3->setString(1, destin_hostname);
-		            s3->setString(2, source_hostname);
-		            r3 = conn->createResultset(s3, pooledConnection);
+                    conn->destroyResultset(s3, r3);
+                    r3 = NULL;
 
-		            if (r3->next()) {
-		            	throughput = r3->getInt(1);
-		            }
+                    // file state: FAILED and FINISHED (in last hour)
+                    s4->setString(1, source_hostname);
+                    s4->setString(2, destin_hostname);
+                    r4 = conn->createResultset(s4, pooledConnection);
 
-		            conn->destroyResultset(s3, r3);
-		            conn->destroyStatement(s3, tag3, pooledConnection);
-		            s3 = 0;
-		            r3 = 0;
+                    while (r4->next())
+                        {
+                            std::string state = r4->getString(1);
+                            if      (state.compare("FAILED") == 0)   nFailedLastHour+=1.0;
+                            else if (state.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+                        }
 
-		            // file state: FAILED and FINISHED (in last hour)
+                    conn->destroyResultset(s4, r4);
+                    r4 = NULL;
 
-		            s4 = conn->createStatement(query4, tag4, pooledConnection);
-		            s4->setString(1, source_hostname);
-		            s4->setString(2, destin_hostname);
-		            r4 = conn->createResultset(s4, pooledConnection);
+                    // number of active for the pair
+                    s5->setString(1, source_hostname);
+                    s5->setString(2, destin_hostname);
+                    r5= conn->createResultset(s5, pooledConnection);
 
-		            while (r4->next()) {
-		            	std::string state = r4->getString(1);
-                        if      (state.compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                        else if (state.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
-		            }
+                    if (r5->next())
+                        {
+                            nActive = r5->getInt(1);
+                        }
 
-		            conn->destroyResultset(s4, r4);
-		            conn->destroyStatement(s4, tag4, pooledConnection);
-		            s4 = 0;
-		            r4 = 0;
+                    conn->destroyResultset(s5, r5);
+                    r5 = NULL;
 
-		            // number of active for the pair
+                    // all finished in total
+                    s6->setString(1, source_hostname);
+                    s6->setString(2, destin_hostname);
+                    r6 = conn->createResultset(s6, pooledConnection);
 
-		            s5 = conn->createStatement(query5, tag5, pooledConnection);
-		            s5->setString(1, source_hostname);
-		            s5->setString(2, destin_hostname);
-		            r5= conn->createResultset(s5, pooledConnection);
+                    if (r6->next())
+                        {
+                            nFinishedAll = r6->getInt(1);
+                        }
 
-		            if (r5->next()) {
-		            	nActive = r5->getInt(1);
-		            }
+                    conn->destroyResultset(s6, r6);
+                    r6 = NULL;
 
-		            conn->destroyResultset(s5, r5);
-		            conn->destroyStatement(s5, tag5, pooledConnection);
-		            s5 = 0;
-		            r5 = 0;
+                    // all failed in total
+                    s7->setString(1, source_hostname);
+                    s7->setString(2, destin_hostname);
+                    r7 = conn->createResultset(s7, pooledConnection);
 
-		            // all finieshed in total
+                    if (r7->next())
+                        {
+                            nFailedAll = r7->getInt(1);
+                        }
 
-		            s6 = conn->createStatement(query6, tag6, pooledConnection);
-		            s6->setString(1, source_hostname);
-		            s6->setString(2, destin_hostname);
-		            r6 = conn->createResultset(s6, pooledConnection);
-
-		            if (r6->next()) {
-		            	nFinishedAll = r6->getInt(1);
-		            }
-
-		            conn->destroyResultset(s6, r6);
-		            conn->destroyStatement(s6, tag6, pooledConnection);
-		            s6 = 0;
-		            r6 = 0;
-
-		            // all failed in total
-
-		            s7 = conn->createStatement(query7, tag7, pooledConnection);
-		            s7->setString(1, source_hostname);
-		            s7->setString(2, destin_hostname);
-		            r7 = conn->createResultset(s7, pooledConnection);
-
-		            if (r7->next()) {
-		            	nFailedAll = r7->getInt(1);
-		            }
-
-		            conn->destroyResultset(s7, r7);
-		            conn->destroyStatement(s7, tag7, pooledConnection);
-		            s7 = 0;
-		            r7 = 0;
+                    conn->destroyResultset(s7, r7);
+                    r7 = NULL;
 
                     double ratioSuccessFailure = 0;
                     if(nFinishedLastHour > 0)
@@ -4144,7 +4125,19 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
                                                           nActive, nActiveSource, nActiveDest,
                                                           ratioSuccessFailure,
                                                           nFinishedAll, nFailedAll,throughput);
-				}
+                }
+            conn->destroyStatement(s2, tag2, pooledConnection);
+            s2 = NULL;
+            conn->destroyStatement(s3, tag3, pooledConnection);
+            s3 = NULL;
+            conn->destroyStatement(s4, tag4, pooledConnection);
+            s4 = 0;
+            conn->destroyStatement(s5, tag5, pooledConnection);
+            s5 = NULL;	    
+            conn->destroyStatement(s6, tag6, pooledConnection);
+            s6 = NULL;	
+            conn->destroyStatement(s7, tag7, pooledConnection);
+            s7 = NULL;	        
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -6936,10 +6929,10 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member)
 void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo)
 {
     const std::string tag = "addJobShareConfig";
-			 
+
     std::string insert = " insert into t_file_share_config (file_id, source, destination, vo) "
-    			 " select :1, :2, :3, :4 from dual where not exists(select file_id, source, destination, vo "
-			 " from t_file_share_config WHERE file_id = :1 AND source = :2 AND destination = :3 AND vo = :4)";			 
+                         " select :1, :2, :3, :4 from dual where not exists(select file_id, source, destination, vo "
+                         " from t_file_share_config WHERE file_id = :1 AND source = :2 AND destination = :3 AND vo = :4)";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
@@ -6954,7 +6947,7 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
             s->setString(2, source);
             s->setString(3, destination);
             s->setString(4, vo);
-	    s->executeUpdate();
+            s->executeUpdate();
             conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
         }
@@ -9057,7 +9050,7 @@ int OracleAPI::getFailureRate(std::string source, std::string destination)
 int OracleAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
 {
 
-    std::string tag = "getAvgThroughpu";
+    std::string tag = "getAvgThroughput";
 
     std::string query =
         " SELECT AVG(throughput) "
@@ -9956,7 +9949,6 @@ void OracleAPI::checkSanityState()
     int allFinished = 0;
     int allFailed = 0;
     int allCanceled = 0;
-    unsigned int allNotUsedStaging = 0;
     unsigned int numberOfFilesRevert = 0;
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
