@@ -5449,7 +5449,7 @@ bool OracleAPI::isSeBlacklisted(std::string se, std::string vo)
 {
 
     std::string tag = "isSeBlacklisted";
-    std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1 AND (vo IS NULL OR vo = :2)";
+    std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1 AND (vo IS NULL OR vo='' OR vo = :2)";
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;

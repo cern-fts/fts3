@@ -2916,7 +2916,7 @@ bool MySqlAPI::isSeBlacklisted(std::string se, std::string vo)
     bool blacklisted = false;
     try
         {
-            sql << "SELECT * FROM t_bad_ses WHERE se = :se AND (vo IS NULL OR vo = :vo)", soci::use(se), soci::use(vo);
+            sql << "SELECT * FROM t_bad_ses WHERE se = :se AND (vo IS NULL OR vo='' OR vo = :vo)", soci::use(se), soci::use(vo);
             blacklisted = sql.got_data();
         }
     catch (std::exception& e)
