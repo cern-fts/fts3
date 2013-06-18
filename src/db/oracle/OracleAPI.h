@@ -212,7 +212,9 @@ public:
 
     virtual void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);
 
-    virtual void getFilesForNewCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out);
+    virtual void getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out);
+
+    virtual void getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out);
 
     virtual void delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);
 

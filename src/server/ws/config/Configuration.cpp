@@ -364,68 +364,88 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
                     // get all scheduled files that are affected by this configuration
                     vector<int> files;
                     vector<int>::iterator it;
-                    db->getFilesForNewCfg(source, destination, vo, files);
 
-                    // update t_file_share_config
-                    for (it = files.begin(); it != files.end(); it++) {
+                    if (isgroup())
+                    	{
+                    	db->getFilesForNewGrCfg(source, destination, vo, files);
 
-                    	if (isgroup()) {
+						// update t_file_share_config
+						for (it = files.begin(); it != files.end(); it++)
+							{
 
-                    		// check if it is a pair
-							bool pair = source != Configuration::any && destination != Configuration::any;
+								// check if it is a pair
+								bool pair = source != Configuration::any && destination != Configuration::any;
 
-							// if it is not a pair it is a standalone configuration
-							if (!pair) {
-								// if there is already a pair cfg this one does not apply
-								if (db->hasPairGrCfgAssigned(*it, vo)) {
+								// if it is not a pair it is a standalone configuration
+								if (!pair)
+									{
+										// if there is already a pair cfg this one does not apply
+										if (db->hasPairGrCfgAssigned(*it, vo)) continue;
 
-								}
+									}
+
+								// if it is a pair cfg ..
+								if (pair)
+									{
+										// the default or standalone cfg should be withdraw from use
+										db->delFileShareConfig(*it, source, Configuration::any, vo);
+										db->delFileShareConfig(*it, Configuration::any, destination, vo);
+									}
+
+								db->addFileShareConfig(*it, source, destination, vo);
 							}
 
-                    	} else {
-							// first check the configuration type
 
-							bool pair =
-									source != Configuration::wildcard &&
-									source != Configuration::any &&
-									destination != Configuration::wildcard &&
-									destination != Configuration::any
-									;
-
-							bool standalone =
-									(source != Configuration::wildcard && destination == Configuration::any) ||
-									(source == Configuration::any && destination != Configuration::wildcard)
-									;
-
-							// if it is not a pair it is either standalone or default cfg
-							if (!pair) {
-								// if there is already a pair cfg this one does not apply
-								if (db->hasPairSeCfgAssigned(*it, vo)) continue;
-							}
-
-							// if it is not a pair or standalone cfg it is a default cfg
-							if (!pair && !standalone) {
-								// if there is already a standalone cfg the default does not apply
-								if (db->hasStandAloneSeCfgAssigned(*it, vo)) continue;
-							}
-
-							// if it is either a pair or standalone ..
-							if (pair || standalone) {
-								// the default cfg should be withdraw from use
-								db->delFileShareConfig(*it, Configuration::wildcard, Configuration::any, vo);
-								db->delFileShareConfig(*it, Configuration::any, Configuration::wildcard, vo);
-							}
-
-							// if it is a pair cfg ..
-							if (pair) {
-								// the default or standalone cfg should be withdraw from use
-								db->delFileShareConfig(*it, source, Configuration::any, vo);
-								db->delFileShareConfig(*it, Configuration::any, destination, vo);
-							}
-
-							db->addFileShareConfig(*it, source, destination, vo);
                     	}
-                    }
+                    else
+                    	{
+							db->getFilesForNewSeCfg(source, destination, vo, files);
+
+							// update t_file_share_config
+							for (it = files.begin(); it != files.end(); it++)
+								{
+									// first check the configuration type
+									bool pair =
+											source != Configuration::wildcard &&
+											source != Configuration::any &&
+											destination != Configuration::wildcard &&
+											destination != Configuration::any
+											;
+
+									bool standalone =
+											(source != Configuration::wildcard && destination == Configuration::any) ||
+											(source == Configuration::any && destination != Configuration::wildcard)
+											;
+
+									// if it is not a pair it is either standalone or default cfg
+									if (!pair) {
+										// if there is already a pair cfg this one does not apply
+										if (db->hasPairSeCfgAssigned(*it, vo)) continue;
+									}
+
+									// if it is not a pair or standalone cfg it is a default cfg
+									if (!pair && !standalone) {
+										// if there is already a standalone cfg the default does not apply
+										if (db->hasStandAloneSeCfgAssigned(*it, vo)) continue;
+									}
+
+									// if it is either a pair or standalone ..
+									if (pair || standalone) {
+										// the default cfg should be withdraw from use
+										db->delFileShareConfig(*it, Configuration::wildcard, Configuration::any, vo);
+										db->delFileShareConfig(*it, Configuration::any, Configuration::wildcard, vo);
+									}
+
+									// if it is a pair cfg ..
+									if (pair) {
+										// the default or standalone cfg should be withdraw from use
+										db->delFileShareConfig(*it, source, Configuration::any, vo);
+										db->delFileShareConfig(*it, Configuration::any, destination, vo);
+									}
+
+									db->addFileShareConfig(*it, source, destination, vo);
+								}
+                    	}
                 }
         }
 }

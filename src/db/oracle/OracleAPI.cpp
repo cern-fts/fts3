@@ -10272,7 +10272,11 @@ void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnec
         }
 }
 
-void OracleAPI::getFilesForNewCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+
+}
+
+void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
 
 }
 

@@ -5242,7 +5242,7 @@ void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& 
         }
 }
 
-void MySqlAPI::getFilesForNewCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+void MySqlAPI::getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
 
     soci::session sql(*connectionPool);
 
@@ -5265,6 +5265,59 @@ void MySqlAPI::getFilesForNewCfg(std::string source, std::string destination, st
             for (soci::rowset<int>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     out.push_back(*i);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+void MySqlAPI::getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+    soci::session sql(*connectionPool);
+
+    std::string select;
+	select +=
+			" select file_id "
+			" from t_file, t_job "
+			" where t_file.job_id = t_job.job_id "
+			"	and t_job.vo_name = :vo "
+			"	and t_file.file_state in ('READY', 'ACTIVE')";
+	if (source != "*")
+		select +=
+			"	and t_file.source_se in ( "
+			"		select member "
+			"		from t_grop_members "
+			"		where groupName = :source "
+			"	) ";
+	if (destination != "*")
+		select +=
+			"	and t_file.dest_se in ( "
+			"		select member "
+			"		from t_grop_members "
+			"		where groupName = :dest "
+			"	) ";
+
+    try
+        {
+    		int id;
+
+    		soci::statement stmt(sql);
+    		stmt.exchange(soci::use(vo, "vo"));
+    		if (source != "*") stmt.exchange(soci::use(source, "source"));
+    		if (destination != "*") stmt.exchange(soci::use(destination, "destination"));
+    		stmt.exchange(soci::into(id));
+    		stmt.alloc();
+    		stmt.prepare(select);
+    		stmt.define_and_bind();
+
+            if (stmt.execute(true))
+                {
+                    do
+                        {
+                            out.push_back(id);
+                        }
+                    while (stmt.fetch());
                 }
         }
     catch (std::exception& e)
@@ -5307,10 +5360,15 @@ bool MySqlAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo) {
         {
             sql <<
                 " select count(*) "
-                " from t_file_share_config "
-                " where file_id = :id "
-                "	and vo = :vo "
-                "	and ((source <> '(*)' and destination = '*') or (source = '*' and destination <> '(*)'))",
+                " from t_file_share_config fc "
+                " where fc.file_id = :id "
+                "	and fc.vo = :vo "
+                "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
+                "	and not exists ( "
+                "		select null "
+                "		from t_group_members g "
+                "		where g.groupName = fc.source or g.groupName = fc.destination "
+                "	) ",
                 soci::use(file_id),
                 soci::use(vo),
                 soci::into(count)
@@ -5336,7 +5394,12 @@ bool MySqlAPI::hasPairSeCfgAssigned(int file_id, std::string vo) {
                 " from t_file_share_config "
                 " where file_id = :id "
                 "	and vo = :vo "
-                "	and (source <> '(*)' and source <> '*' and destination <> '*' and destination <> '(*)')",
+                "	and (source <> '(*)' and source <> '*' and destination <> '*' and destination <> '(*)') "
+				"	and not exists ( "
+				"		select null "
+				"		from t_group_members g "
+				"		where g.groupName = fc.source or g.groupName = fc.destination "
+				"	) ",
                 soci::use(file_id),
                 soci::use(vo),
                 soci::into(count)
@@ -5351,11 +5414,65 @@ bool MySqlAPI::hasPairSeCfgAssigned(int file_id, std::string vo) {
 }
 
 bool MySqlAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo) {
+    soci::session sql(*connectionPool);
 
+    int count = 0;
+
+    try
+        {
+            sql <<
+                " select count(*) "
+                " from t_file_share_config fc "
+                " where fc.file_id = :id "
+                "	and fc.vo = :vo "
+                "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
+                "	and exists ( "
+                "		select null "
+                "		from t_group_members g "
+                "		where g.groupName = fc.source or g.groupName = fc.destination "
+                "	) ",
+                soci::use(file_id),
+                soci::use(vo),
+                soci::into(count)
+                ;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return count > 0;
 }
 
 bool MySqlAPI::hasPairGrCfgAssigned(int file_id, std::string vo) {
+    soci::session sql(*connectionPool);
 
+    int count = 0;
+
+    try
+        {
+            sql <<
+                " select count(*) "
+                " from t_file_share_config "
+                " where file_id = :id "
+                "	and vo = :vo "
+                "	and (source <> '(*)' and source <> '*' and destination <> '*' and destination <> '(*)') "
+				"	and exists ( "
+				"		select null "
+				"		from t_group_members g "
+				"		where g.groupName = fc.source or g.groupName = fc.destination "
+				"	) ",
+                soci::use(file_id),
+                soci::use(vo),
+                soci::into(count)
+                ;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return count > 0;
 }
 
 // the class factories
