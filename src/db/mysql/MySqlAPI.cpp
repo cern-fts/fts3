@@ -5274,7 +5274,26 @@ void MySqlAPI::getFilesForNewCfg(std::string source, std::string destination, st
 
 
 void MySqlAPI::delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) {
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            sql <<
+                " delete from t_file_share_config  "
+                " where file_id = :id "
+                "	and source_se = :src "
+                "	and dest_se = :dest "
+                "	and vo = :vo",
+                soci::use(file_id),
+                soci::into(source),
+                soci::into(destination),
+                soci::into(vo)
+                ;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
 }
 
 
