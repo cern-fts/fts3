@@ -10276,6 +10276,18 @@ void OracleAPI::getFilesForNewCfg(std::string source, std::string destination, s
 
 }
 
+void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) {
+
+}
+
+bool OracleAPI::hasStandAloneCfgAssigned(int file_id, std::string vo) {
+
+}
+
+bool OracleAPI::hasPairCfgAssigned(int file_id, std::string vo) {
+
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()

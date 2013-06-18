@@ -5244,6 +5244,46 @@ void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& 
 
 void MySqlAPI::getFilesForNewCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
 
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            soci::rowset<int> rs = (
+								   sql.prepare <<
+								   " select file_id "
+								   " from t_file, t_job "
+								   " where t_file.source_se like :source "
+								   "	and t_file.dest_se like :destination "
+								   "	and t_file.job_id = t_job.job_id "
+								   "	and t_job.vo_name = :vo ",
+								   soci::use(source == "*" ? "%" : source),
+								   soci::use(destination == "*" ? "%" : destination),
+								   soci::use(vo)
+							   );
+
+            for (soci::rowset<int>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    out.push_back(*i);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+
+void MySqlAPI::delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) {
+
+}
+
+
+bool MySqlAPI::hasStandAloneCfgAssigned(int file_id, std::string vo) {
+
+}
+
+bool MySqlAPI::hasPairCfgAssigned(int file_id, std::string vo) {
+
 }
 
 // the class factories
