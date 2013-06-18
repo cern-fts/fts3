@@ -126,7 +126,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 2;
+                                    (*iter).numOfActivePerPair -= 1;
                                 }
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
@@ -137,7 +137,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
                         {
-                            (*iter).numOfActivePerPair -= 3;
+                            (*iter).numOfActivePerPair -= 2;
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
                             (*iter).successRate = trSuccessRateForPair;
@@ -234,7 +234,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 2;
+                                    (*iter).numOfActivePerPair -= 1;
                                 }
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
@@ -245,7 +245,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
                         {
-                            (*iter).numOfActivePerPair -= 3;
+                            (*iter).numOfActivePerPair -= 2;
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
                             (*iter).successRate = trSuccessRateForPair;
