@@ -343,13 +343,13 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
     map<string, int>::iterator it;
     for (it = share.begin(); it != share.end(); it++)
         {
-    		std::string& vo = it->second;
+    		std::string vo = it->first;
             // create new share configuration
             scoped_ptr<ShareConfig> cfg(new ShareConfig);
             cfg->source = source;
             cfg->destination = destination;
-            cfg->vo = it->first;
-            cfg->active_transfers = vo;
+            cfg->vo = vo;
+            cfg->active_transfers = it->second;
             // check if the configuration should use insert or update
             if (update.count(it->first))
                 {
