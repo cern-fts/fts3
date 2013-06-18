@@ -10273,35 +10273,514 @@ void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnec
 }
 
 void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+    std::string tag = "getFilesForNewSeCfg";
+    std::string query =
+			" select file_id "
+			" from t_file, t_job "
+			" where t_file.source_se like :1 "
+			"	and t_file.dest_se like :2 "
+			"	and t_file.job_id = t_job.job_id "
+			"	and t_job.vo_name = :3 "
+			"	and t_file.file_state in ('READY', 'ACTIVE') "
+    		;
 
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setString(1, source);
+            s->setString(2, destination);
+            s->setString(3, vo);
+            r = conn->createResultset(s, pooledConnection);
+
+            while (r->next())
+                {
+                    out.push_back(r->getInt(1));
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+
+
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
 }
 
 void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+    std::string tag = "getFilesForNewGrCfg";
+    std::string query =
+    		query +=
+						" select file_id "
+						" from t_file, t_job "
+						" where t_file.job_id = t_job.job_id "
+						"	and t_job.vo_name = :1 "
+						"	and t_file.file_state in ('READY', 'ACTIVE')";
+    		if (source != "*")
+    			{
+    				query +=
+						"	and t_file.source_se in ( "
+						"		select member "
+						"		from t_group_members "
+						"		where groupName = :2 "
+						"	) ";
+    				tag += "1";
+    			}
+    		if (destination != "*")
+    			{
+					query +=
+						"	and t_file.dest_se in ( "
+						"		select member "
+						"		from t_group_members "
+						"		where groupName = :3 "
+						"	) ";
+					tag += "2";
+    			}
 
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setString(1, vo);
+            if (source != "*") s->setString(2, source);
+            if (destination != "*") s->setString(3, destination);
+            r = conn->createResultset(s, pooledConnection);
+
+            while (r->next())
+                {
+                    out.push_back(r->getInt(1));
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+
+
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
 }
 
 void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) {
 
+    const std::string tag = "delFileShareConfig";
+    std::string query =
+            " delete from t_file_share_config  "
+            " where file_id = :1 "
+            "	and source = :2 "
+            "	and destination = :3 "
+            "	and vo = :4 "
+    		;
+
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection)
+                return;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setInt(1, file_id);
+            s->setString(2, source);
+            s->setString(3, destination);
+            s->setString(4, vo);
+            if (s->executeUpdate() != 0)
+                conn->commit(pooledConnection);
+            conn->destroyStatement(s, tag, pooledConnection);
+            s = NULL;
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+
+            conn->rollback(pooledConnection);
+            if(s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            conn->releasePooledConnection(pooledConnection);
+            throw Err_Custom(e.what());
+        }
+    catch (...)
+        {
+
+            conn->rollback(pooledConnection);
+            if(s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            conn->releasePooledConnection(pooledConnection);
+            throw Err_Custom("Unknown exception");
+        }
+    conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::delFileShareConfig(std::string groupd, std::string se) {
+void OracleAPI::delFileShareConfig(std::string group, std::string se) {
 
+    const std::string tag = "delFileShareConfig2";
+    std::string query =
+            " delete from t_file_share_config  "
+            " where (source = :1 or destination = :2) "
+            "	and file_id IN ( "
+            "		select file_id "
+            "		from t_file "
+            "		where (source_se = :3 or dest_se = :4) "
+            "			and file_state in ('READY', 'ACTIVE')"
+            "	) "
+    		;
+
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection)
+                return;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setString(1, group);
+            s->setString(2, group);
+            s->setString(3, se);
+            s->setString(4, se);
+            if (s->executeUpdate() != 0)
+                conn->commit(pooledConnection);
+            conn->destroyStatement(s, tag, pooledConnection);
+            s = NULL;
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+
+            conn->rollback(pooledConnection);
+            if(s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            conn->releasePooledConnection(pooledConnection);
+            throw Err_Custom(e.what());
+        }
+    catch (...)
+        {
+
+            conn->rollback(pooledConnection);
+            if(s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            conn->releasePooledConnection(pooledConnection);
+            throw Err_Custom("Unknown exception");
+        }
+    conn->releasePooledConnection(pooledConnection);
 }
 
 bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo) {
+    std::string tag = "hasStandAloneSeCfgAssigned";
+    std::string query =
+            " select count(*) "
+            " from t_file_share_config fc "
+            " where fc.file_id = :1 "
+            "	and fc.vo = :2 "
+            "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
+            "	and not exists ( "
+            "		select null "
+            "		from t_group_members g "
+            "		where g.groupName = fc.source or g.groupName = fc.destination "
+            "	) "
+    		;
 
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    int count = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return count > 0;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setInt(1, file_id);
+            s->setString(2, vo);
+            r = conn->createResultset(s, pooledConnection);
+
+            if (r->next())
+                {
+                    count = r->getInt(1);
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
+
+    return count > 0;
 }
 
 bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo) {
+    std::string tag = "hasPairSeCfgAssigned";
+    std::string query =
+            " select count(*) "
+            " from t_file_share_config fc "
+            " where fc.file_id = :1 "
+            "	and fc.vo = :2 "
+            "	and (fc.source <> '(*)' and fc.source <> '*' and fc.destination <> '*' and fc.destination <> '(*)') "
+			"	and not exists ( "
+			"		select null "
+			"		from t_group_members g "
+			"		where g.groupName = fc.source or g.groupName = fc.destination "
+			"	) "
+    		;
 
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    int count = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return count > 0;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setInt(1, file_id);
+            s->setString(2, vo);
+            r = conn->createResultset(s, pooledConnection);
+
+            if (r->next())
+                {
+                    count = r->getInt(1);
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
+
+    return count > 0;
 }
 
 bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo) {
+    std::string tag = "hasStandAloneGrCfgAssigned";
+    std::string query =
+            " select count(*) "
+            " from t_file_share_config fc "
+            " where fc.file_id = :1 "
+            "	and fc.vo = :2 "
+            "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
+            "	and exists ( "
+            "		select null "
+            "		from t_group_members g "
+            "		where g.groupName = fc.source or g.groupName = fc.destination "
+            "	) "
+    		;
 
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    int count = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return count > 0;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setInt(1, file_id);
+            s->setString(2, vo);
+            r = conn->createResultset(s, pooledConnection);
+
+            if (r->next())
+                {
+                    count = r->getInt(1);
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
+
+    return count > 0;
 }
 
 bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo) {
+    std::string tag = "hasPairGrCfgAssigned";
+    std::string query =
+            " select count(*) "
+            " from t_file_share_config fc "
+            " where fc.file_id = :1 "
+            "	and fc.vo = :2 "
+            "	and (fc.source <> '(*)' and fc.source <> '*' and fc.destination <> '*' and fc.destination <> '(*)') "
+			"	and exists ( "
+			"		select null "
+			"		from t_group_members g "
+			"		where g.groupName = fc.source or g.groupName = fc.destination "
+			"	) "
+    		;
 
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    int count = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return count > 0;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setInt(1, file_id);
+            s->setString(2, vo);
+            r = conn->createResultset(s, pooledConnection);
+
+            if (r->next())
+                {
+                    count = r->getInt(1);
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
+
+    return count > 0;
 }
 
 // the class factories
