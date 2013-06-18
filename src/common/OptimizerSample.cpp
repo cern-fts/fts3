@@ -19,7 +19,7 @@
 
 
 #define LOWTR 2
-#define MAXTR 3
+#define MAXTR 5
 
 
 OptimizerSample::OptimizerSample()
@@ -112,21 +112,21 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput == (*iter).throughput)
                                 {
-                                    if(throughput > 3)
+                                    if(throughput > 2)
                                         (*iter).numOfActivePerPair += 1;
                                     else
                                         (*iter).numOfActivePerPair += 0;
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput < (*iter).throughput)
                                 {
-                                    if(throughput > 3)
+                                    if(throughput > 2)
                                         (*iter).numOfActivePerPair += 1;
                                     else
-                                        (*iter).numOfActivePerPair -= 2;
+                                        (*iter).numOfActivePerPair -= 1;
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 3;
+                                    (*iter).numOfActivePerPair -= 2;
                                 }
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
@@ -220,21 +220,21 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput == (*iter).throughput)
                                 {
-                                    if(throughput > 3)
+                                    if(throughput > 2)
                                         (*iter).numOfActivePerPair += 1;
                                     else
                                         (*iter).numOfActivePerPair += 0;
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput < (*iter).throughput)
                                 {
-                                    if(throughput > 3)
+                                    if(throughput > 2)
                                         (*iter).numOfActivePerPair += 1;
                                     else
-                                        (*iter).numOfActivePerPair -= 2;
+                                        (*iter).numOfActivePerPair -= 1;
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 3;
+                                    (*iter).numOfActivePerPair -= 2;
                                 }
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
