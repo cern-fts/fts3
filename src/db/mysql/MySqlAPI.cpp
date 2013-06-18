@@ -5391,10 +5391,10 @@ bool MySqlAPI::hasPairSeCfgAssigned(int file_id, std::string vo) {
         {
             sql <<
                 " select count(*) "
-                " from t_file_share_config "
-                " where file_id = :id "
-                "	and vo = :vo "
-                "	and (source <> '(*)' and source <> '*' and destination <> '*' and destination <> '(*)') "
+                " from t_file_share_config fc "
+                " where fc.file_id = :id "
+                "	and fc.vo = :vo "
+                "	and (fc.source <> '(*)' and fc.source <> '*' and fc.destination <> '*' and fc.destination <> '(*)') "
 				"	and not exists ( "
 				"		select null "
 				"		from t_group_members g "
