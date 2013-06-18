@@ -10272,6 +10272,10 @@ void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnec
         }
 }
 
+void OracleAPI::getFilesForNewCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()

@@ -258,6 +258,8 @@ public:
 
     virtual void addFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) = 0;
 
+    virtual void getFilesForNewCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) = 0;
+
 //    virtual void delJobShareConfig(std::string job_id) = 0;
 
 //    virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id) = 0;

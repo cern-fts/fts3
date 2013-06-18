@@ -5242,6 +5242,10 @@ void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& 
         }
 }
 
+void MySqlAPI::getFilesForNewCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()
