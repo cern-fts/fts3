@@ -370,9 +370,17 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
                     for (it = files.begin(); it != files.end(); it++) {
 
                     	if (isgroup()) {
-                    		// get all se belonging to this group
-                    		vector<string> members;
-                    		db->getGroupMembers("name", members);
+
+                    		// check if it is a pair
+							bool pair = source != Configuration::any && destination != Configuration::any;
+
+							// if it is not a pair it is a standalone configuration
+							if (!pair) {
+								// if there is already a pair cfg this one does not apply
+								if (db->hasPairGrCfgAssigned(*it, vo)) {
+
+								}
+							}
 
                     	} else {
 							// first check the configuration type
@@ -392,13 +400,13 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
 							// if it is not a pair it is either standalone or default cfg
 							if (!pair) {
 								// if there is already a pair cfg this one does not apply
-								if (db->hasPairCfgAssigned(*it, vo)) continue;
+								if (db->hasPairSeCfgAssigned(*it, vo)) continue;
 							}
 
 							// if it is not a pair or standalone cfg it is a default cfg
 							if (!pair && !standalone) {
 								// if there is already a standalone cfg the default does not apply
-								if (db->hasStandAloneCfgAssigned(*it, vo)) continue;
+								if (db->hasStandAloneSeCfgAssigned(*it, vo)) continue;
 							}
 
 							// if it is either a pair or standalone ..

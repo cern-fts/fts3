@@ -262,9 +262,13 @@ public:
 
     virtual void delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) = 0;
 
-    virtual bool hasStandAloneCfgAssigned(int file_id, std::string vo) = 0;
+    virtual bool hasStandAloneSeCfgAssigned(int file_id, std::string vo) = 0;
 
-    virtual bool hasPairCfgAssigned(int file_id, std::string vo) = 0;
+    virtual bool hasPairSeCfgAssigned(int file_id, std::string vo) = 0;
+
+    virtual bool hasStandAloneGrCfgAssigned(int file_id, std::string vo) = 0;
+
+    virtual bool hasPairGrCfgAssigned(int file_id, std::string vo) = 0;
 
 //    virtual void delJobShareConfig(std::string job_id) = 0;
 

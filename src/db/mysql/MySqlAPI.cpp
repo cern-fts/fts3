@@ -5298,7 +5298,7 @@ void MySqlAPI::delFileShareConfig(int file_id, std::string source, std::string d
 }
 
 
-bool MySqlAPI::hasStandAloneCfgAssigned(int file_id, std::string vo) {
+bool MySqlAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo) {
     soci::session sql(*connectionPool);
 
     int count = 0;
@@ -5324,7 +5324,7 @@ bool MySqlAPI::hasStandAloneCfgAssigned(int file_id, std::string vo) {
     return count > 0;
 }
 
-bool MySqlAPI::hasPairCfgAssigned(int file_id, std::string vo) {
+bool MySqlAPI::hasPairSeCfgAssigned(int file_id, std::string vo) {
     soci::session sql(*connectionPool);
 
     int count = 0;
@@ -5348,6 +5348,14 @@ bool MySqlAPI::hasPairCfgAssigned(int file_id, std::string vo) {
         }
 
     return count > 0;
+}
+
+bool MySqlAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo) {
+
+}
+
+bool MySqlAPI::hasPairGrCfgAssigned(int file_id, std::string vo) {
+
 }
 
 // the class factories
