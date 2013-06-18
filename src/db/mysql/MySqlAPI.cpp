@@ -5305,7 +5305,7 @@ void MySqlAPI::getFilesForNewGrCfg(std::string source, std::string destination, 
     		soci::statement stmt(sql);
     		stmt.exchange(soci::use(vo, "vo"));
     		if (source != "*") stmt.exchange(soci::use(source, "source"));
-    		if (destination != "*") stmt.exchange(soci::use(destination, "destination"));
+    		if (destination != "*") stmt.exchange(soci::use(destination, "dest"));
     		stmt.exchange(soci::into(id));
     		stmt.alloc();
     		stmt.prepare(select);
