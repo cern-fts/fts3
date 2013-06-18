@@ -268,7 +268,7 @@ private:
     bool connected;
 
     /// Constructor
-    BdiiBrowser() : querying(0), connected(false) {};
+    BdiiBrowser() : ld(NULL), querying(0), connected(false) {};
     /// not implemented
     BdiiBrowser(BdiiBrowser const&);
     /// not implemented

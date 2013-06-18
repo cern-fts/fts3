@@ -83,7 +83,8 @@ bool BdiiBrowser::connect(string infosys, time_t sec)
     ret = ldap_initialize(&ld, url.c_str());
     if (ret != LDAP_SUCCESS)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << " " << infosys << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error init: " << ldap_err2string(ret) << " " << infosys << commit;
+	    disconnect();
             return false;
         }
 
@@ -127,7 +128,8 @@ bool BdiiBrowser::connect(string infosys, time_t sec)
     ret = ldap_sasl_bind_s(ld, 0, LDAP_SASL_SIMPLE, &cred, 0, 0, 0);
     if (ret != LDAP_SUCCESS)
         {
-            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error: " << ldap_err2string(ret) << " " << infosys << commit;
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error bind: " << ldap_err2string(ret) << " " << infosys << commit;
+	    disconnect();
             return false;
         }
 

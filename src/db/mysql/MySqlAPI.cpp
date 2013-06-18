@@ -280,7 +280,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
             std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-            for (it = distinct.begin(); it != distinct.end(); it++)
+            for (it = distinct.begin(); it != distinct.end(); ++it)
                 {
 
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
@@ -370,7 +370,7 @@ void MySqlAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<i
                                                  );
 
                     soci::rowset<soci::row>::iterator it;
-                    for (it = rs.begin(); it != rs.end(); it++)
+                    for (it = rs.begin(); it != rs.end(); ++it)
                         {
                             files.push_back(
                                 it->get<int>("file_id")
@@ -548,10 +548,10 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
         }
     catch (std::exception& e)
         {
-            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); i++)
+            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
                 {
                     std::list<TransferFiles*>& l = i->second;
-                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); it++)
+                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
                             delete *it;
                         }
@@ -2109,7 +2109,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
 
             ret += nActiveSource;
 
-            for (it = destination.begin(); it != destination.end(); it++)
+            for (it = destination.begin(); it != destination.end(); ++it)
                 {
 
                     std::string destin_hostname = *it;
@@ -2220,7 +2220,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 
             ret += nActiveDest;
 
-            for (it = source.begin(); it != source.end(); it++)
+            for (it = source.begin(); it != source.end(); ++it)
                 {
 
                     std::string source_hostname = *it;
@@ -3721,7 +3721,7 @@ int MySqlAPI::sumUpVoShares (std::string source, std::string destination, std::s
 
             std::string vos_str = "(";
 
-            for (it = vos.begin(); it != vos.end(); it++)
+            for (it = vos.begin(); it != vos.end(); ++it)
                 {
 
                     vos_str += *it + ",";
@@ -4616,7 +4616,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
                                          );
 
             soci::rowset<soci::row>::iterator it;
-            for (it = rs.begin(); it != rs.end(); it++)
+            for (it = rs.begin(); it != rs.end(); ++it)
                 {
 
                     std::string jobId = it->get<std::string>("job_id");
@@ -4661,7 +4661,7 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
             sql.commit();
 
             std::set<std::string>::iterator job_it;
-            for (job_it = jobs.begin(); job_it != jobs.end(); job_it++)
+            for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
                     updateJobTransferStatus(int(), *job_it, string());
                 }
@@ -4693,7 +4693,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
                                          );
 
             soci::rowset<soci::row>::iterator it;
-            for (it = rs.begin(); it != rs.end(); it++)
+            for (it = rs.begin(); it != rs.end(); ++it)
                 {
 
                     jobs.push_back(it->get<std::string>("job_id"));
@@ -4807,7 +4807,7 @@ void MySqlAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files)
                                          );
 
             soci::rowset<soci::row>::iterator it;
-            for (it = rs.begin(); it != rs.end(); it++)
+            for (it = rs.begin(); it != rs.end(); ++it)
                 {
                     files.push_back(
                         it->get<int>("file_id")
@@ -4838,7 +4838,7 @@ void MySqlAPI::getFilesForJobInCancelState(const std::string& jobId, std::vector
                                          );
 
             soci::rowset<soci::row>::iterator it;
-            for (it = rs.begin(); it != rs.end(); it++)
+            for (it = rs.begin(); it != rs.end(); ++it)
                 {
                     files.push_back(
                         it->get<int>("file_id")
@@ -4954,7 +4954,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                          );
 
             soci::rowset<soci::row>::iterator it;
-            for (it = rs.begin(); it != rs.end(); it++)
+            for (it = rs.begin(); it != rs.end(); ++it)
                 {
 
                     jobs.insert(it->get<std::string>("job_id"));
@@ -4970,7 +4970,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             sql.commit();
 
             std::set<std::string>::iterator job_it;
-            for (job_it = jobs.begin(); job_it != jobs.end(); job_it++)
+            for (job_it = jobs.begin(); job_it != jobs.end(); ++job_it)
                 {
                     updateJobTransferStatus(int(), *job_it, string());
                 }
@@ -5147,10 +5147,12 @@ void MySqlAPI::checkSanityState()
                                                         }
                                                     else   // otherwise it is FINISHEDDIRTY
                                                         {
+							    sql.begin();
                                                             sql << "UPDATE t_job SET "
                                                                 "    job_state = 'FINISHEDDIRTY', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                                                                 "    reason = :failed "
                                                                 "    WHERE job_id = :jobId", soci::use(failed), soci::use(*i);
+							    sql.commit();
                                                         }
                                                 }
                                         }
@@ -5184,6 +5186,7 @@ void MySqlAPI::checkSanityState()
         }
     catch (std::exception& e)
         {
+  	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
@@ -5332,6 +5335,7 @@ void MySqlAPI::delFileShareConfig(int file_id, std::string source, std::string d
 
     try
         {
+	    sql.begin();
             sql <<
                 " delete from t_file_share_config  "
                 " where file_id = :id "
@@ -5343,9 +5347,11 @@ void MySqlAPI::delFileShareConfig(int file_id, std::string source, std::string d
                 soci::use(destination),
                 soci::use(vo)
                 ;
+	    sql.commit();
         }
     catch (std::exception& e)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
@@ -5356,6 +5362,8 @@ void MySqlAPI::delFileShareConfig(std::string group, std::string se) {
 
     try
         {
+	    sql.begin();
+	    
             sql <<
                 " delete from t_file_share_config  "
                 " where (source = :gr or destination = :gr) "
@@ -5370,9 +5378,12 @@ void MySqlAPI::delFileShareConfig(std::string group, std::string se) {
                 soci::use(se),
                 soci::use(se)
                 ;
+		
+	    sql.commit();
         }
     catch (std::exception& e)
         {
+ 	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
