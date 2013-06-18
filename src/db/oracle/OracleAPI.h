@@ -218,6 +218,8 @@ public:
 
     virtual void delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo);
 
+    virtual void delFileShareConfig(std::string groupd, std::string se);
+
     virtual bool hasStandAloneSeCfgAssigned(int file_id, std::string vo);
 
     virtual bool hasPairSeCfgAssigned(int file_id, std::string vo);

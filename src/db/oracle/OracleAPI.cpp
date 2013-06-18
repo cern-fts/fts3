@@ -10284,6 +10284,10 @@ void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string 
 
 }
 
+void OracleAPI::delFileShareConfig(std::string groupd, std::string se) {
+
+}
+
 bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo) {
 
 }

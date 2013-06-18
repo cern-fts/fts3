@@ -5256,7 +5256,7 @@ void MySqlAPI::getFilesForNewSeCfg(std::string source, std::string destination, 
 								   "	and t_file.dest_se like :destination "
 								   "	and t_file.job_id = t_job.job_id "
 								   "	and t_job.vo_name = :vo "
-								   "	and t_file.file_state in ('READY', 'ACTIVE')",
+								   "	and t_file.file_state in ('READY', 'ACTIVE') ",
 								   soci::use(source == "*" ? "%" : source),
 								   soci::use(destination == "*" ? "%" : destination),
 								   soci::use(vo)
@@ -5342,6 +5342,33 @@ void MySqlAPI::delFileShareConfig(int file_id, std::string source, std::string d
                 soci::use(source),
                 soci::use(destination),
                 soci::use(vo)
+                ;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+
+void MySqlAPI::delFileShareConfig(std::string group, std::string se) {
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql <<
+                " delete from t_file_share_config  "
+                " where (source = :gr or destination = :gr) "
+                "	and file_id IN ( "
+                "		select file_id "
+                "		from t_file "
+                "		where (source_se = :se or dest_se = :se) "
+                "			and file_state in ('READY', 'ACTIVE')"
+                "	) ",
+                soci::use(group),
+                soci::use(group),
+                soci::use(se),
+                soci::use(se)
                 ;
         }
     catch (std::exception& e)
