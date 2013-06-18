@@ -5255,7 +5255,8 @@ void MySqlAPI::getFilesForNewCfg(std::string source, std::string destination, st
 								   " where t_file.source_se like :source "
 								   "	and t_file.dest_se like :destination "
 								   "	and t_file.job_id = t_job.job_id "
-								   "	and t_job.vo_name = :vo ",
+								   "	and t_job.vo_name = :vo "
+								   "	and t_file.file_state in ('READY', 'ACTIVE')",
 								   soci::use(source == "*" ? "%" : source),
 								   soci::use(destination == "*" ? "%" : destination),
 								   soci::use(vo)
