@@ -359,6 +359,16 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
                 {
                     db->addShareConfig(cfg.get());
                     insertCount++;
+
+                    // get all scheduled files that are affected by this configuration
+                    vector<int> files;
+                    vector<int>::iterator it;
+                    db->getFilesForNewCfg(cfg->source, cfg->destination, cfg->vo, files);
+
+                    // update t_file_share_config
+                    for (it = files.begin(); it != files.end(); it++) {
+                    	db->addFileShareConfig(*it, cfg->source, cfg->destination, cfg->vo);
+                    }
                 }
         }
 }
