@@ -343,12 +343,13 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
     map<string, int>::iterator it;
     for (it = share.begin(); it != share.end(); it++)
         {
+    		std::string& vo = it->second;
             // create new share configuration
             scoped_ptr<ShareConfig> cfg(new ShareConfig);
             cfg->source = source;
             cfg->destination = destination;
             cfg->vo = it->first;
-            cfg->active_transfers = it->second;
+            cfg->active_transfers = vo;
             // check if the configuration should use insert or update
             if (update.count(it->first))
                 {
@@ -367,7 +368,48 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
 
                     // update t_file_share_config
                     for (it = files.begin(); it != files.end(); it++) {
-                    	db->addFileShareConfig(*it, cfg->source, cfg->destination, cfg->vo);
+
+                    	// first check the configuration type
+
+                    	bool pair =
+                    			source != Configuration::wildcard &&
+                    			source != Configuration::any &&
+                    			destination != Configuration::wildcard &&
+                    			destination != Configuration::any
+                    			;
+
+                    	bool standalone =
+                    			(source != Configuration::wildcard && destination == Configuration::any) ||
+                    			(source == Configuration::any && destination != Configuration::wildcard)
+                    			;
+
+                    	// if it is not a pair it is either standalone or default cfg
+                    	if (!pair) {
+                    		// if there is already a pair cfg this one does not apply
+                    		if (db->hasStandAloneCfgAssigned(*it, vo)) continue;
+                    	}
+
+                    	// if it is not a pair or standalone cfg it is a default cfg
+                    	if (!pair && !standalone) {
+                    		// if there is already a standalone cfg the default does not apply
+                    		if (db->hasStandAloneCfgAssigned(*it, vo)) continue;
+                    	}
+
+                    	// if it is either a pair or standalone ..
+                    	if (pair || standalone) {
+                    		// the default cfg should be withdraw from use
+                    		db->delFileShareConfig(*it, Configuration::wildcard, Configuration::any, vo);
+                    		db->delFileShareConfig(*it, Configuration::any, Configuration::wildcard, vo);
+                    	}
+
+                    	// if it is a pair cfg ..
+                    	if (pair) {
+                    		// the default or standalone cfg should be withdraw from use
+                    		db->delFileShareConfig(*it, source, Configuration::any, vo);
+                    		db->delFileShareConfig(*it, Configuration::any, destination, vo);
+                    	}
+
+                    	db->addFileShareConfig(*it, source, destination, vo);
                     }
                 }
         }
