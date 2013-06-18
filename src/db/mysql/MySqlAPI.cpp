@@ -5287,14 +5287,14 @@ void MySqlAPI::getFilesForNewGrCfg(std::string source, std::string destination, 
 		select +=
 			"	and t_file.source_se in ( "
 			"		select member "
-			"		from t_grop_members "
+			"		from t_group_members "
 			"		where groupName = :source "
 			"	) ";
 	if (destination != "*")
 		select +=
 			"	and t_file.dest_se in ( "
 			"		select member "
-			"		from t_grop_members "
+			"		from t_group_members "
 			"		where groupName = :dest "
 			"	) ";
 
