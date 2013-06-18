@@ -90,6 +90,13 @@ public:
      */
     virtual void del();
 
+    /**
+     * Checks if the configuration concerns a single SE or a group
+     */
+    virtual bool isgroup() {
+    	return true;
+    }
+
 private:
 
     /// SE group name

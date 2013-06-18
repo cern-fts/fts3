@@ -79,6 +79,13 @@ public:
      * Saves the configuration into the DB.
      */
     virtual void save();
+
+    /**
+     * Checks if the configuration concerns a single SE or a group
+     */
+    virtual bool isgroup() {
+    	return true;
+    }
 };
 
 } /* namespace ws */

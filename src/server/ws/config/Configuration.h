@@ -111,6 +111,11 @@ public:
      */
     virtual void del() = 0;
 
+    /**
+     * Checks if the configuration concerns a single SE or a group
+     */
+    virtual bool isgroup() = 0;
+
     /// the 'any' character used to describe the SE (or SE group) to 'any' relation
     static const string any;
     /// the 'wildcard' string, so called catch-all

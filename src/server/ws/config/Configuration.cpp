@@ -369,6 +369,9 @@ void Configuration::addShareCfg(string source, string destination, map<string, i
                     // update t_file_share_config
                     for (it = files.begin(); it != files.end(); it++) {
 
+
+
+
                     	// first check the configuration type
 
                     	bool pair =
