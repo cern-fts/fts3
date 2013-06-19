@@ -256,6 +256,8 @@ public:
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs);
 
+    virtual std::vector<std::string> getAllCfgsForSe(std::string se);
+
     virtual std::vector<std::string> getAllStandAlloneCfgs();
 
     virtual std::vector<std::string> getAllShareOnlyCfgs();

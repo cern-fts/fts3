@@ -4059,6 +4059,12 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 }
 
 
+std::vector<std::string> MySqlAPI::getAllCfgsForSe(std::string se)
+{
+
+}
+
+
 std::vector<std::string> MySqlAPI::getAllStandAlloneCfgs()
 {
 
