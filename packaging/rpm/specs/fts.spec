@@ -302,3 +302,5 @@ exit 0
  * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1%{?dist}
   - dependency on 'gfal2-plugin-http' has been removed
   - the calls to mktemp have been removed
+  - cmake build type changed from Release to RelWithDebInfo
+  - EPEL5 specifics have been removed from spec files
