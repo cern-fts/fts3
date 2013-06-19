@@ -231,7 +231,6 @@ bool ProtocolResolver::resolve()
 
     if (isAuto())
         {
-            autoTunned = true;
             autotune();
         }
 

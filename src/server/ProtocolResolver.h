@@ -160,7 +160,6 @@ public:
 
 private:
 
-    bool autoTunned;
 
     /**
      * Checks if given entity is a SE group

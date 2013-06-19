@@ -104,8 +104,10 @@ int proc_find(const char* name)
                     if (fgets(buf, sizeof(buf), fp) != NULL)
                         {
                             /* check the first token in the file, the program name */
-                            char* first = strtok(buf, " ");
-                            if (!strcmp(first, name))
+                            char* first = NULL;
+			    first = strtok(buf, " ");
+			    
+                            if (first && !strcmp(first, name))
                                 {
                                     fclose(fp);
                                     fp = NULL;
