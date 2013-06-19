@@ -109,7 +109,7 @@ struct type_conversion<TransferJobs>
             }
         else
             {
-                job.FINISH_TIME = -1;
+                job.FINISH_TIME = 0;
             }
     }
 };
@@ -239,7 +239,7 @@ struct type_conversion<FileTransferStatus>
             }
         else
             {
-                transfer.start_time = -1;
+                transfer.start_time = time(NULL);
             }
         if (v.get_indicator("finish_time") == soci::i_ok)
             {
@@ -248,7 +248,7 @@ struct type_conversion<FileTransferStatus>
             }
         else
             {
-                transfer.finish_time = -1;
+                transfer.finish_time = time(NULL);
             }
     }
 };

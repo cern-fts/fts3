@@ -990,7 +990,7 @@ bool MySqlAPI::updateFileTransferStatus(std::string job_id, int file_id, std::st
 
     try
         {
-            double throughput;
+            double throughput = 0;
 
             sql.begin();
 

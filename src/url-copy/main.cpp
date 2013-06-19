@@ -1248,6 +1248,7 @@ int main(int argc, char **argv)
                         log << fileManagement->timestamp() << "INFO Transfer completed successfully" << '\n';
                     }
 
+
                 transferred_bytes = (double) source_size;
                 bytes_to_string = to_string<double>(transferred_bytes, std::dec);
                 msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
