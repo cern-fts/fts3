@@ -26,11 +26,12 @@
 
 using namespace fts3::cli;
 
-GetCfgCli::GetCfgCli()
+GetCfgCli::GetCfgCli() : SrcDestCli(true)
 {
 
     specific.add_options()
     ("name,n", value<string>(), "Restrict to specific symbolic (configuration) name.")
+    ("all", "Get all the configurations (standalone and pairs) for the given SE.")
     ;
 }
 
@@ -52,6 +53,11 @@ string GetCfgCli::getName()
         }
 
     return string();
+}
+
+bool GetCfgCli::all()
+{
+	return vm.count("all");
 }
 
 //optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {

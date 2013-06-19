@@ -51,7 +51,7 @@ public:
      * Creates source and destination command line options
      * (both are marked as positional options).
      */
-    SrcDestCli();
+    SrcDestCli(bool hide = false);
 
     /**
      * Destructor

@@ -66,6 +66,13 @@ public:
     string getName();
 
     /**
+     * Checks is all configurations for the given SE were requested
+     *
+     * return true if yes, fals eotherwise
+     */
+    bool all();
+
+    /**
      * Validates command line options
      * 1. Checks the endpoint
      * 2. If -h or -V option were used respective informations are printed
