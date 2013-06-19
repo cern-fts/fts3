@@ -122,7 +122,7 @@ target_link_libraries(fts_ws_ifce_client -lgsoap++)
 
 # Client side delegation library 
 add_library(fts_delegation_api_cpp SHARED
-#    ${gsoap_env_source_files}
+    ${PROJECT_SOURCE_DIR}/src/ws-ifce/gsoap/gsoap_env.cpp
     ${generated_files_dir}/${delegation_prefix}C.cpp
     ${generated_files_dir}/${delegation_prefix}Client.cpp
 )
