@@ -111,7 +111,7 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
             CGsiAdapter cgsi(soap);
             string dn = cgsi.getClientDn();
 
-            bool all = source.empty() && destination.empty();
+            bool allcfgs = source.empty() && destination.empty();
             bool standalone = !source.empty() && destination.empty();
             bool pair = !source.empty() && !destination.empty();
             bool symbolic_name = !name.empty();
@@ -121,13 +121,20 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
 //		}
 
             ConfigurationHandler handler (dn);
-            if (all)
+            if (allcfgs)
                 {
                     response.configuration->cfg = handler.get();
                 }
             else if (standalone)
                 {
-                    response.configuration->cfg = handler.get(source);
+            		if (all.empty())
+						{
+							response.configuration->cfg = handler.get(source);
+						}
+            		else
+						{
+            				response.configuration->cfg = handler.getAll(source);
+						}
                 }
             else if (pair)
                 {

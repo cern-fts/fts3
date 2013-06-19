@@ -114,6 +114,16 @@ public:
     vector<string> get(string name);
 
     /**
+     * Gets the whole configuration regarding all SEs and all SE groups from the DB.
+     * 	The configuration can also be restricted to a given SE and/or VO.
+     *
+     * @param se - SE name
+     *
+     * @return vector containing single configuration entries in JSON format
+     */
+    vector<string> getAll(string name);
+
+    /**
      *
      */
     vector<string> getPair(string src, string dest);

@@ -212,6 +212,23 @@ vector<string> ConfigurationHandler::get(string name)
     return ret;
 }
 
+vector<string> ConfigurationHandler::getAll(string name)
+{
+    FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
+
+    vector<string> ret;
+    try
+    {
+    	ret = get(name);
+    }
+    catch (Err& ex)
+    {
+    	// we don't care if nothing has been found
+    }
+
+    return ret;
+}
+
 vector<string> ConfigurationHandler::getPair(string src, string dest)
 {
 
