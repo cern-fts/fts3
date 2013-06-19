@@ -10374,9 +10374,12 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
             if (!pooledConnection) return;
 
             s = conn->createStatement(query, tag, pooledConnection);
-            s->setString(1, vo);
-            if (source != "*") s->setString(2, source);
-            if (destination != "*") s->setString(3, destination);
+
+            int index = 1;
+
+            s->setString(index++, vo);
+            if (source != "*") s->setString(index++, source);
+            if (destination != "*") s->setString(index, destination);
             r = conn->createResultset(s, pooledConnection);
 
             while (r->next())
