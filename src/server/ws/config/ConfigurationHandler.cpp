@@ -217,6 +217,7 @@ vector<string> ConfigurationHandler::getAll(string name)
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
 
     vector<string> ret;
+
     try
     {
     	ret = get(name);
