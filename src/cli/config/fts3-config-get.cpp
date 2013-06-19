@@ -52,11 +52,18 @@ int main(int ac, char* av[])
             if (!opt.is_initialized()) return 0;
             GSoapContextAdapter& ctx = opt.get();
 
+            string source = cli->getSource();
+            string destination =  cli->getDestination();
+
             string all;
-            if (cli->all()) all = "all";
+            if (cli->all())
+            {
+            	if (!source.empty() && destination.empty()) throw string("'--all' may only be used if querying for a single SE");
+            	all = "all";
+            }
 
             implcfg__getConfigurationResponse resp;
-            ctx.getConfiguration(cli->getSource(), cli->getDestination(), all, cli->getName(), resp);
+            ctx.getConfiguration(source, destination, all, cli->getName(), resp);
 
             vector<string> &cfgs = resp.configuration->cfg;
             vector<string>::iterator it;
