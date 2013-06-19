@@ -10294,8 +10294,8 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
             if (!pooledConnection) return;
 
             s = conn->createStatement(query, tag, pooledConnection);
-            s->setString(1, source);
-            s->setString(2, destination);
+            s->setString(1, source == "*" ? "%" : source);
+            s->setString(2, destination == "*" ? "%" : destination);
             s->setString(3, vo);
             r = conn->createResultset(s, pooledConnection);
 
@@ -10336,7 +10336,7 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
 
 void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
     std::string tag = "getFilesForNewGrCfg";
-    std::string query =
+    std::string query;
     		query +=
 						" select file_id "
 						" from t_file, t_job "
