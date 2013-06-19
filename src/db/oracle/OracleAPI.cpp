@@ -8005,7 +8005,60 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
 std::vector< std::pair<std::string, std::string> > OracleAPI::getPairsForSe(std::string se)
 {
+    std::vector< std::pair<std::string, std::string> > ret;
 
+    std::string tag = "getPairsForSe";
+    std::string query =
+            " select source, destination "
+            " from t_link_config "
+            " where (source = :1 and destination <> '*') "
+            "	or (source <> '*' and destination = :2) ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return ret;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setString(1, se);
+            s->setString(2, se);
+            r = conn->createResultset(s, pooledConnection);
+
+            while (r->next())
+                {
+                    ret.push_back(std::make_pair(r->getString(1), r->getString(2)));
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
+    return ret;
 }
 
 std::vector<std::string> OracleAPI::getAllStandAlloneCfgs()

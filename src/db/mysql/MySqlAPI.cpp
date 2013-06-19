@@ -4061,7 +4061,35 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 
 std::vector< std::pair<std::string, std::string> > MySqlAPI::getPairsForSe(std::string se)
 {
+    soci::session sql(*connectionPool);
 
+    std::vector< std::pair<std::string, std::string> > ret;
+
+    try
+        {
+            soci::rowset<soci::row> rs = (
+                                               sql.prepare <<
+                                               " select source, destination "
+                                               " from t_link_config "
+                                               " where (source = :source and destination <> '*') "
+                                               "	or (source <> '*' and destination = :dest) ",
+                                               soci::use(se),
+                                               soci::use(se)
+                                           );
+
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    ret.push_back(
+                    		make_pair(i->get<std::string>("source"), i->get<std::string>("destination"))
+                    	);
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return ret;
 }
 
 
