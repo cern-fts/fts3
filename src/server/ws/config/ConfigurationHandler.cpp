@@ -175,12 +175,10 @@ vector<string> ConfigurationHandler::get()
     return ret;
 }
 
-vector<string> ConfigurationHandler::get(string name)
+string ConfigurationHandler::get(string name)
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
-
-    vector<string> ret;
 
     if (db->isShareOnly(name))
         {
@@ -207,9 +205,7 @@ vector<string> ConfigurationHandler::get(string name)
                 }
         }
 
-    ret.push_back(cfg->json());
-
-    return ret;
+    return cfg->json();
 }
 
 vector<string> ConfigurationHandler::getAll(string name)
@@ -220,22 +216,27 @@ vector<string> ConfigurationHandler::getAll(string name)
 
     try
     {
-    	ret = get(name);
+    	ret.push_back(get(name));
     }
     catch (Err& ex)
     {
     	// we don't care if nothing has been found
     }
 
+    vector< pair<string, string> > pairs = db->getPairsForSe(name);
+    vector< pair<string, string> >::iterator it;
+
+    for (it = pairs.begin(); it != pairs.end(); it++) {
+    	ret.push_back(getPair(it->first, it->second));
+    }
+
     return ret;
 }
 
-vector<string> ConfigurationHandler::getPair(string src, string dest)
+string ConfigurationHandler::getPair(string src, string dest)
 {
 
     FTS3_COMMON_LOGGER_NEWLOG (INFO) << "DN: " << dn << " is querying configuration" << commit;
-
-    vector<string> ret;
 
     bool grPair = db->checkGroupExists(src) && db->checkGroupExists(dest);
     bool sePair = !db->checkGroupExists(src) && !db->checkGroupExists(dest);
@@ -255,12 +256,10 @@ vector<string> ConfigurationHandler::getPair(string src, string dest)
     else
         throw Err_Custom("The source and destination have to be either two SEs or two SE groups!");
 
-    ret.push_back(cfg->json());
-
-    return ret;
+    return cfg->json();
 }
 
-vector<string> ConfigurationHandler::getPair(string symbolic)
+string ConfigurationHandler::getPair(string symbolic)
 {
 
     scoped_ptr< pair<string, string> > p (

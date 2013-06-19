@@ -129,7 +129,7 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
                 {
             		if (all.empty())
 						{
-							response.configuration->cfg = handler.get(source);
+							response.configuration->cfg.push_back(handler.get(source));
 						}
             		else
 						{
@@ -138,11 +138,11 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
                 }
             else if (pair)
                 {
-                    response.configuration->cfg = handler.getPair(source, destination);
+                    response.configuration->cfg.push_back(handler.getPair(source, destination));
                 }
             else if (symbolic_name)
                 {
-                    response.configuration->cfg = handler.getPair(name);
+                    response.configuration->cfg.push_back(handler.getPair(name));
                 }
             else
                 {

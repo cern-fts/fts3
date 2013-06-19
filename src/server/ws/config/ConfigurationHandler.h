@@ -111,7 +111,7 @@ public:
      *
      * @return vector containing single configuration entries in JSON format
      */
-    vector<string> get(string name);
+    string get(string name);
 
     /**
      * Gets the whole configuration regarding all SEs and all SE groups from the DB.
@@ -126,12 +126,12 @@ public:
     /**
      *
      */
-    vector<string> getPair(string src, string dest);
+    string getPair(string src, string dest);
 
     /**
      *
      */
-    vector<string> getPair(string symbolic);
+    string getPair(string symbolic);
 
     /**
      * Deletes the configuration specified by the argument
