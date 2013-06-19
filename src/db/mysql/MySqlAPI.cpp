@@ -2640,7 +2640,7 @@ void MySqlAPI::backup()
             sql.commit();
 
             sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
-                "WHERE job_finished < (UTC_TIMESTAMP - interval '7' DAY ) AND "
+                "WHERE job_finished < (UTC_TIMESTAMP - interval '4' DAY ) AND "
                 "job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY')";
             sql.commit();
 
