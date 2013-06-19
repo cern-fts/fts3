@@ -8003,7 +8003,7 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
     conn->releasePooledConnection(pooledConnection);
 }
 
-std::vector<std::string> OracleAPI::getAllCfgsForSe(std::string se)
+std::vector< std::pair<std::string, std::string> > OracleAPI::getPairsForSe(std::string se)
 {
 
 }

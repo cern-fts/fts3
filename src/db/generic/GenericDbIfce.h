@@ -312,7 +312,7 @@ public:
 
     virtual void setToFailOldQueuedJobs(std::vector<std::string>& jobs) = 0;
 
-    virtual std::vector<std::string> getAllCfgsForSe(std::string se) = 0;
+    virtual std::vector< std::pair<std::string, std::string> > getPairsForSe(std::string se) = 0;
 
     virtual std::vector<std::string> getAllStandAlloneCfgs() = 0;
 
