@@ -58,7 +58,7 @@ int main(int ac, char* av[])
             string all;
             if (cli->all())
             {
-            	if (!source.empty() && destination.empty()) throw string("'--all' may only be used if querying for a single SE");
+            	if (!source.empty() && !destination.empty()) throw string("'--all' may only be used if querying for a single SE");
             	all = "all";
             }
 
