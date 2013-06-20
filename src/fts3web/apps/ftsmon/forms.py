@@ -71,6 +71,8 @@ class FilterForm(forms.Form):
     vo          = forms.CharField(required = False)
     metadata    = JsonField(required = False)
     time_window = forms.IntegerField(required = False)
+    startdate   = forms.DateField(required = False)
+    enddate     = forms.DateField(required = False)
     
     def is_empty(self):
         if self['source_se'].data or self['dest_se'].data or\

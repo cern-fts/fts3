@@ -9,7 +9,7 @@ Jobs
 {% include "filter.html" %}
 
 <h2>
-  Showing {{ jobs.start_index }} to {{ jobs.end_index }} out of {{ paginator.count }} (from the last {{hours}}h)
+  Showing {{ jobs.start_index }} to {{ jobs.end_index }} out of {{ paginator.count }} (from the last {{filters.time_window}}h)
   {% if jobs.has_previous %}
     <a href="?page=1&{{ filterForm.args }}">&lt;&lt;</a>
     <a href="?page={{ jobs.previous_page_number }}&{{ filterForm.args }}">&lt;</a>

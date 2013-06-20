@@ -46,7 +46,31 @@
           </span>
         {% endif %}
       </p>
-      {% if not noTime %}
+      {% if dateWindow %}
+      <p>
+        <label for="filter_startdate">Start date:</label>
+        <input type="text" id="filter_startdate" name="startdate" class="text_field"
+               value="{{filterForm.startdate.data|default_if_none:''}}"/>
+        {% if filterForm.startdate.errors %}
+          <span class="error">
+            {% for error in filterForm.startdate.errors %}
+              {{ error|escape }}
+            {% endfor %}
+          </span>
+        {% endif %}
+        
+        <label for="filter_enddate">End date:</label>
+        <input type="text" id="filter_enddate" name="enddate" class="text_field"
+               value="{{filterForm.enddate.data|default_if_none:''}}"/>
+        {% if filterForm.enddate.errors %}
+          <span class="error">
+            {% for error in filterForm.enddate.errors %}
+              {{ error|escape }}
+            {% endfor %}
+          </span>
+        {% endif %}
+      </p>
+      {% else %}
       <p>
         <label for="filter_timewindow">Time window:</label>
         <input type="text" id="filter_timewindow" name="time_window" class="text_field"
@@ -66,7 +90,7 @@
     </form>
   </div>
   <p>
-    <a href="#" onclick="javascript:$('#filters').toggle('slide', {'direction':'up'}); clearTimeout(autoRefresh);">
+    <a href="#" onclick="showFilters();">
       [Filters]
     </a>
   </p>
@@ -75,6 +99,11 @@
   $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources archive %}"});
   $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations archive %}"});
   $("#filter_vo").autocomplete({source: "{% url ftsmon.views.uniqueVos archive %}"});
+  
+  {% if dateWindow %}
+  $("#filter_startdate").datepicker();
+  $("#filter_enddate").datepicker();
+  {% endif %}
   
   function split(val) {
 	  return val.split(/,\s*/);
@@ -98,5 +127,12 @@
 	                                         },
 	                                 focus: function () { return false; }
                                   });
+                                  
+  function showFilters()
+  {
+    $('#filters').toggle('slide', {'direction':'up'});
+    if (typeof autoRefresh !== 'undefined')
+        clearTimeout(autoRefresh);
+  }
   </script>
 </div>

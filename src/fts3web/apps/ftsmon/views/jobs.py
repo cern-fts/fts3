@@ -40,21 +40,23 @@ class MetadataFilter:
 def setupFilters(filterForm):
     # Default values
     filters = {'state': None,
-               'hours': None,
+               'time_window': None,
                'vo': None,
                'source_se': None,
                'dest_se': None,
-               'metadata': None
+               'metadata': None,
+               'startdate': None,
+               'enddate': None
               }
     
     # Process filter form
     if filterForm.is_valid():
-        if filterForm['time_window'].value():
-            filters['hours'] = int(filterForm['time_window'].value())
-            
-        for key in ('state', 'vo', 'source_se', 'dest_se', 'metadata'):
-            if filterForm[key].value():
-                filters[key] = filterForm[key].value()
+        for key in filters.keys():
+            filters[key] = filterForm.cleaned_data[key]
+                
+    # If enddate < startdate, swap
+    if filters['startdate'] and filters['enddate'] and filters['startdate'] > filters['enddate']:
+        filters['startdate'], filters['enddate'] = filters['enddate'], filters['startdate']
     
     return filters
 
@@ -64,10 +66,23 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
     # Initial query
     jobs = jobModel.objects.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'})
     
+    # Convert startdate and enddate to datetime
+    startdate = enddate = None
+    if filters['startdate']:
+        startdate = datetime.datetime.combine(filters['startdate'], datetime.time(0, 0, 0))
+    if filters['enddate']:
+        enddate = datetime.datetime.combine(filters['enddate'], datetime.time(23, 59, 59))
+    
     # Time filter
-    if filters['hours']:
-        notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['hours'])
+    if filters['time_window']:
+        notBefore = datetime.datetime.utcnow() -  datetime.timedelta(hours = filters['time_window'])
         jobs = jobs.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))
+    elif startdate and enddate:
+        jobs = jobs.filter(finish_time__gte = startdate, finish_time__lte = enddate)
+    elif startdate:
+        jobs = jobs.filter(finish_time__gte = startdate)
+    elif enddate:
+        jobs = jobs.filter(finish_time__lte = enddate)
     
     # Filters
     if filters['vo']:
@@ -111,8 +126,8 @@ def jobIndex(httpRequest):
     filters = setupFilters(filterForm)
     
     # Set some defaults for filters if they are empty
-    if not filters['hours']:
-        filters['hours'] = 12;
+    if not filters['time_window']:
+        filters['time_window'] = 12;
     if not filters['state']:
         filters['state'] = states
     
@@ -122,7 +137,7 @@ def jobIndex(httpRequest):
                   {'filterForm': filterForm,
                    'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
-                   'hours': filters['hours'],
+                   'filters':    filters,
                    'request':    httpRequest})
 
 
@@ -130,7 +145,7 @@ def jobIndex(httpRequest):
 def archiveJobIndex(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters = setupFilters(filterForm)
-    filters['hours'] = None
+    filters['time_window'] = None
     
     jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)    
     paginator = Paginator(jobs, 50)
@@ -138,7 +153,7 @@ def archiveJobIndex(httpRequest):
                   {'filterForm': filterForm,
                    'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
-                   'additionalTitle': '',
+                   'filters':    filters,                   
                    'request':    httpRequest})
 
 
