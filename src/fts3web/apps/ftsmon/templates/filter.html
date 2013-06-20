@@ -12,11 +12,13 @@
         <input type="text" id="filter_source_se" name="source_se" class="text_field"
                value="{{filterForm.source_se.data|default_if_none:''}}"/>
       </p>
+      
       <p>
         <label for="filter_dest_se">Destination SE:</label>
         <input type="text" id="filter_dest_se" name="dest_se" class="text_field"
                value="{{filterForm.dest_se.data|default_if_none:''}}"/>
       </p>
+      
       <p>
         <label for="filter_state">State:</label>
         <input type="text" id="filter_state" name="state" class="text_field"
@@ -29,23 +31,13 @@
           </span>
         {% endif %}
       </p>
+      
       <p>
         <label for="filter_vo">VO:</label>
         <input type="text" id="filter_vo" name="vo" class="text_field"
                value="{{filterForm.vo.data|default_if_none:''}}"/>
       </p>
-      <p>
-        <label for="filter_metadata">Metadata:</label>
-        <input type="text" id="filter_metadata" name="metadata" class="text_field"
-               value="{{filterForm.metadata.data|default_if_none:''}}"/>
-        {% if filterForm.metadata.errors %}
-          <span class="error">
-            {% for error in filterForm.metadata.errors %}
-              {{ error|escape }}
-            {% endfor %}
-          </span>
-        {% endif %}
-      </p>
+
       {% if dateWindow %}
       <p>
         <label for="filter_startdate">Start date:</label>
@@ -84,6 +76,20 @@
         {% endif %}
       </p>
       {% endif %}
+      
+      <p>
+        <label for="filter_metadata">Metadata:</label>
+        <input type="text" id="filter_metadata" name="metadata" class="text_field"
+               value="{{filterForm.metadata.data|default_if_none:''}}"/>
+        {% if filterForm.metadata.errors %}
+          <span class="error">
+            {% for error in filterForm.metadata.errors %}
+              {{ error|escape }}
+            {% endfor %}
+          </span>
+        {% endif %}
+      </p>
+      
       <p>
         <input type="submit"/>
       </p>      
@@ -94,6 +100,11 @@
       [Filters]
     </a>
   </p>
+  {% if message %}
+  <p class="error">
+    {{ message }}
+  </p>
+  {% endif %}
   
   <script type="text/javascript">
   $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources archive %}"});

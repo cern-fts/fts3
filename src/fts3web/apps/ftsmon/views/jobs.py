@@ -103,15 +103,21 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
                        'priority', 'user_dn', 'reason',
                        'job_metadata', 'nullFinished', 'source_se', 'dest_se')
     # Ordering
-    jobs = jobs.order_by('-nullFinished', '-submit_time')[:1000]
+    jobs = jobs.order_by('-nullFinished', '-submit_time')
     
     # Wrap with a metadata filterer
+    msg = None
+    
+    META_LIMIT = 2000
     if filters['metadata']:
-        metadataFilter = MetadataFilter(filters['metadata'])
-        jobs = filter(metadataFilter, jobs)
+        if jobs.count() < META_LIMIT:
+            metadataFilter = MetadataFilter(filters['metadata'])
+            jobs = filter(metadataFilter, jobs)
+        else:
+            msg = 'Can not filter by metadata with more than %d results' % META_LIMIT
 
     # Return list
-    return jobs
+    return (msg, jobs)
 
 
 
@@ -131,13 +137,14 @@ def jobIndex(httpRequest):
     if not filters['state']:
         filters['state'] = states
     
-    jobs = jobListing(httpRequest, filters = filters)    
+    msg, jobs = jobListing(httpRequest, filters = filters)    
     paginator = Paginator(jobs, 50)
     return render(httpRequest, 'jobs/list.html',
                   {'filterForm': filterForm,
                    'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
                    'filters':    filters,
+                   'message':    msg,
                    'request':    httpRequest})
 
 
@@ -147,13 +154,14 @@ def archiveJobIndex(httpRequest):
     filters = setupFilters(filterForm)
     filters['time_window'] = None
     
-    jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)    
+    msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)    
     paginator = Paginator(jobs, 50)
     return render(httpRequest, 'jobs/archive.html',
                   {'filterForm': filterForm,
                    'jobs':       getPage(paginator, httpRequest),
                    'paginator':  paginator,
-                   'filters':    filters,                   
+                   'filters':    filters,
+                   'message':    msg,
                    'request':    httpRequest})
 
 
