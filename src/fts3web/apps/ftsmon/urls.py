@@ -24,5 +24,5 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^errors/$', 'showErrors'),
     url(r'^errors/list$', 'transfersWithError'),
     
-    url(r'archive/$', 'archiveJobIndex')
+    url(r'^archive/$', 'archiveJobIndex')
 )
