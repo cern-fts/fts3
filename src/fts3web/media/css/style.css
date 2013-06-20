@@ -329,3 +329,11 @@ table.configAudit .insert td:nth-child(1) {
 table.configAudit .update td:nth-child(1) {
   background-color: #88BBFF;  
 }
+
+table.configAudit .retry td:nth-child(1) {
+  background-color: #ECEB7F;
+}
+
+table.configAudit .debug td:nth-child(1) {
+  background-color: #888888;
+}
