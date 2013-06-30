@@ -258,13 +258,10 @@ exit 0
 %doc README
 %doc LICENSE
 
+
 %files python
-%dir %attr(0755,root,root) %{python_sitearch}/fts
-%{python_sitearch}/fts/*.py*
-%{python_sitearch}/fts/ftsdb.so*
-%{python_sitearch}/fts/libftspython.so*
-%doc README
-%doc LICENSE
+%{python_sitearch}/fts
+
 
 %files devel
 %{_bindir}/fts*
@@ -282,25 +279,25 @@ exit 0
 %{_libdir}/libfts_delegation_api_simple.so
 %{_libdir}/libfts_delegation_api_cpp.so
 %{_mandir}/man1/fts*
-%doc README
 
 
 %changelog
- * Wed Apr 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1%{?dist}
-  - First EPEL release
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.1-1%{?dist}
+* Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1
+  - dependency on 'gfal2-plugin-http' has been removed
+  - the calls to mktemp have been removed
+  - cmake build type changed from Release to RelWithDebInfo
+  - EPEL5 specifics have been removed from spec files
+  - changelog has been fixed
+* Fri May 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.2-1
+  - speling has been fixed in package's description
+  - man pages added to devel package
+  - services are disabled by default
+  - missing 'Requires(post): chkconfig' and 'Requires(preun): chkconfig' added
+* Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.1-1
   - BuildRequires and Requires entries have been sorted alphabetically
   - the non standard compilation options have been removed
   - package and the subpackages descriptions have been updated
   - documentation files listed as %doc
   - trailing white-spaces have been removed
- * Fri May 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.2-1%{?dist}
-  - speling has been fixed in package's description
-  - man pages added to devel package
-  - services are disabled by default
-  - missing 'Requires(post): chkconfig' and 'Requires(preun): chkconfig' added  
- * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1%{?dist}
-  - dependency on 'gfal2-plugin-http' has been removed
-  - the calls to mktemp have been removed
-  - cmake build type changed from Release to RelWithDebInfo
-  - EPEL5 specifics have been removed from spec files
+ * Wed Apr 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1
+  - First EPEL release
