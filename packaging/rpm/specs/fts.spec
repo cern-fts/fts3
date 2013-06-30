@@ -299,5 +299,5 @@ exit 0
   - package and the subpackages descriptions have been updated
   - documentation files listed as %doc
   - trailing white-spaces have been removed
- * Wed Apr 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1
+* Wed Apr 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.0-1
   - First EPEL release
