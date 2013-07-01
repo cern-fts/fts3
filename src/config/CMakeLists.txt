@@ -43,8 +43,10 @@ install(TARGETS         fts_config
 	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
 
 install(FILES         fts3config
-        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )
+        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3
+	PERMISSIONS OWNER_READ OWNER_WRITE)
 
 install(FILES         fts-msg-monitoring.conf
-        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3 )	
+        DESTINATION ${SYSCONF_INSTALL_DIR}/fts3
+	PERMISSIONS OWNER_READ OWNER_WRITE )	
 endif ()

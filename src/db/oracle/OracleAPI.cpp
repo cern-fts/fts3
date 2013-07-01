@@ -10844,6 +10844,63 @@ bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo) {
     return count > 0;
 }
 
+
+void OracleAPI::checkSchemaLoaded(){
+    std::string tag = "checkSchemaLoaded";
+    std::string query =
+            " select count(*) "
+            " from t_debug ";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    int count = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            r = conn->createResultset(s, pooledConnection);
+
+            if (r->next())
+                {
+                    count = r->getInt(1);
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+		
+            conn->releasePooledConnection(pooledConnection);				
+
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+		
+            conn->releasePooledConnection(pooledConnection);		
+
+            throw Err_Custom(std::string(__func__) + ": Caught exception, check if db schema has been created");
+        }
+    conn->releasePooledConnection(pooledConnection);
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()

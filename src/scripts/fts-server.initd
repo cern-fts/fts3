@@ -29,7 +29,8 @@ prog=$(basename $exec)
 
 lockfile=/var/lock/subsys/fts-server
 export GLOBUS_THREAD_MODEL=pthread
-
+export X509_USER_CERT=/etc/grid-security/fts3hostcert.pem
+export X509_USER_KEY=/etc/grid-security/fts3hostkey.pem
 
 start() {
     echo -n $"Starting $prog: "
@@ -37,8 +38,8 @@ start() {
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure   
-    # start 70 threads in the pool
-    fts_server -t 30 
+    # start 30 threads in the pool
+    daemon --user=fts3 fts_server -t 30 
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile

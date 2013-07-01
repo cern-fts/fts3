@@ -5547,6 +5547,26 @@ bool MySqlAPI::hasPairGrCfgAssigned(int file_id, std::string vo) {
     return count > 0;
 }
 
+
+void MySqlAPI::checkSchemaLoaded(){
+    soci::session sql(*connectionPool);
+    
+    int count = 0;
+    
+    try
+        {
+            sql <<
+                " select count(*) "
+                " from t_debug",
+                soci::into(count)
+                ;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }    
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()

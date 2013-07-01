@@ -1314,7 +1314,7 @@ protected:
                                 jobs2.clear();
                             }
                     }
-                usleep(150000);
+                sleep(1);
             } /*end while*/
     }
 

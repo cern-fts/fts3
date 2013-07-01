@@ -223,6 +223,8 @@ exit 0
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-myosg-updater
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-bdii-cache-updater
+%attr(0600,fts3,root) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
+%attr(0600,fts3,root) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server

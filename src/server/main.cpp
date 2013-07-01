@@ -47,8 +47,8 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 extern std::string stackTrace;
 extern bool stopThreads;
-const char *hostcert = "/etc/grid-security/hostcert.pem";
-const char *hostkey = "/etc/grid-security/hostkey.pem";
+const char *hostcert = "/etc/grid-security/fts3hostcert.pem";
+const char *hostkey = "/etc/grid-security/fts3hostkey.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
 /* -------------------------------------------------------------------------- */
@@ -266,13 +266,12 @@ static void isPathSane(const std::string& path,
 void checkDbSchema()
 {
     try
-        {
-	
+        {	
 	fts3_initialize_db_backend();
 	
-	
-	fts3_teardown_db_backend();
-	
+	db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
+		
+	fts3_teardown_db_backend();	
            
         }
     catch (Err& e)
@@ -412,7 +411,8 @@ int DoServer(int argc, char** argv)
             res = sigaction(SIGINT, &action, NULL);
 
             //initialize queue updater here to avoid race conditions
-            ThreadSafeList::get_instance();
+            ThreadSafeList::get_instance();	   
+    
             theServer().start();
 
         }
@@ -429,8 +429,13 @@ int DoServer(int argc, char** argv)
     return EXIT_SUCCESS;
 }
 
+
 int main(int argc, char** argv)
 {
+    //switch to non-priviledged user to avoid reading the hostcert
+    uid_t pw_uid = name_to_uid();
+    setuid(pw_uid);
+    seteuid(pw_uid); 
 
     pid_t child;
     //very first check before it goes to deamon mode

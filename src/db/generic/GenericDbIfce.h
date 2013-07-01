@@ -367,6 +367,8 @@ public:
     virtual void revertNotUsedFiles() = 0;
 
     virtual void checkSanityState() = 0;
+    
+    virtual void checkSchemaLoaded() = 0;
 };
 
 
