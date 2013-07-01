@@ -112,7 +112,9 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
     try
         {
-
+	    if(pooledConn <= 3)
+	       pooledConn = 4;
+		
             connectionPool = new soci::connection_pool(pooledConn);
 
             // From connectString, get host and db
