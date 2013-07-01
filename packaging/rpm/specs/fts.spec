@@ -69,6 +69,7 @@ Requires: gfal2-plugin-gridftp%{?_isa} >= 2.1.0
 Requires: gfal2-plugin-srm%{?_isa} >= 2.1.0
 Requires: glue-schema
 Requires: glue-validator
+Requires: gridsite >= 1.7.25
 Requires(post): chkconfig
 Requires(preun): chkconfig
 Requires(postun): initscripts
