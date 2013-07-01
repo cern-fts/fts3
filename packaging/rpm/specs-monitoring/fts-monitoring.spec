@@ -4,7 +4,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 3.0.3
-Release: 3%{?dist}
+Release: 4%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -40,10 +40,8 @@ shopt -s extglob
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_datadir}/fts3web/
 mkdir -p %{buildroot}%{_sysconfdir}/fts3web/
-mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/
 cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/!(etc|httpd.conf.d) %{buildroot}%{_datadir}/fts3web/
 cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/etc/fts3web         %{buildroot}%{_sysconfdir}
-install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/httpd/conf.d/
 
 %clean
 rm -rf %{buildroot}
@@ -51,7 +49,6 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root,-)
 %{_datadir}/fts3web
-%config(noreplace) %{_sysconfdir}/httpd/conf.d/ftsmon.conf
 %config(noreplace) %{_sysconfdir}/fts3web/
 
 %changelog
