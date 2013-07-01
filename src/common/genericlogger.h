@@ -152,9 +152,9 @@ public:
         if ( ! _logLine.str().empty())
             {
                 fprintf(stderr, "%s\n",_logLine.str().c_str());
-                //fflush(stderr);
+                fflush(stderr);
                 fprintf(stdout, "%s\n",_logLine.str().c_str());
-                //fflush(stdout);
+                fflush(stdout);
             }
 
         _logLine.str("");
