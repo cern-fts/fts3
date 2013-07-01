@@ -176,6 +176,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["SiteName"]) ),
         "Site name running the FTS3 service"
     )
+    (
+        "MonitoringMessaging",
+        po::value<std::string>( &(_vars["MonitoringMessaging"]) )->default_value("true"),
+        "Enable or disable monitoring using messaging for monitoring"
+    )    
     ;
 
     return config;

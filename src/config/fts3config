@@ -43,7 +43,7 @@ Optimizer=true
 HttpKeepAlive=true
 
 #Set to true to one and only one FTS3 VM to let the cron job cleanup old records from the primary database tables. The records are not deleted but moved to *_backup tables
-CleanRecordsHost=false
+CleanRecordsHost=true
 
 #Do not change this
 AuthorizedVO=*
@@ -58,6 +58,9 @@ MaxNumberOfProcesses=25000
 
 # site name 
 SiteName=
+
+#Enable/Disable monitoring using messaging monitoring (disabled=false / enabled=true)
+MonitoringMessaging=true
 
 #Do not change this
 [roles]

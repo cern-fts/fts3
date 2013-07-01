@@ -263,6 +263,37 @@ static void isPathSane(const std::string& path,
         }
 }
 
+void checkDbSchema()
+{
+    try
+        {
+	
+	fts3_initialize_db_backend();
+	
+	
+	fts3_teardown_db_backend();
+	
+           
+        }
+    catch (Err& e)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+            throw;
+        }
+    catch (std::exception& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
+            throw;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is going on the db schema, check if installed" << commit;
+            throw;
+        }
+}
+
+
+
 void checkInitDirs()
 {
     try
@@ -425,7 +456,11 @@ int main(int argc, char** argv)
 
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 
+	    //check file/dir persmissions
             checkInitDirs();
+	    	    
+	    //check if db schema is installed		    
+	    checkDbSchema();
         }
     catch (Err& e)
         {

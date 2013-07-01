@@ -127,6 +127,7 @@ static std::string globalErrorMessage("");
 static std::string infosys("");
 static bool manualConfig = false;
 static bool autoTunned = false;
+static bool monitoringMessages = false;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
@@ -452,7 +453,8 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+    if(monitoringMessages)
+    	msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
     reporter.timeout = timeout;
     reporter.nostreams = nbstreams;
@@ -682,6 +684,8 @@ int main(int argc, char **argv)
     for (register int i(1); i < argc; ++i)
         {
             std::string temp(argv[i]);
+            if (temp.compare("-P") == 0)
+                monitoringMessages = true;	    	    
             if (temp.compare("-O") == 0)
                 autoTunned = true;
             if (temp.compare("-N") == 0)
@@ -949,7 +953,9 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
             msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, dest_token_desc);
             msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);
-            msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
+	    
+	    if(monitoringMessages)
+            	msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
             int checkError = fileManagement->getLogStream(logStream);
             if (checkError != 0)
@@ -1381,7 +1387,10 @@ stop:
                 }
             logStream << fileManagement->timestamp() << "INFO Send monitoring complete message" << '\n';
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-            msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+	    
+    	    if(monitoringMessages)
+            	msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+
             logStream << fileManagement->timestamp() << "INFO Closing the log stream" << '\n';
             if (logStream.is_open())
                 {

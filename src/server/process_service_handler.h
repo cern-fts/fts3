@@ -222,6 +222,12 @@ public:
             {
                 allowedVOs = voNameList[0];
             }
+	    
+	std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+	if(monitoringMessagesStr == "false")
+		monitoringMessages = false;	    
+	else
+		monitoringMessages = true;	    	
     }
 
     /* ---------------------------------------------------------------------- */
@@ -250,6 +256,7 @@ protected:
     std::vector<TransferJobs*> jobs2;
     rlim_t maximumThreads;
     std::string infosys;
+    bool monitoringMessages;
 
     void killRunninfJob(std::vector<int>& requestIDs)
     {
@@ -508,6 +515,11 @@ protected:
                                                     {
                                                         params.append(" -O ");
                                                     }
+						    
+                                                if (monitoringMessages)
+                                                    {
+                                                        params.append(" -P ");
+                                                    }						    
 
                                                 if (proxy_file.length() > 0)
                                                     {
@@ -977,6 +989,11 @@ protected:
                                     {
                                         params.append(" -O ");
                                     }
+
+                                if (monitoringMessages)
+                                    {
+                                        params.append(" -P ");
+                                    }			
 
                                 if (proxy_file.length() > 0)
                                     {

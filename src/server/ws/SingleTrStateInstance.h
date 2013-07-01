@@ -76,6 +76,8 @@ private:
     static boost::scoped_ptr<SingleTrStateInstance> i;
 
     void constructJSONMsg(struct message_state* state);
+    
+    bool monitoringMessages;
 };
 
 

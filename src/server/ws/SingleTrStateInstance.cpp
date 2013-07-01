@@ -20,9 +20,11 @@
 #include "error.h"
 #include "producer_consumer_common.h"
 #include "db/generic/SingleDbInstance.h"
+#include "config/serverconfig.h"
 #include <sstream>
 
 using namespace db;
+using namespace FTS3_CONFIG_NAMESPACE;
 
 std::string _getTrTimestampUTC()
 {
@@ -40,11 +42,14 @@ std::string _getTrTimestampUTC()
 boost::scoped_ptr<SingleTrStateInstance> SingleTrStateInstance::i;
 ThreadTraits::MUTEX SingleTrStateInstance::_mutex;
 
+
 // Implementation
 
-SingleTrStateInstance::SingleTrStateInstance()
+SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
 {
-
+	std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+	if(monitoringMessagesStr == "false")
+		monitoringMessages = false;
 }
 
 SingleTrStateInstance::~SingleTrStateInstance()
@@ -54,8 +59,11 @@ SingleTrStateInstance::~SingleTrStateInstance()
 
 void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileId)
 {
-    struct message_state state;
 
+    if(!monitoringMessages)
+    	return;
+	
+    struct message_state state;
     try
         {
             if(fileId != -1)  //both job_id and file_id are provided
@@ -95,6 +103,9 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
 void SingleTrStateInstance::sendStateMessage(  const std::string&  vo_name, const std::string&  source_se, const std::string&  dest_se, const std::string&  job_id, int file_id, const std::string&
         job_state, const std::string&  file_state, int retry_counter, int retry_max, const std::string&  job_metadata, const std::string&  file_metadata)
 {
+
+    if(!monitoringMessages)
+    	return;
 
     struct message_state state;
     state.vo_name = vo_name;
