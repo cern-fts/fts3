@@ -32,7 +32,11 @@ Job {{ transferJob.job_id }}
       {% for tState in trasferStateCount %}
           {{ tState.count }} <a href="?state={{ tState.file_state }}">{{ tState.file_state }}</a> 
       {% endfor %}
-  )</h3>
+  )
+   {% if stateFilter %}
+   <a href="?">[Remove filter]</a>
+   {% endif %}
+  </h3>
   
   <h4>
     Showing {{ transferFiles.start_index }} to {{ transferFiles.end_index }}
