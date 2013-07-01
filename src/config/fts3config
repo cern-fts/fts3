@@ -5,7 +5,7 @@ Port=8443
 IP=0.0.0.0
 
 #mysql or oracle
-DbType=oracle
+DbType=mysql
 
 #db username
 DbUserName=
