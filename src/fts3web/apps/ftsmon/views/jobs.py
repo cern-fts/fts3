@@ -189,10 +189,13 @@ def jobDetails(httpRequest, jobId):
     transferStateCount = File.objects.filter(job = jobId)\
                                      .values('file_state')\
                                      .annotate(count = Count('file_state'))
+                                     
+    paginator = Paginator(files, 50)
     
     return render(httpRequest, 'jobs/details.html',
                   {'transferJob': job,
-                   'transferFiles': files,
+                   'transferFiles': getPage(paginator, httpRequest),
+                   'paginator':  paginator,
                    'trasferStateCount': transferStateCount,
                    'request': httpRequest})
 
