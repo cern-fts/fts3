@@ -186,9 +186,14 @@ def jobDetails(httpRequest, jobId):
     if not job:
         raise Http404
     
+    transferStateCount = File.objects.filter(job = jobId)\
+                                     .values('file_state')\
+                                     .annotate(count = Count('file_state'))
+    
     return render(httpRequest, 'jobs/details.html',
                   {'transferJob': job,
                    'transferFiles': files,
+                   'trasferStateCount': transferStateCount,
                    'request': httpRequest})
 
 

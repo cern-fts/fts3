@@ -28,7 +28,11 @@ Job {{ transferJob.job_id }}
     </p>
   {% endif %}
     
-  <h3>The job contains {{ transferFiles|length}} transfers</h3>
+  <h3>The job contains {{ transferFiles|length}} transfers (
+      {% for tState in trasferStateCount %}
+          {{ tState.count }} {{ tState.file_state }} 
+      {% endfor %}
+  )</h3>
   
   <table class="fileList">
     <thead>
