@@ -166,10 +166,12 @@ def archiveJobIndex(httpRequest):
 
 
 
-def _getJob(jobModel, fileModel, jobId):
+def _getJob(jobModel, fileModel, jobId, fstate = None):
     try:
         job   = jobModel.objects.get(job_id = jobId)
         files = fileModel.objects.filter(job = jobId)
+        if fstate:
+            files = files.filter(file_state = fstate)
         return (job, files)
     except jobModel.DoesNotExist:
         return (None, None)
@@ -177,11 +179,15 @@ def _getJob(jobModel, fileModel, jobId):
 
 
 def jobDetails(httpRequest, jobId):
+    # State filter
+    state = None
+    if 'state' in httpRequest.GET:
+        state = httpRequest.GET['state']
     # Try t_job and t_file first
-    (job, files) = _getJob(Job, File, jobId)
+    (job, files) = _getJob(Job, File, jobId, state)
     # Otherwise, try the archive
     if not job:
-        (job, files) = _getJob(JobArchive, FileArchive, jobId)
+        (job, files) = _getJob(JobArchive, FileArchive, jobId, state)
         
     if not job:
         raise Http404
@@ -197,6 +203,7 @@ def jobDetails(httpRequest, jobId):
                    'transferFiles': getPage(paginator, httpRequest),
                    'paginator':  paginator,
                    'trasferStateCount': transferStateCount,
+                   'stateFilter': state,
                    'request': httpRequest})
 
 

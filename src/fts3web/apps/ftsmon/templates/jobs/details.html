@@ -28,23 +28,23 @@ Job {{ transferJob.job_id }}
     </p>
   {% endif %}
     
-  <h3>The job contains {{ paginator.count }} transfers (
+  <h3>The job contains {{ paginator.count }} {{ stateFilter|default_if_none:"" }} transfers (
       {% for tState in trasferStateCount %}
-          {{ tState.count }} {{ tState.file_state }} 
+          {{ tState.count }} <a href="?state={{ tState.file_state }}">{{ tState.file_state }}</a> 
       {% endfor %}
   )</h3>
   
   <h4>
     Showing {{ transferFiles.start_index }} to {{ transferFiles.end_index }}
     {% if transferFiles.has_previous %}
-        <a href="?page=1">&lt;&lt;</a>
-        <a href="?page={{ transferFiles.previous_page_number }}">&lt;</a>
+        <a href="?page=1&amp;state={{ stateFilter|default_if_none:"" }}">&lt;&lt;</a>
+        <a href="?page={{ transferFiles.previous_page_number }}&amp;state={{ stateFilter|default_if_none:"" }}">&lt;</a>
     {% else %}
         &lt; &lt;&lt;
     {% endif %} | 
     {% if transferFiles.has_next %}
-        <a href="?page={{ transferFiles.next_page_number }}">&gt;</a>
-        <a href="?page={{ paginator.num_pages }}">&gt;&gt;</a>
+        <a href="?page={{ transferFiles.next_page_number }}&amp;state={{ stateFilter|default_if_none:"" }}">&gt;</a>
+        <a href="?page={{ paginator.num_pages }}&amp;state={{ stateFilter|default_if_none:"" }}">&gt;&gt;</a>
     {% else %}
         &gt; &gt;&gt;
     {% endif %}
