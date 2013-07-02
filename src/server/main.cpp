@@ -266,13 +266,13 @@ static void isPathSane(const std::string& path,
 void checkDbSchema()
 {
     try
-        {	
-	fts3_initialize_db_backend();
-	
-	db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
-		
-	fts3_teardown_db_backend();	
-           
+        {
+            fts3_initialize_db_backend();
+
+            db::DBSingleton::instance().getDBObjectInstance()->checkSchemaLoaded();
+
+            fts3_teardown_db_backend();
+
         }
     catch (Err& e)
         {
@@ -411,8 +411,8 @@ int DoServer(int argc, char** argv)
             res = sigaction(SIGINT, &action, NULL);
 
             //initialize queue updater here to avoid race conditions
-            ThreadSafeList::get_instance();	   
-    
+            ThreadSafeList::get_instance();
+
             theServer().start();
 
         }
@@ -435,7 +435,7 @@ int main(int argc, char** argv)
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
-    seteuid(pw_uid); 
+    seteuid(pw_uid);
 
     pid_t child;
     //very first check before it goes to deamon mode
@@ -461,11 +461,11 @@ int main(int argc, char** argv)
 
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 
-	    //check file/dir persmissions
+            //check file/dir persmissions
             checkInitDirs();
-	    	    
-	    //check if db schema is installed		    
-	    checkDbSchema();
+
+            //check if db schema is installed
+            checkDbSchema();
         }
     catch (Err& e)
         {

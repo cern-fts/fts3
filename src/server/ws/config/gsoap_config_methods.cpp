@@ -127,14 +127,14 @@ int fts3::implcfg__getConfiguration(soap* soap, string all, string name, string 
                 }
             else if (standalone)
                 {
-            		if (all.empty())
-						{
-							response.configuration->cfg.push_back(handler.get(source));
-						}
-            		else
-						{
-            				response.configuration->cfg = handler.getAll(source);
-						}
+                    if (all.empty())
+                        {
+                            response.configuration->cfg.push_back(handler.get(source));
+                        }
+                    else
+                        {
+                            response.configuration->cfg = handler.getAll(source);
+                        }
                 }
             else if (pair)
                 {

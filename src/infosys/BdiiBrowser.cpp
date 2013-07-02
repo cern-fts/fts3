@@ -84,7 +84,7 @@ bool BdiiBrowser::connect(string infosys, time_t sec)
     if (ret != LDAP_SUCCESS)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error init: " << ldap_err2string(ret) << " " << infosys << commit;
-	    disconnect();
+            disconnect();
             return false;
         }
 
@@ -129,7 +129,7 @@ bool BdiiBrowser::connect(string infosys, time_t sec)
     if (ret != LDAP_SUCCESS)
         {
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "LDAP error bind: " << ldap_err2string(ret) << " " << infosys << commit;
-	    disconnect();
+            disconnect();
             return false;
         }
 

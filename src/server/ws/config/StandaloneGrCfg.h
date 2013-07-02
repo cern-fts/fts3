@@ -93,8 +93,9 @@ public:
     /**
      * Checks if the configuration concerns a single SE or a group
      */
-    virtual bool isgroup() {
-    	return true;
+    virtual bool isgroup()
+    {
+        return true;
     }
 
 private:

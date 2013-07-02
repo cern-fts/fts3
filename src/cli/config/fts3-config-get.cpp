@@ -57,10 +57,10 @@ int main(int ac, char* av[])
 
             string all;
             if (cli->all())
-            {
-            	if (!source.empty() && !destination.empty()) throw string("'--all' may only be used if querying for a single SE");
-            	all = "all";
-            }
+                {
+                    if (!source.empty() && !destination.empty()) throw string("'--all' may only be used if querying for a single SE");
+                    all = "all";
+                }
 
             implcfg__getConfigurationResponse resp;
             ctx.getConfiguration(source, destination, all, cli->getName(), resp);

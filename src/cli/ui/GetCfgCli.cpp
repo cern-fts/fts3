@@ -57,7 +57,7 @@ string GetCfgCli::getName()
 
 bool GetCfgCli::all()
 {
-	return vm.count("all");
+    return vm.count("all");
 }
 
 //optional<GSoapContextAdapter&> GetCfgCli::validate(bool init) {

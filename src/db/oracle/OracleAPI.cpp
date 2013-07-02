@@ -744,7 +744,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     std::string selecttag = "getByJobId";
     int limit = 50;
     if(reuse)
-    	limit = 50000;    
+        limit = 50000;
 
     std::string select =
         "SELECT "
@@ -797,7 +797,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                     s->setString(1, job_id);
                     s->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); //submit_time
                     s->setString(3, job_id);
-		    s->setInt(4, limit);
+                    s->setInt(4, limit);
                     r = conn->createResultset(s, pooledConnection);
                     while (r->next())
                         {
@@ -8013,10 +8013,10 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getPairsForSe(std:
 
     std::string tag = "getPairsForSe";
     std::string query =
-            " select source, destination "
-            " from t_link_config "
-            " where (source = :1 and destination <> '*') "
-            "	or (source <> '*' and destination = :2) ";
+        " select source, destination "
+        " from t_link_config "
+        " where (source = :1 and destination <> '*') "
+        "	or (source <> '*' and destination = :2) ";
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10334,17 +10334,18 @@ void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnec
         }
 }
 
-void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out)
+{
     std::string tag = "getFilesForNewSeCfg";
     std::string query =
-			" select file_id "
-			" from t_file, t_job "
-			" where t_file.source_se like :1 "
-			"	and t_file.dest_se like :2 "
-			"	and t_file.job_id = t_job.job_id "
-			"	and t_job.vo_name = :3 "
-			"	and t_file.file_state in ('READY', 'ACTIVE') "
-    		;
+        " select file_id "
+        " from t_file, t_job "
+        " where t_file.source_se like :1 "
+        "	and t_file.dest_se like :2 "
+        "	and t_file.job_id = t_job.job_id "
+        "	and t_job.vo_name = :3 "
+        "	and t_file.file_state in ('READY', 'ACTIVE') "
+        ;
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10396,35 +10397,36 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out) {
+void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination, std::string vo, std::vector<int>& out)
+{
     std::string tag = "getFilesForNewGrCfg";
     std::string query;
-    		query +=
-						" select file_id "
-						" from t_file, t_job "
-						" where t_file.job_id = t_job.job_id "
-						"	and t_job.vo_name = :1 "
-						"	and t_file.file_state in ('READY', 'ACTIVE')";
-    		if (source != "*")
-    			{
-    				query +=
-						"	and t_file.source_se in ( "
-						"		select member "
-						"		from t_group_members "
-						"		where groupName = :2 "
-						"	) ";
-    				tag += "1";
-    			}
-    		if (destination != "*")
-    			{
-					query +=
-						"	and t_file.dest_se in ( "
-						"		select member "
-						"		from t_group_members "
-						"		where groupName = :3 "
-						"	) ";
-					tag += "2";
-    			}
+    query +=
+        " select file_id "
+        " from t_file, t_job "
+        " where t_file.job_id = t_job.job_id "
+        "	and t_job.vo_name = :1 "
+        "	and t_file.file_state in ('READY', 'ACTIVE')";
+    if (source != "*")
+        {
+            query +=
+                "	and t_file.source_se in ( "
+                "		select member "
+                "		from t_group_members "
+                "		where groupName = :2 "
+                "	) ";
+            tag += "1";
+        }
+    if (destination != "*")
+        {
+            query +=
+                "	and t_file.dest_se in ( "
+                "		select member "
+                "		from t_group_members "
+                "		where groupName = :3 "
+                "	) ";
+            tag += "2";
+        }
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10479,16 +10481,17 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo) {
+void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string destination, std::string vo)
+{
 
     const std::string tag = "delFileShareConfig";
     std::string query =
-            " delete from t_file_share_config  "
-            " where file_id = :1 "
-            "	and source = :2 "
-            "	and destination = :3 "
-            "	and vo = :4 "
-    		;
+        " delete from t_file_share_config  "
+        " where file_id = :1 "
+        "	and source = :2 "
+        "	and destination = :3 "
+        "	and vo = :4 "
+        ;
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
@@ -10532,19 +10535,20 @@ void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string 
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::delFileShareConfig(std::string group, std::string se) {
+void OracleAPI::delFileShareConfig(std::string group, std::string se)
+{
 
     const std::string tag = "delFileShareConfig2";
     std::string query =
-            " delete from t_file_share_config  "
-            " where (source = :1 or destination = :2) "
-            "	and file_id IN ( "
-            "		select file_id "
-            "		from t_file "
-            "		where (source_se = :3 or dest_se = :4) "
-            "			and file_state in ('READY', 'ACTIVE')"
-            "	) "
-    		;
+        " delete from t_file_share_config  "
+        " where (source = :1 or destination = :2) "
+        "	and file_id IN ( "
+        "		select file_id "
+        "		from t_file "
+        "		where (source_se = :3 or dest_se = :4) "
+        "			and file_state in ('READY', 'ACTIVE')"
+        "	) "
+        ;
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
@@ -10588,20 +10592,21 @@ void OracleAPI::delFileShareConfig(std::string group, std::string se) {
     conn->releasePooledConnection(pooledConnection);
 }
 
-bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo) {
+bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
+{
     std::string tag = "hasStandAloneSeCfgAssigned";
     std::string query =
-            " select count(*) "
-            " from t_file_share_config fc "
-            " where fc.file_id = :1 "
-            "	and fc.vo = :2 "
-            "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
-            "	and not exists ( "
-            "		select null "
-            "		from t_group_members g "
-            "		where g.groupName = fc.source or g.groupName = fc.destination "
-            "	) "
-    		;
+        " select count(*) "
+        " from t_file_share_config fc "
+        " where fc.file_id = :1 "
+        "	and fc.vo = :2 "
+        "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
+        "	and not exists ( "
+        "		select null "
+        "		from t_group_members g "
+        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "	) "
+        ;
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10653,20 +10658,21 @@ bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo) {
     return count > 0;
 }
 
-bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo) {
+bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
+{
     std::string tag = "hasPairSeCfgAssigned";
     std::string query =
-            " select count(*) "
-            " from t_file_share_config fc "
-            " where fc.file_id = :1 "
-            "	and fc.vo = :2 "
-            "	and (fc.source <> '(*)' and fc.source <> '*' and fc.destination <> '*' and fc.destination <> '(*)') "
-			"	and not exists ( "
-			"		select null "
-			"		from t_group_members g "
-			"		where g.groupName = fc.source or g.groupName = fc.destination "
-			"	) "
-    		;
+        " select count(*) "
+        " from t_file_share_config fc "
+        " where fc.file_id = :1 "
+        "	and fc.vo = :2 "
+        "	and (fc.source <> '(*)' and fc.source <> '*' and fc.destination <> '*' and fc.destination <> '(*)') "
+        "	and not exists ( "
+        "		select null "
+        "		from t_group_members g "
+        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "	) "
+        ;
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10718,20 +10724,21 @@ bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo) {
     return count > 0;
 }
 
-bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo) {
+bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
+{
     std::string tag = "hasStandAloneGrCfgAssigned";
     std::string query =
-            " select count(*) "
-            " from t_file_share_config fc "
-            " where fc.file_id = :1 "
-            "	and fc.vo = :2 "
-            "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
-            "	and exists ( "
-            "		select null "
-            "		from t_group_members g "
-            "		where g.groupName = fc.source or g.groupName = fc.destination "
-            "	) "
-    		;
+        " select count(*) "
+        " from t_file_share_config fc "
+        " where fc.file_id = :1 "
+        "	and fc.vo = :2 "
+        "	and ((fc.source <> '(*)' and fc.destination = '*') or (fc.source = '*' and fc.destination <> '(*)')) "
+        "	and exists ( "
+        "		select null "
+        "		from t_group_members g "
+        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "	) "
+        ;
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10783,20 +10790,21 @@ bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo) {
     return count > 0;
 }
 
-bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo) {
+bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
+{
     std::string tag = "hasPairGrCfgAssigned";
     std::string query =
-            " select count(*) "
-            " from t_file_share_config fc "
-            " where fc.file_id = :1 "
-            "	and fc.vo = :2 "
-            "	and (fc.source <> '(*)' and fc.source <> '*' and fc.destination <> '*' and fc.destination <> '(*)') "
-			"	and exists ( "
-			"		select null "
-			"		from t_group_members g "
-			"		where g.groupName = fc.source or g.groupName = fc.destination "
-			"	) "
-    		;
+        " select count(*) "
+        " from t_file_share_config fc "
+        " where fc.file_id = :1 "
+        "	and fc.vo = :2 "
+        "	and (fc.source <> '(*)' and fc.source <> '*' and fc.destination <> '*' and fc.destination <> '(*)') "
+        "	and exists ( "
+        "		select null "
+        "		from t_group_members g "
+        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "	) "
+        ;
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10849,11 +10857,12 @@ bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo) {
 }
 
 
-void OracleAPI::checkSchemaLoaded(){
+void OracleAPI::checkSchemaLoaded()
+{
     std::string tag = "checkSchemaLoaded";
     std::string query =
-            " select count(*) "
-            " from t_debug ";
+        " select count(*) "
+        " from t_debug ";
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -10885,8 +10894,8 @@ void OracleAPI::checkSchemaLoaded(){
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-		
-            conn->releasePooledConnection(pooledConnection);				
+
+            conn->releasePooledConnection(pooledConnection);
 
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
@@ -10897,8 +10906,8 @@ void OracleAPI::checkSchemaLoaded(){
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
-		
-            conn->releasePooledConnection(pooledConnection);		
+
+            conn->releasePooledConnection(pooledConnection);
 
             throw Err_Custom(std::string(__func__) + ": Caught exception, check if db schema has been created");
         }

@@ -98,7 +98,7 @@ int main()
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
-    seteuid(pw_uid); 
+    seteuid(pw_uid);
 
     int d =  daemon(0,0);
     if(d < 0)

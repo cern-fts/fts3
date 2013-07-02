@@ -526,7 +526,7 @@ int main(int argc, char** argv)
     //switch to non-priviledged user to avoid reading the hostcert
     uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
-    seteuid(pw_uid); 
+    seteuid(pw_uid);
 
     pid_t child;
 

@@ -315,8 +315,8 @@ public:
     virtual void checkSanityState();
 
     virtual void countFileInTerminalStates(std::string jobId, int& finished, int& cancelled, int& failed);
-    
-    virtual void checkSchemaLoaded();    
+
+    virtual void checkSchemaLoaded();
 
 private:
     size_t                poolSize;

@@ -47,9 +47,9 @@ ThreadTraits::MUTEX SingleTrStateInstance::_mutex;
 
 SingleTrStateInstance::SingleTrStateInstance(): monitoringMessages(true)
 {
-	std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
-	if(monitoringMessagesStr == "false")
-		monitoringMessages = false;
+    std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+    if(monitoringMessagesStr == "false")
+        monitoringMessages = false;
 }
 
 SingleTrStateInstance::~SingleTrStateInstance()
@@ -61,8 +61,8 @@ void SingleTrStateInstance::sendStateMessage(const std::string& jobId, int fileI
 {
 
     if(!monitoringMessages)
-    	return;
-	
+        return;
+
     struct message_state state;
     try
         {
@@ -105,7 +105,7 @@ void SingleTrStateInstance::sendStateMessage(  const std::string&  vo_name, cons
 {
 
     if(!monitoringMessages)
-    	return;
+        return;
 
     struct message_state state;
     state.vo_name = vo_name;

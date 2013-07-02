@@ -105,8 +105,8 @@ int proc_find(const char* name)
                         {
                             /* check the first token in the file, the program name */
                             char* first = NULL;
-			    first = strtok(buf, " ");
-			    
+                            first = strtok(buf, " ");
+
                             if (first && !strcmp(first, name))
                                 {
                                     fclose(fp);
@@ -222,12 +222,12 @@ public:
             {
                 allowedVOs = voNameList[0];
             }
-	    
-	std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
-	if(monitoringMessagesStr == "false")
-		monitoringMessages = false;	    
-	else
-		monitoringMessages = true;	    	
+
+        std::string monitoringMessagesStr = theServerConfig().get<std::string > ("MonitoringMessaging");
+        if(monitoringMessagesStr == "false")
+            monitoringMessages = false;
+        else
+            monitoringMessages = true;
     }
 
     /* ---------------------------------------------------------------------- */
@@ -515,11 +515,11 @@ protected:
                                                     {
                                                         params.append(" -O ");
                                                     }
-						    
+
                                                 if (monitoringMessages)
                                                     {
                                                         params.append(" -P ");
-                                                    }						    
+                                                    }
 
                                                 if (proxy_file.length() > 0)
                                                     {
@@ -993,7 +993,7 @@ protected:
                                 if (monitoringMessages)
                                     {
                                         params.append(" -P ");
-                                    }			
+                                    }
 
                                 if (proxy_file.length() > 0)
                                     {
@@ -1314,7 +1314,7 @@ protected:
                                 jobs2.clear();
                             }
                     }
-                sleep(1);
+                usleep(500000);
             } /*end while*/
     }
 

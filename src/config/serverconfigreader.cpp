@@ -180,7 +180,7 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         "MonitoringMessaging",
         po::value<std::string>( &(_vars["MonitoringMessaging"]) )->default_value("true"),
         "Enable or disable monitoring using messaging for monitoring"
-    )    
+    )
     ;
 
     return config;

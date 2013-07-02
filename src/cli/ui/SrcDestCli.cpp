@@ -30,22 +30,22 @@ using namespace fts3::cli;
 SrcDestCli::SrcDestCli(bool hide)
 {
 
-	if (hide)
-		{
-			// add commandline hidden options for fts3-transfer-submit
-			hidden.add_options()
-			("source", value<string>(), "Specify source site name.")
-			("destination", value<string>(), "Specify destination site name.")
-			;
-		}
-	else
-		{
-			// add commandline options specific for fts3-transfer-submit
-			specific.add_options()
-			("source", value<string>(), "Specify source site name.")
-			("destination", value<string>(), "Specify destination site name.")
-			;
-		}
+    if (hide)
+        {
+            // add commandline hidden options for fts3-transfer-submit
+            hidden.add_options()
+            ("source", value<string>(), "Specify source site name.")
+            ("destination", value<string>(), "Specify destination site name.")
+            ;
+        }
+    else
+        {
+            // add commandline options specific for fts3-transfer-submit
+            specific.add_options()
+            ("source", value<string>(), "Specify source site name.")
+            ("destination", value<string>(), "Specify destination site name.")
+            ;
+        }
 
     // add positional (those used without an option switch) command line options
     p.add("source", 1);

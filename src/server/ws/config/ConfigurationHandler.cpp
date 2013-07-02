@@ -215,40 +215,43 @@ vector<string> ConfigurationHandler::getAll(string name)
     vector<string> ret;
 
     try
-    {
-    	// get the standalone configuration
-    	ret.push_back(get(name));
-    }
+        {
+            // get the standalone configuration
+            ret.push_back(get(name));
+        }
     catch (Err& ex)
-    {
-    	// we don't care if nothing has been found
-    }
+        {
+            // we don't care if nothing has been found
+        }
 
     // check if there are pair configurations
     vector< pair<string, string> > pairs = db->getPairsForSe(name);
     vector< pair<string, string> >::iterator it;
 
-    for (it = pairs.begin(); it != pairs.end(); it++) {
-    	// get the pair configurations
-    	ret.push_back(getPair(it->first, it->second));
-    }
+    for (it = pairs.begin(); it != pairs.end(); it++)
+        {
+            // get the pair configurations
+            ret.push_back(getPair(it->first, it->second));
+        }
 
     // check if it is a member of a group
     string group = db->getGroupForSe(name);
 
-    if (!group.empty()) {
+    if (!group.empty())
+        {
 
-       	// get the standalone group configuration
-       	ret.push_back(get(group));
+            // get the standalone group configuration
+            ret.push_back(get(group));
 
-        // check if there are pair configurations
-        pairs = db->getPairsForSe(group);
+            // check if there are pair configurations
+            pairs = db->getPairsForSe(group);
 
-        for (it = pairs.begin(); it != pairs.end(); it++) {
-        	// get the pair configurations
-        	ret.push_back(getPair(it->first, it->second));
+            for (it = pairs.begin(); it != pairs.end(); it++)
+                {
+                    // get the pair configurations
+                    ret.push_back(getPair(it->first, it->second));
+                }
         }
-    }
 
     return ret;
 }
