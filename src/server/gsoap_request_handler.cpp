@@ -37,9 +37,9 @@ const char* peek_http_method(SOAP_SOCKET socket, char* method, size_t msize)
 {
     // To get the HTTP verb, 10 chars should be enough.
     // Something longer will likely not be HTTP
-    char buffer[10];
+    char buffer[10]={0};
 
-    size_t received = recv(socket, buffer, sizeof(buffer), MSG_PEEK);
+    ssize_t received = recv(socket, buffer, sizeof(buffer), MSG_PEEK);
     if (received < 1)
         return NULL;
 
