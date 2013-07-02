@@ -53,6 +53,7 @@ limitations under the License. */
 #include "StaticSslLocking.h"
 #include <sys/resource.h>
 #include <boost/algorithm/string/replace.hpp>
+#include <execinfo.h>
 
 using namespace std;
 using boost::thread;
@@ -514,9 +515,33 @@ void taskStatusUpdater(int time)
         }
 }
 
+
+void log_stack(int sig)
+{   
+   if(sig == SIGSEGV || sig == SIGBUS){
+            const int stack_size = 25;
+            void * array[stack_size]= {0};
+            int nSize = backtrace(array, stack_size);
+            char ** symbols = backtrace_symbols(array, nSize);
+            for (register int i = 0; i < nSize; ++i)
+                {
+                    if(symbols && symbols[i])
+                        {
+                            stackTrace+=std::string(symbols[i]) + '\n';
+                        }
+                }
+            if(symbols)
+                {
+                    free(symbols);
+                }
+   }		
+}
+
+
 void signalHandler(int signum)
 {
     logStream << fileManagement->timestamp() << "DEBUG Received signal " << signum << '\n';
+    log_stack(signum);
     if (stackTrace.length() > 0)
         {
             propagated = true;
@@ -663,20 +688,16 @@ __attribute__((constructor)) void begin(void)
 
 int main(int argc, char **argv)
 {
-
-    REGISTER_SIGNAL(SIGABRT);
-    REGISTER_SIGNAL(SIGSEGV);
-    REGISTER_SIGNAL(SIGTERM);
-    REGISTER_SIGNAL(SIGILL);
-    REGISTER_SIGNAL(SIGFPE);
-    REGISTER_SIGNAL(SIGBUS);
-    REGISTER_SIGNAL(SIGTRAP);
-    REGISTER_SIGNAL(SIGSYS);
-    REGISTER_SIGNAL(SIGUSR1);
-
-    // register signal SIGINT & SIGUSR1signal handler
+    // register signals handler
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
+    signal(SIGABRT, signalHandler);
+    signal(SIGSEGV, signalHandler);	
+    signal(SIGTERM, signalHandler);	
+    signal(SIGILL, signalHandler);  
+    signal(SIGBUS, signalHandler);	
+    signal(SIGTRAP, signalHandler);	
+    signal(SIGSYS, signalHandler);		    
 
     set_terminate(myterminate);
     set_unexpected(myunexpected);

@@ -737,11 +737,14 @@ void OracleAPI::updateJObStatus(std::string jobId, const std::string status)
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
+void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
 {
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::const_iterator iter;
     std::string selecttag = "getByJobId";
+    int limit = 50;
+    if(reuse)
+    	limit = 50000;    
 
     std::string select =
         "SELECT "
@@ -773,7 +776,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         "			f2.job_id=:3 AND f2.job_id = f1.job_id AND "
         "			f2.file_index = f1.file_index AND "
         "			f2.file_state= 'READY' "
-        "	) ORDER BY f1.file_id ASC) WHERE ROWNUM <= 100 ORDER BY file_id ASC";
+        "	) ORDER BY f1.file_id ASC) WHERE ROWNUM <= :4 ORDER BY file_id ASC";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -794,6 +797,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                     s->setString(1, job_id);
                     s->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); //submit_time
                     s->setString(3, job_id);
+		    s->setInt(4, limit);
                     r = conn->createResultset(s, pooledConnection);
                     while (r->next())
                         {

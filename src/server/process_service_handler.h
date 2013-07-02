@@ -326,7 +326,7 @@ protected:
                         std::vector<TransferJobs*>::const_iterator iter2;
 
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues, reuse);
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
@@ -756,7 +756,7 @@ protected:
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::list<TransferFiles*>::const_iterator queueiter;
 
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues);
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues, reuse);
 
                         if (voQueues.empty())
                             {

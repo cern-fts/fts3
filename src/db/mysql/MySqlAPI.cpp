@@ -500,13 +500,16 @@ void MySqlAPI::updateJObStatus(std::string jobId, const std::string status)
 
 
 
-void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
+void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
 {
     soci::session sql(*connectionPool);
 
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
+    int limit = 50;
+    if(reuse)
+    	limit = 50000;
 
     try
         {
@@ -535,9 +538,10 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "			f2.job_id = :jobId AND f2.job_id = f1.job_id AND "
                                                          "			f2.file_index = f1.file_index AND "
                                                          "			f2.file_state='READY' "
-                                                         "	 ) ORDER BY f1.file_id ASC LIMIT 50 ",soci::use(jobId), soci::use(tTime), soci::use(jobId)
-
-
+                                                         "	 ) ORDER BY f1.file_id ASC LIMIT :limit ",soci::use(jobId), 
+							 						  soci::use(tTime), 
+													  soci::use(jobId),
+													  soci::use(limit)
                                                      );
 
 
