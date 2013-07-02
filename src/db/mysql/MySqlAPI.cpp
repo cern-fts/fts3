@@ -666,8 +666,6 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus
 
     try
         {
-        // SLOW QUERY
-
             long long numFiles = 0;
             sql << "SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = :jobId",
                     soci::use(requestID), soci::into(numFiles);
