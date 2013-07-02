@@ -94,7 +94,7 @@ def _getStateCountPerVo():
 def _getAllPairs(notBefore, source = None, dest = None):
     pairs = []
     
-    query = File.objects.filter(finish_time__gte = notBefore)\
+    query = File.objects.filter(Q(finish_time__gte = notBefore) | Q(finish_time = None))\
                         .values('source_se', 'dest_se')
     if source:
         query = query.filter(source_se = source)
