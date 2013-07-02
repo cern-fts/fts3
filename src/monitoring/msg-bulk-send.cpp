@@ -52,6 +52,7 @@
 #include "concurrent_queue.h"
 #include "half_duplex.h"
 #include "utility_routines.h"
+#include "name_to_uid.h"
 
 using namespace std;
 
@@ -94,6 +95,10 @@ void DoServer()
 
 int main()
 {
+    //switch to non-priviledged user to avoid reading the hostcert
+    uid_t pw_uid = name_to_uid();
+    setuid(pw_uid);
+    seteuid(pw_uid); 
 
     int d =  daemon(0,0);
     if(d < 0)

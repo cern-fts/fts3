@@ -46,6 +46,7 @@ limitations under the License. */
 #include <string.h>
 #include "name_to_uid.h"
 #include "cred-utility.h"
+#include "name_to_uid.h"
 
 using namespace FTS3_SERVER_NAMESPACE;
 using namespace FTS3_COMMON_NAMESPACE;
@@ -522,6 +523,10 @@ __attribute__((constructor)) void begin(void)
 
 int main(int argc, char** argv)
 {
+    //switch to non-priviledged user to avoid reading the hostcert
+    uid_t pw_uid = name_to_uid();
+    setuid(pw_uid);
+    seteuid(pw_uid); 
 
     pid_t child;
 
