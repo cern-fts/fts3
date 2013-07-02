@@ -228,7 +228,6 @@ exit 0
 %attr(0600,fts3,root) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
 %config(noreplace) %{_sysconfdir}/fts3/fts3config
-%attr(0600,root,root) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts*
 
