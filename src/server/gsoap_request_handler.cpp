@@ -33,10 +33,68 @@ GSoapRequestHandler::~GSoapRequestHandler()
         acceptor.recycleSoapContext(ctx);
 }
 
+const char* peek_http_method(SOAP_SOCKET socket, char* method, size_t msize)
+{
+    // To get the HTTP verb, 10 chars should be enough.
+    // Something longer will likely not be HTTP
+    char buffer[10];
+
+    size_t received = recv(socket, buffer, sizeof(buffer), MSG_PEEK);
+    if (received < 1)
+        return NULL;
+
+    char *space = (char*)memchr(buffer, ' ', sizeof(buffer));
+    if (!space)
+        return NULL;
+
+    *space = '\0';
+
+    // Make sure it is a known verb
+    static const char *verbs[] = {"HEAD", "GET", "POST", "PUT",
+                                  "DELETE", "TRACE", "OPTIONS",
+                                  "CONNECT", NULL};
+
+    for (const char** v = verbs; *v != NULL; ++v) {
+        if (strcasecmp(*v, buffer) == 0) {
+            strncpy(method, buffer, msize);
+            return method;
+        }
+    }
+
+    return NULL;
+}
+
 void GSoapRequestHandler::handle()
 {
-    if(ctx)
-        fts3_serve(ctx);
+    if(ctx) {
+        char method[16] = {0};
+        if (peek_http_method(ctx->socket, method, sizeof(method))) {
+            FTS3_COMMON_LOGGER_NEWLOG (WARNING) << "Someone sent a plain HTTP request ("
+                                                << method
+                                                << ")"
+                                                << commit;
+
+            // Ugly, but soap doesn't seem to be able to respond
+            // (Probably because cgsi expects a ssl negotiation)
+            static const char msg[] =
+                    "HTTP/1.1 400 Bad Request\r\n"
+                    "Connection: close\r\n"
+                    "Content-Type: text/xml\r\n"
+                    "Content-Length: 266\r\n\r\n"
+                    "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">"
+                    "<SOAP-ENV:Body>"
+                    "<SOAP-ENV:Fault><faultcode>SOAP-ENV:Client</faultcode>"
+                    "<faultstring>Use the HTTPS scheme to access this URL</faultstring>"
+                    "</SOAP-ENV:Fault>"
+                    "</SOAP-ENV:Body>"
+                    "</SOAP-ENV:Envelope>";
+            // -1 = skip \0
+            send(ctx->socket, msg, sizeof(msg) - 1, MSG_NOSIGNAL);
+        }
+        else {
+            fts3_serve(ctx);
+        }
+    }
 }
 
 FTS3_SERVER_NAMESPACE_END
