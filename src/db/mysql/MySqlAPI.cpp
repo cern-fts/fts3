@@ -1680,7 +1680,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
             else
                 {
 
-                    unsigned numberOfActives;
+                    unsigned numberOfActives = 0;
 
                     sql << " SELECT COUNT(*) "
                         " FROM t_file "
@@ -1694,14 +1694,12 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT throughput, active, nostreams, timeout, buffer "
-                                                     " FROM ( "
-                                                     "	SELECT throughput, active, nostreams, timeout, buffer "
-                                                     "	FROM t_optimize "
+                                                     " FROM  "
+                                                     "	t_optimize "
                                                      "	WHERE source_se = :source "
                                                      "		AND dest_se = :destination "
                                                      "		AND throughput IS NOT NULL "
                                                      "	ORDER BY ABS(active - :active), throughput DESC"
-                                                     " ) sub "
                                                      " LIMIT 1 ",
                                                      soci::use(source_hostname),
                                                      soci::use(destin_hostname),
