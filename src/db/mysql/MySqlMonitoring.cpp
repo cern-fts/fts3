@@ -23,7 +23,7 @@
 #include "MySqlMonitoring.h"
 #include "sociMonitoringConversions.h"
 
-MySqlMonitoring::MySqlMonitoring(): poolSize(8), connectionPool(poolSize)
+MySqlMonitoring::MySqlMonitoring(): poolSize(2), connectionPool(poolSize)
 {
     memset(&notBefore, 0, sizeof(notBefore));
 }
@@ -39,33 +39,53 @@ MySqlMonitoring::~MySqlMonitoring()
 void MySqlMonitoring::init(const std::string& username, const std::string& password, const std::string &connectString, int pooledConn)
 {
     std::ostringstream connParams;
-    std::string host, db;
+    std::string host, db, port;
 
-    // From connectString, get host and db
-    size_t slash = connectString.find('/');
-    if (slash != std::string::npos)
-        {
-            connParams << "host='" << connectString.substr(0, slash) << "' "
-                       << "db='" << connectString.substr(slash + 1, std::string::npos) << "'";
-        }
-    else
-        {
-            connParams << "db='" << connectString << "'";
-        }
-    connParams << " ";
+             // From connectString, get host and db
+            size_t slash = connectString.find('/');
+            if (slash != std::string::npos)
+                {
+                    host = connectString.substr(0, slash);
+                    db   = connectString.substr(slash + 1, std::string::npos);
 
-    // Build connection string
-    connParams << "user='" << username << "' "
-               << "pass='" << password << "'";
+                    size_t colon = host.find(':');
+                    if (colon != std::string::npos)
+                        {
+                            port = host.substr(colon + 1, std::string::npos);
+                            host = host.substr(0, colon);
+                        }
 
-    std::string connStr = connParams.str();
-    poolSize = pooledConn;
-    // Connect
-    for (size_t i = 0; i < poolSize; ++i)
-        {
-            soci::session& sql = connectionPool.at(i);
-            sql.open(soci::mysql, connStr);
-        }
+                    connParams << "host='" << host << "' "
+                               << "db='" << db << "' ";
+
+                    if (!port.empty())
+                        connParams << "port=" << port << " ";
+                }
+            else
+                {
+                    connParams << "db='" << connectString << "' ";
+                }
+            connParams << " ";
+
+            // Build connection string
+            connParams << "user='" << username << "' "
+                       << "pass='" << password << "'";
+
+            std::string connStr = connParams.str();
+
+            // Connect
+            static const my_bool reconnect = 1;           
+
+            for (size_t i = 0; i < pooledConn; ++i)
+                {
+                    soci::session& sql = connectionPool.at(i);
+                    sql.open(soci::mysql, connStr);
+
+                    connectionPool.at(i) << "SET tx_isolation = 'READ-COMMITTED'";
+
+                    soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
+                    mysql_options(static_cast<MYSQL*>(be->conn_), MYSQL_OPT_RECONNECT, &reconnect);
+                }
 }
 
 

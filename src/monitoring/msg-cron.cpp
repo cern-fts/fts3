@@ -145,7 +145,7 @@ public:
                 try
                     {
                         this->monitoringDb = db::DBSingleton::instance().getMonitoringDBInstance();
-                        this->monitoringDb->init(dbUserName, dbPassword, dbConnectString, 1);
+                        this->monitoringDb->init(dbUserName, dbPassword, dbConnectString, 2);
                     }
                 catch (Err& exc)
                     {
