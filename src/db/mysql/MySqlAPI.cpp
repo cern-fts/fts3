@@ -688,7 +688,7 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus
                                              "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
                                              "    t_job.vo_name, t_file.file_index "
                                              "FROM t_job, t_file "
-                                             "WHERE t_file.job_id = :jobId and t_file.job_id = :jobId",
+                                             "WHERE t_file.job_id = :jobId and t_file.job_id=t_job.job_id and t_file.job_id = :jobId",
                                              soci::use(requestID, "jobId"));
 
             for (soci::rowset<JobStatus>::iterator i = rs.begin(); i != rs.end(); ++i)
@@ -1120,15 +1120,15 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "    (SELECT COUNT(DISTINCT file_index) AS nFiles FROM t_file WHERE job_id = :jobId) as DTableTotal, "
                 // the number of canceled files in the job, files counts as canceled if all replicas has been canceled
                 "    (SELECT COUNT(DISTINCT file_index) AS nCanceled FROM t_file f1 WHERE job_id = :jobId "
-                "																	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'CANCELED') "
+                "	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = :jobId AND f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND f2.file_state <> 'CANCELED') "
                 "		) as DTableCanceled, "
                 // the number of finished files in the job, file counts as finished if at least one replica went to the finished state
                 "    (SELECT COUNT(DISTINCT file_index) AS nFinished FROM t_file WHERE job_id = :jobId AND file_state = 'FINISHED') AS DTableFinished, "
                 // the number of failed files in the job, file counts as failed if all the replicas went to failed state except replicas that were cancelled
                 "    (SELECT COUNT(DISTINCT f1.file_index) AS nFailed FROM t_file f1 WHERE f1.job_id = :jobId "
-                "																	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND (f2.file_state <> 'FAILED' AND f2.file_state <> 'CANCELED')) "
+                "	AND NOT EXISTS (SELECT NULL FROM t_file f2 WHERE f1.job_id = :jobId AND f1.job_id = f2.job_id AND f1.file_index = f2.file_index AND (f2.file_state <> 'FAILED' AND f2.file_state <> 'CANCELED')) "
                 "		) AS DTableFailed ",
-                soci::use(job_id, "jobId"),
+                soci::use(job_id, "jobId"),soci::use(job_id, "jobId"),soci::use(job_id, "jobId"),
                 soci::into(numberOfFilesInJob), soci::into(numberOfFilesCanceled),
                 soci::into(numberOfFilesFinished), soci::into(numberOfFilesFailed);
 
