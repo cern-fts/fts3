@@ -40,6 +40,7 @@ using namespace fts3::common;
  */
 int main(int ac, char* av[])
 {
+    static const int DEFAULT_LIMIT = 100;
 
     scoped_ptr<TransferStatusCli> cli;
 
@@ -86,35 +87,42 @@ int main(int ac, char* av[])
                     // check if the -l option has been used
                     if (cli->list())
                         {
+                            int offset = 0;
+                            int cnt = 0;
 
-                            // do the request
-                            impltns__getFileStatusResponse resp;
-                            ctx.getFileStatus(jobId, resp);
-
-                            if (resp._getFileStatusReturn)
+                            do
                                 {
+                                    // do the request
+                                    impltns__getFileStatusResponse resp;
+                                    cnt = ctx.getFileStatus(jobId, offset, DEFAULT_LIMIT, resp);
 
-                                    std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
-                                    std::vector<tns3__FileTransferStatus * >::iterator it;
-
-                                    // print the response
-                                    for (it = vect.begin(); it < vect.end(); it++)
+                                    if (cnt > 0 && resp._getFileStatusReturn)
                                         {
-                                            tns3__FileTransferStatus* stat = *it;
 
-                                            vector<string> values =
-                                                list_of
-                                                (*stat->sourceSURL)
-                                                (*stat->destSURL)
-                                                (*stat->transferFileState)
-                                                (lexical_cast<string>(stat->numFailures))
-                                                (*stat->reason)
-                                                (lexical_cast<string>(stat->duration))
-                                                ;
+                                            std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
+                                            std::vector<tns3__FileTransferStatus * >::iterator it;
 
-                                            cli->printer().file_list(values);
+                                            // print the response
+                                            for (it = vect.begin(); it < vect.end(); it++)
+                                                {
+                                                    tns3__FileTransferStatus* stat = *it;
+
+                                                    vector<string> values =
+                                                        list_of
+                                                        (*stat->sourceSURL)
+                                                        (*stat->destSURL)
+                                                        (*stat->transferFileState)
+                                                        (lexical_cast<string>(stat->numFailures))
+                                                        (*stat->reason)
+                                                        (lexical_cast<string>(stat->duration))
+                                                        ;
+
+                                                    cli->printer().file_list(values);
+                                                }
                                         }
-                                }
+
+                                    offset += cnt;
+                                } while(cnt == DEFAULT_LIMIT);
                         }
                 }
 

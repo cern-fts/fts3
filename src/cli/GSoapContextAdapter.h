@@ -195,8 +195,9 @@ public:
      *
      * @param jobId id of the job
      * @param resp server response
+     * @return The number of files returned
      */
-    void getFileStatus (string jobId, impltns__getFileStatusResponse& resp);
+    int getFileStatus (string jobId, int offset, int limit, impltns__getFileStatusResponse& resp);
 
     /**
      * Remote call to setConfiguration

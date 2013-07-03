@@ -463,10 +463,11 @@ JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId)
            );
 }
 
-void GSoapContextAdapter::getFileStatus (string jobId, impltns__getFileStatusResponse& resp)
+int GSoapContextAdapter::getFileStatus (string jobId, int offset, int limit, impltns__getFileStatusResponse& resp)
 {
-    if (soap_call_impltns__getFileStatus(ctx, endpoint.c_str(), 0, jobId, 0, 100, resp))
+    if (soap_call_impltns__getFileStatus(ctx, endpoint.c_str(), 0, jobId, offset, limit, resp))
         handleSoapFault("Failed to get job status: getFileStatus.");
+    return resp._getFileStatusReturn->item.size();
 }
 
 void GSoapContextAdapter::setConfiguration (config__Configuration *config, implcfg__setConfigurationResponse& resp)
