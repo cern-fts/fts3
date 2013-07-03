@@ -281,7 +281,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                 "   EXISTS ( "
                 "		SELECT NULL "
                 "		FROM t_file "
-                "		WHERE t_file.job_id = t_job.job_id AND "
+                "		WHERE t_job.job_id = t_file.job_id AND "
                 "		    t_file.source_se = :source AND "
                 "			t_file.dest_se = :dest AND "
                 "			t_file.file_state = 'SUBMITTED'"
@@ -1115,7 +1115,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
             sql.begin();
 
-/* LEAVE IT HERE JUST FOR REFERENCE IF THINGS GO WRONG WITH NOT EXIST
+
 	    // the total number of files within a job
 	    sql << "SELECT COUNT(DISTINCT file_index) FROM t_file WHERE job_id = :jobId", 
 	    	soci::use(job_id, "jobId"), soci::into(numberOfFilesInJob);
@@ -1133,9 +1133,8 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 	    sql << "select COUNT(DISTINCT f1.file_index) FROM t_file as f1 JOIN t_file as f2 on (f2.job_id = :jobId  AND f1.job_id = f2.job_id AND "
 	    	   "f1.file_index = f2.file_index AND (f2.file_state = 'FAILED' AND f2.file_state <> 'CANCELED'))", 
 	    	soci::use(job_id, "jobId"), soci::into(numberOfFilesFailed);	   				 
-*/
 
-
+/*
             sql << "SELECT nFiles, nCanceled, nFinished, nFailed FROM "
                 // the total number of files within a job
                 "    (SELECT COUNT(DISTINCT file_index) AS nFiles FROM t_file WHERE job_id = :jobId) as DTableTotal, "
@@ -1152,7 +1151,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 soci::use(job_id, "jobId"),soci::use(job_id, "jobId"),soci::use(job_id, "jobId"),
                 soci::into(numberOfFilesInJob), soci::into(numberOfFilesCanceled),
                 soci::into(numberOfFilesFinished), soci::into(numberOfFilesFailed);
-  
+*/  
     	  
             int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
