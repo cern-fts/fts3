@@ -803,22 +803,38 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
 
 
 
-void MySqlAPI::getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files)
+void MySqlAPI::getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     soci::session sql(*connectionPool);
     try
         {
-            soci::rowset<FileTransferStatus> rs = (sql.prepare  << "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
-                                                   "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
-                                                   "FROM t_file WHERE t_file.job_id = :jobId",
-                                                   soci::use(requestID));
+            std::string query = "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
+                                "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
+                                "FROM t_file WHERE t_file.job_id = :jobId ";
+            if (limit)
+                query += " LIMIT :offset,:limit";
+            else
+                query += " LIMIT :offset,18446744073709551615";
 
-            for (soci::rowset<FileTransferStatus>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+
+            FileTransferStatus transfer;
+            soci::statement stmt(sql);
+            stmt.exchange(soci::into(transfer));
+            stmt.exchange(soci::use(requestID, "jobId"));
+            stmt.exchange(soci::use(offset, "offset"));
+            if (limit)
+                stmt.exchange(soci::use(limit, "limit"));
+
+            stmt.alloc();
+            stmt.prepare(query);
+            stmt.define_and_bind();
+
+            if (stmt.execute(true))
                 {
-                    FileTransferStatus const& transfer = *i;
-                    files.push_back(new FileTransferStatus(transfer));
+                    do {
+                        files.push_back(new FileTransferStatus(transfer));
+                    } while (stmt.fetch());
                 }
-
         }
     catch (std::exception& e)
         {

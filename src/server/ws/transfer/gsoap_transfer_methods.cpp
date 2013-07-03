@@ -238,9 +238,9 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
 
             // create response
             _param_9._getFileStatusReturn = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus(soap, -1);
-            DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, statuses);
+            DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, _offset, _limit, statuses);
 
-            for (it = statuses.begin() + _offset; it < statuses.end() && it < statuses.begin() + _offset + _limit; it++)
+            for (it = statuses.begin(); it != statuses.end(); it++)
                 {
 
                     FileTransferStatus* tmp = *it;
@@ -302,9 +302,9 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 
             // create response
             _param_10._getFileStatus2Return = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(soap, -1);
-            DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, statuses);
+            DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, _offset, _limit, statuses);
 
-            for (it = statuses.begin() + _offset; it < statuses.end() && it < statuses.begin() + _offset + _limit; it++)
+            for (it = statuses.begin(); it != statuses.end(); it++)
                 {
 
                     FileTransferStatus* tmp = *it;

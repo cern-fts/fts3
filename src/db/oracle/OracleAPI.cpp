@@ -1235,12 +1235,26 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files)
+void OracleAPI::getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     std::string query =
-        "SELECT t_file.SOURCE_SURL, t_file.DEST_SURL, t_file.file_state, t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
-        " FROM t_file WHERE t_file.job_id = :1";
-    const std::string tag = "getTransferFileStatus";
+        "SELECT * FROM ("
+        "   SELECT t_file.SOURCE_SURL, t_file.DEST_SURL, "
+        "          t_file.file_state, t_file.reason, "
+        "          t_file.start_time, t_file.finish_time, t_file.retry, "
+        "          Rownum as rw "
+        "   FROM t_file WHERE t_file.job_id = :1) ";
+
+    std::string tag = "getTransferFileStatus";
+
+    if (limit) {
+        query += "WHERE rw BETWEEN :2 AND :3";
+    }
+    else {
+        query += "WHERE rw >= :2";
+        tag += "Limited";
+    }
+
 
     FileTransferStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
@@ -1257,6 +1271,10 @@ void OracleAPI::getTransferFileStatus(std::string requestID, std::vector<FileTra
 
             s = conn->createStatement(query, tag, pooledConnection);
             s->setString(1, requestID);
+            // Note: Rownum starts counting on 1!
+            s->setInt(2, offset + 1);
+            if (limit)
+                s->setInt(3, offset + limit);
             r = conn->createResultset(s, pooledConnection);
             while (r->next())
                 {

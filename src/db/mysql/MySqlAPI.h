@@ -48,7 +48,7 @@ public:
 
     virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
 
-    virtual void getTransferFileStatus(std::string requestID, std::vector<FileTransferStatus*>& files);
+    virtual void getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
 
