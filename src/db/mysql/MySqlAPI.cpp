@@ -2036,6 +2036,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 " from t_file "
                 " where source_se = :source "
                 " and dest_se = :dest and throughput is not NULL and throughput != 0 "
+                " and finish_time >= date_sub(utc_timestamp(), interval 10 minute) "
                 " order by FINISH_TIME DESC "
                 " LIMIT 1 ",
                 soci::use(source_hostname), soci::use(destin_hostname),
