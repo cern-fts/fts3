@@ -4,7 +4,7 @@
 
 Name: fts
 Version: 3.0.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -285,6 +285,8 @@ exit 0
 
 
 %changelog
+* Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-2
+  - mysql queries optimization
 * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1
   - dependency on 'gfal2-plugin-http' has been removed
   - the calls to mktemp have been removed

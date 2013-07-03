@@ -56,5 +56,5 @@ rm -rf %{buildroot}
 %attr(640, root, apache) %{_sysconfdir}/fts3web/fts3web.ini
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1%{?dist}
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-5%{?dist}
   - First EPEL release
