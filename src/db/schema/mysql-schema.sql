@@ -620,7 +620,8 @@ CREATE INDEX job_cred_id      ON t_job(user_dn(800),cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
 CREATE INDEX job_submit_time     ON t_job(submit_time);
 CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
-
+CREATE INDEX job_cancel     ON t_job(cancel_job);
+CREATE INDEX job_reuse    ON t_job(reuse_job);
 
 
 -- t_file indexes:
