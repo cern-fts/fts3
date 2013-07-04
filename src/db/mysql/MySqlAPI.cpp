@@ -1675,8 +1675,7 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
                 " 	AND t_file.reason LIKE '%operation timeout%' "
                 "	AND t_file.source_se = :sourceSe "
                 " 	AND t_file.dest_se = :destSe  "
-                " 	AND (t_file.finish_time > (UTC_TIMESTAMP - INTERVAL '30' minute)) "
-                " ORDER BY t_file.finish_time DESC",
+                " 	AND (t_file.finish_time > (UTC_TIMESTAMP - INTERVAL '30' minute))",
                 soci::use(source_hostname),
                 soci::use(destin_hostname),
                 soci::into(timeoutTr)
