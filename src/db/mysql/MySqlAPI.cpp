@@ -270,23 +270,22 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
 
             // Query depends on vos
-            std::string query;
-            query =
-                "SELECT DISTINCT t_job.* FROM t_job "
-                "WHERE t_job.job_finished IS NULL AND "
-                "	t_job.cancel_job IS NULL AND "
-                "   (t_job.reuse_job = 'N' OR t_job.reuse_job IS NULL) AND "
-                "   t_job.job_state IN ('ACTIVE', 'READY', 'SUBMITTED') AND "
-                "   t_job.vo_name = :vo AND "
-                "   EXISTS ( "
-                "		SELECT NULL "
-                "		FROM t_file "
-                "		WHERE t_job.job_id = t_file.job_id AND "
-                "		    t_file.source_se = :source AND "
-                "			t_file.dest_se = :dest AND "
-                "			t_file.file_state = 'SUBMITTED'"
-                "	) "
-                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 8 ";
+              std::string query;
+              query =
+                 "SELECT t_job.* FROM t_job "
+                 "WHERE "
+                 "   t_job.vo_name = :vo AND "
+                 "    t_job.cancel_job IS NULL AND "
+                 "   (t_job.reuse_job = 'N' OR t_job.reuse_job IS NULL) AND "
+                 "   EXISTS ( "
+                 "        SELECT NULL "
+                 "        FROM t_file "
+                 "        WHERE t_job.job_id = t_file.job_id AND "
+                 "            t_file.source_se = :source AND "
+                 "            t_file.dest_se = :dest AND "
+                 "            t_file.file_state = 'SUBMITTED'"
+                 "    ) "
+                 "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 8 ";
 
 
             std::set<std::string> jobIds;
