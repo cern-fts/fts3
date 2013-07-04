@@ -100,7 +100,10 @@ int main(int argc, char** argv)
         {
             ifstream myfile(emiVersion);
             getline(myfile, versionEMI);
-        }
+        }else
+	{
+	  versionEMI = "3.0.0-1";
+	}
 
     //get fts server health state
     const char *serverRunning = "/var/lock/subsys/fts-server";
@@ -153,7 +156,7 @@ int main(int argc, char** argv)
             stream << "GLUE2ServiceType: org.glite.FileTransfer" << "\n";
             stream << "GLUE2ServiceQualityLevel: production" << "\n";
             stream << "GLUE2ServiceCapability: data.transfer" << "\n";
-            stream << "GLUE2EndpointIssuerCA:" << issuerCA.str() << "\n";
+            //stream << "GLUE2EndpointIssuerCA:" << issuerCA.str() << "\n";
             stream << "GLUE2ServiceAdminDomainForeignKey: " << sitename << "\n";
 
             stream << "dn: GLUE2EndpointID=" << alias << "_org.glite.fts" << ",GLUE2ServiceID=https://" << alias << ":" << port << "_org.glite.fts" << ",GLUE2GroupID=resource,o=glue" << "\n";
