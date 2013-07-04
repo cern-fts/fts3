@@ -1345,10 +1345,10 @@ void MySqlAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn,
 void MySqlAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn, std::string cert_request, std::string priv_key, std::string voms_attrs)
 {
     soci::session sql(*connectionPool);
-    sql.begin();
 
     try
         {
+	    sql.begin();
             sql << "UPDATE t_credential_cache SET "
                 "    cert_request = :certRequest, "
                 "    priv_key = :privKey, "
@@ -2596,8 +2596,7 @@ void MySqlAPI::revertToSubmitted()
             int fileId=0;
             std::string jobId, reuseJob;
             time_t now2 = convertToUTC(0);
-            sql.begin();
-
+ 
             soci::indicator reuseInd;
             soci::statement readyStmt = (sql.prepare << "SELECT t_file.start_time, t_file.file_id, t_file.job_id, t_job.reuse_job "
                                          "FROM t_file, t_job "
@@ -2614,11 +2613,12 @@ void MySqlAPI::revertToSubmitted()
                             if (diff > 100 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
-
+			            sql.begin();
                                     sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
                                         "WHERE file_state = 'READY' AND finish_time IS NULL AND "
                                         "      job_finished IS NULL AND file_id = :fileId",
                                         soci::use(fileId);
+				    sql.commit();
                                 }
                             else
                                 {
@@ -2634,21 +2634,20 @@ void MySqlAPI::revertToSubmitted()
                                             if(diff > terminateTime)
                                                 {
                                                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id (reuse) " << fileId << " seems to be stalled, restart it" << commit;
-
+						    sql.begin();
                                                     sql << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId);
 
                                                     sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
                                                         "WHERE file_state = 'READY' AND finish_time IS NULL AND "
                                                         "      job_finished IS NULL AND file_id = :fileId",
                                                         soci::use(fileId);
+						    sql.commit();							
                                                 }
                                         }
                                 }
                         }
                     while (readyStmt.fetch());
-                }
-
-            sql.commit();
+                }            
         }
     catch (std::exception& e)
         {
@@ -4085,15 +4084,15 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
             if (maxTime == 0)
                 return;
 
-            sql.begin();
-
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                                             "    (submit_time < (UTC_TIMESTAMP - interval :interval hour) AND "
                                             "    job_state in ('SUBMITTED', 'READY')",
                                             soci::use(maxTime));
 
+	    sql.begin();
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
+		    
                     sql << "UPDATE t_file SET "
                         "    file_state = 'CANCELED', reason = :reason "
                         "WHERE job_id = :jobId AND "
@@ -4105,7 +4104,6 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                         "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
                         soci::use(message), soci::use(*i);
                 }
-
             sql.commit();
         }
     catch (std::exception& e)
@@ -4597,7 +4595,7 @@ void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId)
                 soci::into(retry_delay)
                 ;
 
-            sql.begin();
+            
 
             if (retry_delay > 0)
                 {
@@ -4605,16 +4603,16 @@ void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId)
                     time_t now = convertToUTC(retry_delay);
                     struct tm tTime;
                     gmtime_r(&now, &tTime);
-
+		    sql.begin();
                     sql <<
                         " update t_file set retry_timestamp=:1 where job_id=:jobId and file_id=:fileId ",
                         soci::use(tTime),
                         soci::use(jobId),
                         soci::use(fileId)
                         ;
+                    sql.commit();
                 }
 
-            sql.commit();
 
         }
     catch (std::exception& e)
@@ -5258,21 +5256,21 @@ void MySqlAPI::checkSanityState()
                                                 sql.prepare <<
                                                 " select job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') "
                                             );
+            sql.begin();					    
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                 {
                     sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                     if(numberOfFilesRevert > 0)
-                        {
-                            sql.begin();
+                        {                            
                             sql << "UPDATE t_job SET "
                                 "    job_state = 'ACTIVE', job_finished = NULL, finish_time = NULL, "
                                 "    reason = NULL "
                                 "    WHERE job_id = :jobId", soci::use(*i2);
-                            sql.commit();
                         }
                     //reset
                     numberOfFilesRevert = 0;
                 }
+            sql.commit();		
 
         }
     catch (std::exception& e)
