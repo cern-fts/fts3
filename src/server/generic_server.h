@@ -39,14 +39,20 @@ public:
     /** Start the service. */
     void start()
     {
+        typename TRAITS::ProcessQueueType queueHandler;
+        queueHandler.executeTransfer_p();    
+	
+	/*wait for status updates to be processed and then start sanity threads*/
+	sleep(2);
+	
+        typename TRAITS::ProcessLogServiceType processLogHandler;
+        processLogHandler.executeTransfer_p();	
+    
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();
 
         typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
         processUpdaterHandler.executeTransfer_p();
-
-        typename TRAITS::ProcessLogServiceType processLogHandler;
-        processLogHandler.executeTransfer_p();
 
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();
@@ -56,9 +62,6 @@ public:
 
         typename TRAITS::TransferWebServiceType handler_t;
         handler_t.listen_p(port, ip);
-
-        typename TRAITS::ProcessQueueType queueHandler;
-        queueHandler.executeTransfer_p();
 
         TRAITS::ThreadPoolType::instance().wait();
     }
