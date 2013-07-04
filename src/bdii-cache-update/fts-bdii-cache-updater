@@ -16,7 +16,7 @@
 
 lockfile=/var/lock/subsys/fts-bdii-cache-updater
 
-[ -f $lockfile ] && exit 0
 
-/usr/sbin/fts_bdii_cache_updater > /dev/null 2>&1
- 
+if [ -f $lockfile ]; then
+	/usr/sbin/fts_bdii_cache_updater > /dev/null 2>&1
+fi
