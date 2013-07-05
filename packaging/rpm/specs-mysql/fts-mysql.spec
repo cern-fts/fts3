@@ -3,7 +3,7 @@
 
 Name: fts-mysql
 Version: 3.0.3
-Release: 4%{?dist}
+Release: 5%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet 
 License: ASL 2.0
@@ -76,7 +76,7 @@ rm -rf %{buildroot}
 
 
 %changelog
-* Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-4
+* Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-5
   - mysql queries optimization
 * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1%{?dist}
   - First EPEL release
