@@ -4,9 +4,9 @@ from django.shortcuts import render, redirect
 from ftsweb.models import Job, File, ConfigAudit
 
 
-
-STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
-ACTIVE_STATES = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
+STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
+ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
+FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 
 
@@ -107,11 +107,11 @@ def _getAllPairs(notBefore, source = None, dest = None):
 
 
 
-def _getAveragePerPair(notBefore, pairs):
+def _getAveragePerPair(pairs, notBefore):
     avg = {}
     
     for (source, dest) in pairs:
-        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES, finish_time__lt = notBefore)\
+        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES, finish_time__gt = notBefore)\
                               .filter(source_se = source,
                                       dest_se = dest)\
                               .aggregate(Avg('tx_duration'), Avg('throughput'))
@@ -122,7 +122,7 @@ def _getAveragePerPair(notBefore, pairs):
 
 
 
-def _getFilesInStatePerPair(pairs, states):
+def _getFilesInStatePerPair(pairs, states, notBefore = None):
     statesPerPair = {}
     
     for (source, dest) in pairs:
@@ -130,9 +130,12 @@ def _getFilesInStatePerPair(pairs, states):
         
         statesInPair = File.objects.filter(file_state__in = states,
                                      source_se = source,
-                                     dest_se = dest)\
-                             .values('file_state')\
-                             .annotate(count = Count('file_state'))
+                                     dest_se = dest)
+        if notBefore:
+            statesInPair = statesInPair.filter(finish_time__gt = notBefore)
+            
+        statesInPair = statesInPair.values('file_state')\
+                                   .annotate(count = Count('file_state'))
 
         for st in statesInPair:
             statesPerPair[(source, dest)].append((st['file_state'], st['count']))
@@ -141,13 +144,36 @@ def _getFilesInStatePerPair(pairs, states):
 
 
 
+def _getSuccessRatePerPair(pairs, notBefore):
+    successPerPair = {}
+    
+    terminatedCount = _getFilesInStatePerPair(pairs, FILE_TERMINAL_STATES, notBefore)
+    successfulCount = _getFilesInStatePerPair(pairs, ['FINISHED'], notBefore)
+    
+    for pair in pairs:
+        if len(terminatedCount[pair]):
+            total   = reduce(lambda a,b: a+b, map(lambda t: t[1], terminatedCount[pair]))
+            success = successfulCount[pair][0][1]
+            
+            if total:
+                successPerPair[pair] = (success/total) * 100
+            else:
+                successPerPair[pair] = None
+        else:
+            successPerPair[pair] = None
+    
+    return successPerPair
+
+
+
 def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(minutes = 5)):
     
     notBefore = datetime.now() - timewindow
     
     allPairs      = _getAllPairs(notBefore, source_se, dest_se)
-    avgsPerPair   = _getAveragePerPair(notBefore, allPairs)
-    activePerPair = _getFilesInStatePerPair(allPairs, ACTIVE_STATES) 
+    avgsPerPair   = _getAveragePerPair(allPairs, notBefore)
+    activePerPair = _getFilesInStatePerPair(allPairs, ACTIVE_STATES)
+    successRate   = _getSuccessRatePerPair(allPairs, notBefore)
         
     pairs = []
     for pair in sorted(allPairs):
@@ -158,6 +184,9 @@ def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(mi
             
         if pair in avgsPerPair:
             p.update(avgsPerPair[pair])
+            
+        if pair in successRate:
+            p['successRate'] = successRate[pair]
             
         pairs.append(p)
     return pairs

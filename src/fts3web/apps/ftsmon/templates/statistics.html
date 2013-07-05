@@ -95,6 +95,7 @@ Statistics
                 </a>
             </th>
             <th>Transfers active</th>
+            <th>Success rate*</th>
             <th>Avg. Throughput*</th>
             <th>Avg. Duration*</th>
           </tr>
@@ -118,6 +119,13 @@ Statistics
                 {% for s in p.active %}
                   {{ s.1 }} {{ s.0 }}
                 {% endfor %}
+              </td>
+              <td>
+                {% if p.successRate %}
+                    {{ p.successRate|floatformat:2 }}%
+                {% else %}
+                    -
+                {% endif %}
               </td>
               <td>{{ p.avgThroughput|floatformat:2 }} Mb/s</td>
               <td>{{ p.avgDuration|floatformat:1 }} s</td>
