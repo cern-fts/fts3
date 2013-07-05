@@ -73,7 +73,7 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s)
         }
 }
 
-void Reporter::constructMessage(bool retry, string job_id, string file_id, string transfer_status, string transfer_message, double timeInSecs, double filesize)
+void Reporter::constructMessage(double throughput, bool retry, string job_id, string file_id, string transfer_status, string transfer_message, double timeInSecs, double filesize)
 {
     try
         {
@@ -106,6 +106,7 @@ void Reporter::constructMessage(bool retry, string job_id, string file_id, strin
             strcpy(msg->dest_se, dest_se.c_str());
             msg->timestamp = milliseconds_since_epoch();
             msg->retry = retry;
+	    msg->throughput = throughput;
             runProducerStatus(*msg);
         }
     catch (...)
@@ -140,6 +141,7 @@ void Reporter::constructMessage(bool retry, string job_id, string file_id, strin
             strcpy(msg->dest_se, dest_se.c_str());
             msg->timestamp = milliseconds_since_epoch();
             msg->retry = retry;
+	    msg->throughput = throughput;
             runProducerStatus(*msg);
         }
 }

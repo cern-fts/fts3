@@ -143,7 +143,7 @@ public:
                     {
                         updated = DBSingleton::instance().
                                   getDBObjectInstance()->
-                                  updateOptimizer(msg.file_id, msg.filesize, msg.timeInSecs,
+                                  updateOptimizer(msg.throughput, msg.file_id, msg.filesize, msg.timeInSecs,
                                                   static_cast<int> (msg.nostreams), static_cast<int> (msg.timeout),
                                                   static_cast<int> (msg.buffersize), std::string(msg.source_se),
                                                   std::string(msg.dest_se));
@@ -162,7 +162,7 @@ public:
                     {
                         updated = DBSingleton::instance().
                                   getDBObjectInstance()->
-                                  updateFileTransferStatus(job, msg.file_id, std::string(msg.transfer_status),
+                                  updateFileTransferStatus(msg.throughput, job, msg.file_id, std::string(msg.transfer_status),
                                                            std::string(msg.transfer_message), static_cast<int> (msg.process_id),
                                                            msg.filesize, msg.timeInSecs);
 

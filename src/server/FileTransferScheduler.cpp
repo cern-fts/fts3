@@ -158,6 +158,7 @@ bool FileTransferScheduler::schedule(bool optimize)
                     string msg = getNoCreditsErrMsg(cfg.get());
                     // set file status to failed
                     db->updateFileTransferStatus(
+		    	0.0,
                         file->JOB_ID,
                         file->FILE_ID,
                         JobStatusHandler::FTS3_STATUS_FAILED,

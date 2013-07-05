@@ -49,7 +49,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include "producer_consumer_common.h"
-
+#include "name_to_uid.h"
 
 #define MILLI 36000000
 
@@ -771,7 +771,9 @@ bool get_mon_cfg_file()
 void appendMessageToLogFile(std::string & text)
 {
     static std::string filename = LOGFILEDIR + "" + LOGFILENAME;
+    const char* logFileName = filename.c_str();
     static ofstream fout;
+    uid_t pw_uid = name_to_uid();
 
     if(!init)
         {
@@ -789,14 +791,16 @@ void appendMessageToLogFile(std::string & text)
             fout.close();
             init = false;
         }
-
+     int checkChown = chown(logFileName, pw_uid, getgid());
 }
 
 
 void appendMessageToLogFileNoConfig(std::string & text)
 {
     static std::string filename = TEMPLOG;
+    const char* logFileName = filename.c_str();
     static ofstream fout;
+    uid_t pw_uid = name_to_uid();
 
     fout.open(filename.c_str(), ios::app); // open file for appending
     if (fout.is_open())
@@ -805,6 +809,7 @@ void appendMessageToLogFileNoConfig(std::string & text)
         }
     fout.flush();
     fout.close(); //close file
+    int checkChown = chown(logFileName, pw_uid, getgid());
 }
 
 

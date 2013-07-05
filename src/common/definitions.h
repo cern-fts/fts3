@@ -44,7 +44,8 @@ public:
         timeout(3600),
         buffersize(0),
         timestamp(0),
-        retry(false)
+        retry(false),
+	throughput(0.0)
     {
         memset(job_id, 0, sizeof (job_id));
         memset(transfer_status, 0, sizeof (transfer_status));
@@ -70,6 +71,7 @@ public:
     unsigned int buffersize;
     boost::posix_time::time_duration::tick_type timestamp;
     bool retry;
+    double throughput;
 
 
 

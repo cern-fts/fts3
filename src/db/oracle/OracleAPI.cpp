@@ -45,6 +45,9 @@ static double convertBtoM( double byte,  double duration)
     return ceil((((byte / duration) / 1024) / 1024) * 100 + 0.5) / 100;
 }
 
+static double convertKbToMb(double throughput){
+	return throughput != 0.0? throughput / 1024: 0.0;
+}
 
 static int extractTimeout(std::string & str)
 {
@@ -1659,7 +1662,7 @@ void OracleAPI::deleteSe(std::string NAME)
 
 
 
-bool OracleAPI::updateFileTransferStatus(std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double
+bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double
         filesize, double duration)
 {
     unsigned int index = 1;
@@ -1773,12 +1776,18 @@ bool OracleAPI::updateFileTransferStatus(std::string job_id, int file_id, std::s
             ++index;
             if(filesize > 0 && duration> 0 && (transfer_status.compare("FINISHED") == 0))
                 {
-                    throughput = convertBtoM(filesize, duration);
+	    	    if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		    else		
+                    	throughput = convertBtoM(filesize, duration);
                     s->setDouble(index, throughput);
                 }
             else if(filesize > 0 && duration<= 0 && (transfer_status.compare("FINISHED") == 0))
                 {
-                    throughput = convertBtoM(filesize, 1);
+	    	    if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		    else		
+                    	throughput = convertBtoM(filesize, 1);
                     s->setDouble(index, throughput);
                 }
             else
@@ -3256,7 +3265,7 @@ void OracleAPI::recordOptimizerUpdate(int active, double filesize, double throug
         }
 }
 
-bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
+bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, double timeInSecs,
                                 int nostreams, int timeout, int buffersize, std::string source_hostname,
                                 std::string destin_hostname)
 {
@@ -3318,10 +3327,18 @@ bool OracleAPI::updateOptimizer(int, double filesize, double timeInSecs,
 
             time_t now = std::time(NULL);
 
-            if (filesize > 0 && timeInSecs > 0)
-                throughput = convertBtoM(filesize, timeInSecs);
-            else
-                throughput = convertBtoM(filesize, 1);
+            if (filesize > 0 && timeInSecs > 0){
+	    	if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		else	    
+                	throughput = convertBtoM(filesize, timeInSecs);
+	    }
+            else{
+	    	if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		else	    	    
+                	throughput = convertBtoM(filesize, 1);
+	    }
             if (filesize <= 0)
                 filesize = 0;
             if (buffersize <= 0)
@@ -4398,7 +4415,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                     kill(pid, SIGUSR1);
                                 }
                             collectJobs.insert(std::make_pair<int, std::string > (file_id, job_id));
-                            updateFileTransferStatus(job_id, file_id, transfer_status, transfer_message, pid, 0, 0);
+                            updateFileTransferStatus(0.0, job_id, file_id, transfer_status, transfer_message, pid, 0, 0);
                             updateJobTransferStatus(file_id, job_id, status);
                         }
                 }
@@ -5111,7 +5128,7 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages)
                     r = conn->createResultset(s, pooledConnection);
                     if(r->next())
                         {
-                            updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                            updateFileTransferStatus(0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
                             updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);
                         }
                     conn->destroyResultset(s, r);

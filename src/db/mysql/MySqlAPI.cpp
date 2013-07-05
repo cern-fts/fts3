@@ -64,6 +64,10 @@ static double convertBtoM( double byte,  double duration)
 }
 
 
+static double convertKbToMb(double throughput){
+	return throughput != 0.0? throughput / 1024: 0.0;
+}
+
 static int extractTimeout(std::string & str)
 {
     size_t found;
@@ -1017,7 +1021,7 @@ void MySqlAPI::deleteSe(std::string NAME)
 
 
 
-bool MySqlAPI::updateFileTransferStatus(std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
+bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                         int process_id, double filesize, double duration)
 {
 
@@ -1079,11 +1083,17 @@ bool MySqlAPI::updateFileTransferStatus(std::string job_id, int file_id, std::st
 
             if (filesize > 0 && duration > 0 && transfer_status == "FINISHED")
                 {
-                    throughput = convertBtoM(filesize, duration);
+		    if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		    else
+                        throughput = convertBtoM(filesize, duration);
                 }
             else if (filesize > 0 && duration <= 0 && transfer_status == "FINISHED")
                 {
-                    throughput = convertBtoM(filesize, 1);
+		    if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		    else		
+                        throughput = convertBtoM(filesize, 1);
                 }
             else
                 {
@@ -1807,7 +1817,7 @@ void MySqlAPI::recordOptimizerUpdate(int active, double filesize,
         }
 }
 
-bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nostreams,
+bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double timeInSecs, int nostreams,
                                int timeout, int buffersize,
                                std::string source_hostname, std::string destin_hostname)
 {
@@ -1829,11 +1839,18 @@ bool MySqlAPI::updateOptimizer(int, double filesize, double timeInSecs, int nost
                 soci::use(destin_hostname),
                 soci::into(active);
 
-            if (filesize > 0 && timeInSecs > 0)
-                throughput = convertBtoM(filesize, timeInSecs);
-            else
-                throughput = convertBtoM(filesize, 1);
-
+            if (filesize > 0 && timeInSecs > 0){
+	    	    if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		    else
+                	throughput = convertBtoM(filesize, timeInSecs);
+	    }
+            else{
+	    	    if(throughputIn != 0.0)
+		    	throughput = convertKbToMb(throughputIn);
+		    else	    
+                	throughput = convertBtoM(filesize, 1);
+            }
             if (filesize <= 0)
                 filesize = 0;
             if (buffersize <= 0)
@@ -2442,7 +2459,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                             kill(pid, SIGUSR1);
                                         }
                                     collectJobs.insert(std::make_pair<int, std::string > (fileId, jobId));
-                                    updateFileTransferStatus(jobId, fileId,
+                                    updateFileTransferStatus(0.0, jobId, fileId,
                                                              "FAILED", "Transfer has been forced-killed because it was stalled",
                                                              pid, 0, 0);
                                     updateJobTransferStatus(fileId, jobId, "FAILED");
@@ -2798,7 +2815,7 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
                                            );
                     if (rs.begin() != rs.end())
                         {
-                            updateFileTransferStatus((*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
+                            updateFileTransferStatus(0.0, (*iter).job_id, (*iter).file_id, transfer_status, transfer_message, (*iter).process_id, 0, 0);
                             updateJobTransferStatus((*iter).file_id, (*iter).job_id, status);
                         }
                 }

@@ -129,6 +129,7 @@ static std::string infosys("");
 static bool manualConfig = false;
 static bool autoTunned = false;
 static bool monitoringMessages = false;
+static double throughput = 0.0;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
@@ -419,6 +420,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
             size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
             time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
             logStream << fileManagement->timestamp() << "INFO bytes:" << trans << ", avg KB/sec:" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed << '\n';
+	    throughput = (double) avg;
         }
 
 }
@@ -462,9 +464,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.buffersize = tcpbuffersize;
 
     if (strArray[0].length() > 0)
-        reporter.constructMessage(retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
+        reporter.constructMessage(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
     else
-        reporter.constructMessage(retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
+        reporter.constructMessage(throughput, retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
 
     std::string moveFile = fileManagement->archive();
     if (strArray[0].length() > 0)
@@ -916,6 +918,7 @@ int main(int argc, char **argv)
             errorPhase = std::string("");
             retry = true;
             errorMessage = std::string("");
+	    throughput = 0.0;
 
             if (reuseFile.length() > 0)
                 {
@@ -1015,7 +1018,7 @@ int main(int argc, char **argv)
 
                 //set to active
                 log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
-                reporter.constructMessage(false, job_id, strArray[0], "ACTIVE", "", diff, source_size);
+                reporter.constructMessage(throughput, false, job_id, strArray[0], "ACTIVE", "", diff, source_size);
 
 
                 if (fexists(proxy.c_str()) != 0)
@@ -1219,7 +1222,7 @@ int main(int argc, char **argv)
                 reporter.timeout = timeout;
                 reporter.nostreams = nbstreams;
                 reporter.buffersize = tcpbuffersize;
-                reporter.constructMessage(false, job_id, strArray[0], "UPDATE", "", diff, source_size);
+                reporter.constructMessage(throughput, false, job_id, strArray[0], "UPDATE", "", diff, source_size);
 
 
                 gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
@@ -1377,7 +1380,7 @@ stop:
                     if (!terminalState)
                         {
                             logStream << fileManagement->timestamp() << "INFO Report FAILED back to the server" << '\n';
-                            reporter.constructMessage(retry, job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
+                            reporter.constructMessage(throughput, retry, job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
                         }
                 }
             else
@@ -1387,7 +1390,7 @@ stop:
                     reporter.nostreams = nbstreams;
                     reporter.buffersize = tcpbuffersize;
                     logStream << fileManagement->timestamp() << "INFO Report FINISHED back to the server" << '\n';
-                    reporter.constructMessage(false, job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
+                    reporter.constructMessage(throughput, false, job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
