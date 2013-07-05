@@ -3682,6 +3682,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     const std::string tag5 = "isTrAllowed5";
     const std::string tag6 = "isTrAllowed6";
     const std::string tag7 = "isTrAllowed7";
+    const std::string tag8 = "isTrAllowed8";  
+      
     bool allowed = true;
     int act = 0;
     int maxDest = 0;
@@ -3692,6 +3694,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     double numberOfFinishedAll = 0;
     double numberOfFailedAll = 0;
     double throughput = 0.0;
+    double avgThr = 0.0;
 
     std::string query_stmt1 = " select count(*) from  t_file where t_file.file_state in ('READY','ACTIVE') and t_file.source_se=:1 ";
 
@@ -3712,6 +3715,10 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
     std::string query_stmt7 = " select throughput from (select throughput from  t_file where source_se=:1 and dest_se=:2 and throughput is not NULL "
                               " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
+			      
+    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
+    			      " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
+	            
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
@@ -3727,6 +3734,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     oracle::occi::ResultSet* r6 = NULL;
     oracle::occi::Statement* s7 = NULL;
     oracle::occi::ResultSet* r7 = NULL;
+    oracle::occi::Statement* s8 = NULL;
+    oracle::occi::ResultSet* r8 = NULL;    
     oracle::occi::Connection* pooledConnection = NULL;
 
 
@@ -3736,6 +3745,19 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return false;
+		
+            s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
+            s8->setString(1, source_hostname);
+            s8->setString(2, destin_hostname);
+            r8 = conn->createResultset(s8, pooledConnection);
+            if (r8->next())
+                {
+                    avgThr = r8->getDouble(1);
+                }
+            conn->destroyResultset(s8, r8);
+            conn->destroyStatement(s8, tag8, pooledConnection);
+            s8 = NULL;
+            r8 = NULL;		
 
             s7 = conn->createStatement(query_stmt7, tag7, pooledConnection);
             s7->setString(1, source_hostname);
@@ -3842,7 +3864,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
 
             allowed = optimizerObject.transferStart((int) numberOfFinished, (int) numberOfFailed,source_hostname, destin_hostname, act, maxSource, maxDest,
-                                                    ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll, throughput);
+                                                    ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll, throughput, avgThr);
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -3884,6 +3906,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
+		
+            if (s8 && r8)
+                conn->destroyResultset(s8, r8);
+            if (s8)
+                conn->destroyStatement(s8, tag8, pooledConnection);		
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
@@ -3926,6 +3953,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
+		
+            if (s8 && r8)
+                conn->destroyResultset(s8, r8);
+            if (s8)
+                conn->destroyStatement(s8, tag8, pooledConnection);				
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
@@ -3953,6 +3985,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     const std::string tag5 = "getSeIn5";
     const std::string tag6 = "getSeIn6";
     const std::string tag7 = "getSeIn7";
+    const std::string tag8 = "getSeIn8";    
 
     std::string query1 =
         "SELECT COUNT(*) FROM t_file "
@@ -4010,6 +4043,9 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
         "      file_state = 'FAILED'"
         ;
+	
+    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and "
+    			      " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";	
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
@@ -4025,6 +4061,8 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     oracle::occi::ResultSet* r6 = NULL;
     oracle::occi::Statement* s7 = NULL;
     oracle::occi::ResultSet* r7 = NULL;
+    oracle::occi::Statement* s8 = NULL;
+    oracle::occi::ResultSet* r8 = NULL;     
     oracle::occi::Connection* pooledConnection = NULL;
 
 
@@ -4034,6 +4072,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             double nFailedLastHour = 0, nFinishedLastHour = 0;
             int nActive = 0;
             double nFailedAll = 0, nFinishedAll = 0, throughput = 0;
+            double avgThr = 0.0;
 
 
             pooledConnection = conn->getPooledConnection();
@@ -4058,7 +4097,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             s1 = 0;
             r1 = 0;
 
-            ret += nActiveDest;
+            ret += nActiveDest;	              
 
             std::set<std::string>::iterator it;
 
@@ -4068,11 +4107,22 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             s5 = conn->createStatement(query5, tag5, pooledConnection);
             s6 = conn->createStatement(query6, tag6, pooledConnection);
             s7 = conn->createStatement(query7, tag7, pooledConnection);
+	    s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
 
             for (it = source.begin(); it != source.end(); ++it)
                 {
                     std::string source_hostname = *it;
-
+		    
+            	    s8->setString(1, source_hostname);
+            	    s8->setString(2, destin_hostname);
+            	    r8 = conn->createResultset(s8, pooledConnection);
+            	    if (r8->next())
+                    {
+                    	avgThr = r8->getDouble(1);
+                    }
+            	    conn->destroyResultset(s8, r8);
+		    r8 = NULL;
+		        	    		   
                     // get number of active for the source
                     s2->setString(1, source_hostname);
                     r2 = conn->createResultset(s2, pooledConnection);
@@ -4163,7 +4213,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
                                                           source_hostname, destin_hostname,
                                                           nActive, nActiveSource, nActiveDest,
                                                           ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll,throughput);
+                                                          nFinishedAll, nFailedAll,throughput, avgThr);
                 }
             conn->destroyStatement(s2, tag2, pooledConnection);
             s2 = NULL;
@@ -4177,6 +4227,8 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             s6 = NULL;
             conn->destroyStatement(s7, tag7, pooledConnection);
             s7 = NULL;
+            conn->destroyStatement(s8, tag8, pooledConnection);
+            s8 = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -4217,6 +4269,11 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
+		
+            if (s8 && r8)
+                conn->destroyResultset(s8, r8);
+            if (s8)
+                conn->destroyStatement(s8, tag8, pooledConnection);		
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
@@ -4259,6 +4316,11 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
+		
+            if (s8 && r8)
+                conn->destroyResultset(s8, r8);
+            if (s8)
+                conn->destroyStatement(s8, tag8, pooledConnection);		
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }

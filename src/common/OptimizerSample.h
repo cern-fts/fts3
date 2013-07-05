@@ -32,6 +32,7 @@ struct transfersStore
     std::string source;
     std::string dest;
     double throughput;
+    double avgThr;
 };
 
 
@@ -48,10 +49,10 @@ public:
     float getGoodput();
     int getTimeout();
     bool transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
-                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput);
+                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr);
 
     int getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
-                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput);
+                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr);
 
     int streamsperfile;
     int numoffiles;
@@ -60,6 +61,7 @@ public:
     int timeout;
     int file_id;
     double throughput;
+    double avgThr;
 
 private:
     std::vector<struct transfersStore> transfersStoreVector;

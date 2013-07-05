@@ -2068,8 +2068,18 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             int nActiveSource=0, nActiveDest=0;
             double nFailedLastHour=0, nFinishedLastHour=0;
             int nActive=0;
-            double nFailedAll=0.0, nFinishedAll=0.0, throughput=0.0;
+            double nFailedAll=0.0, nFinishedAll=0.0, throughput=0.0, avgThr = 0.0;
             soci::indicator isNull;
+	    soci::indicator isNull2;
+	    
+            sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where" 
+	    	   " source_se=:source and dest_se=:dst "
+		   " and finish_time >= date_sub(utc_timestamp(), interval 5 minute)",
+		   soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
+            if (isNull2 == soci::i_null)
+                {
+                    avgThr = 0.0;
+                }		   
 
 
             sql << "SELECT COUNT(*) FROM t_file "
@@ -2145,7 +2155,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                                                     source_hostname, destin_hostname,
                                                     nActive, nActiveSource, nActiveDest,
                                                     ratioSuccessFailure,
-                                                    nFinishedAll, nFailedAll,throughput);
+                                                    nFinishedAll, nFailedAll,throughput, avgThr);
         }
     catch (std::exception& e)
         {
@@ -2167,12 +2177,14 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
             int nActiveSource=0, nActiveDest=0;
             double nFailedLastHour=0, nFinishedLastHour=0;
             int nActive=0;
-            double nFailedAll=0, nFinishedAll=0, throughput=0;
+            double nFailedAll=0, nFinishedAll=0, throughput=0, avgThr = 0.0;
             soci::indicator isNull;
 
             std::set<std::string>::iterator it;
 
             std::string source_hostname = source;
+	    
+	    soci::indicator isNull2;	      	    
 
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.file_state in ('READY','ACTIVE') AND "
@@ -2185,6 +2197,15 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
                 {
 
                     std::string destin_hostname = *it;
+		    
+            	    sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where" 
+	    	   	" source_se=:source and dest_se=:dst "
+		   	" and finish_time >= date_sub(utc_timestamp(), interval 5 minute)",
+		   	soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
+            	    if (isNull2 == soci::i_null)
+                    {
+                    	avgThr = 0.0;
+                    }		  		    
 
                     sql << "SELECT COUNT(*) FROM t_file "
                         "WHERE t_file.file_state in ('READY','ACTIVE') AND "
@@ -2254,7 +2275,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
                                                           source_hostname, destin_hostname,
                                                           nActive, nActiveSource, nActiveDest,
                                                           ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll,throughput);
+                                                          nFinishedAll, nFailedAll,throughput,avgThr);
                 }
 
         }
@@ -2278,12 +2299,14 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
             int nActiveSource=0, nActiveDest=0;
             double nFailedLastHour=0, nFinishedLastHour=0;
             int nActive=0;
-            double nFailedAll=0, nFinishedAll=0, throughput=0;
+            double nFailedAll=0, nFinishedAll=0, throughput=0, avgThr = 0.0;
             soci::indicator isNull;
 
             std::set<std::string>::iterator it;
 
             std::string destin_hostname = destination;
+
+	    soci::indicator isNull2;	    
 
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.file_state in ('READY','ACTIVE') AND "
@@ -2296,6 +2319,15 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
                 {
 
                     std::string source_hostname = *it;
+		    
+            	    sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where" 
+	    	   	" source_se=:source and dest_se=:dst "
+		   	" and finish_time >= date_sub(utc_timestamp(), interval 5 minute)",
+		   	soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
+            	    if (isNull2 == soci::i_null)
+                    {
+                    	avgThr = 0.0;
+                    }			    
 
                     sql << "SELECT COUNT(*) FROM t_file "
                         "WHERE t_file.file_state in ('READY','ACTIVE') AND "
@@ -2365,7 +2397,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
                                                           source_hostname, destin_hostname,
                                                           nActive, nActiveSource, nActiveDest,
                                                           ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll,throughput);
+                                                          nFinishedAll, nFailedAll,throughput, avgThr);
                 }
 
         }
