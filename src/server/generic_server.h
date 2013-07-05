@@ -40,14 +40,14 @@ public:
     void start()
     {
         typename TRAITS::ProcessQueueType queueHandler;
-        queueHandler.executeTransfer_p();    
-	
-	/*wait for status updates to be processed and then start sanity threads*/
-	sleep(3);
-	
+        queueHandler.executeTransfer_p();
+
+        /*wait for status updates to be processed and then start sanity threads*/
+        sleep(3);
+
         typename TRAITS::ProcessLogServiceType processLogHandler;
-        processLogHandler.executeTransfer_p();	
-    
+        processLogHandler.executeTransfer_p();
+
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();
 

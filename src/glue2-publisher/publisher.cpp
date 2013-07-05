@@ -100,10 +100,11 @@ int main(int argc, char** argv)
         {
             ifstream myfile(emiVersion);
             getline(myfile, versionEMI);
-        }else
-	{
-	  versionEMI = "3.0.0-1";
-	}
+        }
+    else
+        {
+            versionEMI = "3.0.0-1";
+        }
 
     //get fts server health state
     const char *serverRunning = "/var/lock/subsys/fts-server";

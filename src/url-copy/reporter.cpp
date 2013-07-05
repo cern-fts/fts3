@@ -106,7 +106,7 @@ void Reporter::constructMessage(double throughput, bool retry, string job_id, st
             strcpy(msg->dest_se, dest_se.c_str());
             msg->timestamp = milliseconds_since_epoch();
             msg->retry = retry;
-	    msg->throughput = throughput;
+            msg->throughput = throughput;
             runProducerStatus(*msg);
         }
     catch (...)
@@ -141,7 +141,7 @@ void Reporter::constructMessage(double throughput, bool retry, string job_id, st
             strcpy(msg->dest_se, dest_se.c_str());
             msg->timestamp = milliseconds_since_epoch();
             msg->retry = retry;
-	    msg->throughput = throughput;
+            msg->throughput = throughput;
             runProducerStatus(*msg);
         }
 }

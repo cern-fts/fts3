@@ -791,7 +791,7 @@ void appendMessageToLogFile(std::string & text)
             fout.close();
             init = false;
         }
-     int checkChown = chown(logFileName, pw_uid, getgid());
+    int checkChown = chown(logFileName, pw_uid, getgid());
 }
 
 

@@ -60,8 +60,8 @@ int OptimizerSample::getTimeout()
 }
 
 bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int
-                                    destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput, 
-				    double avgThr)
+                                    destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput,
+                                    double avgThr)
 {
     /*
             currectActive: number of active for a given src/dest pair
@@ -135,7 +135,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                             (*iter).numberOfFinishedAll = numberOfFinishedAll;
                             (*iter).numberOfFailedAll = numberOfFailedAll;
                             (*iter).throughput = throughput;
-                            (*iter).avgThr = avgThr;			    			    
+                            (*iter).avgThr = avgThr;
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
                         {
@@ -146,7 +146,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                             (*iter).numberOfFinishedAll = numberOfFinishedAll;
                             (*iter).numberOfFailedAll = numberOfFailedAll;
                             (*iter).throughput = throughput;
-			    (*iter).avgThr = avgThr;
+                            (*iter).avgThr = avgThr;
                         }
 
                     if((*iter).numOfActivePerPair <=0 )
@@ -178,8 +178,8 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
     return allowed;
 }
 
-int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int, int, 
-				   double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr)
+int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int, int,
+                                    double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr)
 {
 
     std::vector<struct transfersStore>::iterator iter;
@@ -246,7 +246,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                             (*iter).numberOfFinishedAll = numberOfFinishedAll;
                             (*iter).numberOfFailedAll = numberOfFailedAll;
                             (*iter).throughput = throughput;
-                            (*iter).avgThr = avgThr;			    			    
+                            (*iter).avgThr = avgThr;
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
                         {
@@ -257,7 +257,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                             (*iter).numberOfFinishedAll = numberOfFinishedAll;
                             (*iter).numberOfFailedAll = numberOfFailedAll;
                             (*iter).throughput = throughput;
-			    (*iter).avgThr = avgThr;
+                            (*iter).avgThr = avgThr;
                         }
 
 

@@ -45,7 +45,7 @@ public:
         buffersize(0),
         timestamp(0),
         retry(false),
-	throughput(0.0)
+        throughput(0.0)
     {
         memset(job_id, 0, sizeof (job_id));
         memset(transfer_status, 0, sizeof (transfer_status));

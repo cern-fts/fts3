@@ -45,8 +45,9 @@ static double convertBtoM( double byte,  double duration)
     return ceil((((byte / duration) / 1024) / 1024) * 100 + 0.5) / 100;
 }
 
-static double convertKbToMb(double throughput){
-	return throughput != 0.0? throughput / 1024: 0.0;
+static double convertKbToMb(double throughput)
+{
+    return throughput != 0.0? throughput / 1024: 0.0;
 }
 
 static int extractTimeout(std::string & str)
@@ -1250,13 +1251,15 @@ void OracleAPI::getTransferFileStatus(std::string requestID, unsigned offset, un
 
     std::string tag = "getTransferFileStatus";
 
-    if (limit) {
-        query += "WHERE rw BETWEEN :2 AND :3";
-    }
-    else {
-        query += "WHERE rw >= :2";
-        tag += "Limited";
-    }
+    if (limit)
+        {
+            query += "WHERE rw BETWEEN :2 AND :3";
+        }
+    else
+        {
+            query += "WHERE rw >= :2";
+            tag += "Limited";
+        }
 
 
     FileTransferStatus* js = NULL;
@@ -1776,18 +1779,18 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
             ++index;
             if(filesize > 0 && duration> 0 && (transfer_status.compare("FINISHED") == 0))
                 {
-	    	    if(throughputIn != 0.0)
-		    	throughput = convertKbToMb(throughputIn);
-		    else		
-                    	throughput = convertBtoM(filesize, duration);
+                    if(throughputIn != 0.0)
+                        throughput = convertKbToMb(throughputIn);
+                    else
+                        throughput = convertBtoM(filesize, duration);
                     s->setDouble(index, throughput);
                 }
             else if(filesize > 0 && duration<= 0 && (transfer_status.compare("FINISHED") == 0))
                 {
-	    	    if(throughputIn != 0.0)
-		    	throughput = convertKbToMb(throughputIn);
-		    else		
-                    	throughput = convertBtoM(filesize, 1);
+                    if(throughputIn != 0.0)
+                        throughput = convertKbToMb(throughputIn);
+                    else
+                        throughput = convertBtoM(filesize, 1);
                     s->setDouble(index, throughput);
                 }
             else
@@ -3327,18 +3330,20 @@ bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, doubl
 
             time_t now = std::time(NULL);
 
-            if (filesize > 0 && timeInSecs > 0){
-	    	if(throughputIn != 0.0)
-		    	throughput = convertKbToMb(throughputIn);
-		else	    
-                	throughput = convertBtoM(filesize, timeInSecs);
-	    }
-            else{
-	    	if(throughputIn != 0.0)
-		    	throughput = convertKbToMb(throughputIn);
-		else	    	    
-                	throughput = convertBtoM(filesize, 1);
-	    }
+            if (filesize > 0 && timeInSecs > 0)
+                {
+                    if(throughputIn != 0.0)
+                        throughput = convertKbToMb(throughputIn);
+                    else
+                        throughput = convertBtoM(filesize, timeInSecs);
+                }
+            else
+                {
+                    if(throughputIn != 0.0)
+                        throughput = convertKbToMb(throughputIn);
+                    else
+                        throughput = convertBtoM(filesize, 1);
+                }
             if (filesize <= 0)
                 filesize = 0;
             if (buffersize <= 0)
@@ -3682,8 +3687,8 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     const std::string tag5 = "isTrAllowed5";
     const std::string tag6 = "isTrAllowed6";
     const std::string tag7 = "isTrAllowed7";
-    const std::string tag8 = "isTrAllowed8";  
-      
+    const std::string tag8 = "isTrAllowed8";
+
     bool allowed = true;
     int act = 0;
     int maxDest = 0;
@@ -3715,10 +3720,10 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
     std::string query_stmt7 = " select throughput from (select throughput from  t_file where source_se=:1 and dest_se=:2 and throughput is not NULL "
                               " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
-			      
+
     std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
-    			      " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
-	            
+                              " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
+
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
@@ -3735,7 +3740,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     oracle::occi::Statement* s7 = NULL;
     oracle::occi::ResultSet* r7 = NULL;
     oracle::occi::Statement* s8 = NULL;
-    oracle::occi::ResultSet* r8 = NULL;    
+    oracle::occi::ResultSet* r8 = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
 
 
@@ -3745,7 +3750,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return false;
-		
+
             s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
             s8->setString(1, source_hostname);
             s8->setString(2, destin_hostname);
@@ -3757,7 +3762,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
             conn->destroyResultset(s8, r8);
             conn->destroyStatement(s8, tag8, pooledConnection);
             s8 = NULL;
-            r8 = NULL;		
+            r8 = NULL;
 
             s7 = conn->createStatement(query_stmt7, tag7, pooledConnection);
             s7->setString(1, source_hostname);
@@ -3906,11 +3911,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
-		
+
             if (s8 && r8)
                 conn->destroyResultset(s8, r8);
             if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);		
+                conn->destroyStatement(s8, tag8, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
@@ -3953,11 +3958,11 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
-		
+
             if (s8 && r8)
                 conn->destroyResultset(s8, r8);
             if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);				
+                conn->destroyStatement(s8, tag8, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
@@ -3985,7 +3990,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     const std::string tag5 = "getSeIn5";
     const std::string tag6 = "getSeIn6";
     const std::string tag7 = "getSeIn7";
-    const std::string tag8 = "getSeIn8";    
+    const std::string tag8 = "getSeIn8";
 
     std::string query1 =
         "SELECT COUNT(*) FROM t_file "
@@ -4043,9 +4048,9 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
         "      file_state = 'FAILED'"
         ;
-	
+
     std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and "
-    			      " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";	
+                              " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
     oracle::occi::Statement* s1 = NULL;
     oracle::occi::ResultSet* r1 = NULL;
@@ -4062,7 +4067,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     oracle::occi::Statement* s7 = NULL;
     oracle::occi::ResultSet* r7 = NULL;
     oracle::occi::Statement* s8 = NULL;
-    oracle::occi::ResultSet* r8 = NULL;     
+    oracle::occi::ResultSet* r8 = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
 
 
@@ -4097,7 +4102,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             s1 = 0;
             r1 = 0;
 
-            ret += nActiveDest;	              
+            ret += nActiveDest;
 
             std::set<std::string>::iterator it;
 
@@ -4107,22 +4112,22 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             s5 = conn->createStatement(query5, tag5, pooledConnection);
             s6 = conn->createStatement(query6, tag6, pooledConnection);
             s7 = conn->createStatement(query7, tag7, pooledConnection);
-	    s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
+            s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
 
             for (it = source.begin(); it != source.end(); ++it)
                 {
                     std::string source_hostname = *it;
-		    
-            	    s8->setString(1, source_hostname);
-            	    s8->setString(2, destin_hostname);
-            	    r8 = conn->createResultset(s8, pooledConnection);
-            	    if (r8->next())
-                    {
-                    	avgThr = r8->getDouble(1);
-                    }
-            	    conn->destroyResultset(s8, r8);
-		    r8 = NULL;
-		        	    		   
+
+                    s8->setString(1, source_hostname);
+                    s8->setString(2, destin_hostname);
+                    r8 = conn->createResultset(s8, pooledConnection);
+                    if (r8->next())
+                        {
+                            avgThr = r8->getDouble(1);
+                        }
+                    conn->destroyResultset(s8, r8);
+                    r8 = NULL;
+
                     // get number of active for the source
                     s2->setString(1, source_hostname);
                     r2 = conn->createResultset(s2, pooledConnection);
@@ -4269,11 +4274,11 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
-		
+
             if (s8 && r8)
                 conn->destroyResultset(s8, r8);
             if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);		
+                conn->destroyStatement(s8, tag8, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
@@ -4316,11 +4321,11 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
                 conn->destroyResultset(s7, r7);
             if (s7)
                 conn->destroyStatement(s7, tag7, pooledConnection);
-		
+
             if (s8 && r8)
                 conn->destroyResultset(s8, r8);
             if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);		
+                conn->destroyStatement(s8, tag8, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }

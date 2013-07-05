@@ -122,7 +122,8 @@ int main(int ac, char* av[])
                                         }
 
                                     offset += cnt;
-                                } while(cnt == DEFAULT_LIMIT);
+                                }
+                            while(cnt == DEFAULT_LIMIT);
                         }
                 }
 
