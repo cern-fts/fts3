@@ -3597,7 +3597,7 @@ void MySqlAPI::addFileShareConfig(int file_id, std::string source, std::string d
         {
             sql.begin();
 
-            sql << " insert into t_file_share_config (file_id, source, destination, vo) "
+            sql << " insert ignore into t_file_share_config (file_id, source, destination, vo) "
                 " select :fileId, :source, :dest, :vo from dual where not exists(select file_id, source, destination, vo "
                 " from t_file_share_config WHERE file_id = :fileId AND source = :source AND destination = :dest AND vo = :vo)",
                 soci::use(file_id),
