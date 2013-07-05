@@ -1,4 +1,6 @@
+import os
 from common import FTS3WEB_CONFIG
+from ConfigParser import RawConfigParser
 
 DATABASES = {
     'default': {

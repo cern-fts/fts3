@@ -1,13 +1,53 @@
 import os
+import re
 import sys
+from ConfigParser import RawConfigParser
+from StringIO import StringIO
 
 # INI Configuration
-from ConfigParser import RawConfigParser
 FTS3WEB_CONFIG = RawConfigParser()
 if 'FTS3WEB_CONFIG' in os.environ:
     FTS3WEB_CONFIG.read(os.environ['FTS3WEB_CONFIG'])
 else:
     FTS3WEB_CONFIG.read('/etc/fts3web/fts3web.ini')
+    
+# Overload if /etc/fts3/fts3config is present
+if not FTS3WEB_CONFIG.has_section('database'):
+    print >>sys.stderr, "[database] not present in the fts3web configuration file"
+    print >>sys.stderr, "           Using /etc/fts3/fts3config instead"
+    # FTS3 config file does not have a default header, and ConfigParser does not like that
+    content = "[fts3]\n" + open('/etc/fts3/fts3config').read()
+    fts3cfg = RawConfigParser()
+    fts3cfg.readfp(StringIO(content))
+    
+    dbType = fts3cfg.get('fts3', 'DbType')
+    dbUser = fts3cfg.get('fts3', 'DbUserName')
+    dbPass = fts3cfg.get('fts3', 'DbPassword')
+    dbName = fts3cfg.get('fts3', 'DbConnectString')
+    dbHost = ''
+    dbPort = ''
+    
+    # Need some translation
+    if dbType == 'sqlite':
+        dbType = 'sqlite3'
+    elif dbType == 'mysql':
+        match = re.match('([\w.]+)(:(\d+))?/(\S+)', dbName)
+        if not match:
+            raise ValueError('Could nor parse %s' % dbName)
+        (dbHost, dbPort, dbName) = match.group(1, 3, 4)
+        
+    
+    # Copy to configuration
+    FTS3WEB_CONFIG.add_section('database')
+    FTS3WEB_CONFIG.set('database', 'engine',   dbType)
+    FTS3WEB_CONFIG.set('database', 'user',     dbUser)
+    FTS3WEB_CONFIG.set('database', 'password', dbPass)
+    FTS3WEB_CONFIG.set('database', 'name',     dbName)
+    FTS3WEB_CONFIG.set('database', 'host',     dbHost)
+    FTS3WEB_CONFIG.set('database', 'port',     dbPort)
+    
+    if FTS3WEB_CONFIG.get('database', 'engine') == 'sqlite':
+        FTS3WEB_CONFIG.set('database', 'engine', 'sqlite3')
 
 
 ### 
