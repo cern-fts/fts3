@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
     //get emi-version
     string versionEMI("");
-    if (fexists(emiVersion) != 0)
+    if (fexists(emiVersion) == 0)
         {
             ifstream myfile(emiVersion);
             getline(myfile, versionEMI);
