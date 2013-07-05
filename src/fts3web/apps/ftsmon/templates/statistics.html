@@ -161,8 +161,8 @@ Statistics
 
   </div>
   <script type="text/javascript">
-    $('#statistics').tabs({select: function(event, ui) {
-    	                               window.location.hash = ui.tab.hash;
+    $('#statistics').tabs({activate: function(event, ui) {
+    	                               window.location.hash = ui.newPanel.selector;
                                    }
                            });
     
