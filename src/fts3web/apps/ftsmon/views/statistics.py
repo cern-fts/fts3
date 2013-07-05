@@ -153,7 +153,7 @@ def _getSuccessRatePerPair(pairs, notBefore):
     for pair in pairs:
         if len(terminatedCount[pair]):
             total   = reduce(lambda a,b: a+b, map(lambda t: t[1], terminatedCount[pair]))
-            success = successfulCount[pair][0][1]
+            success = successfulCount[pair][0][1] if len(successfulCount[pair]) else 0
             
             if total:
                 successPerPair[pair] = (success/total) * 100
