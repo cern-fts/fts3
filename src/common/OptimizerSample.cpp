@@ -129,6 +129,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 {
                                     (*iter).numOfActivePerPair -= 1;
                                 }
+							    
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
                             (*iter).successRate = trSuccessRateForPair;

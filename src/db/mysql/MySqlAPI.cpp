@@ -2078,7 +2078,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             soci::indicator isNull2;
 
             sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
-                " source_se=:source and dest_se=:dst "
+                " source_se=:source and dest_se=:dst and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
                 " and finish_time >= date_sub(utc_timestamp(), interval 5 minute)",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
             if (isNull2 == soci::i_null)

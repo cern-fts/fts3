@@ -3722,6 +3722,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                               " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
 
     std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
+    			      " and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
                               " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
 
