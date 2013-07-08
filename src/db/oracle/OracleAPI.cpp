@@ -1894,12 +1894,12 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
         "				AND file_index = tbl.file_index "
         "				AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
         "		) AND EXISTS ( "
-		"			SELECT NULL "
-		"			FROM t_file "
-		"			WHERE job_id = tbl.job_id "
-		"				AND file_index = tbl.file_index "
-		"				AND file_state = 'FAILED' "
-    	"		) "
+        "			SELECT NULL "
+        "			FROM t_file "
+        "			WHERE job_id = tbl.job_id "
+        "				AND file_index = tbl.file_index "
+        "				AND file_state = 'FAILED' "
+        "		) "
         "		THEN 1 END "
         "	) AS NUM4 "
         " FROM "
@@ -3728,7 +3728,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                               " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
 
     std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
-    			      " and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
+                              " and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
                               " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
 
