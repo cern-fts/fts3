@@ -31,9 +31,9 @@ if not FTS3WEB_CONFIG.has_section('database'):
     if dbType == 'sqlite':
         dbType = 'sqlite3'
     elif dbType == 'mysql':
-        match = re.match('([\w.]+)(:(\d+))?/(\S+)', dbName)
+        match = re.match('([\w\-.]+)(:(\d+))?/(\S+)', dbName)
         if not match:
-            raise ValueError('Could nor parse %s' % dbName)
+            raise ValueError('Could not parse %s' % dbName)
         (dbHost, dbPort, dbName) = match.group(1, 3, 4)
         
     
