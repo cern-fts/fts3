@@ -136,6 +136,8 @@ def _getFilesInStatePerPair(pairs, states, notBefore = None):
             
         statesInPair = statesInPair.values('file_state')\
                                    .annotate(count = Count('file_state'))
+                                   
+        print statesInPair.query
 
         for st in statesInPair:
             statesPerPair[(source, dest)].append((st['file_state'], st['count']))
@@ -150,8 +152,11 @@ def _getSuccessRatePerPair(pairs, notBefore):
     terminatedCount = _getFilesInStatePerPair(pairs, FILE_TERMINAL_STATES, notBefore)
     successfulCount = _getFilesInStatePerPair(pairs, ['FINISHED'], notBefore)
     
+    print terminatedCount
+    print successfulCount
+    
     for pair in pairs:
-        if len(terminatedCount[pair]):
+        if len(terminatedCount[pair]):            
             total   = reduce(lambda a,b: a+b, map(lambda t: t[1], terminatedCount[pair]))
             success = successfulCount[pair][0][1] if len(successfulCount[pair]) else 0
             
@@ -168,7 +173,7 @@ def _getSuccessRatePerPair(pairs, notBefore):
 
 def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(minutes = 5)):
     
-    notBefore = datetime.now() - timewindow
+    notBefore = datetime.utcnow() - timewindow
     
     allPairs      = _getAllPairs(notBefore, source_se, dest_se)
     avgsPerPair   = _getAveragePerPair(allPairs, notBefore)
