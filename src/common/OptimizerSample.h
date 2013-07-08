@@ -33,6 +33,7 @@ struct transfersStore
     std::string dest;
     double throughput;
     double avgThr;
+    int storedMaxActive;
 };
 
 
