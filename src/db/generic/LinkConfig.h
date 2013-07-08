@@ -32,7 +32,7 @@
 class LinkConfig
 {
 public:
-    LinkConfig() {};
+    LinkConfig() NOSTREAMS(2),TCP_BUFFER_SIZE(0), URLCOPY_TX_TO(3600),NO_TX_ACTIVITY_TO(300)  {};
     ~LinkConfig() {};
 
     std::string source;

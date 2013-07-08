@@ -313,9 +313,7 @@ static bool checkValidProxy(const std::string& filename)
 
 
 int DoServer(int argc, char** argv)
-{
-
-    int res = 0;
+{    
     std::string proxy_file("");
     std::string infosys("");
     gfal2_context_t handle;
@@ -335,7 +333,6 @@ int DoServer(int argc, char** argv)
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
 
             std::string arguments("");
-            size_t foundHelp;
             if (argc > 1)
                 {
                     int i;
@@ -343,7 +340,7 @@ int DoServer(int argc, char** argv)
                         {
                             arguments += argv[i];
                         }
-                    foundHelp = arguments.find("-h");
+                   size_t foundHelp = arguments.find("-h");
                     if (foundHelp != string::npos)
                         {
                             exit(0);
@@ -389,7 +386,7 @@ int DoServer(int argc, char** argv)
             action.sa_handler = _handle_sigint;
             sigemptyset(&action.sa_mask);
             action.sa_flags = SA_RESTART;
-            res = sigaction(SIGINT, &action, NULL);
+            sigaction(SIGINT, &action, NULL);
 
             //initialize here to avoid race conditions
             ThreadSafeList::get_instance();
@@ -561,8 +558,6 @@ int main(int argc, char** argv)
         }
 
     std::string arguments("");
-    size_t found;
-    size_t foundHelp;
     int d = 0;
     if (argc > 1)
         {
@@ -571,8 +566,8 @@ int main(int argc, char** argv)
                 {
                     arguments += argv[i];
                 }
-            found = arguments.find("-n");
-            foundHelp = arguments.find("-h");
+            size_t found = arguments.find("-n");
+            size_t foundHelp = arguments.find("-h");
             if (found != string::npos)
                 {
                     {

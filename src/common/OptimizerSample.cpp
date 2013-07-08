@@ -72,7 +72,6 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
 
     bool allowed = false;
     std::vector<struct transfersStore>::iterator iter;
-    bool found = false;
     int activeInStore = 0;
 
 
@@ -84,6 +83,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         }
     else
         {
+	    bool found = false;
             for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter)
                 {
                     if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
@@ -213,7 +213,6 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
 {
 
     std::vector<struct transfersStore>::iterator iter;
-    bool found = false;
     int activeInStore = 0;
 
 
@@ -225,6 +224,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
         }
     else
         {
+	    bool found = false;
             for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter)
                 {
                     if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
