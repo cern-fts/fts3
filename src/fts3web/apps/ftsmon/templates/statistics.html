@@ -116,8 +116,8 @@ Statistics
                 </a>
                </td>
               <td>
-                {% for s in p.active %}
-                  {{ s.1 }} {{ s.0 }}
+                {% for state,count in p.active.items %}
+                  {{ count }} {{ state }}
                 {% endfor %}
               </td>
               <td>

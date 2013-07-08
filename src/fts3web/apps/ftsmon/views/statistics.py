@@ -126,7 +126,7 @@ def _getFilesInStatePerPair(pairs, states, notBefore = None):
     statesPerPair = {}
     
     for (source, dest) in pairs:
-        statesPerPair[(source, dest)] = []
+        statesPerPair[(source, dest)] = {}
         
         statesInPair = File.objects.filter(file_state__in = states,
                                      source_se = source,
@@ -140,7 +140,7 @@ def _getFilesInStatePerPair(pairs, states, notBefore = None):
         print statesInPair.query
 
         for st in statesInPair:
-            statesPerPair[(source, dest)].append((st['file_state'], st['count']))
+            statesPerPair[(source, dest)][st['file_state']] = st['count']
         
     return statesPerPair
 
@@ -150,15 +150,11 @@ def _getSuccessRatePerPair(pairs, notBefore):
     successPerPair = {}
     
     terminatedCount = _getFilesInStatePerPair(pairs, FILE_TERMINAL_STATES, notBefore)
-    successfulCount = _getFilesInStatePerPair(pairs, ['FINISHED'], notBefore)
-    
-    print terminatedCount
-    print successfulCount
     
     for pair in pairs:
         if len(terminatedCount[pair]):            
-            total   = reduce(lambda a,b: a+b, map(lambda t: t[1], terminatedCount[pair]))
-            success = successfulCount[pair][0][1] if len(successfulCount[pair]) else 0
+            total   = reduce(lambda a,b: a+b, terminatedCount[pair].values())
+            success = terminatedCount[pair]['FINISHED']
             
             if total:
                 successPerPair[pair] = (success/total) * 100
