@@ -64,9 +64,18 @@ static double convertBtoM( double byte,  double duration)
 }
 
 
+static double my_round(double x, unsigned int digits) {
+  if (digits > 0) {
+    return my_round(x*10.0, digits-1)/10.0;
+  }
+  else {
+    return round(x);
+  }
+}
+
 static double convertKbToMb(double throughput)
 {
-    return throughput != 0.0? throughput / 1024: 0.0;
+    return throughput != 0.0? my_round((throughput / 1024), 2): 0.0;
 }
 
 static int extractTimeout(std::string & str)
