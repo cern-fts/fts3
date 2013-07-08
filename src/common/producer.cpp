@@ -60,25 +60,6 @@ void getUniqueTempFileName(const std::string& basename,
     while( 0 == iRes );
 }
 
-void mktempfile(const std::string& basename,
-                std::string& tempname)
-{
-    char* temp= (char *) "_XXXXXX";
-    int fd = -1;
-
-    do
-        {
-            fd = mkstemp(temp);
-        }
-    while(fd == -1);
-
-    if(fd != -1)
-        close(fd);
-
-    tempname = basename;
-    tempname.append(std::string(temp));
-
-}
 
 void runProducerMonitoring(message_monitoring &msg)
 {
