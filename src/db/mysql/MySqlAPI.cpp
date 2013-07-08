@@ -1153,13 +1153,31 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 soci::use(job_id, "jobId"), soci::into(numberOfFilesFinished);
 
             // the number of canceled files in the job, files counts as canceled if all replicas has been canceled
-            sql << "select COUNT(DISTINCT f1.file_index) FROM t_file as f1 JOIN t_file as f2 on (f2.job_id = :jobId  AND f1.job_id = f2.job_id AND "
-                "f1.file_index = f2.file_index AND f2.file_state = 'CANCELED')",
+            sql <<
+            	"select COUNT(DISTINCT f1.file_index) "
+            	"FROM t_file f1 "
+            	"where f1.job_id = :jobId AND NOT EXISTS ( "
+				"	SELECT NULL "
+				"	FROM t_file f2 "
+				"	WHERE f1.job_id = f2.job_id "
+				"		AND f1.file_index = f2.file_index "
+				"		AND file_state <> 'CANCELED' "
+				") ",
                 soci::use(job_id, "jobId"), soci::into(numberOfFilesCanceled);
 
             // the number of failed files in the job, file counts as failed if all the replicas went to failed state except replicas that were cancelled
-            sql << "select COUNT(DISTINCT f1.file_index) FROM t_file as f1 JOIN t_file as f2 on (f2.job_id = :jobId  AND f1.job_id = f2.job_id AND "
-                "f1.file_index = f2.file_index AND (f2.file_state = 'FAILED' AND f2.file_state <> 'CANCELED'))",
+            sql <<
+            	" select COUNT(DISTINCT f1.file_index) "
+				" FROM t_file f1 "
+				" WHERE f1.job_id = :jobId "
+				"	AND f1.file_state = 'FAILED' "
+				"	AND NOT EXISTS ( "
+				"		SELECT NULL "
+				"		FROM t_file f2 "
+				"		WHERE f1.job_id = f2.job_id "
+				"			AND f1.file_index = f2.file_index "
+				"			AND (f2.file_state <> 'FAILED' AND f2.file_state <> 'CANCELED') "
+				"	) ",
                 soci::use(job_id, "jobId"), soci::into(numberOfFilesFailed);
 
             /*
