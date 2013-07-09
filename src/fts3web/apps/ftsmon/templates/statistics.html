@@ -121,7 +121,7 @@ Statistics
                 {% endfor %}
               </td>
               <td>
-                {% if p.successRate %}
+                {% if p.successRate != None %}
                     {{ p.successRate|floatformat:2 }}%
                 {% else %}
                     -
@@ -133,7 +133,7 @@ Statistics
           {% endfor %}
         </tbody>
       </table>
-      <p>(*) For transfers finished in the last five minutes</p>
+      <p>(*) For transfers finished in the last 30 minutes</p>
     </div>
     
     <div id="perVo">
