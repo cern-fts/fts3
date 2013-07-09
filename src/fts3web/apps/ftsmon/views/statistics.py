@@ -153,8 +153,8 @@ def _getSuccessRatePerPair(pairs, notBefore):
     
     for pair in pairs:
         if len(terminatedCount[pair]):            
-            total   = reduce(lambda a,b: a+b, terminatedCount[pair].values())
-            success = terminatedCount[pair]['FINISHED'] if 'FINISHED' in terminatedCount[pair] else 0
+            total   = float(reduce(lambda a,b: a+b, terminatedCount[pair].values()))
+            success = float(terminatedCount[pair]['FINISHED'] if 'FINISHED' in terminatedCount[pair] else 0)
             
             if total:
                 successPerPair[pair] = (success/total) * 100
@@ -167,7 +167,7 @@ def _getSuccessRatePerPair(pairs, notBefore):
 
 
 
-def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(minutes = 5)):
+def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(minutes = 30)):
     
     notBefore = datetime.utcnow() - timewindow
     
