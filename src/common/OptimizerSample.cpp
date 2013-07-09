@@ -147,7 +147,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                         }
                                     else
                                         {
-                                            (*iter).numOfActivePerPair -= 1;
+                                            (*iter).numOfActivePerPair -= 2;
 					    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                         }
                                 }
@@ -289,7 +289,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                         }
                                     else
                                         {
-                                            (*iter).numOfActivePerPair -= 1;
+                                            (*iter).numOfActivePerPair -= 2;
 					    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                         }
                                 }
