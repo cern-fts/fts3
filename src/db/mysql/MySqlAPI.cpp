@@ -2687,7 +2687,7 @@ void MySqlAPI::revertToSubmitted()
                             double diff = difftime(now2, startTimestamp);
                             if (diff > 100 && reuseJob != "Y")
                                 {
-                                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
+                                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     sql.begin();
                                     sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
                                         "WHERE file_state = 'READY' AND finish_time IS NULL AND "

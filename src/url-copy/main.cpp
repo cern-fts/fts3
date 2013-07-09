@@ -940,7 +940,17 @@ int main(int argc, char **argv)
                     strArray[5] = file_Metadata;
                     strArray[6] = token_bringonline;
                 }
-
+		
+           if (strArray[0].length() > 0)
+                {
+                    logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
+                    reporter.constructMessageUpdater(job_id, strArray[0]);
+                }
+            else
+                {
+                    logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
+                    reporter.constructMessageUpdater(job_id, file_id);
+                }		
 
             fileManagement->setSourceUrl(strArray[1]);
             fileManagement->setDestUrl(strArray[2]);
