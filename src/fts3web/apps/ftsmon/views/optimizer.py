@@ -79,8 +79,8 @@ def optimizerDetailed(httpRequest):
 	
 	# File sizes
 	fsizes = File.objects.filter(source_se = source_se, dest_se = dest_se,
-								 job__finish_time__isnull = False,
-								 job__finish_time__gte = notBefore)
+								 file_state = 'FINISHED',
+								 finish_time__gte = notBefore)
 	
 	fsizes = fsizes.aggregate(nfiles  = Count('file_id'),
 							  biggest = Max('filesize'),
