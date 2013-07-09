@@ -4,7 +4,7 @@
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 3.0.3
-Release: 11%{?dist}
+Release: 12%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -56,5 +56,5 @@ rm -rf %{buildroot}
 %attr(640, root, apache) %{_sysconfdir}/fts3web/fts3web.ini
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-5%{?dist}
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-12%{?dist}
   - First EPEL release
