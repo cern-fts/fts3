@@ -103,10 +103,10 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
             if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
                 {
-                    if((*iter).storedMaxActive < currentActive) //keep count of the max active per pair
+                    if((*iter).storedMaxActive <= currentActive) //keep count of the max active per pair
                         (*iter).storedMaxActive = currentActive;
 
-                    if((*iter).numOfActivePerPair < currentActive)
+                    if((*iter).numOfActivePerPair <= currentActive)
                         (*iter).numOfActivePerPair = currentActive;
 			
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished
@@ -153,7 +153,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 1;
+                                    (*iter).numOfActivePerPair -= 2;
 				    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                 }
 
@@ -177,8 +177,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                             (*iter).avgThr = avgThr;
 			    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                         }
-			
-
+		    			
                     if((*iter).numOfActivePerPair <=0 )
                         activeInStore = 0;
                     else
@@ -246,10 +245,10 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
             if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
                 {
 
-                   if((*iter).storedMaxActive < currentActive) //keep count of the max active per pair
+                   if((*iter).storedMaxActive <= currentActive) //keep count of the max active per pair
                         (*iter).storedMaxActive = currentActive;
 
-                    if((*iter).numOfActivePerPair < currentActive)
+                    if((*iter).numOfActivePerPair <= currentActive)
                         (*iter).numOfActivePerPair = currentActive;
 			
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished
@@ -296,7 +295,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 1;
+                                    (*iter).numOfActivePerPair -= 2;
 				    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                 }
 
