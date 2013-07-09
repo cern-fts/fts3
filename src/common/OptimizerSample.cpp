@@ -153,7 +153,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 1;
+                                    (*iter).numOfActivePerPair -= 2;
 				    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                 }
 
@@ -177,8 +177,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                             (*iter).avgThr = avgThr;
 			    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                         }
-			
-
+		    			
                     if((*iter).numOfActivePerPair <=0 )
                         activeInStore = 0;
                     else
@@ -296,7 +295,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 1;
+                                    (*iter).numOfActivePerPair -= 2;
 				    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                 }
 
