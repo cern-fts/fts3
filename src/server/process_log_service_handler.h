@@ -133,7 +133,12 @@ protected:
                                 queueMsgRecovery.clear();
                             }
 
-                        runConsumerLog(messages);
+                        if (runConsumerLog(messages) != 0) {
+                            char buffer[128];
+                            throw Err_System(std::string("Could not get the log messages: ") +
+                                             strerror_r(errno, buffer, sizeof(buffer)));
+                        }
+
                         if(messages.empty())
                             {
                                 sleep(1);
@@ -143,13 +148,19 @@ protected:
                             {
                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                                     {
-                                        std::string job = std::string((*iter).job_id).substr(0, 36);
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Log Monitor "
-                                                                        << "\nJob id: " << job
-                                                                        << "\nFile id: " << (*iter).file_id
-                                                                        << "\nLog path: " << (*iter).filePath << commit;
-                                        DBSingleton::instance().getDBObjectInstance()->
-                                        transferLogFile((*iter).filePath, job , (*iter).file_id, (*iter).debugFile);
+                                        if (iter->msg_errno == 0) {
+                                            std::string job = std::string((*iter).job_id).substr(0, 36);
+                                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Log Monitor "
+                                                                            << "\nJob id: " << job
+                                                                            << "\nFile id: " << (*iter).file_id
+                                                                            << "\nLog path: " << (*iter).filePath << commit;
+                                            DBSingleton::instance().getDBObjectInstance()->
+                                            transferLogFile((*iter).filePath, job , (*iter).file_id, (*iter).debugFile);
+                                        }
+                                        else {
+                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a log message: "
+                                                << iter->msg_error_reason << commit;
+                                        }
                                     }
                                 messages.clear();
                             }

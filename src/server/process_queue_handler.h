@@ -226,36 +226,49 @@ protected:
                                 queueMsgRecovery.clear();
                             }
 
-                        runConsumerStatus(messages);
+                        if (runConsumerStatus(messages) != 0) {
+                            char buffer[128];
+                            throw Err_System(std::string("Could not get the status messages: ") +
+                                             strerror_r(errno, buffer, sizeof(buffer)));
+                        }
+
                         if(!messages.empty())
                             {
                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                                     {
 
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << std::string((*iter).job_id).substr(0, 36)
-                                                                        << "\nFile id: " << (*iter).file_id
-                                                                        << "\nPid: " << (*iter).process_id
-                                                                        << "\nState: " << (*iter).transfer_status
-                                                                        << "\nMessage: " << (*iter).transfer_message
-                                                                        << "\nSource: " << (*iter).source_se
-                                                                        << "\nDest: " << (*iter).dest_se << commit;
-
-                                        /*
-                                        	exceptional case when a url-copy process fails to start because thread creation failed due to lack of resource
-                                        	do not update the database with the failed state because it will be re-scheduled
-                                        */
-                                        if(std::string((*iter).transfer_message).find("thread_resource_error")!= string::npos ||
-                                                std::string((*iter).transfer_message).find("globus_module_activate_proxy")!= string::npos)
+                                        if (iter->msg_errno == 0)
                                             {
-                                                continue;
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << std::string((*iter).job_id).substr(0, 36)
+                                                                                << "\nFile id: " << (*iter).file_id
+                                                                                << "\nPid: " << (*iter).process_id
+                                                                                << "\nState: " << (*iter).transfer_status
+                                                                                << "\nMessage: " << (*iter).transfer_message
+                                                                                << "\nSource: " << (*iter).source_se
+                                                                                << "\nDest: " << (*iter).dest_se << commit;
+
+                                                /*
+                                                    exceptional case when a url-copy process fails to start because thread creation failed due to lack of resource
+                                                    do not update the database with the failed state because it will be re-scheduled
+                                                */
+                                                if(std::string((*iter).transfer_message).find("thread_resource_error")!= string::npos ||
+                                                        std::string((*iter).transfer_message).find("globus_module_activate_proxy")!= string::npos)
+                                                    {
+                                                        continue;
+                                                    }
+                                                else
+                                                    {
+                                                        bool dbUpdated = updateDatabase((*iter));
+                                                        if(!dbUpdated)
+                                                            {
+                                                                queueMsgRecovery.push_back((*iter));
+                                                            }
+                                                    }
                                             }
                                         else
                                             {
-                                                bool dbUpdated = updateDatabase((*iter));
-                                                if(!dbUpdated)
-                                                    {
-                                                        queueMsgRecovery.push_back((*iter));
-                                                    }
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
+                                                        << iter->msg_error_reason << commit;
                                             }
                                     }//end for
                                 messages.clear();
