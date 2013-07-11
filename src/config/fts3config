@@ -64,4 +64,6 @@ MonitoringMessaging=true
 
 #Do not change this
 [roles]
-Public = all:*
+Public = vo:transfer
+lcgadmin = all:config
+
