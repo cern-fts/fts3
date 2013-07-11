@@ -65,5 +65,5 @@ MonitoringMessaging=true
 #Do not change this
 [roles]
 Public = vo:transfer
-lcgadmin = all:config
+production = all:config
 
