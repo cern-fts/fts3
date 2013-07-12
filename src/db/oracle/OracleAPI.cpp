@@ -4122,7 +4122,7 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
             s7 = conn->createStatement(query7, tag7, pooledConnection);
             s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
 
-            for (it = source.begin(); it != source.end(); ++it)
+            for (it = destination.begin(); it != destination.end(); ++it)
                 {
                     std::string destin_hostname = *it;
 
@@ -7792,7 +7792,95 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
 
 int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos)
 {
+	std::string tag1 = "sumUpVoShares1";
+	std::string query1 =
+            " SELECT vo "
+            " FROM t_share_config "
+            " WHERE source = :1 "
+            "	AND destination = :destination "
+            "	AND vo = :2 "
+			;
 
+	std::string tag2 = "sumUpVoShares2";
+	std::string query2 =
+            " SELECT SUM(active) "
+            " FROM t_share_config "
+            " WHERE source = :source "
+            "	AND destination = :destination "
+            "	AND vo IN "
+			;
+
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;
+    oracle::occi::Statement* s2 = NULL;
+    oracle::occi::ResultSet* r2 = NULL;
+
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    int ret = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection)
+                return false;
+
+//            std::string source_hostname = source;
+//
+//            // get number of active for the destination
+//
+//            s1 = conn->createStatement(query1, tag1, pooledConnection);
+//            s1->setString(1, source_hostname);
+//            r1 = conn->createResultset(s1, pooledConnection);
+//
+//            if (r1->next())
+//                {
+//                    nActiveSource = r1->getInt(1);
+//                }
+//
+//            conn->destroyResultset(s1, r1);
+//            conn->destroyStatement(s1, tag1, pooledConnection);
+//            s1 = 0;
+//            r1 = 0;
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+
+            conn->rollback(pooledConnection);
+
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            if (s2 && r2)
+                conn->destroyResultset(s1, r1);
+            if (s2)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+
+            conn->rollback(pooledConnection);
+
+            if (s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            if (s2 && r2)
+                conn->destroyResultset(s1, r1);
+            if (s2)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+
+    conn->releasePooledConnection(pooledConnection);
+
+    return ret;
 }
 
 //boost::optional<unsigned int> OracleAPI::getJobConfigCount(std::string job_id) {
