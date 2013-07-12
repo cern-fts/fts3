@@ -7797,8 +7797,8 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
             " SELECT vo "
             " FROM t_share_config "
             " WHERE source = :1 "
-            "	AND destination = :destination "
-            "	AND vo = :2 "
+            "	AND destination = :2 "
+            "	AND vo = :3 "
 			;
 
 	std::string tag2 = "sumUpVoShares2";
@@ -7817,7 +7817,7 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
 
     oracle::occi::Connection* pooledConnection = NULL;
 
-    int ret = 0;
+    int sum = 0;
 
     try
         {
@@ -7825,23 +7825,58 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
             if (!pooledConnection)
                 return false;
 
-//            std::string source_hostname = source;
-//
-//            // get number of active for the destination
-//
-//            s1 = conn->createStatement(query1, tag1, pooledConnection);
-//            s1->setString(1, source_hostname);
-//            r1 = conn->createResultset(s1, pooledConnection);
-//
-//            if (r1->next())
-//                {
-//                    nActiveSource = r1->getInt(1);
-//                }
-//
-//            conn->destroyResultset(s1, r1);
-//            conn->destroyStatement(s1, tag1, pooledConnection);
-//            s1 = 0;
-//            r1 = 0;
+            std::set<std::string>::iterator it = vos.begin();
+
+            while (it != vos.end())
+            	{
+            		std::set<std::string>::iterator remove = it;
+            		it++;
+
+					s1 = conn->createStatement(query1, tag1, pooledConnection);
+					s1->setString(1, source);
+					s1->setString(2, destination);
+					s1->setString(3, *remove);
+					r1 = conn->createResultset(s1, pooledConnection);
+
+					if (!r1->next() && *remove != "public") {
+                        // if there is no configuration for this VO replace it with 'public'
+                        vos.erase(remove);
+                        vos.insert("'public'");
+					}
+
+					conn->destroyResultset(s1, r1);
+					conn->destroyStatement(s1, tag1, pooledConnection);
+					s1 = 0;
+					r1 = 0;
+            	}
+
+            std::string vos_str = "(";
+
+            for (it = vos.begin(); it != vos.end(); ++it)
+                {
+
+                    vos_str += *it + ",";
+                }
+
+            // replace the last ',' with closing ')'
+            vos_str[vos_str.size() - 1] = ')';
+
+            // append the VO list to the second query
+            query2 += vos_str;
+
+			s2 = conn->createStatement(query2, tag2, pooledConnection);
+			s2->setString(1, source);
+			s2->setString(2, destination);
+			r2 = conn->createResultset(s2, pooledConnection);
+
+			if (r2->next()) {
+				sum = r2->getInt(1);
+			}
+
+			conn->destroyResultset(s2, r2);
+			conn->destroyStatement(s2, tag2, pooledConnection);
+			s2 = 0;
+			r2 = 0;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -7880,7 +7915,7 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
 
     conn->releasePooledConnection(pooledConnection);
 
-    return ret;
+    return sum;
 }
 
 //boost::optional<unsigned int> OracleAPI::getJobConfigCount(std::string job_id) {
