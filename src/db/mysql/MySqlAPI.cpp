@@ -2268,7 +2268,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
                             i != rs.end(); ++i)
                         {
                             if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (i->compare("FINISHED") == 0) nFinishedLastHour+=1.0;
+                            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
                         }
 
 
@@ -2303,7 +2303,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
                                                           source_hostname, destin_hostname,
                                                           nActive, nActiveSource, nActiveDest,
                                                           ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll,throughput,avgThr);
+                                                          nFinishedAll, nFailedAll, throughput, avgThr);
                 }
 
         }
@@ -2425,7 +2425,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
                                                           source_hostname, destin_hostname,
                                                           nActive, nActiveSource, nActiveDest,
                                                           ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll,throughput, avgThr);
+                                                          nFinishedAll, nFailedAll, throughput, avgThr);
                 }
 
         }
