@@ -3991,14 +3991,14 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
     // total number of allowed active for the source (both currently in use and free credits)
     int ret = 0;
 
-    const std::string tag1 = "getSeIn1";
-    const std::string tag2 = "getSeIn2";
-    const std::string tag3 = "getSeIn3";
-    const std::string tag4 = "getSeIn4";
-    const std::string tag5 = "getSeIn5";
-    const std::string tag6 = "getSeIn6";
-    const std::string tag7 = "getSeIn7";
-    const std::string tag8 = "getSeIn8";
+    const std::string tag1 = "getSeOut1";
+    const std::string tag2 = "getSeOut2";
+    const std::string tag3 = "getSeOut3";
+    const std::string tag4 = "getSeOut4";
+    const std::string tag5 = "getSeOut5";
+    const std::string tag6 = "getSeOut6";
+    const std::string tag7 = "getSeOut7";
+    const std::string tag8 = "getSeOut8";
 
     std::string query1 =
         "SELECT COUNT(*) FROM t_file "
