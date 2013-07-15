@@ -26,6 +26,7 @@
 #include "Blacklister.h"
 
 #include "common/logger.h"
+#include "common/error.h"
 
 #include "ws/CGsiAdapter.h"
 
@@ -123,6 +124,10 @@ void Blacklister::handleDnBlacklisting()
 
     if (blk)
         {
+			if (name == adminDn) {
+				throw Err_Custom ("A user cannot blacklist himself!");
+			}
+
             db->blacklistDn(name, string(), adminDn);
             // log it
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << name << " had blacklisted the DN: " << adminDn << commit;
@@ -132,6 +137,10 @@ void Blacklister::handleDnBlacklisting()
         }
     else
         {
+    		if (name == adminDn) {
+    			throw Err_Custom ("A user cannot unblacklist himself!");
+    		}
+
             db->unblacklistDn(name);
             // log it
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << adminDn << " had unblacklisted the DN: " << name << commit;
