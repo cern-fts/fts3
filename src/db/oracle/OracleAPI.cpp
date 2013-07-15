@@ -4032,7 +4032,7 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
         "WHERE "
         "      t_file.source_se = :1 AND t_file.dest_se = :1 AND "
         "      file_state IN ('FAILED','FINISHED') AND "
-        "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))"
+        "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
         ;
 
     std::string query5 =
@@ -4057,7 +4057,7 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
         "      file_state = 'FAILED'"
         ;
 
-    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and "
+    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
                               " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
     oracle::occi::Statement* s1 = NULL;
@@ -4389,7 +4389,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         "WHERE "
         "      t_file.source_se = :1 AND t_file.dest_se = :1 AND "
         "      file_state IN ('FAILED','FINISHED') AND "
-        "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))"
+        "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
         ;
 
     std::string query5 =
@@ -4414,7 +4414,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         "      file_state = 'FAILED'"
         ;
 
-    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and "
+    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
                               " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
     oracle::occi::Statement* s1 = NULL;
