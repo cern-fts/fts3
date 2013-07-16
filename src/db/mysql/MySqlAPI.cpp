@@ -3846,7 +3846,7 @@ int MySqlAPI::sumUpVoShares (std::string source, std::string destination, std::s
                         {
                             // if there is no configuration for this VO replace it with 'public'
                             vos.erase(remove);
-                            vos.insert("'public'");
+                            vos.insert("public");
                         }
                 }
 
@@ -3855,7 +3855,7 @@ int MySqlAPI::sumUpVoShares (std::string source, std::string destination, std::s
             for (it = vos.begin(); it != vos.end(); ++it)
                 {
 
-                    vos_str += *it + ",";
+                    vos_str += "'" + *it + "'" + ",";
                 }
 
             // replace the last ',' with closing ')'

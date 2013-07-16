@@ -4003,13 +4003,13 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
     std::string query1 =
         "SELECT COUNT(*) FROM t_file "
         "WHERE t_file.file_state in ('READY','ACTIVE') AND "
-        "      t_file.dest_se = :1 "
+        "      t_file.source_se = :1 "
         ;
 
     std::string query2 =
         "SELECT COUNT(*) FROM t_file "
         "WHERE t_file.file_state in ('READY','ACTIVE') AND "
-        "      t_file.source_se = :1"
+        "      t_file.dest_se = :1"
         ;
 
     std::string query3 = // TODO
@@ -7805,8 +7805,8 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
 	std::string query2 =
             " SELECT SUM(active) "
             " FROM t_share_config "
-            " WHERE source = :source "
-            "	AND destination = :destination "
+            " WHERE source = :1 "
+            "	AND destination = :2 "
             "	AND vo IN "
 			;
 
@@ -7841,7 +7841,7 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
 					if (!r1->next() && *remove != "public") {
                         // if there is no configuration for this VO replace it with 'public'
                         vos.erase(remove);
-                        vos.insert("'public'");
+                        vos.insert("public");
 					}
 
 					conn->destroyResultset(s1, r1);
@@ -7855,7 +7855,7 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
             for (it = vos.begin(); it != vos.end(); ++it)
                 {
 
-                    vos_str += *it + ",";
+                    vos_str += "'" + *it + "'" + ",";
                 }
 
             // replace the last ',' with closing ')'
@@ -7863,6 +7863,7 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
 
             // append the VO list to the second query
             query2 += vos_str;
+            tag2 += vos_str;
 
 			s2 = conn->createStatement(query2, tag2, pooledConnection);
 			s2->setString(1, source);
