@@ -3991,349 +3991,80 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
     // total number of allowed active for the source (both currently in use and free credits)
     int ret = 0;
 
-    const std::string tag1 = "getSeOut1";
-    const std::string tag2 = "getSeOut2";
-    const std::string tag3 = "getSeOut3";
-    const std::string tag4 = "getSeOut4";
-    const std::string tag5 = "getSeOut5";
-    const std::string tag6 = "getSeOut6";
-    const std::string tag7 = "getSeOut7";
-    const std::string tag8 = "getSeOut8";
+    std::string tag[8];
+    std::string query[8];
 
-    std::string query1 =
-        "SELECT COUNT(*) FROM t_file "
-        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
-        "      t_file.source_se = :1 "
-        ;
+    oracle::occi::Statement* s[8] = {NULL};
+    oracle::occi::ResultSet* r[8] = {NULL};
 
-    std::string query2 =
-        "SELECT COUNT(*) FROM t_file "
-        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
-        "      t_file.dest_se = :1"
-        ;
-
-    std::string query3 = // TODO
-        " select throughput "
-        " from ("
-        "	select throughput "
-        "	from  t_file "
-        "	where source_se = :1 "
-        "		and dest_se = :2 "
-        "		and throughput is not NULL "
-        " 		and throughput != 0  "
-        "	order by FINISH_TIME DESC"
-        " ) "
-        " where rownum = 1"
-        ;
-
-    std::string query4 =
-        "SELECT file_state "
-        "FROM t_file "
-        "WHERE "
-        "      t_file.source_se = :1 AND t_file.dest_se = :1 AND "
-        "      file_state IN ('FAILED','FINISHED') AND "
-        "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
-        ;
-
-    std::string query5 =
-        "SELECT COUNT(*) "
-        "FROM t_file "
-        "WHERE "
-        "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
-        "      file_state in ('READY','ACTIVE')"
-        ;
-
-    std::string query6 =
-        "SELECT COUNT(*) FROM t_file "
-        "WHERE "
-        "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
-        "      file_state = 'FINISHED'"
-        ;
-
-    std::string query7 =
-        "SELECT COUNT(*) FROM t_file "
-        "WHERE "
-        "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
-        "      file_state = 'FAILED'"
-        ;
-
-    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
-                              " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
-
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::ResultSet* r4 = NULL;
-    oracle::occi::Statement* s5 = NULL;
-    oracle::occi::ResultSet* r5 = NULL;
-    oracle::occi::Statement* s6 = NULL;
-    oracle::occi::ResultSet* r6 = NULL;
-    oracle::occi::Statement* s7 = NULL;
-    oracle::occi::ResultSet* r7 = NULL;
-    oracle::occi::Statement* s8 = NULL;
-    oracle::occi::ResultSet* r8 = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
-
 
     try
         {
-            int nActiveSource = 0, nActiveDest = 0;
-            double nFailedLastHour = 0, nFinishedLastHour = 0;
-            int nActive = 0;
-            double nFailedAll = 0, nFinishedAll = 0, throughput = 0;
-            double avgThr = 0.0;
-
+            int nActiveSource = 0;
 
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return false;
 
+            initVariablesForGetCredits(pooledConnection, s, query, tag, "getSeOut");
+
             std::string source_hostname = source;
 
             // get number of active for the destination
 
-            s1 = conn->createStatement(query1, tag1, pooledConnection);
-            s1->setString(1, source_hostname);
-            r1 = conn->createResultset(s1, pooledConnection);
+            s[0]->setString(1, source_hostname);
+            r[0] = conn->createResultset(s[0], pooledConnection);
 
-            if (r1->next())
+            if (r[0]->next())
                 {
-                    nActiveSource = r1->getInt(1);
+                    nActiveSource = r[0]->getInt(1);
                 }
 
-            conn->destroyResultset(s1, r1);
-            conn->destroyStatement(s1, tag1, pooledConnection);
-            s1 = 0;
-            r1 = 0;
+            conn->destroyResultset(s[0], r[0]);
+            r[0] = 0;
 
             ret += nActiveSource;
 
             std::set<std::string>::iterator it;
 
-            s2 = conn->createStatement(query2, tag2, pooledConnection);
-            s3 = conn->createStatement(query3, tag3, pooledConnection);
-            s4 = conn->createStatement(query4, tag4, pooledConnection);
-            s5 = conn->createStatement(query5, tag5, pooledConnection);
-            s6 = conn->createStatement(query6, tag6, pooledConnection);
-            s7 = conn->createStatement(query7, tag7, pooledConnection);
-            s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
-
             for (it = destination.begin(); it != destination.end(); ++it)
                 {
                     std::string destin_hostname = *it;
-
-                    s8->setString(1, destin_hostname);
-                    s8->setString(2, source_hostname);
-                    r8 = conn->createResultset(s8, pooledConnection);
-                    if (r8->next())
-                        {
-                            avgThr = r8->getDouble(1);
-                        }
-                    conn->destroyResultset(s8, r8);
-                    r8 = NULL;
-
-                    // get number of active for the source
-                    s2->setString(1, source_hostname);
-                    r2 = conn->createResultset(s2, pooledConnection);
-
-                    if (r2->next())
-                        {
-                            nActiveDest = r2->getInt(1);
-                        }
-
-                    conn->destroyResultset(s2, r2);
-                    r2 = NULL;
-
-                    // get the throughput
-                    s3->setString(1, destin_hostname);
-                    s3->setString(2, source_hostname);
-                    r3 = conn->createResultset(s3, pooledConnection);
-
-                    if (r3->next())
-                        {
-                            throughput = r3->getInt(1);
-                        }
-
-                    conn->destroyResultset(s3, r3);
-                    r3 = NULL;
-
-                    // file state: FAILED and FINISHED (in last hour)
-                    s4->setString(1, source_hostname);
-                    s4->setString(2, destin_hostname);
-                    r4 = conn->createResultset(s4, pooledConnection);
-
-                    while (r4->next())
-                        {
-                            std::string state = r4->getString(1);
-                            if      (state.compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (state.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
-                        }
-
-                    conn->destroyResultset(s4, r4);
-                    r4 = NULL;
-
-                    // number of active for the pair
-                    s5->setString(1, source_hostname);
-                    s5->setString(2, destin_hostname);
-                    r5= conn->createResultset(s5, pooledConnection);
-
-                    if (r5->next())
-                        {
-                            nActive = r5->getInt(1);
-                        }
-
-                    conn->destroyResultset(s5, r5);
-                    r5 = NULL;
-
-                    // all finished in total
-                    s6->setString(1, source_hostname);
-                    s6->setString(2, destin_hostname);
-                    r6 = conn->createResultset(s6, pooledConnection);
-
-                    if (r6->next())
-                        {
-                            nFinishedAll = r6->getInt(1);
-                        }
-
-                    conn->destroyResultset(s6, r6);
-                    r6 = NULL;
-
-                    // all failed in total
-                    s7->setString(1, source_hostname);
-                    s7->setString(2, destin_hostname);
-                    r7 = conn->createResultset(s7, pooledConnection);
-
-                    if (r7->next())
-                        {
-                            nFailedAll = r7->getInt(1);
-                        }
-
-                    conn->destroyResultset(s7, r7);
-                    r7 = NULL;
-
-                    double ratioSuccessFailure = 0;
-                    if(nFinishedLastHour > 0)
-                        {
-                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-                        }
-
-
-                    ret += optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
-                                                          source_hostname, destin_hostname,
-                                                          nActive, nActiveSource, nActiveDest,
-                                                          ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll,throughput, avgThr);
+                    ret += getCredits(pooledConnection, s, r, source_hostname, destin_hostname);
                 }
-            conn->destroyStatement(s2, tag2, pooledConnection);
-            s2 = NULL;
-            conn->destroyStatement(s3, tag3, pooledConnection);
-            s3 = NULL;
-            conn->destroyStatement(s4, tag4, pooledConnection);
-            s4 = 0;
-            conn->destroyStatement(s5, tag5, pooledConnection);
-            s5 = NULL;
-            conn->destroyStatement(s6, tag6, pooledConnection);
-            s6 = NULL;
-            conn->destroyStatement(s7, tag7, pooledConnection);
-            s7 = NULL;
-            conn->destroyStatement(s8, tag8, pooledConnection);
-            s8 = NULL;
+
+            for (int i = 0; i < 8; i++)
+            	{
+					conn->destroyStatement(s[i], tag[i], pooledConnection);
+					s[i] = NULL;
+            	}
         }
     catch (oracle::occi::SQLException const &e)
         {
-
             conn->rollback(pooledConnection);
 
-            if (s1 && r1)
-                conn->destroyResultset(s1, r1);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s2 && r2)
-                conn->destroyResultset(s1, r1);
-            if (s2)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
-
-            if (s4 && r4)
-                conn->destroyResultset(s4, r4);
-            if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);
-
-            if (s5 && r5)
-                conn->destroyResultset(s5, r5);
-            if (s5)
-                conn->destroyStatement(s5, tag5, pooledConnection);
-
-            if (s6 && r6)
-                conn->destroyResultset(s6, r6);
-            if (s6)
-                conn->destroyStatement(s6, tag6, pooledConnection);
-
-            if (s7 && r7)
-                conn->destroyResultset(s7, r7);
-            if (s7)
-                conn->destroyStatement(s7, tag7, pooledConnection);
-
-            if (s8 && r8)
-                conn->destroyResultset(s8, r8);
-            if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);
+            for (int i = 0; i < 8; i++)
+            	{
+                if (s[i] && r[i])
+                    conn->destroyResultset(s[i], r[i]);
+                if (s[i])
+                    conn->destroyStatement(s[i], tag[i], pooledConnection);
+            	}
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
     catch (...)
         {
-
             conn->rollback(pooledConnection);
 
-            if (s1 && r1)
-                conn->destroyResultset(s1, r1);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s2 && r2)
-                conn->destroyResultset(s1, r1);
-            if (s2)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
-
-            if (s4 && r4)
-                conn->destroyResultset(s4, r4);
-            if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);
-
-            if (s5 && r5)
-                conn->destroyResultset(s5, r5);
-            if (s5)
-                conn->destroyStatement(s5, tag5, pooledConnection);
-
-            if (s6 && r6)
-                conn->destroyResultset(s6, r6);
-            if (s6)
-                conn->destroyStatement(s6, tag6, pooledConnection);
-
-            if (s7 && r7)
-                conn->destroyResultset(s7, r7);
-            if (s7)
-                conn->destroyStatement(s7, tag7, pooledConnection);
-
-            if (s8 && r8)
-                conn->destroyResultset(s8, r8);
-            if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);
+            for (int i = 0; i < 8; i++)
+            	{
+                if (s[i] && r[i])
+                    conn->destroyResultset(s[i], r[i]);
+                if (s[i])
+                    conn->destroyStatement(s[i], tag[i], pooledConnection);
+            	}
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
@@ -4348,28 +4079,112 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     // total number of allowed active for the source (both currently in use and free credits)
     int ret = 0;
 
-    const std::string tag1 = "getSeIn1";
-    const std::string tag2 = "getSeIn2";
-    const std::string tag3 = "getSeIn3";
-    const std::string tag4 = "getSeIn4";
-    const std::string tag5 = "getSeIn5";
-    const std::string tag6 = "getSeIn6";
-    const std::string tag7 = "getSeIn7";
-    const std::string tag8 = "getSeIn8";
+    std::string tag[8];
+    std::string query[8];
 
-    std::string query1 =
+    oracle::occi::Statement* s[8] = {0};
+    oracle::occi::ResultSet* r[8] = {0};
+
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+            int nActiveDest = 0;
+
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection)
+                return false;
+
+            initVariablesForGetCredits(pooledConnection, s, query, tag, "getSeIn");
+
+            std::string destin_hostname = destination;
+
+            // get number of active for the destination
+            s[1]->setString(1, destin_hostname);
+            r[1] = conn->createResultset(s[1], pooledConnection);
+
+            if (r[1]->next())
+                {
+                    nActiveDest = r[1]->getInt(1);
+                }
+
+            conn->destroyResultset(s[1], r[1]);
+            r[1] = 0;
+
+            ret += nActiveDest;
+
+            std::set<std::string>::iterator it;
+
+            for (it = source.begin(); it != source.end(); ++it)
+                {
+                    std::string source_hostname = *it;
+                    ret += getCredits(pooledConnection, s, r, source_hostname, destin_hostname);
+                }
+
+            for (int i = 0; i < 8; i++)
+            	{
+            		conn->destroyStatement(s[i], tag[i], pooledConnection);
+            		s[i] = NULL;
+            	}
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+
+            for (int i = 0; i < 8; i++)
+				{
+					if (s[i] && r[i])
+						conn->destroyResultset(s[i], r[i]);
+					if (s[i])
+						conn->destroyStatement(s[i], tag[i], pooledConnection);
+				}
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+
+            for (int i = 0; i < 8; i++)
+				{
+					if (s[i] && r[i])
+						conn->destroyResultset(s[i], r[i]);
+					if (s[i])
+						conn->destroyStatement(s[i], tag[i], pooledConnection);
+				}
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+
+    conn->releasePooledConnection(pooledConnection);
+
+    return ret;
+}
+
+void OracleAPI::initVariablesForGetCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, std::string* query, std::string* tag, std::string basename)
+{
+    tag[0] = basename + "0";
+    tag[1] = basename + "1";
+    tag[2] = basename + "2";
+    tag[3] = basename + "3";
+    tag[4] = basename + "4";
+    tag[5] = basename + "5";
+    tag[6] = basename + "6";
+    tag[7] = basename + "7";
+
+    query[0] =
         "SELECT COUNT(*) FROM t_file "
         "WHERE t_file.file_state in ('READY','ACTIVE') AND "
         "      t_file.source_se = :1 "
         ;
 
-    std::string query2 =
+    query[1] =
         "SELECT COUNT(*) FROM t_file "
         "WHERE t_file.file_state in ('READY','ACTIVE') AND "
         "      t_file.dest_se = :1"
         ;
 
-    std::string query3 = // TODO
+    query[2] =
         " select throughput "
         " from ("
         "	select throughput "
@@ -4383,7 +4198,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         " where rownum = 1"
         ;
 
-    std::string query4 =
+    query[3] =
         "SELECT file_state "
         "FROM t_file "
         "WHERE "
@@ -4392,7 +4207,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
         ;
 
-    std::string query5 =
+    query[4] =
         "SELECT COUNT(*) "
         "FROM t_file "
         "WHERE "
@@ -4400,304 +4215,154 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
         "      file_state in ('READY','ACTIVE')"
         ;
 
-    std::string query6 =
+    query[5] =
         "SELECT COUNT(*) FROM t_file "
         "WHERE "
         "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
         "      file_state = 'FINISHED'"
         ;
 
-    std::string query7 =
+    query[6] =
         "SELECT COUNT(*) FROM t_file "
         "WHERE "
         "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
         "      file_state = 'FAILED'"
         ;
 
-    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
+    query[7] = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
                               " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::ResultSet* r4 = NULL;
-    oracle::occi::Statement* s5 = NULL;
-    oracle::occi::ResultSet* r5 = NULL;
-    oracle::occi::Statement* s6 = NULL;
-    oracle::occi::ResultSet* r6 = NULL;
-    oracle::occi::Statement* s7 = NULL;
-    oracle::occi::ResultSet* r7 = NULL;
-    oracle::occi::Statement* s8 = NULL;
-    oracle::occi::ResultSet* r8 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    s[0] = conn->createStatement(query[0], tag[0], pooledConnection);
+    s[1] = conn->createStatement(query[1], tag[1], pooledConnection);
+    s[2] = conn->createStatement(query[2], tag[2], pooledConnection);
+    s[3] = conn->createStatement(query[3], tag[3], pooledConnection);
+    s[4] = conn->createStatement(query[4], tag[4], pooledConnection);
+    s[5] = conn->createStatement(query[5], tag[5], pooledConnection);
+    s[6] = conn->createStatement(query[6], tag[6], pooledConnection);
+    s[7] = conn->createStatement(query[7], tag[7], pooledConnection);
+}
 
+int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, oracle::occi::ResultSet** r, const std::string & source_hostname, const std::string & destin_hostname)
+{
+    int nActiveSource = 0, nActiveDest = 0;
+    double nFailedLastHour = 0, nFinishedLastHour = 0;
+    int nActive = 0;
+    double nFailedAll = 0, nFinishedAll = 0, throughput = 0;
+    double avgThr = 0.0;
 
-    try
+    s[7]->setString(1, source_hostname);
+    s[7]->setString(2, destin_hostname);
+    r[7] = conn->createResultset(s[7], pooledConnection);
+    if (r[7]->next())
         {
-            int nActiveSource = 0, nActiveDest = 0;
-            double nFailedLastHour = 0, nFinishedLastHour = 0;
-            int nActive = 0;
-            double nFailedAll = 0, nFinishedAll = 0, throughput = 0;
-            double avgThr = 0.0;
-
-
-            pooledConnection = conn->getPooledConnection();
-            if (!pooledConnection)
-                return false;
-
-            std::string destin_hostname = destination;
-
-            // get number of active for the destination
-
-            s1 = conn->createStatement(query1, tag1, pooledConnection);
-            s1->setString(1, destin_hostname);
-            r1 = conn->createResultset(s1, pooledConnection);
-
-            if (r1->next())
-                {
-                    nActiveDest = r1->getInt(1);
-                }
-
-            conn->destroyResultset(s1, r1);
-            conn->destroyStatement(s1, tag1, pooledConnection);
-            s1 = 0;
-            r1 = 0;
-
-            ret += nActiveDest;
-
-            std::set<std::string>::iterator it;
-
-            s2 = conn->createStatement(query2, tag2, pooledConnection);
-            s3 = conn->createStatement(query3, tag3, pooledConnection);
-            s4 = conn->createStatement(query4, tag4, pooledConnection);
-            s5 = conn->createStatement(query5, tag5, pooledConnection);
-            s6 = conn->createStatement(query6, tag6, pooledConnection);
-            s7 = conn->createStatement(query7, tag7, pooledConnection);
-            s8 = conn->createStatement(query_stmt8, tag8, pooledConnection);
-
-            for (it = source.begin(); it != source.end(); ++it)
-                {
-                    std::string source_hostname = *it;
-
-                    s8->setString(1, source_hostname);
-                    s8->setString(2, destin_hostname);
-                    r8 = conn->createResultset(s8, pooledConnection);
-                    if (r8->next())
-                        {
-                            avgThr = r8->getDouble(1);
-                        }
-                    conn->destroyResultset(s8, r8);
-                    r8 = NULL;
-
-                    // get number of active for the source
-                    s2->setString(1, source_hostname);
-                    r2 = conn->createResultset(s2, pooledConnection);
-
-                    if (r2->next())
-                        {
-                            nActiveSource = r2->getInt(1);
-                        }
-
-                    conn->destroyResultset(s2, r2);
-                    r2 = NULL;
-
-                    // get the throughput
-                    s3->setString(1, destin_hostname);
-                    s3->setString(2, source_hostname);
-                    r3 = conn->createResultset(s3, pooledConnection);
-
-                    if (r3->next())
-                        {
-                            throughput = r3->getInt(1);
-                        }
-
-                    conn->destroyResultset(s3, r3);
-                    r3 = NULL;
-
-                    // file state: FAILED and FINISHED (in last hour)
-                    s4->setString(1, source_hostname);
-                    s4->setString(2, destin_hostname);
-                    r4 = conn->createResultset(s4, pooledConnection);
-
-                    while (r4->next())
-                        {
-                            std::string state = r4->getString(1);
-                            if      (state.compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (state.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
-                        }
-
-                    conn->destroyResultset(s4, r4);
-                    r4 = NULL;
-
-                    // number of active for the pair
-                    s5->setString(1, source_hostname);
-                    s5->setString(2, destin_hostname);
-                    r5= conn->createResultset(s5, pooledConnection);
-
-                    if (r5->next())
-                        {
-                            nActive = r5->getInt(1);
-                        }
-
-                    conn->destroyResultset(s5, r5);
-                    r5 = NULL;
-
-                    // all finished in total
-                    s6->setString(1, source_hostname);
-                    s6->setString(2, destin_hostname);
-                    r6 = conn->createResultset(s6, pooledConnection);
-
-                    if (r6->next())
-                        {
-                            nFinishedAll = r6->getInt(1);
-                        }
-
-                    conn->destroyResultset(s6, r6);
-                    r6 = NULL;
-
-                    // all failed in total
-                    s7->setString(1, source_hostname);
-                    s7->setString(2, destin_hostname);
-                    r7 = conn->createResultset(s7, pooledConnection);
-
-                    if (r7->next())
-                        {
-                            nFailedAll = r7->getInt(1);
-                        }
-
-                    conn->destroyResultset(s7, r7);
-                    r7 = NULL;
-
-                    double ratioSuccessFailure = 0;
-                    if(nFinishedLastHour > 0)
-                        {
-                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-                        }
-
-
-                    ret += optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
-                                                          source_hostname, destin_hostname,
-                                                          nActive, nActiveSource, nActiveDest,
-                                                          ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll,throughput, avgThr);
-                }
-            conn->destroyStatement(s2, tag2, pooledConnection);
-            s2 = NULL;
-            conn->destroyStatement(s3, tag3, pooledConnection);
-            s3 = NULL;
-            conn->destroyStatement(s4, tag4, pooledConnection);
-            s4 = 0;
-            conn->destroyStatement(s5, tag5, pooledConnection);
-            s5 = NULL;
-            conn->destroyStatement(s6, tag6, pooledConnection);
-            s6 = NULL;
-            conn->destroyStatement(s7, tag7, pooledConnection);
-            s7 = NULL;
-            conn->destroyStatement(s8, tag8, pooledConnection);
-            s8 = NULL;
+            avgThr = r[7]->getDouble(1);
         }
-    catch (oracle::occi::SQLException const &e)
+    conn->destroyResultset(s[7], r[7]);
+    r[7] = NULL;
+
+    // get number of active for the source
+    s[0]->setString(1, source_hostname);
+    r[0] = conn->createResultset(s[0], pooledConnection);
+
+    if (r[0]->next())
         {
-
-            conn->rollback(pooledConnection);
-
-            if (s1 && r1)
-                conn->destroyResultset(s1, r1);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s2 && r2)
-                conn->destroyResultset(s1, r1);
-            if (s2)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
-
-            if (s4 && r4)
-                conn->destroyResultset(s4, r4);
-            if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);
-
-            if (s5 && r5)
-                conn->destroyResultset(s5, r5);
-            if (s5)
-                conn->destroyStatement(s5, tag5, pooledConnection);
-
-            if (s6 && r6)
-                conn->destroyResultset(s6, r6);
-            if (s6)
-                conn->destroyStatement(s6, tag6, pooledConnection);
-
-            if (s7 && r7)
-                conn->destroyResultset(s7, r7);
-            if (s7)
-                conn->destroyStatement(s7, tag7, pooledConnection);
-
-            if (s8 && r8)
-                conn->destroyResultset(s8, r8);
-            if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-        }
-    catch (...)
-        {
-
-            conn->rollback(pooledConnection);
-
-            if (s1 && r1)
-                conn->destroyResultset(s1, r1);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s2 && r2)
-                conn->destroyResultset(s1, r1);
-            if (s2)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            if (s3 && r3)
-                conn->destroyResultset(s3, r3);
-            if (s3)
-                conn->destroyStatement(s3, tag3, pooledConnection);
-
-            if (s4 && r4)
-                conn->destroyResultset(s4, r4);
-            if (s4)
-                conn->destroyStatement(s4, tag4, pooledConnection);
-
-            if (s5 && r5)
-                conn->destroyResultset(s5, r5);
-            if (s5)
-                conn->destroyStatement(s5, tag5, pooledConnection);
-
-            if (s6 && r6)
-                conn->destroyResultset(s6, r6);
-            if (s6)
-                conn->destroyStatement(s6, tag6, pooledConnection);
-
-            if (s7 && r7)
-                conn->destroyResultset(s7, r7);
-            if (s7)
-                conn->destroyStatement(s7, tag7, pooledConnection);
-
-            if (s8 && r8)
-                conn->destroyResultset(s8, r8);
-            if (s8)
-                conn->destroyStatement(s8, tag8, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+            nActiveSource = r[0]->getInt(1);
         }
 
-    conn->releasePooledConnection(pooledConnection);
+    conn->destroyResultset(s[0], r[0]);
+    r[0] = NULL;
 
-    return ret;
+    // get number of active for the destination
+    s[1]->setString(1, destin_hostname);
+    r[1] = conn->createResultset(s[1], pooledConnection);
+
+    if (r[1]->next())
+        {
+            nActiveDest = r[1]->getInt(1);
+        }
+
+    conn->destroyResultset(s[1], r[1]);
+    r[1] = NULL;
+
+    // get the throughput
+    s[2]->setString(1, destin_hostname);
+    s[2]->setString(2, source_hostname);
+    r[2] = conn->createResultset(s[2], pooledConnection);
+
+    if (r[2]->next())
+        {
+            throughput = r[2]->getInt(1);
+        }
+
+    conn->destroyResultset(s[2], r[2]);
+    r[2] = NULL;
+
+    // file state: FAILED and FINISHED (in last hour)
+    s[3]->setString(1, source_hostname);
+    s[3]->setString(2, destin_hostname);
+    r[3] = conn->createResultset(s[3], pooledConnection);
+
+    while (r[3]->next())
+        {
+            std::string state = r[3]->getString(1);
+            if      (state.compare("FAILED") == 0)   nFailedLastHour+=1.0;
+            else if (state.compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+        }
+
+    conn->destroyResultset(s[3], r[3]);
+    r[3] = NULL;
+
+    // number of active for the pair
+    s[4]->setString(1, source_hostname);
+    s[4]->setString(2, destin_hostname);
+    r[4]= conn->createResultset(s[4], pooledConnection);
+
+    if (r[4]->next())
+        {
+            nActive = r[4]->getInt(1);
+        }
+
+    conn->destroyResultset(s[4], r[4]);
+    r[4] = NULL;
+
+    // all finished in total
+    s[5]->setString(1, source_hostname);
+    s[5]->setString(2, destin_hostname);
+    r[5] = conn->createResultset(s[5], pooledConnection);
+
+    if (r[5]->next())
+        {
+            nFinishedAll = r[5]->getInt(1);
+        }
+
+    conn->destroyResultset(s[5], r[5]);
+    r[5] = NULL;
+
+    // all failed in total
+    s[6]->setString(1, source_hostname);
+    s[6]->setString(2, destin_hostname);
+    r[6] = conn->createResultset(s[6], pooledConnection);
+
+    if (r[6]->next())
+        {
+            nFailedAll = r[6]->getInt(1);
+        }
+
+    conn->destroyResultset(s[6], r[6]);
+    r[6] = NULL;
+
+    double ratioSuccessFailure = 0;
+    if(nFinishedLastHour > 0)
+        {
+            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+        }
+
+
+    return optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
+                                          source_hostname, destin_hostname,
+                                          nActive, nActiveSource, nActiveDest,
+                                          ratioSuccessFailure,
+                                          nFinishedAll, nFailedAll,throughput, avgThr);
 }
 
 void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params)

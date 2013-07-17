@@ -135,6 +135,10 @@ public:
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
+    virtual int getCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, oracle::occi::ResultSet** r, const std::string & source_hostname, const std::string & destin_hostname);
+
+    virtual void initVariablesForGetCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, std::string* query, std::string* tag, std::string basename);
+
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
 
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
