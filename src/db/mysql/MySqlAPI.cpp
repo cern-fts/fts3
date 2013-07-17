@@ -2223,87 +2223,8 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
 
             for (it = destination.begin(); it != destination.end(); ++it)
                 {
-
                     std::string destin_hostname = *it;
-
-                    sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
-                        " source_se=:source and dest_se=:dst "
-                        " and finish_time >= date_sub(utc_timestamp(), interval 5 minute)",
-                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
-                    if (isNull2 == soci::i_null)
-                        {
-                            avgThr = 0.0;
-                        }
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
-                        "      t_file.dest_se = :dst",
-                        soci::use(destin_hostname), soci::into(nActiveDest);
-
-                    sql <<
-                        " select throughput "
-                        " from t_file "
-                        " where source_se = :source "
-                        " 	and dest_se = :dest "
-                        "	and throughput is not NULL "
-                        "	and throughput != 0 "
-                        " order by FINISH_TIME DESC "
-                        " LIMIT 1 ",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(throughput, isNull);
-
-                    if (isNull == soci::i_null)
-                        {
-                            throughput = 0.0;
-                        }
-
-                    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                                    "WHERE "
-                                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                    "      file_state IN ('FAILED','FINISHED') AND "
-                                                    "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))",
-                                                    soci::use(source_hostname), soci::use(destin_hostname));
-
-                    for (soci::rowset<std::string>::const_iterator i = rs.begin();
-                            i != rs.end(); ++i)
-                        {
-                            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
-                        }
-
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE "
-                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                        "      file_state in ('READY','ACTIVE')",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(nActive);
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE "
-                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                        "      file_state = 'FINISHED'",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(nFinishedAll);
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE "
-                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                        "      file_state = 'FAILED'",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(nFailedAll);
-
-                    double ratioSuccessFailure = 0;
-                    if(nFinishedLastHour > 0)
-                        {
-                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-                        }
-
-                    ret += optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
-                                                          source_hostname, destin_hostname,
-                                                          nActive, nActiveSource, nActiveDest,
-                                                          ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll, throughput, avgThr);
+                    ret += getCredits(source_hostname, destin_hostname);
                 }
 
         }
@@ -2345,87 +2266,8 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 
             for (it = source.begin(); it != source.end(); ++it)
                 {
-
                     std::string source_hostname = *it;
-
-                    sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
-                        " source_se=:source and dest_se=:dst "
-                        " and finish_time >= date_sub(utc_timestamp(), interval 5 minute)",
-                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
-                    if (isNull2 == soci::i_null)
-                        {
-                            avgThr = 0.0;
-                        }
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
-                        "      t_file.source_se = :source ",
-                        soci::use(source_hostname), soci::into(nActiveSource);
-
-                    sql <<
-                        " select throughput "
-                        " from t_file "
-                        " where source_se = :source "
-                        " 	and dest_se = :dest "
-                        "	and throughput is not NULL "
-                        "	and throughput != 0 "
-                        " order by FINISH_TIME DESC "
-                        " LIMIT 1 ",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(throughput, isNull);
-
-                    if (isNull == soci::i_null)
-                        {
-                            throughput = 0.0;
-                        }
-
-                    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                                    "WHERE "
-                                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                                    "      file_state IN ('FAILED','FINISHED') AND "
-                                                    "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))",
-                                                    soci::use(source_hostname), soci::use(destin_hostname));
-
-                    for (soci::rowset<std::string>::const_iterator i = rs.begin();
-                            i != rs.end(); ++i)
-                        {
-                            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
-                        }
-
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE "
-                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                        "      file_state in ('READY','ACTIVE')",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(nActive);
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE "
-                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                        "      file_state = 'FINISHED'",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(nFinishedAll);
-
-                    sql << "SELECT COUNT(*) FROM t_file "
-                        "WHERE "
-                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                        "      file_state = 'FAILED'",
-                        soci::use(source_hostname), soci::use(destin_hostname),
-                        soci::into(nFailedAll);
-
-                    double ratioSuccessFailure = 0;
-                    if(nFinishedLastHour > 0)
-                        {
-                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-                        }
-
-                    ret += optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
-                                                          source_hostname, destin_hostname,
-                                                          nActive, nActiveSource, nActiveDest,
-                                                          ratioSuccessFailure,
-                                                          nFinishedAll, nFailedAll, throughput, avgThr);
+                    ret += getCredits(source_hostname, destin_hostname);
                 }
 
         }
@@ -2436,6 +2278,103 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 
     return ret;
 }
+
+int MySqlAPI::getCredits(const std::string & source_hostname, const std::string & destin_hostname)
+{
+	soci::session sql(*connectionPool);
+
+    int nActiveSource = 0, nActiveDest = 0;
+    double nFailedLastHour = 0, nFinishedLastHour = 0;
+    int nActive = 0;
+    double nFailedAll = 0, nFinishedAll = 0, throughput = 0, avgThr = 0.0;
+    soci::indicator isNull;
+
+    sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
+        " source_se=:source and dest_se=:dst "
+        " and finish_time >= date_sub(utc_timestamp(), interval 5 minute)",
+        soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull);
+    if (isNull == soci::i_null)
+        {
+            avgThr = 0.0;
+        }
+
+    sql << "SELECT COUNT(*) FROM t_file "
+        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
+        "      t_file.source_se = :source ",
+        soci::use(source_hostname), soci::into(nActiveSource);
+
+    sql << "SELECT COUNT(*) FROM t_file "
+        "WHERE t_file.file_state in ('READY','ACTIVE') AND "
+        "      t_file.dest_se = :dst",
+        soci::use(destin_hostname), soci::into(nActiveDest);
+
+    sql <<
+        " select throughput "
+        " from t_file "
+        " where source_se = :source "
+        " 	and dest_se = :dest "
+        "	and throughput is not NULL "
+        "	and throughput != 0 "
+        " order by FINISH_TIME DESC "
+        " LIMIT 1 ",
+        soci::use(source_hostname), soci::use(destin_hostname),
+        soci::into(throughput, isNull);
+
+    if (isNull == soci::i_null)
+        {
+            throughput = 0.0;
+        }
+
+    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
+                                    "WHERE "
+                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                    "      file_state IN ('FAILED','FINISHED') AND "
+                                    "      (t_file.FINISH_TIME > (UTC_TIMESTAMP - interval '1' hour))",
+                                    soci::use(source_hostname), soci::use(destin_hostname));
+
+    for (soci::rowset<std::string>::const_iterator i = rs.begin();
+            i != rs.end(); ++i)
+        {
+            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
+            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+        }
+
+
+    sql << "SELECT COUNT(*) FROM t_file "
+        "WHERE "
+        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+        "      file_state in ('READY','ACTIVE')",
+        soci::use(source_hostname), soci::use(destin_hostname),
+        soci::into(nActive);
+
+    sql << "SELECT COUNT(*) FROM t_file "
+        "WHERE "
+        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+        "      file_state = 'FINISHED'",
+        soci::use(source_hostname), soci::use(destin_hostname),
+        soci::into(nFinishedAll);
+
+    sql << "SELECT COUNT(*) FROM t_file "
+        "WHERE "
+        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+        "      file_state = 'FAILED'",
+        soci::use(source_hostname), soci::use(destin_hostname),
+        soci::into(nFailedAll);
+
+    double ratioSuccessFailure = 0;
+    if(nFinishedLastHour > 0)
+        {
+            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+        }
+
+    return optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
+                                          source_hostname, destin_hostname,
+                                          nActive, nActiveSource, nActiveDest,
+                                          ratioSuccessFailure,
+                                          nFinishedAll, nFailedAll, throughput, avgThr);
+}
+
+
 
 void MySqlAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params)
 {
