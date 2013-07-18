@@ -147,22 +147,15 @@ public:
     void cancel(vector<string> jobIds);
 
     /**
-     * Remote call to listRequests2
+     * Remote call to listRequests
+     * Internally is listRequests2
      *
      * @param dn user dn
      * @param vo vo name
      * @param array statuses of interest
      * @param resp server response
      */
-    vector<JobStatus> listRequests2 (vector<string> statuses, string dn, string vo);
-
-    /**
-     * Remote call to listRequests
-     *
-     * @param array statuses of interest
-     * @param resp server response
-     */
-    vector<JobStatus> listRequests (vector<string> statuses);
+    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo);
 
     /** TODO
      * Remote call to listVOManagers
@@ -173,16 +166,8 @@ public:
     void listVoManagers (string vo, impltns__listVOManagersResponse& resp);
 
     /**
-     * Remote call to getTransferJobSummary2
-     *
-     * @param jobId id of the job
-     *
-     * @return an object containing job summary
-     */
-    JobSummary getTransferJobSummary2 (string jobId);
-
-    /**
      * Remote call to getTransferJobSummary
+     * Internally it is getTransferJobSummary3
      *
      * @param jobId id of the job
      *

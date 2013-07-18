@@ -58,7 +58,7 @@ int main(int ac, char* av[])
 
             vector<string> array = cli->getStatusArray();
             vector<fts3::cli::JobStatus> statuses;
-            statuses = ctx.listRequests2(array, cli->getUserDn(), cli->getVoName());
+            statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
             vector<fts3::cli::JobStatus>::iterator it;
             for (it = statuses.begin(); it < statuses.end(); it++)

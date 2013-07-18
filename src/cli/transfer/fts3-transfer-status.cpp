@@ -68,7 +68,7 @@ int main(int ac, char* av[])
                     if (cli->isVerbose())
                         {
                             // do the request
-                            JobSummary summary = ctx.getTransferJobSummary2(jobId);
+                            JobSummary summary = ctx.getTransferJobSummary(jobId);
                             // print the response
                             cli->printer().job_summary(summary);
                         }
