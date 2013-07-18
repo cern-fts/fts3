@@ -58,7 +58,7 @@ const string AuthorizationManager::WILD_CARD = "*";
 
 const string AuthorizationManager::ROLES_SECTION_PREFIX = "roles.";
 
-const string AuthorizationManager::dummy = "dummy";
+const OwnedResource *AuthorizationManager::dummy = NULL;
 
 template<>
 vector<string> AuthorizationManager::get< vector<string> >(string cfg)   // TODO same code is in serverconfig.h, Michail is using it!
@@ -297,7 +297,7 @@ AuthorizationManager::Level AuthorizationManager::getGrantedLvl(soap* ctx, Opera
         }
 }
 
-AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Operation op, string rsc_id)
+AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Operation op, const OwnedResource* rsc)
 {
 
     CGsiAdapter cgsi(ctx);
@@ -305,7 +305,7 @@ AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Oper
     // if the resource is not specified we don't need any access level
     // this can happen for example in case of fts-transfer-list where
     // the resources (transfer-jobs) are listed depending on the granted level
-    if (rsc_id.empty()) return NONE;
+    if (!rsc) return NONE;
 
     switch(op)
         {
@@ -313,14 +313,8 @@ AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Oper
             return PRV; // it is only possible to remove someone else's proxy-certificate so it's always 'PRV'
         case TRANSFER:
         {
-
-            scoped_ptr<TransferJobs> job (
-                DBSingleton::instance().getDBObjectInstance()->getTransferJob(rsc_id)
-            );
-
-            if (!job.get()) return NONE; // the transfer-job does not exist
-            if (job->USER_DN == cgsi.getClientDn()) return PRV; // it is user's job
-            if (job->VO_NAME == cgsi.getClientVo()) return VO; // it is a job that has been created within user's VO
+            if (rsc->getUserDn() == cgsi.getClientDn()) return PRV; // it is user's job
+            if (rsc->getVo() == cgsi.getClientVo()) return VO; // it is a job that has been created within user's VO
             return ALL; // it needs global access
         }
         case CONFIG:
@@ -330,7 +324,7 @@ AuthorizationManager::Level AuthorizationManager::getRequiredLvl(soap* ctx, Oper
         }
 }
 
-AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation op, string rsc_id)
+AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation op,  const OwnedResource* rsc)
 {
 
     // check if the configuration file has been modified
@@ -343,7 +337,7 @@ AuthorizationManager::Level AuthorizationManager::authorize(soap* ctx, Operation
         }
 
     Level grantedLvl = getGrantedLvl(ctx, op);
-    Level requiredLvl = getRequiredLvl(ctx, op, rsc_id);
+    Level requiredLvl = getRequiredLvl(ctx, op, rsc);
 
     if (grantedLvl < requiredLvl)
         {

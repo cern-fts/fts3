@@ -248,7 +248,13 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
 #warning TODO: Query archive
     try
         {
-            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, req->jobId);
+            scoped_ptr<TransferJobs> job (
+                    DBSingleton::instance()
+                                 .getDBObjectInstance()
+                                 ->getTransferJob(req->jobId)
+            );
+
+            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
             vector<FileTransferStatus*> statuses;
             vector<FileTransferStatus*>::iterator it;
 
@@ -314,11 +320,18 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 
     try
         {
-            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, _requestID);
+            scoped_ptr<TransferJobs> job (
+                    DBSingleton::instance()
+                                 .getDBObjectInstance()
+                                 ->getTransferJob(_requestID)
+            );
+
+            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
+
+            // create response
             vector<FileTransferStatus*> statuses;
             vector<FileTransferStatus*>::iterator it;
 
-            // create response
             _param_10._getFileStatus2Return = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(soap, -1);
             DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, _offset, _limit, statuses);
 
@@ -394,7 +407,13 @@ int fts3::impltns__getTransferJobStatus2(soap *soap, fts3::tns3__JobRequest *req
 #warning TODO: Query archive too!
     try
         {
-        AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, req->jobId);
+        scoped_ptr<TransferJobs> job (
+                DBSingleton::instance()
+                             .getDBObjectInstance()
+                             ->getTransferJob(req->jobId)
+        );
+
+        AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
 
         vector<JobStatus*> fileStatuses;
         DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(req->jobId, fileStatuses);
@@ -431,7 +450,14 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
 
     try
         {
-            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, _requestID);
+            scoped_ptr<TransferJobs> job (
+                    DBSingleton::instance()
+                                 .getDBObjectInstance()
+                                 ->getTransferJob(_requestID)
+            );
+
+
+            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
             vector<JobStatus*> fileStatuses;
             DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(_requestID, fileStatuses);
 //		FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "The job status has been read" << commit;
@@ -514,7 +540,13 @@ int fts3::impltns__getTransferJobSummary3(soap *soap, fts3::tns3__JobRequest *re
 #warning TODO: Query archive
     try
         {
-            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, req->jobId);
+            scoped_ptr<TransferJobs> job (
+                    DBSingleton::instance()
+                                 .getDBObjectInstance()
+                                 ->getTransferJob(req->jobId)
+            );
+
+            AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
             vector<JobStatus*> fileStatuses;
             DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(req->jobId, fileStatuses);
 
@@ -635,7 +667,14 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
                             for (it = jobs.begin(); it != jobs.end();)
                                 {
                                     // authorize the operation for each job ID
-                                    AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, *it);
+                                    scoped_ptr<TransferJobs> job (
+                                            DBSingleton::instance()
+                                                         .getDBObjectInstance()
+                                                         ->getTransferJob(*it)
+                                    );
+
+
+                                    AuthorizationManager::getInstance().authorize(soap, AuthorizationManager::TRANSFER, job.get());
 
                                     // check if the job ID exists
                                     scoped_ptr<TransferJobs> ptr (
@@ -896,7 +935,13 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
             CGsiAdapter cgsi(ctx);
             string dn = cgsi.getClientDn();
 
-            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job_id);
+            scoped_ptr<TransferJobs> job (
+                    DBSingleton::instance()
+                                 .getDBObjectInstance()
+                                 ->getTransferJob(job_id)
+            );
+
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
             // check job status
             vector<JobStatus*> fileStatuses;
