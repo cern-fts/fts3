@@ -4267,8 +4267,9 @@ void OracleAPI::initVariablesForGetCredits(oracle::occi::Connection* pooledConne
         "      file_state = 'FAILED'"
         ;
 
-    query[7] = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
-                              " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
+    query[7] = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se = :1 and dest_se = :2 "
+            " and file_state = 'FINISHED' and throughput is not NULL and throughput != 0 "
+            " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
     s[0] = conn->createStatement(query[0], tag[0], pooledConnection);
     s[1] = conn->createStatement(query[1], tag[1], pooledConnection);
