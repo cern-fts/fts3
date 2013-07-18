@@ -46,13 +46,13 @@ public:
                                 int bringonline, std::string metadata,
                                 int retry, int retryDelay, std::string sourceSe, std::string destinationSe);
 
-    virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
+    virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
-    virtual void getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
+    virtual void getTransferFileStatus(std::string requestID, bool archive, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
 
-    virtual TransferJobs* getTransferJob(std::string jobId);
+    virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
 

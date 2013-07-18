@@ -202,19 +202,28 @@ bool MySqlAPI::getInOutOfSe(const std::string & sourceSe, const std::string & de
 
 
 
-TransferJobs* MySqlAPI::getTransferJob(std::string jobId)
+TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
 {
     soci::session sql(*connectionPool);
+
+    std::string query;
+    if (archive) {
+        query = "SELECT t_job_backup.vo_name, t_job_backup.user_dn "
+                "FROM t_job_backup WHERE t_job_backup.job_id = :jobId";
+    }
+    else {
+        query = "SELECT t_job.vo_name, t_job.user_dn "
+                "FROM t_job WHERE t_job.job_id = :jobId";
+    }
 
     TransferJobs* job = NULL;
     try
         {
             job = new TransferJobs();
 
-            sql << "SELECT t_job.vo_name, t_job.user_dn "
-                "FROM t_job WHERE t_job.job_id = :jobId",
-                soci::use(jobId),
-                soci::into(job->VO_NAME), soci::into(job->USER_DN);
+            sql << query,
+                   soci::use(jobId),
+                   soci::into(job->VO_NAME), soci::into(job->USER_DN);
 
             if (!sql.got_data())
                 {
@@ -685,23 +694,37 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
 
 
 
-void MySqlAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs)
+void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
 {
     soci::session sql(*connectionPool);
+
+    std::string fileCountQuery;
+    std::string statusQuery;
+
+    if (archive) {
+        fileCountQuery = "SELECT COUNT(DISTINCT file_index) FROM t_file_backup WHERE t_file_backup.job_id = :jobId";
+        statusQuery = "SELECT t_job_backup.job_id, t_job_backup.job_state, t_file_backup.file_state, "
+                      "    t_job_backup.user_dn, t_job_backup.reason, t_job_backup.submit_time, t_job_backup.priority, "
+                      "    t_job_backup.vo_name, t_file_backup.file_index "
+                      "FROM t_job_backup, t_file_backup "
+                      "WHERE t_file_backup.job_id = :jobId and t_file_backup.job_id= t_job_backup.job_id";
+    }
+    else {
+        fileCountQuery = "SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = :jobId";
+        statusQuery = "SELECT t_job.job_id, t_job.job_state, t_file.file_state, "
+                      "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
+                      "    t_job.vo_name, t_file.file_index "
+                      "FROM t_job, t_file "
+                      "WHERE t_file.job_id = :jobId and t_file.job_id=t_job.job_id";
+    }
 
     try
         {
             long long numFiles = 0;
-            sql << "SELECT COUNT(DISTINCT file_index) FROM t_file WHERE t_file.job_id = :jobId",
-                soci::use(requestID), soci::into(numFiles);
+            sql << fileCountQuery, soci::use(requestID), soci::into(numFiles);
 
             soci::rowset<JobStatus> rs = (
-                                             sql.prepare <<
-                                             "SELECT t_job.job_id, t_job.job_state, t_file.file_state, "
-                                             "    t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, "
-                                             "    t_job.vo_name, t_file.file_index "
-                                             "FROM t_job, t_file "
-                                             "WHERE t_file.job_id = :jobId and t_file.job_id=t_job.job_id and t_file.job_id = :jobId",
+                                             sql.prepare << statusQuery,
                                              soci::use(requestID, "jobId"));
 
             for (soci::rowset<JobStatus>::iterator i = rs.begin(); i != rs.end(); ++i)
@@ -816,14 +839,26 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
 
 
 
-void MySqlAPI::getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
+        unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     soci::session sql(*connectionPool);
+
     try
         {
-            std::string query = "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
-                                "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
-                                "FROM t_file WHERE t_file.job_id = :jobId ";
+            std::string query;
+
+            if (archive) {
+                query = "SELECT t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
+                        "       t_file_backup.reason, t_file_backup.start_time, t_file_backup.finish_time, t_file_backup.retry "
+                        "FROM t_file_backup WHERE t_file_backup.job_id = :jobId ";
+            }
+            else {
+                query = "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
+                        "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
+                        "FROM t_file WHERE t_file.job_id = :jobId ";
+            }
+
             if (limit)
                 query += " LIMIT :offset,:limit";
             else

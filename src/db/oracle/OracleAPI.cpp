@@ -161,17 +161,29 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
     return processSe;
 }
 
-TransferJobs* OracleAPI::getTransferJob(std::string jobId)
+TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
 {
 
-    std::string tag = "getTransferJob";
-    std::string stmt =
-        "SELECT "
-        " 	t_job.vo_name,  "
-        " 	t_job.user_dn "
-        " FROM t_job"
-        " WHERE t_job.job_id = :1"
-        ;
+    std::string tag;
+    std::string query;
+
+    if (archive) {
+        tag = "getArchivedJob";
+        query = "SELECT "
+                "   t_job_backup.vo_name,  "
+                "   t_job_backup.user_dn "
+                " FROM t_job_backup"
+                " WHERE t_job_backup.job_id = :1";
+    }
+    else {
+        tag = "getTransferJob";
+        query = "SELECT "
+                "   t_job.vo_name,  "
+                "   t_job.user_dn "
+                " FROM t_job"
+                " WHERE t_job.job_id = :1";
+    }
+
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
@@ -183,7 +195,7 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId)
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection) return job;
 
-            s = conn->createStatement(stmt, tag, pooledConnection);
+            s = conn->createStatement(query, tag, pooledConnection);
             s->setString(1, jobId);
             r = conn->createResultset(s, pooledConnection);
 
@@ -1010,13 +1022,25 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs)
+void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
 {
+    std::string query;
+    std::string tag;
 
-    std::string query = "SELECT t_job.job_id, t_job.job_state, t_file.file_state, t_job.user_dn, t_job.reason, t_job.submit_time, t_job.priority, t_job.vo_name, t_file.file_index, "
-                        "(SELECT count(DISTINCT file_index) from t_file where t_file.job_id=:1) "
-                        "FROM t_job, t_file WHERE t_file.job_id = t_job.job_id and t_file.job_id = :2";
-    const std::string tag = "getTransferJobStatus";
+    if (archive) {
+        tag = "getArchivedJobStatus";
+        query = "SELECT t_job_backup.job_id, t_job_backup.job_state, t_file_backup.file_state, t_job_backup.user_dn, t_job_backup.reason, "
+                "       t_job_backup.submit_time, t_job_backup.priority, t_job_backup.vo_name, t_file_backup.file_index, "
+                "       (SELECT count(DISTINCT file_index) from t_file_backup where t_file_backup.job_id=:1) "
+                "FROM t_job_backup, t_file_backup WHERE t_file_backup.job_id = t_job_backup.job_id and t_file_backup.job_id = :2";
+    }
+    else {
+        tag = "getTransferJobStatus";
+        query = "SELECT t_job.job_id, t_job.job_state, t_file.file_state, t_job.user_dn, t_job.reason, "
+                "       t_job.submit_time, t_job.priority, t_job.vo_name, t_file.file_index, "
+                "       (SELECT count(DISTINCT file_index) from t_file where t_file.job_id=:1) "
+                "FROM t_job, t_file WHERE t_file.job_id = t_job.job_id and t_file.job_id = :2";
+    }
 
     JobStatus* js = NULL;
     oracle::occi::Statement* s = NULL;
@@ -1247,17 +1271,31 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
+                    unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
-    std::string query =
-        "SELECT * FROM ("
-        "   SELECT t_file.SOURCE_SURL, t_file.DEST_SURL, "
-        "          t_file.file_state, t_file.reason, "
-        "          t_file.start_time, t_file.finish_time, t_file.retry, "
-        "          Rownum as rw "
-        "   FROM t_file WHERE t_file.job_id = :1) ";
+    std::string tag;
+    std::string query;
 
-    std::string tag = "getTransferFileStatus";
+    if (archive)
+    {
+        tag = "getArchivedFileStatus";
+        query = "SELECT * FROM ("
+                "   SELECT t_file_backup.SOURCE_SURL, t_file_backup.DEST_SURL, "
+                "          t_file_backup.file_state, t_file_backup.reason, "
+                "          t_file_backup.start_time, t_file_backup.finish_time, t_file_backup.retry, "
+                "          Rownum as rw "
+                "   FROM t_file_backup WHERE t_file_backup.job_id = :1) ";
+    }
+    else {
+        tag = "getTransferFileStatus";
+        query = "SELECT * FROM ("
+                "   SELECT t_file.SOURCE_SURL, t_file.DEST_SURL, "
+                "          t_file.file_state, t_file.reason, "
+                "          t_file.start_time, t_file.finish_time, t_file.retry, "
+                "          Rownum as rw "
+                "   FROM t_file WHERE t_file.job_id = :1) ";
+    }
 
     if (limit)
         {

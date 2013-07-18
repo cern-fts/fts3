@@ -101,14 +101,16 @@ public:
                                 int retry, int retryDelay, std::string sourceSe, std::string destinationSe) = 0;
 
 
-    virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) = 0;
+    virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
 
     // If limit == 0, then all results
-    virtual void getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+    virtual void getTransferFileStatus(std::string requestID, bool archive,
+                    unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
-    virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
+    virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                    std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
 
-    virtual TransferJobs* getTransferJob(std::string jobId) = 0;
+    virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
 
