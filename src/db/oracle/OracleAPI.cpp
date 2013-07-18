@@ -4324,8 +4324,8 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
     r[1] = NULL;
 
     // get the throughput
-    s[2]->setString(1, destin_hostname);
-    s[2]->setString(2, source_hostname);
+    s[2]->setString(1, source_hostname);
+    s[2]->setString(2, destin_hostname);
     r[2] = conn->createResultset(s[2], pooledConnection);
 
     if (r[2]->next())
