@@ -97,7 +97,7 @@ int main(int ac, char* av[])
                     do
                         {
                             sleep(2);
-                            status = ctx.getTransferJobStatus(jobId);
+                            status = ctx.getTransferJobStatus(jobId, false);
                         }
                     while (!JobStatusHandler::getInstance().isTransferFinished(status.jobStatus));
                 }

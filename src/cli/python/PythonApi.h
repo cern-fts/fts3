@@ -49,7 +49,7 @@ public:
     py::str submit(Job job); // deleg only
     void cancel(py::str id);
     void cancelAll(py::list ids);
-    py::str getStatus(py::str id);
+    py::str getStatus(py::str id, bool archive);
 
     py::str getVersion(void);
 

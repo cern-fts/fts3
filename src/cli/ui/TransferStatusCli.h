@@ -84,6 +84,11 @@ public:
      */
     bool list();
 
+    /**
+     * Check if querying the archive is on
+     */
+    bool queryArchived();
+
 };
 
 }

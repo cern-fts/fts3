@@ -227,6 +227,22 @@
      <element maxOccurs="unbounded" name="VOManager" nillable="true" type="tns3:StringPair"/>
     </sequence>
    </complexType>
+   
+   <complexType name="JobRequest">
+    <sequence>
+     <element name="jobId" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+     <element name="archive" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
+    </sequence>
+   </complexType>
+   
+   <complexType name="FileRequest">
+    <sequence>
+     <element name="jobId" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+     <element name="archive" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
+     <element name="offset" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="limit" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+    </sequence>
+   </complexType>
   
   </schema>
   <schema targetNamespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" xmlns="http://www.w3.org/2001/XMLSchema">
@@ -507,6 +523,10 @@
       <part name="requestID" type="xsd:string"/>
 
    </message>
+   
+   <message name="getTransferJobSummary3Request">
+      <part name="requestParams" type="tns3:JobRequest"/>
+   </message>
 
    <message name="AuthorizationException">
 
@@ -518,6 +538,12 @@
 
       <part name="requestID" type="xsd:string"/>
 
+   </message>
+   
+   <message name="getTransferJobStatus2Request">
+   
+      <part name="requestParams" type="tns3:JobRequest"/>
+   
    </message>
 
    <message name="getTransferJobSummaryRequest">
@@ -558,6 +584,10 @@
 
       <part name="limit" type="xsd:int"/>
 
+   </message>
+   
+   <message name="getFileStatus3Request">
+        <part name="filter" type="tns3:FileRequest"/>
    </message>
 
    <message name="addVOManagerRequest">
@@ -801,6 +831,7 @@
 
       </operation>
 
+      <!--  Deprecated. Use getFileStatus3 instead -->
       <operation name="getFileStatus" parameterOrder="requestID offset limit">
 
          <input message="impl:getFileStatusRequest" name="getFileStatusRequest"/>
@@ -817,6 +848,7 @@
 
       </operation>
 
+      <!-- Deprecated (and unused by the fts3 cli). Use getFileStatus3 instead -->
       <operation name="getFileStatus2" parameterOrder="requestID offset limit">
 
          <input message="impl:getFileStatus2Request" name="getFileStatus2Request"/>
@@ -832,7 +864,24 @@
          <fault message="impl:InternalException" name="InternalException"/>
 
       </operation>
+      
+      <operation name="getFileStatus3">
 
+         <input message="impl:getFileStatus3Request" name="getFileStatus3Request"/>
+
+         <output message="impl:getFileStatusResponse" name="getFileStatusResponse"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:NotExistsException" name="NotExistsException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+
+      </operation>
+
+      <!-- Deprecated. Use getTransferJobStatus2 instead  -->
       <operation name="getTransferJobStatus" parameterOrder="requestID">
 
          <input message="impl:getTransferJobStatusRequest" name="getTransferJobStatusRequest"/>
@@ -847,6 +896,22 @@
 
          <fault message="impl:InternalException" name="InternalException"/>
 
+      </operation>
+      
+      <operation name="getTransferJobStatus2">
+      
+         <input message="impl:getTransferJobStatus2Request" name="getTransferJobStatusRequest"/>
+
+         <output message="impl:getTransferJobStatusResponse" name="getTransferJobStatusResponse"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:NotExistsException" name="NotExistsException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+      
       </operation>
 
       <operation name="getTransferJobSummary" parameterOrder="requestID">
@@ -865,6 +930,7 @@
 
       </operation>
 
+      <!-- Deprecated. Use getTransferJobSummary3 instead -->
       <operation name="getTransferJobSummary2" parameterOrder="requestID">
 
          <input message="impl:getTransferJobSummary2Request" name="getTransferJobSummary2Request"/>
@@ -879,6 +945,22 @@
 
          <fault message="impl:InternalException" name="InternalException"/>
 
+      </operation>
+      
+      <operation name="getTransferJobSummary3">
+      
+         <input message="impl:getTransferJobSummary3Request" name="getTransferJobSummary3Request"/>
+
+         <output message="impl:getTransferJobSummary2Response" name="getTransferJobSummary3Response"/>
+
+         <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+
+         <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+
+         <fault message="impl:NotExistsException" name="NotExistsException"/>
+
+         <fault message="impl:InternalException" name="InternalException"/>
+      
       </operation>
 
       <operation name="cancel" parameterOrder="requestIDs">
@@ -1449,6 +1531,7 @@
 
       </operation>
 
+      <!-- Deprecated -->
       <operation name="getFileStatus">
 
          <wsdlsoap:operation soapAction=""/>
@@ -1491,6 +1574,7 @@
 
       </operation>
 
+      <!-- Deprecated -->
       <operation name="getFileStatus2">
 
          <wsdlsoap:operation soapAction=""/>
@@ -1532,8 +1616,93 @@
          </fault>
 
       </operation>
+      
+      <operation name="getFileStatus3">
 
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getFileStatus3Request">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="getFileStatusResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="NotExistsException">
+
+            <wsdlsoap:fault name="NotExistsException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+
+      <!-- Deprecated -->
       <operation name="getTransferJobStatus">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getTransferJobStatusRequest">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="getTransferJobStatusResponse">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="NotExistsException">
+
+            <wsdlsoap:fault name="NotExistsException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+      <operation name="getTransferJobStatus2">
 
          <wsdlsoap:operation soapAction=""/>
 
@@ -1628,6 +1797,48 @@
          </input>
 
          <output name="getTransferJobSummary2Response">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </output>
+
+         <fault name="AuthorizationException">
+
+            <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+
+         </fault>
+
+         <fault name="ServiceBusyException">
+
+            <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+
+         </fault>
+
+         <fault name="NotExistsException">
+
+            <wsdlsoap:fault name="NotExistsException" use="literal"/>
+
+         </fault>
+
+         <fault name="InternalException">
+
+            <wsdlsoap:fault name="InternalException" use="literal"/>
+
+         </fault>
+
+      </operation>
+      
+      <operation name="getTransferJobSummary3">
+
+         <wsdlsoap:operation soapAction=""/>
+
+         <input name="getTransferJobSummary3Request">
+
+            <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
+
+         </input>
+
+         <output name="getTransferJobSummary3Response">
 
             <wsdlsoap:body namespace="http://glite.org/wsdl/services/org.glite.data.transfer.fts" use="literal"/>
 

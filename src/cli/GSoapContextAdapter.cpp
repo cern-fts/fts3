@@ -276,25 +276,29 @@ string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<str
     return resp._transferSubmitReturn;
 }
 
-JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId)
+JobStatus GSoapContextAdapter::getTransferJobStatus (string jobId, bool archive)
 {
+    tns3__JobRequest req;
 
-    impltns__getTransferJobStatusResponse resp;
-    if (soap_call_impltns__getTransferJobStatus(ctx, endpoint.c_str(), 0, jobId, resp))
+    req.jobId   = jobId;
+    req.archive = archive;
+
+    impltns__getTransferJobStatus2Response resp;
+    if (soap_call_impltns__getTransferJobStatus2(ctx, endpoint.c_str(), 0, &req, resp))
         handleSoapFault("Failed to get job status: getTransferJobStatus.");
 
-    if (!resp._getTransferJobStatusReturn)
+    if (!resp.getTransferJobStatusReturn)
         throw string("The response from the server is empty!");
 
     return JobStatus(
-               *resp._getTransferJobStatusReturn->jobID,
-               *resp._getTransferJobStatusReturn->jobStatus,
-               *resp._getTransferJobStatusReturn->clientDN,
-               *resp._getTransferJobStatusReturn->reason,
-               *resp._getTransferJobStatusReturn->voName,
-               resp._getTransferJobStatusReturn->submitTime,
-               resp._getTransferJobStatusReturn->numFiles,
-               resp._getTransferJobStatusReturn->priority
+               *resp.getTransferJobStatusReturn->jobID,
+               *resp.getTransferJobStatusReturn->jobStatus,
+               *resp.getTransferJobStatusReturn->clientDN,
+               *resp.getTransferJobStatusReturn->reason,
+               *resp.getTransferJobStatusReturn->voName,
+               resp.getTransferJobStatusReturn->submitTime,
+               resp.getTransferJobStatusReturn->numFiles,
+               resp.getTransferJobStatusReturn->priority
            );
 }
 
@@ -363,42 +367,58 @@ void GSoapContextAdapter::listVoManagers(string vo, impltns__listVOManagersRespo
         handleSoapFault("Failed to list VO managers: listVOManagers.");
 }
 
-JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId)
+JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archive)
 {
+    tns3__JobRequest req;
 
-    impltns__getTransferJobSummary2Response resp;
-    if (soap_call_impltns__getTransferJobSummary2(ctx, endpoint.c_str(), 0, jobId, resp))
+    req.jobId   = jobId;
+    req.archive = archive;
+
+    impltns__getTransferJobSummary3Response resp;
+    if (soap_call_impltns__getTransferJobSummary3(ctx, endpoint.c_str(), 0, &req, resp))
         handleSoapFault("Failed to get job status: getTransferJobSummary2.");
 
-    if (!resp._getTransferJobSummary2Return)
+    if (!resp.getTransferJobSummary2Return)
         throw string("The response from the server is empty!");
 
     JobStatus status = JobStatus(
-                           *resp._getTransferJobSummary2Return->jobStatus->jobID,
-                           *resp._getTransferJobSummary2Return->jobStatus->jobStatus,
-                           *resp._getTransferJobSummary2Return->jobStatus->clientDN,
-                           *resp._getTransferJobSummary2Return->jobStatus->reason,
-                           *resp._getTransferJobSummary2Return->jobStatus->voName,
-                           resp._getTransferJobSummary2Return->jobStatus->submitTime,
-                           resp._getTransferJobSummary2Return->jobStatus->numFiles,
-                           resp._getTransferJobSummary2Return->jobStatus->priority
+                           *resp.getTransferJobSummary2Return->jobStatus->jobID,
+                           *resp.getTransferJobSummary2Return->jobStatus->jobStatus,
+                           *resp.getTransferJobSummary2Return->jobStatus->clientDN,
+                           *resp.getTransferJobSummary2Return->jobStatus->reason,
+                           *resp.getTransferJobSummary2Return->jobStatus->voName,
+                           resp.getTransferJobSummary2Return->jobStatus->submitTime,
+                           resp.getTransferJobSummary2Return->jobStatus->numFiles,
+                           resp.getTransferJobSummary2Return->jobStatus->priority
                        );
 
     return JobSummary (
                status,
-               resp._getTransferJobSummary2Return->numActive,
-               resp._getTransferJobSummary2Return->numCanceled,
-               resp._getTransferJobSummary2Return->numFailed,
-               resp._getTransferJobSummary2Return->numFinished,
-               resp._getTransferJobSummary2Return->numSubmitted,
-               resp._getTransferJobSummary2Return->numReady
+               resp.getTransferJobSummary2Return->numActive,
+               resp.getTransferJobSummary2Return->numCanceled,
+               resp.getTransferJobSummary2Return->numFailed,
+               resp.getTransferJobSummary2Return->numFinished,
+               resp.getTransferJobSummary2Return->numSubmitted,
+               resp.getTransferJobSummary2Return->numReady
            );
 }
 
-int GSoapContextAdapter::getFileStatus (string jobId, int offset, int limit, impltns__getFileStatusResponse& resp)
+int GSoapContextAdapter::getFileStatus (string jobId, bool archive, int offset, int limit,
+        impltns__getFileStatusResponse& resp)
 {
-    if (soap_call_impltns__getFileStatus(ctx, endpoint.c_str(), 0, jobId, offset, limit, resp))
+    tns3__FileRequest req;
+
+    req.jobId   = jobId;
+    req.archive = archive;
+    req.offset  = offset;
+    req.limit   = limit;
+
+    impltns__getFileStatus3Response resp3;
+    if (soap_call_impltns__getFileStatus3(ctx, endpoint.c_str(), 0, &req, resp3))
         handleSoapFault("Failed to get job status: getFileStatus.");
+
+    resp._getFileStatusReturn = resp3.getFileStatusReturn;
+
     return static_cast<int>(resp._getFileStatusReturn->item.size());
 }
 

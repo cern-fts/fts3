@@ -56,6 +56,8 @@ int main(int ac, char* av[])
             if (!opt.is_initialized()) return 0;
             GSoapContextAdapter& ctx = opt.get();
 
+            // archived content?
+            bool archive = cli->queryArchived();
             // get job IDs that have to be check
             vector<string> jobIds = cli->getJobIds();
             // iterate over job IDs
@@ -68,14 +70,14 @@ int main(int ac, char* av[])
                     if (cli->isVerbose())
                         {
                             // do the request
-                            JobSummary summary = ctx.getTransferJobSummary(jobId);
+                            JobSummary summary = ctx.getTransferJobSummary(jobId, archive);
                             // print the response
                             cli->printer().job_summary(summary);
                         }
                     else
                         {
                             // do the request
-                            fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
+                            fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId, archive);
                             // print the response
                             if (!status.jobStatus.empty())
                                 {
@@ -94,7 +96,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     impltns__getFileStatusResponse resp;
-                                    cnt = ctx.getFileStatus(jobId, offset, DEFAULT_LIMIT, resp);
+                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, resp);
 
                                     if (cnt > 0 && resp._getFileStatusReturn)
                                         {

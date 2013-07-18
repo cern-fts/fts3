@@ -35,6 +35,7 @@ TransferStatusCli::TransferStatusCli()
     // add fts3-transfer-status specific options
     specific.add_options()
     ("list,l", "List status for all files.")
+    ("archive,a", "Query the archive.")
     ;
 }
 
@@ -60,4 +61,9 @@ bool TransferStatusCli::list()
 {
 
     return vm.count("list");
+}
+
+bool TransferStatusCli::queryArchived()
+{
+    return vm.count("archive");
 }
