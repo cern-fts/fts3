@@ -3,6 +3,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
 from ftsweb.models import File
+from utils import getPage
 
 
 def showErrors(httpRequest):
@@ -30,10 +31,13 @@ def transfersWithError(httpRequest):
     notbefore = datetime.utcnow() - timedelta(hours = 12)
     transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)\
                             .order_by('file_id')
+                            
+    paginator = Paginator(transfers, 50)
     
     # Render
     return render(httpRequest, 'errors/transfersWithError.html',
-                  {'transfers': transfers,
+                  {'transfers': getPage(paginator, httpRequest),
+                   'paginator': paginator,
                    'reason': reason,
                    'request': httpRequest
                   })

@@ -8,7 +8,24 @@ Failed transfers
 {% endblock %}
 
 {% block content %}
-<h3>{{ transfers.count }} transfers failed with the given error in the last 12 hours</h3>
+<h2>
+    {{ paginator.count }} transfers failed with the given error in the last 12 hours
+    {% if transfers.has_previous %}
+        <a href="?page=1&amp;reason={{ reason|urlencode:'' }}">&lt;&lt;</a>
+        <a href="?page={{ transfers.previous_page_number }}&amp;reason={{ reason|urlencode:'' }}">&lt;</a>
+    {% else %}
+        &lt; &lt;&lt;
+    {% endif %} | 
+    {% if transfers.has_next %}
+        <a href="?page={{ transfers.next_page_number }}&amp;reason={{ reason|urlencode:'' }}">&gt;</a>
+        <a href="?page={{ paginator.num_pages }}&amp;reason={{ reason|urlencode:'' }}">&gt;&gt;</a>
+    {% else %}
+        &gt; &gt;&gt;
+    {% endif %}
+</h2>
+
+<h3>Showing {{ transfers.start_index }} to {{ transfers.end_index }} </h3>
+
 <p class="reason">
 {{reason}}
 </p>
@@ -24,7 +41,7 @@ Failed transfers
     </tr>
   </thead>
   <tbody>
-    {% for t in transfers %}
+    {% for t in transfers.object_list %}
     <tr class="{% cycle 'odd' 'even' %}">
       <td>
         <a href="{% url ftsmon.views.jobDetails t.job_id %}#{{ t.file_id }}">
