@@ -9326,7 +9326,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
 
 }
 
-int OracleAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
+double OracleAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
 {
 
 }

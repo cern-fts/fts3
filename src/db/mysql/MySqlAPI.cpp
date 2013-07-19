@@ -4734,7 +4734,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
     return ratioSuccessFailure;
 }
 
-int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
+double MySqlAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
 {
     // TODO
     return 0;
