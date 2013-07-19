@@ -44,6 +44,13 @@ using namespace std;
 using namespace boost;
 using namespace boost::property_tree;
 
+struct EndpointInfo
+{
+    std::string sitename;
+    std::string type;
+    std::string version;
+};
+
 class SiteNameCacheRetriever: public ThreadSafeInstanceHolder<SiteNameCacheRetriever>
 {
 
@@ -53,7 +60,7 @@ public:
 
     virtual ~SiteNameCacheRetriever();
 
-    void get(map<string, string>& cache);
+    void get(map<string, EndpointInfo>& cache);
 
 private:
 
@@ -61,13 +68,15 @@ private:
     SiteNameCacheRetriever(SiteNameCacheRetriever const&);
     SiteNameCacheRetriever& operator=(SiteNameCacheRetriever const&);
 
-    void fromGlue1(map<string, string>& cache);
-    void fromGlue2(map<string, string>& cache);
+    void fromGlue1(map<string, EndpointInfo>& cache);
+    void fromGlue2(map<string, EndpointInfo>& cache);
 
     // glue1
     static const char* ATTR_GLUE1_SERVICE;
     static const char* ATTR_GLUE1_LINK;
     static const char* ATTR_GLUE1_SITE;
+    static const char* ATTR_GLUE1_TYPE;
+    static const char* ATTR_GLUE1_VERSION;
 
     static const string FIND_SE_SITE_GLUE1;
     static const char* FIND_SE_SITE_ATTR_GLUE1[];
@@ -76,6 +85,8 @@ private:
     static const char* ATTR_GLUE2_FK;
     static const char* ATTR_GLUE2_ENDPOINT;
     static const char* ATTR_GLUE2_SITE;
+    static const char* ATTR_GLUE2_TYPE;
+    static const char* ATTR_GLUE2_VERSION;
 
     static const string FIND_SE_FK_GLUE2;
     static const char* FIND_SE_FK_ATTR_GLUE2[];
