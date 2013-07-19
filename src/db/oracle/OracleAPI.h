@@ -300,7 +300,7 @@ public:
 
     virtual int countActiveTransfers(std::string source, std::string destination);
 
-    virtual int getFailureRate(std::string source, std::string destination);
+    virtual double getSuccessRate(std::string source, std::string destination);
 
     virtual int getAvgThroughput(std::string source, std::string destination, int activeTransfers);
 

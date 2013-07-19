@@ -4707,11 +4707,47 @@ int MySqlAPI::countActiveTransfers(std::string source, std::string destination)
     return 0;
 }
 
-int MySqlAPI::getFailureRate(std::string source, std::string destination)
+double MySqlAPI::getSuccessRate(std::string source, std::string destination)
 {
-    //TODO
-
-    return 0;
+//    soci::session sql(*connectionPool);
+//
+//    // total number of allowed active for the source (both currently in use and free credits)
+//    int ret = 0;
+//
+//    try
+//        {
+//            int nActiveSource=0, nActiveDest=0;
+//            double nFailedLastHour=0, nFinishedLastHour=0;
+//            int nActive=0;
+//            double nFailedAll=0, nFinishedAll=0, throughput=0, avgThr = 0.0;
+//            soci::indicator isNull;
+//
+//            std::set<std::string>::iterator it;
+//
+//            std::string destin_hostname = destination;
+//
+//            soci::indicator isNull2;
+//
+//            sql << "SELECT COUNT(*) FROM t_file "
+//                "WHERE t_file.file_state in ('READY','ACTIVE') AND "
+//                "      t_file.dest_se = :dst",
+//                soci::use(destin_hostname), soci::into(nActiveDest);
+//
+//            ret += nActiveDest;
+//
+//            for (it = source.begin(); it != source.end(); ++it)
+//                {
+//                    std::string source_hostname = *it;
+//                    ret += getCredits(source_hostname, destin_hostname);
+//                }
+//
+//        }
+//    catch (std::exception& e)
+//        {
+//            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+//        }
+//
+//    return ret;
 }
 
 int MySqlAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)

@@ -9389,19 +9389,9 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination)
     return ret;
 }
 
-int OracleAPI::getFailureRate(std::string source, std::string destination)
+double OracleAPI::getSuccessRate(std::string source, std::string destination)
 {
 
-    std::string tag = "getFailureRate";
-
-    std::string query =
-        " SELECT COUNT (*) "
-        " FROM t_file "
-        " WHERE file_state = 'FAILED' "
-        "	AND source_se = :1 "
-        "	AND dest_se = :2 "
-        "	AND finish_time > (CURRENT_TIMESTAMP - interval '30' minute) "
-        ;
 }
 
 int OracleAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
