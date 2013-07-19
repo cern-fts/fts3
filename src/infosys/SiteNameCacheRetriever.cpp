@@ -33,11 +33,12 @@ namespace fts3
 namespace infosys
 {
 
-const char* SiteNameCacheRetriever::ATTR_GLUE1_SERVICE = "GlueServiceUniqueID";
-const char* SiteNameCacheRetriever::ATTR_GLUE1_LINK    = "GlueForeignKey";
-const char* SiteNameCacheRetriever::ATTR_GLUE1_SITE    = "GlueSiteUniqueID";
-const char* SiteNameCacheRetriever::ATTR_GLUE1_TYPE    = "GlueServiceType";
-const char* SiteNameCacheRetriever::ATTR_GLUE1_VERSION = "GlueServiceVersion";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_SERVICE  = "GlueServiceUniqueID";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_LINK     = "GlueForeignKey";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_SITE     = "GlueSiteUniqueID";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_ENDPOINT = "GlueServiceEndpoint";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_TYPE     = "GlueServiceType";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_VERSION  = "GlueServiceVersion";
 
 const string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 =
     "("
@@ -55,7 +56,7 @@ const string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 =
     ")"
     ;
 const char* SiteNameCacheRetriever::FIND_SE_SITE_ATTR_GLUE1[] =
-    {ATTR_GLUE1_SERVICE, ATTR_GLUE1_LINK, ATTR_GLUE1_TYPE, ATTR_GLUE1_VERSION, 0};
+    {ATTR_GLUE1_SERVICE, ATTR_GLUE1_ENDPOINT, ATTR_GLUE1_LINK, ATTR_GLUE1_TYPE, ATTR_GLUE1_VERSION, 0};
 
 const char* SiteNameCacheRetriever::ATTR_GLUE2_FK       = "GLUE2EndpointServiceForeignKey";
 const char* SiteNameCacheRetriever::ATTR_GLUE2_SITE     = "GLUE2ServiceAdminDomainForeignKey";
@@ -131,9 +132,9 @@ void SiteNameCacheRetriever::fromGlue1(map<string, EndpointInfo>& cache)
             map<string, list<string> >& item = *it;
 
             // make sure this entry is not empty
-            if (item[ATTR_GLUE1_SERVICE].empty() || item[ATTR_GLUE1_LINK].empty()) continue;
+            if (item[ATTR_GLUE1_ENDPOINT].empty() || item[ATTR_GLUE1_LINK].empty()) continue;
             // get the se name
-            string se = item[ATTR_GLUE1_SERVICE].front();
+            string se = item[ATTR_GLUE1_ENDPOINT].front();
             // get the corresponding site name
             string site = BdiiBrowser::parseForeingKey(item[ATTR_GLUE1_LINK], ATTR_GLUE1_SITE);
             // if the site name is not specified in the foreign key skip it

@@ -75,6 +75,7 @@ private:
     static const char* ATTR_GLUE1_SERVICE;
     static const char* ATTR_GLUE1_LINK;
     static const char* ATTR_GLUE1_SITE;
+    static const char* ATTR_GLUE1_ENDPOINT;
     static const char* ATTR_GLUE1_TYPE;
     static const char* ATTR_GLUE1_VERSION;
 

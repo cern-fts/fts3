@@ -100,7 +100,7 @@ int main(int argc, char** argv)
             map<string, EndpointInfo>::iterator it;
             for (it = cache.begin(); it != cache.end(); ++it)
                 {
-                    string xpath = "/entry[hostname='" + it->first + "']";
+                    string xpath = "/entry[endpoint='" + it->first + "']";
                     xpath_node node = doc.select_single_node(xpath.c_str());
 
                     xml_node entry;
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
                     else {
                         entry = doc.append_child();
                         entry.set_name("entry");
-                        setNodeOrAppend(entry, "hostname", it->first);
+                        setNodeOrAppend(entry, "endpoint", it->first);
                     }
 
                     setNodeOrAppend(entry, "sitename", it->second.sitename);

@@ -54,7 +54,7 @@ string BdiiCacheParser::getSiteName(string se)
 
 string BdiiCacheParser::xpath_entry(string se)
 {
-    static const string xpath_begin = "/entry[hostname='";
+    static const string xpath_begin = "/entry[endpoint='";
     static const string xpath_end = "']";
 
     return xpath_begin + se + xpath_end;
