@@ -1,2017 +1,2899 @@
 <?xml version="1.0"?>
 <entry>
-	<hostname>ali04-iep-grid.saske.sk_xroot_1799499709</hostname>
-	<sitename>IEPSAS-Kosice</sitename>
-</entry>
-<entry>
-	<hostname>alice11.spbu.ru_xroot_225112375</hostname>
-	<sitename>RU-SPbSU</sitename>
-</entry>
-<entry>
-	<hostname>castoralice.cern.ch</hostname>
+	<endpoint>castoralice.cern.ch</endpoint>
 	<sitename>CERN-PROD</sitename>
+	<type>xroot</type>
+	<version>2.1.0-unknown</version>
 </entry>
 <entry>
-	<hostname>clralicexrd.in2p3.fr_xroot_1763435261</hostname>
-	<sitename>IN2P3-LPC</sitename>
+	<endpoint>gsiftp://atlgridftp01.phy.duke.edu:2811</endpoint>
+	<sitename>DukeT3</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>grid-srm.rzg.mpg.de_SRM_171622104</hostname>
-	<sitename>MPPMU</sitename>
-</entry>
-<entry>
-	<hostname>grid04.spacescience.ro_xroot_716929049</hostname>
-	<sitename>RO-13-ISS</sitename>
-</entry>
-<entry>
-	<hostname>gsiftp://eosatlassftp.cern.ch:2811</hostname>
+	<endpoint>gsiftp://eosatlassftp.cern.ch:2811</endpoint>
 	<sitename>CERN-PROD</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>gsiftp://eoscmsftp.cern.ch:2811</hostname>
+	<endpoint>gsiftp://eoscmsftp.cern.ch:2811</endpoint>
 	<sitename>CERN-PROD</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>gsiftp://eoslhcbftp.cern.ch:2811</hostname>
+	<endpoint>gsiftp://eoslhcbftp.cern.ch:2811</endpoint>
 	<sitename>CERN-PROD</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>gsiftp://eosppsftp.cern.ch:2811</hostname>
+	<endpoint>gsiftp://eosppsftp.cern.ch:2811</endpoint>
 	<sitename>CERN-PROD</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>gsiftp://red-gridftp.unl.edu:2811</hostname>
+	<endpoint>gsiftp://red-gridftp.unl.edu:2811</endpoint>
 	<sitename>Nebraska</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://agh3.atlas.unimelb.edu.au:8446/srm/managerv2</hostname>
+	<endpoint>gsiftp://sbahead.physics.sunysb.edu:2811</endpoint>
+	<sitename>SBU_Tier3</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>gsiftp://t3nfs.physics.nyu.edu:2811</endpoint>
+	<sitename>NYU-ATLAS</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>gsiftp://xenia.nevis.columbia.edu:2811</endpoint>
+	<sitename>Nevis</sitename>
+	<type>gsiftp</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://agh3.atlas.unimelb.edu.au:8446/srm/managerv2</endpoint>
 	<sitename>Australia-ATLAS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://alice003.nipne.ro:8446/srm/managerv2</hostname>
+	<endpoint>httpg://alice003.nipne.ro:8446/srm/managerv2</endpoint>
 	<sitename>NIHAM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://alice20.spbu.ru:8443/srm/managerv1</hostname>
-	<sitename>RU-SPbSU</sitename>
-</entry>
-<entry>
-	<hostname>httpg://alice20.spbu.ru:8446/srm/managerv2</hostname>
-	<sitename>RU-SPbSU</sitename>
-</entry>
-<entry>
-	<hostname>httpg://aliserv6.ct.infn.it:8446/srm/managerv2</hostname>
+	<endpoint>httpg://aliserv6.ct.infn.it:8446/srm/managerv2</endpoint>
 	<sitename>GILDA-INFN-CATANIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://alix.if.pw.edu.pl:8443/srm/managerv1</hostname>
+	<endpoint>httpg://alix.if.pw.edu.pl:8446/srm/managerv2</endpoint>
 	<sitename>WUT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://alix.if.pw.edu.pl:8446/srm/managerv2</hostname>
-	<sitename>WUT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://apcse01.in2p3.fr:8443/srm/managerv1</hostname>
+	<endpoint>httpg://apcse01.in2p3.fr:8443/srm/managerv1</endpoint>
 	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://apcse01.in2p3.fr:8446/srm/managerv2</hostname>
+	<endpoint>httpg://apcse01.in2p3.fr:8446/srm/managerv2</endpoint>
 	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://argodpm01.na.infn.it:8446/srm/managerv2</hostname>
-	<sitename>INFN-NAPOLI-ARGO</sitename>
-</entry>
-<entry>
-	<hostname>httpg://as-ds01.euasiagrid.org:8446/srm/managerv2</hostname>
+	<endpoint>httpg://as-ds01.euasiagrid.org:8446/srm/managerv2</endpoint>
 	<sitename>TW-eScience</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://atlas-net2.bu.edu:8443/srm/v2/server</hostname>
+	<endpoint>httpg://atlas.bu.edu:8443/srm/v2/server</endpoint>
 	<sitename>BU_ATLAS_Tier2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://atlas.bu.edu:8443/srm/v2/server</hostname>
-	<sitename>BU_ATLAS_Tier2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://atlasse.lnf.infn.it:8446/srm/managerv2</hostname>
+	<endpoint>httpg://atlasse.lnf.infn.it:8446/srm/managerv2</endpoint>
 	<sitename>INFN-FRASCATI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://atlassrm-fzk.gridka.de:8443/srm/managerv2</hostname>
+	<endpoint>httpg://atlassrm-fzk.gridka.de:8443/srm/managerv2</endpoint>
 	<sitename>FZK-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://bohr3226.tier2.hep.manchester.ac.uk:8446/srm/managerv2</hostname>
+	<endpoint>httpg://atlfs02.phy.duke.edu:8443/srm/v2/server</endpoint>
+	<sitename>DukeT3</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://axon-g05.ieeta.pt:8446/srm/managerv2</endpoint>
+	<sitename>IEETA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://baaf02.nipne.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-02-NIPNE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://bohr3226.tier2.hep.manchester.ac.uk:8446/srm/managerv2</endpoint>
 	<sitename>UKI-NORTHGRID-MAN-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://bonner-grid.rice.edu:8443/srm/v2/server</hostname>
-	<sitename>Rice</sitename>
-</entry>
-<entry>
-	<hostname>httpg://bostorm.bo.infn.it:8444/srm/managerv2</hostname>
+	<endpoint>httpg://bostorm.bo.infn.it:8444/srm/managerv2</endpoint>
 	<sitename>INFN-BOLOGNA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://bsrm-1.t2.ucsd.edu:8443/srm/v2/server</hostname>
+	<endpoint>httpg://bsrm-1.t2.ucsd.edu:8443/srm/v2/server</endpoint>
 	<sitename>UCSDT2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://c02.grid.etfbl.net:8446/srm/managerv2</hostname>
+	<endpoint>httpg://bsrm-3.t2.ucsd.edu:8443/srm/v2/server</endpoint>
+	<sitename>UCSDT2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://c02.grid.etfbl.net:8446/srm/managerv2</endpoint>
 	<sitename>BA-01-ETFBL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://ccsrm.ihep.ac.cn:8443/srm/managerv1</hostname>
-	<sitename>BEIJING-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ccsrm.ihep.ac.cn:8446/srm/managerv2</hostname>
-	<sitename>BEIJING-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ccsrm.in2p3.fr:8443/srm/managerv1</hostname>
+	<endpoint>httpg://ccsrm.in2p3.fr:8443/srm/managerv1</endpoint>
 	<sitename>IN2P3-CC</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://ccsrm.in2p3.fr:8443/srm/managerv2</hostname>
+	<endpoint>httpg://ccsrm.in2p3.fr:8443/srm/managerv2</endpoint>
 	<sitename>IN2P3-CC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://ccsrm02.in2p3.fr:8443/srm/managerv1</hostname>
+	<endpoint>httpg://ccsrm02.in2p3.fr:8443/srm/managerv1</endpoint>
 	<sitename>IN2P3-CC</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://ccsrm02.in2p3.fr:8443/srm/managerv2</hostname>
+	<endpoint>httpg://ccsrm02.in2p3.fr:8443/srm/managerv2</endpoint>
 	<sitename>IN2P3-CC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://ccsrmt2.in2p3.fr:8443/srm/managerv1</hostname>
+	<endpoint>httpg://ccsrmt2.in2p3.fr:8443/srm/managerv1</endpoint>
 	<sitename>IN2P3-CC-T2</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://ccsrmt2.in2p3.fr:8443/srm/managerv2</hostname>
+	<endpoint>httpg://ccsrmt2.in2p3.fr:8443/srm/managerv2</endpoint>
 	<sitename>IN2P3-CC-T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://charm.ucr.edu:10443/srm/v2/server</hostname>
+	<endpoint>httpg://charm.ucr.edu:10443/srm/v2/server</endpoint>
 	<sitename>UCR-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://charon01.westgrid.ca:8443/srm/managerv2</hostname>
+	<endpoint>httpg://charon01.westgrid.ca:8443/srm/managerv2</endpoint>
 	<sitename>CA-VICTORIA-WESTGRID-T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cirigridse01.univ-bpclermont.fr:8446/srm/managerv2</hostname>
+	<endpoint>httpg://cirigridse01.univ-bpclermont.fr:8446/srm/managerv2</endpoint>
 	<sitename>AUVERGRID</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cit-se.ultralight.org:8443/srm/v2/server</hostname>
+	<endpoint>httpg://cit-se.ultralight.org:8443/srm/v2/server</endpoint>
 	<sitename>CIT_CMS_T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://clrlcgse01.in2p3.fr:8446/srm/managerv2</hostname>
+	<endpoint>httpg://clrlcgse01.in2p3.fr:8446/srm/managerv2</endpoint>
 	<sitename>IN2P3-LPC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cluster.pnpi.nw.ru:8446/srm/managerv2</hostname>
+	<endpoint>httpg://cluster.pnpi.nw.ru:8446/srm/managerv2</endpoint>
 	<sitename>ru-PNPI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cluster142.knu.ac.kr:8443/srm/managerv2</hostname>
+	<endpoint>httpg://cluster142.knu.ac.kr:8443/srm/managerv2</endpoint>
 	<sitename>LCG_KNU</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cms-0.mps.ohio-state.edu:8443/srm/v2/server</hostname>
+	<endpoint>httpg://cms-0.mps.ohio-state.edu:8443/srm/v2/server</endpoint>
 	<sitename>UNAVAILABLE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cms-se.hep.uprm.edu:8443/srm/v2/server</hostname>
+	<endpoint>httpg://cms-se.hep.uprm.edu:8443/srm/v2/server</endpoint>
 	<sitename>uprm-cms</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cms-se0.kipt.kharkov.ua:8446/srm/managerv2</hostname>
+	<endpoint>httpg://cms-se0.kipt.kharkov.ua:8446/srm/managerv2</endpoint>
 	<sitename>Kharkov-KIPT-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cmsrm-se01.roma1.infn.it:8443/srm/managerv2</hostname>
+	<endpoint>httpg://cmsrm-se01.roma1.infn.it:8443/srm/managerv2</endpoint>
 	<sitename>INFN-ROMA1-CMS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cmsse02.na.infn.it:8446/srm/managerv2</hostname>
+	<endpoint>httpg://cmsse02.na.infn.it:8446/srm/managerv2</endpoint>
 	<sitename>INFN-NAPOLI-CMS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cmssrm-fzk.gridka.de:8443/srm/managerv2</hostname>
+	<endpoint>httpg://cmssrm-fzk.gridka.de:8443/srm/managerv2</endpoint>
 	<sitename>FZK-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cmssrm.fnal.gov:8443/srm/managerv1</hostname>
+	<endpoint>httpg://cmssrm.fnal.gov:8443/srm/managerv1</endpoint>
 	<sitename>USCMS-FNAL-WC1</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cmssrm.fnal.gov:8443/srm/managerv2</hostname>
+	<endpoint>httpg://cmssrm.fnal.gov:8443/srm/managerv2</endpoint>
 	<sitename>USCMS-FNAL-WC1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cmssrm.hep.wisc.edu:8443/srm/v2/server</hostname>
+	<endpoint>httpg://cmssrm.hep.wisc.edu:8443/srm/v2/server</endpoint>
 	<sitename>GLOW</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://cn-se1.itim-cj.ro:8446/srm/managerv2</hostname>
+	<endpoint>httpg://cn-se1.itim-cj.ro:8446/srm/managerv2</endpoint>
 	<sitename>RO-14-ITIM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://darkmass.wcss.wroc.pl:8446/srm/managerv2</hostname>
+	<endpoint>httpg://darkmass.wcss.wroc.pl:8446/srm/managerv2</endpoint>
 	<sitename>WCSS64</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://darkstorm.cnaf.infn.it:8444/srm/managerv2</hostname>
+	<endpoint>httpg://darkstorm.cnaf.infn.it:8444/srm/managerv2</endpoint>
 	<sitename>IGI-BOLOGNA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dc2-grid-64.brunel.ac.uk:8446/srm/managerv2</hostname>
+	<endpoint>httpg://dc2-grid-64.brunel.ac.uk:8446/srm/managerv2</endpoint>
 	<sitename>UKI-LT2-Brunel</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache-lofar.fz-juelich.de:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache-lofar.fz-juelich.de:8443/srm/managerv2</endpoint>
 	<sitename>FZJ</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache-se-atlas.desy.de:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache-se-atlas.desy.de:8443/srm/managerv2</endpoint>
 	<sitename>DESY-HH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache-se-cms.desy.de:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache-se-cms.desy.de:8443/srm/managerv2</endpoint>
 	<sitename>DESY-HH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache-se-desy.desy.de:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache-se-desy.desy.de:8443/srm/managerv2</endpoint>
 	<sitename>DESY-HH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache.du.cesnet.cz:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache.du.cesnet.cz:8443/srm/managerv2</endpoint>
 	<sitename>praguelcg2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache.fz-juelich.de:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache.fz-juelich.de:8443/srm/managerv2</endpoint>
 	<sitename>FZJ</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache.ijs.si:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache.ijs.si:8443/srm/managerv2</endpoint>
 	<sitename>SiGNET</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache07.unl.edu:8443/srm/v2/server</hostname>
+	<endpoint>httpg://dcache07.unl.edu:8443/srm/v2/server</endpoint>
 	<sitename>Nebraska</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcache2.arnes.si:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcache2.arnes.si:8443/srm/managerv2</endpoint>
 	<sitename>dcache2.arnes.si</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv1</hostname>
-	<sitename>BNL-ATLAS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2</hostname>
-	<sitename>BNL-ATLAS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dgc-grid-38.brunel.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-LT2-Brunel</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dgridsrm-fzk.gridka.de:8443/srm/managerv2</hostname>
-	<sitename>FZK-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dl02.di.uoa.gr:8446/srm/managerv2</hostname>
-	<sitename>GR-09-UoA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dp0015.m45.ihep.su:8443/srm/managerv2</hostname>
-	<sitename>RU-Protvino-IHEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm-egee.bifi.unizar.es:8446/srm/managerv2</hostname>
-	<sitename>BIFI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm.biruni.upm.my:8446/srm/managerv2</hostname>
-	<sitename>MY-UPM-BIRUNI-01</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm.cyf-kr.edu.pl:8446/srm/managerv2</hostname>
-	<sitename>CYFRONET-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm.ipb.ac.rs:8446/srm/managerv2</hostname>
-	<sitename>AEGIS01-IPB-SCL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm.lhep.unibe.ch:8446/srm/managerv2</hostname>
-	<sitename>UNIBE-LHEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm.research-infrastructures.eu:8446/srm/managerv2</hostname>
-	<sitename>CNR-PROD-PISA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm01.grid.etf.rtu.lv:8446/srm/managerv2</hostname>
-	<sitename>RTUETF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://dpm1.egee.cesnet.cz:8446/srm/managerv2</hostname>
-	<sitename>prague_cesnet_lcg2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://duck-03.biocomp.unibo.it:8444/srm/managerv2</hostname>
-	<sitename>BIOCOMP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://egi-se.brgm.fr:8443/srm/managerv1</hostname>
-	<sitename>BRGM-ORLEANS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://egi-se.brgm.fr:8446/srm/managerv2</hostname>
-	<sitename>BRGM-ORLEANS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://egise.polito.it:8444/srm/managerv2</hostname>
-	<sitename>ISMB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://egridglitese.crs4.it:8444/srm/managerv2</hostname>
-	<sitename>CRS4</sitename>
-</entry>
-<entry>
-	<hostname>httpg://emi014.grid.sinica.edu.tw:8443/srm/managerv1</hostname>
-	<sitename>TW-EMI-PPS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://emi014.grid.sinica.edu.tw:8446/srm/managerv2</hostname>
-	<sitename>TW-EMI-PPS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://epgse1.ph.bham.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-BHAM-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://eymir.grid.metu.edu.tr:8446/srm/managerv2</hostname>
-	<sitename>TR-03-METU</sitename>
-</entry>
-<entry>
-	<hostname>httpg://f-dpm001.grid.sinica.edu.tw:8446/srm/managerv2</hostname>
-	<sitename>Taiwan-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fal-pygrid-30.lancs.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-NORTHGRID-LANCS-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ff-se.unl.edu:8443/srm/v2/server</hostname>
-	<sitename>Firefly</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fg-bestman1.fnal.gov:10443/srm/v2/server</hostname>
-	<sitename>FNAL_FERMIGRID</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fn2.hpcc.sztaki.hu:8443/srm/managerv1</hostname>
-	<sitename>SZTAKI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fn2.hpcc.sztaki.hu:8446/srm/managerv2</hostname>
-	<sitename>SZTAKI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fndca1.fnal.gov:8443/srm/managerv1</hostname>
-	<sitename>FNAL_FERMIGRID</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fndca1.fnal.gov:8443/srm/managerv2</hostname>
-	<sitename>FNAL_FERMIGRID</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fornax-se.itwm.fhg.de:8446/srm/managerv2</hostname>
-	<sitename>ITWM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fornax-se2.itwm.fhg.de:8446/srm/managerv2</hostname>
-	<sitename>ITWM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://fs01.grid.uj.ac.za:8446/srm/managerv2</hostname>
-	<sitename>ZA-UJ</sitename>
-</entry>
-<entry>
-	<hostname>httpg://g-se02d.feit.ukim.edu.mk:8446/srm/managerv2</hostname>
-	<sitename>MK-02-ETF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ganymede.hep.kbfi.ee:8888/srm/v2/server</hostname>
-	<sitename>T2_Estonia</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-amc.amc.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-AMC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-amc.amc.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-AMC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-ams.els.sara.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-AMS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-ams.els.sara.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-AMS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-emc.erasmusmc.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-EMC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-emc.erasmusmc.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-EMC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-kg.keygene.com:8443/srm/managerv1</hostname>
-	<sitename>LSG-KG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-kg.keygene.com:8446/srm/managerv2</hostname>
-	<sitename>LSG-KG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-kun.els.sara.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-KUN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-kun.els.sara.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-KUN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-lumc.lumc.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-LUMC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-lumc.lumc.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-LUMC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-nki.els.sara.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-NKI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-nki.els.sara.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-NKI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-rug.sara.usor.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-RUG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-rug.sara.usor.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-RUG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-tud.ewi.tudelft.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-TUD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-tud.ewi.tudelft.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-TUD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-wur.els.sara.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-WUR</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gb-se-wur.els.sara.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-WUR</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gc1-se.spa.umn.edu:8443/srm/v2/server</hostname>
-	<sitename>UMN-CMS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gclse.cs.usm.my:8443/srm/managerv1</hostname>
-	<sitename>MY-USM-GCL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gclse.cs.usm.my:8446/srm/managerv2</hostname>
-	<sitename>MY-USM-GCL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gfe02.grid.hep.ph.ic.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>UKI-LT2-IC-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gilda-02.pd.infn.it:8446/srm/managerv2</hostname>
-	<sitename>GILDA-PADOVA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gk03.atlas-swt2.org:8443/srm/v2/server</hostname>
-	<sitename>SWT2_CPB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gk05.swt2.uta.edu:8443/srm/v2/server</hostname>
-	<sitename>UTA_SWT2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gl-dpm.isma.kharkov.ua:8446/srm/managerv2</hostname>
-	<sitename>UA-ISMA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://glite-se.ceres.auckland.ac.nz:8446/srm/managerv2</hostname>
-	<sitename>NZ-UOA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://glite-se.scai.fraunhofer.de:8446/srm/managerv2</hostname>
-	<sitename>SCAI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://glite01.grid.hku.hk:8446/srm/managerv2</hostname>
-	<sitename>HK-HKU-CC-01</sitename>
-</entry>
-<entry>
-	<hostname>httpg://globe-door.ifh.de:8443/srm/managerv2</hostname>
-	<sitename>DESY-ZN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://golias100.farm.particle.cz:8446/srm/managerv2</hostname>
-	<sitename>praguelcg2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://golp-se.ist.utl.pt:8446/srm/managerv2</hostname>
-	<sitename>CFP-IST</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gorgon01.westgrid.ca:8443/srm/managerv2</hostname>
-	<sitename>CA-VICTORIA-WESTGRID-T2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-cert-03.roma1.infn.it:8446/srm/managerv2</hostname>
-	<sitename>INFN-ROMA1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-se-00.sgai.csic.es:8446/srm/managerv2</hostname>
-	<sitename>SGAI-CSIC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-se.ii.edu.mk:8446/srm/managerv2</hostname>
-	<sitename>MK-01-UKIM_II</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-se.physik.uni-wuppertal.de:8443/srm/managerv2</hostname>
-	<sitename>wuppertalprod</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-se.pv.infn.it:8446/srm/managerv2</hostname>
-	<sitename>INFN-PAVIA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-se2.pr.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-PARMA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-srm.physik.rwth-aachen.de:8443/srm/managerv2</hostname>
-	<sitename>RWTH-Aachen</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-srm.rzg.mpg.de:8443/srm/managerv2</hostname>
-	<sitename>MPPMU</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid-storm.hpc.susx.ac.uk:8444/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-SUSX</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid.isa.ru:8443/srm/managerv1</hostname>
-	<sitename>RU-ISA-CGTDC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid.isa.ru:8446/srm/managerv2</hostname>
-	<sitename>RU-ISA-CGTDC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid001.jet.efda.org:8446/srm/managerv2</hostname>
-	<sitename>EFDA-JET</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid002.ft.uam.es:8443/srm/managerv2</hostname>
-	<sitename>UAM-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid002.ics.forth.gr:8444/srm/managerv2</hostname>
-	<sitename>GR-04-FORTH-ICS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid003.ca.infn.it:8446/srm/managerv2</hostname>
-	<sitename>INFN-CAGLIARI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid01.uibk.ac.at:8446/srm/managerv2</hostname>
-	<sitename>HEPHY-UIBK</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid02.elfak.ni.ac.rs:8446/srm/managerv2</hostname>
-	<sitename>AEGIS03-ELEF-LEDA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid02.hep.by:8444/srm/managerv2</hostname>
-	<sitename>BY-NCPHEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid02.physics.uoi.gr:8446/srm/managerv2</hostname>
-	<sitename>GR-07-UOI-HEPLAB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid02.spacescience.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-13-ISS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid03.ge.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-GENOVA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid03.lal.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid03.lal.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid04.hepl.hiroshima-u.ac.jp:8446/srm/managerv2</hostname>
-	<sitename>JP-HIROSHIMA-WLCG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid05.lal.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid05.lal.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid05.unige.ch:8446/srm/managerv2</hostname>
-	<sitename>UNIGE-DPNC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid130.sinp.msu.ru:8446/srm/managerv2</hostname>
-	<sitename>ru-Moscow-SINP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid143.kfki.hu:8446/srm/managerv2</hostname>
-	<sitename>BUDAPEST</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid15.rcub.bg.ac.rs:8446/srm/managerv2</hostname>
-	<sitename>AEGIS02-RCUB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid2.fe.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-FERRARA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grid2.ira.inaf.it:8444/srm/managerv2</hostname>
-	<sitename>AREA-BO</sitename>
-</entry>
-<entry>
-	<hostname>httpg://griddpm01.ifca.es:8446/srm/managerv2</hostname>
-	<sitename>IFCA-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridka-dCache.fzk.de:8443/srm/managerv2</hostname>
-	<sitename>FZK-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridse.ilc.cnr.it:8446/srm/managerv2</hostname>
-	<sitename>CNR-ILC-PISA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridse.pg.infn.it:8443/srm/managerv1</hostname>
-	<sitename>INFN-PERUGIA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridse.pg.infn.it:8443/srm/managerv2</hostname>
-	<sitename>INFN-PERUGIA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridsrm.pi.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-PISA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridsrm.ts.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-TRIESTE</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridsrv3-4.dir.garr.it:8446/srm/managerv2</hostname>
-	<sitename>GARR-01-DIR</sitename>
-</entry>
-<entry>
-	<hostname>httpg://gridvm01.roma2.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-ROMA2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grisuse.scope.unina.it:8446/srm/managerv2</hostname>
-	<sitename>GRISU-UNINA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grive12.ibcp.fr:8443/srm/managerv1</hostname>
-	<sitename>IBCP-GBIO</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grive12.ibcp.fr:8446/srm/managerv2</hostname>
-	<sitename>IBCP-GBIO</sitename>
-</entry>
-<entry>
-	<hostname>httpg://grse001.inr.troitsk.ru:8446/srm/managerv2</hostname>
-	<sitename>Ru-Troitsk-INR-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hades.up.pt:8446/srm/managerv2</hostname>
-	<sitename>UPorto</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hansolo.kisti.re.kr:8446/srm/managerv2</hostname>
-	<sitename>KR-KISTI-GCRT-01</sitename>
-</entry>
-<entry>
-	<hostname>httpg://head01.aglt2.org:8443/srm/managerv1</hostname>
-	<sitename>AGLT2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://head01.aglt2.org:8443/srm/managerv2</hostname>
-	<sitename>AGLT2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hepcms-0.umd.edu:8443/srm/v2/server</hostname>
-	<sitename>umd-cms</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-NORTHGRID-LIV-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hephyse.oeaw.ac.at:8446/srm/managerv2</hostname>
-	<sitename>Hephy-Vienna</sitename>
-</entry>
-<entry>
-	<hostname>httpg://heplnx204.pp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-RALPP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hepse01.colorado.edu:8443/srm/v2/server</hostname>
-	<sitename>UColorado_HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hepse02.colorado.edu:8443/srm/v2/server</hostname>
-	<sitename>UColorado_HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://hurr.tamu.edu:8443/srm/v2/server</hostname>
-	<sitename>TAMU_BRAZOS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://iceage-se-01.ct.infn.it:8446/srm/managerv2</hostname>
-	<sitename>ICEAGE-CATANIA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://inaf-se-01.ct.pi2s2.it:8446/srm/managerv2</hostname>
-	<sitename>GRISU-COMETA-INAF-CT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://infn-se-03.ct.pi2s2.it:8446/srm/managerv2</hostname>
-	<sitename>GRISU-COMETA-INFN-CT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2</hostname>
-	<sitename>BelGrid-UCL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ipnsedpm.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ipnsedpm.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://kek2-se.cc.kek.jp:8443/srm/managerv1</hostname>
-	<sitename>JP-KEK-CRC-02</sitename>
-</entry>
-<entry>
-	<hostname>httpg://kek2-se.cc.kek.jp:8446/srm/managerv2</hostname>
-	<sitename>JP-KEK-CRC-02</sitename>
-</entry>
-<entry>
-	<hostname>httpg://kek2-se01.cc.kek.jp:8444/srm/managerv2</hostname>
-	<sitename>JP-KEK-CRC-02</sitename>
-</entry>
-<entry>
-	<hostname>httpg://kodiak-se.baylor.edu:8443/srm/v2/server</hostname>
-	<sitename>Baylor-Tier3</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lapp-se01.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>IN2P3-LAPP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lapp-se01.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>IN2P3-LAPP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-dpm01.hep.ucl.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-LT2-UCL-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-lrz-se.lrz-muenchen.de:8443/srm/managerv2</hostname>
-	<sitename>LRZ-LMU</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-se0.ifh.de:8443/srm/managerv2</hostname>
-	<sitename>DESY-ZN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-se01.icepp.jp:8446/srm/managerv2</hostname>
-	<sitename>TOKYO-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-se1.ifh.de:8443/srm/managerv2</hostname>
-	<sitename>DESY-ZN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-se1.scinet.utoronto.ca:8443/srm/managerv2</hostname>
-	<sitename>CA-SCINET-T2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-se2.rcf.uvic.ca:8443/srm/managerv2</hostname>
-	<sitename>VICTORIA-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg-srm.ecm.ub.es:8446/srm/managerv2</hostname>
-	<sitename>UB-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg58.sinp.msu.ru:8446/srm/managerv2</hostname>
-	<sitename>ru-Moscow-SINP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcg59.sinp.msu.ru:8446/srm/managerv2</hostname>
-	<sitename>ru-Moscow-SINP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcgdpmse.dnp.fmph.uniba.sk:8446/srm/managerv2</hostname>
-	<sitename>FMPhI-UNIBA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcgse0.shef.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-NORTHGRID-SHEF-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcgse02.phy.bris.ac.uk:8444/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-BRIS-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lcgsedc01.jinr.ru:8443/srm/managerv2</hostname>
-	<sitename>JINR-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lhcb-se.nipne.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-11-NIPNE</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lhcbsrm-kit.gridka.de:8443/srm/managerv2</hostname>
-	<sitename>FZK-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://linucs-se-01.cs.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-COSENZA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lpnse1.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lpnse1.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lpsc-se-dpm-server.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>IN2P3-LPSC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lpsc-se-dpm-server.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>IN2P3-LPSC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lptadpmsv.msfg.fr:8443/srm/managerv1</hostname>
-	<sitename>MSFG-OPEN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lptadpmsv.msfg.fr:8446/srm/managerv2</hostname>
-	<sitename>MSFG-OPEN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lxse-dc01.jinr.ru:8443/srm/managerv2</hostname>
-	<sitename>JINR-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lyogrid06.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>IN2P3-IPNL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://lyogrid06.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>IN2P3-IPNL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://madhatter.csc.fi:8443/srm/managerv2</hostname>
-	<sitename>FI_HIP_T2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://maite.iihe.ac.be:8443/srm/managerv2</hostname>
-	<sitename>BEgrid-ULB-VUB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://marsedpm.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>IN2P3-CPPM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://marsedpm.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>IN2P3-CPPM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://mereine.univ-lille1.fr:8443/srm/managerv1</hostname>
-	<sitename>UNIV-LILLE</sitename>
-</entry>
-<entry>
-	<hostname>httpg://mereine.univ-lille1.fr:8446/srm/managerv2</hostname>
-	<sitename>UNIV-LILLE</sitename>
-</entry>
-<entry>
-	<hostname>httpg://meson.fis.cinvestav.mx:8443/srm/v2/server</hostname>
-	<sitename>cinvestav</sitename>
-</entry>
-<entry>
-	<hostname>httpg://nanlcg02.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>IN2P3-SUBATECH</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ngiesse.i3m.upv.es:8446/srm/managerv2</hostname>
-	<sitename>UPV-GRyCAP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://node08-02.imi.renam.md:8446/srm/managerv2</hostname>
-	<sitename>MD-02-IMI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://node12.datagrid.cea.fr:8443/srm/managerv1</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://node12.datagrid.cea.fr:8446/srm/managerv2</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ntugrid4.phys.ntu.edu.tw:8446/srm/managerv2</hostname>
-	<sitename>TW-NTU-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://nureddunase.uib-csic.es:8446/srm/managerv2</hostname>
-	<sitename>IFISC-GRID</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ophelia.zih.tu-dresden.de:8443/srm/managerv2</hostname>
-	<sitename>TUDresden-ZIH</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osg-se.cac.cornell.edu:8443/srm/v2/server</hostname>
-	<sitename>NYSGRID_CORNELL_NYS1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osg-se.hep.caltech.edu:8443/srm/v2/server</hostname>
-	<sitename>CIT_HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osg.pnl.gov:8443/srm/v2/server</hostname>
-	<sitename>PNNL_OSG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osgitb2.nhn.ou.edu:8443/srm/v2/server</hostname>
-	<sitename>OUHEP_ITB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osgserv04.slac.stanford.edu:8443/srm/v2/server</hostname>
-	<sitename>WT2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osgsrm01.slac.stanford.edu:8443/srm/v2/server</hostname>
-	<sitename>WT2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osgx1.hep.uiuc.edu:8443/srm/managerv1</hostname>
-	<sitename>IllinoisHEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://osgx1.hep.uiuc.edu:8443/srm/managerv2</hostname>
-	<sitename>IllinoisHEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://ouhep2.nhn.ou.edu:8443/srm/v2/server</hostname>
-	<sitename>OUHEP_OSG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://pcncp22.ncp.edu.pk:8443/srm/managerv1</hostname>
-	<sitename>NCP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://pcncp22.ncp.edu.pk:8446/srm/managerv2</hostname>
-	<sitename>NCP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://pcncp23.ncp.edu.pk:8443/srm/managerv1</hostname>
-	<sitename>NCP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://pcncp23.ncp.edu.pk:8446/srm/managerv2</hostname>
-	<sitename>NCP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://pdsfdtn1.nersc.gov:62443/srm/v2/server</hostname>
-	<sitename>NERSC-PDSFSRM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://plethon.grid.ucy.ac.cy:8446/srm/managerv2</hostname>
-	<sitename>CY-01-KIMON</sitename>
-</entry>
-<entry>
-	<hostname>httpg://polgrid4.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://polgrid4.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>GRIF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://prod-se-01.ct.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-CATANIA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://prod-se-01.pd.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-PADOVA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://prod-se-02.ct.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-CATANIA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://prod-se-02.pd.infn.it:8446/srm/managerv2</hostname>
-	<sitename>INFN-PADOVA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://recasna-se01.unina.it:8446/srm/managerv2</hostname>
-	<sitename>RECAS-NAPOLI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://red-srm1.unl.edu:8443/srm/v2/server</hostname>
-	<sitename>Nebraska</sitename>
-</entry>
-<entry>
-	<hostname>httpg://rhino.lsr.nectec.or.th:8446/srm/managerv2</hostname>
-	<sitename>TH-NECTEC-LSR</sitename>
-</entry>
-<entry>
-	<hostname>httpg://roc-se.triumf.ca:8446/srm/managerv2</hostname>
-	<sitename>ROC_Canada_SERVICES</sitename>
-</entry>
-<entry>
-	<hostname>httpg://sam-dpm.grid.sara.nl:8446/srm/managerv2</hostname>
-	<sitename>SARA-MATRIX</sitename>
-</entry>
-<entry>
-	<hostname>httpg://sampase.if.usp.br:8446/srm/managerv2</hostname>
-	<sitename>SAMPA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://sbgse1.in2p3.fr:8443/srm/managerv1</hostname>
-	<sitename>IN2P3-IRES</sitename>
-</entry>
-<entry>
-	<hostname>httpg://sbgse1.in2p3.fr:8446/srm/managerv2</hostname>
-	<sitename>IN2P3-IRES</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-1.le.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-LECCE</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-cafpegrid.ugr.es:8446/srm/managerv2</hostname>
-	<sitename>CAFPE-GRANADA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-dpm-server-grid.obspm.fr:8443/srm/managerv1</hostname>
-	<sitename>OBSPM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-dpm-server-grid.obspm.fr:8446/srm/managerv2</hostname>
-	<sitename>OBSPM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-emi.igfae.usc.es:8446/srm/managerv2</hostname>
-	<sitename>USC-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-enmr.cerm.unifi.it:8446/srm/managerv2</hostname>
-	<sitename>CIRMMP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-enmr.chemie.uni-frankfurt.de:8446/srm/managerv2</hostname>
-	<sitename>BMRZ-FRANKFURT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-enmr.science.uu.nl:8446/srm/managerv2</hostname>
-	<sitename>BCBR</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-goegrid.gwdg.de:8443/srm/managerv2</hostname>
-	<sitename>GoeGrid</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-grid.uaic.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-16-UAIC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-gsdc1.sdfarm.kr:8446/srm/managerv2</hostname>
-	<sitename>KR-KISTI-GSDC-01</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se-iep-grid.saske.sk:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dcachetest-iep-grid.saske.sk:8443/srm/managerv2</endpoint>
 	<sitename>IEPSAS-Kosice</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se-ngi.ceta-ciemat.es:8446/srm/managerv2</hostname>
-	<sitename>CETA-GRID</sitename>
+	<endpoint>httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv1</endpoint>
+	<sitename>BNL-ATLAS</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se-ngi.grid.acad.bg:8443/srm/managerv1</hostname>
-	<sitename>BG03-NGCC</sitename>
+	<endpoint>httpg://dcsrm.usatlas.bnl.gov:8443/srm/managerv2</endpoint>
+	<sitename>BNL-ATLAS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se-ngi.grid.acad.bg:8446/srm/managerv2</hostname>
-	<sitename>BG03-NGCC</sitename>
+	<endpoint>httpg://dgc-grid-38.brunel.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-LT2-Brunel</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se-qamar.utmgrid.utm.my:8446/srm/managerv2</hostname>
-	<sitename>MY-UTM-GRID</sitename>
+	<endpoint>httpg://dgridsrm-fzk.gridka.de:8443/srm/managerv2</endpoint>
+	<sitename>FZK-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se-sivvp.ui.savba.sk:8446/srm/managerv2</hostname>
-	<sitename>IISAS-Bratislava</sitename>
+	<endpoint>httpg://dl02.di.uoa.gr:8446/srm/managerv2</endpoint>
+	<sitename>GR-09-UoA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se-srm-00.to.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-TORINO</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.bfg.uni-freiburg.de:8443/srm/managerv2</hostname>
-	<sitename>UNI-FREIBURG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.biomed.kiev.ua:8444/srm/managerv2</hostname>
-	<sitename>UA-NSCMBR</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.bitp.kiev.ua:8446/srm/managerv2</hostname>
-	<sitename>UA-BITP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.cat.cbpf.br:8446/srm/managerv2</hostname>
-	<sitename>CBPF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.core.wits.ac.za:8446/srm/managerv2</hostname>
-	<sitename>ZA-WITS-CORE</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.csk.kg.ac.rs:8446/srm/managerv2</hostname>
-	<sitename>AEGIS04-KG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.csl.ee.upatras.gr:8446/srm/managerv2</hostname>
-	<sitename>GR-11-UPATRAS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.cta.camk.edu.pl:8446/srm/managerv2</hostname>
-	<sitename>CAMK</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.esac.esa.int:8444/srm/managerv2</hostname>
-	<sitename>ESA-ESAC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.fesb.egi.cro-ngi.hr:8444/srm/managerv2</hostname>
-	<sitename>egee.fesb.hr</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.ac.me:8446/srm/managerv2</hostname>
-	<sitename>MREN-01-CIS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.eenet.ee:8446/srm/managerv2</hostname>
-	<sitename>EENet</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.ici.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-01-ICI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.kiae.ru:8446/srm/managerv2</hostname>
-	<sitename>RRC-KI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.rug.nl:8443/srm/managerv2</hostname>
-	<sitename>RUG-CIT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.task.gda.pl:8446/srm/managerv2</hostname>
-	<sitename>TASK</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.tuke.sk:8446/srm/managerv2</hostname>
-	<sitename>TU-Kosice</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.grid.unipg.it:8444/srm/managerv2</hostname>
-	<sitename>UNI-PERUGIA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.haii.or.th:8446/srm/managerv2</hostname>
-	<sitename>TH-HAII</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.hpc.iit.bme.hu:8446/srm/managerv2</hostname>
-	<sitename>BMEGrid</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.hpc.utfsm.cl:8443/srm/managerv2</hostname>
-	<sitename>EELA-UTFSM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.hpgcc.finki.ukim.mk:8446/srm/managerv2</hostname>
-	<sitename>MK-03-FINKI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.iaa.csic.es:8446/srm/managerv2</hostname>
-	<sitename>IAA-CSIC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.imbg.org.ua:8443/srm/managerv2</hostname>
-	<sitename>UA-IMBG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.irb.egi.cro-ngi.hr:8444/srm/managerv2</hostname>
-	<sitename>egee.irb.hr</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.lsg.hubrecht.eu:8443/srm/managerv1</hostname>
-	<sitename>LSG-HUB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.lsg.hubrecht.eu:8446/srm/managerv2</hostname>
-	<sitename>LSG-HUB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.lsg.psy.vu.nl:8443/srm/managerv1</hostname>
-	<sitename>LSG-VU</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.lsg.psy.vu.nl:8446/srm/managerv2</hostname>
-	<sitename>LSG-VU</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.polgrid.pl:8446/srm/managerv2</hostname>
-	<sitename>ICM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.pscigrid.gov.ph:8443/srm/managerv1</hostname>
-	<sitename>PH-ASTI-LIKNAYAN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.pscigrid.gov.ph:8446/srm/managerv2</hostname>
-	<sitename>PH-ASTI-LIKNAYAN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.reef.man.poznan.pl:8446/srm/managerv2</hostname>
-	<sitename>PSNC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.scope.unina.it:8446/srm/managerv2</hostname>
-	<sitename>UNINA-EGEE</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.sg.grena.ge:8446/srm/managerv2</hostname>
-	<sitename>GE-01-GRENA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.srce.egi.cro-ngi.hr:8444/srm/managerv2</hostname>
-	<sitename>egee.srce.hr</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.uagrid.org.ua:8446/srm/managerv2</hostname>
-	<sitename>UA_ICYB_ARC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.ui.savba.sk:8446/srm/managerv2</hostname>
-	<sitename>IISAS-Bratislava</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.utmgrid.utm.my:8446/srm/managerv2</hostname>
-	<sitename>MY-UTM-GRID</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.wcss.wroc.pl:8446/srm/managerv2</hostname>
-	<sitename>WCSS-PPS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se.yerphi-cluster.grid.am:8446/srm/managerv2</hostname>
-	<sitename>AM-04-YERPHI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se0.bordeaux.inra.fr:8443/srm/managerv1</hostname>
-	<sitename>M3PEC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se0.bordeaux.inra.fr:8446/srm/managerv2</hostname>
-	<sitename>M3PEC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se0.m3pec.u-bordeaux1.fr:8443/srm/managerv1</hostname>
-	<sitename>M3PEC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se0.m3pec.u-bordeaux1.fr:8446/srm/managerv2</hostname>
-	<sitename>M3PEC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se0.sdfarm.kr:8446/srm/managerv2</hostname>
-	<sitename>KR-KISTI-GCRT-01</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se0002.m45.ihep.su:8443/srm/managerv2</hostname>
+	<endpoint>httpg://dp0015.m45.ihep.su:8443/srm/managerv2</endpoint>
 	<sitename>RU-Protvino-IHEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se001.grid.uni-sofia.bg:8443/srm/managerv1</hostname>
-	<sitename>BG05-SUGrid</sitename>
+	<endpoint>httpg://dpm-egee.bifi.unizar.es:8446/srm/managerv2</endpoint>
+	<sitename>BIFI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se001.grid.uni-sofia.bg:8446/srm/managerv2</hostname>
-	<sitename>BG05-SUGrid</sitename>
+	<endpoint>httpg://dpm.biruni.upm.my:8446/srm/managerv2</endpoint>
+	<sitename>MY-UPM-BIRUNI-01</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://se001.ipp.acad.bg:8443/srm/managerv2</hostname>
-	<sitename>BG01-IPP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01-lhcb-t2.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-CNAF-LHCB</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01-tic.ciemat.es:8446/srm/managerv2</hostname>
-	<sitename>CIEMAT-TIC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.afroditi.hellasgrid.gr:8446/srm/managerv2</hostname>
-	<sitename>HG-03-AUTH</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.ariagni.hellasgrid.gr:8446/srm/managerv2</hostname>
-	<sitename>HG-05-FORTH</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.athena.hellasgrid.gr:8443/srm/managerv2</hostname>
-	<sitename>HG-06-EKT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.begrid.be:8443/srm/managerv1</hostname>
-	<sitename>BEgrid-BELNET</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.begrid.be:8446/srm/managerv2</hostname>
-	<sitename>BEgrid-BELNET</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.cmsaf.mit.edu:8443/srm/v2/server</hostname>
-	<sitename>MIT_CMS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.dur.scotgrid.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-SCOTGRID-DURHAM</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.esc.qmul.ac.uk:8444/srm/managerv2</hostname>
-	<sitename>UKI-LT2-QMUL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.grid.auth.gr:8446/srm/managerv2</hostname>
-	<sitename>GR-01-AUTH</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.grid.uoi.gr:8446/srm/managerv2</hostname>
-	<sitename>GR-10-UOI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.indiacms.res.in:8446/srm/managerv2</hostname>
-	<sitename>INDIACMS-TIFR</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.isabella.grnet.gr:8446/srm/managerv2</hostname>
-	<sitename>HG-01-GRNET</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.kallisto.hellasgrid.gr:8443/srm/managerv1</hostname>
-	<sitename>HG-04-CTI-CEID</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.kallisto.hellasgrid.gr:8446/srm/managerv2</hostname>
-	<sitename>HG-04-CTI-CEID</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.knowledgegrid.net.my:8446/srm/managerv2</hostname>
-	<sitename>MY-MIMOS-GC-01</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.macc.unican.es:8446/srm/managerv2</hostname>
-	<sitename>UNICAN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.marie.hellasgrid.gr:8446/srm/managerv2</hostname>
-	<sitename>HG-02-IASA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.mosigrid.utcluj.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-09-UTCN</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se01.oats.inaf.it:8444/srm/managerv2</hostname>
-	<sitename>INAF-TS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se02.cat.cbpf.br:8446/srm/managerv2</hostname>
-	<sitename>CBPF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se02.marie.hellasgrid.gr:8446/srm/managerv2</hostname>
-	<sitename>GR-06-IASA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se02.ncp.edu.pk:8446/srm/managerv2</hostname>
-	<sitename>NCP-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se02.ngcc.acad.bg:8446/srm/managerv2</hostname>
-	<sitename>BG03-NGCC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se03.esc.qmul.ac.uk:8444/srm/managerv2</hostname>
-	<sitename>UKI-LT2-QMUL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se04.esc.qmul.ac.uk:8444/srm/managerv2</hostname>
-	<sitename>UKI-LT2-QMUL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se05.lip.pt:8446/srm/managerv2</hostname>
-	<sitename>LIP-Lisbon</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se1.accre.vanderbilt.edu:6288/srm/v2/server</hostname>
-	<sitename>Vanderbilt</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se1.geophys.bas.bg:8443/srm/managerv1</hostname>
-	<sitename>BG06-GPHI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se1.geophys.bas.bg:8446/srm/managerv2</hostname>
-	<sitename>BG06-GPHI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se1.particles.ipm.ac.ir:8446/srm/managerv2</hostname>
-	<sitename>IR-IPM-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se2.egi.cesga.es:8446/srm/managerv2</hostname>
-	<sitename>CESGA</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se2.grid.lebedev.ru:8446/srm/managerv2</hostname>
-	<sitename>ru-Moscow-FIAN-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se2.ppgrid1.rhul.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-LT2-RHUL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se3.accre.vanderbilt.edu:6288/srm/v2/server</hostname>
-	<sitename>Vanderbilt</sitename>
-</entry>
-<entry>
-	<hostname>httpg://se3.itep.ru:8443/srm/managerv2</hostname>
-	<sitename>ITEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://sebo-t3-01.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-BOLOGNA-T3</sitename>
-</entry>
-<entry>
-	<hostname>httpg://sehn02.atlas.ualberta.ca:8443/srm/managerv2</hostname>
-	<sitename>CA-ALBERTA-WESTGRID-T2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://serv02.hep.phy.cam.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-CAM-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://sirius-se.ct.infn.it:8446/srm/managerv2</hostname>
-	<sitename>GILDA-SIRIUS</sitename>
-</entry>
-<entry>
-	<hostname>httpg://solorina.geranium.um.edu.my:8446/srm/managerv2</hostname>
-	<sitename>MY-UM-CRYSTAL</sitename>
-</entry>
-<entry>
-	<hostname>httpg://spacina-se.scope.unina.it:8446/srm/managerv2</hostname>
-	<sitename>GRISU-SPACI-NAPOLI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-alice.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-atlas.cern.ch:8443/srm/managerv2</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-atlas.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-biomed.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-cms.cern.ch:8443/srm/managerv2</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-cms.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-dcache.rcac.purdue.edu:8443/srm/v2/server</hostname>
-	<sitename>Purdue-RCAC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-disk.pic.es:8443/srm/managerv2</hostname>
-	<sitename>ifae</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-dteam.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-eosatlas.cern.ch:8443/srm/v2/server</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-eoscms.cern.ch:8443/srm/v2/server</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-eoslhcb.cern.ch:8443/srm/v2/server</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-eospps.cern.ch:8443/srm/v2/server</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-hone.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-ilc.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-lhcb.cern.ch:8443/srm/managerv2</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-lhcb.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-mice.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-minos.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-na62.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-public.cern.ch:8443/srm/managerv2</hostname>
-	<sitename>CERN-PROD</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-snoplus.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-superb.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm-t2k.gridpp.rl.ac.uk:8443/srm/managerv2</hostname>
-	<sitename>RAL-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.ciemat.es:8443/srm/managerv2</hostname>
-	<sitename>CIEMAT-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.fgi.csc.fi:8446/srm/managerv2</hostname>
-	<sitename>CSC</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.glite.ecdf.ed.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-SCOTGRID-ECDF</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.grid.sara.nl:8443/srm/managerv2</hostname>
-	<sitename>SARA-MATRIX</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.hep.brown.edu:8443/srm/v2/server</hostname>
-	<sitename>brown-cms-new</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.hep.fiu.edu:8443/srm/v2/server</hostname>
-	<sitename>FIUPG</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.ihep.ac.cn:8443/srm/managerv2</hostname>
-	<sitename>BEIJING-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.ihepa.ufl.edu:8443/srm/managerv1</hostname>
-	<sitename>Florida</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.ihepa.ufl.edu:8443/srm/v2/server</hostname>
-	<sitename>Florida</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.ndgf.org:8443/srm/managerv2</hostname>
-	<sitename>NDGF-T1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.pic.es:8443/srm/managerv2</hostname>
-	<sitename>pic</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.swegrid.se:8443/srm/managerv2</hostname>
-	<sitename>SE-SNIC-T2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.target.rug.nl:8444/srm/managerv2</hostname>
-	<sitename>RUG-CIT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.triumf.ca:8443/srm/managerv2</hostname>
-	<sitename>TRIUMF-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm.unl.edu:8443/srm/v2/server</hostname>
-	<sitename>Nebraska</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm01.ifca.es:8444/srm/managerv2</hostname>
-	<sitename>IFCA-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm01.lip.pt:8443/srm/managerv2</hostname>
-	<sitename>LIP-Lisbon</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm01.ncg.ingrid.pt:8443/srm/managerv2</hostname>
-	<sitename>NCG-INGRID-PT</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srm2.grid.sinica.edu.tw:8443/srm/managerv2</hostname>
-	<sitename>Taiwan-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srmatlas.pic.es:8443/srm/managerv2</hostname>
-	<sitename>pic</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srmb.ihepa.ufl.edu:8443/srm/v2/server</hostname>
-	<sitename>Florida</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srmcms.pic.es:8443/srm/managerv2</hostname>
-	<sitename>pic</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srmifae.pic.es:8443/srm/managerv2</hostname>
-	<sitename>ifae</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srmlhcb.pic.es:8443/srm/managerv2</hostname>
-	<sitename>pic</sitename>
-</entry>
-<entry>
-	<hostname>httpg://srmv2.ific.uv.es:8443/srm/managerv2</hostname>
-	<sitename>IFIC-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storage-monit.physics.ox.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-OX-HEP</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storage01.lcg.cscs.ch:8443/srm/managerv2</hostname>
-	<sitename>CSCS-LCG2</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-01.roma3.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-ROMA3</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-fe-alice.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-T1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-T1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-fe-cms.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-T1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-fe-lhcb.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-T1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-fe-superb.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-T1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-fe.cr.cnaf.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-T1</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm-se-01.ba.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-BARI</sitename>
-</entry>
-<entry>
-	<hostname>httpg://storm.grid.cyf-kr.edu.pl:8444/srm/managerv2</hostname>
+	<endpoint>httpg://dpm.cyf-kr.edu.pl:8446/srm/managerv2</endpoint>
 	<sitename>CYFRONET-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://storm.gridc.lip.pt:8444/srm/managerv2</hostname>
-	<sitename>LIP-Coimbra</sitename>
+	<endpoint>httpg://dpm.grid.tuke.sk:8446/srm/managerv2</endpoint>
+	<sitename>TU-Kosice</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://storm.ifca.es:8444/srm/managerv2</hostname>
-	<sitename>IFCA-LCG2</sitename>
+	<endpoint>httpg://dpm.hpcc.sztaki.hu:8446/srm/managerv2</endpoint>
+	<sitename>SZTAKI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://storm.mib.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-MIB</sitename>
+	<endpoint>httpg://dpm.ipb.ac.rs:8446/srm/managerv2</endpoint>
+	<sitename>AEGIS01-IPB-SCL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://storm.physik.uni-bonn.de:8444/srm/managerv2</hostname>
-	<sitename>UNI-BONN</sitename>
+	<endpoint>httpg://dpm.lhep.unibe.ch:8446/srm/managerv2</endpoint>
+	<sitename>UNIBE-LHEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://storm02.clumeq.mcgill.ca:8444/srm/managerv2</hostname>
-	<sitename>CA-MCGILL-CLUMEQ-T2</sitename>
+	<endpoint>httpg://dpm.research-infrastructures.eu:8446/srm/managerv2</endpoint>
+	<sitename>CNR-PROD-PISA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://stormfe1.pi.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-PISA</sitename>
+	<endpoint>httpg://dpm01.grid.etf.rtu.lv:8446/srm/managerv2</endpoint>
+	<sitename>RTUETF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://styx.ifh.de:8443/srm/v2/server</hostname>
+	<endpoint>httpg://dpm1.egee.cesnet.cz:8446/srm/managerv2</endpoint>
+	<sitename>prague_cesnet_lcg2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://dpm1.ipgp.fr:8446/srm/managerv2</endpoint>
+	<sitename>INSU01-PARIS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://egee013.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>IGI-BOLOGNA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://egi-se.brgm.fr:8446/srm/managerv2</endpoint>
+	<sitename>BRGM-ORLEANS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://egise.polito.it:8444/srm/managerv2</endpoint>
+	<sitename>ISMB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://egridglitese.crs4.it:8444/srm/managerv2</endpoint>
+	<sitename>CRS4</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://emi014.grid.sinica.edu.tw:8446/srm/managerv2</endpoint>
+	<sitename>TW-EMI-PPS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://emso-se-01.lns.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>ICEAGE-CATANIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://epgse1.ph.bham.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-BHAM-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://eymir.grid.metu.edu.tr:8446/srm/managerv2</endpoint>
+	<sitename>TR-03-METU</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://f-dpm001.grid.sinica.edu.tw:8446/srm/managerv2</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://fal-pygrid-30.lancs.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-NORTHGRID-LANCS-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ff-se.unl.edu:8443/srm/v2/server</endpoint>
+	<sitename>Firefly</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://fg-bestman1.fnal.gov:10443/srm/v2/server</endpoint>
+	<sitename>FNAL_FERMIGRID</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://fndca1.fnal.gov:8443/srm/managerv1</endpoint>
+	<sitename>FNAL_FERMIGRID</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://fndca1.fnal.gov:8443/srm/managerv2</endpoint>
+	<sitename>FNAL_FERMIGRID</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://fornax-se.itwm.fhg.de:8446/srm/managerv2</endpoint>
+	<sitename>ITWM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://fornax-se2.itwm.fhg.de:8446/srm/managerv2</endpoint>
+	<sitename>ITWM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://fs01.grid.uj.ac.za:8446/srm/managerv2</endpoint>
+	<sitename>ZA-UJ</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://g-se02d.feit.ukim.edu.mk:8446/srm/managerv2</endpoint>
+	<sitename>MK-02-ETF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ganymede.hep.kbfi.ee:8888/srm/v2/server</endpoint>
+	<sitename>T2_Estonia</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-amc.amc.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-AMC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-ams.els.sara.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-AMS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-emc.erasmusmc.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-EMC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-kg.keygene.com:8446/srm/managerv2</endpoint>
+	<sitename>LSG-KG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-kun.els.sara.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-KUN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-lumc.lumc.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-LUMC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-nki.els.sara.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-NKI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-rug.sara.usor.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-RUG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-tud.ewi.tudelft.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-TUD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gb-se-wur.els.sara.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-WUR</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gc1-se.spa.umn.edu:8443/srm/v2/server</endpoint>
+	<sitename>UMN-CMS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gfe02.grid.hep.ph.ic.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>UKI-LT2-IC-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gilda-02.pd.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>GILDA-PADOVA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gk03.atlas-swt2.org:8443/srm/v2/server</endpoint>
+	<sitename>SWT2_CPB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gk05.swt2.uta.edu:8443/srm/v2/server</endpoint>
+	<sitename>UTA_SWT2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gl-dpm.isma.kharkov.ua:8446/srm/managerv2</endpoint>
+	<sitename>UA-ISMA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://glite-se.scai.fraunhofer.de:8446/srm/managerv2</endpoint>
+	<sitename>SCAI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://glite01.grid.hku.hk:8446/srm/managerv2</endpoint>
+	<sitename>HK-HKU-CC-01</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://globe-door.ifh.de:8443/srm/managerv2</endpoint>
 	<sitename>DESY-ZN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://svr018.gla.scotgrid.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-SCOTGRID-GLASGOW</sitename>
+	<endpoint>httpg://golias100.farm.particle.cz:8446/srm/managerv2</endpoint>
+	<sitename>praguelcg2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t-dpm.grid.sinica.edu.tw:8443/srm/managerv1</hostname>
-	<sitename>Taiwan-LCG2</sitename>
+	<endpoint>httpg://golp-se.ist.utl.pt:8446/srm/managerv2</endpoint>
+	<sitename>CFP-IST</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t-dpm.grid.sinica.edu.tw:8446/srm/managerv2</hostname>
-	<sitename>Taiwan-LCG2</sitename>
+	<endpoint>httpg://gorgon01.westgrid.ca:8443/srm/managerv2</endpoint>
+	<sitename>CA-VICTORIA-WESTGRID-T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t2-dpm-01.na.infn.it:8446/srm/managerv2</hostname>
-	<sitename>INFN-NAPOLI-ATLAS</sitename>
+	<endpoint>httpg://grid-0.hep.brown.edu:8443/srm/v2/server</endpoint>
+	<sitename>brown-cms</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t2-srm-02.lnl.infn.it:8443/srm/managerv2</hostname>
-	<sitename>INFN-LNL-2</sitename>
+	<endpoint>httpg://grid-cert-03.roma1.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>INFN-ROMA1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t2-srm-04.pd.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-LNL-2</sitename>
+	<endpoint>httpg://grid-se.ii.edu.mk:8446/srm/managerv2</endpoint>
+	<sitename>MK-01-UKIM_II</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t2cmcondor.mi.infn.it:8444/srm/managerv2</hostname>
-	<sitename>INFN-MILANO-ATLASC</sitename>
+	<endpoint>httpg://grid-se.physik.uni-wuppertal.de:8443/srm/managerv2</endpoint>
+	<sitename>wuppertalprod</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t2ksrm.nd280.org:8443/srm/managerv2</hostname>
-	<sitename>CA-TRIUMF-T2K</sitename>
+	<endpoint>httpg://grid-se.pv.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>INFN-PAVIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t2se01.physics.ox.ac.uk:8446/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-OX-HEP</sitename>
+	<endpoint>httpg://grid-se2.pr.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-PARMA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t2storm1.physics.ox.ac.uk:8444/srm/managerv2</hostname>
-	<sitename>UKI-SOUTHGRID-OX-HEP</sitename>
+	<endpoint>httpg://grid-srm.physik.rwth-aachen.de:8443/srm/managerv2</endpoint>
+	<sitename>RWTH-Aachen</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t3se01.psi.ch:8443/srm/managerv2</hostname>
-	<sitename>T3_CH_PSI</sitename>
+	<endpoint>httpg://grid-srm.rzg.mpg.de:8443/srm/managerv2</endpoint>
+	<sitename>MPPMU</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t3se02.grid.sinica.edu.tw:8443/srm/managerv1</hostname>
-	<sitename>Taiwan-LCG2</sitename>
+	<endpoint>httpg://grid-storm.hpc.susx.ac.uk:8444/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-SUSX</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://t3se02.grid.sinica.edu.tw:8446/srm/managerv2</hostname>
-	<sitename>Taiwan-LCG2</sitename>
+	<endpoint>httpg://grid001.jet.efda.org:8446/srm/managerv2</endpoint>
+	<sitename>EFDA-JET</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tau-se.hep.tau.ac.il:8444/srm/managerv2</hostname>
-	<sitename>IL-TAU-HEP</sitename>
+	<endpoint>httpg://grid002.ft.uam.es:8443/srm/managerv2</endpoint>
+	<sitename>UAM-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tbat05.nipne.ro:8443/srm/managerv1</hostname>
-	<sitename>RO-02-NIPNE</sitename>
+	<endpoint>httpg://grid002.ics.forth.gr:8444/srm/managerv2</endpoint>
+	<sitename>GR-04-FORTH-ICS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tbat05.nipne.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-02-NIPNE</sitename>
+	<endpoint>httpg://grid003.ca.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>INFN-CAGLIARI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tbit00.nipne.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-07-NIPNE</sitename>
+	<endpoint>httpg://grid01.uibk.ac.at:8446/srm/managerv2</endpoint>
+	<sitename>HEPHY-UIBK</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tblb02.nipne.ro:8446/srm/managerv2</hostname>
-	<sitename>RO-15-NIPNE</sitename>
+	<endpoint>httpg://grid02.elfak.ni.ac.rs:8446/srm/managerv2</endpoint>
+	<sitename>AEGIS03-ELEF-LEDA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tbn18.nikhef.nl:8446/srm/managerv2</hostname>
-	<sitename>NIKHEF-ELPROD</sitename>
+	<endpoint>httpg://grid02.hep.by:8444/srm/managerv2</endpoint>
+	<sitename>BY-NCPHEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tech-se.hep.technion.ac.il:8444/srm/managerv2</hostname>
-	<sitename>TECHNION-HEP</sitename>
+	<endpoint>httpg://grid02.physics.uoi.gr:8446/srm/managerv2</endpoint>
+	<sitename>GR-07-UOI-HEPLAB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://terbium.lsr.nectec.or.th:8446/srm/managerv2</hostname>
-	<sitename>T2-TH-CUNSTDA</sitename>
+	<endpoint>httpg://grid02.spacescience.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-13-ISS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tier2-02.ochep.ou.edu:8443/srm/v2/server</hostname>
-	<sitename>OU_OCHEP_SWT2</sitename>
+	<endpoint>httpg://grid03.ge.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-GENOVA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tier3-atlas2.bellarmine.edu:8443/srm/v2/server</hostname>
-	<sitename>BELLARMINE-ATLAS-T3</sitename>
+	<endpoint>httpg://grid03.lal.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tlapiacalli.nucleares.unam.mx:8446/srm/managerv2</hostname>
-	<sitename>ICN-UNAM</sitename>
+	<endpoint>httpg://grid03.lal.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://torik1.ulakbim.gov.tr:8446/srm/managerv2</hostname>
-	<sitename>TR-10-ULAKBIM</sitename>
+	<endpoint>httpg://grid04.hepl.hiroshima-u.ac.jp:8446/srm/managerv2</endpoint>
+	<sitename>JP-HIROSHIMA-WLCG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://tw-dpm01.grid.sinica.edu.tw:8446/srm/managerv2</hostname>
-	<sitename>Taiwan-LCG2</sitename>
+	<endpoint>httpg://grid05.lal.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://uct2-dc1.uchicago.edu:8443/srm/managerv1</hostname>
-	<sitename>MWT2</sitename>
+	<endpoint>httpg://grid05.lal.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://uct2-dc1.uchicago.edu:8443/srm/managerv2</hostname>
-	<sitename>MWT2</sitename>
+	<endpoint>httpg://grid05.unige.ch:8446/srm/managerv2</endpoint>
+	<sitename>UNIGE-DPNC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://umiss005.hep.olemiss.edu:8443/srm/v2/server</hostname>
-	<sitename>UMissHEP</sitename>
+	<endpoint>httpg://grid130.sinp.msu.ru:8446/srm/managerv2</endpoint>
+	<sitename>ru-Moscow-SINP-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://uosaf0007.sscc.uos.ac.kr:8446/srm/managerv2</hostname>
-	<sitename>KR-UOS-SSCC</sitename>
+	<endpoint>httpg://grid143.kfki.hu:8446/srm/managerv2</endpoint>
+	<sitename>BUDAPEST</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://vm134.grnet.stratuslab.eu:8446/srm/managerv2</hostname>
-	<sitename>HG-08-Okeanos</sitename>
+	<endpoint>httpg://grid15.rcub.bg.ac.rs:8446/srm/managerv2</endpoint>
+	<sitename>AEGIS02-RCUB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://vse001.hep.physik.uni-siegen.de:8446/srm/managerv2</hostname>
-	<sitename>UNI-SIEGEN-HEP</sitename>
+	<endpoint>httpg://grid2.fe.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-FERRARA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://w-dpm01.grid.sinica.edu.tw:8443/srm/managerv1</hostname>
-	<sitename>Taiwan-LCG2</sitename>
+	<endpoint>httpg://grid2.ira.inaf.it:8444/srm/managerv2</endpoint>
+	<sitename>AREA-BO</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://w-dpm01.grid.sinica.edu.tw:8446/srm/managerv2</hostname>
-	<sitename>Taiwan-LCG2</sitename>
+	<endpoint>httpg://griddpm01.ifca.es:8446/srm/managerv2</endpoint>
+	<sitename>IFCA-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://wipp-se.weizmann.ac.il:8444/srm/managerv2</hostname>
-	<sitename>WEIZMANN-LCG2</sitename>
+	<endpoint>httpg://gridka-dCache.fzk.de:8443/srm/managerv2</endpoint>
+	<sitename>FZK-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://wormhole.westgrid.ca:8443/srm/managerv2</hostname>
-	<sitename>SFU-LCG2</sitename>
+	<endpoint>httpg://gridse.ilc.cnr.it:8446/srm/managerv2</endpoint>
+	<sitename>CNR-ILC-PISA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>lcgstorage04.dnp.fmph.uniba.sk_xroot_2776308355</hostname>
+	<endpoint>httpg://gridse.pg.infn.it:8443/srm/managerv1</endpoint>
+	<sitename>INFN-PERUGIA</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gridse.pg.infn.it:8443/srm/managerv2</endpoint>
+	<sitename>INFN-PERUGIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gridse.sns.it:8444/srm/managerv2</endpoint>
+	<sitename>SNS-PISA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gridsrm.pi.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-PISA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gridsrm.ts.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-TRIESTE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gridsrv3-4.dir.garr.it:8446/srm/managerv2</endpoint>
+	<sitename>GARR-01-DIR</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://gridvm01.roma2.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-ROMA2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://grisuse.scope.unina.it:8446/srm/managerv2</endpoint>
+	<sitename>GRISU-UNINA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://grse001.inr.troitsk.ru:8446/srm/managerv2</endpoint>
+	<sitename>Ru-Troitsk-INR-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hades.up.pt:8446/srm/managerv2</endpoint>
+	<sitename>UPorto</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hansolo.kisti.re.kr:8446/srm/managerv2</endpoint>
+	<sitename>KR-KISTI-GCRT-01</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://head01.aglt2.org:8443/srm/managerv1</endpoint>
+	<sitename>AGLT2</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://head01.aglt2.org:8443/srm/managerv2</endpoint>
+	<sitename>AGLT2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hepcms-0.umd.edu:8443/srm/v2/server</endpoint>
+	<sitename>umd-cms</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-NORTHGRID-LIV-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hephyse.oeaw.ac.at:8446/srm/managerv2</endpoint>
+	<sitename>Hephy-Vienna</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://heplnx204.pp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-RALPP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hepse01.colorado.edu:8443/srm/v2/server</endpoint>
+	<sitename>UColorado_HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hepse02.colorado.edu:8443/srm/v2/server</endpoint>
+	<sitename>UColorado_HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://hurr.tamu.edu:8443/srm/v2/server</endpoint>
+	<sitename>TAMU_BRAZOS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://iceage-se-01.ct.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>ICEAGE-CATANIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://inaf-se-01.ct.pi2s2.it:8446/srm/managerv2</endpoint>
+	<sitename>GRISU-COMETA-INAF-CT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://infn-se-03.ct.pi2s2.it:8446/srm/managerv2</endpoint>
+	<sitename>GRISU-COMETA-INFN-CT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ingrid-se02.cism.ucl.ac.be:8444/srm/managerv2</endpoint>
+	<sitename>BelGrid-UCL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ipnsedpm.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ipnsedpm.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://kek2-se.cc.kek.jp:8446/srm/managerv2</endpoint>
+	<sitename>JP-KEK-CRC-02</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://kek2-se01.cc.kek.jp:8444/srm/managerv2</endpoint>
+	<sitename>JP-KEK-CRC-02</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://kodiak-se.baylor.edu:8443/srm/v2/server</endpoint>
+	<sitename>Baylor-Tier3</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lapp-se01.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>IN2P3-LAPP</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lapp-se01.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>IN2P3-LAPP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg-dpm01.hep.ucl.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-LT2-UCL-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg-lrz-srm.grid.lrz.de:8443/srm/managerv2</endpoint>
+	<sitename>LRZ-LMU</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg-se0.ifh.de:8443/srm/managerv2</endpoint>
+	<sitename>DESY-ZN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg-se01.icepp.jp:8446/srm/managerv2</endpoint>
+	<sitename>TOKYO-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg-se1.ifh.de:8443/srm/managerv2</endpoint>
+	<sitename>DESY-ZN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg-se1.scinet.utoronto.ca:8443/srm/managerv2</endpoint>
+	<sitename>CA-SCINET-T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg-srm.ecm.ub.es:8446/srm/managerv2</endpoint>
+	<sitename>UB-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg58.sinp.msu.ru:8446/srm/managerv2</endpoint>
+	<sitename>ru-Moscow-SINP-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcg59.sinp.msu.ru:8446/srm/managerv2</endpoint>
+	<sitename>ru-Moscow-SINP-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lcgdpmse.dnp.fmph.uniba.sk:8446/srm/managerv2</endpoint>
 	<sitename>FMPhI-UNIBA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>root://eosalice.cern.ch:1094/</hostname>
-	<sitename>CERN-PROD</sitename>
+	<endpoint>httpg://lcgse0.shef.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-NORTHGRID-SHEF-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>root://eosatlas.cern.ch:1094/</hostname>
-	<sitename>CERN-PROD</sitename>
+	<endpoint>httpg://lcgse02.phy.bris.ac.uk:8444/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-BRIS-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>root://eoscms.cern.ch:1094/</hostname>
-	<sitename>CERN-PROD</sitename>
+	<endpoint>httpg://lcgsedc01.jinr.ru:8443/srm/managerv2</endpoint>
+	<sitename>JINR-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>root://eoslhcb.cern.ch:1094/</hostname>
-	<sitename>CERN-PROD</sitename>
+	<endpoint>httpg://lhcb-se.nipne.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-11-NIPNE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>root://eospps.cern.ch:1094/</hostname>
-	<sitename>CERN-PROD</sitename>
+	<endpoint>httpg://lhcbsrm-kit.gridka.de:8443/srm/managerv2</endpoint>
+	<sitename>FZK-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>xroot://nanxrdmgr01.in2p3.fr:1094/</hostname>
+	<endpoint>httpg://linucs-se-01.cs.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-COSENZA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lpnse1.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lpnse1.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lpsc-se-dpm-server.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>IN2P3-LPSC</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lpsc-se-dpm-server.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>IN2P3-LPSC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lptadpmsv.msfg.fr:8443/srm/managerv1</endpoint>
+	<sitename>MSFG-OPEN</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lptadpmsv.msfg.fr:8446/srm/managerv2</endpoint>
+	<sitename>MSFG-OPEN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lxse-dc01.jinr.ru:8443/srm/managerv2</endpoint>
+	<sitename>JINR-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lyogrid06.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>IN2P3-IPNL</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://lyogrid06.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>IN2P3-IPNL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://madhatter.csc.fi:8443/srm/managerv2</endpoint>
+	<sitename>FI_HIP_T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://maigrid-se1.physik.uni-mainz.de:8443/srm/managerv2</endpoint>
+	<sitename>MaiGRID</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://maite.iihe.ac.be:8443/srm/managerv2</endpoint>
+	<sitename>BEgrid-ULB-VUB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://marsedpm.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>IN2P3-CPPM</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://marsedpm.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>IN2P3-CPPM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://mereine.univ-lille1.fr:8443/srm/managerv1</endpoint>
+	<sitename>UNIV-LILLE</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://mereine.univ-lille1.fr:8446/srm/managerv2</endpoint>
+	<sitename>UNIV-LILLE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://meson.fis.cinvestav.mx:8443/srm/v2/server</endpoint>
+	<sitename>cinvestav</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://nanlcg02.in2p3.fr:8446/srm/managerv2</endpoint>
 	<sitename>IN2P3-SUBATECH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>gsiftp://oasis-dm.sdsc.xsede.org:2811</hostname>
-	<sitename>UCSDT2</sitename>
+	<endpoint>httpg://ngiesse.i3m.upv.es:8446/srm/managerv2</endpoint>
+	<sitename>UPV-GRyCAP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://maigrid-se1.physik.uni-mainz.de:8443/srm/managerv2</hostname>
-	<sitename>MaiGRID</sitename>
+	<endpoint>httpg://node04-04.grid.renam.md:8446/srm/managerv2</endpoint>
+	<sitename>MD-04-RENAM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://mgse1.physik.uni-mainz.de:8444/srm/managerv2</hostname>
-	<sitename>MaiGRID</sitename>
+	<endpoint>httpg://node08-02.imi.renam.md:8446/srm/managerv2</endpoint>
+	<sitename>MD-02-IMI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://osg-se.sprace.org.br:8443/srm/managerv1</hostname>
+	<endpoint>httpg://node12.datagrid.cea.fr:8443/srm/managerv1</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://node12.datagrid.cea.fr:8446/srm/managerv2</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ntugrid4.phys.ntu.edu.tw:8446/srm/managerv2</endpoint>
+	<sitename>TW-NTU-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://nureddunase.uib-csic.es:8446/srm/managerv2</endpoint>
+	<sitename>IFISC-GRID</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ophelia.zih.tu-dresden.de:8443/srm/managerv2</endpoint>
+	<sitename>TUDresden-ZIH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osg-se.cac.cornell.edu:8443/srm/v2/server</endpoint>
+	<sitename>NYSGRID_CORNELL_NYS1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osg-se.hep.caltech.edu:8443/srm/v2/server</endpoint>
+	<sitename>CIT_HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osg-se.sprace.org.br:8443/srm/managerv1</endpoint>
 	<sitename>SPRACE</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
 </entry>
 <entry>
-	<hostname>httpg://osg-se.sprace.org.br:8443/srm/managerv2</hostname>
+	<endpoint>httpg://osg-se.sprace.org.br:8443/srm/managerv2</endpoint>
 	<sitename>SPRACE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
 </entry>
 <entry>
-	<hostname>httpg://sdrm.t1.grid.kiae.ru:8443/srm/managerv2</hostname>
+	<endpoint>httpg://osg.pnl.gov:8443/srm/v2/server</endpoint>
+	<sitename>PNNL_OSG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osgitb2.nhn.ou.edu:8443/srm/v2/server</endpoint>
+	<sitename>OUHEP_ITB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osgserv04.slac.stanford.edu:8443/srm/v2/server</endpoint>
+	<sitename>WT2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osgsrm01.slac.stanford.edu:8443/srm/v2/server</endpoint>
+	<sitename>WT2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osgx1.hep.uiuc.edu:8443/srm/managerv1</endpoint>
+	<sitename>IllinoisHEP</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://osgx1.hep.uiuc.edu:8443/srm/managerv2</endpoint>
+	<sitename>IllinoisHEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ouhep2.nhn.ou.edu:8443/srm/v2/server</endpoint>
+	<sitename>OUHEP_OSG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://pamelase01.na.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-NAPOLI-PAMELA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://pcncp22.ncp.edu.pk:8443/srm/managerv1</endpoint>
+	<sitename>NCP-LCG2</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://pcncp22.ncp.edu.pk:8446/srm/managerv2</endpoint>
+	<sitename>NCP-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://pcncp23.ncp.edu.pk:8443/srm/managerv1</endpoint>
+	<sitename>NCP-LCG2</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://pcncp23.ncp.edu.pk:8446/srm/managerv2</endpoint>
+	<sitename>NCP-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://pdsfdtn1.nersc.gov:62443/srm/v2/server</endpoint>
+	<sitename>NERSC-PDSFSRM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://pg.ihepa.ufl.edu:8443/srm/v2/server</endpoint>
+	<sitename>Florida</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://plethon.grid.ucy.ac.cy:8446/srm/managerv2</endpoint>
+	<sitename>CY-01-KIMON</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://polgrid4.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://polgrid4.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>GRIF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://ppssrm-kit.gridka.de:8443/srm/managerv2</endpoint>
+	<sitename>FZK-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://prod-se-01.ct.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-CATANIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://prod-se-01.pd.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-PADOVA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://prod-se-02.ct.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-CATANIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://prod-se-02.pd.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>INFN-PADOVA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://recasna-se01.unina.it:8446/srm/managerv2</endpoint>
+	<sitename>RECAS-NAPOLI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://red-srm1.unl.edu:8443/srm/v2/server</endpoint>
+	<sitename>Nebraska</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://rhino.lsr.nectec.or.th:8446/srm/managerv2</endpoint>
+	<sitename>TH-NECTEC-LSR</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://roc-se.triumf.ca:8446/srm/managerv2</endpoint>
+	<sitename>ROC_Canada_SERVICES</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sam-dpm.grid.sara.nl:8446/srm/managerv2</endpoint>
+	<sitename>SARA-MATRIX</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sampase.if.usp.br:8446/srm/managerv2</endpoint>
+	<sitename>SAMPA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sbgse1.in2p3.fr:8443/srm/managerv1</endpoint>
+	<sitename>IN2P3-IRES</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sbgse1.in2p3.fr:8446/srm/managerv2</endpoint>
+	<sitename>IN2P3-IRES</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sdrm.t1.grid.kiae.ru:8443/srm/managerv2</endpoint>
 	<sitename>RRC-KI-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-1.le.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-LECCE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-cafpegrid.ugr.es:8446/srm/managerv2</endpoint>
+	<sitename>CAFPE-GRANADA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-dpm-server-grid.obspm.fr:8443/srm/managerv1</endpoint>
+	<sitename>OBSPM</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-dpm-server-grid.obspm.fr:8446/srm/managerv2</endpoint>
+	<sitename>OBSPM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-enmr.cerm.unifi.it:8446/srm/managerv2</endpoint>
+	<sitename>CIRMMP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-enmr.chemie.uni-frankfurt.de:8446/srm/managerv2</endpoint>
+	<sitename>BMRZ-FRANKFURT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-enmr.science.uu.nl:8446/srm/managerv2</endpoint>
+	<sitename>BCBR</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-goegrid.gwdg.de:8443/srm/managerv2</endpoint>
+	<sitename>GoeGrid</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-grid.uaic.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-16-UAIC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-gsdc1.sdfarm.kr:8446/srm/managerv2</endpoint>
+	<sitename>KR-KISTI-GSDC-01</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-iep-grid.saske.sk:8443/srm/managerv2</endpoint>
+	<sitename>IEPSAS-Kosice</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-ngi.ceta-ciemat.es:8446/srm/managerv2</endpoint>
+	<sitename>CETA-GRID</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-ngi.grid.acad.bg:8443/srm/managerv1</endpoint>
+	<sitename>BG07-EDU</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-ngi.grid.acad.bg:8446/srm/managerv2</endpoint>
+	<sitename>BG07-EDU</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-sivvp.ui.savba.sk:8446/srm/managerv2</endpoint>
+	<sitename>IISAS-Bratislava</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se-srm-00.to.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-TORINO</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.bfg.uni-freiburg.de:8443/srm/managerv2</endpoint>
+	<sitename>UNI-FREIBURG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.biomed.kiev.ua:8444/srm/managerv2</endpoint>
+	<sitename>UA-NSCMBR</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.bitp.kiev.ua:8446/srm/managerv2</endpoint>
+	<sitename>UA-BITP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.cat.cbpf.br:8446/srm/managerv2</endpoint>
+	<sitename>CBPF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.core.wits.ac.za:8446/srm/managerv2</endpoint>
+	<sitename>ZA-WITS-CORE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.csk.kg.ac.rs:8446/srm/managerv2</endpoint>
+	<sitename>AEGIS04-KG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.csl.ee.upatras.gr:8446/srm/managerv2</endpoint>
+	<sitename>GR-11-UPATRAS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.cta.camk.edu.pl:8446/srm/managerv2</endpoint>
+	<sitename>CAMK</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.esac.esa.int:8444/srm/managerv2</endpoint>
+	<sitename>ESA-ESAC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.fcfm.buap.mx:8446/srm/managerv2</endpoint>
+	<sitename>FENIX</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.fesb.egi.cro-ngi.hr:8444/srm/managerv2</endpoint>
+	<sitename>egee.fesb.hr</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.ftn.pr.ac.rs:8446/srm/managerv2</endpoint>
+	<sitename>AEGIS09-FTN-KM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.ac.me:8446/srm/managerv2</endpoint>
+	<sitename>MREN-01-CIS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.eenet.ee:8446/srm/managerv2</endpoint>
+	<sitename>EENet</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.ici.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-01-ICI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.kiae.ru:8446/srm/managerv2</endpoint>
+	<sitename>RRC-KI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.rug.nl:8443/srm/managerv2</endpoint>
+	<sitename>RUG-CIT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.task.gda.pl:8446/srm/managerv2</endpoint>
+	<sitename>TASK</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.tuke.sk:8446/srm/managerv2</endpoint>
+	<sitename>TU-Kosice</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.grid.unipg.it:8444/srm/managerv2</endpoint>
+	<sitename>UNI-PERUGIA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.haii.or.th:8446/srm/managerv2</endpoint>
+	<sitename>TH-HAII</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.hep.fsu.edu:8443/srm/v2/server</endpoint>
+	<sitename>FSU-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.hpc.iit.bme.hu:8446/srm/managerv2</endpoint>
+	<sitename>BMEGrid</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.hpc.utfsm.cl:8443/srm/managerv2</endpoint>
+	<sitename>EELA-UTFSM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.hpgcc.finki.ukim.mk:8446/srm/managerv2</endpoint>
+	<sitename>MK-03-FINKI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.igfae.usc.es:8446/srm/managerv2</endpoint>
+	<sitename>USC-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.iiap.cluster.grid.am:8446/srm/managerv2</endpoint>
+	<sitename>AM-01-IIAP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.imbg.org.ua:8443/srm/managerv2</endpoint>
+	<sitename>UA-IMBG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.irb.egi.cro-ngi.hr:8444/srm/managerv2</endpoint>
+	<sitename>egee.irb.hr</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.lsg.hubrecht.eu:8446/srm/managerv2</endpoint>
+	<sitename>LSG-HUB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.lsg.psy.vu.nl:8446/srm/managerv2</endpoint>
+	<sitename>LSG-VU</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.polgrid.pl:8446/srm/managerv2</endpoint>
+	<sitename>ICM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.reef.man.poznan.pl:8446/srm/managerv2</endpoint>
+	<sitename>PSNC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.scope.unina.it:8446/srm/managerv2</endpoint>
+	<sitename>UNINA-EGEE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.sg.grena.ge:8446/srm/managerv2</endpoint>
+	<sitename>GE-01-GRENA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.srce.egi.cro-ngi.hr:8444/srm/managerv2</endpoint>
+	<sitename>egee.srce.hr</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.tier3.ucdavis.edu:8443/srm/v2/server</endpoint>
+	<sitename>UCD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.uagrid.org.ua:8446/srm/managerv2</endpoint>
+	<sitename>UA_ICYB_ARC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.ui.savba.sk:8446/srm/managerv2</endpoint>
+	<sitename>IISAS-Bratislava</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.univ.kiev.ua:8446/srm/managerv2</endpoint>
+	<sitename>UA-KNU</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.wcss.wroc.pl:8446/srm/managerv2</endpoint>
+	<sitename>WCSS-PPS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se.yerphi-cluster.grid.am:8446/srm/managerv2</endpoint>
+	<sitename>AM-04-YERPHI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se0.bordeaux.inra.fr:8443/srm/managerv1</endpoint>
+	<sitename>M3PEC</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se0.bordeaux.inra.fr:8446/srm/managerv2</endpoint>
+	<sitename>M3PEC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se0.m3pec.u-bordeaux1.fr:8443/srm/managerv1</endpoint>
+	<sitename>M3PEC</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se0.m3pec.u-bordeaux1.fr:8446/srm/managerv2</endpoint>
+	<sitename>M3PEC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se0.sdfarm.kr:8446/srm/managerv2</endpoint>
+	<sitename>KR-KISTI-GCRT-01</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se0002.m45.ihep.su:8443/srm/managerv2</endpoint>
+	<sitename>RU-Protvino-IHEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se001.grid.uni-sofia.bg:8443/srm/managerv1</endpoint>
+	<sitename>BG05-SUGrid</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se001.grid.uni-sofia.bg:8446/srm/managerv2</endpoint>
+	<sitename>BG05-SUGrid</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se001.ipp.acad.bg:8443/srm/managerv2</endpoint>
+	<sitename>BG01-IPP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01-lhcb-t2.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-CNAF-LHCB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01-tic.ciemat.es:8446/srm/managerv2</endpoint>
+	<sitename>CIEMAT-TIC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.afroditi.hellasgrid.gr:8446/srm/managerv2</endpoint>
+	<sitename>HG-03-AUTH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.ariagni.hellasgrid.gr:8446/srm/managerv2</endpoint>
+	<sitename>HG-05-FORTH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.athena.hellasgrid.gr:8443/srm/managerv2</endpoint>
+	<sitename>HG-06-EKT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.cmsaf.mit.edu:8443/srm/v2/server</endpoint>
+	<sitename>MIT_CMS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.dur.scotgrid.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-SCOTGRID-DURHAM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.esc.qmul.ac.uk:8444/srm/managerv2</endpoint>
+	<sitename>UKI-LT2-QMUL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.grid.auth.gr:8446/srm/managerv2</endpoint>
+	<sitename>GR-01-AUTH</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.grid.uoi.gr:8446/srm/managerv2</endpoint>
+	<sitename>GR-10-UOI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.indiacms.res.in:8446/srm/managerv2</endpoint>
+	<sitename>INDIACMS-TIFR</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.isabella.grnet.gr:8446/srm/managerv2</endpoint>
+	<sitename>HG-01-GRNET</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.kallisto.hellasgrid.gr:8446/srm/managerv2</endpoint>
+	<sitename>HG-04-CTI-CEID</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.knowledgegrid.net.my:8446/srm/managerv2</endpoint>
+	<sitename>MY-MIMOS-GC-01</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.macc.unican.es:8446/srm/managerv2</endpoint>
+	<sitename>UNICAN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.marie.hellasgrid.gr:8446/srm/managerv2</endpoint>
+	<sitename>HG-02-IASA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.mosigrid.utcluj.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-09-UTCN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se01.oats.inaf.it:8444/srm/managerv2</endpoint>
+	<sitename>INAF-TS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se02.marie.hellasgrid.gr:8446/srm/managerv2</endpoint>
+	<sitename>GR-06-IASA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se02.ncp.edu.pk:8446/srm/managerv2</endpoint>
+	<sitename>NCP-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se02.ngcc.acad.bg:8446/srm/managerv2</endpoint>
+	<sitename>BG03-NGCC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se03.esc.qmul.ac.uk:8444/srm/managerv2</endpoint>
+	<sitename>UKI-LT2-QMUL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se04.esc.qmul.ac.uk:8444/srm/managerv2</endpoint>
+	<sitename>UKI-LT2-QMUL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se05.lip.pt:8446/srm/managerv2</endpoint>
+	<sitename>LIP-Lisbon</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se1.accre.vanderbilt.edu:6288/srm/v2/server</endpoint>
+	<sitename>Vanderbilt</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se1.particles.ipm.ac.ir:8446/srm/managerv2</endpoint>
+	<sitename>IR-IPM-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se2.egi.cesga.es:8446/srm/managerv2</endpoint>
+	<sitename>CESGA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se2.grid.lebedev.ru:8446/srm/managerv2</endpoint>
+	<sitename>ru-Moscow-FIAN-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se2.ppgrid1.rhul.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-LT2-RHUL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se3.accre.vanderbilt.edu:6288/srm/v2/server</endpoint>
+	<sitename>Vanderbilt</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://se3.itep.ru:8443/srm/managerv2</endpoint>
+	<sitename>ITEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sebo-t3-01.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-BOLOGNA-T3</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sehn02.atlas.ualberta.ca:8443/srm/managerv2</endpoint>
+	<sitename>CA-ALBERTA-WESTGRID-T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://serv02.hep.phy.cam.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-CAM-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sigmorgh.hpcc.ttu.edu:49443/srm/v2/server</endpoint>
+	<sitename>TTU-TINGE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://sirius-se.ct.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>GILDA-SIRIUS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://smuosgse.physics.smu.edu:8443/srm/v2/server</endpoint>
+	<sitename>SMU_HPC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://solorina.geranium.um.edu.my:8446/srm/managerv2</endpoint>
+	<sitename>MY-UM-CRYSTAL</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://spacina-se.scope.unina.it:8446/srm/managerv2</endpoint>
+	<sitename>GRISU-SPACI-NAPOLI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-alice.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-atlas.cern.ch:8443/srm/managerv2</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-atlas.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-biomed.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-cms-mss.jinr-t1.ru:8443/srm/managerv2</endpoint>
+	<sitename>JINR-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-cms.cern.ch:8443/srm/managerv2</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-cms.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-cms.jinr-t1.ru:8443/srm/managerv2</endpoint>
+	<sitename>JINR-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-dcache.rcac.purdue.edu:8443/srm/v2/server</endpoint>
+	<sitename>Purdue-RCAC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-disk.pic.es:8443/srm/managerv2</endpoint>
+	<sitename>ifae</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-dteam.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-eosatlas.cern.ch:8443/srm/v2/server</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-eoscms.cern.ch:8443/srm/v2/server</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-eoslhcb.cern.ch:8443/srm/v2/server</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-eospps.cern.ch:8443/srm/v2/server</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-hone.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-ilc.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-lhcb.cern.ch:8443/srm/managerv2</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-lhcb.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-mice.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-minos.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-na62.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-public.cern.ch:8443/srm/managerv2</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-snoplus.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-superb.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm-t2k.gridpp.rl.ac.uk:8443/srm/managerv2</endpoint>
+	<sitename>RAL-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.ciemat.es:8443/srm/managerv2</endpoint>
+	<sitename>CIEMAT-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.fgi.csc.fi:8446/srm/managerv2</endpoint>
+	<sitename>CSC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.glite.ecdf.ed.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-SCOTGRID-ECDF</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.grid.sara.nl:8443/srm/managerv2</endpoint>
+	<sitename>SARA-MATRIX</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.hep.brown.edu:8443/srm/v2/server</endpoint>
+	<sitename>brown-cms-new</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.hep.fiu.edu:8443/srm/v2/server</endpoint>
+	<sitename>FIUPG</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.hep.upenn.edu:8443/srm/v2/server</endpoint>
+	<sitename>UPENN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.ihepa.ufl.edu:8443/srm/managerv1</endpoint>
+	<sitename>Florida</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.ihepa.ufl.edu:8443/srm/v2/server</endpoint>
+	<sitename>Florida</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.ndgf.org:8443/srm/managerv2</endpoint>
+	<sitename>NDGF-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.pic.es:8443/srm/managerv2</endpoint>
+	<sitename>pic</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.swegrid.se:8443/srm/managerv2</endpoint>
+	<sitename>SE-SNIC-T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.target.rug.nl:8444/srm/managerv2</endpoint>
+	<sitename>RUG-CIT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.triumf.ca:8443/srm/managerv2</endpoint>
+	<sitename>TRIUMF-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm.unl.edu:8443/srm/v2/server</endpoint>
+	<sitename>Nebraska</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm01.ifca.es:8444/srm/managerv2</endpoint>
+	<sitename>IFCA-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm01.lip.pt:8443/srm/managerv2</endpoint>
+	<sitename>LIP-Lisbon</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm01.ncg.ingrid.pt:8443/srm/managerv2</endpoint>
+	<sitename>NCG-INGRID-PT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srm2.grid.sinica.edu.tw:8443/srm/managerv2</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srmatlas.pic.es:8443/srm/managerv2</endpoint>
+	<sitename>pic</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srmb.ihepa.ufl.edu:8443/srm/v2/server</endpoint>
+	<sitename>Florida</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srmcms.pic.es:8443/srm/managerv2</endpoint>
+	<sitename>pic</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srmifae.pic.es:8443/srm/managerv2</endpoint>
+	<sitename>ifae</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srmlhcb.pic.es:8443/srm/managerv2</endpoint>
+	<sitename>pic</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srmv2.ific.uv.es:8443/srm/managerv2</endpoint>
+	<sitename>IFIC-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://srv3.fatebenefratelli.it:8446/srm/managerv2</endpoint>
+	<sitename>FBF-Brescia-IT</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storage-monit.physics.ox.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-OX-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storage01.lcg.cscs.ch:8443/srm/managerv2</endpoint>
+	<sitename>CSCS-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-01.roma3.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-ROMA3</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-fe-alice.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-fe-archive.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-fe-cms.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-fe-lhcb.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-fe-superb.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-fe.cr.cnaf.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-T1</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm-se-01.ba.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-BARI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm.grid.cyf-kr.edu.pl:8444/srm/managerv2</endpoint>
+	<sitename>CYFRONET-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm.gridc.lip.pt:8444/srm/managerv2</endpoint>
+	<sitename>LIP-Coimbra</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm.ifca.es:8444/srm/managerv2</endpoint>
+	<sitename>IFCA-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm.mib.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-MIB</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm.physik.uni-bonn.de:8444/srm/managerv2</endpoint>
+	<sitename>UNI-BONN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://storm02.clumeq.mcgill.ca:8444/srm/managerv2</endpoint>
+	<sitename>CA-MCGILL-CLUMEQ-T2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://stormfe1.pi.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-PISA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://styx.ifh.de:8443/srm/v2/server</endpoint>
+	<sitename>DESY-ZN</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://svr018.gla.scotgrid.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-SCOTGRID-GLASGOW</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t-dpm.grid.sinica.edu.tw:8443/srm/managerv1</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t-dpm.grid.sinica.edu.tw:8446/srm/managerv2</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t2-dpm-01.na.infn.it:8446/srm/managerv2</endpoint>
+	<sitename>INFN-NAPOLI-ATLAS</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t2-srm-02.lnl.infn.it:8443/srm/managerv2</endpoint>
+	<sitename>INFN-LNL-2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t2cmcondor.mi.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-MILANO-ATLASC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t2ksrm.nd280.org:8443/srm/managerv2</endpoint>
+	<sitename>CA-TRIUMF-T2K</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t2se01.physics.ox.ac.uk:8446/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-OX-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t2storm1.physics.ox.ac.uk:8444/srm/managerv2</endpoint>
+	<sitename>UKI-SOUTHGRID-OX-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t3se01.psi.ch:8443/srm/managerv2</endpoint>
+	<sitename>T3_CH_PSI</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t3se02.grid.sinica.edu.tw:8443/srm/managerv1</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t3se02.grid.sinica.edu.tw:8446/srm/managerv2</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://t3serv006.mit.edu:8443/srm/v2/server</endpoint>
+	<sitename>MIT_CMS_T3</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tau-se.hep.tau.ac.il:8444/srm/managerv2</endpoint>
+	<sitename>IL-TAU-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tbit00.nipne.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-07-NIPNE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tblb02.nipne.ro:8446/srm/managerv2</endpoint>
+	<sitename>RO-15-NIPNE</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tbn18.nikhef.nl:8446/srm/managerv2</endpoint>
+	<sitename>NIKHEF-ELPROD</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tech-se.hep.technion.ac.il:8444/srm/managerv2</endpoint>
+	<sitename>TECHNION-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://terbium.lsr.nectec.or.th:8446/srm/managerv2</endpoint>
+	<sitename>T2-TH-CUNSTDA</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tier2-02.ochep.ou.edu:8443/srm/v2/server</endpoint>
+	<sitename>OU_OCHEP_SWT2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tier3-atlas2.bellarmine.edu:8443/srm/v2/server</endpoint>
+	<sitename>BELLARMINE-ATLAS-T3</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tlapiacalli.nucleares.unam.mx:8446/srm/managerv2</endpoint>
+	<sitename>ICN-UNAM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://torik1.ulakbim.gov.tr:8446/srm/managerv2</endpoint>
+	<sitename>TR-10-ULAKBIM</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://tw-dpm01.grid.sinica.edu.tw:8446/srm/managerv2</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://uct2-dc1.uchicago.edu:8443/srm/managerv1</endpoint>
+	<sitename>MWT2-SL6</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://uct2-dc1.uchicago.edu:8443/srm/managerv2</endpoint>
+	<sitename>MWT2-SL6</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://uosaf0007.sscc.uos.ac.kr:8446/srm/managerv2</endpoint>
+	<sitename>KR-UOS-SSCC</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://virgo-se01.roma1.infn.it:8444/srm/managerv2</endpoint>
+	<sitename>INFN-ROMA1-VIRGO</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://vm134.grnet.stratuslab.eu:8446/srm/managerv2</endpoint>
+	<sitename>HG-08-Okeanos</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://vse001.hep.physik.uni-siegen.de:8446/srm/managerv2</endpoint>
+	<sitename>UNI-SIEGEN-HEP</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://w-dpm01.grid.sinica.edu.tw:8443/srm/managerv1</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>1.1.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://w-dpm01.grid.sinica.edu.tw:8446/srm/managerv2</endpoint>
+	<sitename>Taiwan-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://wipp-se.weizmann.ac.il:8444/srm/managerv2</endpoint>
+	<sitename>WEIZMANN-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>httpg://wormhole.westgrid.ca:8443/srm/managerv2</endpoint>
+	<sitename>SFU-LCG2</sitename>
+	<type>SRM</type>
+	<version>2.2.0</version>
+</entry>
+<entry>
+	<endpoint>root://eosalice.cern.ch:1094/</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>xroot</type>
+	<version>(unknown)</version>
+</entry>
+<entry>
+	<endpoint>root://eosatlas.cern.ch:1094/</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>xroot</type>
+	<version>(unknown)</version>
+</entry>
+<entry>
+	<endpoint>root://eoscms.cern.ch:1094/</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>xroot</type>
+	<version>(unknown)</version>
+</entry>
+<entry>
+	<endpoint>root://eoslhcb.cern.ch:1094/</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>xroot</type>
+	<version>(unknown)</version>
+</entry>
+<entry>
+	<endpoint>root://eospps.cern.ch:1094/</endpoint>
+	<sitename>CERN-PROD</sitename>
+	<type>xroot</type>
+	<version>(unknown)</version>
+</entry>
+<entry>
+	<endpoint>xroot://ali01-iep-grid.saske.sk:1094/</endpoint>
+	<sitename>IEPSAS-Kosice</sitename>
+	<type>xroot</type>
+	<version>2.9.6</version>
+</entry>
+<entry>
+	<endpoint>xroot://clralicexrd.in2p3.fr:1094/</endpoint>
+	<sitename>IN2P3-LPC</sitename>
+	<type>xroot</type>
+	<version>2.9.6</version>
+</entry>
+<entry>
+	<endpoint>xroot://lcgstorage04.dnp.fmph.uniba.sk:1094/</endpoint>
+	<sitename>FMPhI-UNIBA</sitename>
+	<type>xroot</type>
+	<version>3.2.4</version>
+</entry>
+<entry>
+	<endpoint>xroot://nanxrdmgr01.in2p3.fr:1094/</endpoint>
+	<sitename>IN2P3-SUBATECH</sitename>
+	<type>xroot</type>
+	<version>2.9.6</version>
+</entry>
+<entry>
+	<endpoint>xroot://rd.spacescience.ro:1094/</endpoint>
+	<sitename>RO-13-ISS</sitename>
+	<type>xroot</type>
+	<version>v3.1.0</version>
 </entry>

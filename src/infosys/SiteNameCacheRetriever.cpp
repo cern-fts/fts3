@@ -33,9 +33,12 @@ namespace fts3
 namespace infosys
 {
 
-const char* SiteNameCacheRetriever::ATTR_GLUE1_SERVICE = "GlueServiceUniqueID";
-const char* SiteNameCacheRetriever::ATTR_GLUE1_LINK = "GlueForeignKey";
-const char* SiteNameCacheRetriever::ATTR_GLUE1_SITE = "GlueSiteUniqueID";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_SERVICE  = "GlueServiceUniqueID";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_LINK     = "GlueForeignKey";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_SITE     = "GlueSiteUniqueID";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_ENDPOINT = "GlueServiceEndpoint";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_TYPE     = "GlueServiceType";
+const char* SiteNameCacheRetriever::ATTR_GLUE1_VERSION  = "GlueServiceVersion";
 
 const string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 =
     "("
@@ -52,11 +55,14 @@ const string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 =
     "	)"
     ")"
     ;
-const char* SiteNameCacheRetriever::FIND_SE_SITE_ATTR_GLUE1[] = {ATTR_GLUE1_SERVICE, ATTR_GLUE1_LINK, 0};
+const char* SiteNameCacheRetriever::FIND_SE_SITE_ATTR_GLUE1[] =
+    {ATTR_GLUE1_SERVICE, ATTR_GLUE1_ENDPOINT, ATTR_GLUE1_LINK, ATTR_GLUE1_TYPE, ATTR_GLUE1_VERSION, 0};
 
-const char* SiteNameCacheRetriever::ATTR_GLUE2_FK = "GLUE2EndpointServiceForeignKey";
-const char* SiteNameCacheRetriever::ATTR_GLUE2_SITE = "GLUE2ServiceAdminDomainForeignKey";
+const char* SiteNameCacheRetriever::ATTR_GLUE2_FK       = "GLUE2EndpointServiceForeignKey";
+const char* SiteNameCacheRetriever::ATTR_GLUE2_SITE     = "GLUE2ServiceAdminDomainForeignKey";
 const char* SiteNameCacheRetriever::ATTR_GLUE2_ENDPOINT = "GLUE2EndpointURL";
+const char* SiteNameCacheRetriever::ATTR_GLUE2_TYPE     = "GLUE2EndpointInterfaceName";
+const char* SiteNameCacheRetriever::ATTR_GLUE2_VERSION  = "GLUE2EndpointInterfaceVersion";
 
 const string SiteNameCacheRetriever::FIND_SE_FK_GLUE2 =
     "("
@@ -74,11 +80,13 @@ const string SiteNameCacheRetriever::FIND_SE_FK_GLUE2 =
     "	)"
     ")"
     ;
-const char* SiteNameCacheRetriever::FIND_SE_FK_ATTR_GLUE2[] = {ATTR_GLUE2_ENDPOINT, ATTR_GLUE2_FK, 0};
+const char* SiteNameCacheRetriever::FIND_SE_FK_ATTR_GLUE2[] =
+    {ATTR_GLUE2_ENDPOINT, ATTR_GLUE2_FK, ATTR_GLUE2_TYPE, ATTR_GLUE2_VERSION, 0};
 
 const string SiteNameCacheRetriever::FIND_FK_SITE_GLUE2(string fk)
 {
     stringstream ss;
+
     ss << "(";
     ss << "	&";
     ss << "	(objectClass=GLUE2Service)";
@@ -94,7 +102,7 @@ SiteNameCacheRetriever::~SiteNameCacheRetriever()
 
 }
 
-void SiteNameCacheRetriever::get(map<string, string>& cache)
+void SiteNameCacheRetriever::get(map<string, EndpointInfo>& cache)
 {
     // get data from glue1
     fromGlue1(cache);
@@ -102,7 +110,7 @@ void SiteNameCacheRetriever::get(map<string, string>& cache)
     fromGlue2(cache);
 }
 
-void SiteNameCacheRetriever::fromGlue1(map<string, string>& cache)
+void SiteNameCacheRetriever::fromGlue1(map<string, EndpointInfo>& cache)
 {
 
     static BdiiBrowser& bdii = BdiiBrowser::getInstance();
@@ -124,19 +132,24 @@ void SiteNameCacheRetriever::fromGlue1(map<string, string>& cache)
             map<string, list<string> >& item = *it;
 
             // make sure this entry is not empty
-            if (item[ATTR_GLUE1_SERVICE].empty() || item[ATTR_GLUE1_LINK].empty()) continue;
+            if (item[ATTR_GLUE1_ENDPOINT].empty() || item[ATTR_GLUE1_LINK].empty()) continue;
             // get the se name
-            string se = item[ATTR_GLUE1_SERVICE].front();
+            string se = item[ATTR_GLUE1_ENDPOINT].front();
             // get the corresponding site name
             string site = BdiiBrowser::parseForeingKey(item[ATTR_GLUE1_LINK], ATTR_GLUE1_SITE);
             // if the site name is not specified in the foreign key skip it
             if (site.empty()) continue;
             // cache the values
-            cache[se] = site;
+            cache[se].sitename = site;
+
+            if (!item[ATTR_GLUE1_TYPE].empty())
+                cache[se].type     = item[ATTR_GLUE1_TYPE].front();
+            if (!item[ATTR_GLUE1_VERSION].empty())
+                cache[se].version  = item[ATTR_GLUE1_VERSION].front();
         }
 }
 
-void SiteNameCacheRetriever::fromGlue2(map<string, string>& cache)
+void SiteNameCacheRetriever::fromGlue2(map<string, EndpointInfo>& cache)
 {
 
     static BdiiBrowser& bdii = BdiiBrowser::getInstance();
@@ -181,7 +194,12 @@ void SiteNameCacheRetriever::fromGlue2(map<string, string>& cache)
             // get the respective site name
             string site = rs2.front()[ATTR_GLUE2_SITE].front();
             // cache the values
-            cache[se] = site;
+            cache[se].sitename = site;
+
+            if (!item[ATTR_GLUE2_TYPE].empty())
+                cache[se].type    = item[ATTR_GLUE2_TYPE].front();
+            if (!item[ATTR_GLUE2_VERSION].empty())
+            cache[se].version = item[ATTR_GLUE2_VERSION].front();
         }
 }
 

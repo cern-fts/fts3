@@ -42,6 +42,22 @@ using namespace fts3::infosys;
 using namespace boost::property_tree;
 using namespace pugi;
 
+static void setNodeOrAppend(xml_node& node, const std::string& key,
+                const std::string& value)
+{
+    xml_node child = node.child(key.c_str());
+    if (child.empty()) {
+        child = node.append_child();
+        child.set_name(key.c_str());
+    }
+
+    xml_node vnode = child.last_child();
+    if (vnode.empty())
+        vnode = child.append_child(pugi::node_pcdata);
+
+    vnode.set_value(value.c_str());
+}
+
 /* -------------------------------------------------------------------------- */
 int main(int argc, char** argv)
 {
@@ -78,32 +94,28 @@ int main(int argc, char** argv)
             xml_document doc;
             doc.load_file(bdii_path.c_str());
 
-            map<string, string> cache;
+            map<string, EndpointInfo> cache;
             bdii_cache.get(cache);
 
-            map<string, string>::iterator it;
+            map<string, EndpointInfo>::iterator it;
             for (it = cache.begin(); it != cache.end(); ++it)
                 {
-                    string xpath = "/entry[hostname='" + it->first + "']";
+                    string xpath = "/entry[endpoint='" + it->first + "']";
                     xpath_node node = doc.select_single_node(xpath.c_str());
-                    if (node)
-                        {
-                            node.node().child("sitename").last_child().set_value(it->second.c_str());
-                        }
-                    else
-                        {
-                            // add new entry
-                            xml_node entry = doc.append_child();
-                            entry.set_name("entry");
 
-                            xml_node host = entry.append_child();
-                            host.set_name("hostname");
-                            host.append_child(pugi::node_pcdata).set_value(it->first.c_str());
+                    xml_node entry;
+                    if (node) {
+                        entry = node.node();
+                    }
+                    else {
+                        entry = doc.append_child();
+                        entry.set_name("entry");
+                        setNodeOrAppend(entry, "endpoint", it->first);
+                    }
 
-                            xml_node site = entry.append_child();
-                            site.set_name("sitename");
-                            site.append_child(pugi::node_pcdata).set_value(it->second.c_str());
-                        }
+                    setNodeOrAppend(entry, "sitename", it->second.sitename);
+                    setNodeOrAppend(entry, "type", it->second.type);
+                    setNodeOrAppend(entry, "version", it->second.version);
                 }
 
             if (!doc.save_file(bdii_path.c_str()))
