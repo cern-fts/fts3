@@ -2085,8 +2085,39 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
 
 void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred)
 {
-    // TODO
-#warning NOT IMPLEMENTED
+    const std::string queryTag = "updateFileTransferProgress";
+    const std::string query    = "UPDATE t_file SET throughput = :1 "
+                                 "WHERE job_id = :2 AND file_id = :3";
+
+    oracle::occi::Statement* st = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try {
+        pooledConnection = conn->getPooledConnection();
+        if (!pooledConnection)
+            return;
+
+        st = conn->createStatement(query, queryTag, pooledConnection);
+
+        st->setNumber(1, throughput);
+        st->setString(2, job_id);
+        st->setInt(3, file_id);
+
+        st->executeUpdate();
+        conn->commit(pooledConnection);
+    }
+    catch (oracle::occi::SQLException const &e) {
+        conn->rollback(pooledConnection);
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+    }
+    catch (...) {
+        conn->rollback(pooledConnection);
+        FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+    }
+
+    if (st)
+        conn->destroyStatement(st, queryTag, pooledConnection);
+    conn->releasePooledConnection(pooledConnection);
 }
 
 void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
