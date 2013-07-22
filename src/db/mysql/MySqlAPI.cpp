@@ -4126,7 +4126,7 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                 return;
 
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
-                                            "    (submit_time < (UTC_TIMESTAMP - interval :interval hour) AND "
+                                            "    submit_time < (UTC_TIMESTAMP - interval :interval hour) AND "
                                             "    job_state in ('SUBMITTED', 'READY')",
                                             soci::use(maxTime));
 

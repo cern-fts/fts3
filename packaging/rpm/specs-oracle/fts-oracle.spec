@@ -3,7 +3,7 @@
 
 Name: fts-oracle
 Version: 3.0.3
-Release: 15%{?dist}
+Release: 17%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
 License: ASL 2.0
