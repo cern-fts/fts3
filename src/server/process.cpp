@@ -134,6 +134,9 @@ int ExecuteProcess::execProcessLog(size_t argc, char** argv)
     else if (pid < 0)
         {
             // fork failed
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
+            close(fdpipe[0]);
+            close(fdpipe[1]);
             status = -1;
         }
     else
@@ -179,6 +182,7 @@ int ExecuteProcess::execProcess(size_t argc, char** argv)
     else if (pid < 0)
         {
             // fork failed
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
             status = -1;
         }
     else
@@ -227,8 +231,10 @@ int ExecuteProcess::execProcessShellLog(const char* SHELL)
     int fdpipe[2];
     int value = 0;
     value = pipe(fdpipe);
-    if (value != 0)
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << " Pipe system call failed, errno: " << errno << commit;
+    if (value != 0) {
+        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Pipe system call failed, errno: " << errno << commit;
+        return -1;
+    }
 
 
     pid_t pid = fork();
@@ -245,6 +251,9 @@ int ExecuteProcess::execProcessShellLog(const char* SHELL)
     else if (pid < 0)
         {
             // fork failed
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
+            close(fdpipe[0]);
+            close(fdpipe[1]);
             status = -1;
         }
     else
@@ -336,6 +345,8 @@ int ExecuteProcess::execProcessShell()
             if(argv)
                 delete [] argv;
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
+            close(pipefds[0]);
+            close(pipefds[1]);
             return -1;
         case 0:
             // Detach from parent

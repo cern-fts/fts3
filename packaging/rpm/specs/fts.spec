@@ -4,7 +4,7 @@
 
 Name: fts
 Version: 3.0.3
-Release: 16%{?dist}
+Release: 17%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
