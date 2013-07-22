@@ -4742,6 +4742,8 @@ double MySqlAPI::getAvgThroughput(std::string source, std::string destination, i
 
     try
         {
+    		soci::indicator isNull;
+
 			sql <<
 				" select ROUND(AVG(throughput),2) AS Average  from t_file where"
 				" source_se=:source and dest_se=:dst "
