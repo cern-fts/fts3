@@ -4716,8 +4716,8 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
             for (soci::rowset<std::string>::const_iterator i = rs.begin();
                     i != rs.end(); ++i)
                 {
-                    if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                    else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+                    if      (i->compare("FAILED") == 0)   ++nFailedLastHour;
+                    else if (i->compare("FINISHED") == 0) ++nFinishedLastHour;
                 }
 
             if(nFinishedLastHour > 0)
@@ -4736,8 +4736,28 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
 
 double MySqlAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
 {
-    // TODO
-    return 0;
+    soci::session sql(*connectionPool);
+
+    double avgThr = 0;
+
+    try
+        {
+			sql <<
+				" select ROUND(AVG(throughput),2) AS Average  from t_file where"
+				" source_se=:source and dest_se=:dst "
+				" and finish_time >= date_sub(utc_timestamp(), interval '1' hour)",
+				soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull);
+			if (isNull == soci::i_null)
+				{
+					avgThr = 0.0;
+				}
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return avgThr;
 }
 
 void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& vo, std::set<std::string>& jobs)

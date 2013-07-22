@@ -4240,7 +4240,7 @@ void OracleAPI::initVariablesForGetCredits(oracle::occi::Connection* pooledConne
         "SELECT file_state "
         "FROM t_file "
         "WHERE "
-        "      t_file.source_se = :1 AND t_file.dest_se = :1 AND "
+        "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
         "      file_state IN ('FAILED','FINISHED') AND "
         "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
         ;
@@ -9323,12 +9323,135 @@ void OracleAPI::setRetryTimestamp(const std::string& jobId, int fileId)
 
 double OracleAPI::getSuccessRate(std::string source, std::string destination)
 {
+    const std::string tag = "getSuccessRate";
+    std::string query =
+    		"SELECT file_state "
+            "FROM t_file "
+            "WHERE "
+            "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
+            "      file_state IN ('FAILED','FINISHED') AND "
+            "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
+            ;
 
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    double ratioSuccessFailure = 0;
+
+    try
+        {
+			s = conn->createStatement(query, tag, pooledConnection);
+
+			// file state: FAILED and FINISHED (in last hour)
+			s->setString(1, source);
+			s->setString(2, destination);
+			r = conn->createResultset(s, pooledConnection);
+
+			while (r->next())
+				{
+					std::string state = r->getString(1);
+					if      (state.compare("FAILED") == 0)   ++nFailedLastHour;
+					else if (state.compare("FINISHED") == 0) ++nFinishedLastHour;
+				}
+
+			conn->destroyResultset(s, r);
+			r = NULL;
+
+			conn->destroyStatement(s, tag, pooledConnection);
+			s = NULL;
+
+			double ratioSuccessFailure = 0;
+			if(nFinishedLastHour > 0)
+            {
+                ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+            }
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s_se)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch(...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+        }
+
+    conn->releasePooledConnection(pooledConnection);
+
+    return ratioSuccessFailure;
 }
 
 double OracleAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
 {
+    const std::string tag = "getAvgThroughput";
+    std::string query =
+    		" select ROUND(AVG(throughput),2) AS Average  from t_file where source_se = :1 and dest_se = :2 "
+    		" and file_state = 'FINISHED' and throughput is not NULL and throughput != 0 "
+    		" and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
+    		;
 
+
+    oracle::occi::Statement* s = NULL;
+    oracle::occi::ResultSet* r = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    double avgThr = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection)
+                return avgThr;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setString(1, source);
+            s->setString(2, destination);
+            r = conn->createResultset(s, pooledConnection);
+            if (r->next())
+                {
+                    avgThr = r->getDouble(1);
+                }
+            conn->destroyResultset(s, r);
+            r = NULL;
+            conn->destroyStatement(s, tag, pooledConnection);
+            s = NULL;
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch(...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+        }
+
+    conn->releasePooledConnection(pooledConnection);
+
+    return avgThr;
 }
 
 
