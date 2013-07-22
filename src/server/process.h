@@ -24,20 +24,19 @@ class ExecuteProcess
 {
 public:
     ExecuteProcess( const string& app, const string& arguments, int fdlog=0 );
-    int executeProcess();
     int executeProcessShell();
-    int execProcess(size_t argc, char** argv);
-    int execProcessLog(size_t argc, char** argv);
     void setPid(const string& jobId, const string& fileId);
     void setPidV(std::map<int,std::string>& pids);
 
-    int execProcessShell();
-    int execProcessShellLog(const char* shell);
     inline int getPid()
     {
         return pid;
     }
     int check_pid(int pid);
+
+protected:
+    int execProcessShell();
+    int execProcessShellLog(const char* shell);
 
 private:
     map<int,string> _fileIds;
