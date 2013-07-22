@@ -76,7 +76,7 @@ void MySqlMonitoring::init(const std::string& username, const std::string& passw
     // Connect
     static const my_bool reconnect = 1;
 
-    for (size_t i = 0; i < pooledConn; ++i)
+    for (int i = 0; i < pooledConn; ++i)
         {
             soci::session& sql = connectionPool.at(i);
             sql.open(soci::mysql, connStr);

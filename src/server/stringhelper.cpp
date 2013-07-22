@@ -109,7 +109,7 @@ string toLowerCase( const string& s )
     string result = "";
     for ( string::size_type i = 0; i < s.length(); ++i )
         {
-            result += tolower( s[i] );
+            result += static_cast<char>(tolower( s[i] ));
         }
 
     return result;
@@ -121,7 +121,7 @@ string toUpperCase( const string& s )
     string result = "";
     for ( string::size_type i = 0; i < s.length(); ++i )
         {
-            result += toupper( s[i] );
+            result += static_cast<char>(toupper( s[i] ));
         }
 
     return result;

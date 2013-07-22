@@ -136,7 +136,7 @@ unsigned long str_to_size(std::string str) /*throw (LogicError)*/
 
                             std::string num_units_str = str.substr(0, std::distance(str.begin(),num_end));
                             double num_units = boost::lexical_cast<double>(num_units_str);
-                            size = (unsigned long) (num_units * unit_size);
+                            size = static_cast<unsigned long>(num_units * static_cast<double>(unit_size));
                         }
                 }
             else

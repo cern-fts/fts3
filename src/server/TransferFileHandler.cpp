@@ -124,13 +124,12 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
 
     // the return value
     TransferFiles* ret = 0;
-    int maxThroughput = 0;
-    int minFailureRate = INT_MAX;
 
     // TODO for now give the first one in the future a selection strategy should be implemented
     if (!fileIndexToFiles[index].empty())
         {
-
+//      int maxThroughput = 0;
+//      int minFailureRate = INT_MAX;
 //		list<TransferFiles*>& alternatives = fileIndexToFiles[index];
 //		list<TransferFiles*>::iterator it;
 //

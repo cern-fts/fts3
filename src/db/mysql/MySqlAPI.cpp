@@ -1309,7 +1309,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
     return ok;
 }
 
-void MySqlAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred)
+void MySqlAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double /*transferred*/)
 {
     soci::session sql(*connectionPool);
 
@@ -2258,8 +2258,6 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
 
             std::string source_hostname = source;
 
-            soci::indicator isNull2;
-
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.file_state in ('READY','ACTIVE') AND "
                 "      t_file.source_se = :source ",
@@ -2296,8 +2294,6 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
             std::set<std::string>::iterator it;
 
             std::string destin_hostname = destination;
-
-            soci::indicator isNull2;
 
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.file_state in ('READY','ACTIVE') AND "
@@ -4159,6 +4155,8 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
                         "    job_state = 'CANCELED', reason = :reason "
                         "WHERE job_id = :jobId AND job_state IN ('SUBMITTED','READY')",
                         soci::use(message), soci::use(*i);
+
+                    jobs.push_back(*i);
                 }
             sql.commit();
         }
@@ -4749,7 +4747,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
     return ratioSuccessFailure;
 }
 
-double MySqlAPI::getAvgThroughput(std::string source, std::string destination, int activeTransfers)
+double MySqlAPI::getAvgThroughput(std::string /*source*/, std::string /*destination*/, int /*activeTransfers*/)
 {
     soci::session sql(*connectionPool);
 
@@ -5283,10 +5281,9 @@ void MySqlAPI::checkSanityState()
     std::vector<std::string> ret;
     unsigned int numberOfFiles = 0;
     unsigned int terminalState = 0;
-    int allFinished = 0;
-    int allFailed = 0;
-    int allCanceled = 0;
-    unsigned int allNotUsedStaging = 0;
+    unsigned int allFinished = 0;
+    unsigned int allFailed = 0;
+    unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
@@ -5386,7 +5383,8 @@ void MySqlAPI::checkSanityState()
         }
 }
 
-void MySqlAPI::countFileInTerminalStates(std::string jobId, int& finished, int& canceled, int& failed)
+void MySqlAPI::countFileInTerminalStates(std::string jobId,
+        unsigned int& finished, unsigned int& canceled, unsigned int& failed)
 {
     soci::session sql(*connectionPool);
 

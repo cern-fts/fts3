@@ -78,7 +78,7 @@ int proc_find(const char* name)
     struct dirent* ent=NULL;
     char* endptr=NULL;
     char buf[512]= {0};
-    int count = 0;
+    unsigned count = 0;
 
     if (!(dir = opendir("/proc")))
         {
@@ -349,8 +349,8 @@ protected:
                                                 return;
                                             }
 
-                                        unsigned int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= maximumThreads)
+                                        int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
+                                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
                                             {
                                                 /*verify it's correct, you never know */
                                                 int countTr = proc_find(cmd.c_str());
@@ -364,7 +364,7 @@ protected:
                                                     }
                                                 else
                                                     {
-                                                        if(countTr < currentActiveTransfers || (countTr * 8) <= maximumThreads)
+                                                        if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
                                                             {
                                                                 /*do nothing*/
                                                             }
@@ -777,8 +777,8 @@ protected:
                                         return;
                                     }
 
-                                unsigned int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                                if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= maximumThreads)
+                                int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
+                                if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
                                     {
                                         /*verify it's correct, you never know */
                                         int countTr = proc_find(cmd.c_str());
@@ -792,7 +792,7 @@ protected:
                                             }
                                         else
                                             {
-                                                if(countTr < currentActiveTransfers || (countTr * 8) <= maximumThreads)
+                                                if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
                                                     {
                                                         /*do nothing*/
                                                     }

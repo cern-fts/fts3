@@ -2083,7 +2083,7 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
     return ok;
 }
 
-void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred)
+void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double /*transferred*/)
 {
     const std::string queryTag = "updateFileTransferProgress";
     const std::string query    = "UPDATE t_file SET throughput = :1 "
@@ -10375,9 +10375,9 @@ void OracleAPI::checkSanityState()
     std::vector<std::string> retRevert;
     unsigned int numberOfFiles = 0;
     unsigned int terminalState = 0;
-    int allFinished = 0;
-    int allFailed = 0;
-    int allCanceled = 0;
+    unsigned int allFinished = 0;
+    unsigned int allFailed = 0;
+    unsigned int allCanceled = 0;
     unsigned int numberOfFilesRevert = 0;
     std::string canceledMessage = "Transfer canceled by the user";
     std::string failed = "One or more files failed. Please have a look at the details for more information";
@@ -10563,7 +10563,8 @@ void OracleAPI::checkSanityState()
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId, int& finished, int& canceled, int& failed)
+void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
+        unsigned int& finished, unsigned int& canceled, unsigned int& failed)
 {
     if (!pooledConnection) return;
 
