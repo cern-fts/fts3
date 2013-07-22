@@ -4746,7 +4746,7 @@ double MySqlAPI::getAvgThroughput(std::string source, std::string destination, i
 				" select ROUND(AVG(throughput),2) AS Average  from t_file where"
 				" source_se=:source and dest_se=:dst "
 				" and finish_time >= date_sub(utc_timestamp(), interval '1' hour)",
-				soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull);
+				soci::use(source),soci::use(destination), soci::into(avgThr, isNull);
 			if (isNull == soci::i_null)
 				{
 					avgThr = 0.0;
