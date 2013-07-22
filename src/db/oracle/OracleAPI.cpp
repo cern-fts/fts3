@@ -9337,6 +9337,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
     oracle::occi::ResultSet* r = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
 
+    double nFailedLastHour = 0, nFinishedLastHour = 0;
     double ratioSuccessFailure = 0;
 
     try
@@ -9372,7 +9373,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
             conn->rollback(pooledConnection);
             if(s && r)
                 conn->destroyResultset(s, r);
-            if (s_se)
+            if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
