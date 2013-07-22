@@ -1309,7 +1309,22 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
     return ok;
 }
 
+void MySqlAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred)
+{
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            throughput = convertKbToMb(throughput);
+            sql << "UPDATE t_file SET throughput = :throughput "
+                   "WHERE job_id = :jobId AND file_id = :fileId",
+                   soci::use(throughput), soci::use(job_id), soci::use(file_id);
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
 
 void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 {

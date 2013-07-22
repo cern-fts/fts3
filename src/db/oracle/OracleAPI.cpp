@@ -2083,6 +2083,12 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
     return ok;
 }
 
+void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred)
+{
+    // TODO
+#warning NOT IMPLEMENTED
+}
+
 void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
 {
     const std::string cancelReason = "Job canceled by the user";

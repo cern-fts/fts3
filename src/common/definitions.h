@@ -113,6 +113,8 @@ public:
     int file_id;
     pid_t process_id;
     boost::posix_time::time_duration::tick_type timestamp;
+    double throughput;
+    double transferred;
 };
 
 struct message_log: public message_base

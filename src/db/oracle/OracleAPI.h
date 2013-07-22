@@ -86,6 +86,8 @@ public:
 
     virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status);
 
+    virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred);
+
     virtual void updateJObStatus(std::string jobId, const std::string status);
 
     virtual void cancelJob(std::vector<std::string>& requestIDs);

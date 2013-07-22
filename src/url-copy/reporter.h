@@ -29,7 +29,7 @@ public:
     Reporter();
     ~Reporter();
     void constructMessage(double throughput, bool retry, std::string job_id, std::string file_id, std::string transfer_status, std::string transfer_message,  double timeInSecs,  double fileSize);
-    void constructMessageUpdater(std::string job_id, std::string file_id);
+    void constructMessageUpdater(std::string job_id, std::string file_id, double throughput, double transferred);
     void constructMessageLog(std::string job_id, std::string file_id, std::string logFileName, bool debug);
     unsigned int nostreams;
     unsigned int timeout;

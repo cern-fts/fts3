@@ -160,8 +160,17 @@ protected:
                                                                         << "\nJob id: " << job
                                                                         << "\nFile id: " << (*iter).file_id
                                                                         << "\nPid: " << (*iter).process_id
-                                                                        << "\nTimestamp: " << (*iter).timestamp << commit;
+                                                                        << "\nTimestamp: " << (*iter).timestamp
+                                                                        << "\nThroughput: " << (*iter).throughput
+                                                                        << "\nTransferred: " << (*iter).transferred
+                                                                        << commit;
                                                 ThreadSafeList::get_instance().updateMsg(*iter);
+
+                                                // Update progress
+                                                DBSingleton::instance().getDBObjectInstance()
+                                                           ->updateFileTransferProgress(job, (*iter).file_id,
+                                                                                        (*iter).throughput,
+                                                                                        (*iter).transferred);
                                             }
                                         else
                                             {

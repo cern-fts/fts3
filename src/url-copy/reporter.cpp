@@ -147,7 +147,7 @@ void Reporter::constructMessage(double throughput, bool retry, string job_id, st
 }
 
 
-void Reporter::constructMessageUpdater(std::string job_id, std::string file_id)
+void Reporter::constructMessageUpdater(std::string job_id, std::string file_id, double throughput, double transferred)
 {
     try
         {
@@ -155,6 +155,8 @@ void Reporter::constructMessageUpdater(std::string job_id, std::string file_id)
             msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
             msg_updater->process_id = (int) getpid();
             msg_updater->timestamp = milliseconds_since_epoch();
+            msg_updater->throughput = throughput;
+            msg_updater->transferred = transferred;
             runProducerStall(*msg_updater);
         }
     catch (...)

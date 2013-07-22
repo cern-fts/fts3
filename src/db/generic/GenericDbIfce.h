@@ -132,6 +132,8 @@ public:
 
     virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status) = 0;
 
+    virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred) = 0;
+
     // UNUSED
     //virtual void updateJObStatus(std::string jobId, const std::string status) = 0;
 

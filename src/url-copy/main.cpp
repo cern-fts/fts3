@@ -130,6 +130,7 @@ static bool manualConfig = false;
 static bool autoTunned = false;
 static bool monitoringMessages = false;
 static double throughput = 0.0;
+static double transferred_bytes = 0;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
@@ -420,7 +421,8 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
             size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
             time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
             logStream << fileManagement->timestamp() << "INFO bytes:" << trans << ", avg KB/sec:" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed << '\n';
-            throughput = (double) avg;
+            throughput        = (double) avg;
+            transferred_bytes = (double) trans;
         }
 
 }
@@ -501,17 +503,17 @@ void taskTimer(int time)
 
 void taskStatusUpdater(int time)
 {
-    while (1)
+    while (time)
         {
             if (strArray[0].length() > 0)
                 {
                     logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
-                    reporter.constructMessageUpdater(job_id, strArray[0]);
+                    reporter.constructMessageUpdater(job_id, strArray[0], throughput, transferred_bytes);
                 }
             else
                 {
                     logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
-                    reporter.constructMessageUpdater(job_id, file_id);
+                    reporter.constructMessageUpdater(job_id, file_id, throughput, transferred_bytes);
                 }
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
@@ -804,7 +806,6 @@ int main(int argc, char **argv)
     struct stat statbufdest;
     struct stat statbufdestOver;
     int ret = -1;
-    double transferred_bytes = 0;
     UserProxyEnv* cert = NULL;
 
     hostname[1023] = '\0';
@@ -824,7 +825,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 30);
+            boost::thread btUpdater(taskStatusUpdater, 10);
         }
     catch (std::exception& e)
         {
@@ -941,16 +942,8 @@ int main(int argc, char **argv)
                     strArray[6] = token_bringonline;
                 }
 		
-           if (strArray[0].length() > 0)
-                {
-                    logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
-                    reporter.constructMessageUpdater(job_id, strArray[0]);
-                }
-            else
-                {
-                    logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
-                    reporter.constructMessageUpdater(job_id, file_id);
-                }		
+            // Trigger immediately an update
+            taskStatusUpdater(0);
 
             fileManagement->setSourceUrl(strArray[1]);
             fileManagement->setDestUrl(strArray[2]);
