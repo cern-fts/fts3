@@ -8,7 +8,11 @@ Queue
 
 {% block content %}
 
-  <h2>
+{% include "filter.html" with withoutDate=1 withoutMetadata=1 withoutState=1  %}
+
+  <h2>{{ filters.source_se }} =&gt; {{ filters.dest_se }} for VO {{ filters.vo_name }}</h2>
+
+  <h3>
     Showing queued transfers {{ transfers.start_index }} to {{ transfers.end_index }} out of {{ paginator.count}}
     {% if transfers.has_previous %}
       <a href="?page=1&{{ extra_args }}">&lt;&lt;</a>
@@ -22,7 +26,7 @@ Queue
     {% else %}
       &gt; &gt;&gt;
     {% endif %}
-  </h2>
+  </h3>
 
   <table class="queueList">
     <thead>

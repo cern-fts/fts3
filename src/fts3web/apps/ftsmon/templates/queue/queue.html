@@ -7,6 +7,8 @@ Queue
 
 {% block content %}
 
+{% include "filter.html" with withoutDate=1 withoutMetadata=1 withoutState=1  %}
+
 <h2>
     Showing {{ pairsPerVo.start_index}} to {{ pairsPerVo.end_index}} pairs/vo out of {{ paginator.count }}
     {% if pairsPerVo.has_previous %}
