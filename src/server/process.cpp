@@ -58,13 +58,6 @@ using namespace std;
 using namespace StringHelper;
 using namespace db;
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
-
 
 ExecuteProcess::ExecuteProcess(const string& app, const string& arguments)
     : pid(0), _jobId(""), _fileId(""), m_app(app), m_arguments(arguments)
@@ -87,52 +80,55 @@ void ExecuteProcess::setPidV(std::map<int,std::string>& pids)
     _fileIds.insert(pids.begin(), pids.end());
 }
 
-int ExecuteProcess::execProcessShell()
+// argsHolder is used to keep the argument pointers alive
+// for as long as needed
+void ExecuteProcess::getArgv(list<string>& argsHolder, size_t* argc, char*** argv)
 {
-    std::vector<std::string> pathV;
-    std::vector<std::string>::iterator iter;
-    std::string p;
-    int pipefds[2];
-    ssize_t count=0;
-    int err=0;
-    pid_t child;
-    const char *path=NULL;
-    char *copy=NULL;
-    long int maxfd;
-    ssize_t checkWriteSize;
-    int checkDir = 0;
+    split(m_arguments, ' ', argsHolder, 0, false);
 
-    list<string> args;
-    split(m_arguments, ' ', args, 0, false);
+    *argc = argsHolder.size() + 2; // Need place for the binary and the NULL
+    *argv = new char*[*argc];
 
-    size_t argc = 1 + args.size() + 1;
-
-    char** argv = new char*[argc];
-    list<string>::iterator it = args.begin();
-
+    list<string>::iterator it;
     int i = 0;
-    argv[i] = const_cast<char*> (m_app.c_str());
-    for (; it != args.end(); ++it)
+    (*argv)[i] = const_cast<char*> (m_app.c_str());
+    for (it = argsHolder.begin(); it != argsHolder.end(); ++it)
         {
             ++i;
-            argv[i] = const_cast<char*> (it->c_str());
+            (*argv)[i] = const_cast<char*> (it->c_str());
         }
 
     ++i;
     assert(i + 1 == argc);
-    argv[i] = NULL;
+    (*argv)[i] = NULL;
+}
 
+static void closeAllFilesExcept(int exception)
+{
+    long maxfd = sysconf(_SC_OPEN_MAX);
+
+    register int fdAll;
+    for(fdAll = 3; fdAll < maxfd; fdAll++)
+        {
+            if(fdAll != exception)
+                close(fdAll);
+        }
+}
+
+int ExecuteProcess::execProcessShell()
+{
+    // Open pipe
+    int pipefds[2] = {0, 0};
     if (pipe(pipefds))
         {
-            if(argv)
-                delete [] argv;
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to create pipe between parent/child processes"  << commit;
             return -1;
         }
     if (fcntl(pipefds[1], F_SETFD, fcntl(pipefds[1], F_GETFD) | FD_CLOEXEC))
         {
-            if(argv)
-                delete [] argv;
+            close(pipefds[0]);
+            close(pipefds[1]);
+
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to set fd FD_CLOEXEC"  << commit;
             return -1;
         }
@@ -141,97 +137,74 @@ int ExecuteProcess::execProcessShell()
     signal(SIGCLD, SIG_IGN);
     signal(SIGPIPE, SIG_IGN);
 
-    switch (child = fork())
+    pid_t child = fork();
+    // Error
+    if (child == -1 )
         {
-        case -1:
-            if(argv)
-                delete [] argv;
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
             close(pipefds[0]);
             close(pipefds[1]);
+
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
             return -1;
-        case 0:
+        }
+    // Child
+    else if (child == 0)
+        {
             // Detach from parent
             setsid();
+
             // Set working directory
-            checkDir = chdir(_PATH_TMP);
-            if(-1 == checkDir)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chdir"  << commit;
-                }
-            maxfd=sysconf(_SC_OPEN_MAX);
-            register int fdAll;
-            for(fdAll=3; fdAll<maxfd; fdAll++)
-                {
-                    if(fdAll == pipefds[0])
-                        continue;
-                    if(fdAll == pipefds[1])
-                        continue;
-                    close(fdAll);
-                }
+            if(chdir(_PATH_TMP) != 0)
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chdir"  << commit;
 
-            close(pipefds[0]);
-            char *token;
-            path = getenv("PATH");
-            if (path == NULL || path[0] == '\0')
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to getenv PATH" << commit;
-                    if(argv)
-                        delete [] argv;
-                    return -1;
-                }
+            // Close all open file descriptors _except_ the write-end of the pipe
+            // (and stdin, stdout and stderr)
+            closeAllFilesExcept(pipefds[1]);
 
-            copy = (char *) malloc(strlen(path) + 1);
-            strcpy(copy, path);
-            token = strtok(copy, ":");
-            if(token)
-                {
-                    pathV.push_back(std::string(token));
-                }
-            while ( (token = strtok(0, ":")) != NULL)
-                {
-                    pathV.push_back(std::string(token));
-                }
-            for (iter = pathV.begin(); iter < pathV.end(); ++iter)
-                {
-                    p = *iter + "/" + std::string(argv[0]);
-                    if (fexists(p.c_str()) == 0)
-                        break;
-                }
-            if(copy)
-                {
-                    free(copy);
-                    copy = NULL;
-                }
-            pathV.clear();
-            execvp(p.c_str(), argv);
+            // Get parameter array
+            list<string> argsHolder;
+            size_t       argc;
+            char       **argv;
+            getArgv(argsHolder, &argc, &argv);
+
+            // Execute the new binary
+            execvp(m_app.c_str(), argv);
+
+            // If we are here, execvp failed, so write the errno to the pipe
+            ssize_t checkWriteSize;
             checkWriteSize = write(pipefds[1], &errno, sizeof(int));
             _exit(EXIT_FAILURE);
-        default:
-            pid = (int) child;
-            if(argv)
-                delete [] argv;
-            close(pipefds[1]);
-            while ((count = read(pipefds[0], &err, sizeof(errno))) == -1)
-                {
-                    if (errno != EAGAIN && errno != EINTR) break;
-                }
-            if (count)
-                {
-                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Child's execvp error: " << strerror(err)  << commit;
-                    return -1;
-                }
-            close(pipefds[0]);
         }
 
-    /*sleep for awhile but do not block waiting for child*/
+    // Parent process
+    // Close writting end of the pipe, and wait and see if we got an error from
+    // the child
+    close(pipefds[1]);
+
+    ssize_t count = 0;
+    int     err = 0;
+    while ((count = read(pipefds[0], &err, sizeof(errno))) == -1)
+        {
+            if (errno != EAGAIN && errno != EINTR) break;
+        }
+    if (count)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Child's execvp error: " << strerror(err)  << commit;
+            return -1;
+        }
+
+    // Close reading end
+    close(pipefds[0]);
+
+    // Sleep for awhile but do not block waiting for child
     usleep(10000);
-    err  = waitpid(pid, NULL, WNOHANG);
-    if(err != 0)
+    if(waitpid(pid, NULL, WNOHANG) != 0)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "waitpid error: " << strerror(errno)  << commit;
+            return -1;
         }
-    return err;
+
+    return 0;
 }
 
 

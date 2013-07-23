@@ -37,6 +37,7 @@ public:
 protected:
     int execProcessShell();
     int execProcessShellLog(const char* shell);
+    void getArgv(list<string>& argsHolder, size_t* argc, char*** argv);
 
 private:
     map<int,string> _fileIds;
