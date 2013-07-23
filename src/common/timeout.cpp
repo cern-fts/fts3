@@ -22,12 +22,14 @@ FTS3_COMMON_NAMESPACE_START
 
 Timeout& Timeout::actualize()
 {
+	using namespace boost;
+
     static const int MILLISECONDS_PER_SECOND = 1000;
     static const int NANOSECONDS_PER_SECOND = 1000000000;
     static const int NANOSECONDS_PER_MILLISECOND = 1000000;
-    int res = boost::xtime_get (&_xt, boost::TIME_UTC);
+    int res = boost::xtime_get (&_xt, TIME_UTC);
 
-    if (boost::TIME_UTC != res) FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Time error"));
+    if (TIME_UTC != res) FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Time error"));
 
     int nsecs = _ns + (int) _xt.nsec;
     int usecs = _us + nsecs / NANOSECONDS_PER_MILLISECOND;
