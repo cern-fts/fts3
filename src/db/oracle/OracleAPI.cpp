@@ -777,14 +777,14 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         "		checksum, CHECKSUM_METHOD, SOURCE_SPACE_TOKEN, "
         " 		SPACE_TOKEN, copy_pin_lifetime, bring_online, "
         "		user_filesize, file_metadata, job_metadata, file_index, BRINGONLINE_TOKEN,"
-        "		source_se, dest_se  "
+        "		source_se, dest_se, selection_strategy  "
         "		from (select  /*+ FIRST_ROWS(100) */  "
         "		f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
         " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
         "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
         " 		j.SPACE_TOKEN, j.copy_pin_lifetime, j.bring_online, "
         "		f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index, f1.BRINGONLINE_TOKEN,"
-        "		f1.source_se, f1.dest_se  "
+        "		f1.source_se, f1.dest_se, f1.selection_strategy  "
         "FROM t_file f1, t_job j "
         "WHERE "
         "	j.job_id = :1 AND "
@@ -847,6 +847,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                             tr_files->BRINGONLINE_TOKEN = r->getString(19);
                             tr_files->SOURCE_SE = r->getString(20);
                             tr_files->DEST_SE = r->getString(21);
+                            tr_files->SELECTION_STRATEGY = r->getString(22);
 
                             files[tr_files->VO_NAME].push_back(tr_files);
                         }

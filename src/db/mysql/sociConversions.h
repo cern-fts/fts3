@@ -144,6 +144,7 @@ struct type_conversion<TransferFiles>
         file.BRINGONLINE_TOKEN = v.get<std::string>("bringonline_token", "");
         file.SOURCE_SE = v.get<std::string>("source_se", "");
         file.DEST_SE = v.get<std::string>("dest_se", "");
+        file.SELECTION_STRATEGY = v.get<std::string>("selection_strategy", "");
 
         unsigned long long size = static_cast<unsigned>(v.get<double>("filesize", 0));
         std::ostringstream str;

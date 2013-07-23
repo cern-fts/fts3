@@ -74,6 +74,7 @@ public:
     std::string CHECKSUM_METHOD;
     std::string SOURCE_SPACE_TOKEN;
     std::string DEST_SPACE_TOKEN;
+    std::string SELECTION_STRATEGY;
     int PIN_LIFETIME;
     int BRINGONLINE;
     double USER_FILESIZE;
