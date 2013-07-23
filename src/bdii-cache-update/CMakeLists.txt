@@ -31,6 +31,7 @@ target_link_libraries(fts_bdii_cache_updater -lfts_common)
 target_link_libraries(fts_bdii_cache_updater -lfts_config)
 target_link_libraries(fts_bdii_cache_updater -lfts_infosys)
 target_link_libraries(fts_bdii_cache_updater -lboost_system-mt)
+target_link_libraries(fts_bdii_cache_updater -lpugixml)
 
 install(TARGETS         fts_bdii_cache_updater 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
