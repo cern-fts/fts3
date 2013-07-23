@@ -23,7 +23,7 @@ using namespace std;
 class ExecuteProcess
 {
 public:
-    ExecuteProcess( const string& app, const string& arguments, int fdlog=0 );
+    ExecuteProcess( const string& app, const string& arguments);
     int executeProcessShell();
     void setPid(const string& jobId, const string& fileId);
     void setPidV(std::map<int,std::string>& pids);
@@ -45,6 +45,5 @@ private:
     string _fileId;
     string m_app;
     string m_arguments;
-    int m_fdlog;
 };
 

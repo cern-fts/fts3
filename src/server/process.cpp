@@ -66,28 +66,15 @@ static int fexists(const char *filename)
 }
 
 
-ExecuteProcess::ExecuteProcess(const string& app, const string& arguments, int fdlog)
-    : pid(0), _jobId(""), _fileId(""), m_app(app), m_arguments(arguments),
-      m_fdlog(fdlog)
+ExecuteProcess::ExecuteProcess(const string& app, const string& arguments)
+    : pid(0), _jobId(""), _fileId(""), m_app(app), m_arguments(arguments)
 {
 }
 
 int ExecuteProcess::executeProcessShell()
 {
-    static const char SHELL[] = "/bin/sh";
-    int status = 0;
-    if (m_fdlog > 0)
-        {
-            status = execProcessShellLog(SHELL);
-        }
-    else
-        {
-            status = execProcessShell();
-        }
-
-    return status;
+    return execProcessShell();
 }
-
 
 void ExecuteProcess::setPid(const string& jobId, const string& fileId)
 {
@@ -98,67 +85,6 @@ void ExecuteProcess::setPid(const string& jobId, const string& fileId)
 void ExecuteProcess::setPidV(std::map<int,std::string>& pids)
 {
     _fileIds.insert(pids.begin(), pids.end());
-}
-
-int ExecuteProcess::execProcessShellLog(const char* SHELL)
-{
-    int status = 0;
-    ssize_t write_size;
-    int fdpipe[2];
-    int value = 0;
-    value = pipe(fdpipe);
-    if (value != 0) {
-        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Pipe system call failed, errno: " << errno << commit;
-        return -1;
-    }
-
-
-    pid_t pid = fork();
-    if (pid == 0)
-        {
-            // child process
-            close(fdpipe[0]);
-            dup2(fdpipe[1], 1);
-            dup2(fdpipe[1], 2);
-
-            execl(SHELL, SHELL, "-c", (m_app + " " + m_arguments).c_str(), NULL);
-            _exit(EXIT_FAILURE);
-        }
-    else if (pid < 0)
-        {
-            // fork failed
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
-            close(fdpipe[0]);
-            close(fdpipe[1]);
-            status = -1;
-        }
-    else
-        {
-            // parent process
-            close(fdpipe[1]);
-
-            char readbuf[1024];
-            ssize_t bytes;
-            pid_t wpval;
-
-            while ((wpval = waitpid(pid, &status, WNOHANG)) == 0)
-                {
-                    while ((bytes = read(fdpipe[0], readbuf, sizeof (readbuf) - 1)) > 0)
-                        {
-                            readbuf[bytes] = 0;
-                            fflush(stdout);
-                            fflush(stderr);
-                            write_size = write(m_fdlog, readbuf, static_cast<size_t>(bytes));
-                        }
-                }
-
-            if (wpval != pid)
-                {
-                    status = -1;
-                }
-        }
-
-    return status;
 }
 
 int ExecuteProcess::execProcessShell()

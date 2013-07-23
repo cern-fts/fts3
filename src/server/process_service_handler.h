@@ -684,7 +684,7 @@ protected:
                                                 if (host.compare(ftsHostName) == 0 && ready == true)
                                                     {
                                                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                                                        pr = new ExecuteProcess(cmd, params, 0);
+                                                        pr = new ExecuteProcess(cmd, params);
                                                         if (pr)
                                                             {
                                                                 /*check if fork/execvp failed, */
@@ -1125,7 +1125,7 @@ protected:
                                 if (host.compare(ftsHostName) == 0 && ready == true)
                                     {
                                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                                        pr = new ExecuteProcess(cmd, params, 0);
+                                        pr = new ExecuteProcess(cmd, params);
                                         if (pr)
                                             {
                                                 /*check if fork failed , check if execvp failed, */
