@@ -18,16 +18,16 @@ syslog_ident=mock
 syslog_device=
 
 # repos
-[slc6]
-name=Scientific Linux 6
+[base]
+name=BaseOS
 enabled=1
-baseurl=http://ftp.scientificlinux.org/linux/scientific/6/$basearch/os/
+mirrorlist=http://mirrorlist.centos.org/?release=6&arch=x86_64&repo=os
 failovermethod=priority
 
-[scl6-updates]
-name=Scientific Linux 6 updates
+[updates]
+name=updates
 enabled=1
-baseurl=http://ftp.scientificlinux.org/linux/scientific/6/$basearch/updates/security/
+mirrorlist=http://mirrorlist.centos.org/?release=6&arch=x86_64&repo=updates
 failovermethod=priority
 
 [epel]
@@ -58,7 +58,7 @@ name=Scientific Linux CERN 6 (SLC6) CERN-only packages
 baseurl=http://linuxsoft.cern.ch/onlycern/slc6X/$basearch/yum/cernonly/
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-cern
 gpgcheck=1
-enabled=1
+enabled=0
 protect=1
 
 [fts3-cbuilds-el6]
