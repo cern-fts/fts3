@@ -35,6 +35,7 @@ target_link_libraries(fts_info_publisher ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(fts_info_publisher -lfts_db_generic)
 target_link_libraries(fts_info_publisher -lfts_config)
 target_link_libraries(fts_info_publisher -lfts_common)
+target_link_libraries(fts_info_publisher -lboost_system-mt)
 
 install(TARGETS         fts_info_publisher 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )
