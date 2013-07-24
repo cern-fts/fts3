@@ -9404,7 +9404,6 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
 			conn->destroyStatement(s, tag, pooledConnection);
 			s = NULL;
 
-			double ratioSuccessFailure = 0;
 			if(nFinishedLastHour > 0)
             {
                 ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
