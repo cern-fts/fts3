@@ -9380,6 +9380,10 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
 
     try
         {
+        	pooledConnection = conn->getPooledConnection();
+        	if (!pooledConnection)
+        		return ratioSuccessFailure;
+
 			s = conn->createStatement(query, tag, pooledConnection);
 
 			// file state: FAILED and FINISHED (in last hour)
