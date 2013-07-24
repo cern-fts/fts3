@@ -9405,7 +9405,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
 			s = NULL;
 
 			double ratioSuccessFailure = 0;
-			if(nFinishedLastHour > 0)
+			if(nFinishedLastHour + nFailedLastHour > 0)
             {
                 ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
             }
