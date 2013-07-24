@@ -285,6 +285,8 @@ exit 0
 
 
 %changelog
+* Wed Jul 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-15
+  - compatible with rawhide (f20)
 * Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
   - mysql queries optimization
 * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1
