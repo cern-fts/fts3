@@ -4733,7 +4733,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
                     else if (i->compare("FINISHED") == 0) ++nFinishedLastHour;
                 }
 
-            if(nFinishedLastHour > 0)
+            if(nFinishedLastHour + nFailedLastHour > 0)
                 {
                     ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
                 }
