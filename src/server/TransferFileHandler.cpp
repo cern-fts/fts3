@@ -118,6 +118,7 @@ optional<FileIndex> TransferFileHandler::getIndex(string vo)
 
 TransferFiles* TransferFileHandler::getFile(FileIndex index)
 {
+	static const string automatic = "auto";
 
     // if there's no mapping for this index ..
     if (fileIndexToFiles.find(index) == fileIndexToFiles.end()) return 0;
@@ -125,56 +126,57 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
     // the return value
     TransferFiles* ret = 0;
 
-    // TODO for now give the first one in the future a selection strategy should be implemented
     if (!fileIndexToFiles[index].empty())
         {
-//      int maxThroughput = 0;
-//      int minFailureRate = INT_MAX;
-//		list<TransferFiles*>& alternatives = fileIndexToFiles[index];
-//		list<TransferFiles*>::iterator it;
-//
-//		for (it = alternatives.begin(); it != alternatives.end(); it++) {
-//
-//			string& src = (*it)->SOURCE_SE;
-//			string& dest = (*it)->DEST_SE;
-//
-//			int activeTransfers = db->countActiveTransfers(src, dest);
-//			int throughput = db->getAvgThroughput(src, dest, activeTransfers);
-//			int failureRate = db->getFailureRate(src, dest);
-//
-//			// everything is better
-//			if (throughput >= maxThroughput && failureRate < minFailureRate) {
-//				// swap
-//				continue;
-//			}
-//
-//			// throughput is slightly smaller equal
-//			if (0.95 * maxThroughput < throughput && failureRate < 0.8 * minFailureRate) {
-//
-//			}
-//
-//			if (throughput > maxThroughput) {
-//				// swap if failure rate not critical
-//			}
-//
-//
-//
-//			// throughput +/- 5%
-//
-//
-//
-//			// for each check the failure rate for last 30 min
-//			// current number of active transfers
-//			// use the number of active transfers to check the throughtput for last 30 min
-//
-//		}
+    		list<TransferFiles*>& alternatives = fileIndexToFiles[index];
 
-            // get the first in the list
-            ret = fileIndexToFiles[index].front();
-            // remove it from the list
-            fileIndexToFiles[index].pop_front();
+    		if (alternatives.front()->SELECTION_STRATEGY == automatic)
+    			{
+    				// the maximum success rate (we are treating as equal everything that's equal or greater than 99%)
+					double maxSuccessRate = -1;
+					// the maximum average throughput for pairs with maximum success rate (and the corresponding file)
+					pair<double, TransferFiles*> maxAvgThr(-1, 0);
+
+					list<TransferFiles*>::iterator it;
+
+					for (it = alternatives.begin(); it != alternatives.end(); it++)
+						{
+							double tmpRate = db->getSuccessRate((*it)->SOURCE_SE, (*it)->DEST_SE);
+							double tmpAvgThr = db->getAvgThroughput((*it)->SOURCE_SE, (*it)->DEST_SE);
+
+							// we are interested in all pairs that have success rate equal or greater to 99%
+							if (tmpRate > 99) tmpRate = 99;
+
+							if (tmpRate > maxSuccessRate)
+								{
+									maxSuccessRate = tmpRate;
+									maxAvgThr.first = tmpAvgThr;
+									maxAvgThr.second = *it;
+								}
+							else if (tmpRate == maxSuccessRate)
+								{
+									if (tmpAvgThr > maxAvgThr.first)
+										{
+											maxAvgThr.first = tmpAvgThr;
+											maxAvgThr.second = *it;
+										}
+								}
+						}
+					// the chosen file
+					ret = maxAvgThr.second;
+					// remove it from the list
+					fileIndexToFiles[index].remove(ret);
+	   			}
+    		else
+    			{
+					// get the first in the list
+					ret = fileIndexToFiles[index].front();
+					// remove it from the list
+					fileIndexToFiles[index].pop_front();
+    			}
         }
-    if(ret)
+
+    if (ret)
         {
             if (notScheduled.count(make_pair(ret->SOURCE_SE, ret->DEST_SE)))
                 {
