@@ -305,7 +305,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
         "			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
         "			AND t_file.file_state = 'SUBMITTED'"
         "	) "
-        " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= 20 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
+        " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= 2 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -754,7 +754,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::const_iterator iter;
     std::string selecttag = "getByJobId";
-    int limit = 50;
+    int limit = 5;
     if(reuse)
         limit = 50000;
 

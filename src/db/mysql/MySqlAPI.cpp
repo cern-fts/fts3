@@ -299,7 +299,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                 "            t_file.dest_se = :dest AND "
                 "            t_file.file_state = 'SUBMITTED'"
                 "    ) "
-                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 5 ";
+                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 2 ";
 
 
             std::set<std::string> jobIds;
@@ -532,7 +532,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
-    int limit = 20;
+    int limit = 5;
     if(reuse)
         limit = 50000;
 
