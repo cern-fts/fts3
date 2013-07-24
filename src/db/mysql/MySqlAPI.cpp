@@ -126,8 +126,8 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
     try
         {
-            if(pooledConn <= 3)
-                pooledConn = 4;
+            /*if(pooledConn <= 3)
+                pooledConn = 4;*/
 
             connectionPool = new soci::connection_pool(pooledConn);
 
@@ -1363,12 +1363,11 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 
 void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 {
-    soci::session select(*connectionPool);
-    soci::session update(*connectionPool);
+    soci::session sql(*connectionPool);
 
     try
         {
-            soci::rowset<soci::row> rs = (select.prepare << "SELECT t_file.pid, t_file.job_id FROM t_file, t_job "
+            soci::rowset<soci::row> rs = (sql.prepare << "SELECT t_file.pid, t_file.job_id FROM t_file, t_job "
                                           "WHERE t_file.job_id = t_job.job_id AND "
                                           "      t_file.FILE_STATE = 'CANCELED' AND "
                                           "      t_file.PID IS NOT NULL AND "
@@ -1377,10 +1376,10 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                                           soci::use(hostname));
 
             std::string jobId;
-            soci::statement updateStmt = (select.prepare << "UPDATE t_job SET cancel_job='Y' WHERE job_id = :jobId AND cancel_job IS NULL",
+            soci::statement updateStmt = (sql.prepare << "UPDATE t_job SET cancel_job='Y' WHERE job_id = :jobId AND cancel_job IS NULL",
                                           soci::use(jobId));
 
-            update.begin();
+            sql.begin();
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     soci::row const& row = *i;
@@ -1391,11 +1390,11 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                     requestIDs.push_back(pid);
                     updateStmt.execute();
                 }
-            update.commit();
+            sql.commit();
         }
     catch (std::exception& e)
         {
-            update.rollback();
+            sql.rollback();
             requestIDs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
@@ -1870,12 +1869,10 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
         }
 }
 
-void MySqlAPI::recordOptimizerUpdate(int active, double filesize,
+void MySqlAPI::recordOptimizerUpdate(soci::session& sql, int active, double filesize,
                                      double throughput, int nostreams, int timeout, int buffersize,
                                      std::string source_hostname, std::string destin_hostname)
 {
-    soci::session sql(*connectionPool);
-
     try
         {
             sql.begin();
@@ -2006,7 +2003,7 @@ bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double
 
             // Historical data
             if (affected_rows)
-                recordOptimizerUpdate(active, filesize, throughput, nostreams,
+                recordOptimizerUpdate(sql, active, filesize, throughput, nostreams,
                                       timeout, buffersize,
                                       source_hostname, destin_hostname);
 
@@ -2048,7 +2045,7 @@ void MySqlAPI::addOptimizer(time_t when, double throughput,
                 soci::use(file_id), soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams), soci::use(timeout),
                 soci::use(actives), soci::use(buffersize), soci::use(throughput), soci::use(timest);
 
-            recordOptimizerUpdate(actives, 0, throughput, nostreams,
+            recordOptimizerUpdate(sql, actives, 0, throughput, nostreams,
                                   timeout, buffersize,
                                   source_hostname, destin_hostname);
 
@@ -4128,14 +4125,17 @@ void MySqlAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
 {
     const static std::string message = "Job has been canceled because it stayed in the queue for too long";
 
+    int maxTime = getMaxTimeInQueue();
+    if (maxTime == 0)
+        return;
+
+    // Acquire the session afet calling getMaxTimeInQueue to avoid
+    // deadlocks (sql acquired and getMaxTimeInQueue locked
+    // waiting for a session we have)
     soci::session sql(*connectionPool);
 
     try
         {
-            int maxTime = getMaxTimeInQueue();
-            if (maxTime == 0)
-                return;
-
             soci::rowset<std::string> rs = (sql.prepare << "SELECT job_id FROM t_job WHERE "
                                             "    submit_time < (UTC_TIMESTAMP - interval :interval hour) AND "
                                             "    job_state in ('SUBMITTED', 'READY')",

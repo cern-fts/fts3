@@ -110,8 +110,6 @@ public:
 
     virtual void fetchOptimizationConfig2(OptimizerSample* ops, const std::string & source_hostname, const std::string & destin_hostname);
 
-    virtual void recordOptimizerUpdate(int active, double filesize, double throughput, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
-
     virtual bool updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
     virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);
@@ -328,4 +326,7 @@ private:
     std::string           hostname;
 
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
+
+    void recordOptimizerUpdate(soci::session& sql, int active, double filesize, double throughput,
+            int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 };
