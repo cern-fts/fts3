@@ -110,17 +110,17 @@ public:
 
     string getStatus()
     {
+    	if (vm.count("allow-submit"))
+    		{
+    			status = "WAIT_AS"; // the _AS (allow submit) sufix to the status
+    		}
+
         return status;
     }
 
     int getTimeout()
     {
         return timeout;
-    }
-
-    bool allowSubmit()
-    {
-    	return vm.count("allow-submit");
     }
 
 private:

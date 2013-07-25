@@ -102,6 +102,12 @@ optional<GSoapContextAdapter&> BlacklistCli::validate(bool init)
             return 0;
         }
 
+    if (vm.count("allow-submit") && status == "CANCEL")
+    	{
+			cout << "If the 'allow-submit' option is used you may not use 'CANCEL' status" << endl;
+			return 0;
+    	}
+
     return *ctx;
 }
 
