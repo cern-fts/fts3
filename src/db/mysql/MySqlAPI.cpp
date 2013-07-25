@@ -561,6 +561,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "WHERE j.job_id = :jobId AND"
                                                          "    f1.job_id = j.job_id AND "
                                                          "    f1.job_finished IS NULL AND "
+                                                         "	  f1.wait_timestamp IS NULL AND "
                                                          "    f1.file_state = 'SUBMITTED' AND "
                                                          " 	 (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) "
                                                          "     AND "
