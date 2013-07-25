@@ -191,10 +191,6 @@ void Blacklister::handleJobsInTheQueue()
         }
     else if (status == "WAIT" || status == "WAIT_AS")
         {
-
-            // if the timeout was set to 0 it means that the jobs should not timeout
-            if (!timeout) return;
-
             if (vo.is_initialized())
                 {
                     db->setFilesToWaiting(name, *vo, timeout);

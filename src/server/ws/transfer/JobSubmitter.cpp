@@ -559,8 +559,10 @@ void JobSubmitter::checkSe(string se, string vo)
 {
 
     // check if the SE is blacklisted
-    if (db->isSeBlacklisted(se, vo)) throw Err_Custom("The SE: " + se + " is blacklisted!");
-
+    if (db->isSeBlacklisted(se, vo))
+    	{
+    		if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
+    	}
     // if we don't care about MyOSQ return
     if (!theServerConfig().get<bool>("MyOSG")) return;
 

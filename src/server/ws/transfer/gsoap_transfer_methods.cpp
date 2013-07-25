@@ -710,7 +710,7 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 
                             DBSingleton::instance().getDBObjectInstance()->cancelJob(jobs);
 
-                            //send state message for cancelation
+                            //send state message for cancellation
                             std::vector<int> files;
                             std::vector<std::string>::iterator it2;
                             std::vector<int>::iterator it3;
