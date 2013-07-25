@@ -3034,7 +3034,19 @@ bool MySqlAPI::isSeBlacklisted(std::string se, std::string vo)
 
 bool MySqlAPI::allowSubmitForBlacklistedSe(std::string se)
 {
+    soci::session sql(*connectionPool);
 
+    bool ret = false;
+    try
+        {
+            sql << "SELECT * FROM t_bad_ses WHERE se = :se AND status = 'WAIT_AS'", soci::use(se);
+            ret = sql.got_data();
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    return ret;
 }
 
 
@@ -5147,8 +5159,9 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                                              sql.prepare <<
                                              " SELECT file_id, job_id "
                                              " FROM t_file "
-                                             " WHERE TIMESTAMPDIFF(SECOND, wait_timestamp, UTC_TIMESTAMP()) > wait_timeout "
-                                             "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
+                                             " WHERE wait_timeout <> 0 "
+                                             "	AND TIMESTAMPDIFF(SECOND, wait_timestamp, UTC_TIMESTAMP()) > wait_timeout "
+                                             "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')"
                                          );
 
             soci::rowset<soci::row>::iterator it;

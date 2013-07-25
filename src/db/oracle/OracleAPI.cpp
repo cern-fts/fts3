@@ -5718,6 +5718,57 @@ bool OracleAPI::isSeBlacklisted(std::string se, std::string vo)
 bool OracleAPI::allowSubmitForBlacklistedSe(std::string se)
 {
 
+    std::string tag = "allowSubmitForBlacklistedSe";
+    std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1 AND status = 'WAIT_AS'";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+    bool ret = false;
+
+
+    try
+        {
+
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return ret;
+
+            s = conn->createStatement(stmt, tag, pooledConnection);
+            s->setString(1, se);
+            r = conn->createResultset(s, pooledConnection);
+
+            ret = r->next();
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+
+            conn->rollback(pooledConnection);
+
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+
+            conn->rollback(pooledConnection);
+
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
+    return ret;
 }
 
 bool OracleAPI::isDnBlacklisted(std::string dn)
@@ -10229,7 +10280,8 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
     std::string query =
         " SELECT file_id, job_id "
         " FROM t_file "
-        " WHERE (CAST(CURRENT_TIMESTAMP(3) AS DATE) - CAST(wait_timestamp AS DATE)) * 86400 > wait_timeout "
+        " WHERE wait_timeout <> 0 "
+        "	AND (CAST(CURRENT_TIMESTAMP(3) AS DATE) - CAST(wait_timestamp AS DATE)) * 86400 > wait_timeout "
         "	AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') "
         ;
 
