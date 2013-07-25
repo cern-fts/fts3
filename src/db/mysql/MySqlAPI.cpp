@@ -2960,7 +2960,7 @@ void MySqlAPI::unblacklistSe(std::string se)
                 "	AND NOT EXISTS ( "
                 "		SELECT NULL "
                 "		FROM t_bad_dns "
-                "		WHERE dn = j.user_dn AND status = 'WAIT' "
+                "		WHERE dn = j.user_dn AND (status = 'WAIT' OR status = 'WAIT_AS')"
                 "	)",
                 soci::use(se),
                 soci::use(se)

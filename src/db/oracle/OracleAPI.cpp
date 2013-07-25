@@ -5522,7 +5522,7 @@ void OracleAPI::unblacklistSe(std::string se)
         "	AND NOT EXISTS ( "
         "		SELECT NULL "
         "		FROM t_bad_ses, t_job j "
-        "		WHERE (se = f.source_se OR se = f.dest_se) AND status = 'WAIT' "
+        "		WHERE (se = f.source_se OR se = f.dest_se) AND (status = 'WAIT' OR status = 'WAIT_AS') "
         "	)"
         ;
 

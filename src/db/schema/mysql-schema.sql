@@ -247,7 +247,7 @@ CREATE TABLE t_bad_ses (
 -- VO that is banned for the SE
    vo			 VARCHAR(50) DEFAULT NULL,
 --
--- status: either CANCEL or WAIT
+-- status: either CANCEL or WAIT or WAIT_AS
    status 		 VARCHAR(10) DEFAULT NULL,
 --
 -- the timeout that is used when WAIT status was specified
