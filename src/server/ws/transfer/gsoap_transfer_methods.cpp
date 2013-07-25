@@ -873,7 +873,7 @@ int fts3::impltns__debugSet(struct soap* soap, string _source, string _destinati
     return SOAP_OK;
 }
 
-int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string vo, std::string status, int timeout, bool allow_submit, bool blk, struct impltns__blacklistSeResponse &resp)
+int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string vo, std::string status, int timeout, bool blk, struct impltns__blacklistSeResponse &resp)
 {
 
     try
@@ -882,7 +882,6 @@ int fts3::impltns__blacklistSe(struct soap* ctx, std::string name, std::string v
 
             Blacklister blacklister (ctx, name, vo, status, timeout, blk);
             blacklister.executeRequest();
-
         }
     catch(Err& ex)
         {

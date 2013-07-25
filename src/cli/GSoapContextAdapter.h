@@ -242,7 +242,7 @@ public:
      */
     void blacklistDn(string subject, string status, int timeout, bool mode);
 
-    void blacklistSe(string name, string vo, string status, int timeout, bool mode, bool allow_submit);
+    void blacklistSe(string name, string vo, string status, int timeout, bool mode);
 
     /**
      * TODO

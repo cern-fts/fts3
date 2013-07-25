@@ -197,13 +197,10 @@ void Blacklister::handleJobsInTheQueue()
 
             if (vo.is_initialized())
                 {
-
                     db->setFilesToWaiting(name, *vo, timeout);
-
                 }
             else
                 {
-
                     db->setFilesToWaiting(name, timeout);
                 }
         }

@@ -57,8 +57,7 @@ int main(int ac, char* av[])
                         cli->getVo(),
                         cli->getStatus(),
                         cli->getTimeout(),
-                        cli->getBlkMode(),
-                        cli->allowSubmit()
+                        cli->getBlkMode()
                     );
 
                 }
