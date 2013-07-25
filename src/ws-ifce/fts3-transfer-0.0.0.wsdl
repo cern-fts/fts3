@@ -371,6 +371,7 @@
       <part name="vo" type="xsd:string"/>
       <part name="status" type="xsd:string"/>
       <part name="timeout" type="xsd:int"/>
+      <part name="allow-submit" type="xsd:boolean"/>
       <part name="blk" type="xsd:boolean"/>
       
    </message> 

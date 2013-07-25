@@ -118,6 +118,11 @@ public:
         return timeout;
     }
 
+    bool allowSubmit()
+    {
+    	return vm.count("allow-submit");
+    }
+
 private:
 
     /// blacklist mode, either ON or OFF

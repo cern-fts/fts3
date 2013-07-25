@@ -56,6 +56,7 @@ BlacklistCli::BlacklistCli()
 
     command_specific.add_options()
     ("vo", value<string>(&vo), "The VO that is banned for the given SE")
+    ("allow-submit", "FTS will accept transfer jobs for the blacklisted SE (they wont be executed until the SE is blacklisted)")
     ;
 
     // add positional (those used without an option switch) command line options
