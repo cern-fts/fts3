@@ -5715,6 +5715,11 @@ bool OracleAPI::isSeBlacklisted(std::string se, std::string vo)
     return ret;
 }
 
+bool OracleAPI::allowSubmitForBlacklistedSe(std::string se)
+{
+
+}
+
 bool OracleAPI::isDnBlacklisted(std::string dn)
 {
 

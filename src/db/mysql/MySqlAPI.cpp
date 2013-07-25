@@ -3032,6 +3032,11 @@ bool MySqlAPI::isSeBlacklisted(std::string se, std::string vo)
 }
 
 
+bool MySqlAPI::allowSubmitForBlacklistedSe(std::string se)
+{
+
+}
+
 
 bool MySqlAPI::isDnBlacklisted(std::string dn)
 {

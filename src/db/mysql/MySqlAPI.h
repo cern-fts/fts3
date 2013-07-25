@@ -160,6 +160,8 @@ public:
 
     virtual bool isSeBlacklisted(std::string se, std::string vo);
 
+    virtual bool allowSubmitForBlacklistedSe(std::string se);
+
     virtual bool isDnBlacklisted(std::string dn);
 
     virtual bool isFileReadyState(int fileID);

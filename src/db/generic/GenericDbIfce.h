@@ -219,6 +219,8 @@ public:
 
     virtual bool isSeBlacklisted(std::string se, std::string vo) = 0;
 
+    virtual bool allowSubmitForBlacklistedSe(std::string se) = 0;
+
     virtual bool isDnBlacklisted(std::string dn) = 0;
 
     virtual bool isFileReadyState(int fileID) = 0;
