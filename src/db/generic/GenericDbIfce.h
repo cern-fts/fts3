@@ -75,6 +75,7 @@ struct job_element_tupple
     std::string metadata;
     std::string selectionStrategy;
     int fileIndex;
+    boost::optional<int> timeout;
 };
 
 class GenericDbIfce
@@ -220,6 +221,8 @@ public:
     virtual bool isSeBlacklisted(std::string se, std::string vo) = 0;
 
     virtual bool allowSubmitForBlacklistedSe(std::string se) = 0;
+
+    virtual boost::optional<int> getTimeoutForSe(std::string se) = 0;
 
     virtual bool isDnBlacklisted(std::string dn) = 0;
 

@@ -177,6 +177,8 @@ public:
 
     virtual bool allowSubmitForBlacklistedSe(std::string se);
 
+    virtual boost::optional<int> getTimeoutForSe(std::string se);
+
     virtual bool isDnBlacklisted(std::string dn);
 
     virtual bool isFileReadyState(int fileID);

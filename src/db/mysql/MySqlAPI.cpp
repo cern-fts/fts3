@@ -3051,6 +3051,37 @@ bool MySqlAPI::allowSubmitForBlacklistedSe(std::string se)
 }
 
 
+boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
+{
+    soci::session sql(*connectionPool);
+
+    boost::optional<int> ret;
+
+    try
+        {
+			soci::indicator isNull;
+			int tmp;
+
+			sql <<
+				" SELECT wait_timeout FROM t_bad_ses WHERE se = :se ",
+				soci::use(se),
+				soci::into(tmp, isNull)
+			;
+
+            if (isNull == soci::i_null)
+                {
+                    ret = tmp;
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return ret;
+}
+
+
 bool MySqlAPI::isDnBlacklisted(std::string dn)
 {
     soci::session sql(*connectionPool);
