@@ -652,36 +652,65 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             // Insert src/dest pair
             std::string sourceSurl, destSurl, checksum, metadata, selectionStrategy, sourceSe, destSe;
             double filesize = 0.0;
-            int fileIndex = 0;
+            int fileIndex = 0, timeout = 0;
             soci::statement pairStmt = (
-                                           sql.prepare <<
-                                           "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se) "
-                                           "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se)",
-                                           soci::use(jobId),
-                                           soci::use(initialState),
-                                           soci::use(sourceSurl),
-                                           soci::use(destSurl),
-                                           soci::use(checksum),
-                                           soci::use(filesize),
-                                           soci::use(metadata),
-                                           soci::use(selectionStrategy),
-                                           soci::use(fileIndex),
-                                           soci::use(sourceSe),
-                                           soci::use(destSe)
-                                       );
+				   sql.prepare <<
+				   "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se) "
+				   "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se)",
+				   soci::use(jobId),
+				   soci::use(initialState),
+				   soci::use(sourceSurl),
+				   soci::use(destSurl),
+				   soci::use(checksum),
+				   soci::use(filesize),
+				   soci::use(metadata),
+				   soci::use(selectionStrategy),
+				   soci::use(fileIndex),
+				   soci::use(sourceSe),
+				   soci::use(destSe)
+            	);
+
+            soci::statement pairStmtSeBlaklisted = (
+				   sql.prepare <<
+				   "INSERT INTO t_file (job_id, file_state, source_surl, dest_surl, checksum, user_filesize, file_metadata, selection_strategy, file_index, source_se, dest_se, wait_timestamp, wait_timeout) "
+				   "VALUES (:jobId, :fileState, :sourceSurl, :destSurl, :checksum, :filesize, :metadata, :ss, :fileIndex, :source_se, :dest_se, UTC_TIMESTAMP(), :timeout)",
+				   soci::use(jobId),
+				   soci::use(initialState),
+				   soci::use(sourceSurl),
+				   soci::use(destSurl),
+				   soci::use(checksum),
+				   soci::use(filesize),
+				   soci::use(metadata),
+				   soci::use(selectionStrategy),
+				   soci::use(fileIndex),
+				   soci::use(sourceSe),
+				   soci::use(destSe),
+            	   soci::use(timeout)
+            	);
+
+
             std::vector<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
                 {
-                    sourceSurl = iter->source;
-                    destSurl   = iter->destination;
-                    checksum   = iter->checksum;
-                    filesize   = iter->filesize;
-                    metadata   = iter->metadata;
-                    selectionStrategy = iter->selectionStrategy;
-                    fileIndex = iter->fileIndex;
-                    sourceSe = iter->source_se;
-                    destSe = iter->dest_se;
-                    pairStmt.execute();
+					sourceSurl = iter->source;
+					destSurl   = iter->destination;
+					checksum   = iter->checksum;
+					filesize   = iter->filesize;
+					metadata   = iter->metadata;
+					selectionStrategy = iter->selectionStrategy;
+					fileIndex = iter->fileIndex;
+					sourceSe = iter->source_se;
+					destSe = iter->dest_se;
+
+            		if (iter->wait_timeout.is_initialized())
+						{
+            				timeout = *iter->wait_timeout;
+            				pairStmtSeBlaklisted.execute();
+						}
+            		else
+            			{
+            				pairStmt.execute();
+            			}
                 }
 
             sql.commit();
@@ -3068,10 +3097,10 @@ boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
 				soci::into(tmp, isNull)
 			;
 
-            if (isNull == soci::i_null)
-                {
-                    ret = tmp;
-                }
+			if (sql.got_data())
+				{
+					if (isNull == soci::i_ok) ret = tmp;
+				}
         }
     catch (std::exception& e)
         {

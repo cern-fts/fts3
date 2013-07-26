@@ -917,9 +917,11 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         "	selection_strategy, "
         "	file_index, "
         "	source_se, "
-        "	dest_se "
+        "	dest_se, "
+		"   wait_timestamp, "
+		"   wait_timeout "
         " ) "
-        " VALUES (:1,:2,:3,:4,:5,:6,:7,:8, :9, :10, :11)";
+        " VALUES (:1,:2,:3,:4,:5,:6,:7,:8, :9, :10, :11, :12, :13)";
 
     oracle::occi::Statement* s_job_statement = NULL;
     oracle::occi::Statement* s_file_statement = NULL;
@@ -971,6 +973,21 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
 
             for (iter = job_elements.begin(); iter != job_elements.end(); ++iter)
                 {
+            		oracle::occi::Timestamp wait_timestamp;
+            		oracle::occi::Number wait_timeout;
+
+                    if (iter->wait_timeout.is_initialized())
+                    	{
+                        	time_t timed = time(NULL);
+                        	wait_timestamp = conv->toTimestamp(timed, conn->getEnv());
+                        	wait_timeout = oracle::occi::Number(*iter->wait_timeout);
+                    	}
+                    else
+                    	{
+                    		wait_timeout.setNull();
+                    		wait_timestamp.setNull();
+                    	}
+
                     s_file_statement->setString(1, jobId);
                     s_file_statement->setString(2, initial_state);
                     s_file_statement->setString(3, iter->source);
@@ -979,9 +996,12 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
                     s_file_statement->setDouble(6, iter->filesize);
                     s_file_statement->setString(7, iter->metadata);
                     s_file_statement->setString(8, iter->selectionStrategy);
-                    s_file_statement->setInt(9, iter->fileIndex);//todo
+                    s_file_statement->setInt(9, iter->fileIndex);
                     s_file_statement->setString(10, iter->source_se);
                     s_file_statement->setString(11, iter->dest_se);
+            		s_file_statement->setTimestamp(12, wait_timestamp);
+            		s_file_statement->setNumber(13, wait_timeout);
+
                     s_file_statement->executeUpdate();
                 }
             conn->commit(pooledConnection);
@@ -5381,7 +5401,6 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
 
             if (count)
                 {
-
                     s2 = conn->createStatement(update, updateTag, pooledConnection);
                     s2->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
                     s2->setString(2, adm_dn);
@@ -5392,11 +5411,9 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
                     s2->executeUpdate();
                     conn->commit(pooledConnection);
                     conn->destroyStatement(s2, updateTag, pooledConnection);
-
                 }
             else
                 {
-
                     s3 = conn->createStatement(insert, insertTag, pooledConnection);
                     s3->setString(1, se);
                     s3->setString(2, msg);
@@ -5794,7 +5811,7 @@ boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
 
             if (r->next())
             	{
-            		ret = r->getInt(1);
+            		if (!r->isNull(1)) ret = r->getInt(1);
             	}
 
             conn->destroyResultset(s, r);
