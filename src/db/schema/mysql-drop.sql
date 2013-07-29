@@ -19,6 +19,6 @@ DROP TABLE t_credential;
 DROP TABLE t_credential_cache;
 DROP TABLE t_debug;
 DROP TABLE t_config_audit;
-DROP TABLE t_optimizer_evolution
+DROP TABLE t_optimizer_evolution;
 DROP TABLE t_optimize;
 DROP TABLE t_server_config;
