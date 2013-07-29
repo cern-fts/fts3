@@ -214,7 +214,7 @@ def statistics(httpRequest):
         
     statsDict['overall'] = overall
     
-    statsDict['servers'] = _getTransferAndSubmissionPerHost(timedelta(hours = 24))
+    statsDict['servers'] = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
     statsDict['pairs'] = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 30))   
     statsDict['vos'] = _getStateCountPerVo(timedelta(minutes = 30));
     
