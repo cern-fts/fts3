@@ -9,6 +9,20 @@ ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 
+class Timer:
+    all = {}
+    
+    def __init__(self, f):
+        self.f = f
+        
+    def __call__(self, *args, **kwargs):
+        start = datetime.utcnow()
+        r = self.f(*args, **kwargs)
+        end = datetime.utcnow()
+        #print "%s(%s, %s): %d" % (str(self.f), str(args), str(kwargs), (end - start).microseconds)
+        Timer.all[self.f] = (end-start).microseconds
+        return r
+
 
 def configurationAudit(httpRequest):
     configs = ConfigAudit.objects.order_by('-datetime')
@@ -16,7 +30,7 @@ def configurationAudit(httpRequest):
                   {'configs': configs})
 
 
-
+@Timer
 def _getCountPerState(states, age = None):
 	count = {}
 	
@@ -38,7 +52,7 @@ def _getCountPerState(states, age = None):
 	return count
 
 
-
+@Timer
 def _getTransferAndSubmissionPerHost():
     hostnames = []
         
@@ -75,10 +89,13 @@ def _getTransferAndSubmissionPerHost():
     return servers
 
 
-
-def _getStateCountPerVo():
+@Timer
+def _getStateCountPerVo(timewindow):
     perVoDict = {}
-    for voJob in File.objects.values('file_state', 'job__vo_name').annotate(count = Count('file_state')):
+    query = File.objects.values('file_state', 'job__vo_name')\
+                        .filter(Q(finish_time__gte = datetime.utcnow() - timewindow) | Q(finish_time__isnull = True))\
+                        .annotate(count = Count('file_state'))
+    for voJob in query:
         vo = voJob['job__vo_name']
         if vo not in perVoDict:
             perVoDict[vo] = []
@@ -90,7 +107,7 @@ def _getStateCountPerVo():
     return perVo
 
 
-
+@Timer
 def _getAllPairs(notBefore, source = None, dest = None):
     pairs = []
     
@@ -106,7 +123,7 @@ def _getAllPairs(notBefore, source = None, dest = None):
     return pairs
 
 
-
+@Timer
 def _getAveragePerPair(pairs, notBefore):
     avg = {}
     
@@ -121,7 +138,7 @@ def _getAveragePerPair(pairs, notBefore):
     return avg
 
 
-
+@Timer
 def _getFilesInStatePerPair(pairs, states, notBefore = None):
     statesPerPair = {}
     
@@ -143,7 +160,7 @@ def _getFilesInStatePerPair(pairs, states, notBefore = None):
     return statesPerPair
 
 
-
+@Timer
 def _getSuccessRatePerPair(pairs, notBefore):
     successPerPair = {}
     
@@ -164,8 +181,8 @@ def _getSuccessRatePerPair(pairs, notBefore):
     return successPerPair
 
 
-
-def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(minutes = 30)):
+@Timer
+def _getStatsPerPair(source_se, dest_se, timewindow):
     
     notBefore = datetime.utcnow() - timewindow
     
@@ -213,8 +230,13 @@ def statistics(httpRequest):
     statsDict['overall'] = overall
     
     statsDict['servers'] = _getTransferAndSubmissionPerHost()
-    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se)   
-    statsDict['vos'] = _getStateCountPerVo();
+    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 60))   
+    statsDict['vos'] = _getStateCountPerVo(timedelta(minutes = 60));
+    
+    # profiling
+    sortedTimes = sorted(Timer.all, key = Timer.all.__getitem__)
+    maxTime = sortedTimes[-1]
+    print maxTime, Timer.all[maxTime]
     
     # Render
     return render(httpRequest, 'statistics.html',
