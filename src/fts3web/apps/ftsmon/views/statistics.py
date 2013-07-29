@@ -9,20 +9,6 @@ ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 
-class Timer:
-    all = {}
-    
-    def __init__(self, f):
-        self.f = f
-        
-    def __call__(self, *args, **kwargs):
-        start = datetime.utcnow()
-        r = self.f(*args, **kwargs)
-        end = datetime.utcnow()
-        #print "%s(%s, %s): %d" % (str(self.f), str(args), str(kwargs), (end - start).microseconds)
-        Timer.all[self.f] = (end-start).microseconds
-        return r
-
 
 def configurationAudit(httpRequest):
     configs = ConfigAudit.objects.order_by('-datetime')
@@ -30,7 +16,7 @@ def configurationAudit(httpRequest):
                   {'configs': configs})
 
 
-@Timer
+
 def _getCountPerState(states, age = None):
 	count = {}
 	
@@ -52,18 +38,24 @@ def _getCountPerState(states, age = None):
 	return count
 
 
-@Timer
-def _getTransferAndSubmissionPerHost():
+
+def _getTransferAndSubmissionPerHost(timewindow):
     hostnames = []
+    
+    notBefore = datetime.utcnow() - timewindow
         
     submissions = {}
-    query = Job.objects.values('submit_host').annotate(count = Count('submit_host'))
+    query = Job.objects.values('submit_host')\
+                       .filter(submit_time__gte = notBefore)\
+                       .annotate(count = Count('submit_host'))
     for j in query:
         submissions[j['submit_host']] = j['count']
         hostnames.append(j['submit_host'])
         
     transfers = {}
-    query = File.objects.values('transferHost').annotate(count = Count('transferHost'))
+    query = File.objects.values('transferHost')\
+                        .filter(Q(finish_time__gte = notBefore) | Q(finish_time__isnull = True))\
+                        .annotate(count = Count('transferHost'))
     for t in query:
         # Submitted do not have a transfer host!
         if t['transferHost']:
@@ -89,7 +81,7 @@ def _getTransferAndSubmissionPerHost():
     return servers
 
 
-@Timer
+
 def _getStateCountPerVo(timewindow):
     perVoDict = {}
     query = File.objects.values('file_state', 'job__vo_name')\
@@ -107,7 +99,7 @@ def _getStateCountPerVo(timewindow):
     return perVo
 
 
-@Timer
+
 def _getAllPairs(notBefore, source = None, dest = None):
     pairs = []
     
@@ -123,7 +115,7 @@ def _getAllPairs(notBefore, source = None, dest = None):
     return pairs
 
 
-@Timer
+
 def _getAveragePerPair(pairs, notBefore):
     avg = {}
     
@@ -138,7 +130,7 @@ def _getAveragePerPair(pairs, notBefore):
     return avg
 
 
-@Timer
+
 def _getFilesInStatePerPair(pairs, states, notBefore):
     statesPerPair = {}
     for pair in pairs:
@@ -163,7 +155,6 @@ def _getFilesInStatePerPair(pairs, states, notBefore):
 
 
 
-@Timer
 def _getStatsPerPair(source_se, dest_se, timewindow):
     
     notBefore = datetime.utcnow() - timewindow
@@ -223,14 +214,9 @@ def statistics(httpRequest):
         
     statsDict['overall'] = overall
     
-    statsDict['servers'] = _getTransferAndSubmissionPerHost()
-    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 60))   
-    statsDict['vos'] = _getStateCountPerVo(timedelta(minutes = 60));
-    
-    # profiling
-    sortedTimes = sorted(Timer.all, key = Timer.all.__getitem__)
-    maxTime = sortedTimes[-1]
-    print maxTime, Timer.all[maxTime]
+    statsDict['servers'] = _getTransferAndSubmissionPerHost(timedelta(hours = 24))
+    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 30))   
+    statsDict['vos'] = _getStateCountPerVo(timedelta(minutes = 30));
     
     # Render
     return render(httpRequest, 'statistics.html',
