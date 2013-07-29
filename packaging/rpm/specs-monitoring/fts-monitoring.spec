@@ -49,6 +49,7 @@ install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf         
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/ftsmon.conf
 %config(noreplace) %dir %{_sysconfdir}/fts3web/
 %config(noreplace) %attr(640, root, apache) %{_sysconfdir}/fts3web/fts3web.ini
+%doc LICENSE
 
 %changelog
  * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1%{?dist}

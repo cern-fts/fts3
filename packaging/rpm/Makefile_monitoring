@@ -5,7 +5,7 @@ MOCKENV=epel-6-cernonly-x86_64
 MOCKARGS=--trace --verbose
 
 dist: clean
-	tar --create --gzip --directory ../../src/fts3web --file ./${name}-${version}.tar.gz --exclude=./packaging --exclude .svn .
+	tar --create --gzip --directory ../../src/fts3web ../../LICENSE --file ./${name}-${version}.tar.gz --exclude=./packaging --exclude .svn .
 
 clean:
 	@rm -rf $(rpmbuild)
