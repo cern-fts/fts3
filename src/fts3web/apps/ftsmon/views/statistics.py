@@ -141,21 +141,26 @@ def _getAveragePerPair(pairs, notBefore):
 @Timer
 def _getFilesInStatePerPair(pairs, states, notBefore):
     statesPerPair = {}
+    for pair in pairs:
+        statesPerPair[pair] = {}
     
-    for (source, dest) in pairs:
-        statesPerPair[(source, dest)] = {}
+    query = File.objects
+    
+    if states:
+        query = query.filter(file_state__in = states)
         
-        statesInPair = File.objects.filter(file_state__in = states,
-                                     source_se = source,
-                                     dest_se = dest)\
-                                   .filter(Q(finish_time__gt = notBefore) | Q(finish_time__isnull = True))\
-                                   .values('file_state')\
-                                   .annotate(count = Count('file_state'))
+    query = query.filter(Q(finish_time__gt = notBefore) | Q(finish_time__isnull = True))\
+                        .values('source_se', 'dest_se', 'file_state')\
+                        .annotate(count = Count('file_state'))
 
-        for st in statesInPair:
-            statesPerPair[(source, dest)][st['file_state']] = st['count']
-        
+    for result in query:
+        pair = (result['source_se'], result['dest_se'])
+        if pair in pairs:
+            statesPerPair[pair][result['file_state']] = result['count']
+
+    
     return statesPerPair
+
 
 
 @Timer
@@ -166,7 +171,7 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
     allPairs      = _getAllPairs(notBefore, source_se, dest_se)
     avgsPerPair   = _getAveragePerPair(allPairs, notBefore)
     
-    statesPerPair = _getFilesInStatePerPair(allPairs, STATES, notBefore)
+    statesPerPair = _getFilesInStatePerPair(allPairs, None, notBefore)
         
     pairs = []
     for pair in sorted(allPairs):
