@@ -136,8 +136,6 @@ def _getFilesInStatePerPair(pairs, states, notBefore = None):
             
         statesInPair = statesInPair.values('file_state')\
                                    .annotate(count = Count('file_state'))
-                                   
-        print statesInPair.query
 
         for st in statesInPair:
             statesPerPair[(source, dest)][st['file_state']] = st['count']
