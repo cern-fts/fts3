@@ -56,17 +56,23 @@ def _getCountPerState(states, age = None):
 
 
 
-def _getTransferAndSubmissionPerHost():
+def _getTransferAndSubmissionPerHost(timewindow):
     hostnames = []
+    
+    notBefore = datetime.utcnow() - timewindow
         
     submissions = {}
-    query = Job.objects.values('submit_host').annotate(count = Count('submit_host'))
+    query = Job.objects.values('submit_host')\
+                       .filter(submit_time__gte = notBefore)\
+                       .annotate(count = Count('submit_host'))
     for j in query:
         submissions[j['submit_host']] = j['count']
         hostnames.append(j['submit_host'])
         
     transfers = {}
-    query = File.objects.values('transferHost').annotate(count = Count('transferHost'))
+    query = File.objects.values('transferHost')\
+                        .filter(Q(finish_time__gte = notBefore) | Q(finish_time__isnull = True))\
+                        .annotate(count = Count('transferHost'))
     for t in query:
         # Submitted do not have a transfer host!
         if t['transferHost']:
@@ -93,9 +99,12 @@ def _getTransferAndSubmissionPerHost():
 
 
 
-def _getStateCountPerVo():
+def _getStateCountPerVo(timewindow):
     perVoDict = {}
-    for voJob in File.objects.values('file_state', 'job__vo_name').annotate(count = Count('file_state')):
+    query = File.objects.values('file_state', 'job__vo_name')\
+                        .filter(Q(finish_time__gte = datetime.utcnow() - timewindow) | Q(finish_time__isnull = True))\
+                        .annotate(count = Count('file_state'))
+    for voJob in query:
         vo = voJob['job__vo_name']
         if vo not in perVoDict:
             perVoDict[vo] = []
@@ -139,73 +148,64 @@ def _getAveragePerPair(pairs, notBefore):
 
 
 
-def _getFilesInStatePerPair(pairs, states, notBefore = None):
+def _getFilesInStatePerPair(pairs, states, notBefore):
     statesPerPair = {}
+    for pair in pairs:
+        statesPerPair[pair] = {}
     
-    for (source, dest) in pairs:
-        statesPerPair[(source, dest)] = {}
+    query = File.objects
+    
+    if states:
+        query = query.filter(file_state__in = states)
         
-        statesInPair = File.objects.filter(file_state__in = states,
-                                     source_se = source,
-                                     dest_se = dest)
-        if notBefore:
-            statesInPair = statesInPair.filter(finish_time__gt = notBefore)
-            
-        statesInPair = statesInPair.values('file_state')\
-                                   .annotate(count = Count('file_state'))
-                                   
-        print statesInPair.query
+    query = query.filter(Q(finish_time__gt = notBefore) | Q(finish_time__isnull = True))\
+                        .values('source_se', 'dest_se', 'file_state')\
+                        .annotate(count = Count('file_state'))
 
-        for st in statesInPair:
-            statesPerPair[(source, dest)][st['file_state']] = st['count']
-        
+    for result in query:
+        pair = (result['source_se'], result['dest_se'])
+        if pair in pairs:
+            statesPerPair[pair][result['file_state']] = result['count']
+
+    
     return statesPerPair
 
 
 
-def _getSuccessRatePerPair(pairs, notBefore):
-    successPerPair = {}
-    
-    terminatedCount = _getFilesInStatePerPair(pairs, FILE_TERMINAL_STATES, notBefore)
-    
-    for pair in pairs:
-        if len(terminatedCount[pair]):            
-            total   = float(reduce(lambda a,b: a+b, terminatedCount[pair].values()))
-            success = float(terminatedCount[pair]['FINISHED'] if 'FINISHED' in terminatedCount[pair] else 0)
-            
-            if total:
-                successPerPair[pair] = (success/total) * 100
-            else:
-                successPerPair[pair] = None
-        else:
-            successPerPair[pair] = None
-    
-    return successPerPair
-
-
-
-def _getStatsPerPair(source_se = None, dest_se = None, timewindow = timedelta(minutes = 30)):
+def _getStatsPerPair(source_se, dest_se, timewindow):
     
     notBefore = datetime.utcnow() - timewindow
     
     allPairs      = _getAllPairs(notBefore, source_se, dest_se)
     avgsPerPair   = _getAveragePerPair(allPairs, notBefore)
-    activePerPair = _getFilesInStatePerPair(allPairs, ACTIVE_STATES)
-    successRate   = _getSuccessRatePerPair(allPairs, notBefore)
+    
+    statesPerPair = _getFilesInStatePerPair(allPairs, None, notBefore)
         
     pairs = []
     for pair in sorted(allPairs):
         p = {'source': pair[0], 'destination': pair[1]}
-        
-        if pair in activePerPair:
-            p['active'] = activePerPair[pair]
-            
+
         if pair in avgsPerPair:
             p.update(avgsPerPair[pair])
             
-        if pair in successRate:
-            p['successRate'] = successRate[pair]
+        if pair in statesPerPair:
+            states = statesPerPair[pair]
+            p['active'] = {}
+            # Active
+            for k in ACTIVE_STATES:
+                if k in states:
+                    p['active'][k] = states[k]
+                
+            # Success rate
+            terminal = dict((k, v) for k, v in states.items() if k in FILE_TERMINAL_STATES)
+            total = float(reduce(lambda a,b: a+b, terminal.values(), 0))
+            success = float(states['FINISHED'] if 'FINISHED' in states else 0)
             
+            if total:
+                p['successRate'] = (success/total) * 100
+            else:
+                p['successRate'] = None
+
         pairs.append(p)
     return pairs
 
@@ -231,9 +231,9 @@ def statistics(httpRequest):
         
     statsDict['overall'] = overall
     
-    statsDict['servers'] = _getTransferAndSubmissionPerHost()
-    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se)   
-    statsDict['vos'] = _getStateCountPerVo();
+    statsDict['servers'] = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
+    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 30))   
+    statsDict['vos'] = _getStateCountPerVo(timedelta(minutes = 30));
     
     # Render
     return render(httpRequest, 'statistics.html',
