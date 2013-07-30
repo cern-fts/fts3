@@ -270,11 +270,11 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT DISTINCT p.source_se, p.dest_se FROM t_file p "
-                                                     " JOIN t_job c ON p.job_id = c.job_id JOIN t_job b ON p.job_id = b.job_id "
-                                                     " WHERE b.vo_name=:vo_name and b.job_finished IS NULL and b.CANCEL_JOB IS NULL "
-                                                     " and (b.reuse_job='N' OR b.reuse_job is NULL) and "
-                                                     " b.job_state IN ('ACTIVE', 'READY','SUBMITTED')",
+                                                     " SELECT DISTINCT t_file.source_se, t_file.dest_se FROM t_file "
+                                                     " JOIN t_job ON t_job.job_id = t_file.job_id "
+                                                     " WHERE vo_name = :vo_name and job_finished IS NULL and cancel_job IS NULL "
+                                                     " and (reuse_job='N' OR reuse_job is NULL) and "
+                                                     " job_state IN ('ACTIVE', 'READY','SUBMITTED')",
                                                      soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
