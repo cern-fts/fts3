@@ -272,7 +272,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                                                      sql.prepare <<
                                                      " SELECT DISTINCT t_file.source_se, t_file.dest_se FROM t_file "
                                                      " JOIN t_job ON t_job.job_id = t_file.job_id "
-                                                     " WHERE vo_name = :vo_name and job_finished IS NULL and cancel_job IS NULL "
+                                                     " WHERE vo_name = :vo_name and t_job.job_finished IS NULL and cancel_job IS NULL "
                                                      " and (reuse_job='N' OR reuse_job is NULL) and "
                                                      " job_state IN ('ACTIVE', 'READY','SUBMITTED')",
                                                      soci::use(vo_name)
