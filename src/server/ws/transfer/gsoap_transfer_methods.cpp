@@ -747,8 +747,10 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
 }
 
 /// Web service operation 'setJobPriority' (returns error code or SOAP_OK)
-int fts3::impltns__setJobPriority(soap *soap, string _requestID, int _priority, struct impltns__setJobPriorityResponse &_param_15)
+int fts3::impltns__setJobPriority(soap *ctx, string requestID, int priority, impltns__setJobPriorityResponse &resp)
 {
+	impltns__prioritySetResponse r;
+	impltns__prioritySet(ctx, requestID, priority, r);
     return SOAP_OK;
 }
 
