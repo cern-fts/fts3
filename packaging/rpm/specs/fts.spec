@@ -3,8 +3,8 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts
-Version: 3.0.5
-Release: 2%{?dist}
+Version: 3.0.6
+Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -285,6 +285,8 @@ exit 0
 
 
 %changelog
+* Wed Jul 31 2013 Michal Simon <michal.simon@cern.ch> - 3.0.6-1
+  - fix for setjobPriority (glite-transfer cli)
 * Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
   - mysql queries optimization
 * Fri Jun 14 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-1
