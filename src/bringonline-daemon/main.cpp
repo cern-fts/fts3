@@ -294,7 +294,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                 }
                         }
                 }
-            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(30000));
         }
 }
 
@@ -491,7 +491,7 @@ int DoServer(int argc, char** argv)
 
                     urls.clear();
                     voHostnameConfig.clear();
-                    sleep(1);
+                    sleep(30);
                 }
             gfal2_context_free(handle);
         }
