@@ -41,3 +41,10 @@ def urlTransferLog(transfer):
 def urlServerLog(server):
     baseUrl = settings.LOG_BASE_URL.replace('%(host)', server['hostname']).strip('/')
     return baseUrl + '/var/log/fts3/fts3server.log'
+
+
+
+@register.simple_tag
+def urlBringonlineLog(server):
+    baseUrl = settings.LOG_BASE_URL.replace('%(host)', server['hostname']).strip('/')
+    return baseUrl + '/var/log/fts3/fts3bringonline.log'
