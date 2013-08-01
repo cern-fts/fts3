@@ -4493,10 +4493,11 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                     sql.begin();
                     sql <<
                         " UPDATE t_file "
-                        " SET staging_start = UTC_TIMESTAMP() "
+                        " SET staging_start = UTC_TIMESTAMP(), transferhost=:thost "
                         " WHERE job_id = :jobId "
                         "	AND file_id= :fileId "
                         "	AND file_state='STAGING'",
+                        soci::use(hostname),
                         soci::use(msg.job_id),
                         soci::use(msg.file_id)
                         ;

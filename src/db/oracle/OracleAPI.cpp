@@ -8682,7 +8682,7 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
     const std::string tag3 = "bringOnlineReportStatus3";
     const std::string tag4 = "bringOnlineReportStatus4";
 
-    std::string query1 = " UPDATE t_file set STAGING_START=:1 where job_id=:2 and file_id=:3 and file_state='STAGING' ";
+    std::string query1 = " UPDATE t_file set STAGING_START=:1, transferhost=:2 where job_id=:3 and file_id=:4 and file_state='STAGING' ";
     std::string query2 = " UPDATE t_file set STAGING_FINISHED=:1, reason=:2, file_state=:3 where job_id=:4 and file_id=:5 and file_state='STAGING'";
     std::string query3 = " select reuse_job from t_job where job_id=:1 ";
     std::string query4 = " select count(*) from t_file where job_id=:1 and file_state='STAGING' ";
@@ -8720,8 +8720,9 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
                 {
                     s1 = conn->createStatement(query1, tag1, pooledConnection);
                     s1->setTimestamp(1, conv->toTimestamp(timed, conn->getEnv()));
-                    s1->setString(2, msg.job_id);
-                    s1->setInt(3, msg.file_id);
+                    s1->setString(2, ftsHostName);
+                    s1->setString(3, msg.job_id);
+                    s1->setInt(4, msg.file_id);
                     s1->executeUpdate();
                     conn->commit(pooledConnection);
                     conn->destroyStatement(s1, tag1, pooledConnection);
