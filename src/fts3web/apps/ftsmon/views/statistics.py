@@ -18,24 +18,26 @@ def configurationAudit(httpRequest):
 
 
 def _getCountPerState(states, age = None):
-	count = {}
-	
-	query = File.objects.filter(file_state__in = states)
-	if age:
-		query = query.filter(finish_time__gte = datetime.utcnow() - age)
-	query = query.values('file_state').annotate(number = Count('file_state'))
-	
-	for row in query:
-		count[row['file_state'].lower()] = row['number']
-		
-	for s in filter(lambda s: s not in count, map(lambda s: s.lower(), states)):
-		count[s] = 0
-		
-	# Couple of aggregations
-	count['queued'] = count['submitted'] + count['ready']
-	count['total'] = count['finished'] + count['failed'] + count['canceled']
-		
-	return count
+    count = {}
+    
+    query = File.objects.filter(file_state__in = states)
+    if age:
+        notBefore = datetime.utcnow() - age
+        query = query.filter(Q(finish_time__gte = notBefore) | Q(finish_time__isnull = True))
+    
+    query = query.values('file_state').annotate(number = Count('file_state'))
+    
+    for row in query:
+        count[row['file_state'].lower()] = row['number']
+    
+    for s in filter(lambda s: s not in count, map(lambda s: s.lower(), states)):
+        count[s] = 0
+    
+    # Couple of aggregations
+    count['queued'] = count['submitted'] + count['ready']
+    count['total'] = count['finished'] + count['failed'] + count['canceled']
+    
+    return count
 
 
 
@@ -203,7 +205,7 @@ def statistics(httpRequest):
     dest_se   = httpRequest.GET['dest_se'] if 'dest_se' in httpRequest.GET else None    
     
     # Overall (all times)
-    overall = _getCountPerState(STATES)        
+    overall = _getCountPerState(STATES, timedelta(hours = 24))        
     
     # Success rate (last hour)
     lastHour = _getCountPerState(STATES, timedelta(hours = 1))
