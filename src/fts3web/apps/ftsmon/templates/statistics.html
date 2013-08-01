@@ -19,6 +19,7 @@ Statistics
     
     
     <div id="overview">
+      <h3>For the last 24 hours</h3>
       <img style="float: right"
            src="{% url ftsmon.views.pie %}?t=Overview&l=Failed,Finished,Canceled,Queued,Active,Staging&v={{overall.failed}},{{overall.finished}},{{overall.canceled}},{{overall.queued}},{{overall.active}},{{overall.staging}}&c=r,g,y,b,m,c"/>
       <ul>
