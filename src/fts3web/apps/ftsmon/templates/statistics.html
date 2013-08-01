@@ -64,7 +64,7 @@ Statistics
             <tr class="{% cycle 'odd' 'even' %}">
               <td>
                 {{ s.hostname }}
-                [<a href="{% urlServerLog s %}">Logs</a>]
+                [Logs: <a href="{% urlServerLog s %}">FTS3</a> <a href="{% urlBringonlineLog s %}">Bringonline</a>]
               </td>
               <td>{{ s.submissions }}</td>
               <td>{{ s.transfers }}</td>
