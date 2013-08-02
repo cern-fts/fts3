@@ -44,12 +44,12 @@ Failed transfers
     {% for t in transfers.object_list %}
     <tr class="{% cycle 'odd' 'even' %}">
       <td>
-        <a href="{% url ftsmon.views.jobDetails t.job_id %}#{{ t.file_id }}">
+        <a href="{% url ftsmon.views.jobs.jobDetails t.job_id %}#{{ t.file_id }}">
         #{{ t.file_id }}
         </a>
       </td>
       <td>
-        <a href="{% url ftsmon.views.jobDetails t.job_id %}">{{ t.job_id }}</a>
+        <a href="{% url ftsmon.views.jobs.jobDetails t.job_id %}">{{ t.job_id }}</a>
       </td>
       <td>{{ t.job.vo_name }}</td>
       <td>{{ t.source_surl }}</td>

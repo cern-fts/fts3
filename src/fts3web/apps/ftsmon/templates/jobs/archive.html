@@ -53,7 +53,7 @@ Archive
       <tr class="{% cycle 'odd' 'even' %}">
         <td>
           <img src="{{ STATIC_URL }}img/plus.gif" title="Show details" onclick="$('#{{j.job_id}}').toggle()"/>
-          <a href="{% url ftsmon.views.jobDetails j.job_id %}"> {{j.job_id }} </a>
+          <a href="{% url ftsmon.views.jobs.jobDetails j.job_id %}"> {{j.job_id }} </a>
         </td>
         <td>{{ j.submit_host }}</td>
         <td>{{ j.submit_time }}</td>

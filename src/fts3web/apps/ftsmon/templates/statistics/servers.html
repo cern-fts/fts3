@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load filters %}
+{% load urlLog %}
+
+{% block title %} Statistics - Overview {% endblock %}
+
+{% block content %}
+<h2>Statistics - Servers</h2>
+
+<div id="statistics"
+    class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+    {% include "statistics/tabs.html" with tab_servers=1 %}
+
+    <div aria-labelledby="ui-id-1"
+        class="ui-tabs-panel ui-widget-content ui-corner-bottom"
+        role="tabpanel" aria-expanded="true" aria-hidden="false">
+
+
+	    <div>
+	      <h3>For the last 24 hours</h3>
+	      <table>
+	        <thead>
+	          <tr>
+	            <th>Server</th>
+	            <th>Submissions received</th>
+	            <th>Transfers picked</th>
+	            <th>Transfers running</th>
+	          </tr>
+	        </thead>
+	        <tbody class="centered">
+	          {% for s in servers %}
+	            <tr class="{% cycle 'odd' 'even' %}">
+	              <td>
+	                {{ s.hostname }}
+	                [Logs: <a href="{% urlServerLog s %}">FTS3</a> <a href="{% urlBringonlineLog s %}">Bringonline</a>]
+	              </td>
+	              <td>{{ s.submissions }}</td>
+	              <td>{{ s.transfers }}</td>
+	              <td>{{ s.active }}</td>
+	            </tr>
+	          {% endfor %}
+	        </tbody>
+	      </table>
+	      <p style="text-align: center">
+	        <img src="{% url ftsmon.views.plots.pie %}?t=Submissions&l={{ servers|partition:'hostname'|join:',' }}&v={{ servers|partition:'submissions'|join:','}}"/>
+	        <img src="{% url ftsmon.views.plots.pie %}?t=Transfers&l={{ servers|partition:'hostname'|join:',' }}&v={{ servers|partition:'transfers'|join:','}}"/>
+	      </p>
+	    </div>
+    </div>
+</div>
+{% endblock %}

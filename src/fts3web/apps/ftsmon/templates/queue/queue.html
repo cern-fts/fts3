@@ -39,7 +39,7 @@ Queue
 	       <td>{{ p.dest_se }}</td>
 	       <td>{{ p.job__vo_name }}</td>
 	       <td>
-	           <a href="{% url ftsmon.views.queue %}?source_se={{ p.source_se|urlencode }}&dest_se={{ p.dest_se|urlencode}}&vo={{ p.job__vo_name|urlencode }}">
+	           <a href="{% url ftsmon.views.queue.queue %}?source_se={{ p.source_se|urlencode }}&dest_se={{ p.dest_se|urlencode}}&vo={{ p.job__vo_name|urlencode }}">
 	               {{ p.ntransfers }}
 	           </a>
            </td>

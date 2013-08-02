@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load filters %}
+
+{% block title %} Statistics - VOs {% endblock %}
+
+{% block content %}
+<h2>Statistics - Pairs</h2>
+
+<div id="statistics"
+    class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+    {% include "statistics/tabs.html" with tab_vos=1 %}
+
+    <div aria-labelledby="ui-id-1"
+        class="ui-tabs-panel ui-widget-content ui-corner-bottom"
+        role="tabpanel" aria-expanded="true" aria-hidden="false">
+	    <div>
+	      <h3>For the last 30 minutes</h3>
+	      <table>
+	        <thead>
+	          <tr>
+	            <th>VO</th>
+	            <th>Transfer states</th>
+	          </tr>
+	        </thead>
+	        <tbody class="centered">
+	          {% for v in vos %}
+	            <tr class="{% cycle 'odd' 'even' %}">
+	              <td>{{ v.vo }}</td>
+	              <td>
+	                {% for s in v.states %}
+	                  {{ s.1 }} {{ s.0 }}
+	                {% endfor %}
+	              </td>
+	            </tr>
+	          {% endfor %}
+	        </tbody>
+	      </table>
+	    </div>
+    </div>
+</div>
+{% endblock %}

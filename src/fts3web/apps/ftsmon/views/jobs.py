@@ -126,7 +126,7 @@ def jobIndex(httpRequest):
     
     # If jobId is in the request, redirect directly
     if httpRequest.method == 'GET' and 'jobId' in httpRequest.GET:
-        return redirect('ftsmon.views.jobDetails', jobId = httpRequest.GET['jobId'])
+        return redirect('ftsmon.views.jobs.jobDetails', jobId = httpRequest.GET['jobId'])
     
     filterForm = forms.FilterForm(httpRequest.GET)
     filters = setupFilters(filterForm)

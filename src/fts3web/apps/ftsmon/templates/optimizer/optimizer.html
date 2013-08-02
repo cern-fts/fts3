@@ -12,7 +12,7 @@ Optimizer
 	  {% else %}
 	  <div id="filters">
 	  {% endif %}
-		<form method="GET" action="{% url ftsmon.views.optimizer %}">
+		<form method="GET" action="{% url ftsmon.views.optimizer.optimizer %}">
 	      <p>
 	        <label for="filter_source_se">Source SE:</label>
 	        <input type="text" id="filter_source_se" name="source_se" class="text_field"
@@ -46,8 +46,8 @@ Optimizer
 	    </a>
   	</p>
  	<script type="text/javascript">
-	  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources %}"});
-	  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations %}"});
+	  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.autocomplete.uniqueSources %}"});
+	  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.autocomplete.uniqueDestinations %}"});
   </script>
 </div>
 
@@ -85,7 +85,7 @@ Optimizer
 			<td>
 				{% with escapedSource=o.source_se|urlencode:"" %}
 				{% with escapedDestination=o.dest_se|urlencode:"" %}
-                <a href="{% url ftsmon.views.optimizerDetailed %}?source={{ escapedSource }}&destination={{ escapedDestination }}&time_window={{ filterForm.time_window.value }}">
+                <a href="{% url ftsmon.views.optimizer.optimizerDetailed %}?source={{ escapedSource }}&destination={{ escapedDestination }}&time_window={{ filterForm.time_window.value }}">
                     <img src="{{ STATIC_URL }}img/detailed.png" title="View details" alt="[Detailed]"/>
                 </a>
 				{% endwith %}
