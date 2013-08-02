@@ -25,24 +25,24 @@
     <div id="header">
       <h1>
         <img src="{% getSetting 'SITE_LOGO' %}" alt="{% getSetting 'SITE_NAME' %}"/>
-        <a href="{% url ftsmon.views.jobIndex %}">{% getSetting "SITE_NAME" %} FTS3 Monitoring</a>
+        <a href="{% url ftsmon.views.jobs.jobIndex %}">{% getSetting "SITE_NAME" %} FTS3 Monitoring</a>
       </h1>
     </div>
     
     <div id="toolbox">
       <div id="links">
-        <a href="{% url ftsmon.views.jobIndex %}">Jobs</a>
-        <a href="{% url ftsmon.views.queue %}">Queue</a>
-        <a href="{% url ftsmon.views.staging %}">Staging</a>
-        <a href="{% url ftsmon.views.optimizer %}">Optimizer</a>
-        <a href="{% url ftsmon.views.showErrors %}">Error reasons</a>
-        <a href="{% url ftsmon.views.statistics %}">Statistics</a>
-        <a href="{% url ftsmon.views.configurationAudit %}">Configuration audit</a>
-        <a href="{% url ftsmon.views.archiveJobIndex %}">Archive</a>
+        <a href="{% url ftsmon.views.jobs.jobIndex %}">Jobs</a>
+        <a href="{% url ftsmon.views.queue.queue %}">Queue</a>
+        <a href="{% url ftsmon.views.jobs.staging %}">Staging</a>
+        <a href="{% url ftsmon.views.optimizer.optimizer %}">Optimizer</a>
+        <a href="{% url ftsmon.views.errors.showErrors %}">Error reasons</a>
+        <a href="{% url ftsmon.views.statistics.overview %}">Statistics</a>
+        <a href="{% url ftsmon.views.statistics.configurationAudit %}">Configuration audit</a>
+        <a href="{% url ftsmon.views.jobs.archiveJobIndex %}">Archive</a>
       </div>
     </div>
     <div id="jobSearchForm">
-      <form method="get" action="{% url ftsmon.views.jobIndex %}">
+      <form method="get" action="{% url ftsmon.views.jobs.jobIndex %}">
         <input type="text" name="jobId" size="40"/>
         <input type="submit" value="Search job"/>
       </form>

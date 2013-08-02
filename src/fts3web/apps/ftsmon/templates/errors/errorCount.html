@@ -21,7 +21,7 @@ Unique errors
       <tr class="{% cycle 'odd' 'even' %}">
         <td>{{ r.count }}</td>
         <td class="reason">
-          <a href="{% url ftsmon.views.transfersWithError %}?reason={{r.reason|urlencode:''}}">"{{ r.reason }}"</a>
+          <a href="{% url ftsmon.views.errors.transfersWithError %}?reason={{r.reason|urlencode:''}}">"{{ r.reason }}"</a>
         </td>
       </tr>
     {% endfor %}

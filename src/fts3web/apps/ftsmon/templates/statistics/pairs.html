@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load filters %}
+
+{% block title %} Statistics - Pairs {% endblock %}
+
+{% block content %}
+<h2>Statistics - Pairs</h2>
+
+<div id="statistics"
+    class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+    {% include "statistics/tabs.html" with tab_pairs=1 %}
+
+    <div aria-labelledby="ui-id-1"
+        class="ui-tabs-panel ui-widget-content ui-corner-bottom"
+        role="tabpanel" aria-expanded="true" aria-hidden="false">
+        
+	    <div>
+	      <table>
+	        <thead>
+	          <tr>
+	            <th>
+	                Source
+	                <a href="{% url ftsmon.views.statistics.pairs %}">
+	                  <img src="{{STATIC_URL}}img/filter_clear.png" title="Clear filter"/>
+	                </a>
+	            </th>
+	            <th>
+	                Destination
+	                <a href="{% url ftsmon.views.statistics.pairs %}">
+	                  <img src="{{STATIC_URL}}img/filter_clear.png" title="Clear filter"/>
+	                </a>
+	            </th>
+	            <th>Transfers active</th>
+	            <th>Success rate*</th>
+	            <th>Avg. Throughput*</th>
+	            <th>Avg. Duration*</th>
+	          </tr>
+	        </thead>
+	        <tbody class="centered">
+	          {% for p in pairs %}
+	            <tr class="{% cycle 'odd' 'even' %}">
+	              <td>
+	                {{ p.source }}
+	                <a href="{% url ftsmon.views.statistics.pairs %}?{% with_query 'source_se' p.source %}">
+	                    <img src="{{ STATIC_URL }}img/filter.png" title="Filter by this source"/>
+	                </a>
+	              </td>
+	              <td>
+	                {{ p.destination }}
+	                <a href="{% url ftsmon.views.statistics.pairs %}?{% with_query 'dest_se' p.destination %}">
+	                    <img src="{{ STATIC_URL }}img/filter.png" title="Filter by this destination"/>
+	                </a>
+	               </td>
+	              <td>
+	                {% for state,count in p.active.items %}
+	                  {{ count }} {{ state }}
+	                {% endfor %}
+	              </td>
+	              <td>
+	                {% if p.successRate != None %}
+	                    {{ p.successRate|floatformat:2 }}%
+	                {% else %}
+	                    -
+	                {% endif %}
+	              </td>
+	              <td>{{ p.avgThroughput|floatformat:2 }} Mb/s</td>
+	              <td>{{ p.avgDuration|floatformat:1 }} s</td>
+	            </tr>
+	          {% endfor %}
+	        </tbody>
+	      </table>
+	      <p>(*) For transfers finished in the last 30 minutes</p>
+	    </div>
+    </div>
+</div>
+{% endblock %}

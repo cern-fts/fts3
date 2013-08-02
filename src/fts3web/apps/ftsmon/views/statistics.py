@@ -105,7 +105,8 @@ def _getStateCountPerVo(timewindow):
     perVoDict = {}
     query = File.objects.values('file_state', 'job__vo_name')\
                         .filter(Q(finish_time__gte = datetime.utcnow() - timewindow) | Q(finish_time__isnull = True))\
-                        .annotate(count = Count('file_state'))
+                        .annotate(count = Count('file_state'))\
+                        .order_by('file_state')
     for voJob in query:
         vo = voJob['job__vo_name']
         if vo not in perVoDict:
@@ -213,31 +214,37 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
 
 
 
-def statistics(httpRequest):
-    statsDict = {}
-    statsDict['request'] = httpRequest
-    
-    # Filters
-    source_se = httpRequest.GET['source_se'] if 'source_se' in httpRequest.GET else None  
-    dest_se   = httpRequest.GET['dest_se'] if 'dest_se' in httpRequest.GET else None    
-    
-    # Overall (all times)
-    overall = _getCountPerState(STATES, timedelta(hours = 24))        
-    
-    # Success rate (last hour)
+def overview(httpRequest):
+    overall = _getCountPerState(STATES, timedelta(hours = 24))
     lastHour = _getCountPerState(STATES, timedelta(hours = 1))
     if lastHour['total'] > 0:
         overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
     else:
         overall['rate'] = 0
         
-    statsDict['overall'] = overall
+    return render(httpRequest, 'statistics/overview.html',
+                  {'overall': overall})
     
-    statsDict['servers'] = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
-    statsDict['pairs'] = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 30))   
-    statsDict['vos'] = _getStateCountPerVo(timedelta(minutes = 30));
-    
-    # Render
-    return render(httpRequest, 'statistics.html',
-                  statsDict)
- 
+
+
+def servers(httpRequest):
+    servers = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
+    return render(httpRequest, 'statistics/servers.html',
+                  {'servers': servers})
+
+
+def pairs(httpRequest):
+    source_se = httpRequest.GET['source_se'] if 'source_se' in httpRequest.GET else None  
+    dest_se   = httpRequest.GET['dest_se'] if 'dest_se' in httpRequest.GET else None    
+    pairs = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 30))
+    return render(httpRequest, 'statistics/pairs.html',
+                  {'pairs': pairs,
+                   'request': httpRequest})
+
+
+
+def pervo(httpRequest):
+    vos = _getStateCountPerVo(timedelta(minutes = 30));
+    return render(httpRequest, 'statistics/vos.html',
+                  {'vos': vos})
+

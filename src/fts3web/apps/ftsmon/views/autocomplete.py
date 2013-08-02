@@ -29,9 +29,10 @@ def uniqueSources(httpRequest, archive):
     else:
         model = Job
         
-    query = model.objects.values('source_se').distinct('source_se')
+    query = model.objects
     if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
         query = query.filter(source_se__icontains = httpRequest.GET['term'])
+    query = query.distinct('source_se')
     
     ses = []
     for se in query:

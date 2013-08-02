@@ -1,0 +1,26 @@
+<ul
+	class="ui-tabs-nav ui-helper-reset ui-helper-clearfix ui-widget-header ui-corner-all"
+	role="tablist">
+	<li class="ui-state-default ui-corner-top {% if tab_overview %} ui-tabs-active {% endif %}"
+	    role="tab"
+		tabindex="0" aria-controls="overview" aria-labelledby="ui-id-1">
+		<a href="{% url ftsmon.views.statistics.overview %}"
+		class="ui-tabs-anchor" role="presentation" tabindex="-1">Overview</a>
+	</li>
+	<li class="ui-state-default ui-corner-top {% if tab_servers %} ui-tabs-active {% endif %}"
+	    role="tab" tabindex="-1"
+		aria-controls="fts3" aria-labelledby="ui-id-2"><a
+		href="{% url ftsmon.views.statistics.servers %}"
+		class="ui-tabs-anchor" role="presentation" tabindex="-1" id="ui-id-2">FTS3
+			Servers</a></li>
+	<li class="ui-state-default ui-corner-top {% if tab_pairs %} ui-tabs-active {% endif %}"
+	    role="tab" tabindex="-1"
+		aria-controls="perPair" aria-labelledby="ui-id-3"><a
+		href="{% url ftsmon.views.statistics.pairs %}" class="ui-tabs-anchor"
+		role="presentation" tabindex="-1" id="ui-id-3">Per pair</a></li>
+	<li class="ui-state-default ui-corner-top {% if tab_vos %} ui-tabs-active {% endif %}"
+	    role="tab" tabindex="-1"
+		aria-controls="perVo" aria-labelledby="ui-id-4"><a
+		href="{% url ftsmon.views.statistics.pervo %}" class="ui-tabs-anchor"
+		role="presentation" tabindex="-1" id="ui-id-4">Per vo</a></li>
+</ul>

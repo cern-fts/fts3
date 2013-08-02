@@ -116,9 +116,9 @@
   {% endif %}
   
   <script type="text/javascript">
-  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.uniqueSources archive %}"});
-  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.uniqueDestinations archive %}"});
-  $("#filter_vo").autocomplete({source: "{% url ftsmon.views.uniqueVos archive %}"});
+  $("#filter_source_se").autocomplete({source: "{% url ftsmon.views.autocomplete.uniqueSources archive %}"});
+  $("#filter_dest_se").autocomplete({source: "{% url ftsmon.views.autocomplete.uniqueDestinations archive %}"});
+  $("#filter_vo").autocomplete({source: "{% url ftsmon.views.autocomplete.uniqueVos archive %}"});
   
   {% if dateWindow %}
   $("#filter_startdate").datepicker();

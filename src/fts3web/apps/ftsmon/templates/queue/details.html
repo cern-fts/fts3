@@ -48,7 +48,7 @@ Queue
             {{ t.file_state }}
           </td>
           <td>
-            <a href="{% url ftsmon.views.jobDetails t.job.job_id %}">
+            <a href=" {% url ftsmon.views.jobs.jobDetails t.job.job_id %}">
               {{ t.job.job_id }}
             </a>
           </td>
