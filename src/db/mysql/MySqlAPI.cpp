@@ -255,11 +255,9 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                                                sql.prepare <<
                                                " SELECT DISTINCT vo_name "  /*create index on vo_name*/
                                                " FROM t_job "
-                                               " WHERE "
-                                               "	job_finished IS NULL "
+                                               " WHERE t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')"
                                                "	AND t_job.CANCEL_JOB IS NULL "
-                                               "	AND (t_job.reuse_job='N' OR t_job.reuse_job is NULL) "
-                                               "	AND t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED') "
+                                               "	AND (t_job.reuse_job='N' OR t_job.reuse_job is NULL) "                                             
                                                <<
                                                (vos == "*" ? "" : " AND t_job.vo_name IN " + vos)
                                            );
@@ -561,10 +559,10 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "FROM t_file f1, t_job j "
                                                          "WHERE j.job_id = :jobId AND"
                                                          "    f1.job_id = j.job_id AND "
-                                                         "    f1.job_finished IS NULL AND "
-                                                         "	  f1.wait_timestamp IS NULL AND "
+                                                         "    j.job_finished IS NULL AND "
+                                                         "    f1.wait_timestamp IS NULL AND "
                                                          "    f1.file_state = 'SUBMITTED' AND "
-                                                         " 	 (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) "
+                                                         "    (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) "
                                                          "     AND "
                                                          "	 NOT EXISTS ( "
                                                          "		SELECT NULL "
