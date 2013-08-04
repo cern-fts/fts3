@@ -134,7 +134,7 @@ protected:
                             }
 
                         if (runConsumerLog(messages) != 0) {
-                            char buffer[128];
+                            char buffer[128]={0};
                             throw Err_System(std::string("Could not get the log messages: ") +
                                              strerror_r(errno, buffer, sizeof(buffer)));
                         }

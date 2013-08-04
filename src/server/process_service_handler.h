@@ -228,6 +228,9 @@ public:
             monitoringMessages = false;
         else
             monitoringMessages = true;
+	    	    
+       requestIDs.reserve(5000);
+      jobs2.reserve(3000);	    
     }
 
     /* ---------------------------------------------------------------------- */
@@ -1314,7 +1317,7 @@ protected:
                                 jobs2.clear();
                             }
                     }
-                usleep(500000);
+                usleep(400000);
             } /*end while*/
     }
 
