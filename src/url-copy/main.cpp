@@ -671,7 +671,7 @@ int main(int argc, char **argv)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
             if (!opts.logToStderr) {
-                int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath());
+                int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath(), opts.debug);
                 if (checkError != 0)
                     {
                         std::string message = mapErrnoToString(checkError);
@@ -741,13 +741,6 @@ int main(int argc, char **argv)
                     {
                         logger.INFO() << "Set the transfer to debug mode" << std::endl;
                         gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
-                        FILE* reopenDebugFile = freopen(fileManagement->getLogFileFullPath().c_str(), "w", stderr);
-                        chmod(fileManagement->getLogFileFullPath().c_str(), (mode_t) 0644);
-                        if (reopenDebugFile == NULL)
-                            {
-                                logger.WARNING() << "Failed to create debug file, errno:" << mapErrnoToString(errno)
-                                                 << std::endl;
-                            }
                         gfal_log_set_handler((GLogFunc) log_func, NULL);
                     }
 

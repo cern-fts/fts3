@@ -21,15 +21,21 @@ static std::string getTimestamp()
 
 
 
-Logger::Logger(): os(&std::cerr)
+Logger::Logger(): log(&std::cerr), debug(&debugHandle)
 {
+    debugHandle.open("/dev/null", std::ios::app);
 }
+
+
 
 Logger::~Logger()
 {
    INFO() << "Closing the log stream" << std::endl;
-   fhandle.close();
+   logHandle.close();
+   debugHandle.close();
 }
+
+
 
 Logger& Logger::getInstance()
 {
@@ -40,38 +46,49 @@ Logger& Logger::getInstance()
 
 std::ostream& Logger::INFO()
 {
-   return (*os << getTimestamp() << " INFO    ");
+   return (*log << getTimestamp() << " INFO     ");
 }
 
 
 
 std::ostream& Logger::WARNING()
 {
-   return (*os << getTimestamp() << " WARNING  ");
+   return (*log << getTimestamp() << " WARNING  ");
 }
 
 
 
 std::ostream& Logger::ERROR()
 {
-   return (*os << getTimestamp() << " ERROR    ");
+   return (*log << getTimestamp() << " ERROR    ");
 }
+
 
 
 std::ostream& Logger::DEBUG()
 {
-   return (*os << getTimestamp() << " DEBUG    ");
+   return (*debug << getTimestamp() << " DEBUG    ");
 }
 
 
 
-int Logger::redirectTo(const std::string& path)
+int Logger::redirectTo(const std::string& path, bool debug)
 {
-    fhandle.close();
-    fhandle.open(path.c_str(), std::ios::app);
-    if (fhandle.fail())
+    // Regular output
+    logHandle.close();
+    logHandle.open(path.c_str(), std::ios::app);
+    if (logHandle.fail())
        return errno;
     chmod(path.c_str(), 0644);
-    os = &fhandle;
+    log = &logHandle;
+
+    // Debug output
+    if (debug) {
+        std::string debugPath = path + ".debug";
+        debugHandle.close();
+        debugHandle.open(debugPath.c_str(), std::ios::app);
+        chmod(debugPath.c_str(), 0644);
+    }
+
     return 0;
 }

@@ -163,27 +163,7 @@ std::string FileManagement::archive()
     directoryExists(arcFileName.c_str());
     arcFileName += "/" + fname;
     int r = rename(log.c_str(), arcFileName.c_str());
-    if (r == 0)
-        {
-            if (access(fullPath.c_str(), F_OK) == 0)
-                {
-                    std::string debugArchFile = arcFileName + ".debug";
-                    int r2 = rename(fullPath.c_str(), debugArchFile.c_str());
-                    if (r2 != 0)
-                        {
-                            char const * str = strerror_r(errno, buf, 256);
-                            if (str)
-                                {
-                                    return std::string(str);
-                                }
-                            else
-                                {
-                                    return std::string("Unknown error when moving debug log file");
-                                }
-                        }
-                }
-        }
-    else
+    if (r != 0)
         {
             char const * str = strerror_r(errno, buf, 256);
             if (str)

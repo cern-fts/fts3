@@ -44,11 +44,6 @@ public:
     void setFileId(std::string& file_id);
     void setJobId(std::string& job_id);
 
-
-    inline std::string getLogFileFullPath()
-    {
-        return fullPath;
-    }
     inline std::string getLogFileName()
     {
         return fname;
@@ -100,7 +95,6 @@ private:
     std::string dhostFile;
     std::string dateArch;
     std::string log;
-    std::string fullPath;
     std::string arcFileName;
     char *base_scheme;
     char *base_host;

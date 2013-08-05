@@ -36,7 +36,7 @@ public:
     std::ostream& ERROR();
     std::ostream& DEBUG();
 
-    int redirectTo(const std::string& path);
+    int redirectTo(const std::string& path, bool debug);
 
 private:
     static Logger instance;
@@ -45,8 +45,8 @@ private:
     Logger(const Logger&); // Should never be called
     ~Logger();
 
-    std::ostream *os;
-    std::ofstream fhandle;
+    std::ostream *log, *debug;
+    std::ofstream logHandle, debugHandle;
 };
 
 #endif
