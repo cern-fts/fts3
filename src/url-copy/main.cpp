@@ -221,12 +221,12 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    if(UrlCopyOpts::getInstance()->monitoringMessages)
+    if(UrlCopyOpts::getInstance().monitoringMessages)
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
-    reporter.timeout = UrlCopyOpts::getInstance()->timeout;
-    reporter.nostreams = UrlCopyOpts::getInstance()->nStreams;
-    reporter.buffersize = UrlCopyOpts::getInstance()->tcpBuffersize;
+    reporter.timeout = UrlCopyOpts::getInstance().timeout;
+    reporter.nostreams = UrlCopyOpts::getInstance().nStreams;
+    reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
     if (strArray[0].length() > 0)
         reporter.constructMessage(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
@@ -236,17 +236,17 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     std::string moveFile = fileManagement->archive();
     if (strArray[0].length() > 0)
         reporter.constructMessageLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                UrlCopyOpts::getInstance()->debug);
+                UrlCopyOpts::getInstance().debug);
     else
         reporter.constructMessageLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
-                UrlCopyOpts::getInstance()->debug);
+                UrlCopyOpts::getInstance().debug);
 
     if (moveFile.length() != 0)
         {
             Logger::getInstance().ERROR() << "Failed to archive file: " << moveFile
                                           << std::endl;
         }
-    if (UrlCopyOpts::getInstance()->reuseFile && readFile.length() > 0)
+    if (UrlCopyOpts::getInstance().reuseFile && readFile.length() > 0)
         unlink(readFile.c_str());
 
     cancelTransfer();
@@ -276,13 +276,13 @@ void taskStatusUpdater(int time)
                 {
                     Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
                                                  << std::endl;
-                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance()->jobId, strArray[0], throughput, transferred_bytes);
+                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance().jobId, strArray[0], throughput, transferred_bytes);
                 }
             else
                 {
                     Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
                                                  << std::endl;
-                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance()->jobId, UrlCopyOpts::getInstance()->fileId,
+                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
                             throughput, transferred_bytes);
                 }
             boost::this_thread::sleep(boost::posix_time::seconds(time));
@@ -425,8 +425,8 @@ void myunexpected()
         {
             propagated = true;
             errorMessage = "Transfer unexpected handler called " + g_job_id;
-            errorMessage += " Source: " + UrlCopyOpts::getInstance()->sourceUrl;
-            errorMessage += " Dest: " + UrlCopyOpts::getInstance()->destUrl;
+            errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
+            errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
 
             abnormalTermination("FAILED", errorMessage, "Abort");
@@ -439,8 +439,8 @@ void myterminate()
         {
             propagated = true;
             errorMessage = "Transfer terminate handler called:" + g_job_id;
-            errorMessage += " Source: " + UrlCopyOpts::getInstance()->sourceUrl;
-            errorMessage += " Dest: " + UrlCopyOpts::getInstance()->destUrl;
+            errorMessage += " Source: " + UrlCopyOpts::getInstance().sourceUrl;
+            errorMessage += " Dest: " + UrlCopyOpts::getInstance().destUrl;
             Logger::getInstance().ERROR() << errorMessage << std::endl;
 
             abnormalTermination("FAILED", errorMessage, "Abort");
@@ -477,14 +477,14 @@ int main(int argc, char **argv)
     //set_terminate(myterminate);
     //set_unexpected(myunexpected);
 
-    UrlCopyOpts* opts = UrlCopyOpts::getInstance();
-    if (opts->parse(argc, argv) < 0) {
-        std::cerr << opts->getErrorMessage() << std::endl;
+    UrlCopyOpts &opts = UrlCopyOpts::getInstance();
+    if (opts.parse(argc, argv) < 0) {
+        std::cerr << opts.getErrorMessage() << std::endl;
         return 1;
     }
 
-    g_file_id = opts->fileId;
-    g_job_id = opts->jobId;
+    g_file_id = opts.fileId;
+    g_job_id = opts.jobId;
 
     std::string bytes_to_string("");
     struct stat statbufsrc;
@@ -498,7 +498,7 @@ int main(int argc, char **argv)
 
 
     /*TODO: until we find a way to calculate RTT(perfsonar) accurately, OS tcp auto-tuning does a better job*/
-    opts->tcpBuffersize = DEFAULT_BUFFSIZE;
+    opts.tcpBuffersize = DEFAULT_BUFFSIZE;
 
     if(argc < 4)
         {
@@ -523,16 +523,16 @@ int main(int argc, char **argv)
             throw;
         }
 
-    if (opts->proxy.length() > 0)
+    if (opts.proxy.length() > 0)
         {
             // Set Proxy Env
-            cert = new UserProxyEnv(opts->proxy);
+            cert = new UserProxyEnv(opts.proxy);
         }
 
     std::vector<std::string> urlsFile;
     std::string line("");
-    readFile = "/var/lib/fts3/" + opts->jobId;
-    if (opts->reuseFile)
+    readFile = "/var/lib/fts3/" + opts.jobId;
+    if (opts.reuseFile)
         {
             std::ifstream infile(readFile.c_str(), std::ios_base::in);
             while (getline(infile, line, '\n'))
@@ -563,7 +563,7 @@ int main(int argc, char **argv)
             throw;
         }
 
-    if (opts->reuseFile && urlsFile.empty() == true)
+    if (opts.reuseFile && urlsFile.empty() == true)
         {
             errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
 
@@ -580,7 +580,7 @@ int main(int argc, char **argv)
 
 
     //reuse session
-    if (opts->reuseFile)
+    if (opts.reuseFile)
         {
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
@@ -606,7 +606,7 @@ int main(int argc, char **argv)
             errorMessage = std::string("");
             throughput = 0.0;
 
-            if (opts->reuseFile)
+            if (opts.reuseFile)
                 {
                     std::string mid_str(urlsFile[ii]);
                     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -615,16 +615,16 @@ int main(int argc, char **argv)
                 }
             else
                 {
-                    strArray[0] = opts->fileId;
-                    strArray[1] = opts->sourceUrl;
-                    strArray[2] = opts->destUrl;
-                    strArray[3] = opts->checksumValue;
-                    if(opts->userFileSize > 0)
-                        strArray[4] = to_string<double >(opts->userFileSize, std::dec);
+                    strArray[0] = opts.fileId;
+                    strArray[1] = opts.sourceUrl;
+                    strArray[2] = opts.destUrl;
+                    strArray[3] = opts.checksumValue;
+                    if(opts.userFileSize > 0)
+                        strArray[4] = to_string<double >(opts.userFileSize, std::dec);
                     else
                         strArray[4] = "0";
-                    strArray[5] = opts->fileMetadata;
-                    strArray[6] = opts->tokenBringOnline;
+                    strArray[5] = opts.fileMetadata;
+                    strArray[6] = opts.tokenBringOnline;
                 }
 		
             // Trigger immediately an update
@@ -633,13 +633,13 @@ int main(int argc, char **argv)
             fileManagement->setSourceUrl(strArray[1]);
             fileManagement->setDestUrl(strArray[2]);
             fileManagement->setFileId(strArray[0]);
-            fileManagement->setJobId(opts->jobId);
+            fileManagement->setJobId(opts.jobId);
             g_file_id = strArray[0];
-            g_job_id = opts->jobId;
+            g_job_id = opts.jobId;
 
-            reporter.timeout = opts->timeout;
-            reporter.nostreams = opts->nStreams;
-            reporter.buffersize = opts->tcpBuffersize;
+            reporter.timeout = opts.timeout;
+            reporter.nostreams = opts.nStreams;
+            reporter.buffersize = opts.tcpBuffersize;
             reporter.source_se = fileManagement->getSourceHostname();
             reporter.dest_se = fileManagement->getDestHostname();
             fileManagement->generateLogFile();
@@ -655,22 +655,22 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostnameFile());
             msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostnameFile());
             msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
-            msg_ifce::getInstance()->set_vo(&tr_completed, opts->vo);
-            msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts->sourceSiteName);
-            msg_ifce::getInstance()->set_dest_site_name(&tr_completed, opts->destSiteName);
-            nstream_to_string = to_string<unsigned int>(opts->nStreams, std::dec);
+            msg_ifce::getInstance()->set_vo(&tr_completed, opts.vo);
+            msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts.sourceSiteName);
+            msg_ifce::getInstance()->set_dest_site_name(&tr_completed, opts.destSiteName);
+            nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
             msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-            tcpbuffer_to_string = to_string<unsigned int>(opts->tcpBuffersize, std::dec);
+            tcpbuffer_to_string = to_string<unsigned int>(opts.tcpBuffersize, std::dec);
             msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, tcpbuffer_to_string.c_str());
-            block_to_string = to_string<unsigned int>(opts->blockSize, std::dec);
+            block_to_string = to_string<unsigned int>(opts.blockSize, std::dec);
             msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
-            msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts->destTokenDescription);
-            msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts->sourceTokenDescription);
+            msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts.destTokenDescription);
+            msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts.sourceTokenDescription);
 
-            if(opts->monitoringMessages)
+            if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
-            if (!opts->logToStderr) {
+            if (!opts.logToStderr) {
                 int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath());
                 if (checkError != 0)
                     {
@@ -682,39 +682,39 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                reporter.constructMessageLog(opts->jobId, strArray[0], fileManagement->_getLogFileFullPath(),
-                        opts->debug);
+                reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->_getLogFileFullPath(),
+                        opts.debug);
 
                 gfalt_set_user_data(params, NULL, NULL);
 
                 logger.INFO() << "Transfer accepted" << std::endl;
-                logger.INFO() << "Proxy:" << opts->proxy << std::endl;
-                logger.INFO() << "VO:" << opts->vo << std::endl; //a
-                logger.INFO() << "Job id:" << opts->jobId << std::endl;
+                logger.INFO() << "Proxy:" << opts.proxy << std::endl;
+                logger.INFO() << "VO:" << opts.vo << std::endl; //a
+                logger.INFO() << "Job id:" << opts.jobId << std::endl;
                 logger.INFO() << "File id:" << strArray[0] << std::endl;
                 logger.INFO() << "Source url:" << strArray[1] << std::endl;
                 logger.INFO() << "Dest url:" << strArray[2] << std::endl;
-                logger.INFO() << "Overwrite enabled:" << opts->overwrite << std::endl;
-                logger.INFO() << "Tcp buffer size:" << opts->tcpBuffersize << std::endl;
-                logger.INFO() << "Dest space token:" << opts->destTokenDescription << std::endl;
-                logger.INFO() << "Source space token:" << opts->sourceTokenDescription << std::endl;
-                logger.INFO() << "Pin lifetime:" << opts->copyPinLifetime << std::endl;
-                logger.INFO() << "BringOnline:" << opts->bringOnline << std::endl;
+                logger.INFO() << "Overwrite enabled:" << opts.overwrite << std::endl;
+                logger.INFO() << "Tcp buffer size:" << opts.tcpBuffersize << std::endl;
+                logger.INFO() << "Dest space token:" << opts.destTokenDescription << std::endl;
+                logger.INFO() << "Source space token:" << opts.sourceTokenDescription << std::endl;
+                logger.INFO() << "Pin lifetime:" << opts.copyPinLifetime << std::endl;
+                logger.INFO() << "BringOnline:" << opts.bringOnline << std::endl;
                 logger.INFO() << "Checksum:" << strArray[3] << std::endl;
-                logger.INFO() << "Checksum enabled:" << opts->compareChecksum << std::endl;
+                logger.INFO() << "Checksum enabled:" << opts.compareChecksum << std::endl;
                 logger.INFO() << "User filesize:" << strArray[4] << std::endl;
                 logger.INFO() << "File metadata:" << replaceMetadataString(strArray[5]) << std::endl;
-                logger.INFO() << "Job metadata:" << replaceMetadataString(opts->jobMetadata) << std::endl;
+                logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
                 logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
 
                 //set to active
                 logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
-                reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "ACTIVE", "", diff, source_size);
+                reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
 
 
-                if (fexists(opts->proxy.c_str()) != 0)
+                if (fexists(opts.proxy.c_str()) != 0)
                     {
-                        errorMessage = "Proxy doesn't exist, probably expired and not renewed " + opts->proxy;
+                        errorMessage = "Proxy doesn't exist, probably expired and not renewed " + opts.proxy;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errno);
                         errorPhase = TRANSFER_PREPARATION;
@@ -725,19 +725,19 @@ int main(int argc, char **argv)
                 /*set infosys to gfal2*/
                 if (handle)
                     {
-                        logger.INFO() << "BDII:" << opts->infosys << std::endl;
-                        if (opts->infosys.compare("false") == 0)
+                        logger.INFO() << "BDII:" << opts.infosys << std::endl;
+                        if (opts.infosys.compare("false") == 0)
                             {
                                 gfal2_set_opt_boolean(handle, "BDII", "ENABLED", false, NULL);
                             }
                         else
                             {
-                                gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", (char *) opts->infosys.c_str(), NULL);
+                                gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", (char *) opts.infosys.c_str(), NULL);
                             }
                     }
 
                 /*gfal2 debug logging*/
-                if (opts->debug == true)
+                if (opts.debug == true)
                     {
                         logger.INFO() << "Set the transfer to debug mode" << std::endl;
                         gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
@@ -751,11 +751,11 @@ int main(int argc, char **argv)
                         gfal_log_set_handler((GLogFunc) log_func, NULL);
                     }
 
-                if (!opts->sourceTokenDescription.empty())
-                    gfalt_set_src_spacetoken(params, opts->sourceTokenDescription.c_str(), NULL);
+                if (!opts.sourceTokenDescription.empty())
+                    gfalt_set_src_spacetoken(params, opts.sourceTokenDescription.c_str(), NULL);
 
-                if (!opts->destTokenDescription.empty())
-                    gfalt_set_dst_spacetoken(params, opts->destTokenDescription.c_str(), NULL);
+                if (!opts.destTokenDescription.empty())
+                    gfalt_set_dst_spacetoken(params, opts.destTokenDescription.c_str(), NULL);
 
                 gfalt_set_create_parent_dir(params, TRUE, NULL);
 
@@ -765,9 +765,9 @@ int main(int argc, char **argv)
                 msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));
 
                 /*Checksuming*/
-                if (opts->compareChecksum)
+                if (opts.compareChecksum)
                     {
-                        if (!opts->checksumValue.empty() && opts->checksumValue != "x")   //user provided checksum
+                        if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
                             {
                                 logger.INFO() << "User  provided checksum" << std::endl;
                                 //check if only alg is specified
@@ -865,7 +865,7 @@ int main(int argc, char **argv)
                     }
 
                 //overwrite dest file if exists
-                if (opts->overwrite)
+                if (opts.overwrite)
                     {
                         logger.INFO() << "Overwrite is enabled" << std::endl;
                         gfalt_set_replace_existing_file(params, TRUE, NULL);
@@ -895,31 +895,31 @@ int main(int argc, char **argv)
                             }
                     }
 
-                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, opts->timeout);
-                if(!opts->manualConfig || opts->autoTunned || opts->timeout==0)
-                    opts->timeout = experimentalTimeout;
-                gfalt_set_timeout(params, opts->timeout, NULL);
-                timeout_to_string = to_string<unsigned int>(opts->timeout, std::dec);
+                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, opts.timeout);
+                if(!opts.manualConfig || opts.autoTunned || opts.timeout==0)
+                    opts.timeout = experimentalTimeout;
+                gfalt_set_timeout(params, opts.timeout, NULL);
+                timeout_to_string = to_string<unsigned int>(opts.timeout, std::dec);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
-                logger.INFO() << "Timeout:" << opts->timeout << std::endl;
+                logger.INFO() << "Timeout:" << opts.timeout << std::endl;
 
-                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts->nStreams);
-                if(!opts->manualConfig || opts->autoTunned || opts->nStreams==0)
-                    opts->nStreams = experimentalNstreams;
-                gfalt_set_nbstreams(params, opts->nStreams, NULL);
-                nstream_to_string = to_string<unsigned int>(opts->nStreams, std::dec);
+                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
+                if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
+                    opts.nStreams = experimentalNstreams;
+                gfalt_set_nbstreams(params, opts.nStreams, NULL);
+                nstream_to_string = to_string<unsigned int>(opts.nStreams, std::dec);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-                logger.INFO() << "nbstreams:" << opts->nStreams << std::endl;
+                logger.INFO() << "nbstreams:" << opts.nStreams << std::endl;
 
                 //update protocol stuff
                 logger.INFO() << "Update protocol stuff, report back to the server" << std::endl;
-                reporter.timeout = opts->timeout;
-                reporter.nostreams = opts->nStreams;
-                reporter.buffersize = opts->tcpBuffersize;
-                reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "UPDATE", "", diff, source_size);
+                reporter.timeout = opts.timeout;
+                reporter.nostreams = opts.nStreams;
+                reporter.buffersize = opts.tcpBuffersize;
+                reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "UPDATE", "", diff, source_size);
 
 
-                gfalt_set_tcp_buffer_size(params, opts->tcpBuffersize, NULL);
+                gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);
 
                 //check all params before passed to gfal2
@@ -1072,27 +1072,27 @@ stop:
             if (errorMessage.length() > 0)
                 {
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-                    reporter.timeout = opts->timeout;
-                    reporter.nostreams = opts->nStreams;
-                    reporter.buffersize = opts->tcpBuffersize;
+                    reporter.timeout = opts.timeout;
+                    reporter.nostreams = opts.nStreams;
+                    reporter.buffersize = opts.tcpBuffersize;
                     if (!terminalState)
                         {
                             logger.INFO() << "Report FAILED back to the server" << std::endl;
-                            reporter.constructMessage(throughput, retry, opts->jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
+                            reporter.constructMessage(throughput, retry, opts.jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
                         }
                 }
             else
                 {
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
-                    reporter.timeout = opts->timeout;
-                    reporter.nostreams = opts->nStreams;
-                    reporter.buffersize = opts->tcpBuffersize;
+                    reporter.timeout = opts.timeout;
+                    reporter.nostreams = opts.nStreams;
+                    reporter.buffersize = opts.tcpBuffersize;
                     logger.INFO() << "Report FINISHED back to the server" << std::endl;
-                    reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
+                    reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
-                    if (opts->bringOnline > 0)
+                    if (opts.bringOnline > 0)
                         {
                             logger.INFO() << "Token will be unpinned: " << strArray[6] << std::endl;
                             if(gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0)
@@ -1111,12 +1111,12 @@ stop:
             logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-            if(opts->monitoringMessages)
+            if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
             fileManagement->archive();
-            reporter.constructMessageLog(opts->jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                    opts->debug);
+            reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
+                    opts.debug);
         }//end for reuse loop
 
     if (params)
@@ -1136,7 +1136,7 @@ stop:
             cert = NULL;
         }
 
-    if (opts->reuseFile && readFile.length() > 0)
+    if (opts.reuseFile && readFile.length() > 0)
         unlink(readFile.c_str());
 
 

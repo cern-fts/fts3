@@ -6,7 +6,7 @@
 class UrlCopyOpts
 {
 public:
-    static UrlCopyOpts* getInstance();
+    static UrlCopyOpts& getInstance();
 
     int parse(int argc, char * const argv[]);
     std::string usage(const std::string& bin);
@@ -54,6 +54,7 @@ private:
     static const char short_options[];
 
     UrlCopyOpts();
+    UrlCopyOpts(const UrlCopyOpts&);
 
     std::string errorMessage;
 };

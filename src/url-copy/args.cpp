@@ -55,9 +55,9 @@ UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
 
 
 
-UrlCopyOpts* UrlCopyOpts::getInstance()
+UrlCopyOpts& UrlCopyOpts::getInstance()
 {
-    return &UrlCopyOpts::instance;
+    return UrlCopyOpts::instance;
 }
 
 
