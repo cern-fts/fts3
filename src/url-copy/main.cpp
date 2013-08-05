@@ -627,15 +627,15 @@ int main(int argc, char **argv)
                     strArray[6] = opts.tokenBringOnline;
                 }
 		
-            // Trigger immediately an update
-            taskStatusUpdater(0);
-
             fileManagement->setSourceUrl(strArray[1]);
             fileManagement->setDestUrl(strArray[2]);
             fileManagement->setFileId(strArray[0]);
             fileManagement->setJobId(opts.jobId);
             g_file_id = strArray[0];
             g_job_id = opts.jobId;
+
+            // Trigger immediately an update
+            taskStatusUpdater(0);
 
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;

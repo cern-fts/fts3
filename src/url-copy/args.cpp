@@ -46,7 +46,7 @@ const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GFD:E:C:y:z:At:a:b:c:d
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
         manualConfig(false), debug(false), compareChecksum(false),
-        overwrite(false), daemonize(false), logToStderr(false), userFileSize(0),
+        overwrite(false), daemonize(false), logToStderr(false), fileId("0"), userFileSize(0),
         bringOnline(-1), copyPinLifetime(-1), nStreams(DEFAULT_NOSTREAMS),
         tcpBuffersize(DEFAULT_BUFFSIZE), blockSize(0), timeout(DEFAULT_TIMEOUT)
 
