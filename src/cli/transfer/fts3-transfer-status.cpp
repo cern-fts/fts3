@@ -134,18 +134,24 @@ int main(int ac, char* av[])
         {
             if (cli.get())
                 cli->printer().error_msg(ex.what());
+            else
+                std::cerr << ex.what() << std::endl;
             return 1;
         }
     catch(string& ex)
         {
             if (cli.get())
                 cli->printer().gsoap_error_msg(ex);
+            else
+                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)
         {
             if (cli.get())
                 cli->printer().error_msg("Exception of unknown type!");
+            else
+                std::cerr << "Exception of unknown type!" << std::endl;
             return 1;
         }
 
