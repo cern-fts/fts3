@@ -38,6 +38,7 @@ find_package (Boost COMPONENTS thread)
 set(fts_url_copy_SOURCES args.cpp
                          main.cpp
                          file_management.cpp
+                         heuristics.cpp
                          reporter.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/StaticSslLocking.cpp
                          ${PROJECT_SOURCE_DIR}/src/common/signal_logger.cpp
