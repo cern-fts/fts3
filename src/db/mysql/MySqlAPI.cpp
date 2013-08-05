@@ -126,8 +126,6 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
     try
         {
-            /*if(pooledConn <= 3)
-                pooledConn = 4;*/
 
             connectionPool = new soci::connection_pool(pooledConn);
 
@@ -329,7 +327,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                 "            t_file.dest_se = :dest AND "
                 "            t_file.file_state = 'SUBMITTED'"
                 "    ) "
-                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 2 ";
+                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 3 ";
 
 
             std::set<std::string> jobIds;
