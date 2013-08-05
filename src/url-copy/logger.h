@@ -22,33 +22,31 @@
 #ifndef _LOGGER
 #define _LOGGER
 
+#include <cerrno>
+#include <fstream>
 #include <iostream>
 
-class logger
+class Logger
 {
 public:
+    static Logger& getInstance();
 
-    logger( std::ostream& os_);
-    ~logger() {}
+    std::ostream& INFO();
+    std::ostream& WARNING();
+    std::ostream& ERROR();
+    std::ostream& DEBUG();
 
-    template<class T>
-    friend logger& operator<<( logger& log, const T& output );
+    int redirectTo(const std::string& path);
 
 private:
-    std::ostream& os;
+    static Logger instance;
+
+    Logger();
+    Logger(const Logger&); // Should never be called
+    ~Logger();
+
+    std::ostream *os;
+    std::ofstream fhandle;
 };
-
-logger::logger( std::ostream& os_) : os(os_) {}
-
-template<class T>
-logger& operator<<( logger& log, const T& output )
-{
-    if(log.os.good())
-        {
-            log.os << output;
-            log.os.flush();
-        }
-    return log;
-}
 
 #endif

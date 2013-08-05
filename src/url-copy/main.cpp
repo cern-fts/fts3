@@ -62,7 +62,6 @@ using boost::thread;
 
 FileManagement* fileManagement = NULL;
 static Reporter reporter;
-static std::ofstream logStream;
 static transfer_completed tr_completed;
 static bool retry = true;
 static std::string strArray[7];
@@ -185,7 +184,11 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
 
             size_t trans = gfalt_copy_get_bytes_transfered(h, NULL);
             time_t elapsed = gfalt_copy_get_elapsed_time(h, NULL);
-            logStream << fileManagement->timestamp() << "INFO bytes:" << trans << ", avg KB/sec:" << avg << ", inst KB/sec:" << inst << ", elapsed:" << elapsed << '\n';
+            Logger::getInstance().INFO() << "bytes: " << trans
+                                         << ", avg KB/sec:" << avg
+                                         << ", inst KB/sec:" << inst
+                                         << ", elapsed:" << elapsed
+                                         << std::endl;
             throughput        = (double) avg;
             transferred_bytes = (double) trans;
         }
@@ -245,7 +248,8 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
     if (moveFile.length() != 0)
         {
-            logStream << fileManagement->timestamp() << "ERROR Failed to archive file: " << moveFile << '\n';
+            Logger::getInstance().ERROR() << "Failed to archive file: " << moveFile
+                                          << std::endl;
         }
     if (reuseFile.length() > 0 && readFile.length() > 0)
         unlink(readFile.c_str());
@@ -257,8 +261,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
 void canceler()
 {
-    errorMessage = "WARN Transfer " + g_job_id + " was canceled because it was not responding";
-    logStream << fileManagement->timestamp() << errorMessage << '\n';
+    Logger::getInstance().WARNING() << "Transfer " << g_job_id
+                                    << " was canceled because it was not responding"
+                                    << std::endl;
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
@@ -274,12 +279,14 @@ void taskStatusUpdater(int time)
         {
             if (strArray[0].length() > 0)
                 {
-                    logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
+                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
+                                                 << std::endl;
                     reporter.constructMessageUpdater(UrlCopyOpts::getInstance()->jobId, strArray[0], throughput, transferred_bytes);
                 }
             else
                 {
-                    logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
+                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
+                                                 << std::endl;
                     reporter.constructMessageUpdater(UrlCopyOpts::getInstance()->jobId, UrlCopyOpts::getInstance()->fileId,
                             throughput, transferred_bytes);
                 }
@@ -313,14 +320,19 @@ void log_stack(int sig)
 
 void signalHandler(int signum)
 {
-    logStream << fileManagement->timestamp() << "DEBUG Received signal " << signum << '\n';
+    Logger& logger = Logger::getInstance();
+
+    logger.WARNING() << "Received signal " << signum << std::endl;
+
     log_stack(signum);
     if (stackTrace.length() > 0)
         {
             propagated = true;
-            errorMessage = "ERROR Transfer process died " + g_job_id;
-            logStream << fileManagement->timestamp() << errorMessage << '\n';
-            logStream << fileManagement->timestamp() << "ERROR " << stackTrace << '\n';
+
+            logger.ERROR() << "Transfer process died " << g_job_id << std::endl;
+            logger.ERROR() << stackTrace << std::endl;
+
+            errorMessage = "Transfer process died " + g_job_id;
             errorMessage += stackTrace;
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -329,8 +341,8 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "WARN Transfer " + g_job_id + " canceled by the user";
-                    logStream << fileManagement->timestamp() << errorMessage << '\n';
+                    errorMessage = "Transfer " + g_job_id + " canceled by the user";
+                    logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
         }
@@ -339,8 +351,8 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "WARN Transfer " + g_job_id + " has been forced-canceled because it was stalled";
-                    logStream << fileManagement->timestamp() << errorMessage << '\n';
+                    errorMessage = "Transfer " + g_job_id + " has been forced-canceled because it was stalled";
+                    logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("FAILED", errorMessage, "Abort");
                 }
         }
@@ -349,8 +361,8 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "WARN Transfer " + g_job_id + " canceled";
-                    logStream << fileManagement->timestamp() << errorMessage << '\n';
+                    errorMessage = "Transfer " + g_job_id + " canceled";
+                    logger.WARNING() << errorMessage << std::endl;
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
         }
@@ -358,7 +370,7 @@ void signalHandler(int signum)
 
 // Callback used to populate the messaging with the different stages
 
-static void event_logger(const gfalt_event_t e, gpointer udata)
+static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
 {
     static const char* sideStr[] = {"SRC", "DST", "BTH"};
     static const GQuark SRM_DOMAIN = g_quark_from_static_string("SRM");
@@ -366,17 +378,11 @@ static void event_logger(const gfalt_event_t e, gpointer udata)
     msg_ifce* msg = msg_ifce::getInstance();
     std::string timestampStr = _to_string<long double>(e->timestamp, std::dec);
 
-    logger* log = static_cast<logger*> (udata);
-
-    if (log)
-        {
-            (*log) << fileManagement->timestamp() << "INFO "
-                   << '[' << timestampStr << "] "
-                   << sideStr[e->side] << ' '
-                   << g_quark_to_string(e->domain) << '\t'
-                   << g_quark_to_string(e->stage) << '\t'
-                   << e->description << '\n';
-        }
+    Logger::getInstance().INFO() << '[' << timestampStr << "] "
+                                 << sideStr[e->side] << ' '
+                                 << g_quark_to_string(e->domain) << '\t'
+                                 << g_quark_to_string(e->stage) << '\t'
+                                 << e->description << std::endl;
 
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
         {
@@ -414,7 +420,7 @@ static void log_func(const gchar *, GLogLevelFlags, const gchar *message, gpoint
 {
     if (message)
         {
-            logStream << fileManagement->timestamp() << "DEBUG " << message << '\n';
+            Logger::getInstance().DEBUG() << message << std::endl;
         }
 }
 
@@ -423,10 +429,10 @@ void myunexpected()
     if (propagated == false)
         {
             propagated = true;
-            errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
+            errorMessage = "Transfer unexpected handler called " + g_job_id;
             errorMessage += " Source: " + UrlCopyOpts::getInstance()->sourceUrl;
             errorMessage += " Dest: " + UrlCopyOpts::getInstance()->destUrl;
-            logStream << fileManagement->timestamp() << errorMessage << '\n';
+            Logger::getInstance().ERROR() << errorMessage << std::endl;
 
             abnormalTermination("FAILED", errorMessage, "Abort");
         }
@@ -437,15 +443,14 @@ void myterminate()
     if (propagated == false)
         {
             propagated = true;
-            errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
+            errorMessage = "Transfer terminate handler called:" + g_job_id;
             errorMessage += " Source: " + UrlCopyOpts::getInstance()->sourceUrl;
             errorMessage += " Dest: " + UrlCopyOpts::getInstance()->destUrl;
-            logStream << fileManagement->timestamp() << errorMessage << '\n';
+            Logger::getInstance().ERROR() << errorMessage << std::endl;
 
             abnormalTermination("FAILED", errorMessage, "Abort");
         }
 }
-
 
 
 
@@ -461,6 +466,8 @@ __attribute__((constructor)) void begin(void)
 
 int main(int argc, char **argv)
 {
+    Logger &logger = Logger::getInstance();
+
     // register signals handler
     signal(SIGINT, signalHandler);
     signal(SIGUSR1, signalHandler);
@@ -472,8 +479,8 @@ int main(int argc, char **argv)
     signal(SIGTRAP, signalHandler);
     signal(SIGSYS, signalHandler);
 
-    set_terminate(myterminate);
-    set_unexpected(myunexpected);
+    //set_terminate(myterminate);
+    //set_unexpected(myunexpected);
 
     UrlCopyOpts* opts = UrlCopyOpts::getInstance();
     if (opts->parse(argc, argv) < 0) {
@@ -668,60 +675,62 @@ int main(int argc, char **argv)
             if(opts->monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
-            int checkError = fileManagement->getLogStream(logStream);
-            if (checkError != 0)
-                {
-                    std::string message = mapErrnoToString(checkError);
-                    errorMessage = "Failed to create transfer log file, error was: " + message;
-                    goto stop;
-                }
+            if (!opts->logToStderr) {
+                int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath());
+                if (checkError != 0)
+                    {
+                        std::string message = mapErrnoToString(checkError);
+                        errorMessage = "Failed to create transfer log file, error was: " + message;
+                        goto stop;
+                    }
+            }
+
+            // Scope
             {
-                //add curly brackets to delimit the scope of the logger
-                logger log(logStream);
                 reporter.constructMessageLog(opts->jobId, strArray[0], fileManagement->_getLogFileFullPath(),
                         opts->debug);
 
-                gfalt_set_user_data(params, &log, NULL);
+                gfalt_set_user_data(params, NULL, NULL);
 
-                log << fileManagement->timestamp() << "INFO Transfer accepted" << '\n';
-                log << fileManagement->timestamp() << "INFO Proxy:" << opts->proxy << '\n';
-                log << fileManagement->timestamp() << "INFO VO:" << opts->vo << '\n'; //a
-                log << fileManagement->timestamp() << "INFO Job id:" << opts->jobId << '\n'; //a
-                log << fileManagement->timestamp() << "INFO File id:" << strArray[0] << '\n'; //a
-                log << fileManagement->timestamp() << "INFO Source url:" << strArray[1] << '\n'; //b
-                log << fileManagement->timestamp() << "INFO Dest url:" << strArray[2] << '\n'; //c
-                log << fileManagement->timestamp() << "INFO Overwrite enabled:" << opts->overwrite << '\n'; //d
-                log << fileManagement->timestamp() << "INFO Tcp buffer size:" << opts->tcpBuffersize << '\n'; //f
-                log << fileManagement->timestamp() << "INFO Dest space token:" << opts->destTokenDescription << '\n'; //j
-                log << fileManagement->timestamp() << "INFO Source space token:" << opts->sourceTokenDescription << '\n'; //k
-                log << fileManagement->timestamp() << "INFO Pin lifetime:" << opts->copyPinLifetime << '\n'; //t
-                log << fileManagement->timestamp() << "INFO BringOnline:" << opts->bringOnline << '\n'; //t
-                log << fileManagement->timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
-                log << fileManagement->timestamp() << "INFO Checksum enabled:" << opts->compareChecksum << '\n'; //A
-                log << fileManagement->timestamp() << "INFO User filesize:" << strArray[4] << '\n'; //A
-                log << fileManagement->timestamp() << "INFO File metadata:" << replaceMetadataString(strArray[5]) << '\n'; //A
-                log << fileManagement->timestamp() << "INFO Job metadata:" << replaceMetadataString(job_Metadata) << '\n'; //A
-                log << fileManagement->timestamp() << "INFO Bringonline token:" << strArray[6] << '\n'; //A
+                logger.INFO() << "Transfer accepted" << std::endl;
+                logger.INFO() << "Proxy:" << opts->proxy << std::endl;
+                logger.INFO() << "VO:" << opts->vo << std::endl; //a
+                logger.INFO() << "Job id:" << opts->jobId << std::endl;
+                logger.INFO() << "File id:" << strArray[0] << std::endl;
+                logger.INFO() << "Source url:" << strArray[1] << std::endl;
+                logger.INFO() << "Dest url:" << strArray[2] << std::endl;
+                logger.INFO() << "Overwrite enabled:" << opts->overwrite << std::endl;
+                logger.INFO() << "Tcp buffer size:" << opts->tcpBuffersize << std::endl;
+                logger.INFO() << "Dest space token:" << opts->destTokenDescription << std::endl;
+                logger.INFO() << "Source space token:" << opts->sourceTokenDescription << std::endl;
+                logger.INFO() << "Pin lifetime:" << opts->copyPinLifetime << std::endl;
+                logger.INFO() << "BringOnline:" << opts->bringOnline << std::endl;
+                logger.INFO() << "Checksum:" << strArray[3] << std::endl;
+                logger.INFO() << "Checksum enabled:" << opts->compareChecksum << std::endl;
+                logger.INFO() << "User filesize:" << strArray[4] << std::endl;
+                logger.INFO() << "File metadata:" << replaceMetadataString(strArray[5]) << std::endl;
+                logger.INFO() << "Job metadata:" << replaceMetadataString(job_Metadata) << std::endl;
+                logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
 
                 //set to active
-                log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
+                logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
                 reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "ACTIVE", "", diff, source_size);
 
 
                 if (fexists(opts->proxy.c_str()) != 0)
                     {
-                        errorMessage = "ERROR proxy doesn't exist, probably expired and not renewed " + opts->proxy;
+                        errorMessage = "Proxy doesn't exist, probably expired and not renewed " + opts->proxy;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errno);
                         errorPhase = TRANSFER_PREPARATION;
-                        log << fileManagement->timestamp() << errorMessage << '\n';
+                        logger.ERROR() << errorMessage << std::endl;
                         goto stop;
                     }
 
                 /*set infosys to gfal2*/
                 if (handle)
                     {
-                        log << fileManagement->timestamp() << "INFO BDII:" << infosys << '\n';
+                        logger.INFO() << "BDII:" << infosys << std::endl;
                         if (infosys.compare("false") == 0)
                             {
                                 gfal2_set_opt_boolean(handle, "BDII", "ENABLED", false, NULL);
@@ -735,13 +744,14 @@ int main(int argc, char **argv)
                 /*gfal2 debug logging*/
                 if (opts->debug == true)
                     {
-                        log << fileManagement->timestamp() << "INFO Set the transfer to debug mode" << '\n';
+                        logger.INFO() << "Set the transfer to debug mode" << std::endl;
                         gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
                         FILE* reopenDebugFile = freopen(fileManagement->getLogFileFullPath().c_str(), "w", stderr);
                         chmod(fileManagement->getLogFileFullPath().c_str(), (mode_t) 0644);
                         if (reopenDebugFile == NULL)
                             {
-                                log << fileManagement->timestamp() << "WARN Failed to create debug file, errno:" << mapErrnoToString(errno) << '\n';
+                                logger.WARNING() << "Failed to create debug file, errno:" << mapErrnoToString(errno)
+                                                 << std::endl;
                             }
                         gfal_log_set_handler((GLogFunc) log_func, NULL);
                     }
@@ -755,7 +765,7 @@ int main(int argc, char **argv)
                 gfalt_set_create_parent_dir(params, TRUE, NULL);
 
                 //get checksum timeout from gfal2
-                log << fileManagement->timestamp() << "INFO get checksum timeout" << '\n';
+                logger.INFO() << "Get checksum timeout" << std::endl;
                 int checksumTimeout = gfal2_get_opt_integer(handle, "GRIDFTP PLUGIN", "CHECKSUM_CALC_TIMEOUT", NULL);
                 msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));
 
@@ -764,7 +774,7 @@ int main(int argc, char **argv)
                     {
                         if (!opts->checksumValue.empty() && opts->checksumValue != "x")   //user provided checksum
                             {
-                                log << fileManagement->timestamp() << "INFO user  provided checksum" << '\n';
+                                logger.INFO() << "User  provided checksum" << std::endl;
                                 //check if only alg is specified
                                 if (std::string::npos == (strArray[3]).find(":"))
                                     {
@@ -782,12 +792,12 @@ int main(int argc, char **argv)
                             }
                         else    //use auto checksum
                             {
-                                log << fileManagement->timestamp() << "INFO Calculate checksum auto" << '\n';
+                                logger.INFO() << "Calculate checksum auto" << std::endl;
                                 gfalt_set_checksum_check(params, TRUE, NULL);
                             }
                     }
 
-                log << fileManagement->timestamp() << "INFO Stat the source surl start" << '\n';
+                logger.INFO() << "Stat the source surl start" << std::endl;
                 for (int sourceStatRetry = 0; sourceStatRetry < 4; sourceStatRetry++)
                     {
                         errorMessage = ""; //reset
@@ -795,7 +805,9 @@ int main(int argc, char **argv)
                             {
                                 std::string tempError(tmp_err->message);
                                 const int errCode = tmp_err->code;
-                                log << fileManagement->timestamp() << "ERROR Failed to get source file size, errno:" << errCode << ", " << tempError << '\n';
+                                logger.ERROR() << "Failed to get source file size, errno:"
+                                               << errCode << ", " << tempError
+                                               << std::endl;
                                 errorMessage = "Failed to get source file size: " + tempError;
                                 errorScope = SOURCE;
                                 reasonClass = mapErrnoToString(errCode);
@@ -803,7 +815,7 @@ int main(int argc, char **argv)
                                 retry = retryTransfer(tmp_err->code, "SOURCE" );
                                 if (sourceStatRetry == 3 || retry == false)
                                     {
-                                        log << fileManagement->timestamp() << "INFO No more retries for stat the source" << '\n';
+                                        logger.INFO() << "No more retries for stat the source" << std::endl;
                                         g_clear_error(&tmp_err);
                                         goto stop;
                                     }
@@ -814,13 +826,13 @@ int main(int argc, char **argv)
                                 if (statbufsrc.st_size <= 0)
                                     {
                                         errorMessage = "Source file size is 0";
-                                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                                        logger.ERROR() << errorMessage << std::endl;
                                         errorScope = SOURCE;
                                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                                         errorPhase = TRANSFER_PREPARATION;
                                         if (sourceStatRetry == 3)
                                             {
-                                                log << fileManagement->timestamp() << "INFO No more retries for stat the source" << '\n';
+                                                logger.INFO() << "No more retries for stat the source" << std::endl;
                                                 retry = true;
                                                 goto stop;
                                             }
@@ -830,20 +842,20 @@ int main(int argc, char **argv)
                                         std::stringstream error_;
                                         error_ << "User specified source file size is " << strArray[4] << " but stat returned " << statbufsrc.st_size;
                                         errorMessage = error_.str();
-                                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                                        logger.ERROR() << errorMessage << std::endl;
                                         errorScope = SOURCE;
                                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                                         errorPhase = TRANSFER_PREPARATION;
                                         if (sourceStatRetry == 3)
                                             {
-                                                log << fileManagement->timestamp() << "INFO No more retries for stat the source" << '\n';
+                                                logger.INFO() << "No more retries for stat the source" << std::endl;
                                                 retry = true;
                                                 goto stop;
                                             }
                                     }
                                 else
                                     {
-                                        log << fileManagement->timestamp() << "INFO Source file size: " << statbufsrc.st_size << '\n';
+                                        logger.INFO() << "Source file size: " << statbufsrc.st_size << std::endl;
                                         if (statbufsrc.st_size > 0)
                                             source_size = (double) statbufsrc.st_size;
                                         //conver longlong to string
@@ -853,20 +865,20 @@ int main(int argc, char **argv)
                                         break;
                                     }
                             }
-                        log << fileManagement->timestamp() << "INFO Stat the source file will be retried" << '\n';
+                        logger.INFO() <<"Stat the source file will be retried" << std::endl;
                         sleep(3); //give it some time to breath
                     }
 
                 //overwrite dest file if exists
                 if (opts->overwrite)
                     {
-                        log << fileManagement->timestamp() << "INFO Overwrite is enabled" << '\n';
+                        logger.INFO() << "Overwrite is enabled" << std::endl;
                         gfalt_set_replace_existing_file(params, TRUE, NULL);
                     }
                 else
                     {
                         //if overwrite is not enabled, check if  exists and stop the transfer if it does
-                        log << fileManagement->timestamp() << "INFO Stat the dest surl to check if file already exists" << '\n';
+                        logger.INFO() << "Stat the dest surl to check if file already exists" << std::endl;
                         errorMessage = ""; //reset
                         if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdestOver, &tmp_err) == 0)
                             {
@@ -874,7 +886,7 @@ int main(int argc, char **argv)
                                 if(dest_sizeOver > 0)
                                     {
                                         errorMessage = "Destination file already exists and overwrite is not enabled";
-                                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                                        logger.ERROR() << errorMessage << std::endl;
                                         errorScope = DESTINATION;
                                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                                         errorPhase = TRANSFER_PREPARATION;
@@ -894,7 +906,7 @@ int main(int argc, char **argv)
                 gfalt_set_timeout(params, opts->timeout, NULL);
                 timeout_to_string = to_string<unsigned int>(opts->timeout, std::dec);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
-                log << fileManagement->timestamp() << "INFO Timeout:" << opts->timeout << '\n'; //h
+                logger.INFO() << "Timeout:" << opts->timeout << std::endl;
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts->nStreams);
                 if(!opts->manualConfig || opts->autoTunned || opts->nStreams==0)
@@ -902,10 +914,10 @@ int main(int argc, char **argv)
                 gfalt_set_nbstreams(params, opts->nStreams, NULL);
                 nstream_to_string = to_string<unsigned int>(opts->nStreams, std::dec);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-                log << fileManagement->timestamp() << "INFO nbstreams:" << opts->nStreams << '\n'; //e
+                logger.INFO() << "nbstreams:" << opts->nStreams << std::endl;
 
                 //update protocol stuff
-                log << fileManagement->timestamp() << "INFO Update protocol stuff, report back to the server" << '\n';
+                logger.INFO() << "Update protocol stuff, report back to the server" << std::endl;
                 reporter.timeout = opts->timeout;
                 reporter.nostreams = opts->nStreams;
                 reporter.buffersize = opts->tcpBuffersize;
@@ -919,19 +931,21 @@ int main(int argc, char **argv)
                 if ((strArray[1]).c_str() == NULL || (strArray[2]).c_str() == NULL)
                     {
                         errorMessage = "Failed to get source or dest surl";
-                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                        logger.ERROR() << errorMessage << std::endl;
                         errorScope = TRANSFER;
                         reasonClass = GENERAL_FAILURE;
                         errorPhase = TRANSFER;
                         goto stop;
                     }
 
-                log << fileManagement->timestamp() << "INFO Transfer Starting" << '\n';
+                logger.INFO() << "Transfer Starting" << std::endl;
                 if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
                     {
                         if (tmp_err != NULL && tmp_err->message != NULL)
                             {
-                                log << fileManagement->timestamp() << "ERROR Transfer failed - errno: " << tmp_err->code << " Error message:" << tmp_err->message << '\n';
+                                logger.ERROR() << "Transfer failed - errno: " << tmp_err->code
+                                               << " Error message:" << tmp_err->message
+                                               << std::endl;
                                 if (tmp_err->code == 110)
                                     {
                                         errorMessage = std::string(tmp_err->message);
@@ -947,7 +961,7 @@ int main(int argc, char **argv)
                             }
                         else
                             {
-                                log << fileManagement->timestamp() << "ERROR Transfer failed - Error message: Unresolved error" << '\n';
+                                logger.ERROR() << "Transfer failed - Error message: Unresolved error" << std::endl;
                                 errorMessage = std::string("Unresolved error");
                                 errorScope = TRANSFER;
                                 reasonClass = GENERAL_FAILURE;
@@ -963,7 +977,7 @@ int main(int argc, char **argv)
                     }
                 else
                     {
-                        log << fileManagement->timestamp() << "INFO Transfer completed successfully" << '\n';
+                        logger.INFO() << "Transfer completed successfully" << std::endl;
                     }
 
 
@@ -971,14 +985,16 @@ int main(int argc, char **argv)
                 bytes_to_string = to_string<double>(transferred_bytes, std::dec);
                 msg_ifce::getInstance()->set_total_bytes_transfered(&tr_completed, bytes_to_string.c_str());
 
-                log << fileManagement->timestamp() << "INFO Stat the dest surl start" << '\n';
+                logger.INFO() << "Stat the dest surl start" << std::endl;
                 for (int destStatRetry = 0; destStatRetry < 4; destStatRetry++)
                     {
                         errorMessage = ""; //reset
                         if (gfal2_stat(handle, (strArray[2]).c_str(), &statbufdest, &tmp_err) < 0)
                             {
                                 std::string tempError(tmp_err->message);
-                                log << fileManagement->timestamp() << "ERROR Failed to get dest file size, errno:" << tmp_err->code << ", " << tempError << '\n';
+                                logger.ERROR() << "Failed to get dest file size, errno:" << tmp_err->code << ", "
+                                               << tempError
+                                               << std::endl;
                                 errorMessage = "Failed to get dest file size: " + tempError;
                                 errorScope = DESTINATION;
                                 reasonClass = mapErrnoToString(tmp_err->code);
@@ -986,7 +1002,7 @@ int main(int argc, char **argv)
                                 retry = retryTransfer(tmp_err->code, "DESTINATION" );
                                 if (destStatRetry == 3 || false == retry)
                                     {
-                                        log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
+                                        logger.INFO() << "No more retry stating the destination" << std::endl;
                                         g_clear_error(&tmp_err);
                                         goto stop;
                                     }
@@ -997,13 +1013,13 @@ int main(int argc, char **argv)
                                 if (statbufdest.st_size <= 0)
                                     {
                                         errorMessage = "Destination file size is 0";
-                                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                                        logger.ERROR() << errorMessage << std::endl;
                                         errorScope = DESTINATION;
                                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                                         errorPhase = TRANSFER_FINALIZATION;
                                         if (destStatRetry == 3)
                                             {
-                                                log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
+                                                logger.INFO() << "No more retry stating the destination" << std::endl;
                                                 retry = true;
                                                 goto stop;
                                             }
@@ -1013,36 +1029,36 @@ int main(int argc, char **argv)
                                         std::stringstream error_;
                                         error_ << "User specified destination file size is " << strArray[4] << " but stat returned " << statbufdest.st_size;
                                         errorMessage = error_.str();
-                                        log << fileManagement->timestamp() << "ERROR " << errorMessage << '\n';
+                                        logger.ERROR() << errorMessage << std::endl;
                                         errorScope = DESTINATION;
                                         reasonClass = mapErrnoToString(gfal_posix_code_error());
                                         errorPhase = TRANSFER_FINALIZATION;
                                         if (destStatRetry == 3)
                                             {
                                                 retry = true;
-                                                log << fileManagement->timestamp() << "INFO No more retry stating the destination" << '\n';
+                                                logger.INFO() << "No more retry stating the destination" << std::endl;
                                                 goto stop;
                                             }
                                     }
                                 else
                                     {
-                                        log << fileManagement->timestamp() << "INFO Destination file size: " << statbufdest.st_size << '\n';
+                                        logger.INFO() << "Destination file size: " << statbufdest.st_size << std::endl;
                                         dest_size = (double) statbufdest.st_size;
                                         break;
                                     }
                             }
-                        log << fileManagement->timestamp() << "WARN Stat the destination will be retried" << '\n';
+                        logger.WARNING() << "Stat the destination will be retried" << std::endl;
                         sleep(3); //give it some time to breath
                     }
 
                 //check source and dest file sizes
                 if (source_size == dest_size)
                     {
-                        log << fileManagement->timestamp() << "INFO Source and destination file size matching" << '\n';
+                        logger.INFO() << "Source and destination file size matching" << std::endl;
                     }
                 else
                     {
-                        log << fileManagement->timestamp() << "ERROR Source and destination file size are different" << '\n';
+                        logger.ERROR() << "Source and destination file size are different" << std::endl;
                         errorMessage = "Source and destination file size mismatch";
                         errorScope = DESTINATION;
                         reasonClass = mapErrnoToString(gfal_posix_code_error());
@@ -1066,7 +1082,7 @@ stop:
                     reporter.buffersize = opts->tcpBuffersize;
                     if (!terminalState)
                         {
-                            logStream << fileManagement->timestamp() << "INFO Report FAILED back to the server" << '\n';
+                            logger.INFO() << "Report FAILED back to the server" << std::endl;
                             reporter.constructMessage(throughput, retry, opts->jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
                         }
                 }
@@ -1076,42 +1092,32 @@ stop:
                     reporter.timeout = opts->timeout;
                     reporter.nostreams = opts->nStreams;
                     reporter.buffersize = opts->tcpBuffersize;
-                    logStream << fileManagement->timestamp() << "INFO Report FINISHED back to the server" << '\n';
+                    logger.INFO() << "Report FINISHED back to the server" << std::endl;
                     reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
                     if (opts->bringOnline > 0)
                         {
-                            logStream << fileManagement->timestamp() << "INFO Token will be unpinned: " << strArray[6] << '\n';
+                            logger.INFO() << "Token will be unpinned: " << strArray[6] << std::endl;
                             if(gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0)
                                 {
                                     if (tmp_err && tmp_err->message)
                                         {
-                                            logStream << fileManagement->timestamp() << "WARN Failed unpinning the file: " << std::string(tmp_err->message) << '\n';
+                                            logger.WARNING() << "Failed unpinning the file: " << std::string(tmp_err->message) << std::endl;
                                         }
                                 }
                             else
                                 {
-                                    logStream << fileManagement->timestamp() << "INFO Token unpinned: " << strArray[6] << '\n';
+                                    logger.INFO() << "Token unpinned: " << strArray[6] << std::endl;
                                 }
                         }
                 }
-            logStream << fileManagement->timestamp() << "INFO Send monitoring complete message" << '\n';
+            logger.INFO() << "Send monitoring complete message" << std::endl;
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
             if(opts->monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
-
-            logStream << fileManagement->timestamp() << "INFO Closing the log stream" << '\n';
-            if (logStream.is_open())
-                {
-                    logStream.close();
-                }
-            if (opts->debug == true)
-                {
-                    fclose(stderr);
-                }
 
             fileManagement->archive();
             reporter.constructMessageLog(opts->jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),

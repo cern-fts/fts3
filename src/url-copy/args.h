@@ -20,6 +20,7 @@ public:
     bool compareChecksum;
     bool overwrite;
     bool daemonize;
+    bool logToStderr;
 
     // Arguments
     std::string infosys;

@@ -37,6 +37,7 @@ const option UrlCopyOpts::long_options[] = {
     {"source-token-desc", required_argument, 0, 'k'},
     {"file-id",           required_argument, 0, 'B'},
     {"proxy",             required_argument, 0, '5'},
+    {"stderr",            no_argument,       0, '1'},
     {0, 0, 0, 0}
 };
 
@@ -45,7 +46,7 @@ const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:G:FD:E:C:y:z:At:a:b:c:
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
         manualConfig(false), debug(false), compareChecksum(false),
-        overwrite(false), daemonize(false), userFileSize(0),
+        overwrite(false), daemonize(false), logToStderr(false), userFileSize(0),
         bringOnline(-1), copyPinLifetime(-1), nStreams(DEFAULT_NOSTREAMS),
         tcpBuffersize(DEFAULT_BUFFSIZE), blockSize(0), timeout(DEFAULT_TIMEOUT)
 
@@ -185,6 +186,9 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                     break;
                 case '5':
                     proxy = optarg;
+                    break;
+                case '1':
+                    logToStderr = true;
                     break;
                 case '?':
                     errorMessage = usage(argv[0]);
