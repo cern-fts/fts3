@@ -35,6 +35,11 @@ using namespace boost::assign;
 using namespace fts3::cli;
 using namespace fts3::common;
 
+static bool isTransferFailed(const std::string& state)
+{
+    return state == "CANCELED" || state == "FAILED";
+}
+
 /**
  * This is the entry point for the fts3-transfer-status command line tool.
  */
@@ -60,12 +65,21 @@ int main(int ac, char* av[])
             bool archive = cli->queryArchived();
             // get job IDs that have to be check
             vector<string> jobIds = cli->getJobIds();
+
             // iterate over job IDs
             vector<string>::iterator it;
             for (it = jobIds.begin(); it < jobIds.end(); it++)
                 {
 
                     string jobId = *it;
+
+                    std::ofstream failedFiles;
+                    if (cli->dumpFailed())
+                        {
+                            failedFiles.open(jobId.c_str(), ios_base::out);
+                            if (failedFiles.fail())
+                                throw std::string(strerror(errno));
+                        }
 
                     if (cli->isVerbose())
                         {
@@ -86,8 +100,9 @@ int main(int ac, char* av[])
                         }
 
                     // TODO test!
-                    // check if the -l option has been used
-                    if (cli->list())
+                    // If a list is requested, or dumping the failed transfers,
+                    // get the transfers
+                    if (cli->list() || cli->dumpFailed())
                         {
                             int offset = 0;
                             int cnt = 0;
@@ -109,17 +124,25 @@ int main(int ac, char* av[])
                                                 {
                                                     tns3__FileTransferStatus* stat = *it;
 
-                                                    vector<string> values =
-                                                        list_of
-                                                        (*stat->sourceSURL)
-                                                        (*stat->destSURL)
-                                                        (*stat->transferFileState)
-                                                        (lexical_cast<string>(stat->numFailures))
-                                                        (*stat->reason)
-                                                        (lexical_cast<string>(stat->duration))
-                                                        ;
+                                                    if (cli->list()) {
+                                                        vector<string> values =
+                                                            list_of
+                                                            (*stat->sourceSURL)
+                                                            (*stat->destSURL)
+                                                            (*stat->transferFileState)
+                                                            (lexical_cast<string>(stat->numFailures))
+                                                            (*stat->reason)
+                                                            (lexical_cast<string>(stat->duration))
+                                                            ;
 
-                                                    cli->printer().file_list(values);
+                                                        cli->printer().file_list(values);
+                                                    }
+
+                                                    if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState)) {
+                                                        failedFiles << *stat->sourceSURL << "\t"
+                                                                    << *stat->destSURL
+                                                                    << std::endl;
+                                                    }
                                                 }
                                         }
 

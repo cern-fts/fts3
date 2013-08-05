@@ -89,6 +89,11 @@ public:
      */
     bool queryArchived();
 
+    /**
+     * If true, the failed files should be dump to a file
+     */
+    bool dumpFailed();
+
 };
 
 }
