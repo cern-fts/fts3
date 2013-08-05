@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
+#include "args.h"
 #include <iostream>
 #include <algorithm>
 #include <ctype.h>
@@ -75,46 +76,11 @@ static std::string reuseFile("");
 static std::string token_bringonline("");
 static double source_size = 0.0;
 static double dest_size = 0.0;
-static std::string userFilesize("");
 static double diff = 0.0;
 static double transfer_start = 0.0;
 static double transfer_complete = 0.0;
 static uid_t pw_uid;
-static std::string file_id("0");
-static std::string job_id(""); //a
-static std::string source_url(""); //b
-static std::string dest_url(""); //c
-static bool overwrite = false; //d
-static unsigned int nbstreams = DEFAULT_NOSTREAMS; //e
-static unsigned int tcpbuffersize = DEFAULT_BUFFSIZE; //f
-static unsigned int blocksize = 0; //g
-static unsigned int timeout = DEFAULT_TIMEOUT; //h
-static bool daemonize = true; //i
-static std::string dest_token_desc(""); //j
-static std::string source_token_desc(""); //k
-static unsigned int markers_timeout = 180; //l
-static unsigned int first_marker_timeout = 180; //m
-static unsigned int srm_get_timeout = 180; //n
-static unsigned int srm_put_timeout = 180; //o
-static unsigned int http_timeout = 180; //p
-static bool dont_ping_source = false; //q
-static bool dont_ping_dest = false; //r
-static bool disable_dir_check = false; //s
-static int copy_pin_lifetime = -1; //t
-static int bringonline = -1; //H
-static bool lan_connection = false; //u
-static bool fail_nearline = false; //v
-static unsigned int timeout_per_mb = 0; //w
-static unsigned int no_progress_timeout = 180; //x
-static std::string algorithm(""); //y
-static std::string checksum_value(""); //z
-static bool compare_checksum = false; //A
-static std::string vo("");
-static std::string sourceSiteName("");
-static std::string destSiteName("");
 static char hostname[1024] = {0};
-static std::string proxy("");
-static bool debug = false;
 static volatile bool propagated = false;
 static volatile bool canceled = false;
 static volatile bool terminalState = false;
@@ -126,21 +92,12 @@ static std::string file_Metadata("");
 static std::string job_Metadata(""); //a
 static std::string globalErrorMessage("");
 static std::string infosys("");
-static bool manualConfig = false;
-static bool autoTunned = false;
-static bool monitoringMessages = false;
 static double throughput = 0.0;
 static double transferred_bytes = 0;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
 
-
-static std::string removeDecimal(const std::string & input)
-{
-    size_t pos = input.find(".");
-    return input.substr (0, pos);
-}
 
 //convert milli to secs
 static double transferDuration(double start , double complete)
@@ -458,12 +415,12 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, errorMessage);
     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, finalState);
     msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
-    if(monitoringMessages)
+    if(UrlCopyOpts::getInstance()->monitoringMessages)
         msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
-    reporter.timeout = timeout;
-    reporter.nostreams = nbstreams;
-    reporter.buffersize = tcpbuffersize;
+    reporter.timeout = UrlCopyOpts::getInstance()->timeout;
+    reporter.nostreams = UrlCopyOpts::getInstance()->nStreams;
+    reporter.buffersize = UrlCopyOpts::getInstance()->tcpBuffersize;
 
     if (strArray[0].length() > 0)
         reporter.constructMessage(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
@@ -472,9 +429,11 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
     std::string moveFile = fileManagement->archive();
     if (strArray[0].length() > 0)
-        reporter.constructMessageLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(), debug);
+        reporter.constructMessageLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
+                UrlCopyOpts::getInstance()->debug);
     else
-        reporter.constructMessageLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(), debug);
+        reporter.constructMessageLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
+                UrlCopyOpts::getInstance()->debug);
 
     if (moveFile.length() != 0)
         {
@@ -508,12 +467,13 @@ void taskStatusUpdater(int time)
             if (strArray[0].length() > 0)
                 {
                     logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
-                    reporter.constructMessageUpdater(job_id, strArray[0], throughput, transferred_bytes);
+                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance()->jobId, strArray[0], throughput, transferred_bytes);
                 }
             else
                 {
                     logStream << fileManagement->timestamp() << "INFO Sending back to the server url-copy is still alive!" << '\n';
-                    reporter.constructMessageUpdater(job_id, file_id, throughput, transferred_bytes);
+                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance()->jobId, UrlCopyOpts::getInstance()->fileId,
+                            throughput, transferred_bytes);
                 }
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
@@ -656,8 +616,8 @@ void myunexpected()
         {
             propagated = true;
             errorMessage = "ERROR Transfer unexpected handler called " + g_job_id;
-            errorMessage += " Source: " + source_url;
-            errorMessage += " Dest: " + dest_url;
+            errorMessage += " Source: " + UrlCopyOpts::getInstance()->sourceUrl;
+            errorMessage += " Dest: " + UrlCopyOpts::getInstance()->destUrl;
             logStream << fileManagement->timestamp() << errorMessage << '\n';
 
             abnormalTermination("FAILED", errorMessage, "Abort");
@@ -670,8 +630,8 @@ void myterminate()
         {
             propagated = true;
             errorMessage = "ERROR Transfer terminate handler called:" + g_job_id;
-            errorMessage += " Source: " + source_url;
-            errorMessage += " Dest: " + dest_url;
+            errorMessage += " Source: " + UrlCopyOpts::getInstance()->sourceUrl;
+            errorMessage += " Dest: " + UrlCopyOpts::getInstance()->destUrl;
             logStream << fileManagement->timestamp() << errorMessage << '\n';
 
             abnormalTermination("FAILED", errorMessage, "Abort");
@@ -707,99 +667,14 @@ int main(int argc, char **argv)
     set_terminate(myterminate);
     set_unexpected(myunexpected);
 
-    for (register int i(1); i < argc; ++i)
-        {
-            std::string temp(argv[i]);
-            if (temp.compare("-P") == 0)
-                monitoringMessages = true;
-            if (temp.compare("-O") == 0)
-                autoTunned = true;
-            if (temp.compare("-N") == 0)
-                manualConfig = true;
-            if (temp.compare("-M") == 0)
-                infosys = std::string(argv[i + 1]);
-            if (temp.compare("-L") == 0)
-                token_bringonline = std::string(argv[i + 1]);
-            if (temp.compare("-K") == 0)
-                file_Metadata = std::string(argv[i + 1]);
-            if (temp.compare("-J") == 0)
-                job_Metadata = std::string(argv[i + 1]);
-            if (temp.compare("-I") == 0)
-                userFilesize = std::string(argv[i + 1]);
-            if (temp.compare("-H") == 0)
-                bringonline = boost::lexical_cast<int>(argv[i + 1]);
-            if (temp.compare("-G") == 0)
-                reuseFile = std::string(argv[i + 1]);
-            if (temp.compare("-F") == 0)
-                debug = true;
-            if (temp.compare("-D") == 0)
-                sourceSiteName = std::string(argv[i + 1]);
-            if (temp.compare("-E") == 0)
-                destSiteName = std::string(argv[i + 1]);
-            if (temp.compare("-C") == 0)
-                vo = std::string(argv[i + 1]);
-            if (temp.compare("-y") == 0)
-                algorithm = std::string(argv[i + 1]);
-            if (temp.compare("-z") == 0)
-                checksum_value = std::string(argv[i + 1]);
-            if (temp.compare("-A") == 0)
-                compare_checksum = true;
-            if (temp.compare("-w") == 0)
-                timeout_per_mb = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-x") == 0)
-                no_progress_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-u") == 0)
-                lan_connection = true;
-            if (temp.compare("-v") == 0)
-                fail_nearline = true;
-            if (temp.compare("-t") == 0)
-                copy_pin_lifetime = boost::lexical_cast<int>(argv[i + 1]);
-            if (temp.compare("-q") == 0)
-                dont_ping_source = true;
-            if (temp.compare("-r") == 0)
-                dont_ping_dest = true;
-            if (temp.compare("-s") == 0)
-                disable_dir_check = true;
-            if (temp.compare("-a") == 0)
-                job_id = std::string(argv[i + 1]);
-            if (temp.compare("-b") == 0)
-                source_url = std::string(argv[i + 1]);
-            if (temp.compare("-c") == 0)
-                dest_url = std::string(argv[i + 1]);
-            if (temp.compare("-d") == 0)
-                overwrite = true;
-            if (temp.compare("-e") == 0)
-                nbstreams = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-f") == 0)
-                tcpbuffersize = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-g") == 0)
-                blocksize = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-h") == 0)
-                timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-i") == 0)
-                daemonize = true;
-            if (temp.compare("-j") == 0)
-                dest_token_desc = std::string(argv[i + 1]);
-            if (temp.compare("-k") == 0)
-                source_token_desc = std::string(argv[i + 1]);
-            if (temp.compare("-l") == 0)
-                markers_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-m") == 0)
-                first_marker_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-n") == 0)
-                srm_get_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-o") == 0)
-                srm_put_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-p") == 0)
-                http_timeout = boost::lexical_cast<unsigned int>(argv[i + 1]);
-            if (temp.compare("-B") == 0)
-                file_id = std::string(argv[i + 1]);
-            if (temp.compare("-proxy") == 0)
-                proxy = std::string(argv[i + 1]);
-        }
+    UrlCopyOpts* opts = UrlCopyOpts::getInstance();
+    if (opts->parse(argc, argv) < 0) {
+        std::cerr << opts->getErrorMessage() << std::endl;
+        return 1;
+    }
 
-    g_file_id = file_id;
-    g_job_id = job_id;
+    g_file_id = opts->fileId;
+    g_job_id = opts->jobId;
 
     std::string bytes_to_string("");
     struct stat statbufsrc;
@@ -813,7 +688,7 @@ int main(int argc, char **argv)
 
 
     /*TODO: until we find a way to calculate RTT(perfsonar) accurately, OS tcp auto-tuning does a better job*/
-    tcpbuffersize = DEFAULT_BUFFSIZE;
+    opts->tcpBuffersize = DEFAULT_BUFFSIZE;
 
     if(argc < 4)
         {
@@ -838,15 +713,15 @@ int main(int argc, char **argv)
             throw;
         }
 
-    if (proxy.length() > 0)
+    if (opts->proxy.length() > 0)
         {
             // Set Proxy Env
-            cert = new UserProxyEnv(proxy);
+            cert = new UserProxyEnv(opts->proxy);
         }
 
     std::vector<std::string> urlsFile;
     std::string line("");
-    readFile = "/var/lib/fts3/" + job_id;
+    readFile = "/var/lib/fts3/" + opts->jobId;
     if (reuseFile.length() > 0)
         {
             std::ifstream infile(readFile.c_str(), std::ios_base::in);
@@ -930,12 +805,12 @@ int main(int argc, char **argv)
                 }
             else
                 {
-                    strArray[0] = file_id;
-                    strArray[1] = source_url;
-                    strArray[2] = dest_url;
-                    strArray[3] = checksum_value;
-                    if(userFilesize.length() > 0)
-                        strArray[4] = removeDecimal(userFilesize);
+                    strArray[0] = opts->fileId;
+                    strArray[1] = opts->sourceUrl;
+                    strArray[2] = opts->destUrl;
+                    strArray[3] = opts->checksumValue;
+                    if(opts->userFileSize > 0)
+                        strArray[4] = to_string<double >(opts->userFileSize, std::dec);
                     else
                         strArray[4] = "0";
                     strArray[5] = file_Metadata;
@@ -948,13 +823,13 @@ int main(int argc, char **argv)
             fileManagement->setSourceUrl(strArray[1]);
             fileManagement->setDestUrl(strArray[2]);
             fileManagement->setFileId(strArray[0]);
-            fileManagement->setJobId(job_id);
+            fileManagement->setJobId(opts->jobId);
             g_file_id = strArray[0];
-            g_job_id = job_id;
+            g_job_id = opts->jobId;
 
-            reporter.timeout = timeout;
-            reporter.nostreams = nbstreams;
-            reporter.buffersize = tcpbuffersize;
+            reporter.timeout = opts->timeout;
+            reporter.nostreams = opts->nStreams;
+            reporter.buffersize = opts->tcpBuffersize;
             reporter.source_se = fileManagement->getSourceHostname();
             reporter.dest_se = fileManagement->getDestHostname();
             fileManagement->generateLogFile();
@@ -970,19 +845,19 @@ int main(int argc, char **argv)
             msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostnameFile());
             msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostnameFile());
             msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
-            msg_ifce::getInstance()->set_vo(&tr_completed, vo);
-            msg_ifce::getInstance()->set_source_site_name(&tr_completed, sourceSiteName);
-            msg_ifce::getInstance()->set_dest_site_name(&tr_completed, destSiteName);
-            nstream_to_string = to_string<unsigned int>(nbstreams, std::dec);
+            msg_ifce::getInstance()->set_vo(&tr_completed, opts->vo);
+            msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts->sourceSiteName);
+            msg_ifce::getInstance()->set_dest_site_name(&tr_completed, opts->destSiteName);
+            nstream_to_string = to_string<unsigned int>(opts->nStreams, std::dec);
             msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-            tcpbuffer_to_string = to_string<unsigned int>(tcpbuffersize, std::dec);
+            tcpbuffer_to_string = to_string<unsigned int>(opts->tcpBuffersize, std::dec);
             msg_ifce::getInstance()->set_tcp_buffer_size(&tr_completed, tcpbuffer_to_string.c_str());
-            block_to_string = to_string<unsigned int>(blocksize, std::dec);
+            block_to_string = to_string<unsigned int>(opts->blockSize, std::dec);
             msg_ifce::getInstance()->set_block_size(&tr_completed, block_to_string.c_str());
-            msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, dest_token_desc);
-            msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, source_token_desc);
+            msg_ifce::getInstance()->set_srm_space_token_dest(&tr_completed, opts->destTokenDescription);
+            msg_ifce::getInstance()->set_srm_space_token_source(&tr_completed, opts->sourceTokenDescription);
 
-            if(monitoringMessages)
+            if(opts->monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
             int checkError = fileManagement->getLogStream(logStream);
@@ -995,25 +870,26 @@ int main(int argc, char **argv)
             {
                 //add curly brackets to delimit the scope of the logger
                 logger log(logStream);
-                reporter.constructMessageLog(job_id, strArray[0], fileManagement->_getLogFileFullPath(), debug);
+                reporter.constructMessageLog(opts->jobId, strArray[0], fileManagement->_getLogFileFullPath(),
+                        opts->debug);
 
                 gfalt_set_user_data(params, &log, NULL);
 
                 log << fileManagement->timestamp() << "INFO Transfer accepted" << '\n';
-                log << fileManagement->timestamp() << "INFO Proxy:" << proxy << '\n';
-                log << fileManagement->timestamp() << "INFO VO:" << vo << '\n'; //a
-                log << fileManagement->timestamp() << "INFO Job id:" << job_id << '\n'; //a
+                log << fileManagement->timestamp() << "INFO Proxy:" << opts->proxy << '\n';
+                log << fileManagement->timestamp() << "INFO VO:" << opts->vo << '\n'; //a
+                log << fileManagement->timestamp() << "INFO Job id:" << opts->jobId << '\n'; //a
                 log << fileManagement->timestamp() << "INFO File id:" << strArray[0] << '\n'; //a
                 log << fileManagement->timestamp() << "INFO Source url:" << strArray[1] << '\n'; //b
                 log << fileManagement->timestamp() << "INFO Dest url:" << strArray[2] << '\n'; //c
-                log << fileManagement->timestamp() << "INFO Overwrite enabled:" << overwrite << '\n'; //d
-                log << fileManagement->timestamp() << "INFO Tcp buffer size:" << tcpbuffersize << '\n'; //f
-                log << fileManagement->timestamp() << "INFO Dest space token:" << dest_token_desc << '\n'; //j
-                log << fileManagement->timestamp() << "INFO Source space token:" << source_token_desc << '\n'; //k
-                log << fileManagement->timestamp() << "INFO Pin lifetime:" << copy_pin_lifetime << '\n'; //t
-                log << fileManagement->timestamp() << "INFO BringOnline:" << bringonline << '\n'; //t
+                log << fileManagement->timestamp() << "INFO Overwrite enabled:" << opts->overwrite << '\n'; //d
+                log << fileManagement->timestamp() << "INFO Tcp buffer size:" << opts->tcpBuffersize << '\n'; //f
+                log << fileManagement->timestamp() << "INFO Dest space token:" << opts->destTokenDescription << '\n'; //j
+                log << fileManagement->timestamp() << "INFO Source space token:" << opts->sourceTokenDescription << '\n'; //k
+                log << fileManagement->timestamp() << "INFO Pin lifetime:" << opts->copyPinLifetime << '\n'; //t
+                log << fileManagement->timestamp() << "INFO BringOnline:" << opts->bringOnline << '\n'; //t
                 log << fileManagement->timestamp() << "INFO Checksum:" << strArray[3] << '\n'; //z
-                log << fileManagement->timestamp() << "INFO Checksum enabled:" << compare_checksum << '\n'; //A
+                log << fileManagement->timestamp() << "INFO Checksum enabled:" << opts->compareChecksum << '\n'; //A
                 log << fileManagement->timestamp() << "INFO User filesize:" << strArray[4] << '\n'; //A
                 log << fileManagement->timestamp() << "INFO File metadata:" << replaceMetadataString(strArray[5]) << '\n'; //A
                 log << fileManagement->timestamp() << "INFO Job metadata:" << replaceMetadataString(job_Metadata) << '\n'; //A
@@ -1021,12 +897,12 @@ int main(int argc, char **argv)
 
                 //set to active
                 log << fileManagement->timestamp() << "INFO Set the transfer to ACTIVE, report back to the server" << '\n';
-                reporter.constructMessage(throughput, false, job_id, strArray[0], "ACTIVE", "", diff, source_size);
+                reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "ACTIVE", "", diff, source_size);
 
 
-                if (fexists(proxy.c_str()) != 0)
+                if (fexists(opts->proxy.c_str()) != 0)
                     {
-                        errorMessage = "ERROR proxy doesn't exist, probably expired and not renewed " + proxy;
+                        errorMessage = "ERROR proxy doesn't exist, probably expired and not renewed " + opts->proxy;
                         errorScope = SOURCE;
                         reasonClass = mapErrnoToString(errno);
                         errorPhase = TRANSFER_PREPARATION;
@@ -1049,7 +925,7 @@ int main(int argc, char **argv)
                     }
 
                 /*gfal2 debug logging*/
-                if (debug == true)
+                if (opts->debug == true)
                     {
                         log << fileManagement->timestamp() << "INFO Set the transfer to debug mode" << '\n';
                         gfal_set_verbose(GFAL_VERBOSE_TRACE | GFAL_VERBOSE_VERBOSE | GFAL_VERBOSE_TRACE_PLUGIN);
@@ -1062,11 +938,11 @@ int main(int argc, char **argv)
                         gfal_log_set_handler((GLogFunc) log_func, NULL);
                     }
 
-                if (source_token_desc.length() > 0)
-                    gfalt_set_src_spacetoken(params, source_token_desc.c_str(), NULL);
+                if (!opts->sourceTokenDescription.empty())
+                    gfalt_set_src_spacetoken(params, opts->sourceTokenDescription.c_str(), NULL);
 
-                if (dest_token_desc.length() > 0)
-                    gfalt_set_dst_spacetoken(params, dest_token_desc.c_str(), NULL);
+                if (!opts->destTokenDescription.empty())
+                    gfalt_set_dst_spacetoken(params, opts->destTokenDescription.c_str(), NULL);
 
                 gfalt_set_create_parent_dir(params, TRUE, NULL);
 
@@ -1076,9 +952,9 @@ int main(int argc, char **argv)
                 msg_ifce::getInstance()->set_checksum_timeout(&tr_completed, boost::lexical_cast<std::string > (checksumTimeout));
 
                 /*Checksuming*/
-                if (compare_checksum)
+                if (opts->compareChecksum)
                     {
-                        if (checksum_value.length() > 0 && checksum_value!="x")   //user provided checksum
+                        if (!opts->checksumValue.empty() && opts->checksumValue != "x")   //user provided checksum
                             {
                                 log << fileManagement->timestamp() << "INFO user  provided checksum" << '\n';
                                 //check if only alg is specified
@@ -1174,7 +1050,7 @@ int main(int argc, char **argv)
                     }
 
                 //overwrite dest file if exists
-                if (overwrite)
+                if (opts->overwrite)
                     {
                         log << fileManagement->timestamp() << "INFO Overwrite is enabled" << '\n';
                         gfalt_set_replace_existing_file(params, TRUE, NULL);
@@ -1204,31 +1080,31 @@ int main(int argc, char **argv)
                             }
                     }
 
-                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, timeout);
-                if(!manualConfig || autoTunned || timeout==0)
-                    timeout = experimentalTimeout;
-                gfalt_set_timeout(params, timeout, NULL);
-                timeout_to_string = to_string<unsigned int>(timeout, std::dec);
+                unsigned int experimentalTimeout = adjustTimeoutBasedOnSize(statbufsrc.st_size, opts->timeout);
+                if(!opts->manualConfig || opts->autoTunned || opts->timeout==0)
+                    opts->timeout = experimentalTimeout;
+                gfalt_set_timeout(params, opts->timeout, NULL);
+                timeout_to_string = to_string<unsigned int>(opts->timeout, std::dec);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
-                log << fileManagement->timestamp() << "INFO Timeout:" << timeout << '\n'; //h
+                log << fileManagement->timestamp() << "INFO Timeout:" << opts->timeout << '\n'; //h
 
-                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, nbstreams);
-                if(!manualConfig || autoTunned || nbstreams==0)
-                    nbstreams = experimentalNstreams;
-                gfalt_set_nbstreams(params, experimentalNstreams, NULL);
-                nstream_to_string = to_string<unsigned int>(experimentalNstreams, std::dec);
+                unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts->nStreams);
+                if(!opts->manualConfig || opts->autoTunned || opts->nStreams==0)
+                    opts->nStreams = experimentalNstreams;
+                gfalt_set_nbstreams(params, opts->nStreams, NULL);
+                nstream_to_string = to_string<unsigned int>(opts->nStreams, std::dec);
                 msg_ifce::getInstance()->set_number_of_streams(&tr_completed, nstream_to_string.c_str());
-                log << fileManagement->timestamp() << "INFO nbstreams:" << nbstreams << '\n'; //e
+                log << fileManagement->timestamp() << "INFO nbstreams:" << opts->nStreams << '\n'; //e
 
                 //update protocol stuff
                 log << fileManagement->timestamp() << "INFO Update protocol stuff, report back to the server" << '\n';
-                reporter.timeout = timeout;
-                reporter.nostreams = nbstreams;
-                reporter.buffersize = tcpbuffersize;
-                reporter.constructMessage(throughput, false, job_id, strArray[0], "UPDATE", "", diff, source_size);
+                reporter.timeout = opts->timeout;
+                reporter.nostreams = opts->nStreams;
+                reporter.buffersize = opts->tcpBuffersize;
+                reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "UPDATE", "", diff, source_size);
 
 
-                gfalt_set_tcp_buffer_size(params, tcpbuffersize, NULL);
+                gfalt_set_tcp_buffer_size(params, opts->tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);
 
                 //check all params before passed to gfal2
@@ -1377,27 +1253,27 @@ stop:
             if (errorMessage.length() > 0)
                 {
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Error");
-                    reporter.timeout = timeout;
-                    reporter.nostreams = nbstreams;
-                    reporter.buffersize = tcpbuffersize;
+                    reporter.timeout = opts->timeout;
+                    reporter.nostreams = opts->nStreams;
+                    reporter.buffersize = opts->tcpBuffersize;
                     if (!terminalState)
                         {
                             logStream << fileManagement->timestamp() << "INFO Report FAILED back to the server" << '\n';
-                            reporter.constructMessage(throughput, retry, job_id, strArray[0], "FAILED", errorMessage, diff, source_size);
+                            reporter.constructMessage(throughput, retry, opts->jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
                         }
                 }
             else
                 {
                     msg_ifce::getInstance()->set_final_transfer_state(&tr_completed, "Ok");
-                    reporter.timeout = timeout;
-                    reporter.nostreams = nbstreams;
-                    reporter.buffersize = tcpbuffersize;
+                    reporter.timeout = opts->timeout;
+                    reporter.nostreams = opts->nStreams;
+                    reporter.buffersize = opts->tcpBuffersize;
                     logStream << fileManagement->timestamp() << "INFO Report FINISHED back to the server" << '\n';
-                    reporter.constructMessage(throughput, false, job_id, strArray[0], "FINISHED", errorMessage, diff, source_size);
+                    reporter.constructMessage(throughput, false, opts->jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
-                    if (bringonline > 0)
+                    if (opts->bringOnline > 0)
                         {
                             logStream << fileManagement->timestamp() << "INFO Token will be unpinned: " << strArray[6] << '\n';
                             if(gfal2_release_file(handle, (strArray[1]).c_str(), (strArray[6]).c_str(), &tmp_err) < 0)
@@ -1416,7 +1292,7 @@ stop:
             logStream << fileManagement->timestamp() << "INFO Send monitoring complete message" << '\n';
             msg_ifce::getInstance()->set_tr_timestamp_complete(&tr_completed, msg_ifce::getInstance()->getTimestamp());
 
-            if(monitoringMessages)
+            if(opts->monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
             logStream << fileManagement->timestamp() << "INFO Closing the log stream" << '\n';
@@ -1424,13 +1300,14 @@ stop:
                 {
                     logStream.close();
                 }
-            if (debug == true)
+            if (opts->debug == true)
                 {
                     fclose(stderr);
                 }
 
             fileManagement->archive();
-            reporter.constructMessageLog(job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(), debug);
+            reporter.constructMessageLog(opts->jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
+                    opts->debug);
         }//end for reuse loop
 
     if (params)
