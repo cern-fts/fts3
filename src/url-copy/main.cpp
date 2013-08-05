@@ -139,22 +139,6 @@ static std::string srmVersion(const std::string & url)
     return std::string("");
 }
 
-/*replace space with _*/
-static std::string mapErrnoToString(int err)
-{
-    if (err != 0)
-        {
-            char buf[256] = {0};
-            char const * str = strerror_r(err, buf, 256);
-            if (str)
-                {
-                    std::string rep(str);
-                    std::replace(rep.begin(), rep.end(), ' ', '_');
-                    return boost::to_upper_copy(rep);
-                }
-        }
-    return "GENERAL ERROR";
-}
 
 static std::vector<std::string> split(const char *str, char c = ':')
 {

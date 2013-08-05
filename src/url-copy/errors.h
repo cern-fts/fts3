@@ -46,3 +46,23 @@
 #define STORAGE_INTERNAL_ERROR ""
 #define GENERAL_FAILURE "GENERAL_FAILURE"
 #define SECURITY_ERROR "SECURITY_ERROR"
+
+#include <cstring>
+
+/**
+ * Return the string representation of the error code,
+ * replacing spaces with '_'
+ */
+inline std::string mapErrnoToString(int err)
+{
+    if (err != 0) {
+        char buf[256] = {0};
+        char const *str = strerror_r(err, buf, sizeof(buf));
+        if (str) {
+            std::string rep(str);
+            std::replace(rep.begin(), rep.end(), ' ', '_');
+            return boost::to_upper_copy(rep);
+        }
+    }
+    return "GENERAL ERROR";
+}
