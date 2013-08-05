@@ -179,6 +179,7 @@ int ExecuteProcess::execProcessShell()
     // Parent process
     // Close writting end of the pipe, and wait and see if we got an error from
     // the child
+    pid = child;
     close(pipefds[1]);
 
     ssize_t count = 0;
