@@ -21,9 +21,8 @@ static std::string getTimestamp()
 
 
 
-Logger::Logger(): log(&std::cerr), debug(&debugHandle)
+Logger::Logger(): log(&std::cerr)
 {
-    debugHandle.open("/dev/null", std::ios::app);
 }
 
 
@@ -32,7 +31,6 @@ Logger::~Logger()
 {
    INFO() << "Closing the log stream" << std::endl;
    logHandle.close();
-   debugHandle.close();
 }
 
 
@@ -67,7 +65,7 @@ std::ostream& Logger::ERROR()
 
 std::ostream& Logger::DEBUG()
 {
-   return (*debug << getTimestamp() << " DEBUG    ");
+   return (*log << getTimestamp() << " DEBUG    ");
 }
 
 
@@ -85,11 +83,8 @@ int Logger::redirectTo(const std::string& path, bool debug)
     // Debug output
     if (debug) {
         std::string debugPath = path + ".debug";
-        debugHandle.close();
-        debugHandle.open(debugPath.c_str(), std::ios::app);
+        freopen(debugPath.c_str(), "w", stderr);
         chmod(debugPath.c_str(), 0644);
-        debug = &debugHandle;
     }
-
     return 0;
 }

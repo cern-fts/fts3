@@ -45,8 +45,8 @@ private:
     Logger(const Logger&); // Should never be called
     ~Logger();
 
-    std::ostream *log, *debug;
-    std::ofstream logHandle, debugHandle;
+    std::ostream *log;
+    std::ofstream logHandle;
 };
 
 #endif
