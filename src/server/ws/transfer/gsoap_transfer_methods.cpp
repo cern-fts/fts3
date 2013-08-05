@@ -263,7 +263,7 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                          .getDBObjectInstance()
                          ->getTransferFileStatus(req->jobId, req->archive, req->offset, req->limit, statuses);
 
-            for (it = statuses.begin(); it != statuses.end(); it++)
+            for (it = statuses.begin(); it != statuses.end(); ++it)
                 {
 
                     FileTransferStatus* tmp = *it;
@@ -334,7 +334,7 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
             _param_10._getFileStatus2Return = soap_new_impltns__ArrayOf_USCOREtns3_USCOREFileTransferStatus2(soap, -1);
             DBSingleton::instance().getDBObjectInstance()->getTransferFileStatus(_requestID, false, _offset, _limit, statuses);
 
-            for (it = statuses.begin(); it != statuses.end(); it++)
+            for (it = statuses.begin(); it != statuses.end(); ++it)
                 {
 
                     FileTransferStatus* tmp = *it;
