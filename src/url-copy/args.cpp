@@ -16,7 +16,7 @@ const option UrlCopyOpts::long_options[] = {
     {"job-metadata",      required_argument, 0, 'J'},
     {"user-filesize",     required_argument, 0, 'I'},
     {"bringonline",       required_argument, 0, 'H'},
-    {"reuse",             required_argument, 0, 'G'},
+    {"reuse",             no_argument,       0, 'G'},
     {"debug",             no_argument,       0, 'F'},
     {"source-site",       required_argument, 0, 'D'},
     {"dest-site",         required_argument, 0, 'E'},
@@ -41,7 +41,7 @@ const option UrlCopyOpts::long_options[] = {
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:G:FD:E:C:y:z:At:a:b:c:de:f:h:ij:k:B:5:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GFD:E:C:y:z:At:a:b:c:de:f:h:ij:k:B:5:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
@@ -122,7 +122,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                     bringOnline = boost::lexical_cast<int>(optarg);
                     break;
                 case 'G':
-                    reuseFile = optarg;
+                    reuseFile = true;
                     break;
                 case 'F':
                     debug = true;

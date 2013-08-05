@@ -72,8 +72,6 @@ static std::string errorPhase("");
 static std::string reasonClass("");
 static std::string errorMessage("");
 static std::string readFile("");
-static std::string reuseFile("");
-static std::string token_bringonline("");
 static double source_size = 0.0;
 static double dest_size = 0.0;
 static double diff = 0.0;
@@ -88,10 +86,7 @@ static std::string nstream_to_string("");
 static std::string tcpbuffer_to_string("");
 static std::string block_to_string("");
 static std::string timeout_to_string("");
-static std::string file_Metadata("");
-static std::string job_Metadata(""); //a
 static std::string globalErrorMessage("");
-static std::string infosys("");
 static double throughput = 0.0;
 static double transferred_bytes = 0;
 
@@ -251,7 +246,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
             Logger::getInstance().ERROR() << "Failed to archive file: " << moveFile
                                           << std::endl;
         }
-    if (reuseFile.length() > 0 && readFile.length() > 0)
+    if (UrlCopyOpts::getInstance()->reuseFile && readFile.length() > 0)
         unlink(readFile.c_str());
 
     cancelTransfer();
@@ -537,7 +532,7 @@ int main(int argc, char **argv)
     std::vector<std::string> urlsFile;
     std::string line("");
     readFile = "/var/lib/fts3/" + opts->jobId;
-    if (reuseFile.length() > 0)
+    if (opts->reuseFile)
         {
             std::ifstream infile(readFile.c_str(), std::ios_base::in);
             while (getline(infile, line, '\n'))
@@ -568,7 +563,7 @@ int main(int argc, char **argv)
             throw;
         }
 
-    if (reuseFile.length() > 0 && urlsFile.empty() == true)
+    if (opts->reuseFile && urlsFile.empty() == true)
         {
             errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
 
@@ -585,7 +580,7 @@ int main(int argc, char **argv)
 
 
     //reuse session
-    if (reuseFile.length() > 0)
+    if (opts->reuseFile)
         {
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
@@ -611,7 +606,7 @@ int main(int argc, char **argv)
             errorMessage = std::string("");
             throughput = 0.0;
 
-            if (reuseFile.length() > 0)
+            if (opts->reuseFile)
                 {
                     std::string mid_str(urlsFile[ii]);
                     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -628,8 +623,8 @@ int main(int argc, char **argv)
                         strArray[4] = to_string<double >(opts->userFileSize, std::dec);
                     else
                         strArray[4] = "0";
-                    strArray[5] = file_Metadata;
-                    strArray[6] = token_bringonline;
+                    strArray[5] = opts->fileMetadata;
+                    strArray[6] = opts->tokenBringOnline;
                 }
 		
             // Trigger immediately an update
@@ -709,7 +704,7 @@ int main(int argc, char **argv)
                 logger.INFO() << "Checksum enabled:" << opts->compareChecksum << std::endl;
                 logger.INFO() << "User filesize:" << strArray[4] << std::endl;
                 logger.INFO() << "File metadata:" << replaceMetadataString(strArray[5]) << std::endl;
-                logger.INFO() << "Job metadata:" << replaceMetadataString(job_Metadata) << std::endl;
+                logger.INFO() << "Job metadata:" << replaceMetadataString(opts->jobMetadata) << std::endl;
                 logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
 
                 //set to active
@@ -730,14 +725,14 @@ int main(int argc, char **argv)
                 /*set infosys to gfal2*/
                 if (handle)
                     {
-                        logger.INFO() << "BDII:" << infosys << std::endl;
-                        if (infosys.compare("false") == 0)
+                        logger.INFO() << "BDII:" << opts->infosys << std::endl;
+                        if (opts->infosys.compare("false") == 0)
                             {
                                 gfal2_set_opt_boolean(handle, "BDII", "ENABLED", false, NULL);
                             }
                         else
                             {
-                                gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", (char *) infosys.c_str(), NULL);
+                                gfal2_set_opt_string(handle, "BDII", "LCG_GFAL_INFOSYS", (char *) opts->infosys.c_str(), NULL);
                             }
                     }
 
@@ -1141,7 +1136,7 @@ stop:
             cert = NULL;
         }
 
-    if (reuseFile.length() > 0 && readFile.length() > 0)
+    if (opts->reuseFile && readFile.length() > 0)
         unlink(readFile.c_str());
 
 

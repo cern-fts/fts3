@@ -21,13 +21,13 @@ public:
     bool overwrite;
     bool daemonize;
     bool logToStderr;
+    bool reuseFile;
 
     // Arguments
     std::string infosys;
     std::string tokenBringOnline;
     std::string fileMetadata;
     std::string jobMetadata;
-    std::string reuseFile;
     std::string sourceSiteName;
     std::string destSiteName;
     std::string vo;
