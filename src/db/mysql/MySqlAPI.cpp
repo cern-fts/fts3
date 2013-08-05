@@ -482,7 +482,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
             stmt.alloc();
             stmt.prepare("UPDATE t_file SET "
                          "    file_state = :state, start_time = UTC_TIMESTAMP(), transferHost = :hostname "
-                         "WHERE file_id = :fileId AND file_state = 'SUBMITTED'");
+                         "WHERE file_id = :fileId ");
             stmt.define_and_bind();
             stmt.execute(true);
 
@@ -495,7 +495,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
                     jobStmt.alloc();
                     jobStmt.prepare("UPDATE t_job SET "
                                     "    job_state = :state "
-                                    "WHERE job_id = :jobId AND job_state = 'SUBMITTED'");
+                                    "WHERE job_id = :jobId ");
                     jobStmt.define_and_bind();
                     jobStmt.execute(true);
                 }
@@ -2688,7 +2688,7 @@ void MySqlAPI::revertToSubmitted()
                         {
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
-                            if (diff > 100 && reuseJob != "Y")
+                            if (diff > 150 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     sql.begin();
