@@ -139,7 +139,7 @@ int main(int ac, char* av[])
                                                     }
 
                                                     if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState)) {
-                                                        failedFiles << *stat->sourceSURL << "\t"
+                                                        failedFiles << *stat->sourceSURL << " "
                                                                     << *stat->destSURL
                                                                     << std::endl;
                                                     }
