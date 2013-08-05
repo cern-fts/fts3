@@ -229,7 +229,6 @@ public:
         else
             monitoringMessages = true;
 	    	    
-       requestIDs.reserve(5000);
       jobs2.reserve(3000);	    
     }
 
@@ -255,22 +254,10 @@ protected:
     SiteName siteResolver;
     std::string ftsHostName;
     std::string allowedVOs;
-    std::vector<int> requestIDs;
     std::vector<TransferJobs*> jobs2;
     rlim_t maximumThreads;
     std::string infosys;
     bool monitoringMessages;
-
-    void killRunninfJob(std::vector<int>& requestIDs)
-    {
-        std::vector<int>::const_iterator iter;
-        for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter)
-            {
-                int pid = *iter;
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
-                kill(pid, SIGTERM);
-            }
-    }
 
     std::string extractHostname(std::string surl)
     {
@@ -1215,65 +1202,9 @@ protected:
                                 drainMode = false;
                             }
 
-                        /*revert to SUBMITTED if stayed in READY for too long (100 secs)*/
-                        countReverted++;
-                        if (countReverted >= 100)
-                            {
-                                DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
-                                countReverted = 0;
-                            }
-
-                        /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
-                        counterTimeoutWaiting++;
-                        if (counterTimeoutWaiting >= 10000)
-                            {
-                                std::set<std::string> canceled;
-                                DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
-                                set<string>::const_iterator iter;
-                                if(!canceled.empty())
-                                    {
-                                        for (iter = canceled.begin(); iter != canceled.end(); ++iter)
-                                            {
-                                                SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
-                                            }
-                                        canceled.clear();
-                                    }
-
-                                // sanity check to make sure there are no files that have all replicas in not used state
-                                DBSingleton::instance().getDBObjectInstance()->revertNotUsedFiles();
-
-                                counterTimeoutWaiting = 0;
-                            }
-
-                        /*force-fail stalled ACTIVE transfers*/
-                        counter++;
-                        if (counter == 300)
-                            {
-                                std::map<int, std::string> collectJobs;
-                                DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
-                                if(!collectJobs.empty())
-                                    {
-                                        std::map<int, std::string>::const_iterator iterCollectJobs;
-                                        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
-                                            {
-                                                SingleTrStateInstance::instance().sendStateMessage((*iterCollectJobs).second, (*iterCollectJobs).first);
-                                            }
-                                        collectJobs.clear();
-                                    }
-                                counter = 0;
-                            }
-
 
                         /*get jobs in submitted state*/
                         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
-
-                        /*also get jobs which have been canceled by the client*/
-                        DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                        if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
-                            {
-                                killRunninfJob(requestIDs);
-                                requestIDs.clear(); /*clean the list*/
-                            }
 
                         if (!jobs2.empty())
                             {

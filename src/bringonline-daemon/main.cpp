@@ -58,6 +58,8 @@ const std::string repository = "/tmp/";
 const char *hostcert = "/etc/grid-security/hostcert.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
+// exp backoff for bringonline ops
+// 1, 2, 5, 60, 180s, 3 m
 
 static bool retryTransfer(int errorNo)
 {
