@@ -293,7 +293,29 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
             // Query depends on vos
             std::string query;
             query =
-                "SELECT t_job.* FROM t_job "
+                "SELECT "
+                "   job_id, "
+                "   job_state, "
+                "   vo_name,  "
+                "   priority,  "
+                "   source_se, "
+                "   dest_se,  "
+                "   agent_dn, "
+                "   submit_host, "
+                "   user_dn, "
+                "   user_cred, "
+                "   cred_id,  "
+                "   space_token, "
+                "   storage_class,  "
+                "   job_params, "
+                "   overwrite_flag, "
+                "   source_space_token, "
+                "   source_token_description,"
+                "   copy_pin_lifetime, "
+                "   checksum_method, "
+                "   bring_online, "
+                "   submit_time "
+                "FROM t_job "
                 "WHERE "
                 "   t_job.vo_name = :vo AND "
                 "   t_job.job_state in ('SUBMITTED', 'READY', 'ACTIVE') AND "
@@ -552,10 +574,13 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
 
                     soci::rowset<TransferFiles> rs = (
                                                          sql.prepare <<
-                                                         "SELECT f1.*, j.vo_name, j.overwrite_flag, "
-                                                         "    j.user_dn, j.cred_id, j.checksum_method, "
-                                                         "    j.source_space_token, j.space_token, j.job_metadata, "
-                                                         "    j.copy_pin_lifetime, j.bring_online "
+                                                         "SELECT "
+                                                         "       f1.file_state, f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
+                                                         "       f1.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                                                         "       f1.checksum, j.checksum_method, j.source_space_token, "
+                                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                                                         "       f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index, f1.bringonline_token, "
+                                                         "       f1.source_se, f1.dest_se, f1.selection_strategy  "
                                                          "FROM t_file f1, t_job j "
                                                          "WHERE j.job_id = :jobId AND"
                                                          "    f1.job_id = j.job_id AND "
@@ -1698,27 +1723,39 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
     try
         {
             std::string query;
-            if (vos == "*")
+            query = "SELECT "
+                    " job_id, "
+                    " job_state, "
+                    " vo_name,  "
+                    " priority,  "
+                    " source_se, "
+                    " dest_se,  "
+                    " agent_dn, "
+                    " submit_host, "
+                    " user_dn, "
+                    " user_cred, "
+                    " cred_id,  "
+                    " space_token, "
+                    " storage_class,  "
+                    " job_params, "
+                    " overwrite_flag, "
+                    " source_space_token, "
+                    " source_token_description,"
+                    " copy_pin_lifetime, "
+                    " checksum_method "
+                    "FROM t_job WHERE "
+                    "    t_job.job_finished IS NULL AND "
+                    "    t_job.cancel_job IS NULL AND "
+                    "    t_job.reuse_job='Y' AND "
+                    "    t_job.job_state = 'SUBMITTED' ";
+
+            if (vos != "*")
                 {
-                    query = "SELECT t_job.* FROM t_job WHERE "
-                            "    t_job.job_finished IS NULL AND "
-                            "    t_job.cancel_job IS NULL AND "
-                            "    t_job.reuse_job='Y' AND "
-                            "    t_job.job_state = 'SUBMITTED' "
-                            "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
-                            "LIMIT 1";
+                    query += "    t_job.vo_name IN " + vos + " ";
                 }
-            else
-                {
-                    query = "SELECT t_job.* FROM t_job WHERE "
-                            "    t_job.job_finished IS NULL AND "
-                            "    t_job.cancel_job IS NULL AND "
-                            "    t_job.reuse_job='Y' AND "
-                            "    t_job.job_state = 'SUBMITTED' AND"
-                            "    t_job.vo_name IN " + vos + " "
-                            "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
-                            "LIMIT 1";
-                }
+
+            query += "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
+                     "LIMIT 1";
 
             soci::rowset<TransferJobs> rs = (sql.prepare << query);
             for (soci::rowset<TransferJobs>::const_iterator i = rs.begin(); i != rs.end(); ++i)
