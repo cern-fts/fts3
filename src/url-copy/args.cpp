@@ -1,11 +1,46 @@
 #include <boost/lexical_cast.hpp>
-#include <getopt.h>
 #include <sstream>
 #include "common/definitions.h"
 #include "args.h"
 
 UrlCopyOpts UrlCopyOpts::instance;
 
+
+const option UrlCopyOpts::long_options[] = {
+    {"monitoring",        no_argument,       0, 'P'},
+    {"auto-tunned",       no_argument,       0, 'O'},
+    {"manual-config",     no_argument,       0, 'N'},
+    {"infosystem",        required_argument, 0, 'M'},
+    {"token-bringonline", required_argument, 0, 'L'},
+    {"file-metadata",     required_argument, 0, 'K'},
+    {"job-metadata",      required_argument, 0, 'J'},
+    {"user-filesize",     required_argument, 0, 'I'},
+    {"bringonline",       required_argument, 0, 'H'},
+    {"reuse",             required_argument, 0, 'G'},
+    {"debug",             no_argument,       0, 'F'},
+    {"source-site",       required_argument, 0, 'D'},
+    {"dest-site",         required_argument, 0, 'E'},
+    {"vo",                required_argument, 0, 'C'},
+    {"algorithm",         required_argument, 0, 'y'},
+    {"checksum",          required_argument, 0, 'z'},
+    {"compare-checksum",  no_argument,       0, 'A'},
+    {"pin-lifetime",      required_argument, 0, 't'},
+    {"job-id",            required_argument, 0, 'a'},
+    {"source",            required_argument, 0, 'b'},
+    {"destination",       required_argument, 0, 'c'},
+    {"overwrite",         no_argument,       0, 'd'},
+    {"nstreams",          required_argument, 0, 'e'},
+    {"tcp-buffersize",    required_argument, 0, 'f'},
+    {"timeout",           required_argument, 0, 'h'},
+    {"daemonize",         no_argument,       0, 'i'},
+    {"dest-token-desc",   required_argument, 0, 'j'},
+    {"source-token-desc", required_argument, 0, 'k'},
+    {"file-id",           required_argument, 0, 'B'},
+    {"proxy",             required_argument, 0, '5'},
+    {0, 0, 0, 0}
+};
+
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:G:FD:E:C:y:z:At:a:b:c:de:f:h:ij:k:B:5:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
@@ -29,7 +64,13 @@ UrlCopyOpts* UrlCopyOpts::getInstance()
 std::string UrlCopyOpts::usage(const std::string& bin)
 {
     std::stringstream msg;
-    msg << "Usage: " << bin << " [options]" << std::endl;
+    msg << "Usage: " << bin << " [options]" << std::endl
+        << "Options: " << std::endl;
+    for (int i = 0; long_options[i].name; ++i) {
+        msg << "\t--" << long_options[i].name
+            << ",-" << static_cast<char>(long_options[i].val)
+            << std::endl;
+    }
     return msg.str();
 }
 
@@ -42,40 +83,7 @@ std::string UrlCopyOpts::getErrorMessage()
 
 int UrlCopyOpts::parse(int argc, char * const argv[])
 {
-    static option long_options[] = {
-        {"monitoring",        no_argument,       0, 'P'},
-        {"auto-tunned",       no_argument,       0, 'O'},
-        {"manual-config",     no_argument,       0, 'N'},
-        {"infosystem",        required_argument, 0, 'M'},
-        {"token-bringonline", required_argument, 0, 'L'},
-        {"file-metadata",     required_argument, 0, 'K'},
-        {"job-metadata",      required_argument, 0, 'J'},
-        {"user-filesize",     required_argument, 0, 'I'},
-        {"bringonline",       required_argument, 0, 'H'},
-        {"reuse",             required_argument, 0, 'G'},
-        {"debug",             no_argument,       0, 'F'},
-        {"source-site",       required_argument, 0, 'D'},
-        {"dest-site",         required_argument, 0, 'E'},
-        {"vo",                required_argument, 0, 'C'},
-        {"algorithm",         required_argument, 0, 'y'},
-        {"checksum",          required_argument, 0, 'z'},
-        {"compare-checksum",  no_argument,       0, 'A'},
-        {"pin-lifetime",      required_argument, 0, 't'},
-        {"job-id",            required_argument, 0, 'a'},
-        {"source",            required_argument, 0, 'b'},
-        {"destination",       required_argument, 0, 'c'},
-        {"overwrite",         no_argument,       0, 'd'},
-        {"nstreams",          required_argument, 0, 'e'},
-        {"tcp-buffersize",    required_argument, 0, 'f'},
-        {"timeout",           required_argument, 0, 'h'},
-        {"daemonize",         no_argument,       0, 'i'},
-        {"dest-token-desc",   required_argument, 0, 'j'},
-        {"source-token-desc", required_argument, 0, 'k'},
-        {"file-id",           required_argument, 0, 'B'},
-        {"proxy",             required_argument, 0, '5'},
-        {0, 0, 0, 0}
-    };
-    static const char short_options[] = "PONM:L:K:J:I:H:G:FD:E:C:y:z:At:a:b:c:de:f:h:ij:k:B:";
+
 
     int option_index;
     int opt;

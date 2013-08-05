@@ -1,5 +1,6 @@
 #pragma once
 
+#include <getopt.h>
 #include <string>
 
 class UrlCopyOpts
@@ -48,6 +49,8 @@ public:
 
 private:
     static UrlCopyOpts instance;
+    static const option long_options[];
+    static const char short_options[];
 
     UrlCopyOpts();
 
