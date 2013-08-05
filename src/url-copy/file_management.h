@@ -71,11 +71,6 @@ public:
         return dhostFile;
     }
 
-    inline std::string _getLogFileFullPath()
-    {
-        return log;
-    }
-
     inline std::string _getLogArchivedFileFullPath()
     {
         return arcFileName;
@@ -94,7 +89,6 @@ private:
     std::string shostFile;
     std::string dhostFile;
     std::string dateArch;
-    std::string log;
     std::string arcFileName;
     char *base_scheme;
     char *base_host;

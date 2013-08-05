@@ -682,7 +682,7 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->_getLogFileFullPath(),
+                reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->getLogFilePath(),
                         opts.debug);
 
                 gfalt_set_user_data(params, NULL, NULL);
@@ -1107,7 +1107,9 @@ stop:
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
-            fileManagement->archive();
+            std::string archiveErr = fileManagement->archive();
+            if (!archiveErr.empty())
+                logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
             reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
                     opts.debug);
         }//end for reuse loop

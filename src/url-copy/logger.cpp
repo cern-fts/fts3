@@ -88,6 +88,7 @@ int Logger::redirectTo(const std::string& path, bool debug)
         debugHandle.close();
         debugHandle.open(debugPath.c_str(), std::ios::app);
         chmod(debugPath.c_str(), 0644);
+        debug = &debugHandle;
     }
 
     return 0;
