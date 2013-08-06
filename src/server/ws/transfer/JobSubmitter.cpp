@@ -426,6 +426,25 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     tupple.source_se = sourceSe;
                     tupple.dest_se = destinationSe;
 
+                    // check the timeout in case the source has been blacklisted
+                    boost::optional<int> source_timeout = db->getTimeoutForSe(sourceSe);
+                    // check the timeout in case the destination has been blacklisted
+                    boost::optional<int> destin_timeout = db->getTimeoutForSe(destinationSe);
+
+                    // set the wait_timeout for the transfer (in case the source / destination have been blacklisted with '--allow-submit')
+                    if (source_timeout.is_initialized() && destin_timeout.is_initialized())
+                    	{
+                    		tupple.wait_timeout = *source_timeout < *destin_timeout ? *source_timeout : *destin_timeout;
+                    	}
+                    else if (source_timeout.is_initialized())
+                    	{
+                    		tupple.wait_timeout = source_timeout;
+                    	}
+                    else if (destin_timeout.is_initialized())
+                    	{
+                    		tupple.wait_timeout = destin_timeout;
+                    	}
+
                     jobs.push_back(tupple);
                 }
         }
@@ -463,7 +482,6 @@ string JobSubmitter::submit()
     if (!params.isParamSet(JobParameterHandler::BRING_ONLINE))
         {
             params.set(JobParameterHandler::BRING_ONLINE, "-1");
-
         }
     else
         {
@@ -559,8 +577,10 @@ void JobSubmitter::checkSe(string se, string vo)
 {
 
     // check if the SE is blacklisted
-    if (db->isSeBlacklisted(se, vo)) throw Err_Custom("The SE: " + se + " is blacklisted!");
-
+    if (db->isSeBlacklisted(se, vo))
+    	{
+    		if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
+    	}
     // if we don't care about MyOSQ return
     if (!theServerConfig().get<bool>("MyOSG")) return;
 

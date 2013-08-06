@@ -69,7 +69,6 @@ struct sort_functor_monitoring
     }
 };
 
-
 boost::posix_time::time_duration::tick_type milliseconds_since_epoch()
 {
     using boost::gregorian::date;
@@ -88,7 +87,6 @@ int getDir (string dir, vector<string> &files)
     struct stat st;
     if((dp  = opendir(dir.c_str())) == NULL)
         {
-            std::cerr << "Error opening dir: " <<  strerror(errno) << std::endl;
             return errno;
         }
 
@@ -108,110 +106,153 @@ int getDir (string dir, vector<string> &files)
     return 0;
 }
 
-void runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
+int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 {
     string dir = string(MONITORING_DIR);
     vector<string> files = vector<string>();
     struct message_monitoring msg;
 
-    getDir(dir,files);
+    if (getDir(dir,files) != 0)
+        return errno;
+
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
-                    size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
-                    if(readBytes==0 || errno != 0)
-                        {
-                            readBytes = fread(&msg, sizeof(msg), 1, fp);
-                        }
-                    messages.push_back(msg);
+                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+                    if(readElements == 0)
+                        readElements = fread(&msg, sizeof(msg), 1, fp);
+
+                    if (readElements == 1)
+                        messages.push_back(msg);
+                    else
+                        msg.set_error(EBADMSG);
+
                     unlink(files[i].c_str());
                     fclose(fp);
+                }
+            else
+                {
+                    msg.set_error(errno);
                 }
         }
     files.clear();
     std::sort(messages.begin(), messages.end(), sort_functor_monitoring());
+
+    return 0;
 }
 
 
-void runConsumerStatus(std::vector<struct message>& messages)
+int runConsumerStatus(std::vector<struct message>& messages)
 {
     string dir = string(STATUS_DIR);
     vector<string> files = vector<string>();
     struct message msg;
 
-    getDir(dir,files);
+    if (getDir(dir,files) != 0)
+        return errno;
+
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
-                    size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
-                    if(readBytes==0 || errno != 0)
-                        {
-                            readBytes = fread(&msg, sizeof(msg), 1, fp);
-                        }
-                    messages.push_back(msg);
+                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+                    if(readElements == 0)
+                        readElements = fread(&msg, sizeof(msg), 1, fp);
+
+                    if (readElements == 1)
+                        messages.push_back(msg);
+                    else
+                        msg.set_error(EBADMSG);
+
                     unlink(files[i].c_str());
                     fclose(fp);
+                }
+            else
+                {
+                    msg.set_error(errno);
                 }
         }
     files.clear();
     std::sort(messages.begin(), messages.end(), sort_functor_status());
+    return 0;
 }
 
-void runConsumerStall(std::vector<struct message_updater>& messages)
+int runConsumerStall(std::vector<struct message_updater>& messages)
 {
     string dir = string(STALLED_DIR);
     vector<string> files = vector<string>();
     struct message_updater msg;
 
-    getDir(dir,files);
+    if (getDir(dir,files) != 0)
+        return errno;
+
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
-                    size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
-                    if(readBytes==0 || errno != 0)
-                        {
-                            readBytes = fread(&msg, sizeof(msg), 1, fp);
-                        }
-                    messages.push_back(msg);
+                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+                    if(readElements == 0)
+                        readElements = fread(&msg, sizeof(msg), 1, fp);
+
+                    if (readElements == 1)
+                        messages.push_back(msg);
+                    else
+                        msg.set_error(EBADMSG);
+
                     unlink(files[i].c_str());
                     fclose(fp);
+                }
+            else
+                {
+                    msg.set_error(errno);
                 }
         }
     files.clear();
     std::sort(messages.begin(), messages.end(), sort_functor_updater());
+
+    return 0;
 }
 
 
-void runConsumerLog(std::vector<struct message_log>& messages)
+int runConsumerLog(std::vector<struct message_log>& messages)
 {
     string dir = string(LOG_DIR);
     vector<string> files = vector<string>();
     struct message_log msg;
 
-    getDir(dir,files);
+    if (getDir(dir,files) != 0)
+        return errno;
+
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
-                    size_t readBytes = fread(&msg, sizeof(msg), 1, fp);
-                    if(readBytes==0 || errno != 0)
-                        {
-                            readBytes = fread(&msg, sizeof(msg), 1, fp);
-                        }
-                    messages.push_back(msg);
+                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+                    if(readElements == 0)
+                        readElements = fread(&msg, sizeof(msg), 1, fp);
+
+                    if (readElements == 1)
+                        messages.push_back(msg);
+                    else
+                        msg.set_error(EBADMSG);
+
                     unlink(files[i].c_str());
                     fclose(fp);
+                }
+            else
+                {
+                    msg.set_error(errno);
                 }
         }
     files.clear();
     std::sort(messages.begin(), messages.end(), sort_functor_log());
+
+    return 0;
 }
 
 

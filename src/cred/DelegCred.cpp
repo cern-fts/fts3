@@ -186,7 +186,7 @@ std::string DelegCred::encodeName(const std::string& str) /*throw()*/
         {
             if (isalnum((*s_it)))
                 {
-                    encoded.push_back(tolower((*s_it)));
+                    encoded.push_back(static_cast<char>(tolower((*s_it))));
                 }
             else
                 {

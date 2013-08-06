@@ -27,11 +27,12 @@
 #pragma once
 
 #include <iostream>
+#include "OwnedResource.h"
 
 /**
  * Describes the status of one file in a transfer job.
  */
-class TransferJobs
+class TransferJobs: public OwnedResource
 {
 public:
 
@@ -79,4 +80,7 @@ public:
     std::string FAIL_NEARLINE;//						    CHAR(1)
     std::string CHECKSUM_METHOD;//					    CHAR(1)
     int BRINGONLINE; //					    NUMBER(38)
+
+    std::string getUserDn() const { return USER_DN; }
+    std::string getVo() const { return VO_NAME; }
 };

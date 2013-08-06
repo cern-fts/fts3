@@ -181,7 +181,14 @@ void Configuration::eraseSe(string se)
 
 void Configuration::addGroup(string group, vector<string>& members)
 {
-
+	// first check if the new group members are correct
+    vector<string>::iterator it;
+    for (it = members.begin(); it != members.end(); it++)
+        {
+            if (db->checkIfSeIsMemberOfAnotherGroup(*it))
+                throw Err_Custom("The SE: " + *it + " is already a member of another SE group!");
+        }
+    // if the group already exists delete it
     if (db->checkGroupExists(group))
         {
             // if the group exists remove it!
@@ -195,13 +202,10 @@ void Configuration::addGroup(string group, vector<string>& members)
             for (it = tmp.begin(); it != tmp.end(); it++)
                 db->delFileShareConfig(group, *it);
         }
-
-    vector<string>::iterator it;
+    // add new members to the group
     for (it = members.begin(); it != members.end(); it++)
         {
             addSe(*it);
-            if (db->checkIfSeIsMemberOfAnotherGroup(*it))
-                throw Err_Custom("The SE: " + *it + " is already a member of another SE group!");
         }
 
     db->addMemberToGroup(group, members);

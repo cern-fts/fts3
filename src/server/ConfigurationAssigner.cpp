@@ -158,6 +158,8 @@ void ConfigurationAssigner::assignShareCfg(list<cfg_type> arg, vector< shared_pt
                     ptr->destination = destination;
                     ptr->vo = Configuration::pub;
                     ptr->active_transfers = 0;
+                    // insert into DB
+                    db->addShareConfig(ptr.get());
                 }
 
             // if it is a auto-share don't assign a configuration

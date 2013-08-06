@@ -119,11 +119,12 @@ public:
     /**
      * Remote call to getTransferJobStatus
      *
-     * @param jobId the job id
+     * @param jobId   the job id
+     * @param archive if true, the archive will be queried
      *
      * @return an object holding the job status
      */
-    JobStatus getTransferJobStatus (string jobId);
+    JobStatus getTransferJobStatus (string jobId, bool archive);
 
     /** TODO
      * Remote call to getRoles
@@ -147,22 +148,15 @@ public:
     void cancel(vector<string> jobIds);
 
     /**
-     * Remote call to listRequests2
+     * Remote call to listRequests
+     * Internally is listRequests2
      *
      * @param dn user dn
      * @param vo vo name
      * @param array statuses of interest
      * @param resp server response
      */
-    vector<JobStatus> listRequests2 (vector<string> statuses, string dn, string vo);
-
-    /**
-     * Remote call to listRequests
-     *
-     * @param array statuses of interest
-     * @param resp server response
-     */
-    vector<JobStatus> listRequests (vector<string> statuses);
+    vector<JobStatus> listRequests (vector<string> statuses, string dn, string vo);
 
     /** TODO
      * Remote call to listVOManagers
@@ -173,31 +167,28 @@ public:
     void listVoManagers (string vo, impltns__listVOManagersResponse& resp);
 
     /**
-     * Remote call to getTransferJobSummary2
-     *
-     * @param jobId id of the job
-     *
-     * @return an object containing job summary
-     */
-    JobSummary getTransferJobSummary2 (string jobId);
-
-    /**
      * Remote call to getTransferJobSummary
+     * Internally it is getTransferJobSummary3
      *
-     * @param jobId id of the job
+     * @param jobId   id of the job
+     * @param archive if true, the archive will be queried
      *
      * @return an object containing job summary
      */
-    JobSummary getTransferJobSummary (string jobId);
+    JobSummary getTransferJobSummary (string jobId, bool archive);
 
     /**
      * Remote call to getFileStatus
      *
-     * @param jobId id of the job
+     * @param jobId   id of the job
+     * @param archive if true, the archive will be queried
+     * @param offset  query starting from this offset (i.e. files 100 in advance)
+     * @param limit   query a limited number of files (i.e. only 50 results)
      * @param resp server response
      * @return The number of files returned
      */
-    int getFileStatus (string jobId, int offset, int limit, impltns__getFileStatusResponse& resp);
+    int getFileStatus (string jobId, bool archive, int offset, int limit,
+            impltns__getFileStatusResponse& resp);
 
     /**
      * Remote call to setConfiguration

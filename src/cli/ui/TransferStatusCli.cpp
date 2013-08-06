@@ -35,6 +35,8 @@ TransferStatusCli::TransferStatusCli()
     // add fts3-transfer-status specific options
     specific.add_options()
     ("list,l", "List status for all files.")
+    ("archive,a", "Query the archive.")
+    ("dump-failed,F", "Dump failed transfers into a file that can be used as input for submission")
     ;
 }
 
@@ -60,4 +62,15 @@ bool TransferStatusCli::list()
 {
 
     return vm.count("list");
+}
+
+bool TransferStatusCli::queryArchived()
+{
+    return vm.count("archive");
+}
+
+
+bool TransferStatusCli::dumpFailed()
+{
+    return vm.count("dump-failed");
 }

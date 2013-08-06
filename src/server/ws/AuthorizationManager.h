@@ -26,6 +26,7 @@
 #define AUTHORIZATIONMANAGER_H_
 
 #include "common/ThreadSafeInstanceHolder.h"
+#include "db/generic/OwnedResource.h"
 #include "ws-ifce/gsoap/gsoap_stubs.h"
 
 #include <set>
@@ -83,7 +84,7 @@ public:
 
     /// it is used as resource ID for all authorization operations for which the rsc_id doesn't matter
     /// but the required level should be the default for operation (not NONE)
-    static const string dummy;
+    static const OwnedResource* dummy;
 
     /**
      * Destructor
@@ -95,12 +96,12 @@ public:
      * Authorizes the given operation on a given resource
      *
      * @param ctx - the gSOAP context
-     * @param op - the operation that is being authorize
-     * @param rsc_id - the ID of the resource that is being the subject of the operation
+     * @param op  - the operation that is being authorize
+     * @param rsc - the resource that is being the subject of the operation
      *
      * @return authorization level at which access has been granted
      */
-    Level authorize(soap* ctx, Operation op, string rsc_id = string());
+    Level authorize(soap* ctx, Operation op, const OwnedResource* rsc = NULL);
 
 private:
 
@@ -145,12 +146,12 @@ private:
      *
      * @param ctx - the gSOAP context
      * @param op - operation type
-     * @rsc_id - the resource being the subject of the operation
+     * @resource - the resource being the subject of the operation
      *
      * @return the access level required to execute operation 'op' on resource 'rsc_id'
-     * 			If the rsc_id is not specified 'NONE' is returned!
+     * 			If the resource is not specified 'NONE' is returned!
      */
-    Level getRequiredLvl(soap* ctx, Operation op, string rsc_id = string());
+    Level getRequiredLvl(soap* ctx, Operation op, const OwnedResource* rsc = NULL);
 
     /**
      * Converts string to access level

@@ -32,7 +32,30 @@ limitations under the License. */
 
 using namespace std;
 
-struct message
+struct message_base
+{
+public:
+    message_base(): msg_errno(false) {
+        memset(msg_error_reason, 0, sizeof(msg_error_reason));
+    }
+
+    int  msg_errno;
+    char msg_error_reason[128];
+
+    void set_error(int errcode)
+    {
+        // GNU strerror_r may not fill the passed error buffer,
+        // and just return a static area with the message
+        char *aux = strerror_r(errcode, msg_error_reason, sizeof(msg_error_reason));
+        if (aux != msg_error_reason) {
+            strncpy(msg_error_reason, aux, sizeof(msg_error_reason));
+            msg_error_reason[sizeof(msg_error_reason) - 1] = '\0';
+        }
+        msg_errno = errcode;
+    }
+};
+
+struct message: public message_base
 {
 public:
 
@@ -77,7 +100,7 @@ public:
 
 };
 
-struct message_updater
+struct message_updater: public message_base
 {
 public:
     message_updater():file_id(0),process_id(0),timestamp(0)
@@ -92,9 +115,11 @@ public:
     int file_id;
     pid_t process_id;
     boost::posix_time::time_duration::tick_type timestamp;
+    double throughput;
+    double transferred;
 };
 
-struct message_log
+struct message_log: public message_base
 {
 public:
     message_log():file_id(0), debugFile(false),timestamp(0)
@@ -117,7 +142,7 @@ public:
 
 
 
-struct message_bringonline
+struct message_bringonline: public message_base
 {
 public:
     message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0), file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0)
@@ -140,7 +165,7 @@ public:
 };
 
 
-struct message_state
+struct message_state: public message_base
 {
 public:
 
@@ -168,7 +193,7 @@ public:
 };
 
 
-struct message_monitoring
+struct message_monitoring: public message_base
 {
 public:
     message_monitoring():timestamp(0)

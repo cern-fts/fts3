@@ -27,6 +27,7 @@ add_dependencies(fts_myosg_updater fts_common)
 target_link_libraries(fts_myosg_updater -lcurl)
 target_link_libraries(fts_myosg_updater -lfts_config)
 target_link_libraries(fts_myosg_updater -lfts_common)
+target_link_libraries(fts_myosg_updater -lboost_system-mt)
 
 install(TARGETS         fts_myosg_updater 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )

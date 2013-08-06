@@ -19,76 +19,85 @@
                value="{{filterForm.dest_se.data|default_if_none:''}}"/>
       </p>
       
-      <p>
-        <label for="filter_state">State:</label>
-        <input type="text" id="filter_state" name="state" class="text_field"
-               value="{{filterForm.state.data|default_if_none:''}}"/>
-        {% if filterForm.state.errors %}
-          <span class="error">
-            {% for error in filterForm.state.errors %}
-              {{ error|escape }}
-            {% endfor %}
-          </span>
-        {% endif %}
-      </p>
+      {% if not withoutState %}
+	      <p>
+	        <label for="filter_state">State:</label>
+	        <input type="text" id="filter_state" name="state" class="text_field"
+	               value="{{filterForm.state.data|default_if_none:''}}"/>
+	        {% if filterForm.state.errors %}
+	          <span class="error">
+	            {% for error in filterForm.state.errors %}
+	              {{ error|escape }}
+	            {% endfor %}
+	          </span>
+	        {% endif %}
+	      </p>
+	  {% endif %}
       
       <p>
         <label for="filter_vo">VO:</label>
         <input type="text" id="filter_vo" name="vo" class="text_field"
                value="{{filterForm.vo.data|default_if_none:''}}"/>
       </p>
-
-      {% if dateWindow %}
-      <p>
-        <label for="filter_startdate">Start date:</label>
-        <input type="text" id="filter_startdate" name="startdate" class="text_field"
-               value="{{filterForm.startdate.data|default_if_none:''}}"/>
-        {% if filterForm.startdate.errors %}
-          <span class="error">
-            {% for error in filterForm.startdate.errors %}
-              {{ error|escape }}
-            {% endfor %}
-          </span>
-        {% endif %}
-        
-        <label for="filter_enddate">End date:</label>
-        <input type="text" id="filter_enddate" name="enddate" class="text_field"
-               value="{{filterForm.enddate.data|default_if_none:''}}"/>
-        {% if filterForm.enddate.errors %}
-          <span class="error">
-            {% for error in filterForm.enddate.errors %}
-              {{ error|escape }}
-            {% endfor %}
-          </span>
-        {% endif %}
-      </p>
-      {% else %}
-      <p>
-        <label for="filter_timewindow">Time window:</label>
-        <input type="text" id="filter_timewindow" name="time_window" class="text_field"
-               value="{{filterForm.time_window.data|default_if_none:12}}"/> h.
-        {% if filterForm.time_window.errors %}
-          <span class="error">
-            {% for error in filterForm.time_window.errors %}
-              {{ error|escape }}
-            {% endfor %}
-          </span>
-        {% endif %}
-      </p>
-      {% endif %}
       
-      <p>
-        <label for="filter_metadata">Metadata:</label>
-        <input type="text" id="filter_metadata" name="metadata" class="text_field"
-               value="{{filterForm.metadata.data|default_if_none:''}}"/>
-        {% if filterForm.metadata.errors %}
-          <span class="error">
-            {% for error in filterForm.metadata.errors %}
-              {{ error|escape }}
-            {% endfor %}
-          </span>
-        {% endif %}
-      </p>
+      {% if not withoutDate %}
+
+	      {% if dateWindow %}
+	      <p>
+	        <label for="filter_startdate">Start date:</label>
+	        <input type="text" id="filter_startdate" name="startdate" class="text_field"
+	               value="{{filterForm.startdate.data|default_if_none:''}}"/>
+	        {% if filterForm.startdate.errors %}
+	          <span class="error">
+	            {% for error in filterForm.startdate.errors %}
+	              {{ error|escape }}
+	            {% endfor %}
+	          </span>
+	        {% endif %}
+	        
+	        <label for="filter_enddate">End date:</label>
+	        <input type="text" id="filter_enddate" name="enddate" class="text_field"
+	               value="{{filterForm.enddate.data|default_if_none:''}}"/>
+	        {% if filterForm.enddate.errors %}
+	          <span class="error">
+	            {% for error in filterForm.enddate.errors %}
+	              {{ error|escape }}
+	            {% endfor %}
+	          </span>
+	        {% endif %}
+	      </p>
+	      {% else %}
+	      <p>
+	        <label for="filter_timewindow">Time window:</label>
+	        <input type="text" id="filter_timewindow" name="time_window" class="text_field"
+	               value="{{filterForm.time_window.data|default_if_none:12}}"/> h.
+	        {% if filterForm.time_window.errors %}
+	          <span class="error">
+	            {% for error in filterForm.time_window.errors %}
+	              {{ error|escape }}
+	            {% endfor %}
+	          </span>
+	        {% endif %}
+	      </p>
+	      {% endif %}
+	      
+	  {% endif %}
+      
+      
+      {% if not withoutMetadata %}
+	      <p>
+	        <label for="filter_metadata">Metadata:</label>
+	        <input type="text" id="filter_metadata" name="metadata" class="text_field"
+	               value="{{filterForm.metadata.data|default_if_none:''}}"/>
+	        {% if filterForm.metadata.errors %}
+	          <span class="error">
+	            {% for error in filterForm.metadata.errors %}
+	              {{ error|escape }}
+	            {% endfor %}
+	          </span>
+	        {% endif %}
+	      </p>
+      {% endif %}
       
       <p>
         <input type="submit"/>

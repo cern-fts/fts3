@@ -78,7 +78,7 @@ int proc_find(const char* name)
     struct dirent* ent=NULL;
     char* endptr=NULL;
     char buf[512]= {0};
-    int count = 0;
+    unsigned count = 0;
 
     if (!(dir = opendir("/proc")))
         {
@@ -228,6 +228,8 @@ public:
             monitoringMessages = false;
         else
             monitoringMessages = true;
+	    	    
+      jobs2.reserve(3000);	    
     }
 
     /* ---------------------------------------------------------------------- */
@@ -252,22 +254,10 @@ protected:
     SiteName siteResolver;
     std::string ftsHostName;
     std::string allowedVOs;
-    std::vector<int> requestIDs;
     std::vector<TransferJobs*> jobs2;
     rlim_t maximumThreads;
     std::string infosys;
     bool monitoringMessages;
-
-    void killRunninfJob(std::vector<int>& requestIDs)
-    {
-        std::vector<int>::const_iterator iter;
-        for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter)
-            {
-                int pid = *iter;
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
-                kill(pid, SIGTERM);
-            }
-    }
 
     std::string extractHostname(std::string surl)
     {
@@ -349,8 +339,8 @@ protected:
                                                 return;
                                             }
 
-                                        unsigned int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= maximumThreads)
+                                        int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
+                                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
                                             {
                                                 /*verify it's correct, you never know */
                                                 int countTr = proc_find(cmd.c_str());
@@ -364,7 +354,7 @@ protected:
                                                     }
                                                 else
                                                     {
-                                                        if(countTr < currentActiveTransfers || (countTr * 8) <= maximumThreads)
+                                                        if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
                                                             {
                                                                 /*do nothing*/
                                                             }
@@ -684,7 +674,7 @@ protected:
                                                 if (host.compare(ftsHostName) == 0 && ready == true)
                                                     {
                                                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                                                        pr = new ExecuteProcess(cmd, params, 0);
+                                                        pr = new ExecuteProcess(cmd, params);
                                                         if (pr)
                                                             {
                                                                 /*check if fork/execvp failed, */
@@ -777,8 +767,8 @@ protected:
                                         return;
                                     }
 
-                                unsigned int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                                if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= maximumThreads)
+                                int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
+                                if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
                                     {
                                         /*verify it's correct, you never know */
                                         int countTr = proc_find(cmd.c_str());
@@ -792,7 +782,7 @@ protected:
                                             }
                                         else
                                             {
-                                                if(countTr < currentActiveTransfers || (countTr * 8) <= maximumThreads)
+                                                if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
                                                     {
                                                         /*do nothing*/
                                                     }
@@ -1125,7 +1115,7 @@ protected:
                                 if (host.compare(ftsHostName) == 0 && ready == true)
                                     {
                                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                                        pr = new ExecuteProcess(cmd, params, 0);
+                                        pr = new ExecuteProcess(cmd, params);
                                         if (pr)
                                             {
                                                 /*check if fork failed , check if execvp failed, */
@@ -1212,65 +1202,9 @@ protected:
                                 drainMode = false;
                             }
 
-                        /*revert to SUBMITTED if stayed in READY for too long (100 secs)*/
-                        countReverted++;
-                        if (countReverted >= 100)
-                            {
-                                DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
-                                countReverted = 0;
-                            }
-
-                        /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
-                        counterTimeoutWaiting++;
-                        if (counterTimeoutWaiting >= 10000)
-                            {
-                                std::set<std::string> canceled;
-                                DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
-                                set<string>::const_iterator iter;
-                                if(!canceled.empty())
-                                    {
-                                        for (iter = canceled.begin(); iter != canceled.end(); ++iter)
-                                            {
-                                                SingleTrStateInstance::instance().sendStateMessage((*iter), -1);
-                                            }
-                                        canceled.clear();
-                                    }
-
-                                // sanity check to make sure there are no files that have all replicas in not used state
-                                DBSingleton::instance().getDBObjectInstance()->revertNotUsedFiles();
-
-                                counterTimeoutWaiting = 0;
-                            }
-
-                        /*force-fail stalled ACTIVE transfers*/
-                        counter++;
-                        if (counter == 300)
-                            {
-                                std::map<int, std::string> collectJobs;
-                                DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
-                                if(!collectJobs.empty())
-                                    {
-                                        std::map<int, std::string>::const_iterator iterCollectJobs;
-                                        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
-                                            {
-                                                SingleTrStateInstance::instance().sendStateMessage((*iterCollectJobs).second, (*iterCollectJobs).first);
-                                            }
-                                        collectJobs.clear();
-                                    }
-                                counter = 0;
-                            }
-
 
                         /*get jobs in submitted state*/
                         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
-
-                        /*also get jobs which have been canceled by the client*/
-                        DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                        if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
-                            {
-                                killRunninfJob(requestIDs);
-                                requestIDs.clear(); /*clean the list*/
-                            }
 
                         if (!jobs2.empty())
                             {
@@ -1314,7 +1248,7 @@ protected:
                                 jobs2.clear();
                             }
                     }
-                usleep(500000);
+                usleep(400000);
             } /*end while*/
     }
 

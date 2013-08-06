@@ -66,7 +66,6 @@ FileTransferScheduler::FileTransferScheduler(
 
             if (cfg->share_only)
                 {
-
                     double tmp = 0;
                     int sum = 0;
 

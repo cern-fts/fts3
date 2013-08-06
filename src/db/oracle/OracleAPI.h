@@ -58,13 +58,13 @@ public:
                                 int bringonline, std::string metadata,
                                 int retry, int retryDelay, std::string sourceSe, std::string destinationSe);
 
-    virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs);
+    virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 
-    virtual void getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
+    virtual void getTransferFileStatus(std::string requestID, bool archive, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname);
 
-    virtual TransferJobs* getTransferJob(std::string jobId);
+    virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
@@ -85,6 +85,8 @@ public:
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration);
 
     virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status);
+
+    virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred);
 
     virtual void updateJObStatus(std::string jobId, const std::string status);
 
@@ -135,6 +137,10 @@ public:
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
+    virtual int getCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, oracle::occi::ResultSet** r, const std::string & source_hostname, const std::string & destin_hostname);
+
+    virtual void initVariablesForGetCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, std::string* query, std::string* tag, std::string basename);
+
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
 
     virtual void setAllowedNoOptimize(const std::string & job_id, int file_id, const std::string & params);
@@ -168,6 +174,10 @@ public:
     virtual void unblacklistDn(std::string dn);
 
     virtual bool isSeBlacklisted(std::string se, std::string vo);
+
+    virtual bool allowSubmitForBlacklistedSe(std::string se);
+
+    virtual boost::optional<int> getTimeoutForSe(std::string se);
 
     virtual bool isDnBlacklisted(std::string dn);
 
@@ -294,11 +304,9 @@ public:
 
     virtual void setRetryTimestamp(const std::string& jobId, int fileId);
 
-    virtual int countActiveTransfers(std::string source, std::string destination);
+    virtual double getSuccessRate(std::string source, std::string destination);
 
-    virtual int getFailureRate(std::string source, std::string destination);
-
-    virtual int getAvgThroughput(std::string source, std::string destination, int activeTransfers);
+    virtual double getAvgThroughput(std::string source, std::string destination);
 
     virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize);
 
@@ -324,7 +332,8 @@ public:
 
     virtual void checkSanityState();
 
-    virtual void countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId, int& finished, int& cancelled, int& failed);
+    virtual void countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
+            unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
 
     virtual void checkSchemaLoaded();
 

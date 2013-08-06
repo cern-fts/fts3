@@ -110,6 +110,11 @@ public:
 
     string getStatus()
     {
+    	if (vm.count("allow-submit"))
+    		{
+    			status = "WAIT_AS"; // the _AS (allow submit) sufix to the status
+    		}
+
         return status;
     }
 

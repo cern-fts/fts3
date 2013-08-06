@@ -56,6 +56,7 @@ BlacklistCli::BlacklistCli()
 
     command_specific.add_options()
     ("vo", value<string>(&vo), "The VO that is banned for the given SE")
+    ("allow-submit", "FTS will accept transfer jobs for the blacklisted SE (they wont be executed until the SE is blacklisted)")
     ;
 
     // add positional (those used without an option switch) command line options
@@ -100,6 +101,12 @@ optional<GSoapContextAdapter&> BlacklistCli::validate(bool init)
             cout << "You may only specify the timeout for the 'WAIT' status" << endl;
             return 0;
         }
+
+    if (vm.count("allow-submit") && status == "CANCEL")
+    	{
+			cout << "If the 'allow-submit' option is used you may not use 'CANCEL' status" << endl;
+			return 0;
+    	}
 
     return *ctx;
 }

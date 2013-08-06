@@ -84,6 +84,16 @@ public:
      */
     bool list();
 
+    /**
+     * Check if querying the archive is on
+     */
+    bool queryArchived();
+
+    /**
+     * If true, the failed files should be dump to a file
+     */
+    bool dumpFailed();
+
 };
 
 }

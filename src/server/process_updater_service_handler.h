@@ -138,7 +138,12 @@ protected:
                                 queueMsgRecovery.clear();
                             }
 
-                        runConsumerStall(messages);
+                        if (runConsumerStall(messages) != 0) {
+                            char buffer[128];
+                            throw Err_System(std::string("Could not get the status messages: ") +
+                                             strerror_r(errno, buffer, sizeof(buffer)));
+                        }
+
                         if(messages.empty())
                             {
                                 sleep(1);
@@ -148,13 +153,30 @@ protected:
                             {
                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                                     {
-                                        std::string job = std::string((*iter).job_id).substr(0, 36);
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
+                                        if (iter->msg_errno == 0)
+                                            {
+                                                std::string job = std::string((*iter).job_id).substr(0, 36);
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Updater Monitor "
                                                                         << "\nJob id: " << job
                                                                         << "\nFile id: " << (*iter).file_id
                                                                         << "\nPid: " << (*iter).process_id
-                                                                        << "\nTimestamp: " << (*iter).timestamp << commit;
-                                        ThreadSafeList::get_instance().updateMsg(*iter);
+                                                                        << "\nTimestamp: " << (*iter).timestamp
+                                                                        << "\nThroughput: " << (*iter).throughput
+                                                                        << "\nTransferred: " << (*iter).transferred
+                                                                        << commit;
+                                                ThreadSafeList::get_instance().updateMsg(*iter);
+
+                                                // Update progress
+                                                DBSingleton::instance().getDBObjectInstance()
+                                                           ->updateFileTransferProgress(job, (*iter).file_id,
+                                                                                        (*iter).throughput,
+                                                                                        (*iter).transferred);
+                                            }
+                                        else
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a stall message: "
+                                                    << iter->msg_error_reason << commit;
+                                            }
                                     }
                                 messages.clear();
                             }

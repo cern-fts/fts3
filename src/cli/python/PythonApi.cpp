@@ -76,9 +76,9 @@ void PythonApi::cancelAll(py::list ids)
     ctx.cancel(c_ids);
 }
 
-py::str PythonApi::getStatus(py::str id)
+py::str PythonApi::getStatus(py::str id, bool archive)
 {
-    JobStatus s = ctx.getTransferJobStatus(py::extract<string>(id));
+    JobStatus s = ctx.getTransferJobStatus(py::extract<string>(id), archive);
     return s.jobStatus.c_str();
 }
 

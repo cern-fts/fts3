@@ -49,27 +49,27 @@ void getUniqueTempFileName(const std::string& basename, std::string& tempname);
 void mktempfile(const std::string& basename, std::string& tempname);
 
 //for monitoring
-void runConsumerMonitoring(std::vector<struct message_monitoring>& messages);
+int runConsumerMonitoring(std::vector<struct message_monitoring>& messages);
 
-void runProducerMonitoring(struct message_monitoring &msg);
+int runProducerMonitoring(struct message_monitoring &msg);
 
 
 //for receiving the status from url_copy
-void runConsumerStatus(std::vector<struct message>& messages);
+int runConsumerStatus(std::vector<struct message>& messages);
 
-void runProducerStatus(struct message &msg);
+int runProducerStatus(struct message &msg);
 
 
 //for checking is the process is stalled
-void runConsumerStall(std::vector<struct message_updater>& messages);
+int runConsumerStall(std::vector<struct message_updater>& messages);
 
-void runProducerStall(struct message_updater &msg);
+int runProducerStall(struct message_updater &msg);
 
 
 //for checking the log file path
-void runConsumerLog(std::vector<struct message_log>& messages);
+int runConsumerLog(std::vector<struct message_log>& messages);
 
-void runProducerLog(struct message_log &msg);
+int runProducerLog(struct message_log &msg);
 
 
 

@@ -25,6 +25,7 @@
 #include "CfgParser.h"
 
 #include <sstream>
+#include <algorithm>
 
 #include <boost/assign.hpp>
 #include <boost/tokenizer.hpp>
@@ -160,6 +161,14 @@ const map<string, set <string> > CfgParser::initShareOnlyCfgTokens()
 
 CfgParser::CfgParser(string configuration)
 {
+
+	size_t opening = count(configuration.begin(), configuration.end(), '{');
+	size_t closing = count(configuration.begin(), configuration.end(), '}');
+
+	if (opening != closing)
+		{
+			throw Err_Custom("The number of opening braces does not much the number of closing braces");
+		}
 
     // break into lines to give later better feedback to users
     replace_all(configuration, ",", ",\n");

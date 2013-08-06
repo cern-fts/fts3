@@ -101,6 +101,17 @@ public:
 protected:
     std::vector<struct message_log> queueMsgRecovery;
     std::vector<struct message_log> messages;
+    
+    void killRunninfJob(std::vector<int>& requestIDs)
+    {
+        std::vector<int>::const_iterator iter;
+        for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter)
+            {
+                int pid = *iter;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
+                kill(pid, SIGTERM);
+            }
+    }    
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
@@ -108,11 +119,72 @@ protected:
 
         std::vector<struct message_log>::const_iterator iter;
         std::vector<struct message_log>::const_iterator iter_restore;
+	std::vector<int> requestIDs;
+        static unsigned int countReverted = 0;
+        static unsigned int counter = 0;
+        static unsigned int counterTimeoutWaiting = 0;	
 
         while (stopThreads==false)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
+                       /*also get jobs which have been canceled by the client*/
+                        DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                        if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
+                            {
+                                killRunninfJob(requestIDs);
+                                requestIDs.clear(); /*clean the list*/
+                            }
+		    
+		    
+                        /*revert to SUBMITTED if stayed in READY for too long (100 secs)*/
+                        countReverted++;
+                        if (countReverted >= 10)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
+                                countReverted = 0;
+                            }		    
+		    
+                       /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
+                        counterTimeoutWaiting++;
+                        if (counterTimeoutWaiting >= 10)
+                            {
+                                std::set<std::string> canceled;
+                                DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
+                                set<string>::const_iterator iterCan;
+                                if(!canceled.empty())
+                                    {
+                                        for (iterCan = canceled.begin(); iterCan != canceled.end(); ++iterCan)
+                                            {
+                                                SingleTrStateInstance::instance().sendStateMessage((*iterCan), -1);
+                                            }
+                                        canceled.clear();
+                                    }
+
+                                // sanity check to make sure there are no files that have all replicas in not used state
+                                DBSingleton::instance().getDBObjectInstance()->revertNotUsedFiles();
+
+                                counterTimeoutWaiting = 0;
+                            }
+
+                        /*force-fail stalled ACTIVE transfers*/
+                        counter++;
+                        if (counter == 10)
+                            {
+                                std::map<int, std::string> collectJobs;
+                                DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
+                                if(!collectJobs.empty())
+                                    {
+                                        std::map<int, std::string>::const_iterator iterCollectJobs;
+                                        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
+                                            {
+                                                SingleTrStateInstance::instance().sendStateMessage((*iterCollectJobs).second, (*iterCollectJobs).first);
+                                            }
+                                        collectJobs.clear();
+                                    }
+                                counter = 0;
+                            }
+		    		    
 
                         if(fs::is_empty(fs::path(LOG_DIR)))
                             {
@@ -133,7 +205,12 @@ protected:
                                 queueMsgRecovery.clear();
                             }
 
-                        runConsumerLog(messages);
+                        if (runConsumerLog(messages) != 0) {
+                            char buffer[128]={0};
+                            throw Err_System(std::string("Could not get the log messages: ") +
+                                             strerror_r(errno, buffer, sizeof(buffer)));
+                        }
+
                         if(messages.empty())
                             {
                                 sleep(1);
@@ -143,13 +220,19 @@ protected:
                             {
                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                                     {
-                                        std::string job = std::string((*iter).job_id).substr(0, 36);
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Log Monitor "
-                                                                        << "\nJob id: " << job
-                                                                        << "\nFile id: " << (*iter).file_id
-                                                                        << "\nLog path: " << (*iter).filePath << commit;
-                                        DBSingleton::instance().getDBObjectInstance()->
-                                        transferLogFile((*iter).filePath, job , (*iter).file_id, (*iter).debugFile);
+                                        if (iter->msg_errno == 0) {
+                                            std::string job = std::string((*iter).job_id).substr(0, 36);
+                                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Log Monitor "
+                                                                            << "\nJob id: " << job
+                                                                            << "\nFile id: " << (*iter).file_id
+                                                                            << "\nLog path: " << (*iter).filePath << commit;
+                                            DBSingleton::instance().getDBObjectInstance()->
+                                            transferLogFile((*iter).filePath, job , (*iter).file_id, (*iter).debugFile);
+                                        }
+                                        else {
+                                            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a log message: "
+                                                << iter->msg_error_reason << commit;
+                                        }
                                     }
                                 messages.clear();
                             }

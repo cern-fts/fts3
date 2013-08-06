@@ -60,93 +60,64 @@ void getUniqueTempFileName(const std::string& basename,
     while( 0 == iRes );
 }
 
-
-void runProducerMonitoring(message_monitoring &msg)
+static std::string getNewMessageFile(const char* BASE_DIR)
 {
-    FILE *fp=NULL;
-    std::string basename(MONITORING_DIR);
+    std::string basename(BASE_DIR);
     std::string tempname;
-
     getUniqueTempFileName(basename, tempname);
-    if ((fp = fopen(tempname.c_str(), "w")) != NULL)
-        {
-            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-            if(writesBytes==0 || errno != 0)
-                {
-                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-                }
-            fclose(fp);
-            std::string renamedFile = tempname + "_ready";
-            int r = rename(tempname.c_str(), renamedFile.c_str());
-            if(-1 == r)
-                rename(tempname.c_str(), renamedFile.c_str());
-        }
+    return tempname;
 }
 
-
-void runProducerStatus(message &msg)
+static int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR)
 {
-    FILE *fp=NULL;
-    std::string basename(STATUS_DIR);
-    std::string tempname;
+    std::string tempname = getNewMessageFile(BASE_DIR);
 
-    getUniqueTempFileName(basename, tempname);
-    if ((fp = fopen(tempname.c_str(), "w")) != NULL)
-        {
-            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-            if(writesBytes==0 || errno != 0)
-                {
-                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-                }
-            fclose(fp);
-            std::string renamedFile = tempname + "_ready";
-            int r = rename(tempname.c_str(), renamedFile.c_str());
-            if(-1 == r)
-                rename(tempname.c_str(), renamedFile.c_str());
-        }
+    // Open
+    FILE* fp = NULL;
+    fp = fopen(tempname.c_str(), "w");
+    if (fp == NULL)
+        return errno;
+
+    // Try to write twice
+    size_t writeBytes = fwrite(buffer, bufsize, 1, fp);
+    if (writeBytes == 0)
+        writeBytes = fwrite(buffer, bufsize, 1, fp);
+
+    // Close
+    fclose(fp);
+
+    // Rename to final name (sort of commit)
+    // Try twice too
+    std::string renamedFile = tempname + "_ready";
+    int r = rename(tempname.c_str(), renamedFile.c_str());
+    if (r == -1)
+        r = rename(tempname.c_str(), renamedFile.c_str());
+    if (r == -1)
+        return errno;
+
+    return 0;
 }
 
 
-void runProducerStall(message_updater &msg)
+int runProducerMonitoring(message_monitoring &msg)
 {
-    FILE *fp=NULL;
-    std::string basename(STALLED_DIR);
-    std::string tempname = basename + "_" + msg.job_id + "_" + boost::lexical_cast<string>( msg.file_id );
-    if ((fp = fopen(tempname.c_str(), "w+")) != NULL)
-        {
-            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-            if(writesBytes==0 || errno != 0)
-                {
-                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-                }
-            fclose(fp);
-            std::string renamedFile = tempname + "_ready";
-            int r = rename(tempname.c_str(), renamedFile.c_str());
-            if(-1 ==r)
-                rename(tempname.c_str(), renamedFile.c_str());
-        }
+    return writeMessage(&msg, sizeof(message_monitoring), MONITORING_DIR);
 }
 
 
-void runProducerLog(message_log &msg)
+int runProducerStatus(message &msg)
 {
-    FILE *fp=NULL;
-    std::string basename(LOG_DIR);
-    std::string tempname;
-
-    getUniqueTempFileName(basename, tempname);
-    if ((fp = fopen(tempname.c_str(), "w")) != NULL)
-        {
-            size_t writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-            if(writesBytes==0 || errno != 0)
-                {
-                    writesBytes = fwrite(&msg, sizeof(msg), 1, fp);
-                }
-            fclose(fp);
-            std::string renamedFile = tempname + "_ready";
-            int r = rename(tempname.c_str(), renamedFile.c_str());
-            if(-1 == r)
-                rename(tempname.c_str(), renamedFile.c_str());
-        }
+    return writeMessage(&msg, sizeof(message), STATUS_DIR);
 }
 
+
+int runProducerStall(message_updater &msg)
+{
+    return writeMessage(&msg, sizeof(message_updater), STALLED_DIR);
+}
+
+
+int runProducerLog(message_log &msg)
+{
+    return writeMessage(&msg, sizeof(msg), LOG_DIR);
+}

@@ -35,6 +35,11 @@ using namespace boost::assign;
 using namespace fts3::cli;
 using namespace fts3::common;
 
+static bool isTransferFailed(const std::string& state)
+{
+    return state == "CANCELED" || state == "FAILED";
+}
+
 /**
  * This is the entry point for the fts3-transfer-status command line tool.
  */
@@ -56,8 +61,11 @@ int main(int ac, char* av[])
             if (!opt.is_initialized()) return 0;
             GSoapContextAdapter& ctx = opt.get();
 
+            // archived content?
+            bool archive = cli->queryArchived();
             // get job IDs that have to be check
             vector<string> jobIds = cli->getJobIds();
+
             // iterate over job IDs
             vector<string>::iterator it;
             for (it = jobIds.begin(); it < jobIds.end(); it++)
@@ -65,17 +73,25 @@ int main(int ac, char* av[])
 
                     string jobId = *it;
 
+                    std::ofstream failedFiles;
+                    if (cli->dumpFailed())
+                        {
+                            failedFiles.open(jobId.c_str(), ios_base::out);
+                            if (failedFiles.fail())
+                                throw std::string(strerror(errno));
+                        }
+
                     if (cli->isVerbose())
                         {
                             // do the request
-                            JobSummary summary = ctx.getTransferJobSummary2(jobId);
+                            JobSummary summary = ctx.getTransferJobSummary(jobId, archive);
                             // print the response
                             cli->printer().job_summary(summary);
                         }
                     else
                         {
                             // do the request
-                            fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId);
+                            fts3::cli::JobStatus status = ctx.getTransferJobStatus(jobId, archive);
                             // print the response
                             if (!status.jobStatus.empty())
                                 {
@@ -84,8 +100,9 @@ int main(int ac, char* av[])
                         }
 
                     // TODO test!
-                    // check if the -l option has been used
-                    if (cli->list())
+                    // If a list is requested, or dumping the failed transfers,
+                    // get the transfers
+                    if (cli->list() || cli->dumpFailed())
                         {
                             int offset = 0;
                             int cnt = 0;
@@ -94,7 +111,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     impltns__getFileStatusResponse resp;
-                                    cnt = ctx.getFileStatus(jobId, offset, DEFAULT_LIMIT, resp);
+                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, resp);
 
                                     if (cnt > 0 && resp._getFileStatusReturn)
                                         {
@@ -107,17 +124,25 @@ int main(int ac, char* av[])
                                                 {
                                                     tns3__FileTransferStatus* stat = *it;
 
-                                                    vector<string> values =
-                                                        list_of
-                                                        (*stat->sourceSURL)
-                                                        (*stat->destSURL)
-                                                        (*stat->transferFileState)
-                                                        (lexical_cast<string>(stat->numFailures))
-                                                        (*stat->reason)
-                                                        (lexical_cast<string>(stat->duration))
-                                                        ;
+                                                    if (cli->list()) {
+                                                        vector<string> values =
+                                                            list_of
+                                                            (*stat->sourceSURL)
+                                                            (*stat->destSURL)
+                                                            (*stat->transferFileState)
+                                                            (lexical_cast<string>(stat->numFailures))
+                                                            (*stat->reason)
+                                                            (lexical_cast<string>(stat->duration))
+                                                            ;
 
-                                                    cli->printer().file_list(values);
+                                                        cli->printer().file_list(values);
+                                                    }
+
+                                                    if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState)) {
+                                                        failedFiles << *stat->sourceSURL << " "
+                                                                    << *stat->destSURL
+                                                                    << std::endl;
+                                                    }
                                                 }
                                         }
 
@@ -132,18 +157,24 @@ int main(int ac, char* av[])
         {
             if (cli.get())
                 cli->printer().error_msg(ex.what());
+            else
+                std::cerr << ex.what() << std::endl;
             return 1;
         }
     catch(string& ex)
         {
             if (cli.get())
                 cli->printer().gsoap_error_msg(ex);
+            else
+                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)
         {
             if (cli.get())
                 cli->printer().error_msg("Exception of unknown type!");
+            else
+                std::cerr << "Exception of unknown type!" << std::endl;
             return 1;
         }
 

@@ -69,8 +69,6 @@ SubmitTransferCli::SubmitTransferCli()
     ("compare-checksum,K", "Compare checksums between source and destination.")
     ("copy-pin-lifetime", value<int>()->implicit_value(eight_hours)->default_value(-1), "Pin lifetime of the copy of the file (seconds), if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
     ("bring-online", value<int>()->implicit_value(eight_hours)->default_value(-1), "Bring online timeout expressed in seconds, if the argument is not specified a default value of 28800 seconds (8 hours) is used.")
-    ("lan-connection", "use LAN as ConnectionType (default = WAN)")
-    ("fail-nearline", "fail the transfer if the file is nearline")
     ("reuse,r", "enable session reuse for the transfer job")
     ("job-metadata", value<string>(), "transfer-job metadata")
     ("file-metadata", value<string>(), "file metadata")
@@ -372,16 +370,6 @@ map<string, string> SubmitTransferCli::getParams()
     if (vm.count("overwrite"))
         {
             parameters[JobParameterHandler::OVERWRITEFLAG] = "Y";
-        }
-
-    if (vm.count("lan-connection"))
-        {
-            parameters[JobParameterHandler::LAN_CONNECTION] = "Y";
-        }
-
-    if (vm.count("fail-nearline"))
-        {
-            parameters[JobParameterHandler::FAIL_NEARLINE] = "Y";
         }
 
     if (vm.count("gparam"))

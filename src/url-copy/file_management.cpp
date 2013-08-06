@@ -34,12 +34,7 @@ limitations under the License. */
 
 using namespace std;
 
-static int fexists(const char *filename)
-{
-    struct stat buffer;
-    if (stat(filename, &buffer) == 0) return 0;
-    return -1;
-}
+
 
 FileManagement::FileManagement() : logFileName("/var/log/fts3/"), base_scheme(NULL), base_host(NULL), base_path(NULL), base_port(0)
 {
@@ -74,20 +69,9 @@ void FileManagement::generateLogFile()
     fname = generateLogFileName(source_url, dest_url, file_id, job_id);
 }
 
-int FileManagement::getLogStream(std::ofstream& logStream)
+std::string FileManagement::getLogFilePath()
 {
-    log = logFileName + "/" + fname;
-    fullPath = log + ".debug";
-    logStream.open(log.c_str(), ios::app);
-    if (logStream.fail())
-        {
-            return errno;
-        }
-    else
-        {
-            chmod(log.c_str(), (mode_t) 0644);
-            return 0;
-        }
+    return logFileName + "/" + fname;
 }
 
 void FileManagement::setSourceUrl(std::string& source_url)
@@ -146,19 +130,6 @@ void FileManagement::setJobId(std::string& job_id)
     this->job_id = job_id;
 }
 
-std::string FileManagement::timestamp()
-{
-    std::string timestapStr("");
-    char timebuf[128] = "";
-    // Get Current Time
-    time_t current;
-    time(&current);
-    struct tm local_tm;
-    localtime_r(&current, &local_tm);
-    timestapStr = std::string(asctime_r(&local_tm, timebuf));
-    timestapStr.erase(timestapStr.end() - 1);
-    return timestapStr + " ";
-}
 
 bool FileManagement::directoryExists(const char* pzPath)
 {
@@ -191,28 +162,10 @@ std::string FileManagement::archive()
     arcFileName = logFileName + "/" + archiveFileName;
     directoryExists(arcFileName.c_str());
     arcFileName += "/" + fname;
-    int r = rename(log.c_str(), arcFileName.c_str());
-    if (r == 0)
-        {
-            if (fexists(fullPath.c_str()) == 0)
-                {
-                    std::string debugArchFile = arcFileName + ".debug";
-                    int r2 = rename(fullPath.c_str(), debugArchFile.c_str());
-                    if (r2 != 0)
-                        {
-                            char const * str = strerror_r(errno, buf, 256);
-                            if (str)
-                                {
-                                    return std::string(str);
-                                }
-                            else
-                                {
-                                    return std::string("Unknown error when moving debug log file");
-                                }
-                        }
-                }
-        }
-    else
+
+    // Move log
+    int r = rename(getLogFilePath().c_str(), arcFileName.c_str());
+    if (r != 0)
         {
             char const * str = strerror_r(errno, buf, 256);
             if (str)
@@ -224,6 +177,27 @@ std::string FileManagement::archive()
                     return std::string("Unknown error when moving log file");
                 }
         }
+
+    // Move debug file
+    std::string debugFile    = getLogFilePath() + ".debug";
+    std::string debugArchive = arcFileName + ".debug";
+    if (access(debugFile.c_str(), F_OK) == 0)
+        {
+            int r2 = rename(debugFile.c_str(), debugArchive.c_str());
+            if (r2 != 0)
+                {
+                     char const * str = strerror_r(errno, buf, 256);
+                     if (str)
+                         {
+                             return std::string(str);
+                         }
+                     else
+                         {
+                             return std::string("Unknown error when moving debug log file");
+                         }
+                 }
+        }
+
     return std::string("");
 }
 

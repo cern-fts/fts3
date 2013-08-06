@@ -62,7 +62,6 @@ SiteName=replacethis
 #Enable/Disable monitoring using messaging monitoring (disabled=false / enabled=true)
 MonitoringMessaging=true
 
-#Do not change this
 [roles]
 Public = vo:transfer
 production = all:config

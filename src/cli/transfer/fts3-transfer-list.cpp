@@ -58,7 +58,7 @@ int main(int ac, char* av[])
 
             vector<string> array = cli->getStatusArray();
             vector<fts3::cli::JobStatus> statuses;
-            statuses = ctx.listRequests2(array, cli->getUserDn(), cli->getVoName());
+            statuses = ctx.listRequests(array, cli->getUserDn(), cli->getVoName());
 
             vector<fts3::cli::JobStatus>::iterator it;
             for (it = statuses.begin(); it < statuses.end(); it++)
@@ -71,18 +71,24 @@ int main(int ac, char* av[])
         {
             if (cli.get())
                 cli->printer().error_msg(ex.what());
+            else
+                std::cerr << ex.what() << std::endl;
             return 1;
         }
     catch(string& ex)
         {
             if (cli.get())
                 cli->printer().gsoap_error_msg(ex);
+            else
+                std::cerr << ex << std::endl;
             return 1;
         }
     catch(...)
         {
             if (cli.get())
                 cli->printer().error_msg("Exception of unknown type!");
+            else
+                std::cerr << "Exception of unknown type!" << std::endl;
             return 1;
         }
 

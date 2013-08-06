@@ -31,20 +31,19 @@ public:
 public:
     std::string archive();
     std::string generateLogFileName(std::string surl, std::string durl, std::string & file_id, std::string & job_id);
-    static bool directoryExists(const char* pzPath);
-    static std::string timestamp();
     static std::string dateDir();
-    int getLogStream(std::ofstream& logStream);
-    void setSourceUrl(std::string& source_url);
-    void setDestUrl(std::string& dest_url);
-    void setFileId(std::string& file_id);
-    void setJobId(std::string& job_id);
     void generateLogFile();
 
-    inline std::string getLogFileFullPath()
-    {
-        return fullPath;
-    }
+    static bool directoryExists(const char* pzPath);
+
+    std::string getLogFilePath();
+
+    void setSourceUrl(std::string& source_url);
+    void setDestUrl(std::string& dest_url);
+
+    void setFileId(std::string& file_id);
+    void setJobId(std::string& job_id);
+
     inline std::string getLogFileName()
     {
         return fname;
@@ -72,11 +71,6 @@ public:
         return dhostFile;
     }
 
-    inline std::string _getLogFileFullPath()
-    {
-        return log;
-    }
-
     inline std::string _getLogArchivedFileFullPath()
     {
         return arcFileName;
@@ -95,8 +89,6 @@ private:
     std::string shostFile;
     std::string dhostFile;
     std::string dateArch;
-    std::string log;
-    std::string fullPath;
     std::string arcFileName;
     char *base_scheme;
     char *base_host;

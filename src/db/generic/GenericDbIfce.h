@@ -75,6 +75,7 @@ struct job_element_tupple
     std::string metadata;
     std::string selectionStrategy;
     int fileIndex;
+    boost::optional<int> wait_timeout;
 };
 
 class GenericDbIfce
@@ -101,14 +102,16 @@ public:
                                 int retry, int retryDelay, std::string sourceSe, std::string destinationSe) = 0;
 
 
-    virtual void getTransferJobStatus(std::string requestID, std::vector<JobStatus*>& jobs) = 0;
+    virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
 
     // If limit == 0, then all results
-    virtual void getTransferFileStatus(std::string requestID, unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+    virtual void getTransferFileStatus(std::string requestID, bool archive,
+                    unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
-    virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates, std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
+    virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
+                    std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
 
-    virtual TransferJobs* getTransferJob(std::string jobId) = 0;
+    virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
     virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos) = 0;
 
@@ -129,6 +132,8 @@ public:
     virtual bool updateFileTransferStatus(double throughput, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message, int process_id, double filesize, double duration) = 0;
 
     virtual bool updateJobTransferStatus(int file_id, std::string job_id, const std::string status) = 0;
+
+    virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred) = 0;
 
     // UNUSED
     //virtual void updateJObStatus(std::string jobId, const std::string status) = 0;
@@ -214,6 +219,10 @@ public:
     virtual void unblacklistDn(std::string dn) = 0;
 
     virtual bool isSeBlacklisted(std::string se, std::string vo) = 0;
+
+    virtual bool allowSubmitForBlacklistedSe(std::string se) = 0;
+
+    virtual boost::optional<int> getTimeoutForSe(std::string se) = 0;
 
     virtual bool isDnBlacklisted(std::string dn) = 0;
 
@@ -342,9 +351,9 @@ public:
 
     virtual void setRetryTimestamp(const std::string& jobId, int fileId) = 0;
 
-    virtual int getFailureRate(std::string source, std::string destination) = 0;
+    virtual double getSuccessRate(std::string source, std::string destination) = 0;
 
-    virtual int getAvgThroughput(std::string source, std::string destination, int activeTransfers) = 0;
+    virtual double getAvgThroughput(std::string source, std::string destination) = 0;
 
     virtual void updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize) = 0;
 
