@@ -14,7 +14,6 @@ Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name
 BuildRequires:  cmake
 BuildRequires:  boost-devel%{?_isa}
 BuildRequires:  glib2-devel%{?_isa}
-BuildRequires:  python-devel%{?_isa}
 BuildRequires:  soci-mysql-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
@@ -45,7 +44,7 @@ make %{?_smp_mflags}
 cd build
 make install DESTDIR=%{buildroot}
 
-%post  -p /sbin/ldconfig
+%post   -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
 
