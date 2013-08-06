@@ -24,6 +24,7 @@ set_target_properties(fts_db_mysql             PROPERTIES
                                                CLEAN_DIRECT_OUTPUT 1)
 
 
-install(TARGETS         fts_db_mysql 
+install(TARGETS         fts_db_mysql
         RUNTIME         DESTINATION ${CMAKE_INSTALL_PREFIX} 
-        LIBRARY         DESTINATION ${LIB_INSTALL_DIR} )
+        LIBRARY         DESTINATION ${LIB_INSTALL_DIR}
+        NAMELINK_SKIP)
