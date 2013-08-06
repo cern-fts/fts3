@@ -256,9 +256,10 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 
 void canceler()
 {
-    Logger::getInstance().WARNING() << "Transfer " << g_job_id
-                                    << " was canceled because it was not responding"
-                                    << std::endl;
+    errorMessage = "Transfer " + g_job_id + " was canceled because it was not responding";
+				    
+    Logger::getInstance().WARNING() << errorMessage << std::endl;
+    
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
@@ -936,6 +937,10 @@ int main(int argc, char **argv)
                         errorPhase = TRANSFER;
                         goto stop;
                     }
+		    
+		    
+		    
+		    sleep(20);
 
                 logger.INFO() << "Transfer Starting" << std::endl;
                 if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
