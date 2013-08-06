@@ -275,8 +275,8 @@ void taskTimer(time_t* timeout)
 
     while (*timeout) {
         boost::this_thread::sleep(boost::posix_time::seconds(1));
-	std:: cout << "UPDATE = " <<  boost::lexical_cast<std::string>(*timeout) << std::endl;
-        --timeout;
+        std:: cout << "UPDATE = " <<  boost::lexical_cast<std::string>(*timeout) << std::endl;
+        *timeout -= 1;
     }
     canceler();
 }
