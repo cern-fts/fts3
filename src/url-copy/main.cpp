@@ -271,8 +271,11 @@ void canceler()
  */
 void taskTimer(time_t* timeout)
 {
+    std:: cout << "INIT = " <<  boost::lexical_cast<std::string>(*timeout) << std::endl;
+
     while (*timeout) {
         boost::this_thread::sleep(boost::posix_time::seconds(1));
+	std:: cout << "UPDATE = " <<  boost::lexical_cast<std::string>(*timeout) << std::endl;
         --timeout;
     }
     canceler();
@@ -937,10 +940,7 @@ int main(int argc, char **argv)
                         errorPhase = TRANSFER;
                         goto stop;
                     }
-		    
-		    
-		    
-		    sleep(20);
+		    		    		   
 
                 logger.INFO() << "Transfer Starting" << std::endl;
                 if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
