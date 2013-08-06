@@ -102,59 +102,39 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
     for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter)
         {
             if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
-                {
-                    if((*iter).storedMaxActive <= currentActive) //keep count of the max active per pair
-                        (*iter).storedMaxActive = currentActive;
-
-                    if((*iter).numOfActivePerPair <= currentActive)
-                        (*iter).numOfActivePerPair = currentActive;
-			
+                {                    			
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished
                         {
                             if(trSuccessRateForPair >= 99 && throughput > (*iter).throughput)
                                 {
-                                    if( (*iter).storedMaxActive == (*iter).numOfActivePerPair)
-                                        {
-                                            (*iter).numOfActivePerPair += 1;
-                                            (*iter).storedMaxActive = (*iter).numOfActivePerPair;
-                                        }
+                                            (*iter).numOfActivePerPair = ((*iter).numOfActivePerPair + currentActive + 1) - currentActive; 
+					                                              
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput == (*iter).throughput)
                                 {
                                     if(throughput > avgThr )
-                                        {
-                                            if( (*iter).storedMaxActive == (*iter).numOfActivePerPair)
-                                                {
-                                                    (*iter).numOfActivePerPair += 0;
-                                                    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
-                                                }
+                                        {                                            
+                                                    (*iter).numOfActivePerPair += 0;                                
                                         }
                                     else
                                         {
                                             (*iter).numOfActivePerPair -= 1;
-					    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                         }
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput < (*iter).throughput)
                                 {
                                     if(throughput > avgThr)
-                                        {
-                                            if( (*iter).storedMaxActive == (*iter).numOfActivePerPair)
-                                                {
+                                        {                                            
                                                     (*iter).numOfActivePerPair += 0;
-                                                    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
-                                                }
                                         }
                                     else
                                         {
-                                            (*iter).numOfActivePerPair -= 2;
-					    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
+                                            (*iter).numOfActivePerPair -= 1;
                                         }
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
                                     (*iter).numOfActivePerPair -= 2;
-				    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                 }
 
                             (*iter).numFinished = numFinished;
@@ -166,18 +146,25 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                             (*iter).avgThr = avgThr;
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
-                        {
-                            (*iter).numOfActivePerPair -= 2;
+                        {			
+			    if((*iter).numOfActivePerPair > 0)
+                            	(*iter).numOfActivePerPair -= 3;
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
                             (*iter).successRate = trSuccessRateForPair;
                             (*iter).numberOfFinishedAll = numberOfFinishedAll;
                             (*iter).numberOfFailedAll = numberOfFailedAll;
                             (*iter).throughput = throughput;
-                            (*iter).avgThr = avgThr;
-			    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
+                            (*iter).avgThr = avgThr;	
                         }
-		    			
+		    else{
+		        if((*iter).numOfActivePerPair > currentActive)
+		    		(*iter).numOfActivePerPair += 0;			
+			else
+		    		(*iter).numOfActivePerPair = currentActive;
+		    }
+		    		
+					
                     if((*iter).numOfActivePerPair <=0 )
                         activeInStore = 0;
                     else
@@ -243,60 +230,39 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
         {
 
             if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
-                {
-
-                   if((*iter).storedMaxActive <= currentActive) //keep count of the max active per pair
-                        (*iter).storedMaxActive = currentActive;
-
-                    if((*iter).numOfActivePerPair <= currentActive)
-                        (*iter).numOfActivePerPair = currentActive;
-			
+                {                    			
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished
                         {
                             if(trSuccessRateForPair >= 99 && throughput > (*iter).throughput)
                                 {
-                                    if( (*iter).storedMaxActive == (*iter).numOfActivePerPair)
-                                        {
-                                            (*iter).numOfActivePerPair += 1;
-                                            (*iter).storedMaxActive = (*iter).numOfActivePerPair;
-                                        }
+                                            (*iter).numOfActivePerPair = ((*iter).numOfActivePerPair + currentActive + 1) - currentActive; 
+					                                              
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput == (*iter).throughput)
                                 {
                                     if(throughput > avgThr )
-                                        {
-                                            if( (*iter).storedMaxActive == (*iter).numOfActivePerPair)
-                                                {
-                                                    (*iter).numOfActivePerPair += 0;
-                                                    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
-                                                }
+                                        {                                            
+                                                    (*iter).numOfActivePerPair += 0;                                
                                         }
                                     else
                                         {
                                             (*iter).numOfActivePerPair -= 1;
-					    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                         }
                                 }
                             else if( trSuccessRateForPair >= 99 && throughput < (*iter).throughput)
                                 {
                                     if(throughput > avgThr)
-                                        {
-                                            if( (*iter).storedMaxActive == (*iter).numOfActivePerPair)
-                                                {
+                                        {                                            
                                                     (*iter).numOfActivePerPair += 0;
-                                                    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
-                                                }
                                         }
                                     else
                                         {
-                                            (*iter).numOfActivePerPair -= 2;
-					    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
+                                            (*iter).numOfActivePerPair -= 1;
                                         }
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
                                     (*iter).numOfActivePerPair -= 2;
-				    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
                                 }
 
                             (*iter).numFinished = numFinished;
@@ -308,18 +274,23 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                             (*iter).avgThr = avgThr;
                         }
                     else if((*iter).numberOfFailedAll != numberOfFailedAll)
-                        {
-                            (*iter).numOfActivePerPair -= 2;
+                        {			
+			    if((*iter).numOfActivePerPair > 0)
+                            	(*iter).numOfActivePerPair -= 3;
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
                             (*iter).successRate = trSuccessRateForPair;
                             (*iter).numberOfFinishedAll = numberOfFinishedAll;
                             (*iter).numberOfFailedAll = numberOfFailedAll;
                             (*iter).throughput = throughput;
-                            (*iter).avgThr = avgThr;
-			    (*iter).storedMaxActive = (*iter).numOfActivePerPair;
+                            (*iter).avgThr = avgThr;	
                         }
-			
+		    else{
+		        if((*iter).numOfActivePerPair > currentActive)
+		    		(*iter).numOfActivePerPair += 0;			
+			else
+		    		(*iter).numOfActivePerPair = currentActive;
+		    }
                     activeInStore = (*iter).numOfActivePerPair - currentActive;
 
 

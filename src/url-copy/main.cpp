@@ -270,12 +270,9 @@ void canceler()
  * a file bigger than initially expected.
  */
 void taskTimer(time_t* timeout)
-{
-    std:: cout << "INIT = " <<  boost::lexical_cast<std::string>(*timeout) << std::endl;
-
+{    
     while (*timeout) {
-        boost::this_thread::sleep(boost::posix_time::seconds(1));
-        std:: cout << "UPDATE = " <<  boost::lexical_cast<std::string>(*timeout) << std::endl;
+        boost::this_thread::sleep(boost::posix_time::seconds(1));        
         *timeout -= 1;
     }
     canceler();
