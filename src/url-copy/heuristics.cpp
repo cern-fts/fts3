@@ -99,8 +99,8 @@ static unsigned adjustTimeout(off_t sizeInBytes)
     if (sizeInBytes <= 10485760) //starting with 10MB
         return 900;
     else if (sizeInBytes > 10485760 && sizeInBytes <= 52428800)
-        return 1300;
-    return DEFAULT_TIMEOUT;
+        return 1100;
+    return 3200;
 }
 
 
@@ -124,7 +124,7 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes,
 
     // Truncate to an unsigned
     if (totalTimeout >= INT_MAX)
-        timeout = 6000;
+        timeout = 4000;
     else
         timeout = static_cast<unsigned>(totalTimeout);
 
