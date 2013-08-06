@@ -2121,6 +2121,7 @@ void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, doub
 
         st = conn->createStatement(query, queryTag, pooledConnection);
 
+        throughput = convertKbToMb(throughput);
         st->setNumber(1, throughput);
         st->setString(2, job_id);
         st->setInt(3, file_id);
