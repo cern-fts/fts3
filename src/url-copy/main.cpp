@@ -555,7 +555,7 @@ int main(int argc, char **argv)
 
     //cancelation point
     long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    time_t globalTimeout = reuseOrNot * 15000;
+    time_t globalTimeout = reuseOrNot * 6000;
 
     try
         {
@@ -904,22 +904,8 @@ int main(int argc, char **argv)
                 timeout_to_string = to_string<unsigned int>(opts.timeout, std::dec);
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
                 logger.INFO() << "Timeout:" << opts.timeout << std::endl;
-
-                // If experimentalTimeout > globalTimeout, that means that the remaining
-                // life time of the process is not enough to allocate the expected
-                // transferring time of this file, so reset it
-                // (Yes, there is a race condition, but missing by a couple of seconds
-                // is probably acceptable)
-                if (experimentalTimeout > globalTimeout) {
-                    globalTimeout = experimentalTimeout + 500;
-                    logger.INFO() << "Resetting global timeout to "
-                                  << globalTimeout << " seconds" << std::endl;
-                }
-                else {
-                    logger.INFO() << "Leaving global timeout of "
-                                  << globalTimeout << " seconds" << std::endl;
-                }
-
+                globalTimeout = experimentalTimeout + 500;
+                logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;                
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
                 if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)

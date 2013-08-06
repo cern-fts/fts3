@@ -127,6 +127,9 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes,
         timeout = 4000;
     else
         timeout = static_cast<unsigned>(totalTimeout);
-
+	
+    if(timeout > 6000)
+    	timeout = 6000;
+    
     return timeout;
 }
