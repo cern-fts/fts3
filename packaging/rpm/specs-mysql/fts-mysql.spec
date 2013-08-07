@@ -50,5 +50,6 @@ make install DESTDIR=%{buildroot}
 %changelog
 * Mon Jul 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release
+  - devel package removed
 * Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
   - mysql queries optimization

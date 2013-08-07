@@ -9,7 +9,7 @@ URL: https://svnweb.cern.ch/trac/fts3/wiki
 # following commands to generate the tarball:
 #  svn export http://svnweb.cern.ch/guest/fts3/trunk
 #  tar -czvf fts-oracle-0.0.1-60.tar.gz fts-oracle-00160
-Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
+Source0: %{name}-%{version}.tar.gz
 
 BuildRequires:  cmake
 BuildRequires:  boost-devel%{?_isa}
@@ -17,19 +17,10 @@ BuildRequires:  glib2-devel%{?_isa}
 BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
-Requires: fts-libs = %{version}-%{release}
 Requires:  oracle-instantclient-basic%{?_isa}
 
 %description
 The File Transfer Service V3 oracle plug-in
-
-%package devel
-Summary: Development files for File Transfer Service V3 oracle plug-in
-Group: Applications/Internet
-Requires: %{name}%{?_isa} = %{version}-%{release}
-
-%description devel
-Development files for File Transfer Service V3 oracle plug-in
 
 %prep
 %setup -qc
@@ -55,11 +46,10 @@ make install DESTDIR=%{buildroot}
 %doc README
 %doc LICENSE
 
-%files devel
-%{_libdir}/libfts_db_oracle.so
 
 %changelog
 * Tue Aug 06 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
- - First EPEL release
+ - First CERN koji release
+ - devel package removed
 * Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14
  - oracle queries optimization
