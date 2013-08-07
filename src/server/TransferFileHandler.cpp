@@ -135,7 +135,7 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
     				// the maximum success rate (we are treating as equal everything that's equal or greater than 99%)
 					double maxSuccessRate = -1;
 					// the maximum average throughput for pairs with maximum success rate (and the corresponding file)
-					pair<double, TransferFiles*> maxAvgThr(-1, 0);
+					std::pair<double, TransferFiles*> maxAvgThr(-1, static_cast<TransferFiles*>(NULL));
 
 					list<TransferFiles*>::iterator it;
 

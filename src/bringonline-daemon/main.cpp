@@ -428,7 +428,7 @@ int DoServer(int argc, char** argv)
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
                     exit(1);
                 }
-            vector< tuple<string, string, int> >::iterator it;
+            vector< boost::tuple<string, string, int> >::iterator it;
             std::vector< boost::tuple<std::string, std::string, int> > voHostnameConfig;
             std::vector<struct message_bringonline> urls;
             vector<struct message_bringonline>::iterator itUrls;

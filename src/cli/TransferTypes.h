@@ -35,10 +35,7 @@ namespace fts3
 namespace cli
 {
 
-using namespace std;
-using namespace boost;
-
-typedef tuple< string, string, optional<string>, optional<int>, optional<string> > JobElement;
+typedef boost::tuple< std::string, std::string, boost::optional<std::string>, boost::optional<int>, boost::optional<std::string> > JobElement;
 
 enum ElementMember
 {
@@ -58,12 +55,12 @@ struct File
     File () {}
 
     File (
-        vector<string> s,
-        vector<string> d,
-        vector<string> c = vector<string>(),
-        optional<double> fs = optional<double>(),
-        optional<string> m = optional<string>(),
-        optional<string> ss = optional<string>())
+        std::vector<std::string> s,
+        std::vector<std::string> d,
+        std::vector<std::string> c = std::vector<std::string>(),
+        boost::optional<double> fs = boost::optional<double>(),
+        boost::optional<std::string> m = boost::optional<std::string>(),
+        boost::optional<std::string> ss = boost::optional<std::string>())
     {
 
         sources = s;
@@ -75,17 +72,17 @@ struct File
     }
 
     /// the source files (replicas)
-    vector<string> sources;
+    std::vector<std::string> sources;
     /// the destination files (the same SE different protocols)
-    vector<string> destinations;
+    std::vector<std::string> destinations;
     /// source selection strategy
-    optional<string> selection_strategy;
+    boost::optional<std::string> selection_strategy;
     /// checksum (multiple checksums in case of protocols that don't support adler32)
-    vector<string> checksums;
+    std::vector<std::string> checksums;
     /// file size
-    optional<double> file_size;
+    boost::optional<double> file_size;
     /// metadata
-    optional<string> metadata;
+    boost::optional<std::string> metadata;
 };
 
 
@@ -94,7 +91,7 @@ struct JobStatus
 
     JobStatus() {};
 
-    JobStatus(string jobId, string jobStatus, string clientDn, string reason, string voName, long submitTime, int numFiles, int priority) :
+    JobStatus(std::string jobId, std::string jobStatus, std::string clientDn, std::string reason, std::string voName, long submitTime, int numFiles, int priority) :
         jobId(jobId),
         jobStatus(jobStatus),
         clientDn(clientDn),
@@ -120,11 +117,11 @@ struct JobStatus
 
     };
 
-    string jobId;
-    string jobStatus;
-    string clientDn;
-    string reason;
-    string voName;
+    std::string jobId;
+    std::string jobStatus;
+    std::string clientDn;
+    std::string reason;
+    std::string voName;
     long submitTime;
     int numFiles;
     int priority;

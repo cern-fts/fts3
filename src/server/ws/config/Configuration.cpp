@@ -223,7 +223,7 @@ void Configuration::checkGroup(string group)
         }
 }
 
-pair< shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name)
+pair< boost::shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source, string destination, bool active, string symbolic_name)
 {
 
     scoped_ptr< pair<string, string> > p (
@@ -236,7 +236,7 @@ pair< shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source,
                 throw Err_Custom("A 'pair' with the same symbolic name exists already!");
         }
 
-    shared_ptr<LinkConfig> cfg (
+    boost::shared_ptr<LinkConfig> cfg (
         db->getLinkConfig(source, destination)
     );
 
@@ -258,7 +258,7 @@ pair< shared_ptr<LinkConfig>, bool > Configuration::getLinkConfig(string source,
 void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name, optional< map<string, int> >& protocol)
 {
 
-    pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+    pair< boost::shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
     // not used for now therefore set to 0
     cfg.first->NO_TX_ACTIVITY_TO = 0;
@@ -302,7 +302,7 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 void Configuration::addLinkCfg(string source, string destination, bool active, string symbolic_name)
 {
 
-    pair< shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
+    pair< boost::shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
     // not used in case of share-only configuration therefore set to 0
     cfg.first->NO_TX_ACTIVITY_TO = 0;

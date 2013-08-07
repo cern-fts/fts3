@@ -390,7 +390,7 @@ protected:
 
                                         /*check if manual config exist for this pair and vo*/
 
-                                        vector< shared_ptr<ShareConfig> > cfgs;
+                                        vector< boost::shared_ptr<ShareConfig> > cfgs;
 
                                         ConfigurationAssigner cfgAssigner(temp.get());
                                         cfgAssigner.assign(cfgs);
@@ -865,7 +865,7 @@ protected:
                         createJobFile(job_id, urls);
 
                         /*check if manual config exist for this pair and vo*/
-                        vector< shared_ptr<ShareConfig> > cfgs;
+                        vector< boost::shared_ptr<ShareConfig> > cfgs;
                         ConfigurationAssigner cfgAssigner(tempUrl);
                         cfgAssigner.assign(cfgs);
 

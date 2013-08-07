@@ -79,7 +79,7 @@ void SignalLogger::registerSignal(const int signum,const std::string& signame)
     SignalInfoMap::const_iterator it = m_map.find(signum);
     if (m_map.end() == it)
         {
-            m_map.insert(std::make_pair<int,SignalInfo *>(signum,new SignalInfo(signum,signame)));
+            m_map.insert(std::make_pair(signum,new SignalInfo(signum,signame)));
         }
 }
 

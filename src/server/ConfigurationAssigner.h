@@ -62,11 +62,11 @@ class ConfigurationAssigner
     };
 
     /// share tuple (source, destination, VO) -> PK in DB
-    typedef tuple<string, string, string> share;
+    typedef boost::tuple<string, string, string> share;
     /// content tuple - defines if a configuration regards the source, the destination or both
     typedef pair<bool, bool> content;
     /// configuration type
-    typedef tuple< share, content > cfg_type;
+    typedef boost::tuple< share, content > cfg_type;
 
 public:
 
@@ -88,7 +88,7 @@ public:
      *
      * @return list of configurations
      */
-    void assign(vector< shared_ptr<ShareConfig> >& out);
+    void assign(vector< boost::shared_ptr<ShareConfig> >& out);
 
 private:
 
@@ -100,7 +100,7 @@ private:
     /// number of share configuration that have been assigned to the job
     int assign_count;
 
-    void assignShareCfg(list<cfg_type> arg, vector< shared_ptr<ShareConfig> >& out);
+    void assignShareCfg(list<cfg_type> arg, vector< boost::shared_ptr<ShareConfig> >& out);
 
     static const int auto_share = -1;
 };

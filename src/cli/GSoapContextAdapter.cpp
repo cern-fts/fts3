@@ -253,8 +253,8 @@ string GSoapContextAdapter::transferSubmit (vector<JobElement> elements, map<str
             element->source = soap_new_std__string(ctx, -1);
             element->dest = soap_new_std__string(ctx, -1);
 
-            *element->source = get<SOURCE>(*it_e);
-            *element->dest = get<DESTINATION>(*it_e);
+            *element->source = boost::get<SOURCE>(*it_e);
+            *element->dest = boost::get<DESTINATION>(*it_e);
 
             // push the element into the result vector
             job.transferJobElements.push_back(element);
@@ -565,24 +565,24 @@ void GSoapContextAdapter::setInterfaceVersion(string interface)
     if (interface.empty()) return;
 
     // set the seperator that will be used for tokenizing
-    char_separator<char> sep(".");
-    tokenizer< char_separator<char> > tokens(interface, sep);
-    tokenizer< char_separator<char> >::iterator it = tokens.begin();
+    boost::char_separator<char> sep(".");
+    boost::tokenizer< boost::char_separator<char> > tokens(interface, sep);
+    boost::tokenizer< boost::char_separator<char> >::iterator it = tokens.begin();
 
     if (it == tokens.end()) return;
 
     string s = *it++;
-    major = lexical_cast<long>(s);
+    major = boost::lexical_cast<long>(s);
 
     if (it == tokens.end()) return;
 
     s = *it++;
-    minor = lexical_cast<long>(s);
+    minor = boost::lexical_cast<long>(s);
 
     if (it == tokens.end()) return;
 
     s = *it;
-    patch = lexical_cast<long>(s);
+    patch = boost::lexical_cast<long>(s);
 }
 
 }
