@@ -1167,10 +1167,7 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
-        static bool drainMode = false;
-        static unsigned int countReverted = 0;
-        static unsigned int counter = 0;
-        static unsigned int counterTimeoutWaiting = 0;
+        static bool drainMode = false;        
 
         while (1)
             {
