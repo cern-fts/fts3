@@ -1,5 +1,5 @@
 # Copyright notice:
-# Copyright © Members of the EMI Collaboration, 2010.
+# Copyright (C) Members of the EMI Collaboration, 2010.
 #
 # See www.eu-emi.eu for details on the copyright holders
 #
