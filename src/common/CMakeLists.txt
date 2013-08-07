@@ -64,7 +64,8 @@ ${PROJECT_BINARY_DIR}/src/common
 
 
 if(FTS3_COMPILE_WITH_UNITTEST)
-	target_link_libraries(fts_common -lboost_unit_test_framework-mt )
+    find_package (Boost COMPONENTS unit_test_framework REQUIRED)
+	target_link_libraries(fts_common -${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} )
 endif()
 
 
