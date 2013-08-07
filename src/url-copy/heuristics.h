@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sys/types.h>
+
 /**
  * Return true if the error is considered recoverable
  * (i.e. ENOENT is not recoverable)
