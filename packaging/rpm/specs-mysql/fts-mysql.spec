@@ -7,7 +7,7 @@ License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export http://svnweb.cern.ch/guest/fts3/trunk
+#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_mysql_v1
 #  tar -czvf fts-mysql-0.0.1-60.tar.gz fts-mysql-00160
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
@@ -17,19 +17,10 @@ BuildRequires:  glib2-devel%{?_isa}
 BuildRequires:  soci-mysql-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
-Requires: fts-libs = %{version}-%{release}
-Requires:  soci-mysql%{?_isa}
+Requires:       soci-mysql%{?_isa}
 
 %description
 The File Transfer Service V3 mysql plug-in
-
-%package devel
-Summary: Development files for File Transfer Service V3 mysql plug-in
-Group: Applications/Internet
-Requires: %{name}%{?_isa} = %{version}-%{release}
-
-%description devel
-Development files for File Transfer Service V3 mysql plug-in
 
 %prep
 %setup -qc
@@ -55,9 +46,6 @@ make install DESTDIR=%{buildroot}
 %doc %{_docdir}/fts3/mysql-truncate.sql
 %doc README
 %doc LICENSE
-
-%files devel
-%{_libdir}/libfts_db_mysql.so
 
 %changelog
 * Mon Jul 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
