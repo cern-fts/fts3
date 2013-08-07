@@ -51,5 +51,5 @@ install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf         
 %doc LICENSE
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
   - First EPEL release
