@@ -122,24 +122,28 @@ protected:
 	std::vector<int> requestIDs;
         static unsigned int countReverted = 0;
         static unsigned int counter = 0;
-        static unsigned int counterTimeoutWaiting = 0;	
+        static unsigned int counterTimeoutWaiting = 0;
+	static unsigned int counterCanceled = 0;	
 
         while (stopThreads==false)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
                        /*also get jobs which have been canceled by the client*/
-                        DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
-                        if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
-                            {
-                                killRunninfJob(requestIDs);
-                                requestIDs.clear(); /*clean the list*/
-                            }
+		        counterCanceled++;
+			if (countReverted >= 20){
+                        	DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                        	if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
+                            	{
+                                	killRunninfJob(requestIDs);
+                                	requestIDs.clear(); /*clean the list*/
+                            	}
+			}
 		    
 		    
                         /*revert to SUBMITTED if stayed in READY for too long (100 secs)*/
                         countReverted++;
-                        if (countReverted >= 10)
+                        if (countReverted >= 120)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                                 countReverted = 0;
@@ -147,7 +151,7 @@ protected:
 		    
                        /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
                         counterTimeoutWaiting++;
-                        if (counterTimeoutWaiting >= 10)
+                        if (counterTimeoutWaiting >= 120)
                             {
                                 std::set<std::string> canceled;
                                 DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
@@ -169,7 +173,7 @@ protected:
 
                         /*force-fail stalled ACTIVE transfers*/
                         counter++;
-                        if (counter == 10)
+                        if (counter == 120)
                             {
                                 std::map<int, std::string> collectJobs;
                                 DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);

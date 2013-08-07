@@ -1,6 +1,6 @@
 Name: fts-mysql
 Version: 3.1.0
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet
 License: ASL 2.0
