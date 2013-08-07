@@ -1,6 +1,6 @@
 Name: fts-mysql
-Version: 3.1.0
-Release: 2%{?dist}
+Version: 3.1.1
+Release: 1%{?dist}
 Summary: File Transfer Service V3 mysql plug-in
 Group: Applications/Internet
 License: ASL 2.0
@@ -48,6 +48,9 @@ make install DESTDIR=%{buildroot}
 %doc LICENSE
 
 %changelog
+* Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
+  - GenericDbIfce.h includes new blacklisting API
+  - no longer linking explicitly to boost libraries with '-mt' sufix 
 * Mon Jul 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release
   - devel package removed
