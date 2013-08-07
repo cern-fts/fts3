@@ -28,7 +28,7 @@ FIND_PACKAGE(PythonLibs REQUIRED)
 include_directories (${fts_include_dir} ${PYTHON_INCLUDE_PATH})
 include_directories (BEFORE ${PROJECT_SOURCE_DIR}/src/common/)
 
-find_package (Boost COMPONENTS python REQUIRED)
+find_package (Boost COMPONENTS python program_options unit_test_framework REQUIRED)
 execute_process (COMMAND python -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)" 
                  OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
                  OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -57,12 +57,12 @@ set(fts_cli_libs
     ${fts_cli_internal_libs}
     gridsite
     cgsi_plugin_cpp
-    boost_program_options-mt
+    ${Boost_PROGRAM_OPTIONS_LIBRARY}
     fts_delegation_api_simple
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(fts_cli_libs boost_unit_test_framework ${fts_cli_libs})
+    set(fts_cli_libs ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${fts_cli_libs})
 endif ()
 
 # ------------------------------------------------------------------------
@@ -202,7 +202,7 @@ target_link_libraries (fts-set-priority fts_cli_common)
 find_package(PythonEasy REQUIRED)
 
 add_library(ftspython SHARED python/PythonBindings.cpp python/PythonApi.cpp python/Job.cpp python/PyFile.cpp)
-target_link_libraries(ftspython fts_cli_common boost_python ${PYTHON_LIBRARIES})
+target_link_libraries(ftspython fts_cli_common ${Boost_PYTHON_LIBRARIES} ${PYTHON_LIBRARIES})
 #add_dependencies(ftspython fts_cli_common)
 
 # ------------------------------------------------------------------------
