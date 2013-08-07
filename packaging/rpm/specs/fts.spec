@@ -11,7 +11,7 @@ License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_1_EPEL_TESTING
+#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_1_EPEL_TESTING fts3
 #  tar -czvf fts-0.0.1-60.tar.gz fts-00160
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 

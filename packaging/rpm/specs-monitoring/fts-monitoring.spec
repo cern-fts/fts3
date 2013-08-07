@@ -20,7 +20,7 @@ Requires: python-matplotlib%{?_isa}
 
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export http://svnweb.cern.ch/guest/fts3/trunk fts3
+#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_1_EPEL_TESTING fts3
 #  tar -czvf fts-monitoring-0.0.1.tar.gz --directory=fts3 .
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
