@@ -181,6 +181,11 @@ public:
 
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
             }
+        catch (std::exception& e)
+        {
+	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
+	    throw;           
+        }       
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
