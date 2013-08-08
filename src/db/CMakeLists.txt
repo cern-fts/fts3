@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.6)
 
 ADD_DEFINITIONS(-DBOOST_DISABLE_ASSERTS)
 
-
 add_subdirectory(generic)
+add_subdirectory(profiled)
 
 if (ORACLEBUILD STREQUAL "ON")
 add_subdirectory(oracle)
@@ -26,5 +26,3 @@ endif ()
 if (MAINBUILD STREQUAL "ON")
 add_subdirectory(python)
 endif ()
-
-

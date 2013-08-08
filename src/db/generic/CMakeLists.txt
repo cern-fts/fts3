@@ -26,6 +26,7 @@ add_dependencies(fts_db_generic fts_config fts_common)
 target_link_libraries(fts_db_generic ${CMAKE_DL_LIBS})
 target_link_libraries(fts_db_generic ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(fts_db_generic -lfts_common -lfts_config)
+target_link_libraries(fts_db_generic fts_db_profiled)
 set_target_properties(fts_db_generic            PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/db/generic
                                                 VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}

@@ -24,6 +24,7 @@
 #include "error.h"
 #include "config/serverconfig.h"
 #include "version.h"
+#include "../profiled/Profiled.h"
 
 #ifdef FTS3_COMPILE_WITH_UNITTEST
 #include "unittest/testsuite.h"
@@ -40,7 +41,9 @@ ThreadTraits::MUTEX DBSingleton::_mutex;
 
 // Implementation
 
-DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL)
+DBSingleton::DBSingleton(): dbBackend(NULL), dbImpl(NULL),
+        monitoringDbBackend(NULL), profileDumpInterval(0),
+        lastProfileDump(0)
 {
 
     std::string dbType = theServerConfig().get<std::string>("DbType");
@@ -73,7 +76,16 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL)
             *(void**)( &destroy_monitoring_db ) = symbolDestroyMonitoring;
 
             // create an instance of the DB class
-            dbBackend = create_db();
+            dbImpl = dbBackend = create_db();
+
+            // If profiling is enabled, wrap it!
+            profileDumpInterval = theServerConfig().get<int>("Profiling");
+            if (profileDumpInterval) {
+                dbImpl = new ProfiledDB(dbImpl);
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Database wrapped in the profiler!" << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Should report every "
+                                                << profileDumpInterval << " seconds" << commit;
+            }
 
             // create monitoring db on request
         }
@@ -92,6 +104,8 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL)
 
 DBSingleton::~DBSingleton()
 {
+    if (dbBackend != dbImpl)
+        delete dbImpl;
     if (dbBackend)
         destroy_db(dbBackend);
     if (monitoringDbBackend)
@@ -99,10 +113,21 @@ DBSingleton::~DBSingleton()
     if (dlm)
         delete dlm;
 }
+
+GenericDbIfce* DBSingleton::getDBObjectInstance()
+{
+    if (profileDumpInterval) {
+        time_t now = time(NULL);
+        if (now - lastProfileDump >= profileDumpInterval) {
+            ProfiledDB* profiled = dynamic_cast<ProfiledDB*>(dbImpl);
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << '\n' << *profiled << commit;
+            profiled->reset();
+
+            lastProfileDump = now;
+        }
+    }
+
+    return dbImpl;
 }
 
-
-
-
-
-
+}
