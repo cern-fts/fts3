@@ -81,7 +81,10 @@ public:
     /**
      * used by the client to obtain access to the backend instance
      **/
-    GenericDbIfce* getDBObjectInstance();
+    GenericDbIfce* getDBObjectInstance()
+    {
+        return dbBackend;
+    }
 
     MonitoringDbIfce* getMonitoringDBInstance()
     {
@@ -119,7 +122,7 @@ private:
     /**
      * The types of the database class factories
      **/
-    GenericDbIfce *dbBackend, *dbImpl;
+    GenericDbIfce* dbBackend;
     MonitoringDbIfce* monitoringDbBackend;
 
     GenericDbIfce* (*create_db)();
@@ -127,9 +130,6 @@ private:
 
     MonitoringDbIfce* (*create_monitoring_db)();
     void (*destroy_monitoring_db)(void*);
-
-    int profileDumpInterval;
-    time_t lastProfileDump;
 };
 
 }

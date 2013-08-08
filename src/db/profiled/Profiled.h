@@ -29,32 +29,12 @@
 class ProfiledDB : public GenericDbIfce
 {
 private:
-    struct MethodProfile {
-        double          startTs;
-
-        unsigned long   nCalled;
-        unsigned long   nException;
-        double          totalTime;
-
-        MethodProfile();
-
-        void start();
-        void end();
-        void exception();
-        void reset();
-    };
-
-    GenericDbIfce     *db;
-    std::map<std::string, MethodProfile> profiles;
-
-    friend std::ostream& operator << (std::ostream& out, const ProfiledDB& db);
-    friend std::ostream& operator << (std::ostream& out, const ProfiledDB::MethodProfile& prof);
+    GenericDbIfce *db;
+    void (*destroy_db)(void *);
 
 public:
-    ProfiledDB(GenericDbIfce* db);
+    ProfiledDB(GenericDbIfce* db, void (*destroy_db)(void *));
     ~ProfiledDB();
-
-    void reset();
 
     void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
@@ -323,23 +303,5 @@ public:
     void checkSchemaLoaded();
 };
 
-std::ostream& operator << (std::ostream& out, const ProfiledDB::MethodProfile& prof)
-{
-    double average = 0;
-    if (prof.nCalled)
-        average = prof.totalTime / static_cast<double>(prof.nCalled);
 
-    out << "executed " << std::setw(3) << prof.nCalled << " times, "
-        <<  "thrown " << std::setw(3) << prof.nException << " exceptions, average of "
-        << average << "ms";
-    return out;
-}
-
-std::ostream& operator << (std::ostream& out, const ProfiledDB& db)
-{
-    std::map<std::string, ProfiledDB::MethodProfile>::const_iterator i;
-    for (i = db.profiles.begin(); i != db.profiles.end(); ++i) {
-        out << "PROFILE: " << std::setw(32) << i->first << " - " << i->second << std::endl;
-    }
-    return out;
-}
+void destroy_profiled_db(void *db);

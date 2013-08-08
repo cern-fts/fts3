@@ -39,6 +39,7 @@ limitations under the License. */
 #include <sys/resource.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
+#include "profiler/Profiler.h"
 
 namespace fs = boost::filesystem;
 using boost::thread;
@@ -413,6 +414,10 @@ int DoServer(int argc, char** argv)
             //initialize queue updater here to avoid race conditions
             ThreadSafeList::get_instance();
 
+            // Start profiling
+            ProfilingSubsystem::getInstance().start();
+
+            // Start server
             theServer().start();
 
         }

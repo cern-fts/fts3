@@ -41,9 +41,7 @@ ThreadTraits::MUTEX DBSingleton::_mutex;
 
 // Implementation
 
-DBSingleton::DBSingleton(): dbBackend(NULL), dbImpl(NULL),
-        monitoringDbBackend(NULL), profileDumpInterval(0),
-        lastProfileDump(0)
+DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL)
 {
 
     std::string dbType = theServerConfig().get<std::string>("DbType");
@@ -76,12 +74,13 @@ DBSingleton::DBSingleton(): dbBackend(NULL), dbImpl(NULL),
             *(void**)( &destroy_monitoring_db ) = symbolDestroyMonitoring;
 
             // create an instance of the DB class
-            dbImpl = dbBackend = create_db();
+            dbBackend = create_db();
 
             // If profiling is enabled, wrap it!
-            profileDumpInterval = theServerConfig().get<int>("Profiling");
+            int profileDumpInterval = theServerConfig().get<int>("Profiling");
             if (profileDumpInterval) {
-                dbImpl = new ProfiledDB(dbImpl);
+                dbBackend = new ProfiledDB(dbBackend, destroy_db);
+                destroy_db = destroy_profiled_db;
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Database wrapped in the profiler!" << commit;
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Should report every "
                                                 << profileDumpInterval << " seconds" << commit;
@@ -104,8 +103,6 @@ DBSingleton::DBSingleton(): dbBackend(NULL), dbImpl(NULL),
 
 DBSingleton::~DBSingleton()
 {
-    if (dbBackend != dbImpl)
-        delete dbImpl;
     if (dbBackend)
         destroy_db(dbBackend);
     if (monitoringDbBackend)
@@ -113,21 +110,4 @@ DBSingleton::~DBSingleton()
     if (dlm)
         delete dlm;
 }
-
-GenericDbIfce* DBSingleton::getDBObjectInstance()
-{
-    if (profileDumpInterval) {
-        time_t now = time(NULL);
-        if (now - lastProfileDump >= profileDumpInterval) {
-            ProfiledDB* profiled = dynamic_cast<ProfiledDB*>(dbImpl);
-            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << '\n' << *profiled << commit;
-            profiled->reset();
-
-            lastProfileDump = now;
-        }
-    }
-
-    return dbImpl;
-}
-
 }

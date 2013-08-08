@@ -110,6 +110,7 @@ target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_
                                  -lfts_common -lfts_db_generic
                                  -lfts_server_gsoap_transfer -lgsoap++
                                  -lfts_ws_ifce_server -lfts_ws_ifce_client
+                                 fts_profiler
                                  ${Boost_LIBRARIES})
 
 # ------------------------------------------------------------------------
