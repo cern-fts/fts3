@@ -5033,7 +5033,6 @@ void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& j
                 " update t_file set t_log_file=:filePath, t_log_file_debug=:debugFile where file_id=:fileId ",
                 soci::use(filePath),
                 soci::use(debugFile),
-                soci::use(jobId),
                 soci::use(fileId);
 
             sql.commit();
