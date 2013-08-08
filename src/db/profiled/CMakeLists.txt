@@ -9,3 +9,8 @@ set(fts_db_profiled Profiled.cpp)
 add_library(fts_db_profiled SHARED ${fts_db_profiled})
 
 target_link_libraries (fts_db_profiled fts_profiler)
+
+install(TARGETS         fts_db_profiled
+        RUNTIME         DESTINATION ${CMAKE_INSTALL_PREFIX} 
+        LIBRARY         DESTINATION ${LIB_INSTALL_DIR})
+

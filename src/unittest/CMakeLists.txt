@@ -32,9 +32,9 @@ add_executable (fts_unittest
 )
 
 SET(fts_libs 
-    -lfts_config 
-    -lfts_common 
-    -lfts_cli_common
+    fts_config 
+    fts_common 
+    fts_cli_common
 )
 
 target_link_libraries(fts_unittest -lboost_unit_test_framework ${fts_libs})

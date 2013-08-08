@@ -26,8 +26,8 @@ add_executable(fts_myosg_updater ${fts_myosg_updater_SOURCES})
 add_dependencies(fts_myosg_updater fts_config)
 add_dependencies(fts_myosg_updater fts_common)
 target_link_libraries(fts_myosg_updater -lcurl)
-target_link_libraries(fts_myosg_updater -lfts_config)
-target_link_libraries(fts_myosg_updater -lfts_common)
+target_link_libraries(fts_myosg_updater fts_config)
+target_link_libraries(fts_myosg_updater fts_common)
 target_link_libraries(fts_myosg_updater ${Boost_SYSTEM_LIBRARIES})
 
 install(TARGETS         fts_myosg_updater 

@@ -33,9 +33,9 @@ add_dependencies(fts_info_publisher fts_common)
 add_dependencies(fts_info_publisher fts_db_generic)
 target_link_libraries(fts_info_publisher ${CMAKE_DL_LIBS})
 target_link_libraries(fts_info_publisher ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(fts_info_publisher -lfts_db_generic)
-target_link_libraries(fts_info_publisher -lfts_config)
-target_link_libraries(fts_info_publisher -lfts_common)
+target_link_libraries(fts_info_publisher fts_db_generic)
+target_link_libraries(fts_info_publisher fts_config)
+target_link_libraries(fts_info_publisher fts_common)
 target_link_libraries(fts_info_publisher ${Boost_SYSTEM_LIBRARIES})
 
 install(TARGETS         fts_info_publisher 

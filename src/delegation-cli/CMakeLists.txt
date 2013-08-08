@@ -24,7 +24,7 @@ set(fts_delegation_api_simple_SOURCES uri.cpp util.cpp cfg.cpp delegation_simple
 add_library(fts_delegation_api_simple SHARED ${fts_delegation_api_simple_SOURCES})
 add_dependencies(fts_delegation_api_simple fts_delegation_api_cpp)
 target_link_libraries(fts_delegation_api_simple -lgridsite -lglib-2.0 -lgsoap++ -lcgsi_plugin_cpp -lis_ifce )
-target_link_libraries(fts_delegation_api_simple -lfts_delegation_api_cpp )
+target_link_libraries(fts_delegation_api_simple fts_delegation_api_cpp )
 set_target_properties(fts_delegation_api_simple PROPERTIES
 LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/src/delegation-cli VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH} SOVERSION ${VERSION_MAJOR} CLEAN_DIRECT_OUTPUT 1)
 

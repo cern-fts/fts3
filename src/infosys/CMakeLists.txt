@@ -34,7 +34,7 @@ find_package (Boost COMPONENTS thread)
 
 add_library(fts_infosys SHARED ${fts_infosys_sources})
 add_dependencies(fts_infosys fts_common fts_config)
-target_link_libraries(fts_infosys -lfts_common -lfts_config)
+target_link_libraries(fts_infosys fts_common fts_config)
 target_link_libraries(fts_infosys ${Boost_LIBRARIES} )
 target_link_libraries(fts_infosys -lldap_r 	-lpugixml)
 

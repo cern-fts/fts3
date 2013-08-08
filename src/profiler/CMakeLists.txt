@@ -7,3 +7,9 @@ include_directories (BEFORE ../db/generic)
 add_library (fts_profiler SHARED Profiler.cpp)
 
 target_link_libraries (fts_profiler rt)
+
+install(TARGETS         fts_profiler
+        RUNTIME         DESTINATION ${CMAKE_INSTALL_PREFIX} 
+        LIBRARY         DESTINATION ${LIB_INSTALL_DIR}
+        NAMELINK_SKIP)
+
