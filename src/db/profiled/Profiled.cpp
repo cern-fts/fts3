@@ -71,7 +71,7 @@ void ProfiledDB::reset()
 
 
 #define PROFILE_START \
-    MethodProfile &profiler = profiles[__func__];\
+    MethodProfile &profiler = profiles[std::string("DbAPI::") + __func__];\
     try {\
         profiler.start();
 

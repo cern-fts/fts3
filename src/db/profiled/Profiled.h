@@ -45,7 +45,7 @@ private:
     };
 
     GenericDbIfce     *db;
-    std::map<const char*, MethodProfile> profiles;
+    std::map<std::string, MethodProfile> profiles;
 
     friend std::ostream& operator << (std::ostream& out, const ProfiledDB& db);
     friend std::ostream& operator << (std::ostream& out, const ProfiledDB::MethodProfile& prof);
@@ -337,9 +337,9 @@ std::ostream& operator << (std::ostream& out, const ProfiledDB::MethodProfile& p
 
 std::ostream& operator << (std::ostream& out, const ProfiledDB& db)
 {
-    std::map<const char*, ProfiledDB::MethodProfile>::const_iterator i;
+    std::map<std::string, ProfiledDB::MethodProfile>::const_iterator i;
     for (i = db.profiles.begin(); i != db.profiles.end(); ++i) {
-        out << "PROFILE: " << std::setw(28) << i->first << " - " << i->second << std::endl;
+        out << "PROFILE: " << std::setw(32) << i->first << " - " << i->second << std::endl;
     }
     return out;
 }
