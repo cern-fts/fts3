@@ -254,9 +254,13 @@ def pervo(httpRequest):
 def profiling(httpRequest):
     profiling = {}
     
-    info = ProfilingInfo.objects.all()[0]
-    profiling['updated'] = info.updated
-    profiling['period']  = info.period
+    info = ProfilingInfo.objects.all()
+    if len(info) > 0:
+        profiling['updated'] = info[0].updated
+        profiling['period']  = info[0].period
+    else:
+        profiling['updated'] = False
+        profiling['period']  = False
     
     profiles = ProfilingSnapshot.objects.order_by('total')
     profiling['profiles'] = profiles.all()

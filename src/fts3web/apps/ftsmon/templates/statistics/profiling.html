@@ -15,34 +15,37 @@
 
 
         <div>
-            <h3>Last update: {{profiling.updated}}</h3>
-            <p>
-                Updated every {{profiling.period}} seconds.
-            </p>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Scope</th>
-                        <th>Called</th>
-                        <th>Aggregate time</th>
-                        <th>Average time</th>
-                        <th>Exceptions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in profiling.profiles %}
-                    <tr class="{% cycle 'odd' 'even' %}">
-                        <td>{{p.scope}}</td>
-                        <td>{{p.cnt}}</td>
-                        <td>{{p.total|floatformat:2}}</td>
-                        <td>{{p.average|floatformat:2}}</td>
-                        <td>{{p.exceptions}}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
+            {% if profiling.updated %}
+	            <h3>Last update: {{profiling.updated}}</h3>
+	            <p>
+	                Updated every {{profiling.period}} seconds.
+	            </p>
+	            
+	            <table>
+	                <thead>
+	                    <tr>
+	                        <th>Scope</th>
+	                        <th>Called</th>
+	                        <th>Aggregate time</th>
+	                        <th>Average time</th>
+	                        <th>Exceptions</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                    {% for p in profiling.profiles %}
+	                    <tr class="{% cycle 'odd' 'even' %}">
+	                        <td>{{p.scope}}</td>
+	                        <td>{{p.cnt}}</td>
+	                        <td>{{p.total|floatformat:2}}</td>
+	                        <td>{{p.average|floatformat:2}}</td>
+	                        <td>{{p.exceptions}}</td>
+	                    </tr>
+	                    {% endfor %}
+	                </tbody>
+	            </table>
+            {% else %}
+                <p>No data. Probably disabled.</p>
+            {% endif %}
         </div>
     </div>
 </div>
