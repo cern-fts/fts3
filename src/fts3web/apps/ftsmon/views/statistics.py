@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
 from ftsweb.models import Job, File, ConfigAudit
+from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 
 
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
@@ -248,3 +249,18 @@ def pervo(httpRequest):
     return render(httpRequest, 'statistics/vos.html',
                   {'vos': vos})
 
+
+
+def profiling(httpRequest):
+    profiling = {}
+    
+    info = ProfilingInfo.objects.all()[0]
+    profiling['updated'] = info.updated
+    profiling['period']  = info.period
+    
+    profiles = ProfilingSnapshot.objects.order_by('total')
+    profiling['profiles'] = profiles.all()
+    
+    return render(httpRequest, 'statistics/profiling.html',
+                  {'profiling': profiling,
+                   'request': httpRequest})

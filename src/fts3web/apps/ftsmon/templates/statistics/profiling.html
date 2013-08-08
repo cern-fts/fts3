@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %} Statistics - Profiling {% endblock %}
+
+{% block content %}
+<h2>Statistics - Profiling</h2>
+
+<div id="statistics"
+    class="ui-tabs ui-widget ui-widget-content ui-corner-all">
+    {% include "statistics/tabs.html" with tab_profiling=1 %}
+
+    <div aria-labelledby="ui-id-1"
+        class="ui-tabs-panel ui-widget-content ui-corner-bottom"
+        role="tabpanel" aria-expanded="true" aria-hidden="false">
+
+
+        <div>
+            <h3>Last update: {{profiling.updated}}</h3>
+            <p>
+                Updated every {{profiling.period}} seconds.
+            </p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Scope</th>
+                        <th>Called</th>
+                        <th>Aggregate time</th>
+                        <th>Average time</th>
+                        <th>Exceptions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in profiling.profiles %}
+                    <tr class="{% cycle 'odd' 'even' %}">
+                        <td>{{p.scope}}</td>
+                        <td>{{p.cnt}}</td>
+                        <td>{{p.total|floatformat:2}}</td>
+                        <td>{{p.average|floatformat:2}}</td>
+                        <td>{{p.exceptions}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
