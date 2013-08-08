@@ -11422,9 +11422,101 @@ void OracleAPI::checkSchemaLoaded()
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem*)
+void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
 {
-    // TODO
+    std::string resetTag = "storeProfilingReset";
+    std::string reset = "UPDATE t_profiling_snapshot SET "
+                        "    cnt = 0, exceptions = 0, total = 0, average = 0";
+    oracle::occi::Statement* resetStmt = 0;
+
+    std::string updateTag = "storeProfilingUpdate";
+    std::string update = "MERGE INTO t_profiling_snapshot p USING dual ON (scope = :1) "
+                         "WHEN NOT MATCHED THEN INSERT (scope, cnt, exceptions, total, average)"
+                         "      VALUES (:2, :3, :4, :5, :6)"
+                         "WHEN MATCHED THEN UPDATE SET  "
+                        "    cnt = :7, exceptions = :8, total = :9, average = :10";
+
+    oracle::occi::Statement* updateStmt = NULL;
+
+    std::string beatTag = "storeProfilingBeat";
+    std::string beat    = "UPDATE t_profiling_info SET "
+                          "    updated = :1, period = :2";
+    oracle::occi::Statement* beatStmt = NULL;
+
+    std::string insertBeatTag = "storeProfilingBeatInsert";
+    std::string insertBeat = "INSERT INTO t_profiling_info (updated, period) "
+                             "VALUES (:1, :2)";
+    oracle::occi::Statement* insertBeatStmt = NULL;
+
+
+    oracle::occi::Connection* pooledConn = NULL;
+
+    try
+        {
+            pooledConn = conn->getPooledConnection();
+            if (!pooledConn) return;
+
+            // Reset values
+            resetStmt = conn->createStatement(reset, resetTag, pooledConn);
+            resetStmt->executeUpdate();
+            conn->destroyStatement(resetStmt, resetTag, pooledConn);
+            resetStmt = NULL;
+
+            // Update values
+            updateStmt = conn->createStatement(update, updateTag, pooledConn);
+
+            std::map<std::string, fts3::Profile>::const_iterator i;
+            for (i = prof->profiles.begin(); i != prof->profiles.end(); ++i) {
+                updateStmt->setString(1, i->first);
+                updateStmt->setString(2, i->first);
+                updateStmt->setInt(3, static_cast<int>(i->second.nCalled));
+                updateStmt->setInt(4, static_cast<int>(i->second.nExceptions));
+                updateStmt->setNumber(5, i->second.totalTime);
+                updateStmt->setNumber(6, i->second.getAverage());
+                updateStmt->setInt(7, static_cast<int>(i->second.nCalled));
+                updateStmt->setInt(8, static_cast<int>(i->second.nExceptions));
+                updateStmt->setNumber(9, i->second.totalTime);
+                updateStmt->setNumber(10, i->second.getAverage());
+                updateStmt->executeUpdate();
+            }
+
+            conn->destroyStatement(updateStmt, updateTag, pooledConn);
+            updateStmt = NULL;
+
+            // New timestamp
+            beatStmt = conn->createStatement(beat, beatTag, pooledConn);
+            beatStmt->setTimestamp(1, conv->toTimestamp(time(NULL), conn->getEnv()));
+            beatStmt->setInt(2, prof->getInterval());
+            if (beatStmt->executeUpdate() == 0) {
+                insertBeatStmt = conn->createStatement(insertBeat, insertBeatTag, pooledConn);
+                insertBeatStmt->setTimestamp(1, conv->toTimestamp(time(NULL), conn->getEnv()));
+                insertBeatStmt->setInt(2, prof->getInterval());
+                insertBeatStmt->executeUpdate();
+                conn->destroyStatement(insertBeatStmt, insertBeatTag, pooledConn);
+                insertBeatStmt = NULL;
+            }
+            conn->destroyStatement(beatStmt, beatTag, pooledConn);
+            beatStmt = NULL;
+
+            conn->commit(pooledConn);
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConn);
+            if (resetStmt)
+                conn->destroyStatement(resetStmt, resetTag, pooledConn);
+            if (beatStmt)
+                conn->destroyStatement(beatStmt, beatTag, pooledConn);
+            if (insertBeatStmt)
+                conn->destroyStatement(insertBeatStmt, insertBeatTag, pooledConn);
+            if (updateStmt)
+                conn->destroyStatement(updateStmt, updateTag, pooledConn);
+
+            conn->releasePooledConnection(pooledConn);
+
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    conn->releasePooledConnection(pooledConn);
 }
 
 // the class factories

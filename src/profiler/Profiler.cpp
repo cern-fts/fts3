@@ -74,7 +74,17 @@ void profilerThread(ProfilingSubsystem* profSubsys)
     while (1) {
         boost::this_thread::sleep(boost::posix_time::seconds(profSubsys->getInterval()));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << '\n' << *profSubsys << commit;
-        db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(profSubsys);
+
+        try {
+            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(profSubsys);
+        }
+        catch (std::exception& e) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+        }
+        catch (...) {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in profilerThread" << commit;
+        }
+
         // Reset
         profSubsys->profiles.clear();
     }
