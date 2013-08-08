@@ -788,7 +788,6 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
 }
@@ -3700,7 +3699,7 @@ std::string MySqlAPI::transferHostV(std::map<int, std::string>& fileIds)
 {
     soci::session sql(*connectionPool);
 
-    std::string host;
+    std::string host("");
     try
         {
             sql << "SELECT transferHost FROM t_file WHERE file_id = :fileId",
@@ -4115,8 +4114,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
 
         }
     catch (std::exception& e)
-        {
-            sql.rollback();
+        {            
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     return nRetries;
@@ -5018,7 +5016,7 @@ void MySqlAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::stri
         }
 }
 
-void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& jobId, int fileId, bool debug)
+void MySqlAPI::transferLogFile(const std::string& filePath, const std::string& /*jobId*/, int fileId, bool debug)
 {
     soci::session sql(*connectionPool);
 
@@ -5477,22 +5475,22 @@ void MySqlAPI::checkSanityState()
                                                 sql.prepare <<
                                                 " select job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') "
                                             );
-            sql.begin();
+            
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
                 {
                     sql << "SELECT COUNT(*) FROM t_file where job_id=:jobId AND file_state in ('ACTIVE','READY','SUBMITTED','STAGING') ", soci::use(*i2), soci::into(numberOfFilesRevert);
                     if(numberOfFilesRevert > 0)
                         {
+			    sql.begin();
                             sql << "UPDATE t_job SET "
                                 "    job_state = 'ACTIVE', job_finished = NULL, finish_time = NULL, "
                                 "    reason = NULL "
                                 "    WHERE job_id = :jobId", soci::use(*i2);
+            		    sql.commit();				
                         }
                     //reset
                     numberOfFilesRevert = 0;
                 }
-            sql.commit();
-
         }
     catch (std::exception& e)
         {
