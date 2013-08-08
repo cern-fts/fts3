@@ -17,12 +17,15 @@
 
 #pragma once
 
+#include <boost/shared_ptr.hpp>
 #include "Profiler.h"
 
+// Open a profiling scope, capturing exceptions
 #define PROFILE_START(prefix) \
     fts3::ScopeProfiler __profiler(std::string(prefix) + __func__);\
     try {
 
+// Ends a profiling scope, capturing exceptions
 #define PROFILE_END \
     }\
     catch (...) {\
@@ -30,7 +33,15 @@
         throw;\
     }
 
+// Handy macro to avoid repeating PROFILE_START/PROFILE_END for small functions
 #define PROFILE_PREFIXED(prefix, body) \
 PROFILE_START(prefix);\
 body;\
 PROFILE_END;
+
+// Create a ScopeProfiler ONLY if profiling is set
+#define PROFILE_SCOPE(scope) \
+boost::scoped_ptr<fts3::ScopeProfiler> __profiler(NULL);\
+if (fts3::ProfilingSubsystem::getInstance().getInterval() > 0) {\
+    __profiler.reset(new fts3::ScopeProfiler(scope));\
+}

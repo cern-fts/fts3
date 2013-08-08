@@ -62,6 +62,8 @@ limitations under the License. */
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#include "profiler/Profiler.h"
+#include "profiler/Macros.h"
 
 extern bool stopThreads;
 
@@ -324,6 +326,7 @@ protected:
                         // loop until all files have been served
                         while (!tfh.empty())
                             {
+                                PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
 
                                 // iterate over all VOs
                                 set<string>::iterator it_vo;
@@ -762,6 +765,7 @@ protected:
 
                         for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                             {
+                                PROFILE_SCOPE("executeUrlcopy::for[reuse]");
                                 if (stopThreads)
                                     {
                                         return;
