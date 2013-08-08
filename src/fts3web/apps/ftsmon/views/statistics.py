@@ -262,7 +262,7 @@ def profiling(httpRequest):
         profiling['updated'] = False
         profiling['period']  = False
     
-    profiles = ProfilingSnapshot.objects.order_by('total')
+    profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0).order_by('total')
     profiling['profiles'] = profiles.all()
     
     return render(httpRequest, 'statistics/profiling.html',
