@@ -48,6 +48,7 @@ make install DESTDIR=%{buildroot}
 %changelog
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
   - no longer linking explicitly to boost libraries with '-mt' sufix 
+  - sql scripts have been moved to datadir
 * Mon Jul 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release
   - devel package removed
