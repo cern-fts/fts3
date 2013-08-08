@@ -75,6 +75,8 @@ void profilerThread(ProfilingSubsystem* profSubsys)
         boost::this_thread::sleep(boost::posix_time::seconds(profSubsys->getInterval()));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << '\n' << *profSubsys << commit;
         db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(profSubsys);
+        // Reset
+        profSubsys->profiles.clear();
     }
 }
 
