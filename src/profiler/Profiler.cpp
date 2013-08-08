@@ -18,6 +18,7 @@
 #include "Profiler.h"
 #include "config/serverconfig.h"
 #include "common/logger.h"
+#include "SingleDbInstance.h"
 
 using namespace fts3;
 using namespace fts3::common;
@@ -73,6 +74,7 @@ void profilerThread(ProfilingSubsystem* profSubsys)
     while (1) {
         boost::this_thread::sleep(boost::posix_time::seconds(profSubsys->getInterval()));
         FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << '\n' << *profSubsys << commit;
+        db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(profSubsys);
     }
 }
 
@@ -113,8 +115,27 @@ Profile& ProfilingSubsystem::getProfile(const std::string& scope)
 
 
 
-unsigned ProfilingSubsystem::getInterval()
+unsigned ProfilingSubsystem::getInterval() const
 {
     return dumpInterval;
 }
 
+
+
+std::ostream& fts3::operator << (std::ostream& out, const Profile& prof)
+{
+    out << "executed " << std::setw(3) << prof.nCalled << " times, "
+        <<  "thrown " << std::setw(3) << prof.nExceptions << " exceptions, average of "
+        << prof.getAverage() << "ms";
+    return out;
+}
+
+
+
+std::ostream& fts3::operator << (std::ostream& out, const ProfilingSubsystem& profSubsys) {
+    std::map<std::string, Profile>::const_iterator i;
+    for (i = profSubsys.profiles.begin(); i != profSubsys.profiles.end(); ++i) {
+        out << "PROFILE: " << std::setw(32) << i->first << " - " << i->second << std::endl;
+    }
+    return out;
+}

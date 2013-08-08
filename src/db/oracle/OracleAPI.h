@@ -337,6 +337,8 @@ public:
 
     virtual void checkSchemaLoaded();
 
+    virtual void storeProfiling(const fts3::ProfilingSubsystem* prof);
+
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;

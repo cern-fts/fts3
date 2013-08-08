@@ -301,6 +301,8 @@ public:
     void checkSanityState();
 
     void checkSchemaLoaded();
+
+    void storeProfiling(const fts3::ProfilingSubsystem* prof);
 };
 
 

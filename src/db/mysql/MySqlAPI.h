@@ -323,6 +323,8 @@ public:
 
     virtual void checkSchemaLoaded();
 
+    virtual void storeProfiling(const fts3::ProfilingSubsystem* prof);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

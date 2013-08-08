@@ -11422,6 +11422,11 @@ void OracleAPI::checkSchemaLoaded()
     conn->releasePooledConnection(pooledConnection);
 }
 
+void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem*)
+{
+    // TODO
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()

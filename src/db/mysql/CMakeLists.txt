@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 find_package(MySQL REQUIRED)
 
 include_directories (BEFORE ../generic)
+include_directories (BEFORE ../..)
 include_directories (BEFORE ../../common)
 include_directories (.)
 include_directories (${MYSQL_INCLUDE_DIR})

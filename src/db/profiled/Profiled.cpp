@@ -829,3 +829,9 @@ void ProfiledDB::checkSchemaLoaded()
 {
     PROFILE_PREFIXED("DB::", db->checkSchemaLoaded());
 }
+
+
+void ProfiledDB::storeProfiling(const fts3::ProfilingSubsystem* prof)
+{
+    db->storeProfiling(prof);
+}

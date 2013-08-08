@@ -56,6 +56,8 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
+#include "profiler/Profiler.h"
+
 /**
  * GenericDbIfce class declaration
  **/
@@ -380,6 +382,8 @@ public:
     virtual void checkSanityState() = 0;
 
     virtual void checkSchemaLoaded() = 0;
+
+    virtual void storeProfiling(const fts3::ProfilingSubsystem* prof) = 0;
 };
 
 

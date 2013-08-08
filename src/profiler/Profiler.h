@@ -51,13 +51,7 @@ struct Profile {
     }
 };
 
-std::ostream& operator << (std::ostream& out, const Profile& prof)
-{
-    out << "executed " << std::setw(3) << prof.nCalled << " times, "
-        <<  "thrown " << std::setw(3) << prof.nExceptions << " exceptions, average of "
-        << prof.getAverage() << "ms";
-    return out;
-}
+std::ostream& operator << (std::ostream& out, const Profile& prof);
 
 /**
  * Profiles a scope, using constructor/destructor to start/finish
@@ -85,13 +79,12 @@ class ProfilingSubsystem
 private:
     static ProfilingSubsystem instance;
 
-    std::map<std::string, Profile> profiles;
     unsigned dumpInterval;
-
-    friend std::ostream& operator << (std::ostream& out, const ProfilingSubsystem& profSubsys);
 
 public:
     static ProfilingSubsystem& getInstance();
+
+    std::map<std::string, Profile> profiles;
 
     ProfilingSubsystem();
     ~ProfilingSubsystem();
@@ -99,17 +92,10 @@ public:
     void start();
 
     Profile& getProfile(const std::string &scope);
-    unsigned getInterval();
+    unsigned getInterval() const;
 
 };
 
-
-std::ostream& operator << (std::ostream& out, const ProfilingSubsystem& profSubsys) {
-    std::map<std::string, Profile>::const_iterator i;
-    for (i = profSubsys.profiles.begin(); i != profSubsys.profiles.end(); ++i) {
-        out << "PROFILE: " << std::setw(32) << i->first << " - " << i->second << std::endl;
-    }
-    return out;
-}
+std::ostream& operator << (std::ostream& out, const ProfilingSubsystem& profSubsys);
 
 }
