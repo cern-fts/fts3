@@ -41,15 +41,12 @@ make install DESTDIR=%{buildroot}
 
 %files
 %{_libdir}/libfts_db_mysql.so.*
-%doc %{_docdir}/fts3/mysql-schema.sql
-%doc %{_docdir}/fts3/mysql-drop.sql
-%doc %{_docdir}/fts3/mysql-truncate.sql
+%{_datadir}/fts-mysql
 %doc README
 %doc LICENSE
 
 %changelog
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
-  - GenericDbIfce.h includes new blacklisting API
   - no longer linking explicitly to boost libraries with '-mt' sufix 
 * Mon Jul 29 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release

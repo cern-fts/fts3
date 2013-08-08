@@ -41,15 +41,13 @@ make install DESTDIR=%{buildroot}
 
 %files
 %{_libdir}/libfts_db_oracle.so.*
-%doc %{_docdir}/fts3/oracle-schema.sql
-%doc %{_docdir}/fts3/oracle-drop.sql
+%{_datadir}/fts-oracle
 %doc README
 %doc LICENSE
 
 
 %changelog
 * Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
-  - GenericDbIfce.h includes new blacklisting API
   - no longer linking explicitly to boost libraries with '-mt' sufix 
 * Tue Aug 06 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
  - First CERN koji release
