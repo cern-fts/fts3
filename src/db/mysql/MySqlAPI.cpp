@@ -1368,12 +1368,18 @@ void MySqlAPI::updateFileTransferProgress(std::string job_id, int file_id, doubl
     try
         {
             throughput = convertKbToMb(throughput);
-            sql << "UPDATE t_file SET throughput = :throughput "
-                   "WHERE job_id = :jobId AND file_id = :fileId",
+	    
+	    sql.begin();
+            
+	    sql << "UPDATE t_file SET throughput = :throughput "
+                   "WHERE file_id = :fileId AND job_id = :jobId",
                    soci::use(throughput), soci::use(job_id), soci::use(file_id);
+	    
+	    sql.commit();		   
         }
     catch (std::exception& e)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
