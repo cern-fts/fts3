@@ -338,11 +338,19 @@ public:
     virtual void checkSchemaLoaded();
 
     virtual void storeProfiling(const fts3::ProfilingSubsystem* prof);
+    
+    virtual void setOptimizerMode(int mode);    
+  
 
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
+    int getOptimizerMode(); 
     OptimizerSample optimizerObject;
     std::string ftsHostName;
+    int lowDefault;	    
+    int highDefault;	        
+    int jobsNum;
+    int filesNum;    
 };

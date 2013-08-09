@@ -303,6 +303,8 @@ public:
     void checkSchemaLoaded();
 
     void storeProfiling(const fts3::ProfilingSubsystem* prof);
+    
+    void setOptimizerMode(int mode);
 };
 
 

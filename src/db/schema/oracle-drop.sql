@@ -23,6 +23,7 @@ drop table T_DEBUG cascade constraints;
 drop table T_CONFIG_AUDIT cascade constraints;
 drop table t_optimizer_evolution;
 drop table t_optimize cascade constraints;
+drop table t_optimize_mode;
 drop table t_file_backup;
 drop table t_job_backup;
 drop table T_GROUP_MEMBERS cascade constraints;

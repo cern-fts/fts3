@@ -79,7 +79,7 @@ static int extractTimeout(std::string & str)
 }
 
 
-OracleAPI::OracleAPI() : conn(NULL), conv(NULL)
+OracleAPI::OracleAPI() : conn(NULL), conv(NULL), lowDefault(2), highDefault(4), jobsNum(3), filesNum(5)
 {
 }
 
@@ -317,7 +317,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
         "			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
         "			AND t_file.file_state = 'SUBMITTED'"
         "	) "
-        " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= 2 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
+        " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= :4 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -327,6 +327,18 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
 
     try
         {
+	
+	    int mode = getOptimizerMode();
+	    if(mode==1){
+	    	jobsNum = mode_1[2];
+	    }else if(mode==2){
+	    	jobsNum = mode_2[2];	    
+	    }else if(mode==3){
+	    	jobsNum = mode_3[2];	    
+	    }else{
+	    	jobsNum = mode_1[2];	    
+	    }		
+	
 
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
@@ -363,6 +375,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
                     s->setString(1, boost::get<0>(triplet)); // vo
                     s->setString(2, boost::get<1>(triplet)); // source
                     s->setString(3, boost::get<2>(triplet)); // destination
+		    s->setInt(4, jobsNum); // limit
 
                     r = conn->createResultset(s, pooledConnection);
 
@@ -766,9 +779,6 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::const_iterator iter;
     std::string selecttag = "getByJobId";
-    int limit = 5;
-    if(reuse)
-        limit = 50000;
 
     std::string select =
         "SELECT "
@@ -809,6 +819,22 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
 
     try
         {
+	    int mode = getOptimizerMode();
+	    if(mode==1){
+	    	filesNum = mode_1[3];
+	    }else if(mode==2){
+	    	filesNum = mode_2[3];	    
+	    }else if(mode==3){
+	    	filesNum = mode_3[3];	    
+	    }else{
+	    	filesNum = mode_1[3];	    
+	    }	
+	    
+	    if(reuse){
+	    	filesNum = 10000;
+	    }	
+	
+	
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
@@ -822,7 +848,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                     s->setString(1, job_id);
                     s->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); //submit_time
                     s->setString(3, job_id);
-                    s->setInt(4, limit);
+                    s->setInt(4, filesNum);
                     r = conn->createResultset(s, pooledConnection);
                     while (r->next())
                         {
@@ -3981,8 +4007,24 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                     ratioSuccessFailure = 0;
                 }
 
+	    int mode = getOptimizerMode();
+	    if(mode==1){
+	    	lowDefault = mode_1[0];
+		highDefault = mode_1[1];
+	    }else if(mode==2){
+	    	lowDefault = mode_2[0];	
+		highDefault = mode_2[1];		    
+	    }else if(mode==3){
+	    	lowDefault = mode_3[0];	    
+		highDefault = mode_3[1];		
+	    }else{
+	    	jobsNum = mode_1[0];
+		highDefault = mode_1[1];			    
+	    }	
+            
+
             allowed = optimizerObject.transferStart((int) numberOfFinished, (int) numberOfFailed,source_hostname, destin_hostname, act, maxSource, maxDest,
-                                                    ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll, throughput, avgThr);
+                                                    ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll, throughput, avgThr, lowDefault, highDefault);
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -11518,6 +11560,116 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
         }
     conn->releasePooledConnection(pooledConn);
 }
+
+
+void OracleAPI::setOptimizerMode(int mode){
+    std::string insert = "MERGE INTO t_optimize_mode p USING dual ON (mode = :1) "
+                         "WHEN NOT MATCHED THEN INSERT (mode)"
+                         "      VALUES (:2)"
+                         "WHEN MATCHED THEN UPDATE SET  "
+                        "    mode = :3";
+			
+    std::string insertTag = "setOptimizerMode";
+
+    oracle::occi::Statement* s1 = NULL;
+
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return;           
+
+            s1 = conn->createStatement(insert, insertTag, pooledConnection);
+            s1->setInt(1, mode);
+            s1->setInt(2, mode);
+            s1->setInt(3, mode);	    	    
+            
+            s1->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(s1, insertTag, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+
+            conn->rollback(pooledConnection);
+
+            if (s1)
+                conn->destroyStatement(s1, insertTag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+
+            conn->rollback(pooledConnection);
+
+            if (s1)
+                conn->destroyStatement(s1, insertTag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);			
+
+}
+    
+int OracleAPI::getOptimizerMode(){
+    std::string tag = "getOptimizerMode";
+    std::string query = "select mode from t_optimize_mode";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    int mode = 0;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return mode;
+
+            s = conn->createStatement(query, tag, pooledConnection);          
+            r = conn->createResultset(s, pooledConnection);
+
+            if (r->next())
+                {
+                    mode = r->getInt(1);
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+	    r=NULL;
+	    s=NULL;
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
+    conn->releasePooledConnection(pooledConnection);
+
+    return mode;
+}
+
+
 
 // the class factories
 

@@ -9,7 +9,12 @@ CREATE TABLE t_server_config (
 );
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
 
-
+--
+-- Holds the optimizer mode
+--
+CREATE TABLE t_optimize_mode (
+  mode       INTEGER NOT NULL DEFAULT 1
+);
 
 --
 -- Holds optimization parameters

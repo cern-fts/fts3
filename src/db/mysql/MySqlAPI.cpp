@@ -100,7 +100,7 @@ static int extractTimeout(std::string & str)
 
 
 
-MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL)
+MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), lowDefault(2), highDefault(4), jobsNum(3), filesNum(5)
 {
     char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
@@ -244,6 +244,16 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
     try
         {
+	    int mode = getOptimizerMode(sql);
+	    if(mode==1){
+	    	jobsNum = mode_1[2];
+	    }else if(mode==2){
+	    	jobsNum = mode_2[2];	    
+	    }else if(mode==3){
+	    	jobsNum = mode_3[2];	    
+	    }else{
+	    	jobsNum = mode_1[2];	    
+	    }	
 
             // Get uniqueue VOs
             std::vector< std::string > distinctVO;
@@ -327,7 +337,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                 "            t_file.dest_se = :dest AND "
                 "            t_file.file_state = 'SUBMITTED'"
                 "    ) "
-                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT 3 ";
+                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT :jobsNum ";
 
 
             std::set<std::string> jobIds;
@@ -345,7 +355,8 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                                                         query,
                                                         soci::use(boost::get<2>(triplet)),
                                                         soci::use(boost::get<0>(triplet)),
-                                                        soci::use(boost::get<1>(triplet))
+                                                        soci::use(boost::get<1>(triplet)),
+							soci::use(jobsNum)
                                                     );
 
                     for (soci::rowset<TransferJobs>::const_iterator ji = rs.begin(); ji != rs.end(); ++ji)
@@ -560,9 +571,22 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
-    int limit = 5;
-    if(reuse)
-        limit = 50000;
+
+	    int mode = getOptimizerMode(sql);
+	    if(mode==1){
+	    	filesNum = mode_1[3];
+	    }else if(mode==2){
+	    	filesNum = mode_2[3];	    
+	    }else if(mode==3){
+	    	filesNum = mode_3[3];	    
+	    }else{
+	    	filesNum = mode_1[3];	    
+	    }	
+	    
+	    if(reuse){
+	    	filesNum = 10000;
+	    }
+
 
     try
         {
@@ -594,10 +618,10 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "			f2.job_id = :jobId AND f2.job_id = f1.job_id AND "
                                                          "			f2.file_index = f1.file_index AND "
                                                          "			f2.file_state='READY' "
-                                                         "	 ) ORDER BY f1.file_id ASC LIMIT :limit ",soci::use(jobId),
+                                                         "	 ) ORDER BY f1.file_id ASC LIMIT :filesNum ",soci::use(jobId),
                                                          soci::use(tTime),
                                                          soci::use(jobId),
-                                                         soci::use(limit)
+                                                         soci::use(filesNum)
                                                      );
 
 
@@ -2294,11 +2318,28 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                     ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
                 }
 
+	    int mode = getOptimizerMode(sql);
+	    if(mode==1){
+	    	lowDefault = mode_1[0];
+		highDefault = mode_1[1];
+	    }else if(mode==2){
+	    	lowDefault = mode_2[0];	
+		highDefault = mode_2[1];		    
+	    }else if(mode==3){
+	    	lowDefault = mode_3[0];	    
+		highDefault = mode_3[1];		
+	    }else{
+	    	jobsNum = mode_1[0];
+		highDefault = mode_1[1];			    
+	    }	
+            
+
+
             allowed = optimizerObject.transferStart((int) nFinishedLastHour, (int) nFailedLastHour,
                                                     source_hostname, destin_hostname,
                                                     nActive, nActiveSource, nActiveDest,
                                                     ratioSuccessFailure,
-                                                    nFinishedAll, nFailedAll,throughput, avgThr);
+                                                    nFinishedAll, nFailedAll,throughput, avgThr, lowDefault, highDefault );
         }
     catch (std::exception& e)
         {
@@ -2469,6 +2510,7 @@ int MySqlAPI::getCredits(const std::string & source_hostname, const std::string 
         {
             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
         }
+		   
 
     return optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
                                           source_hostname, destin_hostname,
@@ -5900,6 +5942,51 @@ void MySqlAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
         sql.rollback();
         throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
     }
+}
+
+void MySqlAPI::setOptimizerMode(int mode){
+ 
+     soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            sql << "INSERT INTO t_optimize_mode (mode) VALUES (:mode) ON DUPLICATE KEY UPDATE mode=:mode",
+                soci::use(mode)               
+                ;
+
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+    
+int MySqlAPI::getOptimizerMode(soci::session& sql){
+
+    int mode = 0;
+    soci::indicator ind;
+
+    try
+        {
+            sql <<
+                " select mode "
+                " from t_optimize_mode",
+                soci::into(mode, ind)
+                ;
+         if (ind == soci::i_ok)
+	 	return mode;		
+		
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+	
+   return mode;	
 }
 
 // the class factories

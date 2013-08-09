@@ -225,7 +225,9 @@ const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
 const int buffsizes[] = {1048576, 4194304, 5242880, 7340032, 8388608, 9437184, 11534336, 12582912, 14680064, 67108864};
 const size_t buffsizeslen = (sizeof (buffsizes) / sizeof *(buffsizes));
 
-
-
+/*low active / high active / jobs / files*/
+const int mode_1[] = {2,4,3,5};
+const int mode_2[] = {4,6,5,8};
+const int mode_3[] = {6,8,7,10};
 
 

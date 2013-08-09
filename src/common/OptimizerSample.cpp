@@ -18,10 +18,6 @@
 #include "OptimizerSample.h"
 
 
-#define LOWTR 2
-#define MAXTR 4
-
-
 OptimizerSample::OptimizerSample()
 {
 }
@@ -61,7 +57,7 @@ int OptimizerSample::getTimeout()
 
 bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int
                                     destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput,
-                                    double avgThr)
+                                    double avgThr, int lowDefault, int highDefault)
 {
     /*
             currectActive: number of active for a given src/dest pair
@@ -178,7 +174,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
             return true;
         }
-    else if (currentActive <= (trSuccessRateForPair >= 99? MAXTR: LOWTR ) )
+    else if (currentActive <= (trSuccessRateForPair >= 99? highDefault: lowDefault ) )
         {
             return true;
         }

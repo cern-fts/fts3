@@ -835,3 +835,8 @@ void ProfiledDB::storeProfiling(const fts3::ProfilingSubsystem* prof)
 {
     db->storeProfiling(prof);
 }
+
+void ProfiledDB::setOptimizerMode(int mode)
+{
+    db->setOptimizerMode(mode);
+}
