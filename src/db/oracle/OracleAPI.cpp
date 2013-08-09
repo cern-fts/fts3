@@ -11614,7 +11614,7 @@ void OracleAPI::setOptimizerMode(int mode)
     oracle::occi::Statement* s2 = NULL;
     oracle::occi::Statement* s3 = NULL;
 
-    bool _mode = false;
+    int _mode = 0;
 
     try
         {
@@ -11626,27 +11626,27 @@ void OracleAPI::setOptimizerMode(int mode)
 
             if (r1->next())
                 {
-                    _mode = true;
+                    _mode = r1->getInt(1);
                 }
 
             conn->destroyResultset(s1, r1);
             conn->destroyStatement(s1, selectTag, pooledConnection);
 
-            if(_mode)  //issue update
-                {
-                    s2 = conn->createStatement(update, updateTag, pooledConnection);
-                    s2->setInt(1, mode);
-                    s2->executeUpdate();
-                    conn->commit(pooledConnection);
-                    conn->destroyStatement(s2, updateTag, pooledConnection);
-                }
-            else   //insert
+            if(_mode == 0)  //issue insert
                 {
                     s3 = conn->createStatement(insert, insertTag, pooledConnection);
                     s3->setInt(1, mode);
                     s3->executeUpdate();
                     conn->commit(pooledConnection);
-                    conn->destroyStatement(s3, insertTag, pooledConnection);
+                    conn->destroyStatement(s3, insertTag, pooledConnection);		    
+                }
+            else   //update
+                {
+                    s2 = conn->createStatement(update, updateTag, pooledConnection);
+                    s2->setInt(1, mode);
+                    s2->executeUpdate();
+                    conn->commit(pooledConnection);
+                    conn->destroyStatement(s2, updateTag, pooledConnection);		
                 }
         }
     catch (oracle::occi::SQLException const &e)
