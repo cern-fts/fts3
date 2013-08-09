@@ -215,6 +215,19 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
 
 
 
+def _getRetriedStats(timewindow):
+    notBefore = datetime.utcnow() - timewindow
+    
+    retriedObjs = File.objects.filter(file_state__in = ['FAILED', 'FINISHED'], finish_time__gte = notBefore, retry__gt = 0)\
+                          .values('file_state').annotate(number = Count('file_state'))
+    retried = {}
+    for f in retriedObjs:
+        retried[f['file_state'].lower()] = f['number']
+    
+    return retried    
+
+
+
 def overview(httpRequest):
     overall = _getCountPerState(STATES, timedelta(hours = 24))
     lastHour = _getCountPerState(STATES, timedelta(hours = 1))
@@ -223,8 +236,11 @@ def overview(httpRequest):
     else:
         overall['rate'] = 0
         
+    retried = _getRetriedStats(timedelta(hours = 1))
+        
     return render(httpRequest, 'statistics/overview.html',
-                  {'overall': overall})
+                  {'overall': overall,
+                   'retried': retried})
     
 
 
@@ -232,6 +248,7 @@ def servers(httpRequest):
     servers = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
     return render(httpRequest, 'statistics/servers.html',
                   {'servers': servers})
+
 
 
 def pairs(httpRequest):

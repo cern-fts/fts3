@@ -34,9 +34,19 @@
 				    <span class="failed">{{overall.failed }} Failed</span>,
 				    <span class="canceled">{{overall.canceled }} Canceled</span>
 				</li>
-				<li><em>Success rate in the last hour:</em>
+			</ul>
+			
+			<h3>For the last hour</h3>
+			<lu>
+				<li><em>Success rate:</em>
 				    <span class="rate">{{overall.rate|floatformat:2 }}%</span>
 				</li>
+				<li><em>Transfers succcesfully retried:</em>
+				    <span class="finished">{{retried.finished}}</span>
+			    </li>
+			    <li><em>Transfers retried and failed:</em>
+                    <span class="failed">{{retried.failed}}</span>
+                </li>			    
 			</ul>
 		</div>
 	</div>
