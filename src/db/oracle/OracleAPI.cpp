@@ -11563,11 +11563,11 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
 
 
 void OracleAPI::setOptimizerMode(int mode){
-    std::string insert = "MERGE INTO t_optimize_mode p USING dual ON (mode = :1) "
-                         "WHEN NOT MATCHED THEN INSERT (mode)"
+    std::string insert = "MERGE INTO t_optimize_mode p USING dual ON (mode_opt = :1) "
+                         "WHEN NOT MATCHED THEN INSERT (mode_opt)"
                          "      VALUES (:2)"
                          "WHEN MATCHED THEN UPDATE SET  "
-                        "    mode = :3";
+                        "    mode_opt = :3";
 			
     std::string insertTag = "setOptimizerMode";
 
@@ -11617,7 +11617,7 @@ void OracleAPI::setOptimizerMode(int mode){
     
 int OracleAPI::getOptimizerMode(){
     std::string tag = "getOptimizerMode";
-    std::string query = "select mode from t_optimize_mode";
+    std::string query = "select mode_opt from t_optimize_mode";
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;

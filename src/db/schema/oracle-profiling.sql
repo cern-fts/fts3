@@ -13,7 +13,7 @@ CREATE TABLE t_profiling_snapshot (
 
 
 CREATE TABLE t_optimize_mode (
-  mode       INTEGER NOT NULL DEFAULT 1
+  mode_opt       INTEGER NOT NULL DEFAULT 1
 );
 
 CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
