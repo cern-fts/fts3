@@ -2791,8 +2791,8 @@ void MySqlAPI::revertToSubmitted()
             soci::statement readyStmt = (sql.prepare << "SELECT t_file.start_time, t_file.file_id, t_file.job_id, t_job.reuse_job "
                                          "FROM t_file, t_job "
                                          "WHERE t_file.file_state = 'READY' AND t_file.finish_time IS NULL AND "
-                                         "      t_file.job_finished IS NULL AND t_file.job_id = t_job.job_id",
-                                         soci::into(startTime), soci::into(fileId), soci::into(jobId), soci::into(reuseJob, reuseInd));
+                                         "      t_file.job_finished IS NULL AND t_file.job_id = t_job.job_id and t_file.transferhost=:hostname",
+                                         soci::into(startTime), soci::into(fileId), soci::into(jobId), soci::into(reuseJob, reuseInd),soci::use(hostname));
 
             if (readyStmt.execute(true))
                 {
@@ -5983,7 +5983,6 @@ void MySqlAPI::setOptimizerMode(int mode)
 {
 
     soci::session sql(*connectionPool);
-    soci::indicator ind;
     int _mode = 0;
 
     try
