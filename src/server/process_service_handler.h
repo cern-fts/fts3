@@ -683,6 +683,7 @@ protected:
                                                                 /*check if fork/execvp failed, */
                                                                 if (-1 == pr->executeProcessShell())
                                                                     {
+								        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  temp->JOB_ID << "  " << temp->FILE_ID << commit;
                                                                         DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
                                                                     }
                                                                 else
