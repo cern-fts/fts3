@@ -251,12 +251,31 @@ def servers(httpRequest):
 
 
 
+def _sumStatus(stDictA, stDictB):
+    r = {}
+    keys = stDictA.keys() + stDictB.keys()
+    for s in keys:
+        r[s] = stDictA.get(s, 0) + stDictB.get(s, 0)
+        
+    return r
+
+
+
 def pairs(httpRequest):
     source_se = httpRequest.GET['source_se'] if 'source_se' in httpRequest.GET else None  
     dest_se   = httpRequest.GET['dest_se'] if 'dest_se' in httpRequest.GET else None    
     pairs = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 30))
+    
+    # Build aggregates
+    aggregate = {}
+    aggregate['active']        = reduce(lambda a,b: _sumStatus(a, b),  map(lambda x: x['active'], pairs))
+    aggregate['successRate']   = reduce(lambda a,b: a+b, map(lambda x: x['successRate'], pairs)) / len(pairs)
+    aggregate['avgThroughput'] = reduce(lambda a,b: a+b, map(lambda x: x['avgThroughput'], pairs)) / len(pairs)
+    aggregate['avgDuration']   = reduce(lambda a,b: a+b, map(lambda x: x['avgDuration'], pairs)) / len(pairs)
+    
     return render(httpRequest, 'statistics/pairs.html',
                   {'pairs': pairs,
+                   'aggregate': aggregate,
                    'request': httpRequest})
 
 

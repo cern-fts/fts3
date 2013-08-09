@@ -67,6 +67,14 @@ th {
   padding: 0.2em 1em 0.2em 1em;
 }
 
+tfoot {
+	background: #AAA;
+}
+
+tfoot td {
+	text-align: center;
+}
+
 a.hashTarget {
   color: black;
 }

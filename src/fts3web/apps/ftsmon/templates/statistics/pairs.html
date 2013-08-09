@@ -68,6 +68,25 @@
 	            </tr>
 	          {% endfor %}
 	        </tbody>
+	        <tfoot>
+	           <tr>
+	               <td colspan="2"><em>Aggregated</em></td>
+	               <td>
+                    {% for state,count in aggregate.active.items %}
+                      {{ count }} {{ state }}
+                    {% endfor %}
+                   </td>
+	               <td>
+	                   {{ aggregate.successRate|floatformat:2 }}%
+	               </td>
+	               <td>
+	                   {{ aggregate.avgThroughput|floatformat:2 }} Mb/s
+	               </td>
+	               <td>
+	                   {{ aggregate.avgDuration|floatformat:1 }} s
+	               </td>
+	           </tr>
+	        </tfoot>
 	      </table>
 	      <p>(*) For transfers finished in the last 30 minutes</p>
 	    </div>
