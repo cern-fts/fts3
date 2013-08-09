@@ -5988,8 +5988,8 @@ void MySqlAPI::setOptimizerMode(int mode)
 
     try
         {
-            sql << "select mode_opt from t_optimize_mode", soci::into(_mode, ind);
-                if (ind == soci::i_null)
+                sql << "select count(*) from t_optimize_mode", soci::into(_mode);
+                if (_mode == 0)
                 {
                     sql.begin();
 
