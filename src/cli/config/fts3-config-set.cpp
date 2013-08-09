@@ -67,6 +67,12 @@ int main(int ac, char* av[])
                     ctx.retrySet(*retry);
                 }
 
+            optional<int> mode = cli->optimizer_mode();
+            if (mode.is_initialized())
+            	{
+            		ctx.optimizerModeSet(*mode);
+            	}
+
             optional<unsigned> queueTimeout = cli->queueTimeout();
             if (queueTimeout.is_initialized())
                 {

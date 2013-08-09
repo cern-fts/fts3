@@ -5953,7 +5953,8 @@ void MySqlAPI::setOptimizerMode(int mode){
             sql.begin();
 
             sql << "INSERT INTO t_optimize_mode (mode_opt) VALUES (:mode) ON DUPLICATE KEY UPDATE mode_opt=:mode",
-                soci::use(mode)               
+                soci::use(mode),
+                soci::use(mode)
                 ;
 
             sql.commit();

@@ -516,6 +516,15 @@ void GSoapContextAdapter::retrySet(int retry)
         }
 }
 
+void GSoapContextAdapter::optimizerModeSet(int mode)
+{
+    implcfg__setOptimizerModeResponse resp;
+    if (soap_call_implcfg__setOptimizerMode(ctx, endpoint.c_str(), 0, mode, resp))
+        {
+            handleSoapFault("Operation retrySet failed.");
+        }
+}
+
 void GSoapContextAdapter::queueTimeoutSet(unsigned timeout)
 {
     implcfg__setQueueTimeoutResponse resp;

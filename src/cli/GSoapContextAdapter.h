@@ -260,6 +260,11 @@ public:
     void retrySet(int retry);
 
     /**
+     *
+     */
+    void optimizerModeSet(int mode);
+
+    /**
      * TODO
      */
     void queueTimeoutSet(unsigned timeout);

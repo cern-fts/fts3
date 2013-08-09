@@ -41,6 +41,7 @@ SetCfgCli::SetCfgCli(bool spec)
             ("bring-online", "If this switch is used the user should provide SE_NAME VALUE pairs in order to set the maximum number of files that are staged concurrently for a given SE.")
             ("drain", value<string>(), "If set to 'on' drains the given endpoint.")
             ("retry", value<int>(), "Sets the number of retries of each individual file transfer (the value should be greater or equal to -1).")
+            ("optimizer-mode", value<int>(), "Sets the optimizer mode (allowed values: 1, 2 or 3)")
             ("queue-timeout", value<int>(), "Sets the maximum time (in hours) transfer job is allowed to be in the queue (the value should be greater or equal to 0).")
             ;
         }
@@ -125,8 +126,23 @@ optional<GSoapContextAdapter&> SetCfgCli::validate(bool init)
                 }
         }
 
-    if (getConfigurations().empty() && !vm.count("drain")
-            && !vm.count("retry") && !vm.count("queue-timeout") && !vm.count("bring-online"))
+    if (vm.count("optimizer-mode"))
+    	{
+    		int val = vm["optimizer-mode"].as<int>();
+    		if (val < 1 || val > 3)
+    			{
+    				cout << "optimizer-mode may only take following values: 1, 2 or 3" << endl;
+    				return optional<GSoapContextAdapter&>();
+    			}
+    	}
+
+    if (getConfigurations().empty()
+    		&& !vm.count("drain")
+            && !vm.count("retry")
+            && !vm.count("queue-timeout")
+            && !vm.count("bring-online")
+            && !vm.count("optimizer-mode")
+           )
         {
             cout << "No parameters have been specified." << endl;
             return optional<GSoapContextAdapter&>();
@@ -158,10 +174,19 @@ optional<bool> SetCfgCli::drain()
 
 optional<int> SetCfgCli::retry()
 {
-
     if (vm.count("retry"))
         {
             return vm["retry"].as<int>();
+        }
+
+    return optional<int>();
+}
+
+optional<int> SetCfgCli::optimizer_mode()
+{
+    if (vm.count("optimizer-mode"))
+        {
+            return vm["optimizer-mode"].as<int>();
         }
 
     return optional<int>();

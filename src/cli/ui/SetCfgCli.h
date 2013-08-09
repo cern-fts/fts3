@@ -123,6 +123,13 @@ public:
     optional<int> retry();
 
     /**
+     * Check the optimizer-mode option
+     *
+     * @return the optimizer mode if it has been set, otherwise the optional is not initialized
+     */
+    optional<int> optimizer_mode();
+
+    /**
      * Check the queue timeout
      *
      * @return the queue timeout if it has been set, otherwise the optional is not initialized
