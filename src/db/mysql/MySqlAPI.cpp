@@ -2804,7 +2804,7 @@ void MySqlAPI::revertToSubmitted()
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     sql.begin();
-                                    sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
+                                    sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='' "
                                         "WHERE file_state = 'READY' AND finish_time IS NULL AND "
                                         "      job_finished IS NULL AND file_id = :fileId",
                                         soci::use(fileId);

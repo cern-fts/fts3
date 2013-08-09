@@ -142,7 +142,7 @@ protected:
                             }
 
 
-                        /*revert to SUBMITTED if stayed in READY for too long (100 secs)*/
+                        /*revert to SUBMITTED if stayed in READY for too long (150 secs)*/
                         countReverted++;
                         if (countReverted >= 120)
                             {
