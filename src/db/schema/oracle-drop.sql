@@ -30,4 +30,8 @@ drop table T_SHARE_CONFIG cascade constraints;
 drop table T_LINK_CONFIG cascade constraints;
 drop table T_SERVER_CONFIG cascade constraints;
 drop table T_FILE_SHARE_CONFIG  cascade constraints;
+
+drop table t_profiling_info;
+drop table t_profiling_snapshot;
+
 exit;

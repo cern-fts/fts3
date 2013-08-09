@@ -681,3 +681,19 @@ CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
 CREATE INDEX t_file_backup_1            ON t_file_backup(file_id);
 
+-- Profiling information
+CREATE TABLE t_profiling_info (
+    period  INT NOT NULL,
+    updated TIMESTAMP NOT NULL
+);
+
+CREATE TABLE t_profiling_snapshot (
+    scope      VARCHAR(255) NOT NULL PRIMARY KEY,
+    cnt        LONG NOT NULL,
+    exceptions LONG NOT NULL,
+    total      DOUBLE NOT NULL,
+    average    DOUBLE NOT NULL
+);
+
+CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
+
