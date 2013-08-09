@@ -78,13 +78,14 @@ DBSingleton::DBSingleton(): dbBackend(NULL), monitoringDbBackend(NULL)
 
             // If profiling is enabled, wrap it!
             int profileDumpInterval = theServerConfig().get<int>("Profiling");
-            if (profileDumpInterval) {
-                dbBackend = new ProfiledDB(dbBackend, destroy_db);
-                destroy_db = destroy_profiled_db;
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Database wrapped in the profiler!" << commit;
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Should report every "
-                                                << profileDumpInterval << " seconds" << commit;
-            }
+            if (profileDumpInterval)
+                {
+                    dbBackend = new ProfiledDB(dbBackend, destroy_db);
+                    destroy_db = destroy_profiled_db;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Database wrapped in the profiler!" << commit;
+                    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Should report every "
+                                                    << profileDumpInterval << " seconds" << commit;
+                }
 
             // create monitoring db on request
         }

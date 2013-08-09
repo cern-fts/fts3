@@ -182,10 +182,10 @@ public:
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
             }
         catch (std::exception& e)
-        {
-	    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-	    throw;           
-        }       
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
+                throw;
+            }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
@@ -231,11 +231,12 @@ protected:
                                 queueMsgRecovery.clear();
                             }
 
-                        if (runConsumerStatus(messages) != 0) {
-                            char buffer[128];
-                            throw Err_System(std::string("Could not get the status messages: ") +
-                                             strerror_r(errno, buffer, sizeof(buffer)));
-                        }
+                        if (runConsumerStatus(messages) != 0)
+                            {
+                                char buffer[128];
+                                throw Err_System(std::string("Could not get the status messages: ") +
+                                                 strerror_r(errno, buffer, sizeof(buffer)));
+                            }
 
                         if(!messages.empty())
                             {
@@ -273,7 +274,7 @@ protected:
                                         else
                                             {
                                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
-                                                        << iter->msg_error_reason << commit;
+                                                                               << iter->msg_error_reason << commit;
                                             }
                                     }//end for
                                 messages.clear();

@@ -236,10 +236,10 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     std::string moveFile = fileManagement->archive();
     if (strArray[0].length() > 0)
         reporter.constructMessageLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                UrlCopyOpts::getInstance().debug);
+                                     UrlCopyOpts::getInstance().debug);
     else
         reporter.constructMessageLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
-                UrlCopyOpts::getInstance().debug);
+                                     UrlCopyOpts::getInstance().debug);
 
     if (moveFile.length() != 0)
         {
@@ -257,9 +257,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
 void canceler()
 {
     errorMessage = "Transfer " + g_job_id + " was canceled because it was not responding";
-				    
+
     Logger::getInstance().WARNING() << errorMessage << std::endl;
-    
+
     abnormalTermination("FAILED", errorMessage, "Abort");
 }
 
@@ -270,11 +270,12 @@ void canceler()
  * a file bigger than initially expected.
  */
 void taskTimer(time_t* timeout)
-{    
-    while (*timeout) {
-        boost::this_thread::sleep(boost::posix_time::seconds(1));        
-        *timeout -= 1;
-    }
+{
+    while (*timeout)
+        {
+            boost::this_thread::sleep(boost::posix_time::seconds(1));
+            *timeout -= 1;
+        }
     canceler();
 }
 
@@ -293,7 +294,7 @@ void taskStatusUpdater(int time)
                     Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
                                                  << std::endl;
                     reporter.constructMessageUpdater(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
-                            throughput, transferred_bytes);
+                                                     throughput, transferred_bytes);
                 }
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
@@ -488,10 +489,11 @@ int main(int argc, char **argv)
     //set_unexpected(myunexpected);
 
     UrlCopyOpts &opts = UrlCopyOpts::getInstance();
-    if (opts.parse(argc, argv) < 0) {
-        std::cerr << opts.getErrorMessage() << std::endl;
-        return 1;
-    }
+    if (opts.parse(argc, argv) < 0)
+        {
+            std::cerr << opts.getErrorMessage() << std::endl;
+            return 1;
+        }
 
     g_file_id = opts.fileId;
     g_job_id = opts.jobId;
@@ -636,7 +638,7 @@ int main(int argc, char **argv)
                     strArray[5] = opts.fileMetadata;
                     strArray[6] = opts.tokenBringOnline;
                 }
-		
+
             fileManagement->setSourceUrl(strArray[1]);
             fileManagement->setDestUrl(strArray[2]);
             fileManagement->setFileId(strArray[0]);
@@ -680,20 +682,21 @@ int main(int argc, char **argv)
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferStartMessage(&tr_completed);
 
-            if (!opts.logToStderr) {
-                int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath(), opts.debug);
-                if (checkError != 0)
-                    {
-                        std::string message = mapErrnoToString(checkError);
-                        errorMessage = "Failed to create transfer log file, error was: " + message;
-                        goto stop;
-                    }
-            }
+            if (!opts.logToStderr)
+                {
+                    int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath(), opts.debug);
+                    if (checkError != 0)
+                        {
+                            std::string message = mapErrnoToString(checkError);
+                            errorMessage = "Failed to create transfer log file, error was: " + message;
+                            goto stop;
+                        }
+                }
 
             // Scope
             {
                 reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->getLogFilePath(),
-                        opts.debug);
+                                             opts.debug);
 
                 gfalt_set_user_data(params, NULL, NULL);
 
@@ -906,7 +909,7 @@ int main(int argc, char **argv)
                 msg_ifce::getInstance()->set_transfer_timeout(&tr_completed, timeout_to_string.c_str());
                 logger.INFO() << "Timeout:" << opts.timeout << std::endl;
                 globalTimeout = experimentalTimeout + 500;
-                logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;                
+                logger.INFO() << "Resetting global timeout thread to " << globalTimeout << " seconds" << std::endl;
 
                 unsigned int experimentalNstreams = adjustStreamsBasedOnSize(statbufsrc.st_size, opts.nStreams);
                 if(!opts.manualConfig || opts.autoTunned || opts.nStreams==0)
@@ -937,7 +940,7 @@ int main(int argc, char **argv)
                         errorPhase = TRANSFER;
                         goto stop;
                     }
-		    		    		   
+
 
                 logger.INFO() << "Transfer Starting" << std::endl;
                 if ((ret = gfalt_copy_file(handle, params, (strArray[1]).c_str(), (strArray[2]).c_str(), &tmp_err)) != 0)
@@ -1124,7 +1127,7 @@ stop:
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
             reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                    opts.debug);
+                                         opts.debug);
         }//end for reuse loop
 
     if (params)

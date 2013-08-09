@@ -188,7 +188,7 @@ public:
      * @return The number of files returned
      */
     int getFileStatus (string jobId, bool archive, int offset, int limit,
-            impltns__getFileStatusResponse& resp);
+                       impltns__getFileStatusResponse& resp);
 
     /**
      * Remote call to setConfiguration

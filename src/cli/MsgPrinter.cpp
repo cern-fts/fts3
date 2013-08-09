@@ -394,15 +394,15 @@ void MsgPrinter::job_status(JobStatus js)
     if (verbose)
         {
             map<string, string> aux = map_list_of
-                     ("job_id", js.jobId)
-                     ("status", js.jobStatus)
-                     ("dn", js.clientDn)
-                     ("reason", js.reason.empty() ? "<None>": js.reason)
-                     ("submision_time", time_buff)
-                     ("file_count", lexical_cast<string>(js.numFiles))
-                     ("priority", lexical_cast<string>(js.priority))
-                     ("vo", js.voName)
-                     ;
+                                      ("job_id", js.jobId)
+                                      ("status", js.jobStatus)
+                                      ("dn", js.clientDn)
+                                      ("reason", js.reason.empty() ? "<None>": js.reason)
+                                      ("submision_time", time_buff)
+                                      ("file_count", lexical_cast<string>(js.numFiles))
+                                      ("priority", lexical_cast<string>(js.priority))
+                                      ("vo", js.voName)
+                                      ;
             object = aux;
         }
     else

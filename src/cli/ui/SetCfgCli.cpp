@@ -127,22 +127,22 @@ optional<GSoapContextAdapter&> SetCfgCli::validate(bool init)
         }
 
     if (vm.count("optimizer-mode"))
-    	{
-    		int val = vm["optimizer-mode"].as<int>();
-    		if (val < 1 || val > 3)
-    			{
-    				cout << "optimizer-mode may only take following values: 1, 2 or 3" << endl;
-    				return optional<GSoapContextAdapter&>();
-    			}
-    	}
+        {
+            int val = vm["optimizer-mode"].as<int>();
+            if (val < 1 || val > 3)
+                {
+                    cout << "optimizer-mode may only take following values: 1, 2 or 3" << endl;
+                    return optional<GSoapContextAdapter&>();
+                }
+        }
 
     if (getConfigurations().empty()
-    		&& !vm.count("drain")
+            && !vm.count("drain")
             && !vm.count("retry")
             && !vm.count("queue-timeout")
             && !vm.count("bring-online")
             && !vm.count("optimizer-mode")
-           )
+       )
         {
             cout << "No parameters have been specified." << endl;
             return optional<GSoapContextAdapter&>();

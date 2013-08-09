@@ -12,7 +12,7 @@ void destroy_profiled_db(void *db)
 }
 
 ProfiledDB::ProfiledDB(GenericDbIfce* db, void (*destroy_db)(void *)):
-        db(db), destroy_db(destroy_db)
+    db(db), destroy_db(destroy_db)
 {
 }
 
@@ -27,20 +27,20 @@ void ProfiledDB::init(std::string username, std::string password, std::string co
 }
 
 void ProfiledDB::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
-                        const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                        const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                        const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                        const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                        int bringonline, std::string metadata,
-                        int retry, int retryDelay, std::string sourceSe, std::string destinationSe)
+                                const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
+                                const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
+                                const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
+                                const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
+                                int bringonline, std::string metadata,
+                                int retry, int retryDelay, std::string sourceSe, std::string destinationSe)
 {
     PROFILE_PREFIXED("DB::", db->submitPhysical(jobId, src_dest_pair, paramFTP,
-            DN, cred, voName, myProxyServer,
-            delegationID, spaceToken, overwrite,
-            sourceSpaceToken, sourceSpaceTokenDescription, copyPinLifeTime,
-            failNearLine, checksumMethod, reuse,
-            bringonline, metadata,
-            retry, retryDelay, sourceSe, destinationSe));
+                     DN, cred, voName, myProxyServer,
+                     delegationID, spaceToken, overwrite,
+                     sourceSpaceToken, sourceSpaceTokenDescription, copyPinLifeTime,
+                     failNearLine, checksumMethod, reuse,
+                     bringonline, metadata,
+                     retry, retryDelay, sourceSe, destinationSe));
 }
 
 void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)
@@ -51,14 +51,14 @@ void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::
 
 
 void ProfiledDB::getTransferFileStatus(std::string requestID, bool archive,
-                           unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files)
 {
     PROFILE_PREFIXED("DB::", db->getTransferFileStatus(requestID, archive, offset, limit, files));
 }
 
 
 void ProfiledDB::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                std::string restrictToClientDN, std::string forDN, std::string VOname)
+                              std::string restrictToClientDN, std::string forDN, std::string VOname)
 {
     PROFILE_PREFIXED("DB::", db->listRequests(jobs, inGivenStates, restrictToClientDN, forDN, VOname));
 }
@@ -95,18 +95,18 @@ unsigned int ProfiledDB::updateFileStatus(TransferFiles* file, const std::string
 
 
 void ProfiledDB::addSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
-           std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id)
+                       std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id)
 {
     PROFILE_PREFIXED("DB::", db->addSe(endpoint, se_type, site, name, state, version, host,
-                se_transfer_type, se_transfer_protocol, se_control_protocol, gocdb_id));
+                                       se_transfer_type, se_transfer_protocol, se_control_protocol, gocdb_id));
 }
 
 
 void ProfiledDB::updateSe(std::string endpoint, std::string se_type, std::string site, std::string name, std::string state, std::string version, std::string host,
-              std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id)
+                          std::string se_transfer_type, std::string se_transfer_protocol, std::string se_control_protocol, std::string gocdb_id)
 {
     PROFILE_PREFIXED("DB::", db->updateSe(endpoint, se_type, site, name, state, version, host,
-                se_transfer_type, se_transfer_protocol, se_control_protocol, gocdb_id));
+                                          se_transfer_type, se_transfer_protocol, se_control_protocol, gocdb_id));
 }
 
 
@@ -120,8 +120,8 @@ bool ProfiledDB::updateFileTransferStatus(double throughput, std::string job_id,
         std::string transfer_message, int process_id, double filesize, double duration)
 {
     PROFILE_PREFIXED("DB::", return db->updateFileTransferStatus(throughput, job_id, file_id, transfer_status,
-                                transfer_message, process_id,
-                                filesize, duration));
+                                    transfer_message, process_id,
+                                    filesize, duration));
 }
 
 
@@ -228,10 +228,10 @@ void ProfiledDB::fetchOptimizationConfig2(OptimizerSample* ops, const std::strin
 
 
 bool ProfiledDB::updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,
-        std::string source_hostname, std::string destin_hostname)
+                                 std::string source_hostname, std::string destin_hostname)
 {
     PROFILE_PREFIXED("DB::", return db->updateOptimizer(throughput, file_id, filesize, timeInSecs, nostreams, timeout, buffersize,
-                            source_hostname, destin_hostname));
+                                    source_hostname, destin_hostname));
 }
 
 
@@ -266,7 +266,7 @@ int ProfiledDB::getSeIn(const std::set<std::string> & source, const std::string 
 
 
 void ProfiledDB::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest,
-        int nostreams, int timeout, int buffersize)
+                            int nostreams, int timeout, int buffersize)
 {
     PROFILE_PREFIXED("DB::", db->setAllowed(job_id, file_id, source_se, dest, nostreams, timeout, buffersize));
 }

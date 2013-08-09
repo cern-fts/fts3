@@ -230,8 +230,8 @@ public:
             monitoringMessages = false;
         else
             monitoringMessages = true;
-	    	    
-      jobs2.reserve(3000);	    
+
+        jobs2.reserve(3000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -1171,7 +1171,7 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
-        static bool drainMode = false;        
+        static bool drainMode = false;
 
         while (1)
             {

@@ -404,7 +404,7 @@ JobSummary GSoapContextAdapter::getTransferJobSummary (string jobId, bool archiv
 }
 
 int GSoapContextAdapter::getFileStatus (string jobId, bool archive, int offset, int limit,
-        impltns__getFileStatusResponse& resp)
+                                        impltns__getFileStatusResponse& resp)
 {
     tns3__FileRequest req;
 

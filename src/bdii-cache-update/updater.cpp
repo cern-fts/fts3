@@ -43,13 +43,14 @@ using namespace boost::property_tree;
 using namespace pugi;
 
 static void setNodeOrAppend(xml_node& node, const std::string& key,
-                const std::string& value)
+                            const std::string& value)
 {
     xml_node child = node.child(key.c_str());
-    if (child.empty()) {
-        child = node.append_child();
-        child.set_name(key.c_str());
-    }
+    if (child.empty())
+        {
+            child = node.append_child();
+            child.set_name(key.c_str());
+        }
 
     xml_node vnode = child.last_child();
     if (vnode.empty())
@@ -104,14 +105,16 @@ int main(int argc, char** argv)
                     xpath_node node = doc.select_single_node(xpath.c_str());
 
                     xml_node entry;
-                    if (node) {
-                        entry = node.node();
-                    }
-                    else {
-                        entry = doc.append_child();
-                        entry.set_name("entry");
-                        setNodeOrAppend(entry, "endpoint", it->first);
-                    }
+                    if (node)
+                        {
+                            entry = node.node();
+                        }
+                    else
+                        {
+                            entry = doc.append_child();
+                            entry.set_name("entry");
+                            setNodeOrAppend(entry, "endpoint", it->first);
+                        }
 
                     setNodeOrAppend(entry, "sitename", it->second.sitename);
                     setNodeOrAppend(entry, "type", it->second.type);

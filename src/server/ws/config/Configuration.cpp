@@ -181,7 +181,7 @@ void Configuration::eraseSe(string se)
 
 void Configuration::addGroup(string group, vector<string>& members)
 {
-	// first check if the new group members are correct
+    // first check if the new group members are correct
     vector<string>::iterator it;
     for (it = members.begin(); it != members.end(); it++)
         {

@@ -35,7 +35,8 @@ using namespace std;
 struct message_base
 {
 public:
-    message_base(): msg_errno(false) {
+    message_base(): msg_errno(false)
+    {
         memset(msg_error_reason, 0, sizeof(msg_error_reason));
     }
 
@@ -47,10 +48,11 @@ public:
         // GNU strerror_r may not fill the passed error buffer,
         // and just return a static area with the message
         char *aux = strerror_r(errcode, msg_error_reason, sizeof(msg_error_reason));
-        if (aux != msg_error_reason) {
-            strncpy(msg_error_reason, aux, sizeof(msg_error_reason));
-            msg_error_reason[sizeof(msg_error_reason) - 1] = '\0';
-        }
+        if (aux != msg_error_reason)
+            {
+                strncpy(msg_error_reason, aux, sizeof(msg_error_reason));
+                msg_error_reason[sizeof(msg_error_reason) - 1] = '\0';
+            }
         msg_errno = errcode;
     }
 };

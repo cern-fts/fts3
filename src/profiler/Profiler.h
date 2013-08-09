@@ -23,27 +23,32 @@
 #include <ostream>
 #include <string>
 
-namespace fts3 {
+namespace fts3
+{
 
 
 /**
  * Profiling data
  */
-struct Profile {
+struct Profile
+{
     boost::mutex    mutex;
 
     unsigned long   nCalled;
     unsigned long   nExceptions;
     double          totalTime;
 
-    Profile(): nCalled(0), nExceptions(0), totalTime(0) {
+    Profile(): nCalled(0), nExceptions(0), totalTime(0)
+    {
     }
 
     Profile(const Profile& o): nCalled(o.nCalled), nExceptions(o.nExceptions),
-            totalTime(o.totalTime) {
+        totalTime(o.totalTime)
+    {
     }
 
-    double getAverage() const {
+    double getAverage() const
+    {
         if (nCalled)
             return totalTime / static_cast<double>(nCalled);
         else
@@ -57,7 +62,8 @@ std::ostream& operator << (std::ostream& out, const Profile& prof);
  * Profiles a scope, using constructor/destructor to start/finish
  * the profiling
  */
-class ScopeProfiler {
+class ScopeProfiler
+{
 private:
     std::string scope;
     double      start;

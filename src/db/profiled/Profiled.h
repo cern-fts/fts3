@@ -53,7 +53,7 @@ public:
                                unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files);
 
     void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                    std::string restrictToClientDN, std::string forDN, std::string VOname);
+                      std::string restrictToClientDN, std::string forDN, std::string VOname);
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
@@ -95,7 +95,7 @@ public:
 
     void updateGrDPStorageElement(std::string dlg_id, std::string dn, std::string proxy, std::string voms_attrs, time_t termination_time);
 
-     Cred* findGrDPStorageElement(std::string delegationID, std::string dn);
+    Cred* findGrDPStorageElement(std::string delegationID, std::string dn);
 
     void deleteGrDPStorageElement(std::string delegationID, std::string dn);
 
@@ -163,7 +163,7 @@ public:
 
     bool isFileReadyStateV(std::map<int,std::string>& fileIds);
 
-     bool checkGroupExists(const std::string & groupName);
+    bool checkGroupExists(const std::string & groupName);
 
     void getGroupMembers(const std::string & groupName, std::vector<std::string>& groupMembers);
 
@@ -303,7 +303,7 @@ public:
     void checkSchemaLoaded();
 
     void storeProfiling(const fts3::ProfilingSubsystem* prof);
-    
+
     void setOptimizerMode(int mode);
 };
 

@@ -39,7 +39,7 @@ inline double getMilliseconds()
 
 
 ScopeProfiler::ScopeProfiler(const std::string& scope):
-        scope(scope), nExceptions(0)
+    scope(scope), nExceptions(0)
 {
     start = getMilliseconds();
 }
@@ -71,23 +71,27 @@ void profilerThread(ProfilingSubsystem* profSubsys)
 {
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Profiling subsystem started with an interval of "
                                     << profSubsys->getInterval() << commit;
-    while (1) {
-        boost::this_thread::sleep(boost::posix_time::seconds(profSubsys->getInterval()));
-        FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << '\n' << *profSubsys << commit;
+    while (1)
+        {
+            boost::this_thread::sleep(boost::posix_time::seconds(profSubsys->getInterval()));
+            FTS3_COMMON_LOGGER_NEWLOG(DEBUG) << '\n' << *profSubsys << commit;
 
-        try {
-            db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(profSubsys);
-        }
-        catch (std::exception& e) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-        }
-        catch (...) {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in profilerThread" << commit;
-        }
+            try
+                {
+                    db::DBSingleton::instance().getDBObjectInstance()->storeProfiling(profSubsys);
+                }
+            catch (std::exception& e)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+                }
+            catch (...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception in profilerThread" << commit;
+                }
 
-        // Reset
-        profSubsys->profiles.clear();
-    }
+            // Reset
+            profSubsys->profiles.clear();
+        }
 }
 
 
@@ -114,9 +118,10 @@ ProfilingSubsystem& ProfilingSubsystem::getInstance()
 void ProfilingSubsystem::start()
 {
     dumpInterval = fts3::config::theServerConfig().get<unsigned>("Profiling");
-    if (dumpInterval) {
-        boost::thread btUpdater(profilerThread, this);
-    }
+    if (dumpInterval)
+        {
+            boost::thread btUpdater(profilerThread, this);
+        }
 }
 
 
@@ -144,10 +149,12 @@ std::ostream& fts3::operator << (std::ostream& out, const Profile& prof)
 
 
 
-std::ostream& fts3::operator << (std::ostream& out, const ProfilingSubsystem& profSubsys) {
+std::ostream& fts3::operator << (std::ostream& out, const ProfilingSubsystem& profSubsys)
+{
     std::map<std::string, Profile>::const_iterator i;
-    for (i = profSubsys.profiles.begin(); i != profSubsys.profiles.end(); ++i) {
-        out << "PROFILE: " << std::setw(32) << i->first << " - " << i->second << std::endl;
-    }
+    for (i = profSubsys.profiles.begin(); i != profSubsys.profiles.end(); ++i)
+        {
+            out << "PROFILE: " << std::setw(32) << i->first << " - " << i->second << std::endl;
+        }
     return out;
 }

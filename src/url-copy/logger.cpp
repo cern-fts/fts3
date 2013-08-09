@@ -29,8 +29,8 @@ Logger::Logger(): log(&std::cerr)
 
 Logger::~Logger()
 {
-   INFO() << "Closing the log stream" << std::endl;
-   logHandle.close();
+    INFO() << "Closing the log stream" << std::endl;
+    logHandle.close();
 }
 
 
@@ -44,28 +44,28 @@ Logger& Logger::getInstance()
 
 std::ostream& Logger::INFO()
 {
-   return (*log << getTimestamp() << " INFO     ");
+    return (*log << getTimestamp() << " INFO     ");
 }
 
 
 
 std::ostream& Logger::WARNING()
 {
-   return (*log << getTimestamp() << " WARNING  ");
+    return (*log << getTimestamp() << " WARNING  ");
 }
 
 
 
 std::ostream& Logger::ERROR()
 {
-   return (*log << getTimestamp() << " ERROR    ");
+    return (*log << getTimestamp() << " ERROR    ");
 }
 
 
 
 std::ostream& Logger::DEBUG()
 {
-   return (*log << getTimestamp() << " DEBUG    ");
+    return (*log << getTimestamp() << " DEBUG    ");
 }
 
 
@@ -76,15 +76,16 @@ int Logger::redirectTo(const std::string& path, bool debug)
     logHandle.close();
     logHandle.open(path.c_str(), std::ios::app);
     if (logHandle.fail())
-       return errno;
+        return errno;
     chmod(path.c_str(), 0644);
     log = &logHandle;
 
     // Debug output
-    if (debug) {
-        std::string debugPath = path + ".debug";
-        freopen(debugPath.c_str(), "w", stderr);
-        chmod(debugPath.c_str(), 0644);
-    }
+    if (debug)
+        {
+            std::string debugPath = path + ".debug";
+            freopen(debugPath.c_str(), "w", stderr);
+            chmod(debugPath.c_str(), 0644);
+        }
     return 0;
 }

@@ -433,17 +433,17 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
                     // set the wait_timeout for the transfer (in case the source / destination have been blacklisted with '--allow-submit')
                     if (source_timeout.is_initialized() && destin_timeout.is_initialized())
-                    	{
-                    		tupple.wait_timeout = *source_timeout < *destin_timeout ? *source_timeout : *destin_timeout;
-                    	}
+                        {
+                            tupple.wait_timeout = *source_timeout < *destin_timeout ? *source_timeout : *destin_timeout;
+                        }
                     else if (source_timeout.is_initialized())
-                    	{
-                    		tupple.wait_timeout = source_timeout;
-                    	}
+                        {
+                            tupple.wait_timeout = source_timeout;
+                        }
                     else if (destin_timeout.is_initialized())
-                    	{
-                    		tupple.wait_timeout = destin_timeout;
-                    	}
+                        {
+                            tupple.wait_timeout = destin_timeout;
+                        }
 
                     jobs.push_back(tupple);
                 }
@@ -578,9 +578,9 @@ void JobSubmitter::checkSe(string se, string vo)
 
     // check if the SE is blacklisted
     if (db->isSeBlacklisted(se, vo))
-    	{
-    		if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
-    	}
+        {
+            if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
+        }
     // if we don't care about MyOSQ return
     if (!theServerConfig().get<bool>("MyOSG")) return;
 

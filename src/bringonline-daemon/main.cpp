@@ -315,7 +315,7 @@ static bool checkValidProxy(const std::string& filename)
 
 
 int DoServer(int argc, char** argv)
-{    
+{
     std::string proxy_file("");
     std::string infosys("");
     gfal2_context_t handle;
@@ -342,7 +342,7 @@ int DoServer(int argc, char** argv)
                         {
                             arguments += argv[i];
                         }
-                   size_t foundHelp = arguments.find("-h");
+                    size_t foundHelp = arguments.find("-h");
                     if (foundHelp != string::npos)
                         {
                             exit(0);

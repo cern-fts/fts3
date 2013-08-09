@@ -106,7 +106,7 @@ static unsigned adjustTimeout(off_t sizeInBytes)
 
 
 unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes,
-        unsigned timeout)
+                                  unsigned timeout)
 {
     static const unsigned long MB = 1 << 20;
 
@@ -127,9 +127,9 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes,
         timeout = 4000;
     else
         timeout = static_cast<unsigned>(totalTimeout);
-	
+
     if(timeout > 6000)
-    	timeout = 6000;
-    
+        timeout = 6000;
+
     return timeout;
 }
