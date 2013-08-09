@@ -188,10 +188,7 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
     pairs = []
     for pair in sorted(allPairs):
         p = {'source': pair[0], 'destination': pair[1]}
-
-        if pair in avgsPerPair:
-            p.update(avgsPerPair[pair])
-            
+           
         if pair in statesPerPair:
             states = statesPerPair[pair]
             p['active'] = {}
@@ -205,10 +202,18 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
             total = float(reduce(lambda a,b: a+b, terminal.values(), 0))
             success = float(states['FINISHED'] if 'FINISHED' in states else 0)
             
-            if total:
+            if len(terminal):
                 p['successRate'] = (success/total) * 100
             else:
                 p['successRate'] = None
+        else:
+            p['successRate'] = None
+            
+        if pair in avgsPerPair and p['successRate'] is not None:
+            p.update(avgsPerPair[pair])
+        else:
+            p['avgDuration'] = None
+            p['avgThroughput'] = None
 
         pairs.append(p)
     return pairs
@@ -251,6 +256,12 @@ def servers(httpRequest):
 
 
 
+def _avgField(pairs, field):
+    pairsWithTerminal = filter(lambda p: p['successRate'] is not None, pairs)
+    return reduce(lambda a, b: a + b, map(lambda p: p[field], pairsWithTerminal)) / len(pairsWithTerminal)
+
+
+
 def _sumStatus(stDictA, stDictB):
     r = {}
     keys = stDictA.keys() + stDictB.keys()
@@ -269,9 +280,9 @@ def pairs(httpRequest):
     # Build aggregates
     aggregate = {}
     aggregate['active']        = reduce(lambda a,b: _sumStatus(a, b),  map(lambda x: x['active'], pairs))
-    aggregate['successRate']   = reduce(lambda a,b: a+b, map(lambda x: x['successRate'], pairs)) / len(pairs)
-    aggregate['avgThroughput'] = reduce(lambda a,b: a+b, map(lambda x: x['avgThroughput'], pairs)) / len(pairs)
-    aggregate['avgDuration']   = reduce(lambda a,b: a+b, map(lambda x: x['avgDuration'], pairs)) / len(pairs)
+    aggregate['successRate']   = _avgField(pairs, 'successRate')
+    aggregate['avgThroughput'] = _avgField(pairs, 'avgThroughput')
+    aggregate['avgDuration']   = _avgField(pairs, 'avgDuration')
     
     return render(httpRequest, 'statistics/pairs.html',
                   {'pairs': pairs,

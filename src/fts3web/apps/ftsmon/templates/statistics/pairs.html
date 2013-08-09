@@ -63,8 +63,20 @@
 	                    -
 	                {% endif %}
 	              </td>
-	              <td>{{ p.avgThroughput|floatformat:2 }} Mb/s</td>
-	              <td>{{ p.avgDuration|floatformat:1 }} s</td>
+	              <td>
+	                   {% if p.avgThroughput != None %}
+	                       {{ p.avgThroughput|floatformat:2 }} Mb/s
+	                   {% else %}
+	                       -
+	                   {% endif %}
+                  </td>
+	              <td>
+	                   {% if p.avgDuration != None %}
+	                       {{ p.avgDuration|floatformat:1 }} s
+	                   {% else %}
+	                       -
+	                   {% endif %}
+                  </td>
 	            </tr>
 	          {% endfor %}
 	        </tbody>
