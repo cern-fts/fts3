@@ -641,6 +641,7 @@ CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se, job_id);
 CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
 CREATE INDEX file_transferhost on t_file(TRANSFERHOST);
 CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
+CREATE INDEX file_dest_surl ON t_file (dest_surl);
 
 CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
