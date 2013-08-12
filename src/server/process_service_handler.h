@@ -516,17 +516,7 @@ protected:
                                                 if (proxy_file.length() > 0)
                                                     {
                                                         params.append(" -proxy ");
-                                                        params.append(proxy_file);
-                                                        /*make sure proxy is readable    */
-                                                        chmod(proxy_file.c_str(), (mode_t) 0600); //S_IRUSR|S_IRGRP|S_IROTH
-                                                        uid_t pw_uid;
-                                                        pw_uid = name_to_uid();
-                                                        int checkChown = chown(proxy_file.c_str(), pw_uid, getgid());
-                                                        if (checkChown != 0)
-                                                            {
-                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chown for proxy" << proxy_file << commit;
-                                                            }
-
+                                                        params.append(proxy_file);                                                       
                                                     }
 
                                                 if (std::string(temp->CHECKSUM).length() > 0)   //checksum
@@ -534,6 +524,7 @@ protected:
                                                         params.append(" -z ");
                                                         params.append(temp->CHECKSUM);
                                                     }
+						    
                                                 if (std::string(temp->CHECKSUM_METHOD).length() > 0)   //checksum
                                                     {
                                                         params.append(" -A ");
@@ -990,20 +981,7 @@ protected:
                                 if (proxy_file.length() > 0)
                                     {
                                         params.append(" -proxy ");
-                                        params.append(proxy_file);
-                                        /*make sure proxy is readable    */
-                                        int ch = chmod(proxy_file.c_str(), (mode_t) 0600);
-                                        if (ch != 0)
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chmod for proxy" << proxy_file << commit;
-                                            }
-                                        uid_t pw_uid;
-                                        pw_uid = name_to_uid();
-                                        int checkChown = chown(proxy_file.c_str(), pw_uid, getgid());
-                                        if (checkChown != 0)
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to chown for proxy" << proxy_file << commit;
-                                            }
+                                        params.append(proxy_file);                                       
                                     }
 
                                 params.append(" -G ");
