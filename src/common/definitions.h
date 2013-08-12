@@ -147,7 +147,9 @@ public:
 struct message_bringonline: public message_base
 {
 public:
-    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0), file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0)
+    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0),
+        file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0),
+        nPolls(0), nextPoll(0)
     {
     }
 
@@ -164,6 +166,8 @@ public:
     time_t timestamp;
     int pinlifetime;
     int bringonlineTimeout;
+    int nPolls;
+    time_t nextPoll;
 };
 
 

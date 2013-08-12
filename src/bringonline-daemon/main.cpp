@@ -59,7 +59,13 @@ const char *hostcert = "/etc/grid-security/hostcert.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
 // exp backoff for bringonline ops
-// 1, 2, 5, 60, 180s, 3 m
+static time_t getPollInterval(int nPolls)
+{
+    if (nPolls >= 5)
+        return 180;
+    else
+        return (2 << nPolls);
+}
 
 static bool retryTransfer(int errorNo)
 {
@@ -198,6 +204,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                         {
                             cert = new UserProxyEnv((*i).proxy);
                             bool deleteIt = false;
+                            time_t now = time(NULL);
                             if ((*i).started == false)   //issue bringonline
                                 {
                                     db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
@@ -246,7 +253,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                             (*i).retries = 0;
                                         }
                                 }
-                            else     //poll
+                            else if ((*i).nextPoll <= now)     //poll
                                 {
                                     statusB = gfal2_bring_online_poll(handle, ((*i).url).c_str(), ((*i).token).c_str(), &error);
 
@@ -268,7 +275,12 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                         }
                                     else if(statusB == 0)
                                         {
+                                            time_t interval = getPollInterval(++(*i).nPolls);
+                                            (*i).nextPoll = now + interval;
+
                                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling token " << (*i).token << commit;
+                                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in "
+                                                                            << interval << " seconds" << commit;
                                             (*i).started = true;
                                         }
                                     else
@@ -296,7 +308,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                 }
                         }
                 }
-            boost::this_thread::sleep(boost::posix_time::milliseconds(30000));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         }
 }
 
@@ -493,7 +505,7 @@ int DoServer(int argc, char** argv)
 
                     urls.clear();
                     voHostnameConfig.clear();
-                    sleep(30);
+                    sleep(1);
                 }
             gfal2_context_free(handle);
         }
