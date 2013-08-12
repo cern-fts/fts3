@@ -5415,9 +5415,16 @@ void MySqlAPI::revertNotUsedFiles()
 {
 
     soci::session sql(*connectionPool);
+    int countNotUsed = 0;
 
     try
-        {
+        {	
+	    //no reason to execute if there are no files in NOT_USED state
+	    sql << "select count(*) from t_file where file_state = 'NOT_USED' ",    
+                soci::into(countNotUsed);
+	    
+	    if(countNotUsed == 0)
+	    	return;		     
 
             sql.begin();
 
