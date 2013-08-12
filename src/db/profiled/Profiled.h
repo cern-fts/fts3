@@ -305,6 +305,8 @@ public:
     void storeProfiling(const fts3::ProfilingSubsystem* prof);
 
     void setOptimizerMode(int mode);
+    
+    void setRetryTransfer(const std::string & jobId, int fileId, int retry);        
 };
 
 

@@ -11843,6 +11843,200 @@ int OracleAPI::getOptimizerMode()
 
 
 
+void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry){
+    const std::string tagsetRetryTimes = "setRetryTimes";
+    std::string querysetRetryTimes =
+        "UPDATE t_file "
+        "SET retry =:1 where job_id=:2 and file_id=:3 ";
+
+    oracle::occi::Statement* ssetRetryTimes = NULL;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection)
+                return;
+
+            ssetRetryTimes = conn->createStatement(querysetRetryTimes, tagsetRetryTimes, pooledConnection);
+            ssetRetryTimes->setInt(1, retry);
+            ssetRetryTimes->setString(2,jobId);
+            ssetRetryTimes->setInt(3,fileId);
+            ssetRetryTimes->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+	    
+            if(ssetRetryTimes)
+                conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+	    
+            if(ssetRetryTimes)
+                conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+        }
+	
+    const std::string tagsetRetryTransfer = "setRetryTransfer";
+    const std::string tag1setRetryTransfer1 = "setRetryTransfer1";
+    const std::string tag2setRetryTransfer2 = "setRetryTransfer2";
+
+    std::string querysetRetryTransfer =
+        " UPDATE t_file set file_state='SUBMITTED' "
+        "  where job_id=:1 and file_id=:2 and file_state not in ('FAILED','CANCELED') ";
+	
+    std::string query1setRetryTransfer1= "select job_id from t_job where t_job.reuse_job='Y' and job_id=:1  and job_state not in ('FAILED','CANCELED') ";
+    
+    std::string query2setRetryTransfer2= "update t_job set job_state='ACTIVE' where job_id=:1  and job_state not in ('FAILED','CANCELED') ";
+
+    oracle::occi::Statement* ssetRetryTransfer = NULL;
+    oracle::occi::Statement* s2setRetryTransfer2 = NULL;
+    
+    oracle::occi::Statement* s1setRetryTransfer1 = NULL;    
+    oracle::occi::ResultSet* rsetRetryTransfer1 = 0;
+
+    try
+        {           
+            s1setRetryTransfer1 = conn->createStatement(query1setRetryTransfer1, tag1setRetryTransfer1, pooledConnection);
+            s1setRetryTransfer1->setString(1,jobId);
+            rsetRetryTransfer1 = conn->createResultset(s1setRetryTransfer1, pooledConnection);
+
+            if (rsetRetryTransfer1->next())
+                {
+                    s2setRetryTransfer2 = conn->createStatement(query2setRetryTransfer2, tag2setRetryTransfer2, pooledConnection);
+                    s2setRetryTransfer2->setString(1, jobId);
+                    s2setRetryTransfer2->executeUpdate();
+                    conn->destroyStatement(s2setRetryTransfer2, tag2setRetryTransfer2, pooledConnection);
+                }
+
+            conn->destroyResultset(s1setRetryTransfer1, rsetRetryTransfer1);
+            conn->destroyStatement(s1setRetryTransfer1, tag1setRetryTransfer1, pooledConnection);
+
+            ssetRetryTransfer = conn->createStatement(querysetRetryTransfer, tagsetRetryTransfer, pooledConnection);
+            ssetRetryTransfer->setString(1, jobId);
+            ssetRetryTransfer->setInt(2, fileId);
+            ssetRetryTransfer->executeUpdate();
+            conn->commit(pooledConnection);
+            conn->destroyStatement(ssetRetryTransfer, tagsetRetryTransfer, pooledConnection);
+
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+	    
+            if(ssetRetryTransfer)
+                conn->destroyStatement(ssetRetryTransfer, tagsetRetryTransfer, pooledConnection);
+		
+            if(s1setRetryTransfer1 && rsetRetryTransfer1)
+                conn->destroyResultset(s1setRetryTransfer1, rsetRetryTransfer1);
+		
+            if(s1setRetryTransfer1)
+                conn->destroyStatement(s1setRetryTransfer1, tag1setRetryTransfer1, pooledConnection);		
+		
+            if (s2setRetryTransfer2)
+                conn->destroyStatement(s2setRetryTransfer2, tag2setRetryTransfer2, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+	    
+            if(ssetRetryTransfer)
+                conn->destroyStatement(ssetRetryTransfer, tagsetRetryTransfer, pooledConnection);
+		
+            if(s1setRetryTransfer1 && rsetRetryTransfer1)
+                conn->destroyResultset(s1setRetryTransfer1, rsetRetryTransfer1);
+		
+            if(s1setRetryTransfer1)
+                conn->destroyStatement(s1setRetryTransfer1, tag1setRetryTransfer1, pooledConnection);		
+		
+            if (s2setRetryTransfer2)
+                conn->destroyStatement(s2setRetryTransfer2, tag2setRetryTransfer2, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+        }	
+	
+    std::string tagsetRetryTimestamp = "setRetryTimestamp";
+    std::string tagsetRetryTimestamp1 = "setRetryTimestamp1";
+    std::string querysetRetryTimestamp = "select RETRY_DELAY from t_job where job_id=:1";
+    std::string querysetRetryTimestamp1 = "update t_file set retry_timestamp=:1 where job_id=:2 and file_id=:3";
+
+    oracle::occi::Statement* setRetryTimestamp = 0;
+    oracle::occi::Statement* ssetRetryTimestamp1 = 0;
+    oracle::occi::ResultSet* retRetryTimestamp = 0;   
+    //expressed in secs
+    int retry_delay = 0;
+
+    try
+        {          
+            setRetryTimestamp = conn->createStatement(querysetRetryTimestamp, tagsetRetryTimestamp, pooledConnection);
+            setRetryTimestamp->setString(1, jobId);
+            retRetryTimestamp = conn->createResultset(setRetryTimestamp, pooledConnection);
+
+            if (retRetryTimestamp->next())
+                {
+                    retry_delay = retRetryTimestamp->getInt(1);
+                }
+
+            conn->destroyResultset(setRetryTimestamp, retRetryTimestamp);
+            conn->destroyStatement(setRetryTimestamp, tagsetRetryTimestamp, pooledConnection);
+
+            if(retry_delay > 0)
+                {
+                    time_t now = time(0);
+                    time_t now_plus_seconds = now + retry_delay;
+                    ssetRetryTimestamp1 = conn->createStatement(querysetRetryTimestamp1, tagsetRetryTimestamp1, pooledConnection);
+                    ssetRetryTimestamp1->setTimestamp(1, conv->toTimestamp(now_plus_seconds, conn->getEnv()));
+                    ssetRetryTimestamp1->setString(2, jobId);
+                    ssetRetryTimestamp1->setInt(3, fileId);
+                    ssetRetryTimestamp1->executeUpdate();
+                    conn->commit(pooledConnection);
+                    conn->destroyStatement(ssetRetryTimestamp1, tagsetRetryTimestamp1, pooledConnection);
+                }
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+	    
+            if(setRetryTimestamp && retRetryTimestamp)
+                conn->destroyResultset(setRetryTimestamp, retRetryTimestamp);
+            if (setRetryTimestamp)
+                conn->destroyStatement(setRetryTimestamp, tagsetRetryTimestamp, pooledConnection);
+		
+            if (ssetRetryTimestamp1)
+                conn->destroyStatement(ssetRetryTimestamp1, tagsetRetryTimestamp1, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+
+            conn->rollback(pooledConnection);
+
+            if(setRetryTimestamp && retRetryTimestamp)
+                conn->destroyResultset(setRetryTimestamp, retRetryTimestamp);
+            if (setRetryTimestamp)
+                conn->destroyStatement(setRetryTimestamp, tagsetRetryTimestamp, pooledConnection);
+		
+            if (ssetRetryTimestamp1)
+                conn->destroyStatement(ssetRetryTimestamp1, tagsetRetryTimestamp1, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }	
+	
+    conn->releasePooledConnection(pooledConnection);
+}
+
 
 // the class factories
 

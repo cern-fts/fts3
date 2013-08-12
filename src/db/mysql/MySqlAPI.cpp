@@ -6081,7 +6081,59 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
     return mode;
 }
 
+void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry){
+    soci::session sql(*connectionPool);
+	    
+    //expressed in secs
+    int retry_delay = 0;    
 
+    try
+        {
+            sql.begin();
+	    
+            sql << "UPDATE t_file SET "
+                "    retry = :retry "
+                "WHERE file_id = :fileId AND job_id = :jobId ",
+                soci::use(retry), soci::use(fileId), soci::use(jobId);	    
+
+            sql << "UPDATE t_job SET "
+                "    job_state = 'ACTIVE' "
+                "WHERE job_id = :jobId AND "
+                "      job_state NOT IN ('FAILED','CANCELED') AND "
+                "      reuse_job = 'Y'",
+                soci::use(jobId);
+
+            sql << "UPDATE t_file SET file_state = 'SUBMITTED' "
+                "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FAILED','CANCELED')",
+                soci::use(fileId), soci::use(jobId);
+
+            sql <<
+                " select RETRY_DELAY from t_job where job_id=:jobId ",
+                soci::use(jobId),
+                soci::into(retry_delay)
+                ;
+
+            if (retry_delay > 0)
+                {
+                    // update
+                    time_t now = convertToUTC(retry_delay);
+                    struct tm tTime;
+                    gmtime_r(&now, &tTime);
+                    sql <<
+                        " update t_file set retry_timestamp=:1 where file_id=:fileId AND job_id=:jobId ",
+                        soci::use(tTime),
+                        soci::use(fileId),
+                        soci::use(jobId);
+                }
+		
+            sql.commit();			    
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
    
 
 

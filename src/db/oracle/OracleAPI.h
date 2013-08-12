@@ -341,6 +341,8 @@ public:
 
     virtual void setOptimizerMode(int mode);
     
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry);    
+    
   
 
 
