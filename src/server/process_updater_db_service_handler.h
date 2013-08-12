@@ -150,10 +150,12 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                                                        << e.what()
                                                        << commit;
+						       sleep(1);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+			sleep(1);
                     }
                 sleep(1);
             }
