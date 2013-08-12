@@ -244,7 +244,6 @@ void ProtocolResolver::autotune()
     string destination = file->DEST_SE;
 
     OptimizerSample opt_config;
-    DBSingleton::instance().getDBObjectInstance()->initOptimizer(source, destination, 0);
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
     get<TCP_BUFFER_SIZE>(*prot) = opt_config.getBufSize();
     get<NOSTREAMS>(*prot) = opt_config.getStreamsperFile();

@@ -403,7 +403,6 @@ protected:
                                             {
                                                 optimize = true;
                                                 opt_config = new OptimizerSample();
-                                                DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
                                                 DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                                                 BufSize = opt_config->getBufSize();
                                                 StreamsperFile = opt_config->getStreamsperFile();
@@ -490,7 +489,7 @@ protected:
                                                              );
 
                                                 sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
-                                                destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
+                                                destSiteName = siteResolver.getSiteName(temp->DEST_SURL);						
 
                                                 debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
 
@@ -670,11 +669,10 @@ protected:
                                                 params.append(" -M ");
                                                 params.append(infosys);
 
+                                                
+                                                bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);						
 
-                                                std::string host = DBSingleton::instance().getDBObjectInstance()->transferHost(temp->FILE_ID);
-                                                bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
-
-                                                if (host.compare(ftsHostName) == 0 && ready == true)
+                                                if (ready)
                                                     {
                                                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                                                         pr = new ExecuteProcess(cmd, params);
@@ -880,7 +878,6 @@ protected:
                             {
                                 optimize = true;
                                 opt_config = new OptimizerSample();
-                                DBSingleton::instance().getDBObjectInstance()->initOptimizer(source_hostname, destin_hostname, 0);
                                 DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
                                 BufSize = opt_config->getBufSize();
                                 StreamsperFile = opt_config->getStreamsperFile();

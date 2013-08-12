@@ -29,6 +29,7 @@
 #include "MySqlAPI.h"
 #include "MySqlMonitoring.h"
 #include "sociConversions.h"
+#include "queue_updater.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -1408,7 +1409,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
     return ok;
 }
 
-void MySqlAPI::updateFileTransferProgress(std::string job_id, int file_id, double throughput, double /*transferred*/)
+void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, double throughput, double /*transferred*/)
 {
     soci::session sql(*connectionPool);
 
@@ -1417,8 +1418,8 @@ void MySqlAPI::updateFileTransferProgress(std::string job_id, int file_id, doubl
             throughput = convertKbToMb(throughput);
             sql.begin();
             sql << "UPDATE t_file SET throughput = :throughput "
-                "WHERE job_id = :jobId AND file_id = :fileId",
-                soci::use(throughput), soci::use(job_id), soci::use(file_id);
+                "WHERE file_id = :fileId",
+                soci::use(throughput), soci::use(file_id);
             sql.commit();
         }
     catch (std::exception& e)
@@ -1852,7 +1853,36 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
 
     try
         {
+            unsigned foundRecords = 0;
+            sql.begin();
 
+            sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
+                soci::use(source_hostname), soci::use(destin_hostname),
+                soci::into(foundRecords);
+
+            if (foundRecords == 0)
+                {
+                    int timeout=0, nStreams=0, bufferSize=0;
+
+                    soci::statement stmt = (sql.prepare << "INSERT INTO t_optimize (source_se, dest_se, timeout, nostreams, buffer, file_id) "
+                                            "                VALUES (:source, :dest, :timeout, :nostreams, :buffer, 0)",
+                                            soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
+                                            soci::use(nStreams), soci::use(bufferSize));
+
+                    for (unsigned register int x = 0; x < timeoutslen; x++)
+                        {
+                            for (unsigned register int y = 0; y < nostreamslen; y++)
+                                {
+                                    timeout    = timeouts[x];
+                                    nStreams   = nostreams[y];
+                                    bufferSize = 0;
+                                    stmt.execute(true);
+                                }
+                        }
+                }
+
+            sql.commit();	
+		
             int numberOfSamples = 0;
 
             sql <<
@@ -2725,15 +2755,15 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId)
 
 
 
-void MySqlAPI::setPid(const std::string & jobId, int fileId, int pid)
+void MySqlAPI::setPid(const std::string & /*jobId*/, int fileId, int pid)
 {
     soci::session sql(*connectionPool);
 
     try
         {
             sql.begin();
-            sql << "UPDATE t_file SET pid = :pid WHERE job_id = :jobId AND file_id = :fileId",
-                soci::use(pid), soci::use(jobId), soci::use(fileId);
+            sql << "UPDATE t_file SET pid = :pid WHERE file_id = :fileId",
+                soci::use(pid), soci::use(fileId);
             sql.commit();
         }
     catch (std::exception& e)
@@ -2800,13 +2830,14 @@ void MySqlAPI::revertToSubmitted()
                         {
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
-                            if (diff > 300 && reuseJob != "Y")
+			    bool alive = ThreadSafeList::get_instance().isAlive(fileId);
+                            if (diff > 200 && reuseJob != "Y" && !alive)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     sql.begin();
                                     sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='' "
-                                        "WHERE file_state = 'READY' AND finish_time IS NULL AND "
-                                        "      job_finished IS NULL AND file_id = :fileId",
+                                        "WHERE file_id = :fileId AND file_state = 'READY' AND finish_time IS NULL AND "
+                                        "      job_finished IS NULL ",
                                         soci::use(fileId);
                                     sql.commit();
                                 }
@@ -3246,6 +3277,7 @@ bool MySqlAPI::isFileReadyState(int fileID)
 {
     soci::session sql(*connectionPool);
     bool isReady = false;
+    std::string host;
 
     try
         {
@@ -3254,6 +3286,11 @@ bool MySqlAPI::isFileReadyState(int fileID)
                 soci::use(fileID), soci::into(state);
 
             isReady = (state == "READY");
+	    
+           sql << "SELECT transferHost FROM t_file WHERE file_id = :fileId",
+                soci::use(fileID), soci::into(host);	    
+		
+	    isReady = (host == hostname);	
         }
     catch (std::exception& e)
         {
@@ -4254,8 +4291,8 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId)
                 soci::use(jobId);
 
             sql << "UPDATE t_file SET file_state = 'SUBMITTED' "
-                "WHERE job_id = :jobId AND file_id = :fileId AND file_state NOT IN ('FAILED','CANCELED')",
-                soci::use(jobId), soci::use(fileId);
+                "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FAILED','CANCELED')",
+                soci::use(fileId), soci::use(jobId);
 
             sql.commit();
         }
@@ -4848,10 +4885,11 @@ void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId)
                     gmtime_r(&now, &tTime);
                     sql.begin();
                     sql <<
-                        " update t_file set retry_timestamp=:1 where job_id=:jobId and file_id=:fileId ",
+                        " update t_file set retry_timestamp=:1 where file_id=:fileId AND job_id=:jobId ",
                         soci::use(tTime),
-                        soci::use(jobId),
-                        soci::use(fileId)
+                        soci::use(fileId),
+                        soci::use(jobId)
+
                         ;
                     sql.commit();
                 }
@@ -4878,11 +4916,11 @@ void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostream
             internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
 
             sql <<
-                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where job_id=:jobId and file_id=:fileId ",
+                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId AND job_id=:jobId ",
                 soci::use(internalParams.str()),
                 soci::use(filesize),
-                soci::use(jobId),
-                soci::use(fileId);
+                soci::use(fileId),		
+                soci::use(jobId);
 
             sql.commit();
 
@@ -6042,6 +6080,10 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
 
     return mode;
 }
+
+
+   
+
 
 // the class factories
 

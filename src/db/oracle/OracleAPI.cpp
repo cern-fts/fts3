@@ -24,6 +24,7 @@ limitations under the License. */
 #include <stdlib.h>
 #include <sys/param.h>
 #include <math.h>
+#include "queue_updater.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -3173,6 +3174,12 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     const std::string tag3 = "fetchOptimizationConfig2YYYXXX";
     const std::string tag4 = "fetchOptimizationConfig2ZZZZ";
     const std::string tag5 = "fetchOptimizationConfig2ZZZZssss";
+    const std::string tagInit1 = "initOptimizerdds";
+    const std::string tagInit2 = "initOptimizer2adf";
+    std::string queryInit2 = "insert into t_optimize(source_se, dest_se,timeout,nostreams,buffer, file_id ) values(:1,:2,:3,:4,:5,0) ";
+    std::string queryInit1 = "select count(*) from t_optimize where source_se=:1 and dest_se=:2";
+    int foundRecords = 0;
+    
     int current_active_count = 0;
     int check_if_more_samples_exist_count = 0;
     int timeoutTr = 0;
@@ -3212,6 +3219,11 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     oracle::occi::ResultSet* r4 = NULL;
     oracle::occi::Statement* s5 = NULL;
     oracle::occi::ResultSet* r5 = NULL;
+    
+    oracle::occi::Statement* sInit1 = NULL;
+    oracle::occi::ResultSet* rInit1 = NULL;
+    oracle::occi::Statement* sInit2 = NULL;
+        
     oracle::occi::Connection* pooledConnection = NULL;
 
     try
@@ -3219,6 +3231,44 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
+		
+            sInit1 = conn->createStatement(queryInit1, tagInit1, pooledConnection);
+            sInit1->setString(1, source_hostname);
+            sInit1->setString(2, destin_hostname);
+            rInit1 = conn->createResultset(sInit1, pooledConnection);
+            if (rInit1->next())
+                {
+                    foundRecords = rInit1->getInt(1);
+                }
+            conn->destroyResultset(sInit1, rInit1);
+            conn->destroyStatement(sInit1, tagInit1, pooledConnection);
+            rInit1 = NULL;
+            sInit1 = NULL;
+
+
+            if (foundRecords == 0)
+                {
+                    sInit2 = conn->createStatement(queryInit2, tagInit2, pooledConnection);
+
+                    for (unsigned register int x = 0; x < timeoutslen; x++)
+                        {
+                            for (unsigned register int y = 0; y < nostreamslen; y++)
+                                {
+                                    sInit2->setString(1, source_hostname);
+                                    sInit2->setString(2, destin_hostname);
+                                    sInit2->setInt(3, timeouts[x]);
+                                    sInit2->setInt(4, nostreams[y]);
+                                    sInit2->setInt(5, 0);
+                                    sInit2->executeUpdate();
+                                }
+                        }
+                    conn->commit(pooledConnection);
+                    conn->destroyStatement(sInit2, tagInit2, pooledConnection);
+                    sInit2 = NULL;
+                }		
+		
+		
+
 
             //if last 30 minutes transfer timeout use decent defaults
             s5 = conn->createStatement(midRangeTimeout, tag5, pooledConnection);
@@ -3348,7 +3398,14 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 conn->destroyResultset(s4, r4);
             if (s4)
                 conn->destroyStatement(s4, tag4, pooledConnection);
-
+		
+            if (sInit1 && rInit1)
+                conn->destroyResultset(sInit1, rInit1);
+            if (sInit1)
+                conn->destroyStatement(sInit1, tagInit1, pooledConnection);
+		
+            if (sInit2)
+                conn->destroyStatement(sInit2, tagInit2, pooledConnection);
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
@@ -3377,6 +3434,14 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 conn->destroyResultset(s4, r4);
             if (s4)
                 conn->destroyStatement(s4, tag4, pooledConnection);
+		
+            if (sInit1 && rInit1)
+                conn->destroyResultset(sInit1, rInit1);
+            if (sInit1)
+                conn->destroyStatement(sInit1, tagInit1, pooledConnection);
+		
+            if (sInit2)
+                conn->destroyStatement(sInit2, tagInit2, pooledConnection);		
 
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
@@ -5044,7 +5109,8 @@ void OracleAPI::revertToSubmitted()
                     reuseFlag = r2->getString(4);
                     time_t current_time = std::time(NULL);
                     diff = difftime(current_time, start_time);
-                    if (diff > 100 && reuseFlag != "Y")
+   		    bool alive = ThreadSafeList::get_instance().isAlive(file_id);
+                    if (diff > 200 && reuseFlag != "Y"  && !alive)
                         {
                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "The transfer with file id " << file_id << " seems to be stalled, restart it" << commit;
                             s1 = conn->createStatement(query1, tag1, pooledConnection);
@@ -5988,6 +6054,13 @@ bool OracleAPI::isFileReadyState(int fileID)
     const std::string tag = "isFileReadyState";
     bool ready = false;
     std::string query = "select file_state from t_file where file_id=:1";
+    std::string hostname("");
+    std::string tag1 = "transferHost2";   
+    std::string query1 = "select transferHost from t_file where file_id=:1";
+    oracle::occi::Statement* s1 = NULL;
+    oracle::occi::ResultSet* r1 = NULL;     
+    
+    
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
@@ -5999,6 +6072,7 @@ bool OracleAPI::isFileReadyState(int fileID)
             if (!pooledConnection)
                 return false;
 
+	    //check ready
             s = conn->createStatement(query, tag, pooledConnection);
             s->setInt(1, fileID);
             r = conn->createResultset(s, pooledConnection);
@@ -6009,7 +6083,20 @@ bool OracleAPI::isFileReadyState(int fileID)
                         ready = true;
                 }
             conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag, pooledConnection);
+            conn->destroyStatement(s, tag, pooledConnection);	    
+
+	    //check hostname
+            s1 = conn->createStatement(query1, tag1, pooledConnection);
+            s1->setInt(1, fileID);
+            r1 = conn->createResultset(s1, pooledConnection);
+            if (r1->next())
+                {
+                    hostname = r1->getString(1);
+                }
+            conn->destroyResultset(s1, r1);
+            conn->destroyStatement(s1, tag1, pooledConnection);	    
+	    
+	    ready = (hostname == ftsHostName);
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -6021,6 +6108,11 @@ bool OracleAPI::isFileReadyState(int fileID)
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
+		
+           if(s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);		
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
@@ -6033,6 +6125,11 @@ bool OracleAPI::isFileReadyState(int fileID)
                 conn->destroyResultset(s, r);
             if (s)
                 conn->destroyStatement(s, tag, pooledConnection);
+		
+           if(s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);				
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
@@ -11743,6 +11840,7 @@ int OracleAPI::getOptimizerMode()
 
     return mode;
 }
+
 
 
 

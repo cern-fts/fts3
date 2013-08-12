@@ -65,6 +65,25 @@ void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messag
         }
 }
 
+bool ThreadSafeList::isAlive(int fileID){
+    ThreadTraits::LOCK_R lock(_mutex);
+    std::list<struct message_updater>::iterator iter;
+    boost::posix_time::time_duration::tick_type timestamp1;
+    boost::posix_time::time_duration::tick_type timestamp2;
+    boost::posix_time::time_duration::tick_type n_seconds = 0;
+    for (iter = m_list.begin(); iter != m_list.end(); ++iter)
+        {
+            timestamp1 = milliseconds_since_epoch();
+            timestamp2 = iter->timestamp;
+            n_seconds =  timestamp1  - timestamp2;
+            if (n_seconds > 300000 && fileID == iter->file_id)
+                {
+                    return false;
+                }
+        }
+   return true;	
+}
+
 void ThreadSafeList::updateMsg(struct message_updater msg)
 {
     ThreadTraits::LOCK_R lock(_mutex);

@@ -386,6 +386,7 @@ public:
     virtual void storeProfiling(const fts3::ProfilingSubsystem* prof) = 0;
 
     virtual void setOptimizerMode(int mode) = 0;
+    
 
 };
 

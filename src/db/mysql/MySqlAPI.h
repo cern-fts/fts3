@@ -327,6 +327,7 @@ public:
 
     virtual void setOptimizerMode(int mode);
 
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
