@@ -1189,7 +1189,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
                                              soci::use(job_id)
                                          );
 
-            // check if the state is SATGING, there should be just one row
+            // check if the state is STAGING, there should be just one row
             soci::rowset<soci::row>::const_iterator it = rs.begin();
             if (it != rs.end())
                 {
@@ -2800,7 +2800,7 @@ void MySqlAPI::revertToSubmitted()
                         {
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
-                            if (diff > 150 && reuseJob != "Y")
+                            if (diff > 300 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     sql.begin();
