@@ -105,7 +105,7 @@ public:
 struct message_updater: public message_base
 {
 public:
-    message_updater():file_id(0),process_id(0),timestamp(0)
+    message_updater():file_id(0),process_id(0),timestamp(0), throughput(0), transferred(0)
     {
         memset(job_id, 0, sizeof (job_id));
     }

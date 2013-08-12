@@ -18,7 +18,7 @@
 #include "OptimizerSample.h"
 
 
-OptimizerSample::OptimizerSample()
+OptimizerSample::OptimizerSample(): streamsperfile(4), numoffiles(0), bufsize(0), goodput(0), timeout(3600), file_id(0), throughput(0.0), avgThr(0.0)
 {
 }
 
