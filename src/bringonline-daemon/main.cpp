@@ -61,7 +61,7 @@ const char *configfile = "/etc/fts3/fts3config";
 // exp backoff for bringonline ops
 static time_t getPollInterval(int nPolls)
 {
-    if (nPolls >= 5)
+    if (nPolls > 5)
         return 180;
     else
         return (2 << nPolls);
