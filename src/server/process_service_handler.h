@@ -1111,10 +1111,9 @@ protected:
                                 params.append(" -M ");
                                 params.append(infosys);
 
-                                std::string host = DBSingleton::instance().getDBObjectInstance()->transferHostV(fileIds);
                                 bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);
 
-                                if (host.compare(ftsHostName) == 0 && ready == true)
+                                if (ready)
                                     {
                                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
                                         pr = new ExecuteProcess(cmd, params);
