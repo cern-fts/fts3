@@ -471,6 +471,10 @@ int main(int argc, char** argv)
 
             //check if db schema is installed
             checkDbSchema();
+
+            // Set X509_ environment variables properly
+            setenv("X509_USER_CERT", hostcert, 1);
+            setenv("X509_USER_KEY", hostkey, 1);
         }
     catch (Err& e)
         {
