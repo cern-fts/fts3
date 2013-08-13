@@ -22,7 +22,6 @@
 #include <ctime>
 
 
-using namespace FTS3_COMMON_NAMESPACE;
 
 struct transfersStore
 {
