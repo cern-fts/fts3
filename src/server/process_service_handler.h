@@ -163,13 +163,6 @@ static std::string prepareMetadataString(std::string text)
     return text;
 }
 
-template <class T>
-inline std::string to_string(const T& t)
-{   
-    std::stringstream ss;
-    ss << std::fixed << t;
-    return ss.str();
-}
 
 template
 <
@@ -264,8 +257,8 @@ protected:
 
     std::string extractHostname(const std::string &surl)
     {
-      Uri u0 = Uri::Parse(surl);
-      return u0.Protocol + "://" + u0.Host;      
+        Uri u0 = Uri::Parse(surl);
+        return u0.Protocol + "://" + u0.Host;
     }
 
     void createJobFile(std::string job_id, std::vector<std::string>& files)
@@ -301,9 +294,6 @@ protected:
                 bool manualConfigExists = false;
                 if (!jobs22.empty())
                     {
-                        /*get the file for each job*/
-                        std::vector<TransferJobs*>::const_iterator iter2;
-
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs22, voQueues, reuse);
 
@@ -322,11 +312,6 @@ protected:
 
                                         if (stopThreads)
                                             {
-                                                /** cleanup resources */
-                                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2){
-						    if(*iter2)
-                                                    	delete *iter2;
-						}
                                                 jobs22.clear();
                                                 return;
                                             }
@@ -377,8 +362,8 @@ protected:
                                         // if there are no more files for that VO just continue
                                         if (!temp.get()) continue;
 
-                                        source_hostname = temp->SOURCE_SE; 
-                                        destin_hostname = temp->DEST_SE; 					
+                                        source_hostname = temp->SOURCE_SE;
+                                        destin_hostname = temp->DEST_SE;
 
                                         /*check if manual config exist for this pair and vo*/
 
@@ -413,7 +398,7 @@ protected:
                                             {
                                                 SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
                                                 bool isAutoTuned = false;
-
+                                                
                                                 if (optimize && cfgs.empty())
                                                     {
                                                         DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
@@ -526,7 +511,7 @@ protected:
                                                 params.append(" -a ");
                                                 params.append(temp->JOB_ID);
                                                 params.append(" -B ");
-                                                params.append(to_string(temp->FILE_ID));
+                                                params.append(boost::lexical_cast<std::string > (temp->FILE_ID));
                                                 params.append(" -C ");
                                                 params.append(temp->VO_NAME);
                                                 if (sourceSiteName.length() > 0)
@@ -546,57 +531,57 @@ protected:
                                                 if (optimize && manualConfigExists == false)
                                                     {
                                                         params.append(" -e ");
-                                                        params.append(to_string(StreamsperFile));
+                                                        params.append(boost::lexical_cast<std::string > (StreamsperFile));
                                                     }
                                                 else
                                                     {
                                                         if (protocol.NOSTREAMS >= 0)
                                                             {
                                                                 params.append(" -e ");
-                                                                params.append(to_string(protocol.NOSTREAMS));
+                                                                params.append(boost::lexical_cast<std::string > (protocol.NOSTREAMS));
                                                             }
                                                         else
                                                             {
                                                                 params.append(" -e ");
-                                                                params.append(to_string(DEFAULT_NOSTREAMS));
+                                                                params.append(boost::lexical_cast<std::string > (DEFAULT_NOSTREAMS));
                                                             }
                                                     }
 
                                                 if (optimize && manualConfigExists == false)
                                                     {
                                                         params.append(" -f ");
-                                                        params.append(to_string(BufSize));
+                                                        params.append(boost::lexical_cast<std::string > (BufSize));
                                                     }
                                                 else
                                                     {
                                                         if (protocol.TCP_BUFFER_SIZE >= 0)
                                                             {
                                                                 params.append(" -f ");
-                                                                params.append(to_string(protocol.TCP_BUFFER_SIZE));
+                                                                params.append(boost::lexical_cast<std::string > (protocol.TCP_BUFFER_SIZE));
                                                             }
                                                         else
                                                             {
                                                                 params.append(" -f ");
-                                                                params.append(to_string(DEFAULT_BUFFSIZE));
+                                                                params.append(boost::lexical_cast<std::string > (DEFAULT_BUFFSIZE));
                                                             }
                                                     }
 
                                                 if (optimize && manualConfigExists == false)
                                                     {
                                                         params.append(" -h ");
-                                                        params.append(to_string(Timeout));
+                                                        params.append(boost::lexical_cast<std::string > (Timeout));
                                                     }
                                                 else
                                                     {
                                                         if (protocol.URLCOPY_TX_TO >= 0)
                                                             {
                                                                 params.append(" -h ");
-                                                                params.append(to_string(protocol.URLCOPY_TX_TO));
+                                                                params.append(boost::lexical_cast<std::string > (protocol.URLCOPY_TX_TO));
                                                             }
                                                         else
                                                             {
                                                                 params.append(" -h ");
-                                                                params.append(to_string(DEFAULT_TIMEOUT));
+                                                                params.append(boost::lexical_cast<std::string > (DEFAULT_TIMEOUT));
                                                             }
                                                     }
                                                 if (std::string(temp->SOURCE_SPACE_TOKEN).length() > 0)
@@ -613,19 +598,19 @@ protected:
                                                 if (temp->PIN_LIFETIME > 0)
                                                     {
                                                         params.append(" -t ");
-                                                        params.append(to_string(temp->PIN_LIFETIME));
+                                                        params.append(boost::lexical_cast<std::string > (temp->PIN_LIFETIME));
                                                     }
 
                                                 if (temp->BRINGONLINE > 0)
                                                     {
                                                         params.append(" -H ");
-                                                        params.append(to_string(temp->BRINGONLINE));
+                                                        params.append(boost::lexical_cast<std::string > (temp->BRINGONLINE));
                                                     }
 
                                                 if (temp->USER_FILESIZE > 0)
                                                     {
                                                         params.append(" -I ");
-                                                        params.append(to_string(temp->USER_FILESIZE));
+                                                        params.append(boost::lexical_cast<std::string > (temp->USER_FILESIZE));
                                                     }
 
                                                 if (temp->FILE_METADATA.length() > 0)
@@ -685,6 +670,15 @@ protected:
                                             }
                                     }
                             }
+
+                        /** cleanup resources */
+                        std::vector<TransferJobs*>::const_iterator iter22;
+                        for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
+                            {
+                                if(*iter22)
+                                    delete *iter22;
+                            }
+                        jobs22.clear();
                     }
             }
         else     /*reuse session*/
@@ -727,11 +721,6 @@ protected:
 
                         if (voQueues.empty())
                             {
-                                /** cleanup resources */
-                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2){
-				    if(*iter2)
-                                    	delete *iter2;
-				}
                                 jobs22.clear();
                                 return;
                             }
@@ -794,8 +783,8 @@ protected:
                                 dn = temp->DN;
                                 file_id = temp->FILE_ID;
                                 overwrite = temp->OVERWRITE;
-				source_hostname = temp->SOURCE_SE; //extractHostname(temp->SOURCE_SURL);
-                                destin_hostname = temp->DEST_SE; //extractHostname(temp->DEST_SURL);								
+                                source_hostname = temp->SOURCE_SE;
+                                destin_hostname = temp->DEST_SE;
                                 source_space_token = temp->SOURCE_SPACE_TOKEN;
                                 dest_space_token = temp->DEST_SPACE_TOKEN;
                                 pinLifetime = temp->PIN_LIFETIME;
@@ -829,15 +818,17 @@ protected:
                         if(!tempUrl)
                             {
                                 /** cleanup resources */
-                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2){
-				    if(*iter2)
-                                    	delete *iter2;
-				}
+                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2)
+                                    {
+                                        if(*iter2)
+                                            delete *iter2;
+                                    }
                                 jobs22.clear();
-                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter){
-				    if(*queueiter)
-                                    	delete *queueiter;
-				}
+                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                                    {
+                                        if(*queueiter)
+                                            delete *queueiter;
+                                    }
                                 voQueues[vo].clear();
                                 fileIds.clear();
                                 return;
@@ -996,55 +987,55 @@ protected:
                                 if (optimize && manualConfigExists == false)
                                     {
                                         params.append(" -e ");
-                                        params.append(to_string(StreamsperFile));
+                                        params.append(boost::lexical_cast<std::string > (StreamsperFile));
                                     }
                                 else
                                     {
                                         if (protocol.NOSTREAMS >= 0)
                                             {
                                                 params.append(" -e ");
-                                                params.append(to_string(protocol.NOSTREAMS));
+                                                params.append(boost::lexical_cast<std::string > (protocol.NOSTREAMS));
                                             }
                                         else
                                             {
                                                 params.append(" -e ");
-                                                params.append(to_string(DEFAULT_NOSTREAMS));
+                                                params.append(boost::lexical_cast<std::string > (DEFAULT_NOSTREAMS));
                                             }
                                     }
                                 if (optimize && manualConfigExists == false)
                                     {
                                         params.append(" -f ");
-                                        params.append(to_string(BufSize));
+                                        params.append(boost::lexical_cast<std::string > (BufSize));
                                     }
                                 else
                                     {
                                         if (protocol.TCP_BUFFER_SIZE >= 0)
                                             {
                                                 params.append(" -f ");
-                                                params.append(to_string(protocol.TCP_BUFFER_SIZE));
+                                                params.append(boost::lexical_cast<std::string > (protocol.TCP_BUFFER_SIZE));
                                             }
                                         else
                                             {
                                                 params.append(" -f ");
-                                                params.append(to_string(DEFAULT_BUFFSIZE));
+                                                params.append(boost::lexical_cast<std::string > (DEFAULT_BUFFSIZE));
                                             }
                                     }
                                 if (optimize && manualConfigExists == false)
                                     {
                                         params.append(" -h ");
-                                        params.append(to_string(Timeout));
+                                        params.append(boost::lexical_cast<std::string > (Timeout));
                                     }
                                 else
                                     {
                                         if (protocol.URLCOPY_TX_TO >= 0)
                                             {
                                                 params.append(" -h ");
-                                                params.append(to_string(protocol.URLCOPY_TX_TO));
+                                                params.append(boost::lexical_cast<std::string > (protocol.URLCOPY_TX_TO));
                                             }
                                         else
                                             {
                                                 params.append(" -h ");
-                                                params.append(to_string(DEFAULT_TIMEOUT));
+                                                params.append(boost::lexical_cast<std::string > (DEFAULT_TIMEOUT));
                                             }
                                     }
                                 if (std::string(source_space_token).length() > 0)
@@ -1061,13 +1052,13 @@ protected:
                                 if (pinLifetime > 0)
                                     {
                                         params.append(" -t ");
-                                        params.append(to_string(pinLifetime));
+                                        params.append(boost::lexical_cast<std::string > (pinLifetime));
                                     }
 
                                 if (bringOnline > 0)
                                     {
                                         params.append(" -H ");
-                                        params.append(to_string(bringOnline));
+                                        params.append(boost::lexical_cast<std::string > (bringOnline));
                                     }
 
                                 if (jobMetadata.length() > 0)
@@ -1120,11 +1111,20 @@ protected:
                                 params.clear();
                             }
 
-                       
-                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter){
-			    if(*queueiter)
-                            	delete *queueiter;
-			}
+
+                        std::vector<TransferJobs*>::const_iterator iter22;
+                        for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
+                            {
+                                if(*iter22)
+                                    delete *iter22;
+                            }
+                        jobs22.clear();
+
+                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                            {
+                                if(*queueiter)
+                                    delete *queueiter;
+                            }
                         voQueues[vo].clear();
                         fileIds.clear();
 
@@ -1147,10 +1147,11 @@ protected:
                                 if (!jobs2.empty())
                                     {
                                         std::vector<TransferJobs*>::const_iterator iter2;
-                                        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2){
-					    if(*iter2)
-                                            	delete *iter2;
-					}
+                                        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                                            {
+                                                if(*iter2)
+                                                    delete *iter2;
+                                            }
                                         jobs2.clear();
                                     }
                                 sleep(1);
@@ -1175,9 +1176,11 @@ protected:
                         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
 
                         if (!jobs2.empty())
-                            {			                                                       				    
-                                        executeUrlcopy(jobs2, false);
+                            {
+                                executeUrlcopy(jobs2, false);
                             }
+
+
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
                         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
