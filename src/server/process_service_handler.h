@@ -312,6 +312,13 @@ protected:
 
                                         if (stopThreads)
                                             {
+                      				/** cleanup resources */
+                        			std::vector<TransferJobs*>::const_iterator iter22;
+                        			for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
+                            			{
+                                			if(*iter22)
+                                    				delete *iter22;
+                           			}				    
                                                 jobs22.clear();
                                                 return;
                                             }
