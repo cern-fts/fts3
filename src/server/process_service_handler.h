@@ -32,6 +32,8 @@ limitations under the License. */
 #include <sstream>
 #include "site_name.h"
 #include "FileTransferScheduler.h"
+#include "FileTransferExecutorPool.h"
+#include "TransferFileHandler.h"
 #include "ConfigurationAssigner.h"
 #include "ProtocolResolver.h"
 #include <signal.h>
@@ -291,7 +293,6 @@ protected:
 
         if (reuse == false)
             {
-                bool manualConfigExists = false;
                 if (!jobs22.empty())
                     {
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
@@ -299,6 +300,9 @@ protected:
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
+
+                        // the worker thread pool
+                        FileTransferExecutorPool execPool(10, tfh, monitoringMessages, infosys, ftsHostName);
 
                         // loop until all files have been served
                         while (!tfh.empty())
@@ -320,6 +324,7 @@ protected:
                                     				delete *iter22;
                            			}				    
                                                 jobs22.clear();
+                                                // TODO stop worker threads
                                                 return;
                                             }
 
@@ -359,324 +364,12 @@ protected:
                                                 continue;
                                             }
 
-
-                                        int BufSize = 0;
-                                        int StreamsperFile = 0;
-                                        int Timeout = 0;
-                                        std::stringstream internalParams;
-                                        // serve the first file from the queue
-                                        boost::scoped_ptr<TransferFiles> temp(tfh.get(*it_vo));
-                                        // if there are no more files for that VO just continue
-                                        if (!temp.get()) continue;
-
-                                        source_hostname = temp->SOURCE_SE;
-                                        destin_hostname = temp->DEST_SE;
-
-                                        /*check if manual config exist for this pair and vo*/
-
-                                        vector< boost::shared_ptr<ShareConfig> > cfgs;
-
-                                        ConfigurationAssigner cfgAssigner(temp.get());
-                                        cfgAssigner.assign(cfgs);
-
-                                        bool optimize = false;
-                                        if (enableOptimization.compare("true") == 0)
-                                            {
-                                                optimize = true;
-                                                opt_config = new OptimizerSample();
-                                                DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                                                BufSize = opt_config->getBufSize();
-                                                StreamsperFile = opt_config->getStreamsperFile();
-                                                Timeout = opt_config->getTimeout();
-                                                delete opt_config;
-                                                opt_config = NULL;
-                                            }
-
-                                        FileTransferScheduler scheduler(
-                                            temp.get(),
-                                            cfgs,
-                                            tfh.getDestinations(source_hostname),
-                                            tfh.getSources(destin_hostname),
-                                            tfh.getDestinationsVos(source_hostname),
-                                            tfh.getSourcesVos(destin_hostname)
-
-                                        );
-                                        if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
-                                            {
-                                                SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
-                                                bool isAutoTuned = false;
-                                                
-                                                if (optimize && cfgs.empty())
-                                                    {
-                                                        DBSingleton::instance().getDBObjectInstance()->setAllowed(temp->JOB_ID, temp->FILE_ID, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-                                                    }
-                                                else
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << commit;
-                                                        ProtocolResolver resolver(temp.get(), cfgs);
-                                                        protocolExists = resolver.resolve();
-                                                        if (protocolExists)
-                                                            {
-                                                                manualConfigExists = true;
-                                                                protocol.NOSTREAMS = resolver.getNoStreams();
-                                                                protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
-                                                                protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
-                                                                protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
-
-                                                                if (protocol.NOSTREAMS >= 0)
-                                                                    internalParams << "nostreams:" << protocol.NOSTREAMS;
-                                                                if (protocol.URLCOPY_TX_TO >= 0)
-                                                                    internalParams << ",timeout:" << protocol.URLCOPY_TX_TO;
-                                                                if (protocol.TCP_BUFFER_SIZE >= 0)
-                                                                    internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
-                                                            }
-                                                        else
-                                                            {
-                                                                internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
-                                                            }
-
-                                                        if (resolver.isAuto())
-                                                            {
-                                                                isAutoTuned = true;
-                                                                DBSingleton::instance().getDBObjectInstance()->setAllowed(
-                                                                    temp->JOB_ID,
-                                                                    temp->FILE_ID,
-                                                                    source_hostname,
-                                                                    destin_hostname,
-                                                                    resolver.getNoStreams(),
-                                                                    resolver.getNoTxActiveTo(),
-                                                                    resolver.getTcpBufferSize()
-                                                                );
-                                                            }
-                                                        else
-                                                            {
-                                                                DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(
-                                                                    temp->JOB_ID,
-                                                                    temp->FILE_ID,
-                                                                    internalParams.str()
-                                                                );
-                                                            }
-                                                    }
-
-                                                proxy_file = get_proxy_cert(
-                                                                 temp->DN, // user_dn
-                                                                 temp->CRED_ID, // user_cred
-                                                                 temp->VO_NAME, // vo_name
-                                                                 "",
-                                                                 "", // assoc_service
-                                                                 "", // assoc_service_type
-                                                                 false,
-                                                                 ""
-                                                             );
-
-                                                sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
-                                                destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
-
-                                                debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
-
-                                                if (debug == true)
-                                                    {
-                                                        params.append(" -F ");
-                                                    }
-
-                                                if (manualConfigExists)
-                                                    {
-                                                        params.append(" -N ");
-                                                    }
-
-                                                if (isAutoTuned)
-                                                    {
-                                                        params.append(" -O ");
-                                                    }
-
-                                                if (monitoringMessages)
-                                                    {
-                                                        params.append(" -P ");
-                                                    }
-
-                                                if (proxy_file.length() > 0)
-                                                    {
-                                                        params.append(" -proxy ");
-                                                        params.append(proxy_file);
-                                                    }
-
-                                                if (std::string(temp->CHECKSUM).length() > 0)   //checksum
-                                                    {
-                                                        params.append(" -z ");
-                                                        params.append(temp->CHECKSUM);
-                                                    }
-
-                                                if (std::string(temp->CHECKSUM_METHOD).length() > 0)   //checksum
-                                                    {
-                                                        params.append(" -A ");
-                                                        params.append(temp->CHECKSUM_METHOD);
-                                                    }
-                                                params.append(" -b ");
-                                                params.append(temp->SOURCE_SURL);
-                                                params.append(" -c ");
-                                                params.append(temp->DEST_SURL);
-                                                params.append(" -a ");
-                                                params.append(temp->JOB_ID);
-                                                params.append(" -B ");
-                                                params.append(boost::lexical_cast<std::string > (temp->FILE_ID));
-                                                params.append(" -C ");
-                                                params.append(temp->VO_NAME);
-                                                if (sourceSiteName.length() > 0)
-                                                    {
-                                                        params.append(" -D ");
-                                                        params.append(sourceSiteName);
-                                                    }
-                                                if (destSiteName.length() > 0)
-                                                    {
-                                                        params.append(" -E ");
-                                                        params.append(destSiteName);
-                                                    }
-                                                if (std::string(temp->OVERWRITE).length() > 0)
-                                                    {
-                                                        params.append(" -d ");
-                                                    }
-                                                if (optimize && manualConfigExists == false)
-                                                    {
-                                                        params.append(" -e ");
-                                                        params.append(boost::lexical_cast<std::string > (StreamsperFile));
-                                                    }
-                                                else
-                                                    {
-                                                        if (protocol.NOSTREAMS >= 0)
-                                                            {
-                                                                params.append(" -e ");
-                                                                params.append(boost::lexical_cast<std::string > (protocol.NOSTREAMS));
-                                                            }
-                                                        else
-                                                            {
-                                                                params.append(" -e ");
-                                                                params.append(boost::lexical_cast<std::string > (DEFAULT_NOSTREAMS));
-                                                            }
-                                                    }
-
-                                                if (optimize && manualConfigExists == false)
-                                                    {
-                                                        params.append(" -f ");
-                                                        params.append(boost::lexical_cast<std::string > (BufSize));
-                                                    }
-                                                else
-                                                    {
-                                                        if (protocol.TCP_BUFFER_SIZE >= 0)
-                                                            {
-                                                                params.append(" -f ");
-                                                                params.append(boost::lexical_cast<std::string > (protocol.TCP_BUFFER_SIZE));
-                                                            }
-                                                        else
-                                                            {
-                                                                params.append(" -f ");
-                                                                params.append(boost::lexical_cast<std::string > (DEFAULT_BUFFSIZE));
-                                                            }
-                                                    }
-
-                                                if (optimize && manualConfigExists == false)
-                                                    {
-                                                        params.append(" -h ");
-                                                        params.append(boost::lexical_cast<std::string > (Timeout));
-                                                    }
-                                                else
-                                                    {
-                                                        if (protocol.URLCOPY_TX_TO >= 0)
-                                                            {
-                                                                params.append(" -h ");
-                                                                params.append(boost::lexical_cast<std::string > (protocol.URLCOPY_TX_TO));
-                                                            }
-                                                        else
-                                                            {
-                                                                params.append(" -h ");
-                                                                params.append(boost::lexical_cast<std::string > (DEFAULT_TIMEOUT));
-                                                            }
-                                                    }
-                                                if (std::string(temp->SOURCE_SPACE_TOKEN).length() > 0)
-                                                    {
-                                                        params.append(" -k ");
-                                                        params.append(temp->SOURCE_SPACE_TOKEN);
-                                                    }
-                                                if (std::string(temp->DEST_SPACE_TOKEN).length() > 0)
-                                                    {
-                                                        params.append(" -j ");
-                                                        params.append(temp->DEST_SPACE_TOKEN);
-                                                    }
-
-                                                if (temp->PIN_LIFETIME > 0)
-                                                    {
-                                                        params.append(" -t ");
-                                                        params.append(boost::lexical_cast<std::string > (temp->PIN_LIFETIME));
-                                                    }
-
-                                                if (temp->BRINGONLINE > 0)
-                                                    {
-                                                        params.append(" -H ");
-                                                        params.append(boost::lexical_cast<std::string > (temp->BRINGONLINE));
-                                                    }
-
-                                                if (temp->USER_FILESIZE > 0)
-                                                    {
-                                                        params.append(" -I ");
-                                                        params.append(boost::lexical_cast<std::string > (temp->USER_FILESIZE));
-                                                    }
-
-                                                if (temp->FILE_METADATA.length() > 0)
-                                                    {
-                                                        params.append(" -K ");
-                                                        params.append(prepareMetadataString(temp->FILE_METADATA));
-                                                    }
-
-                                                if (temp->JOB_METADATA.length() > 0)
-                                                    {
-                                                        params.append(" -J ");
-                                                        params.append(prepareMetadataString(temp->JOB_METADATA));
-                                                    }
-
-                                                if (temp->BRINGONLINE_TOKEN.length() > 0)
-                                                    {
-                                                        params.append(" -L ");
-                                                        params.append(temp->BRINGONLINE_TOKEN);
-                                                    }
-
-                                                params.append(" -M ");
-                                                params.append(infosys);
-
-
-                                                bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
-
-                                                if (ready)
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                                                        pr = new ExecuteProcess(cmd, params);
-                                                        if (pr)
-                                                            {
-                                                                /*check if fork/execvp failed, */
-                                                                if (-1 == pr->executeProcessShell())
-                                                                    {
-                                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  temp->JOB_ID << "  " << temp->FILE_ID << commit;
-                                                                        DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
-                                                                    }
-                                                                else
-                                                                    {
-                                                                        DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, temp->FILE_ID, pr->getPid());
-                                                                        struct message_updater msg;
-                                                                        strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());
-                                                                        msg.file_id = temp->FILE_ID;
-                                                                        msg.process_id = (int) pr->getPid();
-                                                                        msg.timestamp = milliseconds_since_epoch();
-                                                                        ThreadSafeList::get_instance().push_back(msg);
-                                                                    }
-                                                                delete pr;
-                                                            }
-                                                    }
-                                                params.clear();
-                                            }
-                                        else
-                                            {
-                                                tfh.remove(temp->SOURCE_SE, temp->DEST_SE);
-                                            }
+                                        execPool.add(tfh.get(*it_vo), enableOptimization.compare("true") == 0);
                                     }
                             }
+
+                        // wait for all the workers to finish
+                        execPool.join();
 
                         /** cleanup resources */
                         std::vector<TransferJobs*>::const_iterator iter22;

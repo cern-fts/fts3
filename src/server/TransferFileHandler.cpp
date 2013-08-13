@@ -30,52 +30,78 @@ namespace fts3
 namespace server
 {
 
-TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& files) :
-    db (DBSingleton::instance().getDBObjectInstance())
+map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, list<TransferFiles*> >& files, GET_MAP_OPTS opt)
 {
+	if (init_arr == 0)
+		{
+			init_arr = new map< string, set<string> > [4];
+		    map<string, list<TransferFiles*> >::iterator it_v;
 
-    map<string, list<TransferFiles*> >::iterator it_v;
+		    map< string, set<FileIndex> > unique;
 
-    map< string, set<FileIndex> > unique;
+		    // iterate over all VOs
+		    for (it_v = files.begin(); it_v != files.end(); ++it_v)
+		        {
+		            // the vo name
+		            string vo = it_v->first;
+		            // unique vo names
+		            vos.insert(vo);
+		            // ref to the list of files (for the given VO)
+		            list<TransferFiles*>& tfs = it_v->second;
+		            list<TransferFiles*>::iterator it_tf;
+		            // iterate over all files in a given VO
+		            for (it_tf = tfs.begin(); it_tf != tfs.end(); ++it_tf)
+		                {
 
-    // iterate over all VOs
-    for (it_v = files.begin(); it_v != files.end(); ++it_v)
-        {
-            // the vo name
-            string vo = it_v->first;
-            // unique vo names
-            vos.insert(vo);
-            // ref to the list of files (for the given VO)
-            list<TransferFiles*>& tfs = it_v->second;
-            list<TransferFiles*>::iterator it_tf;
-            // iterate over all files in a given VO
-            for (it_tf = tfs.begin(); it_tf != tfs.end(); ++it_tf)
-                {
+		                    TransferFiles* tmp = *it_tf;
 
-                    TransferFiles* tmp = *it_tf;
+		                    init_arr[SOURCE_TO_DESTINATIONS][tmp->SOURCE_SE].insert(tmp->DEST_SE);
+		                    init_arr[SOURCE_TO_VOS][tmp->SOURCE_SE].insert(tmp->VO_NAME);
+		                    init_arr[DESTINATION_TO_SOURCES][tmp->DEST_SE].insert(tmp->SOURCE_SE);
+		                    init_arr[DESTINATION_TO_VOS][tmp->DEST_SE].insert(tmp->VO_NAME);
 
-                    sourceToDestinations[tmp->SOURCE_SE].insert(tmp->DEST_SE);
-                    sourceToVos[tmp->SOURCE_SE].insert(tmp->VO_NAME);
-                    destinationToSources[tmp->DEST_SE].insert(tmp->SOURCE_SE);
-                    destinationToVos[tmp->DEST_SE].insert(tmp->VO_NAME);
+		                    // create index (job ID + file index)
+		                    FileIndex index((*it_tf)->JOB_ID, tmp->FILE_INDEX);
+		                    // file index to files mapping
+		                    fileIndexToFiles[index].push_back(tmp);
+		                    // check if the mapping for the VO already exists
+		                    if (!unique[vo].count(index))
+		                        {
+		                            // if not creat it
+		                            unique[vo].insert(index);
+		                            voToFileIndexes[it_v->first].push_back(index);
+		                        }
+		                }
+		        }
+		}
 
-                    // create index (job ID + file index)
-                    FileIndex index((*it_tf)->JOB_ID, tmp->FILE_INDEX);
-                    // file index to files mapping
-                    fileIndexToFiles[index].push_back(tmp);
-                    // check if the mapping for the VO already exists
-                    if (!unique[vo].count(index))
-                        {
-                            // if not creat it
-                            unique[vo].insert(index);
-                            voToFileIndexes[it_v->first].push_back(index);
-                        }
-                }
-        }
+	return init_arr[opt];
+}
+
+void TransferFileHandler::eraseCache()
+{
+	if (init_arr)
+		{
+			delete[] init_arr;
+			init_arr = 0;
+		}
+}
+
+TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& files) :
+			init_arr(0),
+			sourceToDestinations(getMapFromCache(files, SOURCE_TO_DESTINATIONS)),
+			sourceToVos(getMapFromCache(files, SOURCE_TO_VOS)),
+			destinationToSources(getMapFromCache(files, DESTINATION_TO_SOURCES)),
+			destinationToVos(getMapFromCache(files, DESTINATION_TO_VOS)),
+			db (DBSingleton::instance().getDBObjectInstance())
+{
+	eraseCache();
 }
 
 TransferFileHandler::~TransferFileHandler()
 {
+	// just in case
+	eraseCache();
 
     map< FileIndex, list<TransferFiles*> >::iterator it;
     for (it = fileIndexToFiles.begin(); it != fileIndexToFiles.end(); ++it)
@@ -176,14 +202,6 @@ TransferFiles* TransferFileHandler::getFile(FileIndex index)
                 }
         }
 
-    if (ret)
-        {
-            if (notScheduled.count(make_pair(ret->SOURCE_SE, ret->DEST_SE)))
-                {
-                    delete ret;
-                    return 0;
-                }
-        }
     return ret;
 }
 
@@ -215,34 +233,49 @@ bool TransferFileHandler::empty()
     return voToFileIndexes.empty();
 }
 
-void TransferFileHandler::remove(string source, string destination)
+const set<string> TransferFileHandler::getSources(string se) const
 {
+	map< string, set<string> >::const_iterator it = destinationToSources.find(se);
+	if (it != destinationToSources.end())
+		{
+			return it->second;
+		}
 
-    notScheduled.insert(
-        make_pair(source, destination)
-    );
+    return set<string>();
+}
+
+const set<string> TransferFileHandler::getDestinations(string se) const
+{
+	map< string, set<string> >::const_iterator it = sourceToDestinations.find(se);
+	if (it != sourceToDestinations.end())
+		{
+			return it->second;
+		}
+
+    return set<string>();
 }
 
 
-set<string> TransferFileHandler::getSources(string se)
+const set<string> TransferFileHandler::getSourcesVos(string se) const
 {
-    return destinationToSources[se];
+	map< string, set<string> >::const_iterator it = destinationToVos.find(se);
+	if (it != destinationToVos.end())
+		{
+			return it->second;
+		}
+
+    return set<string>();
 }
 
-set<string> TransferFileHandler::getDestinations(string se)
+const set<string> TransferFileHandler::getDestinationsVos(string se) const
 {
-    return sourceToDestinations[se];
-}
+	map< string, set<string> >::const_iterator it = sourceToVos.find(se);
+	if (it != sourceToVos.end())
+		{
+			return it->second;
+		}
 
-
-set<string> TransferFileHandler::getSourcesVos(string se)
-{
-    return destinationToVos[se];
-}
-
-set<string> TransferFileHandler::getDestinationsVos(string se)
-{
-    return sourceToVos[se];
+    return set<string>();
 }
 
 } /* namespace cli */
