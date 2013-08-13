@@ -473,7 +473,7 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
     try
         {
 
-            soci::indicator ind;
+            soci::indicator ind = soci::i_ok;
             int fileIndex=0;
 
             sql.begin();
@@ -2299,8 +2299,8 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             double nFailedLastHour=0, nFinishedLastHour=0;
             int nActive=0;
             double nFailedAll=0.0, nFinishedAll=0.0, throughput=0.0, avgThr = 0.0;
-            soci::indicator isNull;
-            soci::indicator isNull2;
+            soci::indicator isNull = soci::i_ok;
+            soci::indicator isNull2 = soci::i_ok;
 
             sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
                 " source_se=:source and dest_se=:dst and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
@@ -2501,7 +2501,7 @@ int MySqlAPI::getCredits(const std::string & source_hostname, const std::string 
     double nFailedLastHour = 0, nFinishedLastHour = 0;
     int nActive = 0;
     double nFailedAll = 0, nFinishedAll = 0, throughput = 0, avgThr = 0.0;
-    soci::indicator isNull;
+    soci::indicator isNull = soci::i_ok;
 
     sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
         " source_se=:source and dest_se=:dst "
@@ -2629,7 +2629,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             time_t now2 = convertToUTC(0);
             time_t startTime;
             double diff = 0.0;
-            soci::indicator isNull;
+            soci::indicator isNull = soci::i_ok;
 
             soci::statement stmt = (
                                        sql.prepare <<
@@ -2827,7 +2827,7 @@ void MySqlAPI::revertToSubmitted()
             std::string jobId, reuseJob;
             time_t now2 = convertToUTC(0);
 
-            soci::indicator reuseInd;
+            soci::indicator reuseInd = soci::i_ok;
             soci::statement readyStmt = (sql.prepare << "SELECT t_file.start_time, t_file.file_id, t_file.job_id, t_job.reuse_job "
                                          "FROM t_file, t_job "
                                          "WHERE t_file.file_state = 'READY' AND t_file.finish_time IS NULL AND "
@@ -3240,7 +3240,7 @@ boost::optional<int> MySqlAPI::getTimeoutForSe(std::string se)
 
     try
         {
-            soci::indicator isNull;
+            soci::indicator isNull = soci::i_ok;
             int tmp;
 
             sql <<
@@ -4071,7 +4071,7 @@ int MySqlAPI::sumUpVoShares (std::string source, std::string destination, std::s
             // replace the last ',' with closing ')'
             vos_str[vos_str.size() - 1] = ')';
 
-            soci::indicator isNull;
+            soci::indicator isNull = soci::i_ok;
 
             sql <<
                 " SELECT SUM(active) "
@@ -4736,7 +4736,7 @@ void MySqlAPI::bringOnlineReportStatus(const std::string & state, const std::str
                     sql.commit();
 
                     //check if session reuse has been issued
-                    soci::indicator isNull;
+                    soci::indicator isNull = soci::i_ok;
                     std::string reuse("");
                     sql << " select reuse_job from t_job where job_id=:jobId", soci::use(msg.job_id), soci::into(reuse, isNull);
                     if (isNull != soci::i_null && reuse == "Y")
@@ -4992,7 +4992,7 @@ double MySqlAPI::getAvgThroughput(std::string source, std::string destination)
 
     try
         {
-            soci::indicator isNull;
+            soci::indicator isNull = soci::i_ok;
 
             sql <<
                 " select ROUND(AVG(throughput),2) AS Average  from t_file where"
@@ -6077,7 +6077,7 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
 {
 
     int mode = 0;
-    soci::indicator ind;
+    soci::indicator ind = soci::i_ok;
 
     try
         {
