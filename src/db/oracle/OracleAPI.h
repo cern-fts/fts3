@@ -340,10 +340,10 @@ public:
     virtual void storeProfiling(const fts3::ProfilingSubsystem* prof);
 
     virtual void setOptimizerMode(int mode);
-    
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry);    
-    
-  
+
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry);
+
+
 
 
 private:

@@ -120,7 +120,7 @@ public:
                         int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
                         if(retry == -1)  //unlimited times
                             {
-				DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id, retryTimes+1);
+                                DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id, retryTimes+1);
                                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                 return true;
                             }
@@ -229,7 +229,7 @@ protected:
 
                         if (runConsumerStatus(messages) != 0)
                             {
-                                char buffer[128]={0};
+                                char buffer[128]= {0};
                                 throw Err_System(std::string("Could not get the status messages: ") +
                                                  strerror_r(errno, buffer, sizeof(buffer)));
                             }

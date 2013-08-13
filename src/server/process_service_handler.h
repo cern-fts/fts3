@@ -64,6 +64,7 @@ limitations under the License. */
 #include <dirent.h>
 #include "profiler/Profiler.h"
 #include "profiler/Macros.h"
+#include <boost/thread.hpp>
 
 extern bool stopThreads;
 
@@ -164,7 +165,7 @@ static std::string prepareMetadataString(std::string text)
 
 template <class T>
 inline std::string to_string(const T& t)
-{
+{   
     std::stringstream ss;
     ss << std::fixed << t;
     return ss.str();
@@ -261,24 +262,10 @@ protected:
     std::string infosys;
     bool monitoringMessages;
 
-    std::string extractHostname(std::string surl)
+    std::string extractHostname(const std::string &surl)
     {
-        std::string hostname("");
-        char *base_scheme = NULL;
-        char *base_host = NULL;
-        char *base_path = NULL;
-        int base_port = 0;
-        parse_url(surl.c_str(), &base_scheme, &base_host, &base_port, &base_path);
-        if (base_host)
-            hostname = std::string(base_scheme) + "://" + std::string(base_host);
-        if (base_scheme)
-            free(base_scheme);
-        if (base_host)
-            free(base_host);
-        if (base_path)
-            free(base_path);
-
-        return hostname;
+      Uri u0 = Uri::Parse(surl);
+      return u0.Protocol + "://" + u0.Host;      
     }
 
     void createJobFile(std::string job_id, std::vector<std::string>& files)
@@ -294,7 +281,7 @@ protected:
         fout.close();
     }
 
-    void executeUrlcopy(std::vector<TransferJobs*>& jobs2, bool reuse)
+    void executeUrlcopy(std::vector<TransferJobs*>& jobs22, bool reuse)
     {
         const std::string cmd = "fts_url_copy";
         std::string params = std::string("");
@@ -312,13 +299,13 @@ protected:
         if (reuse == false)
             {
                 bool manualConfigExists = false;
-                if (!jobs2.empty())
+                if (!jobs22.empty())
                     {
                         /*get the file for each job*/
                         std::vector<TransferJobs*>::const_iterator iter2;
 
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues, reuse);
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs22, voQueues, reuse);
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
@@ -336,9 +323,9 @@ protected:
                                         if (stopThreads)
                                             {
                                                 /** cleanup resources */
-                                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2)
                                                     delete *iter2;
-                                                jobs2.clear();
+                                                jobs22.clear();
                                                 return;
                                             }
 
@@ -388,8 +375,8 @@ protected:
                                         // if there are no more files for that VO just continue
                                         if (!temp.get()) continue;
 
-                                        source_hostname = extractHostname(temp->SOURCE_SURL);
-                                        destin_hostname = extractHostname(temp->DEST_SURL);
+                                        source_hostname = "srm://dsafsdf"; //temp->SOURCE_SE; 
+                                        destin_hostname = "srm://dfasdfasdfas"; //temp->DEST_SE; 					
 
                                         /*check if manual config exist for this pair and vo*/
 
@@ -489,7 +476,7 @@ protected:
                                                              );
 
                                                 sourceSiteName = siteResolver.getSiteName(temp->SOURCE_SURL);
-                                                destSiteName = siteResolver.getSiteName(temp->DEST_SURL);						
+                                                destSiteName = siteResolver.getSiteName(temp->DEST_SURL);
 
                                                 debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
 
@@ -516,7 +503,7 @@ protected:
                                                 if (proxy_file.length() > 0)
                                                     {
                                                         params.append(" -proxy ");
-                                                        params.append(proxy_file);                                                       
+                                                        params.append(proxy_file);
                                                     }
 
                                                 if (std::string(temp->CHECKSUM).length() > 0)   //checksum
@@ -524,7 +511,7 @@ protected:
                                                         params.append(" -z ");
                                                         params.append(temp->CHECKSUM);
                                                     }
-						    
+
                                                 if (std::string(temp->CHECKSUM_METHOD).length() > 0)   //checksum
                                                     {
                                                         params.append(" -A ");
@@ -660,8 +647,8 @@ protected:
                                                 params.append(" -M ");
                                                 params.append(infosys);
 
-                                                
-                                                bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);						
+
+                                                bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyState(temp->FILE_ID);
 
                                                 if (ready)
                                                     {
@@ -672,7 +659,7 @@ protected:
                                                                 /*check if fork/execvp failed, */
                                                                 if (-1 == pr->executeProcessShell())
                                                                     {
-								        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  temp->JOB_ID << "  " << temp->FILE_ID << commit;
+                                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " <<  temp->JOB_ID << "  " << temp->FILE_ID << commit;
                                                                         DBSingleton::instance().getDBObjectInstance()->forkFailedRevertState(temp->JOB_ID, temp->FILE_ID);
                                                                     }
                                                                 else
@@ -697,10 +684,8 @@ protected:
                                     }
                             }
 
-                        /** cleanup resources */
-                        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                            delete *iter2;
-                        jobs2.clear();
+                        
+                        jobs22.clear();
                     }
             }
         else     /*reuse session*/
@@ -744,8 +729,10 @@ protected:
                         if (voQueues.empty())
                             {
                                 /** cleanup resources */
-                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                                    delete *iter2;
+                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2){
+				    if(*iter2)
+                                    	delete *iter2;
+				}
                                 jobs2.clear();
                                 return;
                             }
@@ -808,8 +795,8 @@ protected:
                                 dn = temp->DN;
                                 file_id = temp->FILE_ID;
                                 overwrite = temp->OVERWRITE;
-                                source_hostname = extractHostname(temp->SOURCE_SURL);
-                                destin_hostname = extractHostname(temp->DEST_SURL);
+				source_hostname = temp->SOURCE_SE; //extractHostname(temp->SOURCE_SURL);
+                                destin_hostname = temp->DEST_SE; //extractHostname(temp->DEST_SURL);								
                                 source_space_token = temp->SOURCE_SPACE_TOKEN;
                                 dest_space_token = temp->DEST_SPACE_TOKEN;
                                 pinLifetime = temp->PIN_LIFETIME;
@@ -843,11 +830,15 @@ protected:
                         if(!tempUrl)
                             {
                                 /** cleanup resources */
-                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                                    delete *iter2;
+                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2){
+				    if(*iter2)
+                                    	delete *iter2;
+				}
                                 jobs2.clear();
-                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
-                                    delete *queueiter;
+                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter){
+				    if(*queueiter)
+                                    	delete *queueiter;
+				}
                                 voQueues[vo].clear();
                                 fileIds.clear();
                                 return;
@@ -981,7 +972,7 @@ protected:
                                 if (proxy_file.length() > 0)
                                     {
                                         params.append(" -proxy ");
-                                        params.append(proxy_file);                                       
+                                        params.append(proxy_file);
                                     }
 
                                 params.append(" -G ");
@@ -1100,7 +1091,7 @@ protected:
                                                 /*check if fork failed , check if execvp failed, */
                                                 if (-1 == pr->executeProcessShell())
                                                     {
-						        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
+                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
                                                         DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
                                                     }
                                                 else
@@ -1130,13 +1121,11 @@ protected:
                                 params.clear();
                             }
 
-
-                        /** cleanup resources */
-                        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                            delete *iter2;
-                        jobs2.clear();
-                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
-                            delete *queueiter;
+                       
+                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter){
+			    if(*queueiter)
+                            	delete *queueiter;
+			}
                         voQueues[vo].clear();
                         fileIds.clear();
 
@@ -1145,6 +1134,7 @@ protected:
     }
 
     /* ---------------------------------------------------------------------- */
+
     void executeTransfer_a()
     {
         static bool drainMode = false;
@@ -1158,8 +1148,10 @@ protected:
                                 if (!jobs2.empty())
                                     {
                                         std::vector<TransferJobs*>::const_iterator iter2;
-                                        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                                            delete *iter2;
+                                        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2){
+					    if(*iter2)
+                                            	delete *iter2;
+					}
                                         jobs2.clear();
                                     }
                                 sleep(1);
@@ -1184,8 +1176,8 @@ protected:
                         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
 
                         if (!jobs2.empty())
-                            {
-                                executeUrlcopy(jobs2, false);
+                            {			                                      	                				    
+                                        executeUrlcopy(jobs2, false);
                             }
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
@@ -1194,23 +1186,29 @@ protected:
                             {
                                 executeUrlcopy(jobs2, true);
                             }
+
                         if (!jobs2.empty())
                             {
-                                std::vector<TransferJobs*>::const_iterator iter2;
+                                std::vector<TransferJobs*>::iterator iter2;
                                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                                    delete *iter2;
+                                    {
+                                        if(*iter2)
+                                            delete *iter2;
+                                    }
                                 jobs2.clear();
                             }
-
                     }
                 catch (std::exception& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
                         if (!jobs2.empty())
                             {
-                                std::vector<TransferJobs*>::const_iterator iter2;
+                                std::vector<TransferJobs*>::iterator iter2;
                                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                                    delete *iter2;
+                                    {
+                                        if(*iter2)
+                                            delete *iter2;
+                                    }
                                 jobs2.clear();
                             }
                     }
@@ -1219,9 +1217,12 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
                         if (!jobs2.empty())
                             {
-                                std::vector<TransferJobs*>::const_iterator iter2;
+                                std::vector<TransferJobs*>::iterator iter2;
                                 for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                                    delete *iter2;
+                                    {
+                                        if(*iter2)
+                                            delete *iter2;
+                                    }
                                 jobs2.clear();
                             }
                     }

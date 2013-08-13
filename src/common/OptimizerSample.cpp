@@ -59,12 +59,6 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                     destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput,
                                     double avgThr, int lowDefault, int highDefault)
 {
-    /*
-            currectActive: number of active for a given src/dest pair
-            sourceActive: number of active for a given source
-            destActive:   number of active for a given dest
-            trSuccessRateForPair: success rate of the last 10 transfers between src/dest, must always be > 90%
-     */
 
     bool allowed = false;
     std::vector<struct transfersStore>::iterator iter;
