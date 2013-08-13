@@ -323,8 +323,10 @@ protected:
                                         if (stopThreads)
                                             {
                                                 /** cleanup resources */
-                                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2)
-                                                    delete *iter2;
+                                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2){
+						    if(*iter2)
+                                                    	delete *iter2;
+						}
                                                 jobs22.clear();
                                                 return;
                                             }
@@ -687,7 +689,7 @@ protected:
             }
         else     /*reuse session*/
             {
-                if (!jobs2.empty())
+                if (!jobs22.empty())
                     {
                         bool manualConfigExists = false;
                         std::vector<std::string> urls;
@@ -721,21 +723,21 @@ protected:
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::list<TransferFiles*>::const_iterator queueiter;
 
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs2, voQueues, reuse);
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs22, voQueues, reuse);
 
                         if (voQueues.empty())
                             {
                                 /** cleanup resources */
-                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2){
+                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2){
 				    if(*iter2)
                                     	delete *iter2;
 				}
-                                jobs2.clear();
+                                jobs22.clear();
                                 return;
                             }
 
                         // since there will be just one VO pick it (TODO)
-                        std::string vo = jobs2.front()->VO_NAME;
+                        std::string vo = jobs22.front()->VO_NAME;
 
                         for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                             {
@@ -827,11 +829,11 @@ protected:
                         if(!tempUrl)
                             {
                                 /** cleanup resources */
-                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2){
+                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2){
 				    if(*iter2)
                                     	delete *iter2;
 				}
-                                jobs2.clear();
+                                jobs22.clear();
                                 for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter){
 				    if(*queueiter)
                                     	delete *queueiter;

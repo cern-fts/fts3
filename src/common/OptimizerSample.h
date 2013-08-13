@@ -22,7 +22,6 @@
 #include <ctime>
 
 
-
 struct transfersStore
 {
     double numberOfFinishedAll;
