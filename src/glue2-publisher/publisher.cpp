@@ -167,8 +167,13 @@ int main(int argc, char** argv)
             stream << "GLUE2EndpointQualityLevel: production" << "\n";
             stream << "GLUE2EndpointImplementationName: FTS" << "\n";
             stream << "GLUE2EndpointImplementationVersion: " << versionFTS.str() << "\n";
-            stream << "GLUE2EntityOtherInfo: MiddlewareName=EMI" << "\n";
-            stream << "GLUE2EntityOtherInfo: MiddlewareVersion=" << versionEMI << "\n";
+	    
+	    //publish emi when it's EMI!
+	    if (fexists(emiVersion) == 0){
+            	stream << "GLUE2EntityOtherInfo: MiddlewareName=EMI" << "\n";
+            	stream << "GLUE2EntityOtherInfo: MiddlewareVersion=" << versionEMI << "\n";
+	    }
+	    
             stream << "GLUE2EndpointInterfaceName: org.glite.FileTransfer" << "\n";
             stream << "GLUE2EndpointURL: https://" << alias << ":" << port << "\n";
             stream << "GLUE2EndpointSemantics: https://svnweb.cern.ch/trac/fts3" << "\n";
