@@ -375,8 +375,8 @@ protected:
                                         // if there are no more files for that VO just continue
                                         if (!temp.get()) continue;
 
-                                        source_hostname = "srm://dsafsdf"; //temp->SOURCE_SE; 
-                                        destin_hostname = "srm://dfasdfasdfas"; //temp->DEST_SE; 					
+                                        source_hostname = temp->SOURCE_SE; 
+                                        destin_hostname = temp->DEST_SE; 					
 
                                         /*check if manual config exist for this pair and vo*/
 
@@ -1173,7 +1173,7 @@ protected:
                         DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
 
                         if (!jobs2.empty())
-                            {			                                      	                				    
+                            {			                                                       				    
                                         executeUrlcopy(jobs2, false);
                             }
                         /* --- session reuse section ---*/
