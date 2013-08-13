@@ -683,14 +683,6 @@ protected:
                                             }
                                     }
                             }
-                        
-                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter){
-			    if(*queueiter)
-                            	delete *queueiter;
-			}
-                        voQueues[vo].clear();
-                        fileIds.clear();
-			                        
                     }
             }
         else     /*reuse session*/
