@@ -59,7 +59,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                     destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput,
                                     double avgThr, int lowDefault, int highDefault)
 {
-
+    ThreadTraits::LOCK_R lock(_mutex);
     bool allowed = false;
     std::vector<struct transfersStore>::iterator iter;
     int activeInStore = 0;
@@ -188,7 +188,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
 int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int, int,
                                     double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr)
 {
-
+    ThreadTraits::LOCK_R lock(_mutex);
     std::vector<struct transfersStore>::iterator iter;
     int activeInStore = 0;
 

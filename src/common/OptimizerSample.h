@@ -20,6 +20,9 @@
 #include <vector>
 #include <iostream>
 #include <ctime>
+#include "threadtraits.h"
+
+using namespace FTS3_COMMON_NAMESPACE;
 
 
 struct transfersStore
@@ -67,6 +70,7 @@ public:
 
 private:
     std::vector<struct transfersStore> transfersStoreVector;
+    mutable ThreadTraits::MUTEX_R _mutex;
 
 };
 
