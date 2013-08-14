@@ -104,7 +104,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 {
                                     if(throughput > avgThr )
                                         {
-                                            (*iter).numOfActivePerPair += 0;
+                                            (*iter).numOfActivePerPair += 1;
                                         }
                                     else
                                         {
@@ -233,7 +233,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 {
                                     if(throughput > avgThr )
                                         {
-                                            (*iter).numOfActivePerPair += 0;
+                                            (*iter).numOfActivePerPair += 1;
                                         }
                                     else
                                         {
