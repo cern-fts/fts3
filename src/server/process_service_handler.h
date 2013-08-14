@@ -302,7 +302,7 @@ protected:
                         TransferFileHandler tfh(voQueues);
 
                         // the worker thread pool
-                        FileTransferExecutorPool execPool(10, tfh, monitoringMessages, infosys, ftsHostName);
+                        FileTransferExecutorPool execPool(5, tfh, monitoringMessages, infosys, ftsHostName);
 
                         // loop until all files have been served
                         while (!tfh.empty())
