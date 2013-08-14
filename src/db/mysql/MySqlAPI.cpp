@@ -640,17 +640,8 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "    f1.wait_timestamp IS NULL AND "
                                                          "    f1.file_state = 'SUBMITTED' AND "
                                                          "    (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) "
-                                                         "     AND "
-                                                         "	 NOT EXISTS ( "
-                                                         "		SELECT NULL "
-                                                         "		FROM t_file f2 "
-                                                         "		WHERE "
-                                                         "			f2.job_id = :jobId AND f2.job_id = f1.job_id AND "
-                                                         "			f2.file_index = f1.file_index AND "
-                                                         "			f2.file_state='READY' "
-                                                         "	 ) ORDER BY f1.file_id ASC LIMIT :filesNum ",soci::use(jobId),
+                                                         " ORDER BY f1.file_id ASC LIMIT :filesNum ",soci::use(jobId),
                                                          soci::use(tTime),
-                                                         soci::use(jobId),
                                                          soci::use(filesNum)
                                                      );
 
@@ -1345,7 +1336,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 soci::into(numberOfFilesCanceled),
                 soci::into(numberOfFilesFinished),
                 soci::into(numberOfFilesFailed)
-                ;		
+                ;
 
             int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
@@ -1390,7 +1381,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                     // And file finish timestamp
                     sql << "UPDATE t_file SET job_finished = UTC_TIMESTAMP() WHERE job_id = :jobId ",
                         soci::use(job_id, "jobId");
-			
+
                 }
             // Job not finished yet
             else
@@ -2702,6 +2693,8 @@ void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::st
         {
             sql.begin();
 
+
+
             sql << "UPDATE t_optimize SET "
                 "    file_id = 1 "
                 "WHERE nostreams = :nStreams AND buffer = :bufferSize AND timeout = :timeout AND "
@@ -2709,15 +2702,18 @@ void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::st
                 soci::use(nostreams), soci::use(buffersize), soci::use(timeout),
                 soci::use(source_se), soci::use(dest);
 
+
             params << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
 
             if (file_id != -1)
                 {
                     sql << "UPDATE t_file SET internal_file_params = :params WHERE file_id = :fileId AND job_id = :jobId",
                         soci::use(params.str()), soci::use(file_id), soci::use(job_id);
+
                 }
             else
                 {
+
                     sql << "UPDATE t_file SET internal_file_params = :params WHERE job_id = :jobId",
                         soci::use(params.str()), soci::use(job_id);
                 }
@@ -2840,8 +2836,8 @@ void MySqlAPI::revertToSubmitted()
                         {
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
-                            bool alive = ThreadSafeList::get_instance().isAlive(fileId);			    			
-			    
+                            bool alive = ThreadSafeList::get_instance().isAlive(fileId);
+
                             if (diff > 200 && reuseJob != "Y" && !alive)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;

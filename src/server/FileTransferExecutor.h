@@ -39,81 +39,81 @@ class FileTransferExecutor
 
 public:
 
-	/**
-	 *
-	 */
-	FileTransferExecutor(TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName);
+    /**
+     *
+     */
+    FileTransferExecutor(TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName);
 
-	/**
-	 *
-	 */
-	virtual ~FileTransferExecutor();
+    /**
+     *
+     */
+    virtual ~FileTransferExecutor();
 
-	/**
-	 *
-	 */
-	void execute();
+    /**
+     *
+     */
+    void execute();
 
-	/**
-	 *
-	 */
-	void put(TransferFiles* tf)
-	{
-		queue.put(tf);
-	}
+    /**
+     *
+     */
+    void put(TransferFiles* tf)
+    {
+        queue.put(tf);
+    }
 
-	/**
-	 *
-	 */
-	void noMoreData()
-	{
-		queue.noMoreData();
-	}
+    /**
+     *
+     */
+    void noMoreData()
+    {
+        queue.noMoreData();
+    }
 
-	/**
-	 *
-	 */
-	bool isActive()
-	{
-		return active;
-	}
+    /**
+     *
+     */
+    bool isActive()
+    {
+        return active;
+    }
 
-	/**
-	 *
-	 */
-	void join()
-	{
-		t.join();
-	}
+    /**
+     *
+     */
+    void join()
+    {
+        t.join();
+    }
 
 private:
 
-	static string prepareMetadataString(std::string text);
+    static string prepareMetadataString(std::string text);
 
-	/// queue with all the tasks
-	ThreadSafeQueue<TransferFiles> queue;
+    /// queue with all the tasks
+    ThreadSafeQueue<TransferFiles> queue;
 
-	/// pairs that were already checked and were not scheduled
-	set< pair<string, string> > notScheduled;
+    /// pairs that were already checked and were not scheduled
+    set< pair<string, string> > notScheduled;
 
-	/// state of the worker
-	bool active;
+    /// state of the worker
+    bool active;
 
-	/// variables from process_service_handler
-	TransferFileHandler& tfh;
-	bool optimize;
-	bool monitoringMsg;
-	string infosys;
-	string ftsHostName;
-	SiteName siteResolver;
+    /// variables from process_service_handler
+    TransferFileHandler& tfh;
+    bool optimize;
+    bool monitoringMsg;
+    string infosys;
+    string ftsHostName;
+    SiteName siteResolver;
 
-	// DB interface
-	GenericDbIfce* db;
+    // DB interface
+    GenericDbIfce* db;
 
-	/// worker thread
-	thread t;
+    /// worker thread
+    thread t;
 
-	static const std::string cmd;
+    static const std::string cmd;
 };
 
 } /* namespace server */

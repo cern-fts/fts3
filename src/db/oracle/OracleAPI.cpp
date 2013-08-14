@@ -287,7 +287,7 @@ void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::st
         " 	checksum_method, "
         " 	bring_online, "
         "   submit_time "
-        "   from ( select /*+ FIRST_ROWS(20) */  "
+        "   from ( select "
         " 	t_job.job_id, "
         " 	t_job.job_state, "
         " 	t_job.vo_name,  "
@@ -801,7 +801,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         " 		SPACE_TOKEN, copy_pin_lifetime, bring_online, "
         "		user_filesize, file_metadata, job_metadata, file_index, BRINGONLINE_TOKEN,"
         "		source_se, dest_se, selection_strategy  "
-        "		from (select  /*+ FIRST_ROWS(100) */  "
+        "		from (select "
         "		f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
         " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
         "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
@@ -811,20 +811,19 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
         "FROM t_file f1, t_job j "
         "WHERE "
         "	j.job_id = :1 AND "
-        "	f1.job_id = j.job_id AND "
-        "   f1.job_finished is NULL AND "
-        "	f1.wait_timestamp IS NULL AND "
-        "	j.job_finished is NULL AND "
+        "	j.job_id = f1.job_id AND "
         "	f1.file_state ='SUBMITTED' AND "
+        "       j.job_finished is NULL AND "
+        "	f1.wait_timestamp IS NULL AND "
         " 	f1.retry_timestamp is NULL OR f1.retry_timestamp < :2 AND "
         "	NOT EXISTS ( "
         "		SELECT NULL "
         "		FROM t_file f2 "
         "		WHERE "
-        "			f2.job_id=:3 AND f2.job_id = f1.job_id AND "
-        "			f2.file_index = f1.file_index AND "
-        "			f2.file_state= 'READY' "
-        "	) ORDER BY f1.file_id ASC) WHERE ROWNUM <= :4 ORDER BY file_id ASC";
+        "			f2.job_id=:3 AND f2.file_state= 'READY' AND f1.job_id = f2.job_id AND "
+        "			f1.file_index = f2.file_index  "
+        "			 "
+        "	) ORDER BY f1.file_id ASC) WHERE ROWNUM <= :4 ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
@@ -861,6 +860,7 @@ void OracleAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::stri
                 return;
 
             s = conn->createStatement(select, selecttag, pooledConnection);
+
             for (iter = jobs.begin(); iter != jobs.end(); ++iter)
                 {
                     time_t timed = time(NULL);

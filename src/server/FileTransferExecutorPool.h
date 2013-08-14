@@ -30,37 +30,37 @@ class FileTransferExecutorPool
 
 public:
 
-	/**
-	 *
-	 */
-	FileTransferExecutorPool(int size, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName);
+    /**
+     *
+     */
+    FileTransferExecutorPool(int size, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName);
 
-	/**
-	 *
-	 */
-	virtual ~FileTransferExecutorPool();
+    /**
+     *
+     */
+    virtual ~FileTransferExecutorPool();
 
-	/**
-	 *
-	 */
-	void add(TransferFiles* tf, bool optimize);
+    /**
+     *
+     */
+    void add(TransferFiles* tf, bool optimize);
 
-	/**
-	 *
-	 */
-	void join();
+    /**
+     *
+     */
+    void join();
 
 private:
-	vector<FileTransferExecutor*> executors;
+    vector<FileTransferExecutor*> executors;
 
-	int index;
-	int size;
+    unsigned int index;
+    unsigned int size;
 
-	/// variables from process_service_handler
-	TransferFileHandler& tfh;
-	bool monitoringMsg;
-	string infosys;
-	string ftsHostName;
+    /// variables from process_service_handler
+    TransferFileHandler& tfh;
+    bool monitoringMsg;
+    string infosys;
+    string ftsHostName;
 };
 
 } /* namespace server */

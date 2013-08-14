@@ -72,35 +72,35 @@ bool ThreadSafeList::isAlive(int fileID)
     std::list<struct message_updater>::iterator iter;
     boost::posix_time::time_duration::tick_type timestamp1;
     boost::posix_time::time_duration::tick_type timestamp2;
-    boost::posix_time::time_duration::tick_type n_seconds = 0;            
-    
+    boost::posix_time::time_duration::tick_type n_seconds = 0;
+
     //check first if exists
     for (iter = m_list.begin(); iter != m_list.end(); ++iter)
         {
-	  if(fileID == iter->file_id)
-	  {
-	  	exists = true;	
-	  }	  
-	}    
-    
+            if(fileID == iter->file_id)
+                {
+                    exists = true;
+                }
+        }
+
     //now check if expired
     if(exists)
-    {
-	    for (iter = m_list.begin(); iter != m_list.end(); ++iter)
-        	{
-            	timestamp1 = milliseconds_since_epoch();
-            	timestamp2 = iter->timestamp;
-            	n_seconds =  timestamp1  - timestamp2;
-            	if (n_seconds > 300000 && fileID == iter->file_id)
-                	{
-                    	return false;
-                	}
-        	}
-    }
+        {
+            for (iter = m_list.begin(); iter != m_list.end(); ++iter)
+                {
+                    timestamp1 = milliseconds_since_epoch();
+                    timestamp2 = iter->timestamp;
+                    n_seconds =  timestamp1  - timestamp2;
+                    if (n_seconds > 300000 && fileID == iter->file_id)
+                        {
+                            return false;
+                        }
+                }
+        }
     else
-    {
-     	return false;
-    }    
+        {
+            return false;
+        }
     return true;
 }
 

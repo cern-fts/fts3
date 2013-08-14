@@ -50,13 +50,13 @@ typedef pair<string, int> FileIndex;
 class TransferFileHandler
 {
 
-	enum GET_MAP_OPTS
-	{
-		SOURCE_TO_DESTINATIONS,
-		SOURCE_TO_VOS,
-		DESTINATION_TO_SOURCES,
-		DESTINATION_TO_VOS
-	};
+    enum GET_MAP_OPTS
+    {
+        SOURCE_TO_DESTINATIONS,
+        SOURCE_TO_VOS,
+        DESTINATION_TO_SOURCES,
+        DESTINATION_TO_VOS
+    };
 
 public:
 
@@ -91,7 +91,7 @@ private:
 
     set<string> vos;
 
-     void freeList(list<TransferFiles*>& l);
+    void freeList(list<TransferFiles*>& l);
 
     /// mutex that ensures thread safety
     mutex m;

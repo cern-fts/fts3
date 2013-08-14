@@ -302,7 +302,7 @@ protected:
                         TransferFileHandler tfh(voQueues);
 
                         // the worker thread pool
-                        FileTransferExecutorPool execPool(5, tfh, monitoringMessages, infosys, ftsHostName);
+                        FileTransferExecutorPool execPool(4, tfh, monitoringMessages, infosys, ftsHostName);
 
                         // loop until all files have been served
                         while (!tfh.empty())
@@ -316,13 +316,13 @@ protected:
 
                                         if (stopThreads)
                                             {
-                      				/** cleanup resources */
-                        			std::vector<TransferJobs*>::const_iterator iter22;
-                        			for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
-                            			{
-                                			if(*iter22)
-                                    				delete *iter22;
-                           			}				    
+                                                /** cleanup resources */
+                                                std::vector<TransferJobs*>::const_iterator iter22;
+                                                for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
+                                                    {
+                                                        if(*iter22)
+                                                            delete *iter22;
+                                                    }
                                                 jobs22.clear();
                                                 // TODO stop worker threads
                                                 return;

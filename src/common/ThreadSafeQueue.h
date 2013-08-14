@@ -34,64 +34,64 @@ class ThreadSafeQueue
 {
 
 public:
-	ThreadSafeQueue() : no_more_data(false)
-	{
+    ThreadSafeQueue() : no_more_data(false)
+    {
 
-	}
+    }
 
-	virtual ~ThreadSafeQueue()
-	{
+    virtual ~ThreadSafeQueue()
+    {
 
-	}
+    }
 
-	/**
-	 * Insert element
-	 */
-	void put(T* e)
-	{
-		mutex::scoped_lock lock(qm);
-		ts_queue.push(e);
-		qv.notify_all();
-	}
+    /**
+     * Insert element
+     */
+    void put(T* e)
+    {
+        mutex::scoped_lock lock(qm);
+        ts_queue.push(e);
+        qv.notify_all();
+    }
 
-	/**
-	 * Get next element
-	 */
-	T* get()
-	{
-		// get the mutex
-	    mutex::scoped_lock lock(qm);
-	    // if the queue is empty ...
-	    while (ts_queue.empty())
-	    	{
-	    		// if no data will be put into the queue ever return 0
-	    		if (no_more_data) return 0;
-	    		// otherwise wait
-	    		qv.wait(lock);
-	    	}
-	    // get an item from the queue
-		T* e = ts_queue.front();
-		ts_queue.pop();
-		return e;
-	}
+    /**
+     * Get next element
+     */
+    T* get()
+    {
+        // get the mutex
+        mutex::scoped_lock lock(qm);
+        // if the queue is empty ...
+        while (ts_queue.empty())
+            {
+                // if no data will be put into the queue ever return 0
+                if (no_more_data) return 0;
+                // otherwise wait
+                qv.wait(lock);
+            }
+        // get an item from the queue
+        T* e = ts_queue.front();
+        ts_queue.pop();
+        return e;
+    }
 
-	bool hasData()
-	{
-		mutex::scoped_lock lock(qm);
-		return !ts_queue.empty() || !no_more_data;
-	}
+    bool hasData()
+    {
+        mutex::scoped_lock lock(qm);
+        return !ts_queue.empty() || !no_more_data;
+    }
 
-	void noMoreData ()
-	{
-		mutex::scoped_lock lock(qm);
-		no_more_data = true;
-		qv.notify_all();
-	}
+    void noMoreData ()
+    {
+        mutex::scoped_lock lock(qm);
+        no_more_data = true;
+        qv.notify_all();
+    }
 
 private:
     /// the queue itself
 
-	queue<T*> ts_queue;
+    queue<T*> ts_queue;
 
     /// the mutex preventing concurrent browsing and reconnecting
     mutex qm;
