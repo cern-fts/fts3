@@ -13,13 +13,14 @@ bool retryTransfer(int errorNo, const std::string& category)
         {
             switch (errorNo)
                 {
-                case ENOENT:       // No such file or directory
-                case EPERM:        // Operation not permitted
-                case EACCES:       // Permission denied
-                case EISDIR:       // Is a directory
-                case ENAMETOOLONG: // File name too long
-                case E2BIG:        // Argument list too long
-                case ENOTDIR:      // Part of the path is not a directory
+                case ENOENT:          // No such file or directory
+                case EPERM:           // Operation not permitted
+                case EACCES:          // Permission denied
+                case EISDIR:          // Is a directory
+                case ENAMETOOLONG:    // File name too long
+                case E2BIG:           // Argument list too long
+                case ENOTDIR:         // Part of the path is not a directory
+                case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
                     retry = false;
                     break;
                 default:
@@ -31,11 +32,12 @@ bool retryTransfer(int errorNo, const std::string& category)
         {
             switch (errorNo)
                 {
-                case EPERM:        // Operation not permitted
-                case EACCES:       // Permission denied
-                case EISDIR:       // Is a directory
-                case ENAMETOOLONG: //  File name too long
-                case E2BIG:        //  Argument list too long
+                case EPERM:           // Operation not permitted
+                case EACCES:          // Permission denied
+                case EISDIR:          // Is a directory
+                case ENAMETOOLONG:    //  File name too long
+                case E2BIG:           //  Argument list too long
+                case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
                     retry = false;
                     break;
                 default:
@@ -47,13 +49,14 @@ bool retryTransfer(int errorNo, const std::string& category)
         {
             switch (errorNo)
                 {
-                case ENOSPC:       // No space left on device
-                case EPERM:        // Operation not permitted
-                case EACCES:       // Permission denied
-                case EEXIST:       // File exists
-                case EFBIG:        // File too big
-                case EROFS:        // Read-only file system
-                case ENAMETOOLONG: // File name too long
+                case ENOSPC:          // No space left on device
+                case EPERM:           // Operation not permitted
+                case EACCES:          // Permission denied
+                case EEXIST:          // File exists
+                case EFBIG:           // File too big
+                case EROFS:           // Read-only file system
+                case ENAMETOOLONG:    // File name too long
+                case EPROTONOSUPPORT: // Protocol not supported by gfal2 (plugin missing?)
                     retry = false;
                     break;
                 default:
