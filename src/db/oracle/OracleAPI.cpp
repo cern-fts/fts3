@@ -8363,12 +8363,10 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId)
     std::string query =
         " UPDATE t_file set file_state='SUBMITTED' "
         "  where job_id=:1 and file_id=:2 and file_state not in ('FAILED','CANCELED') ";
-    std::string query1= "select job_id from t_job where t_job.reuse_job='Y' and job_id=:1  and job_state not in ('FAILED','CANCELED') ";
-    std::string query2= "update t_job set job_state='ACTIVE' where job_id=:1  and job_state not in ('FAILED','CANCELED') ";
+    std::string query1= "update t_job set job_state='SUBMITTED' where t_job.reuse_job='Y' AND job_id=:1  and job_state not in ('FAILED','CANCELED') ";
 
     oracle::occi::Statement* s = NULL;
     oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
     oracle::occi::ResultSet* r = 0;
     oracle::occi::Connection* pooledConnection = NULL;
 
@@ -8381,18 +8379,9 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId)
 
             s1 = conn->createStatement(query1, tag1, pooledConnection);
             s1->setString(1,jobId);
+            s1->executeUpdate();
             r = conn->createResultset(s1, pooledConnection);
-
-            if (r->next())
-                {
-                    s2 = conn->createStatement(query2, tag2, pooledConnection);
-                    s2->setString(1, jobId);
-                    s2->executeUpdate();
-                    conn->destroyStatement(s2, tag2, pooledConnection);
-                }
-
-            conn->destroyResultset(s1, r);
-            conn->destroyStatement(s1, tag1, pooledConnection);
+            conn->destroyStatement(s1, tag2, pooledConnection);
 
             s = conn->createStatement(query, tag, pooledConnection);
             s->setString(1, jobId);
