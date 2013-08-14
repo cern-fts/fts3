@@ -2840,7 +2840,8 @@ void MySqlAPI::revertToSubmitted()
                         {
                             time_t startTimestamp = timegm(&startTime);
                             double diff = difftime(now2, startTimestamp);
-                            bool alive = ThreadSafeList::get_instance().isAlive(fileId);
+                            bool alive = ThreadSafeList::get_instance().isAlive(fileId);			    			
+			    
                             if (diff > 200 && reuseJob != "Y" && !alive)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
