@@ -1293,7 +1293,6 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
             int numberOfFilesCanceled = 0;
             int numberOfFilesFinished = 0;
             int numberOfFilesFailed = 0;
-
             sql.begin();
 
             sql <<
@@ -1346,7 +1345,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 soci::into(numberOfFilesCanceled),
                 soci::into(numberOfFilesFinished),
                 soci::into(numberOfFilesFailed)
-                ;
+                ;		
 
             int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
@@ -1391,6 +1390,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                     // And file finish timestamp
                     sql << "UPDATE t_file SET job_finished = UTC_TIMESTAMP() WHERE job_id = :jobId ",
                         soci::use(job_id, "jobId");
+			
                 }
             // Job not finished yet
             else
@@ -3025,9 +3025,8 @@ bool MySqlAPI::retryFromDead(std::vector<struct message_updater>& messages)
                     soci::rowset<int> rs = (
                                                sql.prepare <<
                                                " SELECT file_id FROM t_file "
-                                               " WHERE job_id = :jobId AND file_id = :fileId AND file_state='ACTIVE' and transferhost=:hostname ",
-                                               soci::use(std::string(iter->job_id)),
-                                               soci::use(iter->file_id), soci::use(hostname)
+                                               " WHERE file_id = :fileId AND job_id = :jobId AND file_state='ACTIVE' and transferhost=:hostname ",
+                                               soci::use(iter->file_id), soci::use(std::string(iter->job_id)), soci::use(hostname)
                                            );
                     if (rs.begin() != rs.end())
                         {
