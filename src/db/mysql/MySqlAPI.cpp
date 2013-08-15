@@ -4217,6 +4217,10 @@ int MySqlAPI::getRetry(const std::string & jobId)
                         soci::into(nRetries)
                         ;
                 }
+            else if (nRetries < 0)
+                {
+                    nRetries = 0;
+                }
 
         }
     catch (std::exception& e)

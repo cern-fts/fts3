@@ -8122,7 +8122,7 @@ int OracleAPI::getRetry(const std::string & jobId)
     oracle::occi::ResultSet* r = 0;
     oracle::occi::Statement* s1 = 0;
     oracle::occi::ResultSet* r1 = 0;
-    unsigned int ret = 0;
+    int ret = 0;
     oracle::occi::Connection* pooledConnection = NULL;
 
     try
@@ -8156,6 +8156,10 @@ int OracleAPI::getRetry(const std::string & jobId)
 
                     conn->destroyResultset(s, r);
                     conn->destroyStatement(s, tag, pooledConnection);
+                }
+            else if (ret < 0)
+                {
+                    ret = 0;
                 }
 
         }

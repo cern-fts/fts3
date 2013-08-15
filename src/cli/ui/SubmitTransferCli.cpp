@@ -74,7 +74,7 @@ SubmitTransferCli::SubmitTransferCli()
     ("file-metadata", value<string>(), "file metadata")
     ("file-size", value<double>(), "file size (in Bytes)")
     ("new-bulk-format", "New JSON format for bulk submission will be used")
-    ("retry", value<int>(), "Number of retries")
+    ("retry", value<int>(), "Number of retries. If 0, the server default will be used. If negative, there will be no retries.")
     ("retry-delay", value<int>()->default_value(0), "Retry delay in seconds")
     ;
 
@@ -419,7 +419,6 @@ map<string, string> SubmitTransferCli::getParams()
     if (vm.count("retry"))
         {
             int val = vm["retry"].as<int>();
-            if (val < 0) throw string("The 'retry' value has to be positive!");
             parameters[JobParameterHandler::RETRY] = lexical_cast<string>(val);
         }
 
