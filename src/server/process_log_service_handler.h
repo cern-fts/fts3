@@ -144,7 +144,7 @@ protected:
 
                         /*revert to SUBMITTED if stayed in READY for too long (150 secs)*/
                         countReverted++;
-                        if (countReverted >= 120)
+                        if (countReverted >= 150)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                                 countReverted = 0;
@@ -152,7 +152,7 @@ protected:
 
                         /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
                         counterTimeoutWaiting++;
-                        if (counterTimeoutWaiting >= 120)
+                        if (counterTimeoutWaiting >= 150)
                             {
                                 std::set<std::string> canceled;
                                 DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
@@ -174,7 +174,7 @@ protected:
 
                         /*force-fail stalled ACTIVE transfers*/
                         counter++;
-                        if (counter == 120)
+                        if (counter == 150)
                             {
                                 std::map<int, std::string> collectJobs;
                                 DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
@@ -193,7 +193,7 @@ protected:
 
                         if(fs::is_empty(fs::path(LOG_DIR)))
                             {
-                                sleep(1);
+                                sleep(2);
                                 continue;
                             }
 
@@ -219,7 +219,7 @@ protected:
 
                         if(messages.empty())
                             {
-                                sleep(1);
+                                sleep(2);
                                 continue;
                             }
                         else
@@ -244,28 +244,28 @@ protected:
                                     }
                                 messages.clear();
                             }
-                        sleep(1);
+                        sleep(2);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(1);
+                        sleep(2);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(1);
+                        sleep(2);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message log thrown unhandled exception" << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(1);
+                        sleep(2);
                     }
             }
     }

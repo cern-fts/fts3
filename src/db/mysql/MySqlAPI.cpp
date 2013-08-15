@@ -492,9 +492,10 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'SUBMITTED' "
-                        " WHERE job_id = :jobId "
+                        " WHERE file_id = :fileId AND job_id = :jobId "
                         "	AND file_index = :fileIndex "
                         "	AND file_state = 'NOT_USED'",
+			soci::use(fileId),
                         soci::use(jobId),
                         soci::use(fileIndex)
                         ;
@@ -1473,9 +1474,9 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
             soci::rowset<soci::row> rs = (sql.prepare << "SELECT t_file.pid, t_file.job_id FROM t_file, t_job "
                                           "WHERE t_file.job_id = t_job.job_id AND "
                                           "      t_file.FILE_STATE = 'CANCELED' AND "
+                                          "      t_file.transferHost = :thost AND "					  
                                           "      t_file.PID IS NOT NULL AND "
-                                          "      t_job.cancel_job IS NULL AND "
-                                          "      t_file.transferHost = :thost",
+                                          "      t_job.cancel_job IS NULL ",
                                           soci::use(hostname));
 
             std::string jobId;
@@ -4903,7 +4904,7 @@ void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId)
         }
 }
 
-void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostreams, int timeout, int buffersize, double filesize)
+void MySqlAPI::updateProtocol(const std::string& /*jobId*/, int fileId, int nostreams, int timeout, int buffersize, double filesize)
 {
 
     std::stringstream internalParams;
@@ -4916,11 +4917,10 @@ void MySqlAPI::updateProtocol(const std::string& jobId, int fileId, int nostream
             internalParams << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
 
             sql <<
-                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId AND job_id=:jobId ",
+                " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where file_id=:fileId ",
                 soci::use(internalParams.str()),
                 soci::use(filesize),
-                soci::use(fileId),
-                soci::use(jobId);
+                soci::use(fileId);
 
             sql.commit();
 

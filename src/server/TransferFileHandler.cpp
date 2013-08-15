@@ -274,7 +274,7 @@ int TransferFileHandler::size()
 	map< string, list<FileIndex> >::iterator it;
 	for (it = voToFileIndexes.begin(); it != voToFileIndexes.end(); it++)
 		{
-			sum += it->second.size();
+			sum += (unsigned int) it->second.size();
 		}
 
 	return sum;
