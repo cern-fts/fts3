@@ -60,8 +60,6 @@ def queueDetailed(httpRequest):
                                  dest_se = filters['dest_se'],
                                  job__vo_name = filters['vo'])
     
-    print transfers.query
-    
     extra_args = urlencode({'source_se': filters['source_se'],
                             'dest_se': filters['dest_se'],
                             'vo': filters['vo']})
