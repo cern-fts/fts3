@@ -86,6 +86,15 @@ public:
         t.join();
     }
 
+	/**
+	 *
+	 */
+	void stop()
+	{
+		active = false;
+		// t.interrupt();
+	}
+
 private:
 
     static string prepareMetadataString(std::string text);

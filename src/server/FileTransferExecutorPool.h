@@ -50,6 +50,11 @@ public:
      */
     void join();
 
+	/**
+	 *
+	 */
+	void stopAll();
+
 private:
     vector<FileTransferExecutor*> executors;
 

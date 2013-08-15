@@ -324,7 +324,7 @@ protected:
                                                             delete *iter22;
                                                     }
                                                 jobs22.clear();
-                                                // TODO stop worker threads
+                                                execPool.stopAll();
                                                 return;
                                             }
 

@@ -67,5 +67,15 @@ void FileTransferExecutorPool::join()
         }
 }
 
+void FileTransferExecutorPool::stopAll()
+{
+    vector<FileTransferExecutor*>::iterator it;
+
+    for (it = executors.begin(); it != executors.end(); it++)
+        {
+            (*it)->stop();
+        }
+}
+
 } /* namespace server */
 } /* namespace fts3 */

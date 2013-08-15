@@ -47,7 +47,7 @@ FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimi
 
 FileTransferExecutor::~FileTransferExecutor()
 {
-    active = false;
+    stop();
 }
 
 string FileTransferExecutor::prepareMetadataString(std::string text)
