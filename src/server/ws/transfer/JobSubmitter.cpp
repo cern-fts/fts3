@@ -384,6 +384,12 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
                     throw Err_Custom("It has not been possible to pair the sources with destinations (protocols don't match)!");
                 }
 
+            // multiple pairs and reuse are not compatible!
+            if (pairs.size() > 1 && params.get(JobParameterHandler::REUSE) == "Y")
+                {
+                    throw Err_Custom("Reuse and multiple replica selection are incompatible!");
+                }
+
             // add each pair
             list< pair<string, string> >::iterator it_p;
             for (it_p = pairs.begin(); it_p != pairs.end(); it_p++)
