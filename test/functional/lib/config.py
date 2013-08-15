@@ -1,0 +1,58 @@
+# FTS3 tests configuration
+import os
+import sys
+
+# FTS3 server
+Fts3Host = os.environ.get('FTS3_HOST', 'fts3-pilot.cern.ch')
+Fts3Port = int(os.environ.get('FTS3_PORT', 8443))
+Fts3Endpoint = 'https://%s:%d' % (Fts3Host, Fts3Port)
+
+# VO
+Vo = os.environ.get('VO', 'dteam')
+
+# Tests label (passed in the metadata)
+TestLabel = 'fts3-tests'
+
+# Polling interval in seconds
+PollInterval = 5
+
+# Job timeout in seconds
+Timeout = 300
+
+# Checksum algorithm
+Checksum = 'ADLER32'
+
+# Dictionary that can be used to parametrize the storage areas
+StorageParametrization = {
+	'vo': Vo
+}
+
+# Storage areas
+# Give the full path under which the files will be stored
+# You can use string formatting to replace some parts of it,
+# i.e. %(vo)s
+# They will be replaced with the values of StorageParametrization
+StorageAreas = [
+#  'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
+	'gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/%(vo)s/',
+#  'srm://f-dpm001.grid.sinica.edu.tw:8446/srm/managerv2?SFN=/dpm/grid.sinica.edu.tw/home/%(vo)s/',
+	'gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/%(vo)s/'
+]
+
+# Logging level
+import logging
+try:
+	debug = int(os.environ.get('DEBUG', 0))
+except:
+	debug = 1
+if debug:
+	logging.basicConfig(level = logging.DEBUG)
+else:
+	logging.basicConfig(level = logging.INFO)
+
+# Let's make it nicer
+if sys.stdout.isatty():
+	logging.addLevelName(logging.DEBUG, "\033[1;2m%s\033[1;m" % logging.getLevelName(logging.DEBUG))
+	logging.addLevelName(logging.INFO, "\033[1;34m%s\033[1;m" % logging.getLevelName(logging.INFO))
+	logging.addLevelName(logging.ERROR, "\033[1;31m%s\033[1;m" % logging.getLevelName(logging.ERROR))
+

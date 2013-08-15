@@ -1,0 +1,63 @@
+#!/usr/bin/env python
+# meta: proxy=true
+# meta: preconfig=../FTS3-config
+import itertools
+import logging
+import unittest
+from lib import cli, storage, surl 
+
+
+class TestOverwrite(unittest.TestCase):
+
+	def __init__(self, *args, **kwargs): 
+		super(TestOverwrite, self).__init__(*args, **kwargs)
+		self.surl   = surl.Surl()
+		self.client = cli.Cli()
+
+
+	def setUp(self):
+		self.transfers = []
+		for (srcSa, dstSa) in storage.getStoragePairs():
+			srcSurl = self.surl.generate(srcSa)
+			dstSurl = self.surl.generate(dstSa)
+			self.transfers.append((srcSurl, dstSurl))
+
+
+	def tearDown(self):
+		allFiles = set(list(itertools.chain(*self.transfers)))
+		for f in allFiles:
+			try:
+				logging.debug("Removing %s" % f)
+				self.surl.unlink(f)
+			except Exception, e:
+				logging.error(e)
+
+
+	def test_overwriteExisting(self):
+		for (src, dst) in self.transfers:
+			logging.info("Transfer overwriting existing file %s => %s" % (src, dst))
+			self.surl.create(src)
+			self.surl.create(dst)
+			jobId = self.client.spawnTransfer(src, dst, ['-o'])
+			logging.info("Got job id %s" % jobId)
+			state = self.client.poll(jobId)
+			logging.info("Finished with %s" % state)
+			self.assertEqual(state, 'FINISHED')
+
+
+	def test_noOverwriteExisting(self):
+		for (src, dst) in self.transfers:
+			logging.info("Transfer overwriting existing file %s => %s" % (src, dst))
+			self.surl.create(src)
+			self.surl.create(dst)
+			jobId = self.client.spawnTransfer(src, dst)
+			logging.info("Got job id %s" % jobId)
+			state = self.client.poll(jobId)
+			logging.info("Finished with %s" % state)
+			self.assertEqual(state, 'FAILED')
+
+
+
+if __name__ == '__main__':
+	unittest.main()
+
