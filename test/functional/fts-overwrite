@@ -4,34 +4,10 @@
 import itertools
 import logging
 import unittest
-from lib import cli, storage, surl 
+from lib import base 
 
 
-class TestOverwrite(unittest.TestCase):
-
-	def __init__(self, *args, **kwargs): 
-		super(TestOverwrite, self).__init__(*args, **kwargs)
-		self.surl   = surl.Surl()
-		self.client = cli.Cli()
-
-
-	def setUp(self):
-		self.transfers = []
-		for (srcSa, dstSa) in storage.getStoragePairs():
-			srcSurl = self.surl.generate(srcSa)
-			dstSurl = self.surl.generate(dstSa)
-			self.transfers.append((srcSurl, dstSurl))
-
-
-	def tearDown(self):
-		allFiles = set(list(itertools.chain(*self.transfers)))
-		for f in allFiles:
-			try:
-				logging.debug("Removing %s" % f)
-				self.surl.unlink(f)
-			except Exception, e:
-				logging.error(e)
-
+class TestOverwrite(base.TestBase):
 
 	def test_overwriteExisting(self):
 		"""
@@ -42,7 +18,7 @@ class TestOverwrite(unittest.TestCase):
 			logging.info("Transfer overwriting existing file %s => %s" % (src, dst))
 			self.surl.create(src)
 			self.surl.create(dst)
-			jobId = self.client.submit(src, dst, ['-o'])
+			jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}], ['-o'])
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
@@ -58,7 +34,7 @@ class TestOverwrite(unittest.TestCase):
 			logging.info("Transfer overwriting existing file %s => %s" % (src, dst))
 			self.surl.create(src)
 			self.surl.create(dst)
-			jobId = self.client.submit(src, dst)
+			jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
@@ -67,5 +43,6 @@ class TestOverwrite(unittest.TestCase):
 
 
 if __name__ == '__main__':
-	unittest.main()
+	import sys
+	unittest.main(testRunner = unittest.TextTestRunner(stream=sys.stdout, verbosity = 2))
 

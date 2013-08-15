@@ -1,22 +1,29 @@
 import config
+import json
 import fts3
 import logging
+import os
 import subprocess
+import tempfile
 import time
 
 
 class Cli:
-	def submit(self, source, destination, parameters = [], checksum = None):
+
+	def submit(self, transfers, extraArgs = []):
 		"""
 		Spawns a transfer and returns the job ID
-		Source is assumed to exist
 		"""
+		# Build the submission file
+		submission = tempfile.NamedTemporaryFile(delete = False, suffix = '.submission')
+		submission.write(json.dumps({'Files': transfers}))
+		submission.close()
+
+		# Spawn the transfer
 		cmdArray = ['fts-transfer-submit',
                     '-s', config.Fts3Endpoint,
-                    '--job-metadata', config.TestLabel] + parameters
-		cmdArray += [source, destination]
-		if checksum:
-			cmdArray.append(config.Checksum + ':' + checksum)
+                    '--job-metadata', config.TestLabel,
+					'--new-bulk-format', '-f', submission.name] + extraArgs
 		logging.debug("Spawning %s" % ' '.join(cmdArray))
 		proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 		rcode = proc.wait()
@@ -25,6 +32,9 @@ class Cli:
 			logging.error(proc.stderr.read())
 			raise Exception("fts-transfer-submit failed with exit code %d" % rcode)
 		jobId = proc.stdout.read().strip()
+
+		os.unlink(submission.name)
+
 		return jobId
 
 

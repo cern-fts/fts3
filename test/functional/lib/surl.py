@@ -50,7 +50,7 @@ class Surl:
 
 		checksum = self.gctx.checksum(surl, config.Checksum)
 		logging.debug("File uploaded with checksum %s" % checksum)
-		return checksum
+		return config.Checksum + ':' + checksum
 
 
 	def unlink(self, surl):
@@ -58,5 +58,6 @@ class Surl:
 
 
 	def checksum(self, surl):
-		return self.gctx.checksum(surl, config.Checksum)
+		return config.Checksum + ':' + self.gctx.checksum(surl, config.Checksum)
+
 

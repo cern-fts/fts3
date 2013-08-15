@@ -46,13 +46,17 @@ try:
 except:
 	debug = 1
 if debug:
-	logging.basicConfig(level = logging.DEBUG)
+	logLevel = logging.DEBUG
 else:
-	logging.basicConfig(level = logging.INFO)
+	logLevel = logging.INFO
 
 # Let's make it nicer
+logging.basicConfig(level = logLevel, format = '%(levelname)-8s %(message)s')
+
 if sys.stdout.isatty():
 	logging.addLevelName(logging.DEBUG, "\033[1;2m%s\033[1;m" % logging.getLevelName(logging.DEBUG))
 	logging.addLevelName(logging.INFO, "\033[1;34m%s\033[1;m" % logging.getLevelName(logging.INFO))
 	logging.addLevelName(logging.ERROR, "\033[1;31m%s\033[1;m" % logging.getLevelName(logging.ERROR))
+	logging.addLevelName(logging.WARNING, "\033[1;33m%s\033[1;m" % logging.getLevelName(logging.WARNING))
+
 

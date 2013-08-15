@@ -4,34 +4,10 @@
 import itertools
 import logging
 import unittest
-from lib import cli, storage, surl 
+from lib import base 
 
 
-class TestCancel(unittest.TestCase):
-
-	def __init__(self, *args, **kwargs): 
-		super(TestCancel, self).__init__(*args, **kwargs)
-		self.surl   = surl.Surl()
-		self.client = cli.Cli()
-
-
-	def setUp(self):
-		self.transfers = []
-		for (srcSa, dstSa) in storage.getStoragePairs():
-			srcSurl = self.surl.generate(srcSa)
-			dstSurl = self.surl.generate(dstSa)
-			self.transfers.append((srcSurl, dstSurl))
-
-
-	def tearDown(self):
-		allFiles = set(list(itertools.chain(*self.transfers)))
-		for f in allFiles:
-			try:
-				logging.debug("Removing %s" % f)
-				self.surl.unlink(f)
-			except Exception, e:
-				logging.error(e)
-
+class TestCancel(base.TestBase):
 
 	def test_cancelNoFinished(self):
 		"""
@@ -40,7 +16,7 @@ class TestCancel(unittest.TestCase):
 		for (src, dst) in self.transfers:
 			logging.info("Transfer cancelling %s => %s" % (src, dst))
 			self.surl.create(src)
-			jobId = self.client.submit(src, dst)
+			jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])
 			logging.info("Got job id %s" % jobId)
 			self.client.cancel(jobId)
 			state = self.client.poll(jobId)
@@ -55,7 +31,7 @@ class TestCancel(unittest.TestCase):
 		for (src, dst) in self.transfers:
 			logging.info("Transfer cancelling terminal %s => %s" % (src, dst))
 			self.surl.create(src)
-			jobId = self.client.submit(src, dst)
+			jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
@@ -63,5 +39,6 @@ class TestCancel(unittest.TestCase):
 
 
 if __name__ == '__main__':
-	unittest.main()
+	import sys
+	unittest.main(testRunner = unittest.TextTestRunner(stream=sys.stdout, verbosity = 2))
 
