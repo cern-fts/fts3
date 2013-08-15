@@ -12,6 +12,8 @@ BuildRequires: cmake
 
 Requires: fts-client
 Requires: gfal2-python
+Requires: gfal2-plugin-srm
+Requires: gfal2-plugin-gridftp
 Requires: python
 Requires: voms-clients
 
