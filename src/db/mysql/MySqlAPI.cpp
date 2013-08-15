@@ -2683,7 +2683,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
 
 
 
-void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest,
+void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::string & /*source_se*/, const std::string & /*dest*/,
                           int nostreams, int timeout, int buffersize)
 {
     soci::session sql(*connectionPool);
@@ -2692,16 +2692,6 @@ void MySqlAPI::setAllowed(const std::string & job_id, int file_id, const std::st
     try
         {
             sql.begin();
-
-
-
-            sql << "UPDATE t_optimize SET "
-                "    file_id = 1 "
-                "WHERE nostreams = :nStreams AND buffer = :bufferSize AND timeout = :timeout AND "
-                "      source_se = :source AND dest_se = :dest",
-                soci::use(nostreams), soci::use(buffersize), soci::use(timeout),
-                soci::use(source_se), soci::use(dest);
-
 
             params << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
 
