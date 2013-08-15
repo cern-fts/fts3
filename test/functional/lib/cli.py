@@ -6,7 +6,7 @@ import time
 
 
 class Cli:
-	def spawnTransfer(self, source, destination, parameters = [], checksum = None):
+	def submit(self, source, destination, parameters = [], checksum = None):
 		"""
 		Spawns a transfer and returns the job ID
 		Source is assumed to exist

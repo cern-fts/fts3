@@ -34,11 +34,15 @@ class TestOverwrite(unittest.TestCase):
 
 
 	def test_overwriteExisting(self):
+		"""
+		Enable overwrite and submit a transfer with a file that does exist.
+		It must succeed.
+		"""
 		for (src, dst) in self.transfers:
 			logging.info("Transfer overwriting existing file %s => %s" % (src, dst))
 			self.surl.create(src)
 			self.surl.create(dst)
-			jobId = self.client.spawnTransfer(src, dst, ['-o'])
+			jobId = self.client.submit(src, dst, ['-o'])
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
@@ -46,11 +50,15 @@ class TestOverwrite(unittest.TestCase):
 
 
 	def test_noOverwriteExisting(self):
+		"""
+		Do NOT enable overwrite and submit a transfer with a file that does exist.
+		It must fail.
+		"""
 		for (src, dst) in self.transfers:
 			logging.info("Transfer overwriting existing file %s => %s" % (src, dst))
 			self.surl.create(src)
 			self.surl.create(dst)
-			jobId = self.client.spawnTransfer(src, dst)
+			jobId = self.client.submit(src, dst)
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)

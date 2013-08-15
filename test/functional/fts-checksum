@@ -34,10 +34,13 @@ class TestChecksum(unittest.TestCase):
 
 
 	def test_withChecksum(self):
+		"""
+		Just enable the flag needed to check the checksum
+		"""
 		for (src, dst) in self.transfers:
 			logging.info("Transfer with checksum %s => %s" % (src, dst))
 			srcChecksum = self.surl.create(src)
-			jobId = self.client.spawnTransfer(src, dst, ['-K'])
+			jobId = self.client.submit(src, dst, ['-K'])
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
@@ -47,10 +50,13 @@ class TestChecksum(unittest.TestCase):
 
 
 	def test_withUserChecksum(self):
+		"""
+		Ask to validate the checksum and provide the right checksum
+		"""
 		for (src, dst) in self.transfers:
 			logging.info("Transfer with user checksum %s => %s" % (src, dst))
 			srcChecksum = self.surl.create(src)
-			jobId = self.client.spawnTransfer(src, dst, ['-K'], srcChecksum)
+			jobId = self.client.submit(src, dst, ['-K'], srcChecksum)
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
@@ -60,11 +66,14 @@ class TestChecksum(unittest.TestCase):
 
 
 	def test_withBadUserChecksum(self):
+		"""
+		Ask to validate the checksum but give a bad one on purpose
+		"""
 		for (src, dst) in self.transfers:
 			logging.info("Transfer with wrong user checksum %s => %s" % (src, dst))
 			srcChecksum = self.surl.create(src)
 			shiftedChecksum = "%x" % (int(srcChecksum, 16) + 1)
-			jobId = self.client.spawnTransfer(src, dst, ['-K', '-o'], shiftedChecksum)
+			jobId = self.client.submit(src, dst, ['-K', '-o'], shiftedChecksum)
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
