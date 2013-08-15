@@ -21,6 +21,7 @@ FileTransferExecutorPool::FileTransferExecutorPool(int size, TransferFileHandler
     ftsHostName(ftsHostName)
 {
     index = 0;
+    scheduled = 0;
 }
 
 FileTransferExecutorPool::~FileTransferExecutorPool()
@@ -64,6 +65,8 @@ void FileTransferExecutorPool::join()
                 {
                     exec->join();
                 }
+
+            scheduled += exec->getNumberOfScheduled();
         }
 }
 

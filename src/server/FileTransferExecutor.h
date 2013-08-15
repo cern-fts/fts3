@@ -95,6 +95,11 @@ public:
 		// t.interrupt();
 	}
 
+	int getNumberOfScheduled()
+	{
+		return scheduled;
+	}
+
 private:
 
     static string prepareMetadataString(std::string text);
@@ -122,6 +127,10 @@ private:
     /// worker thread
     thread t;
 
+    /// number of files that went to ready state
+    int scheduled;
+
+    /// url_copy command
     static const std::string cmd;
 };
 

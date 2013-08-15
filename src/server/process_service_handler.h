@@ -305,6 +305,10 @@ protected:
                         FileTransferExecutorPool execPool(6, tfh, monitoringMessages, infosys, ftsHostName);
 
                         // loop until all files have been served
+
+                        int initial_size = tfh.size();
+
+
                         while (!tfh.empty())
                             {
                                 PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
@@ -370,6 +374,8 @@ protected:
 
                         // wait for all the workers to finish
                         execPool.join();
+
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
 
                         /** cleanup resources */
                         std::vector<TransferJobs*>::const_iterator iter22;

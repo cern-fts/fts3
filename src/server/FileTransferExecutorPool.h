@@ -55,6 +55,14 @@ public:
 	 */
 	void stopAll();
 
+	/**
+	 *
+	 */
+	int getNumberOfScheduled()
+	{
+		return scheduled;
+	}
+
 private:
     vector<FileTransferExecutor*> executors;
 
@@ -66,6 +74,9 @@ private:
     bool monitoringMsg;
     string infosys;
     string ftsHostName;
+
+    /// number of files scheduled by the thread pool
+    int scheduled;
 };
 
 } /* namespace server */

@@ -70,6 +70,8 @@ public:
 
     bool empty();
 
+    int size();
+
     const set<string> getSources(string se) const;
     const set<string> getDestinations(string se) const;
 

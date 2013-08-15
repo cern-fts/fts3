@@ -267,5 +267,18 @@ const set<string> TransferFileHandler::getDestinationsVos(string se) const
     return set<string>();
 }
 
+int TransferFileHandler::size()
+{
+	int sum = 0;
+
+	map< string, list<FileIndex> >::iterator it;
+	for (it = voToFileIndexes.begin(); it != voToFileIndexes.end(); it++)
+		{
+			sum += it->second.size();
+		}
+
+	return sum;
+}
+
 } /* namespace cli */
 } /* namespace fts3 */
