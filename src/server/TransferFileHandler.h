@@ -83,7 +83,6 @@ private:
     optional<FileIndex> getIndex(string vo);
 
     map< string, set<string> >& getMapFromCache(map< string, list<TransferFiles*> >& files, GET_MAP_OPTS opt);
-    void eraseCache();
 
     map< FileIndex, list<TransferFiles*> > fileIndexToFiles;
 
@@ -97,7 +96,7 @@ private:
     mutex m;
 
     /// cache for the following maps
-    map< string, set<string> >* init_arr;
+    vector< map< string, set<string> > > init_cache;
 
     /// outgoing/incoming transfers/vo for a given SE
     const map< string, set<string> > sourceToDestinations;
