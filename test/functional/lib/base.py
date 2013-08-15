@@ -1,5 +1,6 @@
-import itertools
+import collections
 import logging
+import types
 import unittest
 import cli, storage, surl 
 
@@ -20,8 +21,20 @@ class TestBase(unittest.TestCase):
 			self.transfers.append((srcSurl, dstSurl))
 
 
+	def _flatten(self, l):
+		if type(l) is types.StringType:
+			yield l
+		else:
+			for i in l:
+				if isinstance(i, collections.Iterable):
+					for sub in self._flatten(i):
+						yield sub
+				else:
+					yield i
+
+
 	def tearDown(self):
-		allFiles = set(list(itertools.chain(*self.transfers)))
+		allFiles = self._flatten(self.transfers)
 		for f in allFiles:
 			try:
 				logging.debug("Removing %s" % f)
