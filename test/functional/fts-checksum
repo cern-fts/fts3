@@ -66,6 +66,24 @@ class TestChecksum(base.TestBase):
 			self.assertEqual(state, 'FAILED')
 
 
+	def test_headingZerosUserChecksum(self):
+		"""
+		The right checksum is given, but with heading 0.
+		This is a regression test for LCGUTIL-216
+		"""
+		for (src, dst) in self.transfers:
+			logging.info("Transfer zero-headed checksum %s => %s" % (src, dst))
+			srcChecksum = self.surl.create(src)
+			(al, val) = srcChecksum.split(':')
+			zeroedChecksum = "%s:0%s" % (al, val)
+			jobId = self.client.submit([{'sources': [src], 'destinations': [dst], 'checksums': [zeroedChecksum]}], ['-K', '-o'])
+			logging.info("Got job id %s" % jobId)
+			state = self.client.poll(jobId)
+			logging.info("Finished with %s" % state)
+			self.assertEqual(state, 'FINISHED')
+
+
+
 if __name__ == '__main__':
 	import sys
 	unittest.main(testRunner = unittest.TextTestRunner(stream=sys.stdout, verbosity = 2))
