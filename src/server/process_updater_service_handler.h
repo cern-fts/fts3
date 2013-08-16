@@ -114,8 +114,8 @@ protected:
     void executeTransfer_a()
     {
 
-        std::vector<struct message_updater>::const_iterator iter;
-        std::vector<struct message_updater>::const_iterator iter_restore;
+        std::vector<struct message_updater>::iterator iter;
+        std::vector<struct message_updater>::iterator iter_restore;
 
         while (stopThreads==false)   /*need to receive more than one messages at a time*/
             {

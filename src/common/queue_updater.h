@@ -38,9 +38,9 @@ public:
     ~ThreadSafeList();
 
     std::list<struct message_updater> getList();
-    void push_back(struct message_updater msg);
+    void push_back(message_updater &msg);
     void clear();
-    void updateMsg(struct message_updater msg);
+    void updateMsg(message_updater &msg);
     void checkExpiredMsg(std::vector<struct message_updater>& messages);
     void deleteMsg(std::vector<struct message_updater>& messages);
     void removeFinishedTr(std::string job_id, int file_id);

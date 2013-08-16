@@ -34,7 +34,7 @@ std::list<struct message_updater> ThreadSafeList::getList()
     return tempList;
 }
 
-void ThreadSafeList::push_back(struct message_updater msg)
+void ThreadSafeList::push_back(message_updater &msg)
 {
     ThreadTraits::LOCK_R lock(_mutex);
     m_list.push_back(msg);
@@ -104,7 +104,7 @@ bool ThreadSafeList::isAlive(int fileID)
     return true;
 }
 
-void ThreadSafeList::updateMsg(struct message_updater msg)
+void ThreadSafeList::updateMsg(message_updater &msg)
 {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator iter;

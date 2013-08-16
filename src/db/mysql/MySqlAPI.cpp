@@ -5512,7 +5512,6 @@ void MySqlAPI::checkSanityState()
     //TERMINAL STATES:  "FINISHED" FAILED" "CANCELED"
     soci::session sql(*connectionPool);
 
-    std::vector<std::string> ret;
     unsigned int numberOfFiles = 0;
     unsigned int terminalState = 0;
     unsigned int allFinished = 0;
