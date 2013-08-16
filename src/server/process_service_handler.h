@@ -276,7 +276,7 @@ protected:
         fout.close();
     }
 
-    void executeUrlcopy(std::vector<TransferJobs*>& jobs, bool reuse)
+    void executeUrlcopy(std::vector<TransferJobs*>& jobs22, bool reuse)
     {
         const std::string cmd = "fts_url_copy";
         std::string params = std::string("");
@@ -291,50 +291,12 @@ protected:
         bool debug = false;
         OptimizerSample* opt_config = NULL;
 
-        typedef std::map< std::string, std::list<TransferFiles*> > VoQueues;
-        VoQueues voQueues;
-
-        // When the object is destroyed, voQueues will be freed
-        // This way, we don't have to worry about freeing it in every possible
-        // path of this method (exceptions, return, ...)
-        struct QueueDisposer {
-            VoQueues& vq;
-            QueueDisposer(VoQueues& vq): vq(vq) {}
-
-            ~QueueDisposer() {
-                VoQueues::iterator i;
-                for (i = vq.begin(); i != vq.end(); ++i) {
-                    std::list<TransferFiles*>::iterator j;
-                    for (j = i->second.begin(); j != i->second.end(); ++j) {
-                        delete *j;
-                    }
-                    i->second.clear();
-                }
-                vq.clear();
-            }
-        } vqDisposer(voQueues);
-
-        // Pretty much the same for jobs
-        typedef std::vector<TransferJobs*> JobVector;
-        struct JobsDisposer {
-            JobVector& jv;
-
-            JobsDisposer(JobVector& jv): jv(jv) {}
-
-            ~JobsDisposer() {
-                JobVector::iterator i;
-
-                for (i = jv.begin(); i != jv.end(); ++i)
-                    delete *i;
-                jv.clear();
-            }
-        } jobsDisposer(jobs);
-
         if (reuse == false)
             {
-                if (!jobs.empty())
+                if (!jobs22.empty())
                     {
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs, voQueues, reuse);
+                        std::map< std::string, std::list<TransferFiles*> > voQueues;
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs22, voQueues, reuse);
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
@@ -345,6 +307,7 @@ protected:
                         // loop until all files have been served
 
                         int initial_size = tfh.size();
+
 
                         while (!tfh.empty())
                             {
@@ -357,6 +320,14 @@ protected:
 
                                         if (stopThreads)
                                             {
+                                                /** cleanup resources */
+                                                std::vector<TransferJobs*>::const_iterator iter22;
+                                                for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
+                                                    {
+                                                        if(*iter22)
+                                                            delete *iter22;
+                                                    }
+                                                jobs22.clear();
                                                 execPool.stopAll();
                                                 return;
                                             }
@@ -405,11 +376,20 @@ protected:
                         execPool.join();
 
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
+
+                        /** cleanup resources */
+                        std::vector<TransferJobs*>::const_iterator iter22;
+                        for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
+                            {
+                                if(*iter22)
+                                    delete *iter22;
+                            }
+                        jobs22.clear();
                     }
             }
         else     /*reuse session*/
             {
-                if (!jobs.empty())
+                if (!jobs22.empty())
                     {
                         bool manualConfigExists = false;
                         std::vector<std::string> urls;
@@ -440,17 +420,19 @@ protected:
                         /*get the file for each job*/
                         std::vector<TransferJobs*>::const_iterator iter2;
 
+                        std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::list<TransferFiles*>::const_iterator queueiter;
 
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs, voQueues, reuse);
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs22, voQueues, reuse);
 
                         if (voQueues.empty())
                             {
+                                jobs22.clear();
                                 return;
                             }
 
                         // since there will be just one VO pick it (TODO)
-                        std::string vo = jobs.front()->VO_NAME;
+                        std::string vo = jobs22.front()->VO_NAME;
 
                         for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                             {
@@ -541,6 +523,20 @@ protected:
 
                         if(!tempUrl)
                             {
+                                /** cleanup resources */
+                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2)
+                                    {
+                                        if(*iter2)
+                                            delete *iter2;
+                                    }
+                                jobs22.clear();
+                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                                    {
+                                        if(*queueiter)
+                                            delete *queueiter;
+                                    }
+                                voQueues[vo].clear();
+                                fileIds.clear();
                                 return;
                             }
 
@@ -821,6 +817,21 @@ protected:
                                 params.clear();
                             }
 
+
+                        std::vector<TransferJobs*>::const_iterator iter22;
+                        for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
+                            {
+                                if(*iter22)
+                                    delete *iter22;
+                            }
+                        jobs22.clear();
+
+                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                            {
+                                if(*queueiter)
+                                    delete *queueiter;
+                            }
+                        voQueues[vo].clear();
                         fileIds.clear();
 
                     }
