@@ -11,6 +11,7 @@ from urlparse import urlparse
 class Surl:
 	def __init__(self):
 		self.gctx = gfal2.creat_context()
+		self.gctx.set_opt_string('SRM PLUGIN', 'TURL_PROTOCOLS', 'gsiftp')
 
 
 	def generate(self, base):
