@@ -74,5 +74,6 @@ class TestMultiple(base.TestBase):
 	
 
 if __name__ == '__main__':
-	unittest.main()
+	import sys
+	unittest.main(testRunner = unittest.TextTestRunner(stream=sys.stdout, verbosity = 2))
 
