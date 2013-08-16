@@ -110,9 +110,6 @@ private:
     /// pairs that were already checked and were not scheduled
     set< pair<string, string> > notScheduled;
 
-    /// state of the worker
-    bool active;
-
     /// variables from process_service_handler
     TransferFileHandler& tfh;
     bool optimize;
@@ -126,6 +123,9 @@ private:
 
     /// worker thread
     thread t;
+
+    /// state of the worker
+    bool active;
 
     /// number of files that went to ready state
     int scheduled;

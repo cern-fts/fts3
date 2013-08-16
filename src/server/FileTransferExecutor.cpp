@@ -40,10 +40,11 @@ FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimi
     infosys(infosys),
     ftsHostName(ftsHostName),
     db(DBSingleton::instance().getDBObjectInstance()),
-    t(bind(&FileTransferExecutor::execute, this))
-{
-    active = true;
-    scheduled = 0;
+    t(bind(&FileTransferExecutor::execute, this)),
+    active(true),
+    scheduled(0)
+    
+{    
 }
 
 FileTransferExecutor::~FileTransferExecutor()

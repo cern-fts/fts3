@@ -55,7 +55,6 @@ limitations under the License. */
 #include <boost/shared_ptr.hpp>
 #include "name_to_uid.h"
 #include "producer_consumer_common.h"
-#include "TransferFileHandler.h"
 #include <sys/resource.h>
 #include <sys/sysinfo.h>
 #include <boost/algorithm/string/replace.hpp>
