@@ -1,6 +1,7 @@
 import config
 import json
 import fts3
+import inspect
 import logging
 import os
 import subprocess
@@ -19,10 +20,15 @@ class Cli:
 		submission.write(json.dumps({'Files': transfers}))
 		submission.close()
 
+		# Label the job
+		caller = inspect.stack()[1][3]
+		labeldict = {'label': config.TestLabel, 'test': caller}
+		label = json.dumps(labeldict)
+
 		# Spawn the transfer
 		cmdArray = ['fts-transfer-submit',
                     '-s', config.Fts3Endpoint,
-                    '--job-metadata', config.TestLabel,
+                    '--job-metadata', label, 
 					'--new-bulk-format', '-f', submission.name] + extraArgs
 		logging.debug("Spawning %s" % ' '.join(cmdArray))
 		proc = subprocess.Popen(cmdArray, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
