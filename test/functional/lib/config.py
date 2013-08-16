@@ -33,9 +33,9 @@ StorageParametrization = {
 # i.e. %(vo)s
 # They will be replaced with the values of StorageParametrization
 StorageAreas = [
-#  'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
+	'srm://hepgrid11.ph.liv.ac.uk:8446/srm/managerv2?SFN=/dpm/ph.liv.ac.uk/home/%(vo)s/',
 	'gsiftp://hepgrid11.ph.liv.ac.uk/dpm/ph.liv.ac.uk/home/%(vo)s/',
-#  'srm://f-dpm001.grid.sinica.edu.tw:8446/srm/managerv2?SFN=/dpm/grid.sinica.edu.tw/home/%(vo)s/',
+	'srm://ccsrm.in2p3.fr:8443/srm/managerv2?SFN=/pnfs/in2p3.fr/data/%(vo)s/',
 	'gsiftp://lpsc-se-dpm-server.in2p3.fr/dpm/in2p3.fr/home/%(vo)s/'
 ]
 
