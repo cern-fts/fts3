@@ -402,9 +402,6 @@ int DoServer(int argc, char** argv)
             action.sa_flags = SA_RESTART;
             sigaction(SIGINT, &action, NULL);
 
-            //initialize here to avoid race conditions
-            ThreadSafeList::get_instance();
-
             try
                 {
                     // Set up handle
