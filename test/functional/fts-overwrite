@@ -31,7 +31,7 @@ class TestOverwrite(base.TestBase):
 		It must fail.
 		"""
 		for (src, dst) in self.transfers:
-			logging.info("Transfer overwriting existing file %s => %s" % (src, dst))
+			logging.info("Transfer NOT overwriting existing file %s => %s" % (src, dst))
 			self.surl.create(src)
 			self.surl.create(dst)
 			jobId = self.client.submit([{'sources': [src], 'destinations': [dst]}])

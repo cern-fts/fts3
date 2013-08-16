@@ -42,6 +42,10 @@ class TestChecksum(base.TestBase):
 
 
 	def _badChecksum(self, chk):
+		"""
+		To generate a bad checksum, we get the right one
+		and add any value.
+		"""
 		(al, val) = chk.split(':')
 		val = "%x" % (int(val, 16) + 42)
 		return al + ':' + val

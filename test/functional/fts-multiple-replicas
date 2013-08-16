@@ -21,6 +21,10 @@ class TestMultiple(base.TestBase):
 
 
 	def test_multipleWithReuse(self):
+		"""
+		Submitting multiple replicas with reuse enabled must fail,
+		since those are two incompatible modes
+		"""
 		for (src1, src2, src3, dst) in self.transfers:
 			logging.info("Transfer with multiple sources and reuse enabled")
 			logging.info(src1)
@@ -33,8 +37,12 @@ class TestMultiple(base.TestBase):
 
 
 	def test_multipleNoExists(self):
+		"""
+		Three source replicas are given, but all of them do not exist,
+		so the job final status must be failed
+		"""
 		for (src1, src2, src3, dst) in self.transfers:
-			logging.info("Transfer with multiple sources and reuse enabled")
+			logging.info("Transfer with multiple nonexistent sources")
 			logging.info(src1)
 			logging.info(src2)
 			logging.info(src3)
@@ -47,8 +55,12 @@ class TestMultiple(base.TestBase):
 
 
 	def test_multipleOneExists(self):
+		"""
+		Three source replicas are given, and only one exists.
+		The transfer must succeed. 
+		"""
 		for (src1, src2, src3, dst) in self.transfers:
-			logging.info("Transfer with multiple sources and reuse enabled")
+			logging.info("Transfer with multiple sources, only one exists")
 			logging.info(src1)
 			logging.info(src2)
 			logging.info(src3)
