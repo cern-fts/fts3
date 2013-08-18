@@ -311,7 +311,7 @@ protected:
 	 	                } 
 
                         // the worker thread pool
-                        FileTransferExecutorPool execPool(6, tfh, monitoringMessages, infosys, ftsHostName);
+                        FileTransferExecutorPool execPool(5, tfh, monitoringMessages, infosys, ftsHostName);
 
                         // loop until all files have been served
 
