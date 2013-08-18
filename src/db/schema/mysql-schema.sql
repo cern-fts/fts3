@@ -623,25 +623,40 @@ CREATE TABLE t_stage_req (
 CREATE INDEX job_job_state    ON t_job(job_state);
 CREATE INDEX job_cred_id      ON t_job(user_dn(800),cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
-CREATE INDEX idx_report_job      ON t_job (vo_name);
+CREATE INDEX job_submit_time     ON t_job(submit_time);
+CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
+CREATE INDEX job_cancel     ON t_job(cancel_job);
+CREATE INDEX job_reuse    ON t_job(reuse_job);
 
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
-CREATE INDEX file_job_id_a ON t_file(FINISH_TIME);
-CREATE INDEX file_file_state_job_id4 ON t_file(file_state);
-CREATE INDEX file_pid_job_id ON t_file(job_id);
-CREATE INDEX file_file_id ON t_file(file_id, file_index);
+CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
+CREATE INDEX file_finish_time ON t_file(finish_time);
+CREATE INDEX file_file_index ON t_file(file_index);
+CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
+CREATE INDEX file_file_throughput ON t_file(throughput);
+CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se, job_id);
+CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
+CREATE INDEX file_transferhost on t_file(TRANSFERHOST);
+CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
 
-
+CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
+CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
+CREATE INDEX optimize_buffer            ON t_optimize(buffer);
+CREATE INDEX optimize_order         ON t_optimize(timeout,buffer);
+CREATE INDEX optimize_prot         ON t_optimize(nostreams,active,throughput);
+CREATE INDEX optimize_prot2         ON t_optimize(throughput, active, nostreams, timeout, buffer);
+
+
 
 
 CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
 CREATE INDEX t_server_config_retry         ON t_server_config(retry);
 
-
+CREATE INDEX idx_report_job      ON t_job (vo_name,job_id);
 
 
 -- Config index
