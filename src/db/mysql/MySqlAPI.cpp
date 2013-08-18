@@ -6091,7 +6091,8 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
 {
     soci::session sql(*connectionPool);
 
-    //expressed in secs
+    //expressed in secs, default delay
+    const int default_retry_delay = 7;
     int retry_delay = 0;
 
     try
@@ -6121,7 +6122,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                 ;
 
             if (retry_delay > 0)
-                {
+                {		   
                     // update
                     time_t now = convertToUTC(retry_delay);
                     struct tm tTime;
@@ -6132,6 +6133,18 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                         soci::use(fileId),
                         soci::use(jobId);
                 }
+	     else
+	        {
+                    // update
+                    time_t now = convertToUTC(default_retry_delay);
+                    struct tm tTime;
+                    gmtime_r(&now, &tTime);
+                    sql <<
+                        " update t_file set retry_timestamp=:1 where file_id=:fileId AND job_id=:jobId ",
+                        soci::use(tTime),
+                        soci::use(fileId),
+                        soci::use(jobId);		
+		}
 
             sql.commit();
         }

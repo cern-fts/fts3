@@ -11962,6 +11962,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
     oracle::occi::ResultSet* retRetryTimestamp = 0;
     //expressed in secs
     int retry_delay = 0;
+    const int default_retry_delay = 7;
 
     try
         {
@@ -11989,6 +11990,18 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
                     conn->commit(pooledConnection);
                     conn->destroyStatement(ssetRetryTimestamp1, tagsetRetryTimestamp1, pooledConnection);
                 }
+            else
+                {
+                    time_t now = time(0);
+                    time_t now_plus_seconds = now + default_retry_delay;
+                    ssetRetryTimestamp1 = conn->createStatement(querysetRetryTimestamp1, tagsetRetryTimestamp1, pooledConnection);
+                    ssetRetryTimestamp1->setTimestamp(1, conv->toTimestamp(now_plus_seconds, conn->getEnv()));
+                    ssetRetryTimestamp1->setString(2, jobId);
+                    ssetRetryTimestamp1->setInt(3, fileId);
+                    ssetRetryTimestamp1->executeUpdate();
+                    conn->commit(pooledConnection);
+                    conn->destroyStatement(ssetRetryTimestamp1, tagsetRetryTimestamp1, pooledConnection);
+                }		
         }
     catch (oracle::occi::SQLException const &e)
         {
