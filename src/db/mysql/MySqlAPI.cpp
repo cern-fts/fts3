@@ -1854,36 +1854,6 @@ void MySqlAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string 
 
     try
         {
-            unsigned foundRecords = 0;
-            sql.begin();
-
-            sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
-                soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(foundRecords);
-
-            if (foundRecords == 0)
-                {
-                    int timeout=0, nStreams=0, bufferSize=0;
-
-                    soci::statement stmt = (sql.prepare << "INSERT INTO t_optimize (source_se, dest_se, timeout, nostreams, buffer, file_id) "
-                                            "                VALUES (:source, :dest, :timeout, :nostreams, :buffer, 0)",
-                                            soci::use(source_hostname), soci::use(destin_hostname), soci::use(timeout),
-                                            soci::use(nStreams), soci::use(bufferSize));
-
-                    for (unsigned register int x = 0; x < timeoutslen; x++)
-                        {
-                            for (unsigned register int y = 0; y < nostreamslen; y++)
-                                {
-                                    timeout    = timeouts[x];
-                                    nStreams   = nostreams[y];
-                                    bufferSize = 0;
-                                    stmt.execute(true);
-                                }
-                        }
-                }
-
-            sql.commit();
-
             int numberOfSamples = 0;
 
             sql <<
