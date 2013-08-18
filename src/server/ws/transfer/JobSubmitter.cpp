@@ -538,8 +538,6 @@ string JobSubmitter::submit()
         destinationSe
     );
 
-    db->submitHost(id);
-
     //send state message
     SingleTrStateInstance::instance().sendStateMessage(id, -1);
 
