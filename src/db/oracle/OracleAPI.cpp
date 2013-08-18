@@ -3168,9 +3168,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     const std::string tag5 = "fetchOptimizationConfig2ZZZZssss";
     const std::string tagInit1 = "initOptimizerdds";
     const std::string tagInit2 = "initOptimizer2adf";
-    std::string queryInit2 = "insert into t_optimize(source_se, dest_se,timeout,nostreams,buffer, file_id ) values(:1,:2,:3,:4,:5,0) ";
-    std::string queryInit1 = "select count(*) from t_optimize where source_se=:1 and dest_se=:2";
-    int foundRecords = 0;
 
     int current_active_count = 0;
     int check_if_more_samples_exist_count = 0;
@@ -3212,10 +3209,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
     oracle::occi::Statement* s5 = NULL;
     oracle::occi::ResultSet* r5 = NULL;
 
-    oracle::occi::Statement* sInit1 = NULL;
-    oracle::occi::ResultSet* rInit1 = NULL;
-    oracle::occi::Statement* sInit2 = NULL;
-
     oracle::occi::Connection* pooledConnection = NULL;
 
     try
@@ -3223,43 +3216,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
-
-            sInit1 = conn->createStatement(queryInit1, tagInit1, pooledConnection);
-            sInit1->setString(1, source_hostname);
-            sInit1->setString(2, destin_hostname);
-            rInit1 = conn->createResultset(sInit1, pooledConnection);
-            if (rInit1->next())
-                {
-                    foundRecords = rInit1->getInt(1);
-                }
-            conn->destroyResultset(sInit1, rInit1);
-            conn->destroyStatement(sInit1, tagInit1, pooledConnection);
-            rInit1 = NULL;
-            sInit1 = NULL;
-
-
-            if (foundRecords == 0)
-                {
-                    sInit2 = conn->createStatement(queryInit2, tagInit2, pooledConnection);
-
-                    for (unsigned register int x = 0; x < timeoutslen; x++)
-                        {
-                            for (unsigned register int y = 0; y < nostreamslen; y++)
-                                {
-                                    sInit2->setString(1, source_hostname);
-                                    sInit2->setString(2, destin_hostname);
-                                    sInit2->setInt(3, timeouts[x]);
-                                    sInit2->setInt(4, nostreams[y]);
-                                    sInit2->setInt(5, 0);
-                                    sInit2->executeUpdate();
-                                }
-                        }
-                    conn->commit(pooledConnection);
-                    conn->destroyStatement(sInit2, tagInit2, pooledConnection);
-                    sInit2 = NULL;
-                }
-
-
 
 
             //if last 30 minutes transfer timeout use decent defaults
@@ -3391,14 +3347,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
             if (s4)
                 conn->destroyStatement(s4, tag4, pooledConnection);
 
-            if (sInit1 && rInit1)
-                conn->destroyResultset(sInit1, rInit1);
-            if (sInit1)
-                conn->destroyStatement(sInit1, tagInit1, pooledConnection);
-
-            if (sInit2)
-                conn->destroyStatement(sInit2, tagInit2, pooledConnection);
-
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
 
         }
@@ -3426,15 +3374,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 conn->destroyResultset(s4, r4);
             if (s4)
                 conn->destroyStatement(s4, tag4, pooledConnection);
-
-            if (sInit1 && rInit1)
-                conn->destroyResultset(sInit1, rInit1);
-            if (sInit1)
-                conn->destroyStatement(sInit1, tagInit1, pooledConnection);
-
-            if (sInit2)
-                conn->destroyStatement(sInit2, tagInit2, pooledConnection);
-
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
