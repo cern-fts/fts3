@@ -149,7 +149,7 @@ public:
      *
      * @see parse
      */
-    shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
+    boost::shared_ptr<SeProtocolConfig> getProtocolConfig(map<string, int> protocol);
 
     /**
      * Gets the SE / SE group name

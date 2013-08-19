@@ -23,4 +23,9 @@
 		aria-controls="perVo" aria-labelledby="ui-id-4"><a
 		href="{% url ftsmon.views.statistics.pervo %}" class="ui-tabs-anchor"
 		role="presentation" tabindex="-1" id="ui-id-4">Per vo</a></li>
+    <li class="ui-state-default ui-corner-top {% if tab_profiling %} ui-tabs-active {% endif %}"
+        role="tab" tabindex="-1"
+        aria-controls="perVo" aria-labelledby="ui-id-4"><a
+        href="{% url ftsmon.views.statistics.profiling %}" class="ui-tabs-anchor"
+        role="presentation" tabindex="-1" id="ui-id-4">Profiling</a></li>
 </ul>

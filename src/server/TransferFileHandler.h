@@ -50,6 +50,14 @@ typedef pair<string, int> FileIndex;
 class TransferFileHandler
 {
 
+    enum GET_MAP_OPTS
+    {
+        SOURCE_TO_DESTINATIONS,
+        SOURCE_TO_VOS,
+        DESTINATION_TO_SOURCES,
+        DESTINATION_TO_VOS
+    };
+
 public:
 
     TransferFileHandler(map< string, list<TransferFiles*> >& files);
@@ -62,13 +70,13 @@ public:
 
     bool empty();
 
-    void remove(string source, string destination);
+    int size();
 
-    set<string> getSources(string se);
-    set<string> getDestinations(string se);
+    const set<string> getSources(string se) const;
+    const set<string> getDestinations(string se) const;
 
-    set<string> getSourcesVos(string se);
-    set<string> getDestinationsVos(string se);
+    const set<string> getSourcesVos(string se) const;
+    const set<string> getDestinationsVos(string se) const;
 
 private:
 
@@ -76,24 +84,30 @@ private:
 
     optional<FileIndex> getIndex(string vo);
 
+    map< string, set<string> >& getMapFromCache(map< string, list<TransferFiles*> >& files, GET_MAP_OPTS opt);
+
     map< FileIndex, list<TransferFiles*> > fileIndexToFiles;
 
     map< string, list<FileIndex> > voToFileIndexes;
 
     set<string> vos;
 
-    set< pair<string, string> > notScheduled;
-
     void freeList(list<TransferFiles*>& l);
+
+    /// mutex that ensures thread safety
+    mutex m;
+
+    /// cache for the following maps
+    vector< map< string, set<string> > > init_cache;
+
+    /// outgoing/incoming transfers/vo for a given SE
+    const map< string, set<string> > sourceToDestinations;
+    const map< string, set<string> > sourceToVos;
+    const map< string, set<string> > destinationToSources;
+    const map< string, set<string> > destinationToVos;
 
     /// DB interface
     GenericDbIfce* db;
-
-    map< string, set<string> > sourceToDestinations;
-    map< string, set<string> > sourceToVos;
-    map< string, set<string> > destinationToSources;
-    map< string, set<string> > destinationToVos;
-
 };
 
 } /* namespace cli */

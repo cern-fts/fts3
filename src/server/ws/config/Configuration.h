@@ -129,7 +129,7 @@ public:
     /// 'share_only' string
     static const string share_only;
     /// value of a share pointing that auto should be used
-    static const int auto_share = -1;
+    static const int automatic = -1;
 
 protected:
 
@@ -234,7 +234,7 @@ protected:
      * @param active - the state
      * @param symbolic_name - the symbolic name describing the link
      */
-    pair< shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
+    pair< boost::shared_ptr<LinkConfig>, bool > getLinkConfig(string source, string destination, bool active, string symbolic_name);
 
     /**
      * Adds a link configuration to the DB.

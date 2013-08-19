@@ -9,7 +9,12 @@ CREATE TABLE t_server_config (
 );
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
 
-
+--
+-- Holds the optimizer mode
+--
+CREATE TABLE t_optimize_mode (
+  mode_opt       INTEGER NOT NULL DEFAULT 1
+);
 
 --
 -- Holds optimization parameters
@@ -632,16 +637,16 @@ CREATE INDEX file_finish_time ON t_file(finish_time);
 CREATE INDEX file_file_index ON t_file(file_index);
 CREATE INDEX file_retry_timestamp ON t_file(retry_timestamp);
 CREATE INDEX file_file_throughput ON t_file(throughput);
-CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se, job_id);
-CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
+CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se);
+CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_surl);
 CREATE INDEX file_transferhost on t_file(TRANSFERHOST);
 CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
 
+
+CREATE INDEX file_wait_timeout ON t_file(wait_timeout);
+
 CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
-CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
-CREATE INDEX optimize_buffer            ON t_optimize(buffer);
-CREATE INDEX optimize_order         ON t_optimize(timeout,buffer);
 CREATE INDEX optimize_prot         ON t_optimize(nostreams,active,throughput);
 CREATE INDEX optimize_prot2         ON t_optimize(throughput, active, nostreams, timeout, buffer);
 
@@ -680,4 +685,20 @@ CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 
 CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
 CREATE INDEX t_file_backup_1            ON t_file_backup(file_id);
+
+-- Profiling information
+CREATE TABLE t_profiling_info (
+    period  INT NOT NULL,
+    updated TIMESTAMP NOT NULL
+);
+
+CREATE TABLE t_profiling_snapshot (
+    scope      VARCHAR(255) NOT NULL PRIMARY KEY,
+    cnt        LONG NOT NULL,
+    exceptions LONG NOT NULL,
+    total      DOUBLE NOT NULL,
+    average    DOUBLE NOT NULL
+);
+
+CREATE INDEX t_prof_snapshot_total ON t_profiling_snapshot(total);
 

@@ -35,10 +35,8 @@ include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/ws-ifce/)
 find_package (GLIB2)
 include_directories (${GLIB2_INCLUDE_DIRS})
 
-set(fts_libs "-lfts_config -lfts_common -lfts_db_generic -lfts_infosys")
-
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(fts_libs "-lboost_unit_test_framework ${fts_libs}")
+    set(fts_libs "-lboost_unit_test_framework")
 endif ()
 
 # Web service / gsoap part.
@@ -88,7 +86,7 @@ add_library(fts_server_lib SHARED ${fts_server_lib_sources})
 add_dependencies(fts_server_lib fts_server_gsoap_transfer)
 target_link_libraries(fts_server_lib 
 	${fts_libs} 
-	-lfts_server_gsoap_transfer 
+	fts_server_gsoap_transfer 
 	-lglib-2.0 
 	-lgridsite
 	-lcgsi_plugin_voms_cpp
@@ -106,10 +104,11 @@ ${PROJECT_BINARY_DIR}/src/server
 # Server executable
 add_executable (fts_server main.cpp)
 add_dependencies(fts_server fts_server_lib)
-target_link_libraries(fts_server ${fts_libs} -lfts_server_lib -lfts_proxy -lfts_config
-                                 -lfts_common -lfts_db_generic
-                                 -lfts_server_gsoap_transfer -lgsoap++
-                                 -lfts_ws_ifce_server -lfts_ws_ifce_client
+target_link_libraries(fts_server ${fts_libs} fts_server_lib fts_proxy fts_config
+                                 fts_common fts_db_generic
+                                 fts_server_gsoap_transfer -lgsoap++
+                                 fts_ws_ifce_server fts_ws_ifce_client
+                                 fts_profiler fts_infosys
                                  ${Boost_LIBRARIES})
 
 # ------------------------------------------------------------------------

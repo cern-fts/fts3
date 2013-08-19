@@ -57,7 +57,7 @@ class ProtocolResolver
      * - TCP buffer size
      * - url-copy timeout
      */
-    typedef tuple<bool, int, int, int, int> protocol;
+    typedef boost::tuple<bool, int, int, int, int> protocol;
 
     /**
      * The link type
@@ -107,7 +107,7 @@ public:
      *
      * @param job_id - transfer job ID
      */
-    ProtocolResolver(TransferFiles* file, vector< shared_ptr<ShareConfig> >& cfgs);
+    ProtocolResolver(TransferFiles* file, vector< boost::shared_ptr<ShareConfig> >& cfgs);
     ProtocolResolver(const fts3::server::ProtocolResolver&);
 
     /**
@@ -218,7 +218,7 @@ private:
     // the transfer file
     TransferFiles* file;
 
-    vector< shared_ptr<ShareConfig> >& cfgs;
+    vector< boost::shared_ptr<ShareConfig> >& cfgs;
 };
 
 FTS3_SERVER_NAMESPACE_END

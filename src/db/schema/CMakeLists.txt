@@ -21,36 +21,39 @@ include_directories (${fts_include_dir})
 
 if (ORACLEBUILD STREQUAL "ON")
 install(FILES         oracle-drop.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
 
 install(FILES         oracle-schema.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
 endif ()
 
 if (MYSQLBUILD STREQUAL "ON")
+
+set(APPLICATION_NAME fts-mysql)
+
 install(FILES         mysql-schema.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
 
 install(FILES         mysql-drop.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
 
 install(FILES         mysql-truncate.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
 endif ()
 
 if (ALLBUILD STREQUAL "ON")
 install(FILES         oracle-drop.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
 
 install(FILES         oracle-schema.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-oracle )
 	
 	install(FILES         mysql-schema.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
 
 install(FILES         mysql-drop.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
 
 install(FILES         mysql-truncate.sql
-        DESTINATION ${DOC_INSTALL_DIR} )
+        DESTINATION ${SHARE_INSTALL_PREFIX}/fts-mysql )
 endif ()

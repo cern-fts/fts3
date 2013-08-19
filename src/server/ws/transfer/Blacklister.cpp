@@ -124,9 +124,10 @@ void Blacklister::handleDnBlacklisting()
 
     if (blk)
         {
-			if (name == adminDn) {
-				throw Err_Custom ("A user cannot blacklist himself!");
-			}
+            if (name == adminDn)
+                {
+                    throw Err_Custom ("A user cannot blacklist himself!");
+                }
 
             db->blacklistDn(name, string(), adminDn);
             // log it
@@ -137,9 +138,10 @@ void Blacklister::handleDnBlacklisting()
         }
     else
         {
-    		if (name == adminDn) {
-    			throw Err_Custom ("A user cannot unblacklist himself!");
-    		}
+            if (name == adminDn)
+                {
+                    throw Err_Custom ("A user cannot unblacklist himself!");
+                }
 
             db->unblacklistDn(name);
             // log it

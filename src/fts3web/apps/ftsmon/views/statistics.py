@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
 from ftsweb.models import Job, File, ConfigAudit
+from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 
 
 STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
@@ -187,10 +188,7 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
     pairs = []
     for pair in sorted(allPairs):
         p = {'source': pair[0], 'destination': pair[1]}
-
-        if pair in avgsPerPair:
-            p.update(avgsPerPair[pair])
-            
+           
         if pair in statesPerPair:
             states = statesPerPair[pair]
             p['active'] = {}
@@ -204,13 +202,34 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
             total = float(reduce(lambda a,b: a+b, terminal.values(), 0))
             success = float(states['FINISHED'] if 'FINISHED' in states else 0)
             
-            if total:
+            if len(terminal):
                 p['successRate'] = (success/total) * 100
             else:
                 p['successRate'] = None
+        else:
+            p['successRate'] = None
+            
+        if pair in avgsPerPair and p['successRate'] is not None:
+            p.update(avgsPerPair[pair])
+        else:
+            p['avgDuration'] = None
+            p['avgThroughput'] = None
 
         pairs.append(p)
     return pairs
+
+
+
+def _getRetriedStats(timewindow):
+    notBefore = datetime.utcnow() - timewindow
+    
+    retriedObjs = File.objects.filter(file_state__in = ['FAILED', 'FINISHED'], finish_time__gte = notBefore, retry__gt = 0)\
+                          .values('file_state').annotate(number = Count('file_state'))
+    retried = {}
+    for f in retriedObjs:
+        retried[f['file_state'].lower()] = f['number']
+    
+    return retried    
 
 
 
@@ -222,8 +241,11 @@ def overview(httpRequest):
     else:
         overall['rate'] = 0
         
+    retried = _getRetriedStats(timedelta(hours = 1))
+        
     return render(httpRequest, 'statistics/overview.html',
-                  {'overall': overall})
+                  {'overall': overall,
+                   'retried': retried})
     
 
 
@@ -233,12 +255,38 @@ def servers(httpRequest):
                   {'servers': servers})
 
 
+
+def _avgField(pairs, field):
+    pairsWithTerminal = filter(lambda p: p['successRate'] is not None, pairs)
+    return reduce(lambda a, b: a + b, map(lambda p: p[field], pairsWithTerminal)) / len(pairsWithTerminal)
+
+
+
+def _sumStatus(stDictA, stDictB):
+    r = {}
+    keys = stDictA.keys() + stDictB.keys()
+    for s in keys:
+        r[s] = stDictA.get(s, 0) + stDictB.get(s, 0)
+        
+    return r
+
+
+
 def pairs(httpRequest):
     source_se = httpRequest.GET['source_se'] if 'source_se' in httpRequest.GET else None  
     dest_se   = httpRequest.GET['dest_se'] if 'dest_se' in httpRequest.GET else None    
     pairs = _getStatsPerPair(source_se, dest_se, timedelta(minutes = 30))
+    
+    # Build aggregates
+    aggregate = {}
+    aggregate['active']        = reduce(lambda a,b: _sumStatus(a, b),  map(lambda x: x['active'], pairs))
+    aggregate['successRate']   = _avgField(pairs, 'successRate')
+    aggregate['avgThroughput'] = _avgField(pairs, 'avgThroughput')
+    aggregate['avgDuration']   = _avgField(pairs, 'avgDuration')
+    
     return render(httpRequest, 'statistics/pairs.html',
                   {'pairs': pairs,
+                   'aggregate': aggregate,
                    'request': httpRequest})
 
 
@@ -248,3 +296,22 @@ def pervo(httpRequest):
     return render(httpRequest, 'statistics/vos.html',
                   {'vos': vos})
 
+
+
+def profiling(httpRequest):
+    profiling = {}
+    
+    info = ProfilingInfo.objects.all()
+    if len(info) > 0:
+        profiling['updated'] = info[0].updated
+        profiling['period']  = info[0].period
+    else:
+        profiling['updated'] = False
+        profiling['period']  = False
+    
+    profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0).order_by('total')
+    profiling['profiles'] = profiles.all()
+    
+    return render(httpRequest, 'statistics/profiling.html',
+                  {'profiling': profiling,
+                   'request': httpRequest})

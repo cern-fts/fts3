@@ -28,7 +28,7 @@ add_dependencies(fts_config fts_common)
 
 find_package(Boost COMPONENTS program_options regex thread)
 
-target_link_libraries(fts_config -lfts_common ${Boost_LIBRARIES})
+target_link_libraries(fts_config fts_common ${Boost_LIBRARIES})
 set_target_properties(fts_config                PROPERTIES
                                                 LIBRARY_OUTPUT_DIRECTORY
                                                 ${PROJECT_BINARY_DIR}/src/config

@@ -20,6 +20,10 @@
 #include <vector>
 #include <iostream>
 #include <ctime>
+#include "threadtraits.h"
+
+using namespace FTS3_COMMON_NAMESPACE;
+
 
 struct transfersStore
 {
@@ -50,7 +54,7 @@ public:
     float getGoodput();
     int getTimeout();
     bool transferStart(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
-                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr);
+                       lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr, int lowDefault, int highDefault);
 
     int getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int sourceActive, int destActive, double
                        lastTenSuccessRate, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr);
@@ -66,6 +70,7 @@ public:
 
 private:
     std::vector<struct transfersStore> transfersStoreVector;
+    mutable ThreadTraits::MUTEX_R _mutex;
 
 };
 

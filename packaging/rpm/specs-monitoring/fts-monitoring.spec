@@ -3,8 +3,8 @@
 
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
-Version: 3.1.0
-Release: 4%{?dist}
+Version: 3.1.1
+Release: 1%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0
 Group: Applications/Internet
@@ -20,7 +20,7 @@ Requires: python-matplotlib%{?_isa}
 
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export http://svnweb.cern.ch/guest/fts3/trunk fts3
+#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_1_EPEL_TESTING fts3
 #  tar -czvf fts-monitoring-0.0.1.tar.gz --directory=fts3 .
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
@@ -51,5 +51,5 @@ install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf         
 %doc LICENSE
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
   - First EPEL release

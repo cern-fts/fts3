@@ -3,15 +3,15 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts
-Version: 3.1.0
-Release: 4%{?dist}
+Version: 3.1.1
+Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
 URL: https://svnweb.cern.ch/trac/fts3/wiki
 # The source for this package was pulled from upstream's vcs.  Use the
 # following commands to generate the tarball:
-#  svn export http://svnweb.cern.ch/guest/fts3/trunk
+#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_1_EPEL_TESTING fts3
 #  tar -czvf fts-0.0.1-60.tar.gz fts-00160
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
@@ -224,10 +224,8 @@ exit 0
 %attr(0755,root,root) %{_sysconfdir}/cron.hourly/fts-info-publisher
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-myosg-updater
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/fts-bdii-cache-updater
-%attr(0640,root,fts3) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
-%attr(0640,root,fts3) %{_sysconfdir}/fts3/fts3config
-%config(noreplace) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
-%config(noreplace) %{_sysconfdir}/fts3/fts3config
+%config(noreplace) %attr(0640,root,fts3) %{_sysconfdir}/fts3/fts-msg-monitoring.conf
+%config(noreplace) %attr(0640,root,fts3) %{_sysconfdir}/fts3/fts3config
 %config(noreplace) %{_sysconfdir}/logrotate.d/fts-server
 %{_mandir}/man8/fts*
 
@@ -249,6 +247,7 @@ exit 0
 %{_libdir}/libfts_config.so.*
 %{_libdir}/libfts_infosys.so.*
 %{_libdir}/libfts_db_generic.so.*
+%{_libdir}/libfts_db_profiled.so
 %{_libdir}/libfts_msg_ifce.so.*
 %{_libdir}/libfts_proxy.so.*
 %{_libdir}/libfts_server_gsoap_transfer.so.*
@@ -258,6 +257,7 @@ exit 0
 %{_libdir}/libfts_ws_ifce_server.so.*
 %{_libdir}/libfts_delegation_api_simple.so.*
 %{_libdir}/libfts_delegation_api_cpp.so.*
+%{_libdir}/libfts_profiler.so
 %doc README
 %doc LICENSE
 
@@ -285,6 +285,15 @@ exit 0
 
 
 %changelog
+* Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
+  - GenericDbIfce.h includes new blacklisting API
+  - no longer linking explicitly to boost libraries with '-mt' sufix 
+* Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
+  - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
+* Sat Jul 27 2013 Petr Machata <pmachata@redhat.com> - 3.1.0-2
+  - rebuild for boost 1.54.0
+  - boost package doesn't use tagged sonames anymore, drop the -mt
+    suffix from several boost libraries (fts-3.1.0-boost_mt.patch)
 * Wed Jul 24 2013 Michal Simon <michal.simon@cern.ch> - 3.0.3-15
   - compatible with rawhide (f20)
 * Fri Jul 02 2013 Michail Salichos <michail.salichos@cern.ch> - 3.0.3-14

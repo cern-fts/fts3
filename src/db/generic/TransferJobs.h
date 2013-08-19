@@ -81,6 +81,12 @@ public:
     std::string CHECKSUM_METHOD;//					    CHAR(1)
     int BRINGONLINE; //					    NUMBER(38)
 
-    std::string getUserDn() const { return USER_DN; }
-    std::string getVo() const { return VO_NAME; }
+    std::string getUserDn() const
+    {
+        return USER_DN;
+    }
+    std::string getVo() const
+    {
+        return VO_NAME;
+    }
 };

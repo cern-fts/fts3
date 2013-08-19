@@ -10,10 +10,11 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: cmake
 
-Requires: edg-gridftp-client
 Requires: fts-client
-Requires: globus-gass-copy-progs
-Requires: lcg-util
+Requires: gfal2-python
+Requires: gfal2-plugin-srm
+Requires: gfal2-plugin-gridftp
+Requires: python
 Requires: voms-clients
 
 %description

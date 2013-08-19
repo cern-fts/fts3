@@ -19,27 +19,10 @@ project(fts3)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-link_directories (/usr/lib64/gfal2-plugins)
-link_directories (${PROJECT_BINARY_DIR}/src/common)
-link_directories (${PROJECT_BINARY_DIR}/src/cred) 
-link_directories (${PROJECT_BINARY_DIR}/src/ws-ifce) 
-link_directories (${PROJECT_BINARY_DIR}/src/ws-ifce/gsoap) 
-link_directories (${PROJECT_BINARY_DIR}/src/config) 
-link_directories (${PROJECT_BINARY_DIR}/src/url-copy) 
-link_directories (${PROJECT_BINARY_DIR}/src/server) 
-link_directories (${PROJECT_BINARY_DIR}/src/db/generic)
-link_directories (${PROJECT_BINARY_DIR}/src/db/python) 
-link_directories (${PROJECT_BINARY_DIR}/src/cli)
-link_directories (${PROJECT_BINARY_DIR}/src/monitoring) 
-link_directories (${PROJECT_BINARY_DIR}/src/delegation-cli) 
-link_directories (${PROJECT_BINARY_DIR}/src/dbClear) 
-link_directories (${PROJECT_BINARY_DIR}/src/glue2-publisher) 
-link_directories (${PROJECT_BINARY_DIR}/src/infosys)
-link_directories (${PROJECT_BINARY_DIR}/src/bringonline-daemon)
 
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 1)
-set(VERSION_PATCH 0)
+set(VERSION_PATCH 1)
 set(VERSION_STRING ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 FILE(WRITE ${PROJECT_SOURCE_DIR}/src/common/version.h
@@ -57,6 +40,7 @@ ADD_DEFINITIONS(-DNDEBUG)
 ADD_DEFINITIONS(-DSOCKET_CLOSE_ON_EXIT)
 ADD_DEFINITIONS(-D_REENTRANT)
 ADD_DEFINITIONS(-DBOOST_DATE_TIME_HAS_REENTRANT_STD_FUNCTIONS)
+ADD_DEFINITIONS(-std=c++0x)
 
 set(libsubdirs "lib64;lib" CACHE STRING "The path suffixes to find libraries")
 # load module

@@ -296,10 +296,11 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
             tupple.source_se = sourceSe;
             tupple.dest_se = destinationSe;
             if((*it)->checksum)
-            	{
-                	tupple.checksum = *(*it)->checksum;
-                	params.set(JobParameterHandler::CHECKSUM_METHOD, "compare");
-            	}
+                {
+                    tupple.checksum = *(*it)->checksum;
+                    if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
+                        params.set(JobParameterHandler::CHECKSUM_METHOD, "relaxed");
+                }
             tupple.filesize = 0;
             tupple.metadata = string();
             tupple.fileIndex = fileIndex;
@@ -361,7 +362,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             if (!(*it)->checksum.empty())
                 {
                     tupple.checksum = (*it)->checksum.front();
-                    params.set(JobParameterHandler::CHECKSUM_METHOD, "compare");
+                    if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
+                        params.set(JobParameterHandler::CHECKSUM_METHOD, "relaxed");
                 }
 
             // pair sources with destinations
@@ -382,6 +384,12 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             if (pairs.empty())
                 {
                     throw Err_Custom("It has not been possible to pair the sources with destinations (protocols don't match)!");
+                }
+
+            // multiple pairs and reuse are not compatible!
+            if (pairs.size() > 1 && params.get(JobParameterHandler::REUSE) == "Y")
+                {
+                    throw Err_Custom("Reuse and multiple replica selection are incompatible!");
                 }
 
             // add each pair
@@ -437,17 +445,17 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
 
                     // set the wait_timeout for the transfer (in case the source / destination have been blacklisted with '--allow-submit')
                     if (source_timeout.is_initialized() && destin_timeout.is_initialized())
-                    	{
-                    		tupple.wait_timeout = *source_timeout < *destin_timeout ? *source_timeout : *destin_timeout;
-                    	}
+                        {
+                            tupple.wait_timeout = *source_timeout < *destin_timeout ? *source_timeout : *destin_timeout;
+                        }
                     else if (source_timeout.is_initialized())
-                    	{
-                    		tupple.wait_timeout = source_timeout;
-                    	}
+                        {
+                            tupple.wait_timeout = source_timeout;
+                        }
                     else if (destin_timeout.is_initialized())
-                    	{
-                    		tupple.wait_timeout = destin_timeout;
-                    	}
+                        {
+                            tupple.wait_timeout = destin_timeout;
+                        }
 
                     jobs.push_back(tupple);
                 }
@@ -532,8 +540,6 @@ string JobSubmitter::submit()
         destinationSe
     );
 
-    db->submitHost(id);
-
     //send state message
     SingleTrStateInstance::instance().sendStateMessage(id, -1);
 
@@ -582,9 +588,9 @@ void JobSubmitter::checkSe(string se, string vo)
 
     // check if the SE is blacklisted
     if (db->isSeBlacklisted(se, vo))
-    	{
-    		if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
-    	}
+        {
+            if (!db->allowSubmitForBlacklistedSe(se)) throw Err_Custom("The SE: " + se + " is blacklisted!");
+        }
     // if we don't care about MyOSQ return
     if (!theServerConfig().get<bool>("MyOSG")) return;
 

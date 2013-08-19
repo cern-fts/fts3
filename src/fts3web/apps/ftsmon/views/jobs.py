@@ -47,7 +47,10 @@ class MetadataFilter:
         try:
             value = item['job_metadata']
             if value:
-                return self._compare(self.filter, json.loads(value))
+                try:
+                    return self._compare(self.filter, json.loads(value))
+                except:
+                    return self._compare(self.filter, value)
         except:
             raise
         return False

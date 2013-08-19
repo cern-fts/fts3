@@ -178,3 +178,24 @@ class OptimizerEvolution(models.Model):
     
     class Meta:
         db_table = 't_optimizer_evolution'
+
+
+
+class ProfilingSnapshot(models.Model):
+    scope      = models.CharField(primary_key = True, max_length = 255)
+    cnt        = models.IntegerField()
+    exceptions = models.IntegerField()
+    total      = models.FloatField()
+    average    = models.FloatField()
+    
+    class Meta:
+        db_table = 't_profiling_snapshot'
+
+
+
+class ProfilingInfo(models.Model):
+    updated = models.DateTimeField(primary_key = True)
+    period  = models.IntegerField()
+    
+    class Meta:
+        db_table = 't_profiling_info'

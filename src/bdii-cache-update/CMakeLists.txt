@@ -20,17 +20,18 @@ include_directories (BEFORE ${PROJECT_BINARY_DIR}/src/infosys/)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-#set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_bdii_cache_updater_SOURCES updater.cpp)
+
+find_package (Boost COMPONENTS system REQUIRED)
 
 add_executable(fts_bdii_cache_updater ${fts_bdii_cache_updater_SOURCES})
 add_dependencies(fts_bdii_cache_updater fts_common)
 add_dependencies(fts_bdii_cache_updater fts_config)
 add_dependencies(fts_bdii_cache_updater fts_infosys)
-target_link_libraries(fts_bdii_cache_updater -lfts_common)
-target_link_libraries(fts_bdii_cache_updater -lfts_config)
-target_link_libraries(fts_bdii_cache_updater -lfts_infosys)
-target_link_libraries(fts_bdii_cache_updater -lboost_system-mt)
+target_link_libraries(fts_bdii_cache_updater fts_common)
+target_link_libraries(fts_bdii_cache_updater fts_config)
+target_link_libraries(fts_bdii_cache_updater fts_infosys)
+target_link_libraries(fts_bdii_cache_updater ${Boost_SYSTEM_LIBRARIES})
 target_link_libraries(fts_bdii_cache_updater -lpugixml)
 
 install(TARGETS         fts_bdii_cache_updater 

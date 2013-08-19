@@ -38,10 +38,10 @@ find_package (Boost COMPONENTS thread system)
 
 target_link_libraries(fts_bringonline ${CMAKE_DL_LIBS})
 target_link_libraries(fts_bringonline ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(fts_bringonline -lfts_db_generic)
-target_link_libraries(fts_bringonline -lfts_config)
-target_link_libraries(fts_bringonline -lfts_common)
-target_link_libraries(fts_bringonline -lfts_proxy)
+target_link_libraries(fts_bringonline fts_db_generic)
+target_link_libraries(fts_bringonline fts_config)
+target_link_libraries(fts_bringonline fts_common)
+target_link_libraries(fts_bringonline fts_proxy)
 target_link_libraries(fts_bringonline  -luuid -lssl -lgfal_transfer -lgfal2
                                        -lglib-2.0 ${fts_libs}
                                        ${Boost_LIBRARIES})

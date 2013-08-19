@@ -120,9 +120,7 @@ public:
                         int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
                         if(retry == -1)  //unlimited times
                             {
-                                DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
-                                DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
-                                DBSingleton::instance().getDBObjectInstance()->setRetryTimestamp(job, msg.file_id);
+                                DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id, retryTimes+1);
                                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                 return true;
                             }
@@ -130,9 +128,7 @@ public:
                             {
                                 if(retryTimes <= retry-1 )
                                     {
-                                        DBSingleton::instance().getDBObjectInstance()->setRetryTimes(retryTimes+1, job, msg.file_id);
-                                        DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id);
-                                        DBSingleton::instance().getDBObjectInstance()->setRetryTimestamp(job, msg.file_id);
+                                        DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id, retryTimes+1);
                                         SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }
@@ -181,6 +177,11 @@ public:
 
                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
             }
+        catch (std::exception& e)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
+                throw;
+            }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
@@ -205,14 +206,14 @@ protected:
 
                         if(fs::is_empty(fs::path(STATUS_DIR)))
                             {
-                                sleep(1);
+                                usleep(400000);
                                 continue;
                             }
 
                         bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
                         if(!alive)
                             {
-                                sleep(1);
+                                usleep(400000);
                                 continue;
                             }
 
@@ -226,11 +227,12 @@ protected:
                                 queueMsgRecovery.clear();
                             }
 
-                        if (runConsumerStatus(messages) != 0) {
-                            char buffer[128];
-                            throw Err_System(std::string("Could not get the status messages: ") +
-                                             strerror_r(errno, buffer, sizeof(buffer)));
-                        }
+                        if (runConsumerStatus(messages) != 0)
+                            {
+                                char buffer[128]= {0};
+                                throw Err_System(std::string("Could not get the status messages: ") +
+                                                 strerror_r(errno, buffer, sizeof(buffer)));
+                            }
 
                         if(!messages.empty())
                             {
@@ -268,34 +270,34 @@ protected:
                                         else
                                             {
                                                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
-                                                        << iter->msg_error_reason << commit;
+                                                                               << iter->msg_error_reason << commit;
                                             }
                                     }//end for
                                 messages.clear();
                             }
 
-                        sleep(1);
+                        usleep(400000);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        sleep(1);
+                        usleep(400000);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        sleep(1);
+                        usleep(400000);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        sleep(1);
+                        usleep(400000);
                     }
             }
     }

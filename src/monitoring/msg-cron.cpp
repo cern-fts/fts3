@@ -305,6 +305,16 @@ private:
     void cleanup()
     {
 
+        // Close DB
+        try
+            {
+                db::DBSingleton::tearDown();
+            }
+        catch (std::exception& e)
+            {
+                logger::writeLog(e.what(), true);
+            }
+
         // Destroy resources.
         try
             {

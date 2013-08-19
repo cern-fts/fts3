@@ -29,6 +29,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^stats/servers$', 'statistics.servers'),
     url(r'^stats/pairs$', 'statistics.pairs'),
     url(r'^stats/vo$', 'statistics.pervo'),
+    url(r'^stats/profiling$', 'statistics.profiling'),
     
     url(r'^json/uniqueSources/$', 'autocomplete.uniqueSources', {'archive': None}),
     url(r'^json/uniqueDestinations/$', 'autocomplete.uniqueDestinations', {'archive': None}),

@@ -23,8 +23,9 @@ include_directories (${GLIB2_INCLUDE_DIRS})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-#set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(fts_info_publisher_SOURCES publisher.cpp)
+
+find_package (Boost COMPONENTS system REQUIRED)
 
 add_executable(fts_info_publisher ${fts_info_publisher_SOURCES})
 add_dependencies(fts_info_publisher fts_config)
@@ -32,10 +33,10 @@ add_dependencies(fts_info_publisher fts_common)
 add_dependencies(fts_info_publisher fts_db_generic)
 target_link_libraries(fts_info_publisher ${CMAKE_DL_LIBS})
 target_link_libraries(fts_info_publisher ${CMAKE_THREAD_LIBS_INIT})
-target_link_libraries(fts_info_publisher -lfts_db_generic)
-target_link_libraries(fts_info_publisher -lfts_config)
-target_link_libraries(fts_info_publisher -lfts_common)
-target_link_libraries(fts_info_publisher -lboost_system-mt)
+target_link_libraries(fts_info_publisher fts_db_generic)
+target_link_libraries(fts_info_publisher fts_config)
+target_link_libraries(fts_info_publisher fts_common)
+target_link_libraries(fts_info_publisher ${Boost_SYSTEM_LIBRARIES})
 
 install(TARGETS         fts_info_publisher 
 	RUNTIME             DESTINATION ${SBIN_INSTALL_DIR} )

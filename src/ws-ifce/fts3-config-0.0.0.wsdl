@@ -92,6 +92,12 @@
     </message>
     
     <message name="RetryResponse"/>
+    
+    <message name="OptimizerModeRequest">
+		<part name="optimizer_mode" type="xsd:int"/>
+    </message>
+    
+    <message name="OptimizerModeResponse"/>
 
     <message name="QueueTimeoutRequest">
 		<part name="timeout" type="xsd:unsignedInt"/>
@@ -182,6 +188,14 @@
         <operation name="setRetry">
             <input message="impl:RetryRequest" name="RetryRequest"/>
             <output message="impl:RetryResponse" name="RetryResponse"/>
+            <fault message="impl:AuthorizationException" name="AuthorizationException"/>
+            <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
+            <fault message="impl:InternalException" name="InternalException"/>
+        </operation>
+        
+		<operation name="setOptimizerMode">
+            <input message="impl:OptimizerModeRequest" name="OptimizerModeRequest"/>
+            <output message="impl:OptimizerModeResponse" name="OptimizerModeResponse"/>
             <fault message="impl:AuthorizationException" name="AuthorizationException"/>
             <fault message="impl:ServiceBusyException" name="ServiceBusyException"/>
             <fault message="impl:InternalException" name="InternalException"/>
@@ -336,6 +350,31 @@
                 <wsdlsoap:fault name="InternalException" use="literal"/>
             </fault>
         </operation>
+
+        <operation name="setOptimizerMode">
+            <wsdlsoap:operation soapAction=""/>
+
+            <input name="OptimizerModeRequest">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </input>
+
+            <output name="OptimizerModeResponse">
+                <wsdlsoap:body namespace="http://cern.ch/wsdl/services/fts3/config" use="literal"/>
+            </output>
+
+            <fault name="AuthorizationException">
+                <wsdlsoap:fault name="AuthorizationException" use="literal"/>
+            </fault>
+
+            <fault name="ServiceBusyException">
+                <wsdlsoap:fault name="ServiceBusyException" use="literal"/>
+            </fault>
+
+            <fault name="InternalException">
+                <wsdlsoap:fault name="InternalException" use="literal"/>
+            </fault>
+        </operation>
+
         
         <operation name="setQueueTimeout">
             <wsdlsoap:operation soapAction=""/>

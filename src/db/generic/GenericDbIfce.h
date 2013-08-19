@@ -56,6 +56,8 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/optional.hpp>
 
+#include "profiler/Profiler.h"
+
 /**
  * GenericDbIfce class declaration
  **/
@@ -106,10 +108,10 @@ public:
 
     // If limit == 0, then all results
     virtual void getTransferFileStatus(std::string requestID, bool archive,
-                    unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
+                                       unsigned offset, unsigned limit, std::vector<FileTransferStatus*>& files) = 0;
 
     virtual void listRequests(std::vector<JobStatus*>& jobs, std::vector<std::string>& inGivenStates,
-                    std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
+                              std::string restrictToClientDN, std::string forDN, std::string VOname) = 0;
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
@@ -380,6 +382,14 @@ public:
     virtual void checkSanityState() = 0;
 
     virtual void checkSchemaLoaded() = 0;
+
+    virtual void storeProfiling(const fts3::ProfilingSubsystem* prof) = 0;
+
+    virtual void setOptimizerMode(int mode) = 0;
+
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry) = 0;
+
+
 };
 
 

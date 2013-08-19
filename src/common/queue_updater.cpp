@@ -34,7 +34,7 @@ std::list<struct message_updater> ThreadSafeList::getList()
     return tempList;
 }
 
-void ThreadSafeList::push_back(struct message_updater msg)
+void ThreadSafeList::push_back(message_updater &msg)
 {
     ThreadTraits::LOCK_R lock(_mutex);
     m_list.push_back(msg);
@@ -65,7 +65,46 @@ void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messag
         }
 }
 
-void ThreadSafeList::updateMsg(struct message_updater msg)
+bool ThreadSafeList::isAlive(int fileID)
+{
+    ThreadTraits::LOCK_R lock(_mutex);
+    bool exists = false;
+    std::list<struct message_updater>::iterator iter;
+    boost::posix_time::time_duration::tick_type timestamp1;
+    boost::posix_time::time_duration::tick_type timestamp2;
+    boost::posix_time::time_duration::tick_type n_seconds = 0;
+
+    //check first if exists
+    for (iter = m_list.begin(); iter != m_list.end(); ++iter)
+        {
+            if(fileID == iter->file_id)
+                {
+                    exists = true;
+                }
+        }
+
+    //now check if expired
+    if(exists)
+        {
+            for (iter = m_list.begin(); iter != m_list.end(); ++iter)
+                {
+                    timestamp1 = milliseconds_since_epoch();
+                    timestamp2 = iter->timestamp;
+                    n_seconds =  timestamp1  - timestamp2;
+                    if (n_seconds > 300000 && fileID == iter->file_id)
+                        {
+                            return false;
+                        }
+                }
+        }
+    else
+        {
+            return false;
+        }
+    return true;
+}
+
+void ThreadSafeList::updateMsg(message_updater &msg)
 {
     ThreadTraits::LOCK_R lock(_mutex);
     std::list<struct message_updater>::iterator iter;

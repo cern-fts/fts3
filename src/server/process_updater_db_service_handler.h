@@ -139,23 +139,25 @@ protected:
                         messages.clear();
 
                         counter++;
-                        if (counter == 120)
+                        if (counter == 150)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter = 0;
-                            }
+                            }	    
                     }
                 catch (const std::exception& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                                                        << e.what()
                                                        << commit;
+                        sleep(2);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
+                        sleep(2);
                     }
-                sleep(1);
+                sleep(2);
             }
     }
 

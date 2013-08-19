@@ -22,7 +22,7 @@ FTS3_COMMON_NAMESPACE_START
 
 Timeout& Timeout::actualize()
 {
-	using namespace boost;
+    using namespace boost;
 
     static const int MILLISECONDS_PER_SECOND = 1000;
     static const int NANOSECONDS_PER_SECOND = 1000000000;

@@ -62,6 +62,9 @@ SiteName=replacethis
 #Enable/Disable monitoring using messaging monitoring (disabled=false / enabled=true)
 MonitoringMessaging=true
 
+# Profiling interval in seconds. If set to 0, it will be disabled
+Profiling=0
+
 [roles]
 Public = vo:transfer
 production = all:config

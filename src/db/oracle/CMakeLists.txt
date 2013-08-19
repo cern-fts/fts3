@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 
 include_directories(BEFORE ${OCCI_INCLUDE_DIR})
 include_directories (BEFORE ../generic)
+include_directories (BEFORE ../..)
 include_directories (BEFORE ../../common)
 include_directories (.)
 
@@ -29,4 +30,5 @@ MESSAGE( STATUS "CLNTSH_LIBRARY: " ${CLNTSH_LIBRARY} )
 
 install(TARGETS         fts_db_oracle 
 	RUNTIME             DESTINATION ${CMAKE_INSTALL_PREFIX} 
-	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} )
+	LIBRARY             DESTINATION ${LIB_INSTALL_DIR} 
+    NAMELINK_SKIP)

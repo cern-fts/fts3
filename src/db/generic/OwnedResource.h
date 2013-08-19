@@ -21,9 +21,10 @@
  * Classes that inherit from this interfaces represent
  * elements that have an owner
  */
-class OwnedResource {
+class OwnedResource
+{
 public:
-    virtual ~OwnedResource(){};
+    virtual ~OwnedResource() {};
 
     virtual std::string getUserDn() const = 0;
     virtual std::string getVo() const = 0;

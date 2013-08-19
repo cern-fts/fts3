@@ -8,10 +8,9 @@ endif ()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 install (PROGRAMS FTS3-config
-                  Macros
          DESTINATION ${SHARE_INSTALL_PREFIX}/fts3/tests)
 
-install (DIRECTORY functional stress rest
+install (DIRECTORY functional stress
          DESTINATION ${SHARE_INSTALL_PREFIX}/fts3/tests
          USE_SOURCE_PERMISSIONS)
 endif ()

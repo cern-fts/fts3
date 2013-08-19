@@ -35,7 +35,8 @@ using namespace std;
 struct message_base
 {
 public:
-    message_base(): msg_errno(false) {
+    message_base(): msg_errno(false)
+    {
         memset(msg_error_reason, 0, sizeof(msg_error_reason));
     }
 
@@ -47,10 +48,11 @@ public:
         // GNU strerror_r may not fill the passed error buffer,
         // and just return a static area with the message
         char *aux = strerror_r(errcode, msg_error_reason, sizeof(msg_error_reason));
-        if (aux != msg_error_reason) {
-            strncpy(msg_error_reason, aux, sizeof(msg_error_reason));
-            msg_error_reason[sizeof(msg_error_reason) - 1] = '\0';
-        }
+        if (aux != msg_error_reason)
+            {
+                strncpy(msg_error_reason, aux, sizeof(msg_error_reason));
+                msg_error_reason[sizeof(msg_error_reason) - 1] = '\0';
+            }
         msg_errno = errcode;
     }
 };
@@ -103,7 +105,7 @@ public:
 struct message_updater: public message_base
 {
 public:
-    message_updater():file_id(0),process_id(0),timestamp(0)
+    message_updater():file_id(0),process_id(0),timestamp(0), throughput(0), transferred(0)
     {
         memset(job_id, 0, sizeof (job_id));
     }
@@ -145,7 +147,9 @@ public:
 struct message_bringonline: public message_base
 {
 public:
-    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0), file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0)
+    message_bringonline():job_id(""),url(""), proxy(""), token(""), retries(0),
+        file_id(0),started(false),timestamp(0),pinlifetime(0),bringonlineTimeout(0),
+        nPolls(0), nextPoll(0)
     {
     }
 
@@ -162,6 +166,8 @@ public:
     time_t timestamp;
     int pinlifetime;
     int bringonlineTimeout;
+    int nPolls;
+    time_t nextPoll;
 };
 
 
@@ -225,7 +231,9 @@ const size_t nostreamslen = (sizeof (nostreams) / sizeof *(nostreams));
 const int buffsizes[] = {1048576, 4194304, 5242880, 7340032, 8388608, 9437184, 11534336, 12582912, 14680064, 67108864};
 const size_t buffsizeslen = (sizeof (buffsizes) / sizeof *(buffsizes));
 
-
-
+/*low active / high active / jobs / files*/
+const int mode_1[] = {2,4,3,5};
+const int mode_2[] = {4,6,5,8};
+const int mode_3[] = {6,8,7,10};
 
 

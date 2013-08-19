@@ -28,7 +28,7 @@ include_directories (.)
 set(fts_msg_ifce_SOURCES msg-ifce.cpp utility_routines.cpp Logger.cpp)
 add_library(fts_msg_ifce SHARED ${fts_msg_ifce_SOURCES})
 add_dependencies(fts_msg_ifce fts_common)
-target_link_libraries(fts_msg_ifce -lfts_common)
+target_link_libraries(fts_msg_ifce fts_common)
 set_target_properties(fts_msg_ifce	 	PROPERTIES
 						LIBRARY_OUTPUT_DIRECTORY
 ${PROJECT_BINARY_DIR}/src/monitoring
@@ -53,13 +53,13 @@ find_package (Boost COMPONENTS filesystem thread system)
 set(fts_msg_bulk_SOURCES utility_routines.cpp msg-bulk-send.cpp MsgPipe.cpp MsgProducer.cpp Logger.cpp)
 add_executable (fts_msg_bulk ${fts_msg_bulk_SOURCES})
 add_dependencies(fts_msg_bulk fts_common fts_config)
-target_link_libraries(fts_msg_bulk ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES}  -lfts_common -lfts_config -lrt -lglib-2.0 -lrt ${Boost_LIBRARIES})
+target_link_libraries(fts_msg_bulk ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES} fts_common fts_config -lrt -lglib-2.0 -lrt ${Boost_LIBRARIES})
 
 set(fts_msg_cron_SOURCES msg-cron.cpp Logger.cpp utility_routines.cpp)
 add_executable (fts_msg_cron ${fts_msg_cron_SOURCES})
 target_link_libraries(fts_msg_cron  ${ACTIVEMQCPP_LIBRARIES} ${APR_LIBRARIES} ${APRUTIL_LIBRARIES}  -lglib-2.0)
 add_dependencies(fts_msg_cron fts_common fts_db_generic fts_config)
-target_link_libraries(fts_msg_cron ${CMAKE_THREAD_LIBS_INIT} -lfts_db_generic -lfts_common -lfts_config -lrt ${Boost_LIBRARIES})
+target_link_libraries(fts_msg_cron ${CMAKE_THREAD_LIBS_INIT} fts_db_generic fts_common fts_config -lrt ${Boost_LIBRARIES})
 
 
 install(TARGETS         fts_msg_bulk 

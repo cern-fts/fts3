@@ -124,25 +124,27 @@ int main(int ac, char* av[])
                                                 {
                                                     tns3__FileTransferStatus* stat = *it;
 
-                                                    if (cli->list()) {
-                                                        vector<string> values =
-                                                            list_of
-                                                            (*stat->sourceSURL)
-                                                            (*stat->destSURL)
-                                                            (*stat->transferFileState)
-                                                            (lexical_cast<string>(stat->numFailures))
-                                                            (*stat->reason)
-                                                            (lexical_cast<string>(stat->duration))
-                                                            ;
+                                                    if (cli->list())
+                                                        {
+                                                            vector<string> values =
+                                                                list_of
+                                                                (*stat->sourceSURL)
+                                                                (*stat->destSURL)
+                                                                (*stat->transferFileState)
+                                                                (lexical_cast<string>(stat->numFailures))
+                                                                (*stat->reason)
+                                                                (lexical_cast<string>(stat->duration))
+                                                                ;
 
-                                                        cli->printer().file_list(values);
-                                                    }
+                                                            cli->printer().file_list(values);
+                                                        }
 
-                                                    if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState)) {
-                                                        failedFiles << *stat->sourceSURL << " "
-                                                                    << *stat->destSURL
-                                                                    << std::endl;
-                                                    }
+                                                    if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState))
+                                                        {
+                                                            failedFiles << *stat->sourceSURL << " "
+                                                                        << *stat->destSURL
+                                                                        << std::endl;
+                                                        }
                                                 }
                                         }
 

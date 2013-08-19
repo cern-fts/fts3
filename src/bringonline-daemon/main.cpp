@@ -59,7 +59,13 @@ const char *hostcert = "/etc/grid-security/hostcert.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
 // exp backoff for bringonline ops
-// 1, 2, 5, 60, 180s, 3 m
+static time_t getPollInterval(int nPolls)
+{
+    if (nPolls > 5)
+        return 180;
+    else
+        return (2 << nPolls);
+}
 
 static bool retryTransfer(int errorNo)
 {
@@ -198,6 +204,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                         {
                             cert = new UserProxyEnv((*i).proxy);
                             bool deleteIt = false;
+                            time_t now = time(NULL);
                             if ((*i).started == false)   //issue bringonline
                                 {
                                     db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
@@ -246,7 +253,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                             (*i).retries = 0;
                                         }
                                 }
-                            else     //poll
+                            else if ((*i).nextPoll <= now)     //poll
                                 {
                                     statusB = gfal2_bring_online_poll(handle, ((*i).url).c_str(), ((*i).token).c_str(), &error);
 
@@ -268,7 +275,12 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                         }
                                     else if(statusB == 0)
                                         {
+                                            time_t interval = getPollInterval(++(*i).nPolls);
+                                            (*i).nextPoll = now + interval;
+
                                             FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE polling token " << (*i).token << commit;
+                                            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE next attempt in "
+                                                                            << interval << " seconds" << commit;
                                             (*i).started = true;
                                         }
                                     else
@@ -296,7 +308,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                 }
                         }
                 }
-            boost::this_thread::sleep(boost::posix_time::milliseconds(30000));
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         }
 }
 
@@ -315,7 +327,7 @@ static bool checkValidProxy(const std::string& filename)
 
 
 int DoServer(int argc, char** argv)
-{    
+{
     std::string proxy_file("");
     std::string infosys("");
     gfal2_context_t handle;
@@ -342,7 +354,7 @@ int DoServer(int argc, char** argv)
                         {
                             arguments += argv[i];
                         }
-                   size_t foundHelp = arguments.find("-h");
+                    size_t foundHelp = arguments.find("-h");
                     if (foundHelp != string::npos)
                         {
                             exit(0);
@@ -390,9 +402,6 @@ int DoServer(int argc, char** argv)
             action.sa_flags = SA_RESTART;
             sigaction(SIGINT, &action, NULL);
 
-            //initialize here to avoid race conditions
-            ThreadSafeList::get_instance();
-
             try
                 {
                     // Set up handle
@@ -428,7 +437,7 @@ int DoServer(int argc, char** argv)
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "BRINGONLINE Fatal error (unknown origin), exiting..." << commit;
                     exit(1);
                 }
-            vector< tuple<string, string, int> >::iterator it;
+            vector< boost::tuple<string, string, int> >::iterator it;
             std::vector< boost::tuple<std::string, std::string, int> > voHostnameConfig;
             std::vector<struct message_bringonline> urls;
             vector<struct message_bringonline>::iterator itUrls;
@@ -493,7 +502,7 @@ int DoServer(int argc, char** argv)
 
                     urls.clear();
                     voHostnameConfig.clear();
-                    sleep(30);
+                    sleep(1);
                 }
             gfal2_context_free(handle);
         }

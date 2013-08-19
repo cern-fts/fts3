@@ -1,6 +1,7 @@
 #pragma once
 
 #include <getopt.h>
+#include <iostream>
 #include <string>
 
 class UrlCopyOpts
@@ -17,11 +18,16 @@ public:
     bool autoTunned;
     bool manualConfig;
     bool debug;
-    bool compareChecksum;
     bool overwrite;
     bool daemonize;
     bool logToStderr;
     bool reuseFile;
+
+    enum CompareChecksum {
+          CHECKSUM_DONT_CHECK = 0, // Do not check checksum
+          CHECKSUM_STRICT,          // Strict comparison
+          CHECKSUM_RELAXED          // Relaxed comparision. i.e. do not fail on empty checksum on source
+         } compareChecksum;
 
     // Arguments
     std::string infosys;
@@ -31,7 +37,6 @@ public:
     std::string sourceSiteName;
     std::string destSiteName;
     std::string vo;
-    std::string checksumAlgorithm;
     std::string checksumValue;
     std::string jobId;
     std::string sourceUrl;
@@ -58,3 +63,6 @@ private:
 
     std::string errorMessage;
 };
+
+
+std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum& c);

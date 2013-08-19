@@ -278,6 +278,54 @@ int fts3::implcfg__setRetry(soap* ctx, int retry, implcfg__setRetryResponse& _re
 
 /* ---------------------------------------------------------------------- */
 
+int fts3::implcfg__setOptimizerMode(soap* ctx, int optimizer_mode, implcfg__setOptimizerModeResponse &resp)
+{
+    try
+        {
+            // authorize
+            AuthorizationManager::getInstance().authorize(
+                ctx,
+                AuthorizationManager::CONFIG,
+                AuthorizationManager::dummy
+            );
+
+            // get user dn
+            CGsiAdapter cgsi(ctx);
+            string dn = cgsi.getClientDn();
+
+            // prepare the command for audit
+            stringstream cmd;
+            cmd << "fts-config-set --optimizer-mode " << optimizer_mode;
+
+            // audit the operation
+            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd.str(), "optimizer mode");
+
+            // set the number of retries
+            DBSingleton::instance().getDBObjectInstance()->setOptimizerMode(optimizer_mode);
+
+            // log it
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set the optmizer mode to " << optimizer_mode << commit;
+
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+
+            return SOAP_FAULT;
+        }
+    catch (...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been thrown, the number of retries cannot be set"  << commit;
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+}
+
+/* ---------------------------------------------------------------------- */
+
 int fts3::implcfg__setQueueTimeout(soap* ctx, unsigned int timeout, implcfg__setQueueTimeoutResponse& resp)
 {
 

@@ -186,16 +186,16 @@ std::string FileManagement::archive()
             int r2 = rename(debugFile.c_str(), debugArchive.c_str());
             if (r2 != 0)
                 {
-                     char const * str = strerror_r(errno, buf, 256);
-                     if (str)
-                         {
-                             return std::string(str);
-                         }
-                     else
-                         {
-                             return std::string("Unknown error when moving debug log file");
-                         }
-                 }
+                    char const * str = strerror_r(errno, buf, 256);
+                    if (str)
+                        {
+                            return std::string(str);
+                        }
+                    else
+                        {
+                            return std::string("Unknown error when moving debug log file");
+                        }
+                }
         }
 
     return std::string("");

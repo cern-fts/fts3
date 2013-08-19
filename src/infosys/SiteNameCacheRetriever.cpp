@@ -56,7 +56,7 @@ const string SiteNameCacheRetriever::FIND_SE_SITE_GLUE1 =
     ")"
     ;
 const char* SiteNameCacheRetriever::FIND_SE_SITE_ATTR_GLUE1[] =
-    {ATTR_GLUE1_SERVICE, ATTR_GLUE1_ENDPOINT, ATTR_GLUE1_LINK, ATTR_GLUE1_TYPE, ATTR_GLUE1_VERSION, 0};
+{ATTR_GLUE1_SERVICE, ATTR_GLUE1_ENDPOINT, ATTR_GLUE1_LINK, ATTR_GLUE1_TYPE, ATTR_GLUE1_VERSION, 0};
 
 const char* SiteNameCacheRetriever::ATTR_GLUE2_FK       = "GLUE2EndpointServiceForeignKey";
 const char* SiteNameCacheRetriever::ATTR_GLUE2_SITE     = "GLUE2ServiceAdminDomainForeignKey";
@@ -81,7 +81,7 @@ const string SiteNameCacheRetriever::FIND_SE_FK_GLUE2 =
     ")"
     ;
 const char* SiteNameCacheRetriever::FIND_SE_FK_ATTR_GLUE2[] =
-    {ATTR_GLUE2_ENDPOINT, ATTR_GLUE2_FK, ATTR_GLUE2_TYPE, ATTR_GLUE2_VERSION, 0};
+{ATTR_GLUE2_ENDPOINT, ATTR_GLUE2_FK, ATTR_GLUE2_TYPE, ATTR_GLUE2_VERSION, 0};
 
 const string SiteNameCacheRetriever::FIND_FK_SITE_GLUE2(string fk)
 {
@@ -199,7 +199,7 @@ void SiteNameCacheRetriever::fromGlue2(map<string, EndpointInfo>& cache)
             if (!item[ATTR_GLUE2_TYPE].empty())
                 cache[se].type    = item[ATTR_GLUE2_TYPE].front();
             if (!item[ATTR_GLUE2_VERSION].empty())
-            cache[se].version = item[ATTR_GLUE2_VERSION].front();
+                cache[se].version = item[ATTR_GLUE2_VERSION].front();
         }
 }
 
