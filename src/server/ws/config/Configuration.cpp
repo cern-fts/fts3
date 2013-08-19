@@ -97,7 +97,7 @@ string Configuration::json(map<string, int>& params)
     map<string, int>::iterator it;
     for (it = params.begin(); it != params.end();)
         {
-            if (it->second == auto_share)
+            if (it->second == automatic)
                 {
                     // it is auto
                     ss << "{\"" << it->first << "\":\"" << CfgParser::auto_value << "\"}";

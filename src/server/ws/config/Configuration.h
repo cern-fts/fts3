@@ -129,7 +129,7 @@ public:
     /// 'share_only' string
     static const string share_only;
     /// value of a share pointing that auto should be used
-    static const int auto_share = -1;
+    static const int automatic = -1;
 
 protected:
 
