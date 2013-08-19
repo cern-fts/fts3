@@ -48,6 +48,21 @@ class TestUserChecksum(base.TestBase):
 			logging.info("Finished with %s" % state)
 			self.assertEqual(state, 'FAILED')
 
+	def test_withBadUserChecksumNoFlag(self):
+		"""
+		Same as before, but -K is not passed. The transfer must fail!
+		"""
+		for (src, dst) in self.transfers:
+			logging.info("Transfer with wrong user checksum and no flag %s => %s" % (src, dst))
+			srcChecksum = self.surl.create(src)
+			badChecksum = self._badChecksum(srcChecksum)
+			jobId = self.client.submit([{'sources': [src], 'destinations': [dst], 'checksums': [badChecksum]}], ['-o'])
+			logging.info("Got job id %s" % jobId)
+			state = self.client.poll(jobId)
+			logging.info("Finished with %s" % state)
+			self.assertEqual(state, 'FAILED')
+
+
 
 if __name__ == '__main__':
 	import sys
