@@ -31,7 +31,6 @@ public:
     std::string sourceSiteName;
     std::string destSiteName;
     std::string vo;
-    std::string checksumAlgorithm;
     std::string checksumValue;
     std::string jobId;
     std::string sourceUrl;

@@ -22,7 +22,6 @@ const option UrlCopyOpts::long_options[] =
     {"source-site",       required_argument, 0, 'D'},
     {"dest-site",         required_argument, 0, 'E'},
     {"vo",                required_argument, 0, 'C'},
-    {"algorithm",         required_argument, 0, 'y'},
     {"checksum",          required_argument, 0, 'z'},
     {"compare-checksum",  no_argument,       0, 'A'},
     {"pin-lifetime",      required_argument, 0, 't'},
@@ -42,7 +41,7 @@ const option UrlCopyOpts::long_options[] =
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GFD:E:C:y:z:At:a:b:c:de:f:h:ij:k:B:5:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GFD:E:C:z:At:a:b:c:de:f:h:ij:k:B:5:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
@@ -138,9 +137,6 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             break;
                         case 'C':
                             vo = optarg;
-                            break;
-                        case 'y':
-                            checksumAlgorithm = optarg;
                             break;
                         case 'z':
                             checksumValue = optarg;
