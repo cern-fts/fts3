@@ -186,6 +186,11 @@ po::options_description ServerConfigReader::_defineConfigOptions()
         po::value<std::string>( &(_vars["Profiling"]) )->default_value("0"),
         "Enable or disable internal profiling"
     )
+    (
+        "InternalThreadPool",
+        po::value<std::string>( &(_vars["InternalThreadPool"]) )->default_value("5"),
+        "Set the number of threads in the internal threadpool"
+    )
     ;
 
     return config;

@@ -194,6 +194,8 @@ public:
     {
         maximumThreads = getMaxThreads();
 
+        execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
+
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
         char hostname[MAXHOSTNAMELEN];
         gethostname(hostname, MAXHOSTNAMELEN);
@@ -255,6 +257,7 @@ protected:
     rlim_t maximumThreads;
     std::string infosys;
     bool monitoringMessages;
+    int execPoolSize;
 
     std::string extractHostname(const std::string &surl)
     {
@@ -311,7 +314,7 @@ protected:
 	 	                } 
 
                         // the worker thread pool
-                        FileTransferExecutorPool execPool(5, tfh, monitoringMessages, infosys, ftsHostName);
+                        FileTransferExecutorPool execPool(execPoolSize, tfh, monitoringMessages, infosys, ftsHostName);
 
                         // loop until all files have been served
 
