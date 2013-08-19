@@ -5472,7 +5472,7 @@ void MySqlAPI::checkSanityState()
 
                     if(numberOfFiles > 0)
                         {
-                            countFileInTerminalStates(*i, allFinished, allCanceled, allFailed);
+                            countFileInTerminalStates(sql, *i, allFinished, allCanceled, allFailed);
                             terminalState = allFinished + allCanceled + allFailed;
 
                             if(numberOfFiles == terminalState)  /* all files terminal state but job in ('ACTIVE','READY','SUBMITTED','STAGING') */
@@ -5553,11 +5553,9 @@ void MySqlAPI::checkSanityState()
         }
 }
 
-void MySqlAPI::countFileInTerminalStates(std::string jobId,
+void MySqlAPI::countFileInTerminalStates(soci::session& sql, std::string jobId,
         unsigned int& finished, unsigned int& canceled, unsigned int& failed)
 {
-    soci::session sql(*connectionPool);
-
     try
         {
             sql <<

@@ -332,9 +332,6 @@ public:
 
     virtual void checkSanityState();
 
-    virtual void countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
-                                           unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
-
     virtual void checkSchemaLoaded();
 
     virtual void storeProfiling(const fts3::ProfilingSubsystem* prof);
@@ -351,6 +348,8 @@ private:
     OracleTypeConversions *conv;
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
     int getOptimizerMode();
+    void countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
+                                           unsigned int& finished, unsigned int& cancelled, unsigned int& failed);    
     OptimizerSample optimizerObject;
     std::string ftsHostName;
     int lowDefault;

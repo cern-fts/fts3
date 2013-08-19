@@ -318,9 +318,6 @@ public:
 
     virtual void checkSanityState();
 
-    virtual void countFileInTerminalStates(std::string jobId,
-                                           unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
-
     virtual void checkSchemaLoaded();
 
     virtual void storeProfiling(const fts3::ProfilingSubsystem* prof);
@@ -342,6 +339,9 @@ private:
                                int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
     int getOptimizerMode(soci::session& sql);
+    
+    void countFileInTerminalStates(soci::session& sql, std::string jobId,
+                                           unsigned int& finished, unsigned int& cancelled, unsigned int& failed);    
 
     int lowDefault;
     int highDefault;
