@@ -24,6 +24,10 @@ namespace server
 
 using namespace std;
 
+/**
+ * A pool of FileTransferExecutors. The pool size is set at the construction time.
+ * New TransferFiles are added in round-robin fashion to the queues of the FileTransferExecutors.
+ */
 class FileTransferExecutorPool
 {
 
@@ -31,32 +35,41 @@ class FileTransferExecutorPool
 public:
 
     /**
+     * Constructor.
      *
+     * @params size - pool size (number of worker threads)
+     * @param tfh - reference to the TranferFileHandler
+     * @param monitoringMsg - should be true if monitoring messages are in use
+     * @param infosys - information system host
+     * @param ftsHostName - hostname of the machine hosting FTS3
      */
     FileTransferExecutorPool(int size, TransferFileHandler& tfh, bool monitoringMsg, string infosys, string ftsHostName);
 
     /**
-     *
+     * Destructor.
      */
     virtual ~FileTransferExecutorPool();
 
     /**
+     * Adds new TransferFile to the queue of one of the FileTransferExecutors
      *
+     * @param tf - the TransferFile to be carried out
+     * @param optimize - should be true if autotuning should be used for this FileTransfer
      */
     void add(TransferFiles* tf, bool optimize);
 
     /**
-     *
+     * Waits until all the FileTransferExecutors in the pool finish their job
      */
     void join();
 
 	/**
-	 *
+	 * Stops all the threads in the pool
 	 */
 	void stopAll();
 
 	/**
-	 *
+	 * @return gets the number of files that were scheduled by the executors in the pool
 	 */
 	int getNumberOfScheduled()
 	{
@@ -64,9 +77,13 @@ public:
 	}
 
 private:
+
+	/// vector with executors
     vector<FileTransferExecutor*> executors;
 
+    /// the next queue (executor) to be used
     unsigned int index;
+    /// size of the pool
     unsigned int size;
 
     /// variables from process_service_handler
