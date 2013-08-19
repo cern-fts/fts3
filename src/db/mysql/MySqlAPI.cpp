@@ -492,13 +492,11 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'SUBMITTED' "
-                        " WHERE file_id = :fileId AND job_id = :jobId "
+                        " WHERE job_id = :jobId "
                         "	AND file_index = :fileIndex "
                         "	AND file_state = 'NOT_USED'",
-			soci::use(fileId),
                         soci::use(jobId),
-                        soci::use(fileIndex)
-                        ;
+                        soci::use(fileIndex);
                 }
 
             sql.commit();
