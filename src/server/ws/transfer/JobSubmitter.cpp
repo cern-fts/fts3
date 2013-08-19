@@ -298,7 +298,8 @@ JobSubmitter::JobSubmitter(soap* soap, tns3__TransferJob2 *job) :
             if((*it)->checksum)
                 {
                     tupple.checksum = *(*it)->checksum;
-                    params.set(JobParameterHandler::CHECKSUM_METHOD, "compare");
+                    if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
+                        params.set(JobParameterHandler::CHECKSUM_METHOD, "relaxed");
                 }
             tupple.filesize = 0;
             tupple.metadata = string();
@@ -361,7 +362,8 @@ JobSubmitter::JobSubmitter(soap* ctx, tns3__TransferJob3 *job) :
             if (!(*it)->checksum.empty())
                 {
                     tupple.checksum = (*it)->checksum.front();
-                    params.set(JobParameterHandler::CHECKSUM_METHOD, "compare");
+                    if (!params.isParamSet(JobParameterHandler::CHECKSUM_METHOD))
+                        params.set(JobParameterHandler::CHECKSUM_METHOD, "relaxed");
                 }
 
             // pair sources with destinations

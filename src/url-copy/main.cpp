@@ -773,6 +773,11 @@ int main(int argc, char **argv)
                 /*Checksuming*/
                 if (opts.compareChecksum)
                     {
+                        // Set checksum check
+                        gfalt_set_checksum_check(params, TRUE, NULL);
+                        if (opts.compareChecksum == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED)
+                            gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
+
                         if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
                             {
                                 logger.INFO() << "User  provided checksum" << std::endl;
@@ -780,7 +785,6 @@ int main(int argc, char **argv)
                                 if (std::string::npos == (strArray[3]).find(":"))
                                     {
                                         gfalt_set_user_defined_checksum(params, (strArray[3]).c_str(), NULL, NULL);
-                                        gfalt_set_checksum_check(params, TRUE, NULL);
                                     }
                                 else
                                     {
@@ -788,13 +792,11 @@ int main(int argc, char **argv)
                                         std::string checkAlg = token[0];
                                         std::string csk = token[1];
                                         gfalt_set_user_defined_checksum(params, checkAlg.c_str(), csk.c_str(), NULL);
-                                        gfalt_set_checksum_check(params, TRUE, NULL);
                                     }
                             }
                         else    //use auto checksum
                             {
                                 logger.INFO() << "Calculate checksum auto" << std::endl;
-                                gfalt_set_checksum_check(params, TRUE, NULL);
                             }
                     }
 

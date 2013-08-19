@@ -23,7 +23,7 @@ const option UrlCopyOpts::long_options[] =
     {"dest-site",         required_argument, 0, 'E'},
     {"vo",                required_argument, 0, 'C'},
     {"checksum",          required_argument, 0, 'z'},
-    {"compare-checksum",  no_argument,       0, 'A'},
+    {"compare-checksum",  required_argument, 0, 'A'},
     {"pin-lifetime",      required_argument, 0, 't'},
     {"job-id",            required_argument, 0, 'a'},
     {"source",            required_argument, 0, 'b'},
@@ -41,15 +41,15 @@ const option UrlCopyOpts::long_options[] =
     {0, 0, 0, 0}
 };
 
-const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GFD:E:C:z:At:a:b:c:de:f:h:ij:k:B:5:";
+const char UrlCopyOpts::short_options[] = "PONM:L:K:J:I:H:GFD:E:C:z:A:t:a:b:c:de:f:h:ij:k:B:5:";
 
 
 UrlCopyOpts::UrlCopyOpts(): monitoringMessages(false), autoTunned(false),
-    manualConfig(false), debug(false), compareChecksum(false),
-    overwrite(false), daemonize(false), logToStderr(false),reuseFile(false), fileId("0"), userFileSize(0),
-    bringOnline(-1), copyPinLifetime(-1), nStreams(DEFAULT_NOSTREAMS),
-    tcpBuffersize(DEFAULT_BUFFSIZE), blockSize(0), timeout(DEFAULT_TIMEOUT)
-
+    manualConfig(false), debug(false), overwrite(false), daemonize(false),
+    logToStderr(false),reuseFile(false), compareChecksum(CHECKSUM_DONT_CHECK),
+    fileId("0"), userFileSize(0), bringOnline(-1), copyPinLifetime(-1),
+    nStreams(DEFAULT_NOSTREAMS), tcpBuffersize(DEFAULT_BUFFSIZE),
+    blockSize(0), timeout(DEFAULT_TIMEOUT)
 {
 }
 
@@ -142,7 +142,10 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             checksumValue = optarg;
                             break;
                         case 'A':
-                            compareChecksum = true;
+                            if (strcmp("relaxed", optarg) == 0)
+                                compareChecksum = CHECKSUM_RELAXED;
+                            else
+                                compareChecksum = CHECKSUM_STRICT;
                             break;
                         case 't':
                             copyPinLifetime = boost::lexical_cast<int>(optarg);
@@ -203,4 +206,24 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
         }
 
     return 0;
+}
+
+
+
+std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum& c)
+{
+    switch (c) {
+        case UrlCopyOpts::CompareChecksum::CHECKSUM_DONT_CHECK:
+            out << "No checksum comparison";
+            break;
+        case UrlCopyOpts::CompareChecksum::CHECKSUM_STRICT:
+            out << "Strict comparison";
+            break;
+        case UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED:
+            out << "Relaxed comparison";
+            break;
+        default:
+            out << "Uknown value!";
+    }
+    return out;
 }
