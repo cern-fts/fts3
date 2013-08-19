@@ -3,7 +3,6 @@
 # meta: preconfig=../FTS3-config
 import itertools
 import logging
-import unittest
 from lib import base 
 
 
@@ -25,66 +24,8 @@ class TestChecksum(base.TestBase):
 			self.assertEqual(srcChecksum, dstChecksum)
 
 
-	def test_withUserChecksum(self):
-		"""
-		Ask to validate the checksum and provide the right checksum
-		"""
-		for (src, dst) in self.transfers:
-			logging.info("Transfer with user checksum %s => %s" % (src, dst))
-			srcChecksum = self.surl.create(src)
-			jobId = self.client.submit([{'sources': [src], 'destinations': [dst], 'checksums': [srcChecksum]}], ['-K'])
-			logging.info("Got job id %s" % jobId)
-			state = self.client.poll(jobId)
-			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'FINISHED')
-			dstChecksum = self.surl.checksum(dst)
-			self.assertEqual(srcChecksum, dstChecksum)
-
-
-	def _badChecksum(self, chk):
-		"""
-		To generate a bad checksum, we get the right one
-		and add any value.
-		"""
-		(al, val) = chk.split(':')
-		val = "%x" % (int(val, 16) + 42)
-		return al + ':' + val
-
-
-	def test_withBadUserChecksum(self):
-		"""
-		Ask to validate the checksum but give a bad one on purpose
-		"""
-		for (src, dst) in self.transfers:
-			logging.info("Transfer with wrong user checksum %s => %s" % (src, dst))
-			srcChecksum = self.surl.create(src)
-			badChecksum = self._badChecksum(srcChecksum)
-			jobId = self.client.submit([{'sources': [src], 'destinations': [dst], 'checksums': [badChecksum]}], ['-K', '-o'])
-			logging.info("Got job id %s" % jobId)
-			state = self.client.poll(jobId)
-			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'FAILED')
-
-
-	def test_headingZerosUserChecksum(self):
-		"""
-		The right checksum is given, but with heading 0.
-		This is a regression test for LCGUTIL-216
-		"""
-		for (src, dst) in self.transfers:
-			logging.info("Transfer zero-headed checksum %s => %s" % (src, dst))
-			srcChecksum = self.surl.create(src)
-			(al, val) = srcChecksum.split(':')
-			zeroedChecksum = "%s:0%s" % (al, val)
-			jobId = self.client.submit([{'sources': [src], 'destinations': [dst], 'checksums': [zeroedChecksum]}], ['-K', '-o'])
-			logging.info("Got job id %s" % jobId)
-			state = self.client.poll(jobId)
-			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'FINISHED')
-
-
 
 if __name__ == '__main__':
 	import sys
-	unittest.main(testRunner = unittest.TextTestRunner(stream=sys.stdout, verbosity = 2))
+	sys.exit(TestChecksum().run())
 

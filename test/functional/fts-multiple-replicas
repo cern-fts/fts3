@@ -3,11 +3,10 @@
 # meta: preconfig=../FTS3-config
 import itertools
 import logging
-import unittest
 from lib import base, storage 
 
 
-class TestMultiple(base.TestBase):
+class TestMultipleReplicas(base.TestBase):
 
 	def setUp(self):
 		# Need to create three sources!
@@ -75,5 +74,5 @@ class TestMultiple(base.TestBase):
 
 if __name__ == '__main__':
 	import sys
-	unittest.main(testRunner = unittest.TextTestRunner(stream=sys.stdout, verbosity = 2))
+	sys.exit(TestMultipleReplicas().run())
 
