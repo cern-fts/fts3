@@ -32,7 +32,13 @@ using namespace boost;
 using namespace fts3::common;
 
 /**
+ * FileTransferExecutor is the worker class that executes
+ * FileTransfers one by one in a separate thread.
  *
+ * The FileTransfers are added to a thread-safe queue, which is processed by the worker.
+ * In order to let the worker thread know that all the date were pushed into the queue the
+ * 'noMoreData()' method should be used, in order to wait for the thread to finish processing
+ * FileTransfers the 'join()' method should be used (before calling join, noMoreData should be called)
  */
 class FileTransferExecutor
 {
@@ -40,22 +46,30 @@ class FileTransferExecutor
 public:
 
     /**
+     * Constructor.
      *
+     * @param tfh - the TransferFileHandler reference
+     * @param optimize - flag stating if optimization is ON
+     * @param monitoringMsg - is true if monitoring messages are in use
+     * @param infosys - information system host
+     * @param ftsHostName - hostname of the machine hosting FTS3
      */
     FileTransferExecutor(TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName);
 
     /**
-     *
+     * Destructor.
      */
     virtual ~FileTransferExecutor();
 
     /**
-     *
+     * Worker loop that is executed in a separate thread
      */
     void execute();
 
     /**
+     * Add new FileTransfer to the queue
      *
+     * @param tf - the FileTransfer
      */
     void put(TransferFiles* tf)
     {
@@ -63,7 +77,7 @@ public:
     }
 
     /**
-     *
+     * Calling this method indicates that no more data will be pushed into the queue
      */
     void noMoreData()
     {
@@ -71,7 +85,7 @@ public:
     }
 
     /**
-     *
+     * @return true if the worker loop is active, fale otherwise
      */
     bool isActive()
     {
@@ -79,7 +93,7 @@ public:
     }
 
     /**
-     *
+     * Waits until the worker thread finishes
      */
     void join()
     {
@@ -87,7 +101,7 @@ public:
     }
 
 	/**
-	 *
+	 * Stops the worker thread
 	 */
 	void stop()
 	{
@@ -95,6 +109,11 @@ public:
 		// t.interrupt();
 	}
 
+	/**
+	 * Gets the number of TransferFiles that were scheduled
+	 *
+	 * @return number of TransferFiles that were scheduled
+	 */
 	int getNumberOfScheduled()
 	{
 		return scheduled;
@@ -102,6 +121,9 @@ public:
 
 private:
 
+	/**
+	 * @return the metadata string
+	 */
     static string prepareMetadataString(std::string text);
 
     /// queue with all the tasks
