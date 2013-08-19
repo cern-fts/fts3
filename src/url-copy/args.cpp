@@ -142,7 +142,7 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
                             checksumValue = optarg;
                             break;
                         case 'A':
-                            if (strcmp("relaxed", optarg) == 0)
+                            if (strcmp("relaxed", optarg) == 0 || strcmp("r", optarg) == 0)
                                 compareChecksum = CHECKSUM_RELAXED;
                             else
                                 compareChecksum = CHECKSUM_STRICT;
