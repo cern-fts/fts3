@@ -642,11 +642,11 @@ CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_se);
 CREATE INDEX file_transferhost on t_file(TRANSFERHOST);
 CREATE INDEX file_pid_job_id ON t_file(pid, job_id);
 
+
+CREATE INDEX file_wait_timeout ON t_file(wait_timeout);
+
 CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
-CREATE INDEX optimize_dest_se           ON t_optimize(dest_se);
-CREATE INDEX optimize_buffer            ON t_optimize(buffer);
-CREATE INDEX optimize_order         ON t_optimize(timeout,buffer);
 CREATE INDEX optimize_prot         ON t_optimize(nostreams,active,throughput);
 CREATE INDEX optimize_prot2         ON t_optimize(throughput, active, nostreams, timeout, buffer);
 

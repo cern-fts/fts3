@@ -276,9 +276,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                                                sql.prepare <<
                                                " SELECT DISTINCT vo_name "  /*create index on vo_name*/
                                                " FROM t_job "
-                                               " WHERE t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')"
-                                               "	AND t_job.CANCEL_JOB IS NULL "
-                                               "	AND (t_job.reuse_job='N' OR t_job.reuse_job is NULL) "
+                                               " WHERE t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')"                                              
                                                <<
                                                (vos == "*" ? "" : " AND t_job.vo_name IN " + vos)
                                            );
@@ -289,11 +287,9 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT DISTINCT t_file.source_se, t_file.dest_se FROM t_file "
-                                                     " JOIN t_job ON t_job.job_id = t_file.job_id "
-                                                     " WHERE t_job.vo_name = :vo_name and t_job.job_finished IS NULL and cancel_job IS NULL "
-                                                     " and (reuse_job='N' OR reuse_job is NULL) and "
-                                                     " job_state IN ('ACTIVE', 'READY','SUBMITTED')",
+                                                     "SELECT DISTINCT t_file.source_se, t_file.dest_se FROM t_file, t_job "
+						     "WHERE t_file.file_state='SUBMITTED' AND t_job.job_id = t_file.job_id "
+						     "AND t_job.vo_name = :vo_name ",
                                                      soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -313,46 +309,15 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
             // Query depends on vos
             std::string query;
-            query =
-                "SELECT "
-                "   job_id, "
-                "   job_state, "
-                "   vo_name,  "
-                "   priority,  "
-                "   source_se, "
-                "   dest_se,  "
-                "   agent_dn, "
-                "   submit_host, "
-                "   user_dn, "
-                "   user_cred, "
-                "   cred_id,  "
-                "   space_token, "
-                "   storage_class,  "
-                "   job_params, "
-                "   overwrite_flag, "
-                "   source_space_token, "
-                "   source_token_description,"
-                "   copy_pin_lifetime, "
-                "   checksum_method, "
-                "   bring_online, "
-                "   submit_time "
-                "FROM t_job "
-                "WHERE "
-                "   t_job.vo_name = :vo AND "
-                "   t_job.job_state in ('SUBMITTED', 'READY', 'ACTIVE') AND "
-                "   t_job.cancel_job IS NULL AND "
-                "   (t_job.reuse_job = 'N' OR t_job.reuse_job IS NULL) AND "
-                "   EXISTS ( "
-                "        SELECT NULL "
-                "        FROM t_file "
-                "        WHERE t_job.job_id = t_file.job_id AND "
-                "            t_file.source_se = :source AND "
-                "            t_file.dest_se = :dest AND "
-                "            t_file.file_state = 'SUBMITTED'"
-                "    ) "
-                "ORDER BY t_job.priority DESC, t_job.submit_time ASC LIMIT :jobsNum ";
-
-
+	    
+           query = " SELECT j.job_id, j.job_state, j.vo_name, j.priority, j.source_se, j.dest_se, j.agent_dn, "
+	   	   " j.submit_host, j.user_dn, j.user_cred, j.cred_id, j.space_token, j.storage_class, j.job_params, "
+		   " j.overwrite_flag, j.source_space_token, j.source_token_description, j.copy_pin_lifetime, j.checksum_method, "
+		   " j.bring_online, j.submit_time FROM t_job j JOIN t_file t ON (t.job_id = j.job_id)  WHERE "
+		   " j.finish_time is NULL AND j.vo_name = :vo AND j.cancel_job IS NULL AND  "
+		   " (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND t.source_se = :source AND t.dest_se = :dest AND "
+		   " t.file_state = 'SUBMITTED' ORDER BY j.priority DESC, j.submit_time ASC LIMIT :jobsNum";   
+	  
             std::set<std::string> jobIds;
 
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
@@ -1292,7 +1257,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN NOT EXISTS ( "
                 "				SELECT NULL "
                 "				FROM t_file "
-                "				WHERE job_id = tbl.job_id "
+                "				WHERE job_id = :jobId AND job_id = tbl.job_id "
                 "					AND file_index = tbl.file_index "
                 "					AND file_state <> 'CANCELED' "
                 "		) "
@@ -1302,7 +1267,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE job_id = tbl.job_id "
+                "			WHERE  job_id = :jobId AND job_id = tbl.job_id "
                 "				AND file_index = tbl.file_index "
                 "				AND file_state = 'FINISHED' "
                 "		) "
@@ -1312,13 +1277,13 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN NOT EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE job_id = tbl.job_id "
+                "			WHERE  job_id = :jobId AND job_id = tbl.job_id "
                 "				AND file_index = tbl.file_index "
                 "				AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
                 "		) AND EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE job_id = tbl.job_id "
+                "			WHERE  job_id = :jobId AND job_id = tbl.job_id "
                 "				AND file_index = tbl.file_index "
                 "				AND file_state = 'FAILED' "
                 "		) "
@@ -1331,6 +1296,10 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		WHERE job_id = :jobId "
                 "	) tbl ",
                 soci::use(job_id),
+		soci::use(job_id),
+		soci::use(job_id),
+		soci::use(job_id),
+		soci::use(job_id),
                 soci::into(numberOfFilesInJob),
                 soci::into(numberOfFilesCanceled),
                 soci::into(numberOfFilesFinished),
@@ -2797,7 +2766,7 @@ void MySqlAPI::revertToSubmitted()
                             double diff = difftime(now2, startTimestamp);
                             bool alive = ThreadSafeList::get_instance().isAlive(fileId);
 
-                            if (diff > 200 && reuseJob != "Y" && !alive)
+                            if (diff > 300 && reuseJob != "Y" && !alive)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     sql.begin();
