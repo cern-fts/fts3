@@ -4020,8 +4020,8 @@ int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId)
     int nRetries = 0;
     try
         {
-            sql << "SELECT retry FROM t_file WHERE job_id = :jobId AND file_id = :fileId",
-                soci::use(jobId), soci::use(fileId), soci::into(nRetries);
+            sql << "SELECT retry FROM t_file WHERE file_id = :fileId AND job_id = :jobId ",
+                 soci::use(fileId), soci::use(jobId), soci::into(nRetries);
         }
     catch (std::exception& e)
         {
@@ -5786,7 +5786,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
             sql << "UPDATE t_job SET "
                 "    job_state = 'ACTIVE' "
                 "WHERE job_id = :jobId AND "
-                "      job_state NOT IN ('FAILED','CANCELED') AND "
+                "      job_state NOT IN ('FINISHEDDIRTY','FAILED','CANCELED') AND "
                 "      reuse_job = 'Y'",
                 soci::use(jobId);
 
