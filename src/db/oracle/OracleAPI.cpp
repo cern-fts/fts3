@@ -3907,7 +3907,29 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
     try
         {
+           int mode = getOptimizerMode();
+            if(mode==1)
+                {
+                    lowDefault = mode_1[0];
+                    highDefault = mode_1[1];
+                }
+            else if(mode==2)
+                {
+                    lowDefault = mode_2[0];
+                    highDefault = mode_2[1];
+                }
+            else if(mode==3)
+                {
+                    lowDefault = mode_3[0];
+                    highDefault = mode_3[1];
+                }
+            else
+                {
+                    jobsNum = mode_1[0];
+                    highDefault = mode_1[1];
+                }
 
+	
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return false;
@@ -4029,29 +4051,7 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                     ratioSuccessFailure = 0;
                 }
 
-            int mode = getOptimizerMode();
-            if(mode==1)
-                {
-                    lowDefault = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-            else if(mode==2)
-                {
-                    lowDefault = mode_2[0];
-                    highDefault = mode_2[1];
-                }
-            else if(mode==3)
-                {
-                    lowDefault = mode_3[0];
-                    highDefault = mode_3[1];
-                }
-            else
-                {
-                    jobsNum = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-
-
+ 
             allowed = optimizerObject.transferStart((int) numberOfFinished, (int) numberOfFailed,source_hostname, destin_hostname, act, maxSource, maxDest,
                                                     ratioSuccessFailure,numberOfFinishedAll, numberOfFailedAll, throughput, avgThr, lowDefault, highDefault);
 
@@ -10915,8 +10915,8 @@ void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnec
                 conn->destroyResultset(s3, r3);
             if (s3)
                 conn->destroyStatement(s3, tagCanceled, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+            
+	    throw Err_Custom(e.what());
         }
     catch (...)
         {
@@ -10935,8 +10935,8 @@ void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnec
                 conn->destroyResultset(s3, r3);
             if (s3)
                 conn->destroyStatement(s3, tagCanceled, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+            
+	    throw Err_Custom("Unknown oracle exception");
         }
 }
 
