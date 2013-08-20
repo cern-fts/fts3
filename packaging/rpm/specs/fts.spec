@@ -4,7 +4,7 @@
 
 Name: fts
 Version: 3.1.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
@@ -285,7 +285,7 @@ exit 0
 
 
 %changelog
-* Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
+* Wed Aug 07 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
   - GenericDbIfce.h includes new blacklisting API
   - no longer linking explicitly to boost libraries with '-mt' sufix 
 * Sat Aug 03 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.1.0-3
