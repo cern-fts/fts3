@@ -263,9 +263,10 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
             .getDBObjectInstance()
             ->getTransferFileStatus(req->jobId, req->archive, req->offset, req->limit, statuses);
 
+            std::vector<FileRetry*> retries;
+
             for (it = statuses.begin(); it != statuses.end(); ++it)
                 {
-
                     FileTransferStatus* tmp = *it;
 
                     tns3__FileTransferStatus* status = soap_new_tns3__FileTransferStatus(soap, -1);
@@ -290,6 +291,22 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
 
                     status->duration = tmp->finish_time - tmp->start_time;
                     status->numFailures = tmp->numFailures;
+
+                    DBSingleton::instance()
+                        .getDBObjectInstance()
+                        ->getTransferRetries(tmp->fileId, retries);
+
+                    std::vector<FileRetry*>::iterator ri;
+                    for (ri = retries.begin(); ri != retries.end(); ++ri) {
+                        tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(soap, -1);
+                        retry->attempt  = (*ri)->attempt;
+                        retry->datetime = (*ri)->datetime;
+                        retry->reason   = (*ri)->reason;
+                        status->retries.push_back(retry);
+
+                        delete *ri;
+                    }
+                    retries.clear();
 
                     resp.getFileStatusReturn->item.push_back(status);
 

@@ -453,7 +453,7 @@ void MsgPrinter::job_summary(JobSummary js)
     addToArray(json_out, "job", object);
 }
 
-void MsgPrinter::file_list(vector<string> values)
+void MsgPrinter::file_list(vector<string> values, vector<string> retries)
 {
 
     enum
@@ -474,6 +474,10 @@ void MsgPrinter::file_list(vector<string> values)
             cout << "  Retries:     " << values[RETRIES] << endl;
             cout << "  Reason:      " << values[REASON] << endl;
             cout << "  Duration:    " << values[DURATION] << endl;
+            cout << "  Retries: " << endl;
+            vector<string>::const_iterator i;
+            for (i = retries.begin(); i != retries.end(); ++i)
+                cout << "    " << *i << std::endl;
             return;
         }
 

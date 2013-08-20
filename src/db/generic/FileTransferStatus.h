@@ -57,3 +57,16 @@ public:
     int fileId;
 
 };
+
+
+/**
+ * Retries logging
+ */
+class FileRetry
+{
+public:
+    int         fileId;
+    int         attempt;
+    time_t      datetime;
+    std::string reason;
+};

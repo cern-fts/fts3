@@ -889,13 +889,13 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
 
             if (archive)
                 {
-                    query = "SELECT t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
+                    query = "SELECT t_file_backup.file_id, t_file_backup.source_surl, t_file_backup.dest_surl, t_file_backup.file_state, "
                             "       t_file_backup.reason, t_file_backup.start_time, t_file_backup.finish_time, t_file_backup.retry "
                             "FROM t_file_backup WHERE t_file_backup.job_id = :jobId ";
                 }
             else
                 {
-                    query = "SELECT t_file.source_surl, t_file.dest_surl, t_file.file_state, "
+                    query = "SELECT t_file.file_id, t_file.source_surl, t_file.dest_surl, t_file.file_state, "
                             "       t_file.reason, t_file.start_time, t_file.finish_time, t_file.retry "
                             "FROM t_file WHERE t_file.job_id = :jobId ";
                 }
@@ -5744,7 +5744,6 @@ void MySqlAPI::setOptimizerMode(int mode)
 
 int MySqlAPI::getOptimizerMode(soci::session& sql)
 {
-
     int mode = 0;
     soci::indicator ind = soci::i_ok;
 
@@ -5841,7 +5840,27 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
         }
 }
 
+void MySqlAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
+{
+    soci::session sql(*connectionPool);
 
+    try
+        {
+            soci::rowset<FileRetry> rs = (sql.prepare << "SELECT * FROM t_file_retry_errors WHERE file_id = :fileId",
+                                           soci::use(fileId));
+
+
+            for (soci::rowset<FileRetry>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    FileRetry const &retry = *i;
+                    retries.push_back(new FileRetry(retry));
+                }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
 
 // the class factories
 

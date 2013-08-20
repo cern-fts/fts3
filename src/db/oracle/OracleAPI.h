@@ -318,6 +318,8 @@ public:
 
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
 
+    virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
+
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;

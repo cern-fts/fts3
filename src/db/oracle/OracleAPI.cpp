@@ -1330,7 +1330,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
         {
             tag = "getArchivedFileStatus";
             query = "SELECT * FROM ("
-                    "   SELECT t_file_backup.SOURCE_SURL, t_file_backup.DEST_SURL, "
+                    "   SELECT t_file_backup.file_id, t_file_backup.SOURCE_SURL, t_file_backup.DEST_SURL, "
                     "          t_file_backup.file_state, t_file_backup.reason, "
                     "          t_file_backup.start_time, t_file_backup.finish_time, t_file_backup.retry, "
                     "          Rownum as rw "
@@ -1340,7 +1340,7 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
         {
             tag = "getTransferFileStatus";
             query = "SELECT * FROM ("
-                    "   SELECT t_file.SOURCE_SURL, t_file.DEST_SURL, "
+                    "   SELECT t_file.file_id, t_file.SOURCE_SURL, t_file.DEST_SURL, "
                     "          t_file.file_state, t_file.reason, "
                     "          t_file.start_time, t_file.finish_time, t_file.retry, "
                     "          Rownum as rw "
@@ -1381,13 +1381,14 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
             while (r->next())
                 {
                     js = new FileTransferStatus();
-                    js->sourceSURL = r->getString(1);
-                    js->destSURL = r->getString(2);
-                    js->transferFileState = r->getString(3);
-                    js->reason = r->getString(4);
-                    js->start_time = conv->toTimeT(r->getTimestamp(5));
-                    js->finish_time = conv->toTimeT(r->getTimestamp(6));
-                    js->numFailures = r->getInt(7);
+                    js->fileId            = r->getInt(1);
+                    js->sourceSURL        = r->getString(2);
+                    js->destSURL          = r->getString(3);
+                    js->transferFileState = r->getString(4);
+                    js->reason            = r->getString(5);
+                    js->start_time        = conv->toTimeT(r->getTimestamp(6));
+                    js->finish_time       = conv->toTimeT(r->getTimestamp(7));
+                    js->numFailures       = r->getInt(8);
                     files.push_back(js);
                 }
             conn->destroyResultset(s, r);
@@ -11540,6 +11541,64 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
 
+    conn->releasePooledConnection(pooledConnection);
+}
+
+void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
+{
+    const std::string tag = "getTransferRetries";
+    const std::string query = "SELECT file_id, attempt, datetime, reason from t_file_retry_errors WHERE file_id = :1";
+
+    oracle::occi::Statement* s = 0;
+    oracle::occi::ResultSet* r = 0;
+    oracle::occi::Connection* pooledConnection = NULL;
+
+    try
+        {
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection) return;
+
+            s = conn->createStatement(query, tag, pooledConnection);
+            s->setInt(1, fileId);
+            r = conn->createResultset(s, pooledConnection);
+
+            while (r->next())
+                {
+                    FileRetry* retry = new FileRetry();
+
+                    retry->fileId   = fileId;
+                    retry->attempt  = r->getInt(1);
+                    retry->datetime = conv->toTimeT(r->getTimestamp(2));
+                    retry->reason   = r->getString(3);
+
+                    retries.push_back(retry);
+                }
+
+            conn->destroyResultset(s, r);
+            conn->destroyStatement(s, tag, pooledConnection);
+            r=NULL;
+            s=NULL;
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
+        }
     conn->releasePooledConnection(pooledConnection);
 }
 

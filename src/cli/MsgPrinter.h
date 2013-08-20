@@ -76,8 +76,7 @@ public:
     void status(JobStatus js);
     void job_status(JobStatus js);
     void job_summary(JobSummary js);
-    void file_list(vector<string> values);
-
+    void file_list(vector<string> values, vector<string> retries);
 
     MsgPrinter();
     virtual ~MsgPrinter();

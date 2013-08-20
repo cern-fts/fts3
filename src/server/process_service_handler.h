@@ -303,13 +303,13 @@ protected:
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
 			
-			//init optimizer here to avoid duplicates
-			      std::map< std::string, std::list<TransferFiles*> >::const_iterator i; 
+                        //init optimizer here to avoid duplicates
+                        std::map< std::string, std::list<TransferFiles*> >::const_iterator i;
 	 	                for (i = voQueues.begin(); i != voQueues.end(); ++i) { 
 	 	                    std::list<TransferFiles*>::const_iterator j; 
 	 	                    for (j = i->second.begin(); j != i->second.end(); ++j) { 
 	 	                        TransferFiles* temp = *j; 
-					DBSingleton::instance().getDBObjectInstance()->initOptimizer(temp->SOURCE_SE, temp->DEST_SE, 0);
+	 	                        DBSingleton::instance().getDBObjectInstance()->initOptimizer(temp->SOURCE_SE, temp->DEST_SE, 0);
 	 	                    } 	 	                    
 	 	                } 
 

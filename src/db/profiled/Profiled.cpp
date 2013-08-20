@@ -826,5 +826,10 @@ void ProfiledDB::setOptimizerMode(int mode)
 void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId,
         int retry, const std::string& reason)
 {
-    db->setRetryTransfer(jobId, fileId, retry, reason);
+    PROFILE_PREFIXED("DB::", db->setRetryTransfer(jobId, fileId, retry, reason));
+}
+
+void ProfiledDB::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
+{
+    PROFILE_PREFIXED("DB::", db->getTransferRetries(fileId, retries));
 }

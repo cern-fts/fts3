@@ -303,6 +303,8 @@ public:
     void setOptimizerMode(int mode);
 
     void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
+
+    void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 };
 
 
