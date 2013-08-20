@@ -131,7 +131,7 @@ protected:
                     {
                         /*also get jobs which have been canceled by the client*/
                         counterCanceled++;
-                        if (countReverted >= 20)
+                        if (countReverted >= 30)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
                                 if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
@@ -142,9 +142,9 @@ protected:
                             }
 
 
-                        /*revert to SUBMITTED if stayed in READY for too long (150 secs)*/
+                        /*revert to SUBMITTED if stayed in READY for too long (300 secs)*/
                         countReverted++;
-                        if (countReverted >= 150)
+                        if (countReverted >= 300)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                                 countReverted = 0;
@@ -152,7 +152,7 @@ protected:
 
                         /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
                         counterTimeoutWaiting++;
-                        if (counterTimeoutWaiting >= 150)
+                        if (counterTimeoutWaiting >= 300)
                             {
                                 std::set<std::string> canceled;
                                 DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
@@ -174,7 +174,7 @@ protected:
 
                         /*force-fail stalled ACTIVE transfers*/
                         counter++;
-                        if (counter == 150)
+                        if (counter == 300)
                             {
                                 std::map<int, std::string> collectJobs;
                                 DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
