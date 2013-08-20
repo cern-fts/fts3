@@ -57,7 +57,14 @@ class ProtocolResolver
      * - TCP buffer size
      * - url-copy timeout
      */
-    typedef boost::tuple<bool, int, int, int, int> protocol;
+    struct protocol
+    {
+    	bool auto_tuning;
+    	int nostreams;
+        int no_tx_activity_to;
+        int tcp_buffer_size;
+        int urlcopy_tx_to;
+    };
 
     /**
      * The link type

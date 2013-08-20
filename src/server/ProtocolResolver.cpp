@@ -132,11 +132,11 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 
     protocol ret;
 
-    get<AUTO_TUNING>(ret) = cfg->auto_tuning == Configuration::on || cfg->auto_tuning == Configuration::share_only;
-    get<NOSTREAMS>(ret) = cfg->NOSTREAMS;
-    get<NO_TX_ACTIVITY_TO>(ret) = cfg->NO_TX_ACTIVITY_TO;
-    get<TCP_BUFFER_SIZE>(ret) = cfg->TCP_BUFFER_SIZE;
-    get<URLCOPY_TX_TO>(ret) = cfg->URLCOPY_TX_TO;
+    ret.auto_tuning = cfg->auto_tuning == Configuration::on || cfg->auto_tuning == Configuration::share_only;
+    ret.nostreams = cfg->NOSTREAMS;
+    ret.no_tx_activity_to = cfg->NO_TX_ACTIVITY_TO;
+    ret.tcp_buffer_size = cfg->TCP_BUFFER_SIZE;
+    ret.urlcopy_tx_to = cfg->URLCOPY_TX_TO;
 
     return ret;
 }
@@ -149,40 +149,40 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
 
     protocol ret;
 
-    get<AUTO_TUNING>(ret) = get<AUTO_TUNING>(*source) && get<AUTO_TUNING>(*destination);
+    ret.auto_tuning = source.get().auto_tuning && destination.get().auto_tuning;
 
     // we care about the parameters only if the auto tuning is not enabled
-    if (!get<AUTO_TUNING>(ret))
+    if (!ret.auto_tuning)
         {
 
             // for sure both source and destination were not set to auto!
 
             // if the source is set to auto return the destination
-            if (get<AUTO_TUNING>(*source)) return destination;
+            if (source.get().auto_tuning) return destination;
 
             // if the destination is set to auto return the source
-            if (get<AUTO_TUNING>(*destination)) return source;
+            if (destination.get().auto_tuning) return source;
 
             // neither the source or the destination were set to auto merge the protocol parameters
 
-            get<NOSTREAMS>(ret) =
-                get<NOSTREAMS>(*source) < get<NOSTREAMS>(*destination) ?
-                get<NOSTREAMS>(*source) : get<NOSTREAMS>(*destination)
+            ret.nostreams =
+                (*source).nostreams < (*destination).nostreams ?
+                (*source).nostreams : (*destination).nostreams
                 ;
 
-            get<NO_TX_ACTIVITY_TO>(ret) =
-                get<NO_TX_ACTIVITY_TO>(*source) < get<NO_TX_ACTIVITY_TO>(*destination) ?
-                get<NO_TX_ACTIVITY_TO>(*source) : get<NO_TX_ACTIVITY_TO>(*destination)
+            ret.no_tx_activity_to =
+                (*source).no_tx_activity_to < (*destination).no_tx_activity_to ?
+                (*source).no_tx_activity_to : (*destination).no_tx_activity_to
                 ;
 
-            get<TCP_BUFFER_SIZE>(ret) =
-                get<TCP_BUFFER_SIZE>(*source) < get<TCP_BUFFER_SIZE>(*destination) ?
-                get<TCP_BUFFER_SIZE>(*source) : get<TCP_BUFFER_SIZE>(*destination)
+            ret.tcp_buffer_size =
+                (*source).tcp_buffer_size < (*destination).tcp_buffer_size ?
+                (*source).tcp_buffer_size : (*destination).tcp_buffer_size
                 ;
 
-            get<URLCOPY_TX_TO>(ret) =
-                get<URLCOPY_TX_TO>(*source) < get<URLCOPY_TX_TO>(*destination) ?
-                get<URLCOPY_TX_TO>(*source) : get<URLCOPY_TX_TO>(*destination)
+            ret.urlcopy_tx_to =
+                (*source).urlcopy_tx_to < (*destination).urlcopy_tx_to ?
+                (*source).urlcopy_tx_to : (*destination).urlcopy_tx_to
                 ;
         }
 
@@ -245,34 +245,34 @@ void ProtocolResolver::autotune()
 
     OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
-    get<TCP_BUFFER_SIZE>(*prot) = opt_config.getBufSize();
-    get<NOSTREAMS>(*prot) = opt_config.getStreamsperFile();
-    get<URLCOPY_TX_TO>(*prot) = opt_config.getTimeout();
+    (*prot).tcp_buffer_size = opt_config.getBufSize();
+    (*prot).nostreams = opt_config.getStreamsperFile();
+    (*prot).urlcopy_tx_to = opt_config.getTimeout();
 }
 
 bool ProtocolResolver::isAuto()
 {
-    return get<AUTO_TUNING>(*prot);
+    return (*prot).auto_tuning;
 }
 
 int ProtocolResolver::getNoStreams()
 {
-    return get<NOSTREAMS>(*prot);
+    return (*prot).nostreams;
 }
 
 int ProtocolResolver::getNoTxActiveTo()
 {
-    return get<NO_TX_ACTIVITY_TO>(*prot);
+    return (*prot).no_tx_activity_to;
 }
 
 int ProtocolResolver::getTcpBufferSize()
 {
-    return get<TCP_BUFFER_SIZE>(*prot);
+    return (*prot).tcp_buffer_size;
 }
 
 int ProtocolResolver::getUrlCopyTxTo()
 {
-    return get<URLCOPY_TX_TO>(*prot);
+    return (*prot).urlcopy_tx_to;
 }
 
 FTS3_SERVER_NAMESPACE_END
