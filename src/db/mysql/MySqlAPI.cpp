@@ -2047,16 +2047,7 @@ bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double
                     stmt2.execute(true);
                     affected_rows += stmt2.get_affected_rows();
                     sql.commit();
-                }
-
-            // check the number of updated > 0 (2853)
-
-            //sql.begin();
-
-            //sql << " delete from t_optimize USING t_optimize, t_optimize as vtable WHERE (t_optimize.auto_number < vtable.auto_number) AND "
-            //    " (t_optimize.nostreams=vtable.nostreams AND t_optimize.active=vtable.active and t_optimize.throughput=vtable.throughput)";
-
-            //sql.commit();
+                }  
 
             // Historical data
             if (affected_rows)
