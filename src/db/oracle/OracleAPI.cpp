@@ -6683,7 +6683,7 @@ bool OracleAPI::isGrInPair(std::string group)
     std::string tag = "isGrInPair";
     std::string query =
         "select * from t_link_config "
-        "where (source=:1 and destination<>'*') or (source<>'*' and destination=:1)";
+        "where ((source=:1 and destination<>'*') or (source<>'*' and destination=:1))";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
@@ -11210,7 +11210,7 @@ bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
         "	and not exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
@@ -11276,7 +11276,7 @@ bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
         "	and not exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
@@ -11342,7 +11342,7 @@ bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
         "	and exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
@@ -11408,7 +11408,7 @@ bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
         "	and exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
