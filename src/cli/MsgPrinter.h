@@ -102,6 +102,8 @@ private:
 
     void addToArray(ptree& root, string name, string value);
 
+    void addToArray(ptree& root, string name, const ptree& node);
+
     ///
     bool verbose;
     ///

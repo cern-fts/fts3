@@ -471,7 +471,6 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             cout << "  Source:      " << values[SOURCE] << endl;
             cout << "  Destination: " << values[DESTINATION] << endl;
             cout << "  State:       " << values[STATE] << endl;;
-            cout << "  Retries:     " << values[RETRIES] << endl;
             cout << "  Reason:      " << values[REASON] << endl;
             cout << "  Duration:    " << values[DURATION] << endl;
             cout << "  Retries: " << endl;
@@ -481,19 +480,22 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             return;
         }
 
-    map<string, string> object =
-        map_list_of
-        ("source", values[SOURCE])
-        ("destination", values[DESTINATION])
-        ("state", values[STATE])
-        ("retries", values[RETRIES])
-        ("reason", values[REASON])
-        ("duration", values[DURATION])
-        ;
+    ptree file;
+    file.put("source", values[SOURCE]);
+    file.put("destination", values[DESTINATION]);
+    file.put("state", values[STATE]);
+    file.put("reason", values[REASON]);
+    file.put("duration", values[DURATION]);
+
+    ptree retriesArray;
+    vector<string>::const_iterator i;
+    for (i = retries.begin(); i != retries.end(); ++i)
+        retriesArray.push_front(std::make_pair("", *i));
+    file.put_child("retries", retriesArray);
 
     ptree& job = json_out.get_child("job");
     ptree::iterator it = job.begin();
-    addToArray(it->second, "files", object);
+    addToArray(it->second, "files", file);
 }
 
 MsgPrinter::MsgPrinter(): verbose(false), json(false)
@@ -532,7 +534,6 @@ void MsgPrinter::put (ptree& root, string name, map<string, string>& object)
 
 void MsgPrinter::addToArray(ptree& root, string name, map<string, string>& object)
 {
-
     static const string array_sufix = "..";
 
     optional<ptree&> child = root.get_child_optional(name);
@@ -547,9 +548,9 @@ void MsgPrinter::addToArray(ptree& root, string name, map<string, string>& objec
             put(root, name + array_sufix, object);
         }
 }
+
 void MsgPrinter::addToArray(ptree& root, string name, string value)
 {
-
     optional<ptree&> child = root.get_child_optional(name);
     if (child.is_initialized())
         {
@@ -563,6 +564,19 @@ void MsgPrinter::addToArray(ptree& root, string name, string value)
             item.put("", value);
             child.push_front(make_pair("", item));
             root.put_child(name, child);
+        }
+}
+
+void MsgPrinter::addToArray(ptree& root, string name, const ptree& node)
+{
+    optional<ptree&> child = root.get_child_optional(name);
+    if (child.is_initialized())
+        {
+            child.get().push_front(std::make_pair("", node));
+        }
+    else
+        {
+            root.put_child(name, node);
         }
 }
 
