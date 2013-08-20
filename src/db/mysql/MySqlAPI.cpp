@@ -3206,28 +3206,30 @@ bool MySqlAPI::isDnBlacklisted(std::string dn)
 bool MySqlAPI::isFileReadyState(int fileID)
 {
     soci::session sql(*connectionPool);
-    bool isReady = false;
+    bool isReadyState = false;
+    bool isReadyHost = false;    
     std::string host;
+    std::string state;
 
     try
         {
-            std::string state;
-            sql << "SELECT file_state FROM t_file WHERE file_id = :fileId",
-                soci::use(fileID), soci::into(state);
+	    sql.begin();
+	    
+            sql << "SELECT file_state, transferHost FROM t_file WHERE file_id = :fileId",
+                soci::use(fileID), soci::into(state), soci::into(host);
 
-            isReady = (state == "READY");
-
-            sql << "SELECT transferHost FROM t_file WHERE file_id = :fileId",
-                soci::use(fileID), soci::into(host);
-
-            isReady = (host == hostname);
+            isReadyState = (state == "READY");           
+            isReadyHost = (host == hostname);
+	    
+	    sql.commit();
         }
     catch (std::exception& e)
         {
+	    sql.rollback();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 
-    return isReady;
+    return (isReadyState & isReadyHost);
 }
 
 
