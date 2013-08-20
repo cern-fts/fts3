@@ -3423,8 +3423,8 @@ bool MySqlAPI::isGrInPair(std::string group)
     try
         {
             sql << "SELECT * FROM t_link_config WHERE "
-                "  (source = :group AND destination <> '*') OR "
-                "  (source <> '*' AND destination = :group)",
+                "  ((source = :group AND destination <> '*') OR "
+                "  (source <> '*' AND destination = :group))",
                 soci::use(group, "group");
             inPair = sql.got_data();
         }
@@ -5517,7 +5517,7 @@ bool MySqlAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
                 "	and not exists ( "
                 "		select null "
                 "		from t_group_members g "
-                "		where g.groupName = fc.source or g.groupName = fc.destination "
+                "		where (g.groupName = fc.source or g.groupName = fc.destination) "
                 "	) ",
                 soci::use(file_id),
                 soci::use(vo),
@@ -5549,7 +5549,7 @@ bool MySqlAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
                 "	and not exists ( "
                 "		select null "
                 "		from t_group_members g "
-                "		where g.groupName = fc.source or g.groupName = fc.destination "
+                "		where (g.groupName = fc.source or g.groupName = fc.destination) "
                 "	) ",
                 soci::use(file_id),
                 soci::use(vo),
@@ -5581,7 +5581,7 @@ bool MySqlAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
                 "	and exists ( "
                 "		select null "
                 "		from t_group_members g "
-                "		where g.groupName = fc.source or g.groupName = fc.destination "
+                "		where (g.groupName = fc.source or g.groupName = fc.destination) "
                 "	) ",
                 soci::use(file_id),
                 soci::use(vo),
@@ -5613,7 +5613,7 @@ bool MySqlAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
                 "	and exists ( "
                 "		select null "
                 "		from t_group_members g "
-                "		where g.groupName = fc.source or g.groupName = fc.destination "
+                "		where (g.groupName = fc.source or g.groupName = fc.destination) "
                 "	) ",
                 soci::use(file_id),
                 soci::use(vo),

@@ -3026,17 +3026,7 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                     tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(17);
                     tr_jobs->COPY_PIN_LIFETIME = r->getInt(18);
                     tr_jobs->CHECKSUM_METHOD = r->getString(19);
-
-                    //check if a SE or group must not fetch jobs because credits are set to 0 for both in/out(meaning stop processing tr jobs)
-//            if (std::string(tr_jobs->SOURCE_SE).length() > 0 && std::string(tr_jobs->DEST_SE).length() > 0) {
-//                bool process = getInOutOfSe(tr_jobs->SOURCE_SE, tr_jobs->DEST_SE);
-//                if (process == true) {
                     jobs.push_back(tr_jobs);
-//                } else {
-//                    delete tr_jobs;
-//                }
-//            }
-
                 }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag, pooledConnection);
@@ -6500,7 +6490,7 @@ bool OracleAPI::isGrInPair(std::string group)
     std::string tag = "isGrInPair";
     std::string query =
         "select * from t_link_config "
-        "where (source=:1 and destination<>'*') or (source<>'*' and destination=:1)";
+        "where ((source=:1 and destination<>'*') or (source<>'*' and destination=:1))";
     oracle::occi::Statement* s = NULL;
     oracle::occi::ResultSet* r = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
@@ -10740,7 +10730,7 @@ bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
         "	and not exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
@@ -10806,7 +10796,7 @@ bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
         "	and not exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
@@ -10872,7 +10862,7 @@ bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
         "	and exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
@@ -10938,7 +10928,7 @@ bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
         "	and exists ( "
         "		select null "
         "		from t_group_members g "
-        "		where g.groupName = fc.source or g.groupName = fc.destination "
+        "		where (g.groupName = fc.source or g.groupName = fc.destination) "
         "	) "
         ;
 
