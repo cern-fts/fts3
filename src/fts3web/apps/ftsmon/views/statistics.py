@@ -258,7 +258,11 @@ def servers(httpRequest):
 
 def _avgField(pairs, field):
     pairsWithTerminal = filter(lambda p: p['successRate'] is not None, pairs)
-    return reduce(lambda a, b: a + b, map(lambda p: p[field], pairsWithTerminal)) / len(pairsWithTerminal)
+    nTerminalPairs = len(pairsWithTerminal)
+    if nTerminalPairs:
+        return reduce(lambda a, b: a + b, map(lambda p: p[field], pairsWithTerminal), 0) / nTerminalPairs
+    else:
+        return 0
 
 
 
@@ -279,7 +283,7 @@ def pairs(httpRequest):
     
     # Build aggregates
     aggregate = {}
-    aggregate['active']        = reduce(lambda a,b: _sumStatus(a, b),  map(lambda x: x['active'], pairs))
+    aggregate['active']        = reduce(lambda a,b: _sumStatus(a, b),  map(lambda x: x['active'], pairs), 0)
     aggregate['successRate']   = _avgField(pairs, 'successRate')
     aggregate['avgThroughput'] = _avgField(pairs, 'avgThroughput')
     aggregate['avgDuration']   = _avgField(pairs, 'avgDuration')
