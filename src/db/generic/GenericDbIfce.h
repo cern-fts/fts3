@@ -137,9 +137,6 @@ public:
 
     virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred) = 0;
 
-    // UNUSED
-    //virtual void updateJObStatus(std::string jobId, const std::string status) = 0;
-
     virtual void cancelJob(std::vector<std::string>& requestIDs) = 0;
 
     virtual void getCancelJob(std::vector<int>& requestIDs) = 0;
@@ -174,9 +171,6 @@ public:
 
     virtual bool updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname) = 0;
 
-    // UNUSED
-    //virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers) = 0;
-
     virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id) = 0;
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn) = 0;
@@ -200,9 +194,6 @@ public:
     virtual void setPidV(int pid, std::map<int,std::string>& pids) = 0;
 
     virtual void revertToSubmitted() = 0;
-
-    // UNUSED
-    //virtual void revertToSubmittedTerminate() = 0;
 
     virtual void backup() = 0;
 
@@ -287,12 +278,6 @@ public:
 
     virtual bool hasPairGrCfgAssigned(int file_id, std::string vo) = 0;
 
-//    virtual void delJobShareConfig(std::string job_id) = 0;
-
-//    virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id) = 0;
-
-//    virtual unsigned int countJobShareConfig(std::string job_id) = 0;
-
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo) = 0;
 
     virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo) = 0;
@@ -300,10 +285,6 @@ public:
     virtual int countActiveInboundTransfersUsingDefaultCfg(std::string se, std::string vo) = 0;
 
     virtual int sumUpVoShares (std::string source, std::string destination, std::set<std::string> vos) = 0;
-
-//    virtual boost::optional<unsigned int> getJobConfigCount(std::string job_id) = 0;
-
-//    virtual void setJobConfigCount(std::string job_id, int count) = 0;
 
     virtual bool checkConnectionStatus() = 0;
 
@@ -313,11 +294,7 @@ public:
 
     virtual int getRetry(const std::string & jobId) = 0;
 
-    virtual void setRetryTimes(int retry, const std::string & jobId, int fileId) = 0;
-
     virtual int getRetryTimes(const std::string & jobId, int fileId) = 0;
-
-    virtual void setRetryTransfer(const std::string & jobId, int fileId) = 0;
 
     virtual int getMaxTimeInQueue() = 0;
 
@@ -350,8 +327,6 @@ public:
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val) = 0;
 
     virtual void useFileReplica(std::string jobId, int fileId) = 0;
-
-    virtual void setRetryTimestamp(const std::string& jobId, int fileId) = 0;
 
     virtual double getSuccessRate(std::string source, std::string destination) = 0;
 

@@ -527,29 +527,6 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 }
 
 
-
-void MySqlAPI::updateJObStatus(std::string jobId, const std::string status)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << "UPDATE t_job SET job_state = :state WHERE job_id = :jobId AND job_state = 'SUBMITTED'",
-                soci::use(status, "state"), soci::use(jobId, "jobId");
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-}
-
-
-
 void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
 {
     soci::session sql(*connectionPool);
@@ -2097,49 +2074,6 @@ bool MySqlAPI::updateOptimizer(double throughputIn, int, double filesize, double
     return ok;
 }
 
-
-
-void MySqlAPI::addOptimizer(time_t when, double throughput,
-                            const std::string & source_hostname,
-                            const std::string & destin_hostname, int file_id, int nostreams,
-                            int timeout, int buffersize, int /*noOfActiveTransfers*/)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            struct tm timest;
-            gmtime_r(&when, &timest);
-            unsigned actives = 0;
-
-            sql << "SELECT COUNT(*) FROM t_file WHERE "
-                "    t_file.file_state = 'ACTIVE' AND "
-                "    t_file.source_se = :source AND t_file.dest_se = :dest",
-                soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(actives);
-
-            sql.begin();
-
-            sql << "INSERT INTO t_optimize (file_id, source_se, dest_se, nostreams, timeout, active, buffer, throughput, datetime) "
-                "                VALUES (:fileId, :sourceSe, :destSe, :nStreams, :timeout, :active, :buffer, :throughput, :datetime)",
-                soci::use(file_id), soci::use(source_hostname), soci::use(destin_hostname), soci::use(nostreams), soci::use(timeout),
-                soci::use(actives), soci::use(buffersize), soci::use(throughput), soci::use(timest);
-
-            recordOptimizerUpdate(sql, actives, 0, throughput, nostreams,
-                                  timeout, buffersize,
-                                  source_hostname, destin_hostname);
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-}
-
-
-
 void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int)
 {
     soci::session sql(*connectionPool);
@@ -2800,33 +2734,6 @@ void MySqlAPI::revertToSubmitted()
                         }
                     while (readyStmt.fetch());
                 }
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-}
-
-
-
-void MySqlAPI::revertToSubmittedTerminate()
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED' "
-                "WHERE file_state = 'READY' AND finish_time IS NULL AND job_finished IS NULL";
-
-            sql << "UPDATE t_job SET job_state = 'SUBMITTED' WHERE job_state IN ('READY','ACTIVE') AND "
-                "   finish_time IS NULL AND job_finished IS NULL AND reuse_job = 'Y' AND "
-                "   job_id IN (SELECT DISTINCT t_file.job_id FROM t_file "
-                "              WHERE t_file.job_id = t_job.job_id AND t_file.file_state = 'READY')";
-
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -3812,68 +3719,6 @@ void MySqlAPI::addFileShareConfig(int file_id, std::string source, std::string d
 
 
 
-//void MySqlAPI::delJobShareConfig(std::string job_id) {
-//    soci::session sql(*connectionPool);
-//
-//    try {
-//        sql.begin();
-//
-//        sql << "DELETE FROM t_job_share_config WHERE job_id = :jobId",
-//                soci::use(job_id);
-//
-//        sql.commit();
-//    }
-//    catch (std::exception& e) {
-//        sql.rollback();
-//        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-//    }
-//}
-//
-//
-//
-//std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::getJobShareConfig(std::string job_id) {
-//    soci::session sql(*connectionPool);
-//
-//    std::vector< boost::tuple<std::string, std::string, std::string> > vConfig;
-//    try {
-//        std::string source, dest, vo;
-//        soci::statement stmt = (sql.prepare << "SELECT source, destination, vo FROM t_job_share_config WHERE job_id = :jobId",
-//                                               soci::use(job_id), soci::into(source), soci::into(dest), soci::into(vo));
-//       if (stmt.execute(true)) {
-//            do {
-//            	boost::tuple<std::string, std::string, std::string> tmp;
-//            	boost::get<0>(tmp) = source;
-//            	boost::get<1>(tmp) = dest;
-//            	boost::get<2>(tmp) = vo;
-//            	vConfig.push_back(tmp);
-//            } while (stmt.fetch());
-//        }
-//
-//    }
-//    catch (std::exception& e) {
-//        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-//    }
-//    return vConfig;
-//}
-//
-//
-//
-//unsigned int MySqlAPI::countJobShareConfig(std::string job_id) {
-//    soci::session sql(*connectionPool);
-//
-//    unsigned int count = 0;
-//    try {
-//        sql << "SELECT COUNT(*) FROM t_job_share_config WHERE job_id = :jobId",
-//                soci::use(job_id), soci::into(count);
-//    }
-//    catch (std::exception& e) {
-//        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-//    }
-//    return count;
-//}
-
-
-
 int MySqlAPI::countActiveTransfers(std::string source, std::string destination, std::string vo)
 {
     soci::session sql(*connectionPool);
@@ -4164,30 +4009,6 @@ int MySqlAPI::getRetry(const std::string & jobId)
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     return nRetries;
-}
-
-
-
-void MySqlAPI::setRetryTimes(int retry, const std::string & jobId, int fileId)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << "UPDATE t_file SET "
-                "    retry = :retry "
-                "WHERE job_id = :jobId AND file_id = :fileId",
-                soci::use(retry), soci::use(jobId), soci::use(fileId);
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
 }
 
 
@@ -4786,50 +4607,6 @@ void MySqlAPI::setMaxStageOp(const std::string& se, const std::string& vo, int v
                 }
 
             sql.commit();
-
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-}
-
-
-void MySqlAPI::setRetryTimestamp(const std::string& jobId, int fileId)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            //expressed in secs
-            int retry_delay = 0;
-
-            sql <<
-                " select RETRY_DELAY from t_job where job_id=:jobId ",
-                soci::use(jobId),
-                soci::into(retry_delay)
-                ;
-
-
-
-            if (retry_delay > 0)
-                {
-                    // update
-                    time_t now = convertToUTC(retry_delay);
-                    struct tm tTime;
-                    gmtime_r(&now, &tTime);
-                    sql.begin();
-                    sql <<
-                        " update t_file set retry_timestamp=:1 where file_id=:fileId AND job_id=:jobId ",
-                        soci::use(tTime),
-                        soci::use(fileId),
-                        soci::use(jobId)
-
-                        ;
-                    sql.commit();
-                }
-
 
         }
     catch (std::exception& e)

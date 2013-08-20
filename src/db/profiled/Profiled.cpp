@@ -621,21 +621,9 @@ int ProfiledDB::getRetry(const std::string & jobId)
 }
 
 
-void ProfiledDB::setRetryTimes(int retry, const std::string & jobId, int fileId)
-{
-    PROFILE_PREFIXED("DB::", db->setRetryTimes(retry, jobId, fileId));
-}
-
-
 int ProfiledDB::getRetryTimes(const std::string & jobId, int fileId)
 {
     PROFILE_PREFIXED("DB::", return db->getRetryTimes(jobId, fileId));
-}
-
-
-void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId)
-{
-    PROFILE_PREFIXED("DB::", db->setRetryTransfer(jobId, fileId));
 }
 
 
@@ -732,12 +720,6 @@ void ProfiledDB::setMaxStageOp(const std::string& se, const std::string& vo, int
 void ProfiledDB::useFileReplica(std::string jobId, int fileId)
 {
     PROFILE_PREFIXED("DB::", db->useFileReplica(jobId, fileId));
-}
-
-
-void ProfiledDB::setRetryTimestamp(const std::string& jobId, int fileId)
-{
-    PROFILE_PREFIXED("DB::", db->setRetryTimestamp(jobId, fileId));
 }
 
 

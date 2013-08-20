@@ -232,8 +232,6 @@ public:
 
     int getRetry(const std::string & jobId);
 
-    void setRetryTimes(int retry, const std::string & jobId, int fileId);
-
     int getRetryTimes(const std::string & jobId, int fileId);
 
     void setRetryTransfer(const std::string & jobId, int fileId);
@@ -269,8 +267,6 @@ public:
     void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
     void useFileReplica(std::string jobId, int fileId);
-
-    void setRetryTimestamp(const std::string& jobId, int fileId);
 
     double getSuccessRate(std::string source, std::string destination);
 
