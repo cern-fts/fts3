@@ -120,7 +120,8 @@ public:
                         int retryTimes = DBSingleton::instance().getDBObjectInstance()->getRetryTimes(job, msg.file_id);
                         if(retry == -1)  //unlimited times
                             {
-                                DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id, retryTimes+1);
+                                DBSingleton::instance().getDBObjectInstance()
+                                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                 return true;
                             }
@@ -128,7 +129,8 @@ public:
                             {
                                 if(retryTimes <= retry-1 )
                                     {
-                                        DBSingleton::instance().getDBObjectInstance()->setRetryTransfer(job, msg.file_id, retryTimes+1);
+                                        DBSingleton::instance().getDBObjectInstance()
+                                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                         SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }

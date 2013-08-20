@@ -7959,73 +7959,6 @@ int OracleAPI::getRetryTimes(const std::string & jobId, int fileId)
     return ret;
 }
 
-
-void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId)
-{
-
-    const std::string tag = "setRetryTransfer";
-    const std::string tag1 = "setRetryTransfer1";
-    const std::string tag2 = "setRetryTransfer2";
-
-    std::string query =
-        " UPDATE t_file set file_state='SUBMITTED' "
-        "  where job_id=:1 and file_id=:2 and file_state not in ('FAILED','CANCELED') ";
-    std::string query1= "update t_job set job_state='SUBMITTED' where t_job.reuse_job='Y' AND job_id=:1  and job_state not in ('FAILED','CANCELED') ";
-
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
-
-
-    try
-        {
-            pooledConnection = conn->getPooledConnection();
-            if (!pooledConnection)
-                return;
-
-            s1 = conn->createStatement(query1, tag1, pooledConnection);
-            s1->setString(1,jobId);
-            s1->executeUpdate();
-            r = conn->createResultset(s1, pooledConnection);
-            conn->destroyStatement(s1, tag2, pooledConnection);
-
-            s = conn->createStatement(query, tag, pooledConnection);
-            s->setString(1, jobId);
-            s->setInt(2, fileId);
-            s->executeUpdate();
-            conn->commit(pooledConnection);
-            conn->destroyStatement(s, tag, pooledConnection);
-
-        }
-    catch (oracle::occi::SQLException const &e)
-        {
-            conn->rollback(pooledConnection);
-            if(s)
-                conn->destroyStatement(s, tag, pooledConnection);
-            if(s1 && r)
-                conn->destroyResultset(s1, r);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-        }
-    catch (...)
-        {
-            conn->rollback(pooledConnection);
-            if(s)
-                conn->destroyStatement(s, tag, pooledConnection);
-            if(s1 && r)
-                conn->destroyResultset(s1, r);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
-        }
-    conn->releasePooledConnection(pooledConnection);
-}
-
-
 int OracleAPI::getMaxTimeInQueue()
 {
     std::string tag = "getMaxTimeInQueue";
@@ -11364,18 +11297,28 @@ int OracleAPI::getOptimizerMode()
 
 
 
-void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry)
+void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
 {
     const std::string tagsetRetryTimes = "setRetryTimes";
-    std::string querysetRetryTimes =
+    const std::string querysetRetryTimes =
         "UPDATE t_file "
         "SET retry =:1 where job_id=:2 and file_id=:3 ";
 
+    const std::string tagLogError = "setRetryTimesLog";
+    const std::string queryLogError =
+            "INSERT INTO t_file_retry_errors "
+            "    (file_id, attempt, datetime, reason) "
+            "VALUES (:1, :2, :3, :4)";
+
     oracle::occi::Statement* ssetRetryTimes = NULL;
+    oracle::occi::Statement* sLogError = NULL;
     oracle::occi::Connection* pooledConnection = NULL;
+
 
     try
         {
+            time_t now = time(NULL);
+
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
@@ -11385,9 +11328,17 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             ssetRetryTimes->setString(2,jobId);
             ssetRetryTimes->setInt(3,fileId);
             ssetRetryTimes->executeUpdate();
-            conn->commit(pooledConnection);
             conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
 
+            sLogError = conn->createStatement(queryLogError, tagLogError, pooledConnection);
+            sLogError->setInt(1, fileId);
+            sLogError->setInt(2, retry);
+            sLogError->setTimestamp(3, conv->toTimestamp(now, conn->getEnv()));
+            sLogError->setString(4, reason);
+            sLogError->executeUpdate();
+            conn->destroyStatement(sLogError, tagLogError, pooledConnection);
+
+            conn->commit(pooledConnection);
         }
     catch (oracle::occi::SQLException const &e)
         {

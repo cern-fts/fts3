@@ -823,7 +823,8 @@ void ProfiledDB::setOptimizerMode(int mode)
     db->setOptimizerMode(mode);
 }
 
-void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId, int retry)
+void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId,
+        int retry, const std::string& reason)
 {
-    db->setRetryTransfer(jobId, fileId, retry);
+    db->setRetryTransfer(jobId, fileId, retry, reason);
 }

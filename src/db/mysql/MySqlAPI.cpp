@@ -4032,36 +4032,6 @@ int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId)
 
 
 
-void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId)
-{
-    soci::session sql(*connectionPool);
-
-    try
-        {
-            sql.begin();
-
-            sql << "UPDATE t_job SET "
-                "    job_state = 'SUBMITTED' "
-                "WHERE job_id = :jobId AND "
-                "      job_state NOT IN ('FAILED','CANCELED') AND "
-                "      reuse_job = 'Y'",
-                soci::use(jobId);
-
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED' "
-                "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FAILED','CANCELED')",
-                soci::use(fileId), soci::use(jobId);
-
-            sql.commit();
-        }
-    catch (std::exception& e)
-        {
-            sql.rollback();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-}
-
-
-
 int MySqlAPI::getMaxTimeInQueue()
 {
     soci::session sql(*connectionPool);
@@ -5797,7 +5767,7 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
     return mode;
 }
 
-void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry)
+void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason)
 {
     soci::session sql(*connectionPool);
 
@@ -5854,7 +5824,13 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                         soci::use(tTime),
                         soci::use(fileId),
                         soci::use(jobId);		
-		}
+	        }
+
+            // Keep log
+            sql << "INSERT INTO t_file_retry_errors "
+                   "    (file_id, attempt, datetime, reason) "
+                   "VALUES (:fileId, :attempt, UTC_TIMESTAMP(), :reason)",
+                   soci::use(fileId), soci::use(retry), soci::use(reason);
 
             sql.commit();
         }

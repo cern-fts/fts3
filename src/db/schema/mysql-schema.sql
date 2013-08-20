@@ -576,8 +576,19 @@ CREATE TABLE t_file (
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
 
-  
-  
+--
+-- Keep error reason that drove to retries
+--
+CREATE TABLE t_file_retry_errors (
+    file_id   INTEGER NOT NULL,
+    attempt   INTEGER NOT NULL,
+    datetime  TIMESTAMP,
+    reason    VARCHAR(2048),
+    CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
+    CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
+);
+CREATE INDEX t_file_retry_fid ON t_file_retry_errors (file_id);
+
 -- 
 -- t_file_share_config the se configuration to be used by the job
 --

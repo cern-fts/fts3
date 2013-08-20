@@ -237,8 +237,6 @@ public:
 
     virtual int getRetryTimes(const std::string & jobId, int fileId);
 
-    virtual void setRetryTransfer(const std::string & jobId, int fileId);
-
     virtual int getMaxTimeInQueue();
 
     virtual void setMaxTimeInQueue(int afterXHours);
@@ -305,7 +303,7 @@ public:
 
     virtual void setOptimizerMode(int mode);
 
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry);
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
 
 
 private:

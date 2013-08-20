@@ -362,7 +362,7 @@ public:
 
     virtual void setOptimizerMode(int mode) = 0;
 
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry) = 0;
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason) = 0;
 
 
 };
