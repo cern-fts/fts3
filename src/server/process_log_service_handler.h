@@ -131,7 +131,7 @@ protected:
                     {
                         /*also get jobs which have been canceled by the client*/
                         counterCanceled++;
-                        if (counterCanceled >= 30)
+                        if (counterCanceled >= 3)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
                                 if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
