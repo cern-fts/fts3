@@ -251,24 +251,21 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);
-			requestIDs.clear();
+                        sleep(2);			
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);
-			requestIDs.clear();
+                        sleep(2);			
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message log thrown unhandled exception" << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);
-			requestIDs.clear();
+                        sleep(2);			
                     }
             }
     }
