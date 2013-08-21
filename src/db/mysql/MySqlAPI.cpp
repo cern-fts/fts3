@@ -2687,7 +2687,7 @@ void MySqlAPI::revertToSubmitted()
                             double diff = difftime(now2, startTimestamp);
                             bool alive = ThreadSafeList::get_instance().isAlive(fileId);
 
-                            if (diff > 300 && reuseJob != "Y" && !alive)
+                            if (diff > 1200 && reuseJob != "Y" && !alive)
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     sql.begin();
@@ -2706,7 +2706,7 @@ void MySqlAPI::revertToSubmitted()
 
                                             sql << " SELECT COUNT(*) FROM t_file WHERE job_id = :jobId ", soci::use(jobId), soci::into(count);
                                             if(count > 0)
-                                                terminateTime = count * 360;
+                                                terminateTime = count * 1000;
 
                                             if(diff > terminateTime)
                                                 {
