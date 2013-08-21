@@ -1388,7 +1388,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
             for (std::vector<std::string>::const_iterator i = requestIDs.begin(); i != requestIDs.end(); ++i)
                 {
                     // Cancel job
-                    sql << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
+                    sql << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' "
                         "                 reason = :reason "
                         "WHERE job_id = :jobId AND job_state NOT IN ('FINISHEDDIRTY', 'FINISHED', 'FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
@@ -1418,32 +1418,23 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
         {
             soci::rowset<soci::row> rs = (sql.prepare << "SELECT t_file.pid, t_file.job_id FROM t_file, t_job "
                                           "WHERE t_file.job_id = t_job.job_id AND "
-                                          "      t_file.FILE_STATE = 'CANCELED' AND "
-                                          "      t_file.transferHost = :thost AND "					  
+                                          "      t_file.FILE_STATE = 'CANCELED' AND "					  
                                           "      t_file.PID IS NOT NULL AND "
-                                          "      t_job.cancel_job IS NULL ",
+                                          "      t_job.cancel_job = 'Y' ",
                                           soci::use(hostname));
 
             std::string jobId;
-            soci::statement updateStmt = (sql.prepare << "UPDATE t_job SET cancel_job='Y' WHERE job_id = :jobId AND cancel_job IS NULL",
-                                          soci::use(jobId));
-
-            sql.begin();
+                      
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     soci::row const& row = *i;
-
                     int pid = row.get<int>("pid");
                     jobId = row.get<std::string>("job_id");
-
-                    requestIDs.push_back(pid);
-                    updateStmt.execute();
+                    requestIDs.push_back(pid);                   
                 }
-            sql.commit();
         }
     catch (std::exception& e)
         {
-            sql.rollback();
             requestIDs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
