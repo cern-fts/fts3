@@ -2783,10 +2783,10 @@ void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId)
     try
         {
             sql.begin();
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED' "
+            sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost=:hostname, start_time=NULL "
                 "WHERE file_id = :fileId AND job_id = :jobId AND "
                 "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
-                soci::use(fileId), soci::use(jobId);
+                soci::use(hostname), soci::use(fileId), soci::use(jobId);
             sql.commit();
         }
     catch (std::exception& e)
@@ -2808,10 +2808,10 @@ void MySqlAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
             std::string jobId;
 
             sql.begin();
-            soci::statement stmt = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED'"
+            soci::statement stmt = (sql.prepare << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost=:hostname, start_time=NULL "
                                     "WHERE file_id = :fileId AND job_id = :jobId AND "
                                     "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
-                                    soci::use(fileId), soci::use(jobId));
+                                    soci::use(hostname), soci::use(fileId), soci::use(jobId));
 
             for (std::map<int, std::string>::const_iterator i = pids.begin(); i != pids.end(); ++i)
                 {
