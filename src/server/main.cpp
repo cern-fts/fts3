@@ -77,8 +77,8 @@ static void setLimits()
                 }
         }
 
-    rlOpen.rlim_cur = 3072;
-    rlOpen.rlim_max = 3072;
+    rlOpen.rlim_cur = 10024;
+    rlOpen.rlim_max = 10024;
     if (setrlimit(RLIMIT_NOFILE, &rlOpen) == -1)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NOFILE failed" << commit;
