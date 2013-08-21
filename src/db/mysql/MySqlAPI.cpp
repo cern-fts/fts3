@@ -1234,7 +1234,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN NOT EXISTS ( "
                 "				SELECT NULL "
                 "				FROM t_file "
-                "				WHERE job_id = :jobId AND file_state <> 'CANCELED' "
+                "				WHERE job_id = :jobId AND transferHost= :hostname AND file_state <> 'CANCELED' "
                 "					AND file_index = tbl.file_index "
                 "		) "
                 "		THEN 1 END "
@@ -1243,7 +1243,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE  job_id = :jobId AND file_state = 'FINISHED' "
+                "			WHERE  job_id = :jobId AND transferHost= :hostname AND file_state = 'FINISHED' "
                 "				AND file_index = tbl.file_index "
                 "		) "
                 "		THEN 1 END "
@@ -1252,12 +1252,12 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN NOT EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE  job_id = :jobId AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
+                "			WHERE  job_id = :jobId AND transferHost= :hostname AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
                 "				AND file_index = tbl.file_index "
                 "		) AND EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE  job_id = :jobId AND file_state = 'FAILED' "
+                "			WHERE  job_id = :jobId AND transferHost= :hostname AND file_state = 'FAILED' "
                 "				AND file_index = tbl.file_index "
                 "		) "
                 "		THEN 1 END "
@@ -1266,13 +1266,18 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "	( "
                 "		SELECT DISTINCT file_index "
                 "		FROM t_file "
-                "		WHERE job_id = :jobId "
+                "		WHERE job_id = :jobId AND transferHost= :hostname  "
                 "	) tbl ",
                 soci::use(job_id),
+		soci::use(hostname),
 		soci::use(job_id),
+		soci::use(hostname),
 		soci::use(job_id),
+		soci::use(hostname),
 		soci::use(job_id),
+		soci::use(hostname),
 		soci::use(job_id),
+		soci::use(hostname),
                 soci::into(numberOfFilesInJob),
                 soci::into(numberOfFilesCanceled),
                 soci::into(numberOfFilesFinished),
