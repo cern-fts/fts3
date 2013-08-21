@@ -1751,7 +1751,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     query += "    t_job.vo_name IN " + vos + " ";
                 }
 
-            query += "ORDER BY t_job.priority DESC, t_job.submit_time ASC "
+            query += "ORDER BY t_job.priority DESC, t_job.submit_time DESC "
                      "LIMIT 1";
 
             soci::rowset<TransferJobs> rs = (sql.prepare << query);
