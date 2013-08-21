@@ -316,7 +316,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 		   " j.bring_online, j.submit_time FROM t_job j JOIN t_file t ON (t.job_id = j.job_id)  WHERE "
 		   " j.finish_time is NULL AND j.vo_name = :vo AND j.cancel_job IS NULL AND  "
 		   " (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND t.source_se = :source AND t.dest_se = :dest AND "
-		   " t.file_state = 'SUBMITTED' ORDER BY j.priority DESC, j.submit_time ASC LIMIT :jobsNum";   
+		   " t.file_state = 'SUBMITTED' ORDER BY j.priority DESC, j.submit_time DESC LIMIT :jobsNum";   
 	  
             std::set<std::string> jobIds;
 
