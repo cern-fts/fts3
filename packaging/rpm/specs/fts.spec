@@ -3,8 +3,8 @@
 %global __provides_exclude_from ^%{python_sitearch}/fts/.*\\.so$
 
 Name: fts
-Version: 3.1.1
-Release: 2%{?dist}
+Version: 3.1.3
+Release: 1%{?dist}
 Summary: File Transfer Service V3
 Group: System Environment/Daemons
 License: ASL 2.0
