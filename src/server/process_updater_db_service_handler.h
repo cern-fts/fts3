@@ -75,6 +75,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessUpdaterDBServiceHandler", desc)
     {
+        messages.reserve(1000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -139,7 +140,7 @@ protected:
                         messages.clear();
 
                         counter++;
-                        if (counter == 150)
+                        if (counter == 500)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter = 0;

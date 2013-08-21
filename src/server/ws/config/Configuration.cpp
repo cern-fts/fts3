@@ -265,7 +265,6 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 
     if (protocol.is_initialized())
         {
-
             int value = protocol.get()[Protocol::NOSTREAMS];
             cfg.first->NOSTREAMS = value ? value : DEFAULT_NOSTREAMS;
 
@@ -276,14 +275,12 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
             cfg.first->URLCOPY_TX_TO = value ? value : DEFAULT_TIMEOUT;
 
             cfg.first->auto_tuning = off;
-
         }
     else
         {
-
-            cfg.first->NOSTREAMS = 0;
-            cfg.first->TCP_BUFFER_SIZE = 0;
-            cfg.first->URLCOPY_TX_TO = 0;
+            cfg.first->NOSTREAMS = -1;
+            cfg.first->TCP_BUFFER_SIZE = -1;
+            cfg.first->URLCOPY_TX_TO = -1;
             cfg.first->auto_tuning = on;
         }
 
@@ -304,11 +301,12 @@ void Configuration::addLinkCfg(string source, string destination, bool active, s
 
     pair< boost::shared_ptr<LinkConfig>, bool > cfg = getLinkConfig(source, destination, active, symbolic_name);
 
-    // not used in case of share-only configuration therefore set to 0
+    // not used therefore set to 0
     cfg.first->NO_TX_ACTIVITY_TO = 0;
-    cfg.first->NOSTREAMS = 0;
-    cfg.first->TCP_BUFFER_SIZE = 0;
-    cfg.first->URLCOPY_TX_TO = 0;
+    // not used in case of share-only configuration therefore set to -1
+    cfg.first->NOSTREAMS = -1;
+    cfg.first->TCP_BUFFER_SIZE = -1;
+    cfg.first->URLCOPY_TX_TO = -1;
 
     // mark it as share only
     cfg.first->auto_tuning = share_only;

@@ -48,16 +48,29 @@ using namespace boost;
  */
 class ProtocolResolver
 {
-
-    /**
+	/**
      * protocol data:
-     * - auto protocol (true means that auto was used)
      * - number of streams
      * - no activity timeout
      * - TCP buffer size
      * - url-copy timeout
      */
-    typedef boost::tuple<bool, int, int, int, int> protocol;
+    struct protocol
+    {
+        protocol():nostreams(4),no_tx_activity_to(0),tcp_buffer_size(0),urlcopy_tx_to(3600){}
+    
+    	int nostreams;
+        int no_tx_activity_to;
+        int tcp_buffer_size;
+        int urlcopy_tx_to;
+
+        static const int size = 4;
+
+        int& operator[] (const int index)
+        {
+        	return ((int*) this)[index];
+        }
+    };
 
     /**
      * The link type
@@ -83,18 +96,6 @@ class ProtocolResolver
         SOURCE = 0,
         DESTINATION,
         VO
-    };
-
-    /**
-     * A tuple with all the information about a protocol
-     */
-    enum
-    {
-        AUTO_TUNING = 0,
-        NOSTREAMS,
-        NO_TX_ACTIVITY_TO,
-        TCP_BUFFER_SIZE,
-        URLCOPY_TX_TO
     };
 
 public:
@@ -204,7 +205,7 @@ private:
      * @param source - the source hostname
      * @param destination - the destination hostname
      */
-    void autotune();
+    protocol autotune();
 
     /// DB singleton instance
     GenericDbIfce* db;
@@ -219,6 +220,12 @@ private:
     TransferFiles* file;
 
     vector< boost::shared_ptr<ShareConfig> >& cfgs;
+
+    /// -1 indicates that for the given protocol parameter the value obtained from auto-tuner should be used
+    static const int automatic = -1;
+
+    /// true if auto tuner was used
+    bool auto_tuned;
 };
 
 FTS3_SERVER_NAMESPACE_END

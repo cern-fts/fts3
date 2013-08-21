@@ -232,8 +232,6 @@ public:
 
     int getRetry(const std::string & jobId);
 
-    void setRetryTimes(int retry, const std::string & jobId, int fileId);
-
     int getRetryTimes(const std::string & jobId, int fileId);
 
     void setRetryTransfer(const std::string & jobId, int fileId);
@@ -270,8 +268,6 @@ public:
 
     void useFileReplica(std::string jobId, int fileId);
 
-    void setRetryTimestamp(const std::string& jobId, int fileId);
-
     double getSuccessRate(std::string source, std::string destination);
 
     double getAvgThroughput(std::string source, std::string destination);
@@ -306,7 +302,9 @@ public:
 
     void setOptimizerMode(int mode);
 
-    void setRetryTransfer(const std::string & jobId, int fileId, int retry);
+    void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
+
+    void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 };
 
 

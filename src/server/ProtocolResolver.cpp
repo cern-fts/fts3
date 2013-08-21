@@ -41,7 +41,8 @@ using namespace boost::assign;
 ProtocolResolver::ProtocolResolver(TransferFiles* file, vector< boost::shared_ptr<ShareConfig> >& cfgs) :
     db(DBSingleton::instance().getDBObjectInstance()),
     file(file),
-    cfgs(cfgs)
+    cfgs(cfgs),
+    auto_tuned(false)
 {
 
     vector< boost::shared_ptr<ShareConfig> >::iterator it;
@@ -120,7 +121,6 @@ bool ProtocolResolver::isGr(string name)
 
 optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< pair<string, string> > link)
 {
-
     if (!link) return optional<protocol>();
 
     string source = (*link).first;
@@ -132,59 +132,73 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
 
     protocol ret;
 
-    get<AUTO_TUNING>(ret) = cfg->auto_tuning == Configuration::on || cfg->auto_tuning == Configuration::share_only;
-    get<NOSTREAMS>(ret) = cfg->NOSTREAMS;
-    get<NO_TX_ACTIVITY_TO>(ret) = cfg->NO_TX_ACTIVITY_TO;
-    get<TCP_BUFFER_SIZE>(ret) = cfg->TCP_BUFFER_SIZE;
-    get<URLCOPY_TX_TO>(ret) = cfg->URLCOPY_TX_TO;
+    // set number of streams
+	ret.nostreams = cfg->NOSTREAMS;
+
+    // not used for now but set anyway
+	ret.no_tx_activity_to = cfg->NO_TX_ACTIVITY_TO;
+
+	// set TCP buffer size
+	ret.tcp_buffer_size = cfg->TCP_BUFFER_SIZE;
+
+    // set the timeout
+	ret.urlcopy_tx_to = cfg->URLCOPY_TX_TO;
 
     return ret;
 }
 
 optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination)
 {
-
+	// make sure both source and destination protocol exists
     if (!source) return destination;
     if (!destination) return source;
 
-    protocol ret;
+    protocol ret, &src_prot = *source, &dst_prot = *destination, auto_prot = autotune();
 
-    get<AUTO_TUNING>(ret) = get<AUTO_TUNING>(*source) && get<AUTO_TUNING>(*destination);
-
-    // we care about the parameters only if the auto tuning is not enabled
-    if (!get<AUTO_TUNING>(ret))
-        {
-
-            // for sure both source and destination were not set to auto!
-
-            // if the source is set to auto return the destination
-            if (get<AUTO_TUNING>(*source)) return destination;
-
-            // if the destination is set to auto return the source
-            if (get<AUTO_TUNING>(*destination)) return source;
-
-            // neither the source or the destination were set to auto merge the protocol parameters
-
-            get<NOSTREAMS>(ret) =
-                get<NOSTREAMS>(*source) < get<NOSTREAMS>(*destination) ?
-                get<NOSTREAMS>(*source) : get<NOSTREAMS>(*destination)
-                ;
-
-            get<NO_TX_ACTIVITY_TO>(ret) =
-                get<NO_TX_ACTIVITY_TO>(*source) < get<NO_TX_ACTIVITY_TO>(*destination) ?
-                get<NO_TX_ACTIVITY_TO>(*source) : get<NO_TX_ACTIVITY_TO>(*destination)
-                ;
-
-            get<TCP_BUFFER_SIZE>(ret) =
-                get<TCP_BUFFER_SIZE>(*source) < get<TCP_BUFFER_SIZE>(*destination) ?
-                get<TCP_BUFFER_SIZE>(*source) : get<TCP_BUFFER_SIZE>(*destination)
-                ;
-
-            get<URLCOPY_TX_TO>(ret) =
-                get<URLCOPY_TX_TO>(*source) < get<URLCOPY_TX_TO>(*destination) ?
-                get<URLCOPY_TX_TO>(*source) : get<URLCOPY_TX_TO>(*destination)
-                ;
-        }
+    // iterate over all protocol parameters
+    for (int i = 0; i < protocol::size; i++)
+    	{
+    		// if both are automatic use the automatic value
+			if (src_prot[i] == automatic && dst_prot[i] == automatic)
+				{
+					ret[i] = auto_prot[i];
+					auto_tuned = true;
+				}
+			// if only source uses automatic merge automatic value with destination
+			else if (src_prot[i] == automatic)
+				{
+					if (auto_prot[i] < dst_prot[i])
+						{
+							ret[i] = auto_prot[i];
+							auto_tuned = true;
+						}
+					else
+						{
+							ret[i] = dst_prot[i];
+						}
+				}
+			// if only destination uses automatic merge source with automatic value
+			else if (dst_prot[i] == automatic)
+				{
+					if (auto_prot[i] < src_prot[i])
+						{
+							ret[i] = auto_prot[i];
+							auto_tuned = true;
+						}
+					else
+						{
+							ret[i] = src_prot[i];
+						}
+				}
+			// otherwise automatic is not used at all so merge source with destination
+			else
+				{
+					ret[i] =
+							src_prot[i] < dst_prot[i] ?
+							src_prot[i] : dst_prot[i]
+							;
+				}
+    	}
 
     return ret;
 }
@@ -229,50 +243,48 @@ bool ProtocolResolver::resolve()
                getProtocolCfg(destination_link)
            );
 
-    if (isAuto())
-        {
-            autotune();
-        }
-
     return prot.is_initialized();
 }
 
-void ProtocolResolver::autotune()
+ProtocolResolver::protocol ProtocolResolver::autotune()
 {
+	protocol ret;
 
     string source = file->SOURCE_SE;
     string destination = file->DEST_SE;
 
     OptimizerSample opt_config;
     DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(&opt_config, source, destination);
-    get<TCP_BUFFER_SIZE>(*prot) = opt_config.getBufSize();
-    get<NOSTREAMS>(*prot) = opt_config.getStreamsperFile();
-    get<URLCOPY_TX_TO>(*prot) = opt_config.getTimeout();
+    ret.tcp_buffer_size = opt_config.getBufSize();
+    ret.nostreams = opt_config.getStreamsperFile();
+    ret.urlcopy_tx_to = opt_config.getTimeout();
+
+    return ret;
 }
 
 bool ProtocolResolver::isAuto()
 {
-    return get<AUTO_TUNING>(*prot);
+    return auto_tuned;
 }
 
 int ProtocolResolver::getNoStreams()
 {
-    return get<NOSTREAMS>(*prot);
+    return (*prot).nostreams;
 }
 
 int ProtocolResolver::getNoTxActiveTo()
 {
-    return get<NO_TX_ACTIVITY_TO>(*prot);
+    return (*prot).no_tx_activity_to;
 }
 
 int ProtocolResolver::getTcpBufferSize()
 {
-    return get<TCP_BUFFER_SIZE>(*prot);
+    return (*prot).tcp_buffer_size;
 }
 
 int ProtocolResolver::getUrlCopyTxTo()
 {
-    return get<URLCOPY_TX_TO>(*prot);
+    return (*prot).urlcopy_tx_to;
 }
 
 FTS3_SERVER_NAMESPACE_END

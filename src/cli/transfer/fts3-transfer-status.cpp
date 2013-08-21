@@ -118,6 +118,7 @@ int main(int ac, char* av[])
 
                                             std::vector<tns3__FileTransferStatus * >& vect = resp._getFileStatusReturn->item;
                                             std::vector<tns3__FileTransferStatus * >::iterator it;
+                                            std::vector<tns3__FileTransferRetry*>::const_iterator ri;
 
                                             // print the response
                                             for (it = vect.begin(); it < vect.end(); it++)
@@ -136,7 +137,13 @@ int main(int ac, char* av[])
                                                                 (lexical_cast<string>(stat->duration))
                                                                 ;
 
-                                                            cli->printer().file_list(values);
+                                                            vector<string> retries;
+                                                            for (ri = stat->retries.begin(); ri != stat->retries.end(); ++ri) {
+                                                                retries.resize((*ri)->attempt);
+                                                                retries[(*ri)->attempt - 1] = (*ri)->reason;
+                                                            }
+
+                                                            cli->printer().file_list(values, retries);
                                                         }
 
                                                     if (cli->dumpFailed() && isTransferFailed(*stat->transferFileState))

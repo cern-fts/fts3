@@ -88,8 +88,6 @@ public:
 
     virtual void updateFileTransferProgress(std::string job_id, int file_id, double throughput, double transferred);
 
-    virtual void updateJObStatus(std::string jobId, const std::string status);
-
     virtual void cancelJob(std::vector<std::string>& requestIDs);
 
     virtual void getCancelJob(std::vector<int>& requestIDs);
@@ -125,8 +123,6 @@ public:
 
     virtual bool updateOptimizer(double throughput, int file_id , double filesize, double timeInSecs, int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
-    virtual void addOptimizer(time_t when, double throughput, const std::string & source_hostname, const std::string & destin_hostname, int file_id, int nostreams, int timeout, int buffersize, int noOfActiveTransfers);
-
     virtual void initOptimizer(const std::string & source_hostname, const std::string & destin_hostname, int file_id);
 
     virtual bool isCredentialExpired(const std::string & dlg_id, const std::string & dn);
@@ -154,8 +150,6 @@ public:
     virtual void setPidV(int pid, std::map<int,std::string>& pids);
 
     virtual void revertToSubmitted();
-
-    virtual void revertToSubmittedTerminate();
 
     virtual void backup();
 
@@ -238,12 +232,6 @@ public:
 
     virtual bool hasPairGrCfgAssigned(int file_id, std::string vo);
 
-//    virtual void delJobShareConfig(std::string job_id);
-
-//    virtual std::vector< boost::tuple<std::string, std::string, std::string> > getJobShareConfig(std::string job_id);
-
-//    virtual unsigned int countJobShareConfig(std::string job_id);
-
     virtual int countActiveTransfers(std::string source, std::string destination, std::string vo);
 
     virtual int countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::string vo);
@@ -254,21 +242,13 @@ public:
 
     virtual bool checkConnectionStatus();
 
-//    virtual boost::optional<unsigned int> getJobConfigCount(std::string job_id);
-
-//    virtual void setJobConfigCount(std::string job_id, int count);
-
     virtual void setPriority(std::string jobId, int priority);
 
     virtual void setRetry(int retry);
 
     virtual int getRetry(const std::string & jobId);
 
-    virtual void setRetryTimes(int retry, const std::string & jobId, int fileId);
-
     virtual int getRetryTimes(const std::string & jobId, int fileId);
-
-    virtual void setRetryTransfer(const std::string & jobId, int fileId);
 
     virtual int getMaxTimeInQueue();
 
@@ -301,8 +281,6 @@ public:
     virtual void setMaxStageOp(const std::string& se, const std::string& vo, int val);
 
     virtual void useFileReplica(std::string jobId, int fileId);
-
-    virtual void setRetryTimestamp(const std::string& jobId, int fileId);
 
     virtual double getSuccessRate(std::string source, std::string destination);
 
@@ -338,10 +316,9 @@ public:
 
     virtual void setOptimizerMode(int mode);
 
-    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry);
+    virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
 
-
-
+    virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
 private:
     OracleConnection *conn;

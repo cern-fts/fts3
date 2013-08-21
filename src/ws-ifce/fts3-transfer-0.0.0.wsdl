@@ -137,7 +137,16 @@
      <element name="reason" nillable="true" type="xsd:string"/>
      <element name="reason_class" nillable="true" type="xsd:string"/>
      <element name="duration" type="xsd:long"/>
+     <element name="retries" nillable="true" minOccurs="0" maxOccurs="unbounded" type="tns3:FileTransferRetry"/>
     </sequence>
+   </complexType>
+   
+   <complexType name="FileTransferRetry">
+     <sequence>
+        <element name="attempt" nillable="false" type="xsd:int"/>
+        <element name="datetime" nillable="false" type="xsd:long"/>
+        <element name="reason" nillable="false" type="xsd:string"/>
+     </sequence>
    </complexType>
    
    <element name="NotExistsExceptionElement" type="tns3:NotExistsException"/>

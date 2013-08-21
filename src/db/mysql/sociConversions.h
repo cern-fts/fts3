@@ -227,6 +227,7 @@ struct type_conversion<FileTransferStatus>
     static void from_base(values const& v, indicator, FileTransferStatus& transfer)
     {
         struct tm aux_tm;
+        transfer.fileId            = v.get<int>("file_id");
         transfer.sourceSURL        = v.get<std::string>("source_surl");
         transfer.destSURL          = v.get<std::string>("dest_surl");
         transfer.transferFileState = v.get<std::string>("file_state");
@@ -336,4 +337,22 @@ struct type_conversion<LinkConfig>
         lnk.auto_tuning     = v.get<std::string>("auto_tuning");
     }
 };
+
+template <>
+struct type_conversion<FileRetry>
+{
+    typedef values base_type;
+
+    static void from_base(values const& v, indicator, FileRetry& retry)
+    {
+        retry.fileId   = v.get<int>("file_id");
+        retry.attempt  = v.get<int>("attempt");
+        retry.reason   = v.get<std::string>("reason");
+
+        struct tm aux_tm;
+        aux_tm = v.get<tm>("datetime");
+        retry.datetime = timegm(&aux_tm);
+    }
+};
+
 }
