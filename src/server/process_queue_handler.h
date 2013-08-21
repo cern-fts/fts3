@@ -69,7 +69,7 @@ public:
     {
 
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
-        messages.reserve(500);
+        messages.reserve(3000);
     }
 
     /* ---------------------------------------------------------------------- */

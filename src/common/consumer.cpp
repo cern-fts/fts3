@@ -110,6 +110,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 {
     string dir = string(MONITORING_DIR);
     vector<string> files = vector<string>();
+    files.reserve(1000);
     struct message_monitoring msg;
 
     if (getDir(dir,files) != 0)
@@ -148,6 +149,7 @@ int runConsumerStatus(std::vector<struct message>& messages)
 {
     string dir = string(STATUS_DIR);
     vector<string> files = vector<string>();
+    files.reserve(1000);
     struct message msg;
 
     if (getDir(dir,files) != 0)
@@ -184,6 +186,7 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
 {
     string dir = string(STALLED_DIR);
     vector<string> files = vector<string>();
+    files.reserve(1000);
     struct message_updater msg;
 
     if (getDir(dir,files) != 0)
@@ -222,6 +225,7 @@ int runConsumerLog(std::vector<struct message_log>& messages)
 {
     string dir = string(LOG_DIR);
     vector<string> files = vector<string>();
+    files.reserve(1000);
     struct message_log msg;
 
     if (getDir(dir,files) != 0)

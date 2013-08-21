@@ -77,7 +77,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessLogServiceHandler", desc)
     {
-
+	messages.reserve(1000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -252,6 +252,7 @@ protected:
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
                         sleep(2);
+			requestIDs.clear();
                     }
                 catch (Err& e)
                     {
@@ -259,6 +260,7 @@ protected:
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
                         sleep(2);
+			requestIDs.clear();
                     }
                 catch (...)
                     {
@@ -266,6 +268,7 @@ protected:
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
                         sleep(2);
+			requestIDs.clear();
                     }
             }
     }
