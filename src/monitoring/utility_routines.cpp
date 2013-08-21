@@ -791,7 +791,11 @@ void appendMessageToLogFile(std::string & text)
             fout.close();
             init = false;
         }
-    chown(logFileName, pw_uid, getgid());
+    int chownExec = chown(logFileName, pw_uid, getgid());
+    if(chownExec == -1){
+    	//do nothing
+    }
+    
 }
 
 
@@ -809,7 +813,10 @@ void appendMessageToLogFileNoConfig(std::string & text)
         }
     fout.flush();
     fout.close(); //close file
-    chown(logFileName, pw_uid, getgid());
+    int chownExec = chown(logFileName, pw_uid, getgid());
+    if(chownExec == -1){
+    	//do nothing
+    }    
 }
 
 
