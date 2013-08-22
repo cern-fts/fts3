@@ -11547,7 +11547,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
 void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
 {
     const std::string tag = "getTransferRetries";
-    const std::string query = "SELECT file_id, attempt, datetime, reason from t_file_retry_errors WHERE file_id = :1";
+    const std::string query = "SELECT attempt, datetime, reason from t_file_retry_errors WHERE file_id = :1";
 
     oracle::occi::Statement* s = 0;
     oracle::occi::ResultSet* r = 0;
