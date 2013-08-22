@@ -144,7 +144,7 @@ int ExecuteProcess::execProcessShell()
             close(pipefds[0]);
             close(pipefds[1]);
 
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork"  << commit;
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to fork " << strerror(errno)  << commit;
             return -1;
         }
     // Child

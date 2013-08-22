@@ -809,7 +809,7 @@ protected:
                                                         for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
                                                             {
                                                                 struct message_updater msg;
-                                                                if(std::string(job_id).length() < 38)
+                                                                if(std::string(job_id).length() <= 37)
                                                                     {
                                                                         strcpy(msg.job_id, std::string(job_id).c_str());
                                                                         msg.file_id = iterFileIds->first;

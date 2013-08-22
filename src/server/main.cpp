@@ -65,7 +65,6 @@ static void taskTimer(int time)
 static void setLimits()
 {
     struct rlimit rl;
-    struct rlimit rlOpen;
     int maxNumberOfProcesses = theServerConfig().get<int> ("MaxNumberOfProcesses");
     if(maxNumberOfProcesses != -1)
         {
@@ -76,15 +75,6 @@ static void setLimits()
                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NPROC failed" << commit;
                 }
         }
-
-    rlOpen.rlim_cur = 3072;
-    rlOpen.rlim_max = 3072;
-    if (setrlimit(RLIMIT_NOFILE, &rlOpen) == -1)
-        {
-            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "setrlimit RLIMIT_NOFILE failed" << commit;
-        }
-
-
 }
 
 static int fexists(const char *filename)

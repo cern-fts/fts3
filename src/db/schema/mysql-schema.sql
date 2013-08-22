@@ -638,18 +638,17 @@ CREATE INDEX job_submit_time     ON t_job(submit_time);
 CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
 CREATE INDEX job_cancel     ON t_job(cancel_job);
 CREATE INDEX job_reuse    ON t_job(reuse_job);
-CREATE INDEX idx_report_job      ON t_job (vo_name,job_id);
+CREATE INDEX idx_report_job      ON t_job (vo_name);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
-CREATE INDEX file_file_index ON t_file(file_id, file_index);
 CREATE INDEX file_file_throughput ON t_file(throughput);
 CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se);
-CREATE INDEX file_file_state_job_id4 ON t_file(file_state, dest_surl);
 CREATE INDEX file_transferhost on t_file(TRANSFERHOST);
 CREATE INDEX file_wait_timeout ON t_file(wait_timeout);
+CREATE INDEX file_job_state ON t_file(file_state);
 
 CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);

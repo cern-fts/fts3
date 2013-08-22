@@ -367,9 +367,9 @@ void signalHandler(int signum)
             if (propagated == false)
                 {
                     propagated = true;
-                    errorMessage = "Transfer " + g_job_id + " canceled";
+                    errorMessage = "Transfer " + g_job_id + " aborted, check log file for details, received signum " + boost::lexical_cast<std::string>(signum);
                     logger.WARNING() << errorMessage << std::endl;
-                    abnormalTermination("CANCELED", errorMessage, "Abort");
+                    abnormalTermination("FAILED", errorMessage, "Abort");
                 }
         }
 }
