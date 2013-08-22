@@ -270,7 +270,9 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
             // Get uniqueue VOs
             std::vector< std::string > distinctVO;
+	    distinctVO.reserve(10);
             std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
+	    distinct.reserve(1500); //approximation
 
             soci::rowset<soci::row> rsVO = (
                                                sql.prepare <<
