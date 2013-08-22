@@ -274,7 +274,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 
             soci::rowset<soci::row> rsVO = (
                                                sql.prepare <<
-                                               " SELECT DISTINCT vo_name "  /*create index on vo_name*/
+                                               " SELECT DISTINCT vo_name " 
                                                " FROM t_job "
                                                " WHERE t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')"                                              
                                                <<
