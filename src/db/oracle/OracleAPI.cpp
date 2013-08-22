@@ -11350,6 +11350,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             ssetRetryTimes->setInt(3,fileId);
             ssetRetryTimes->executeUpdate();
             conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
+	    ssetRetryTimes = NULL;
 
             sLogError = conn->createStatement(queryLogError, tagLogError, pooledConnection);
             sLogError->setInt(1, fileId);
@@ -11358,6 +11359,7 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             sLogError->setString(4, reason);
             sLogError->executeUpdate();
             conn->destroyStatement(sLogError, tagLogError, pooledConnection);
+	    sLogError = NULL;
 
             conn->commit(pooledConnection);
         }
@@ -11367,6 +11369,9 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
 
             if(ssetRetryTimes)
                 conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
+		
+            if(sLogError)
+                conn->destroyStatement(sLogError, tagLogError, pooledConnection);		
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
         }
@@ -11376,6 +11381,9 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
 
             if(ssetRetryTimes)
                 conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
+		
+            if(sLogError)
+                conn->destroyStatement(sLogError, tagLogError, pooledConnection);				
 
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
         }

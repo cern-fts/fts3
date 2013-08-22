@@ -43,7 +43,7 @@ public:
         queueHandler.executeTransfer_p();
 
         /*wait for status updates to be processed and then start sanity threads*/
-        sleep(3);
+        sleep(5);
 
         typename TRAITS::ProcessLogServiceType processLogHandler;
         processLogHandler.executeTransfer_p();
@@ -54,8 +54,8 @@ public:
         typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
         processUpdaterHandler.executeTransfer_p();
 
-        typename TRAITS::ProcessServiceType processHandler;
-        processHandler.executeTransfer_p();
+        //typename TRAITS::ProcessServiceType processHandler;
+        //processHandler.executeTransfer_p();
 
         unsigned int port = theServerConfig().get<unsigned int>("Port");
         const std::string& ip = theServerConfig().get<std::string>("IP");
