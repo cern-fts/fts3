@@ -1223,65 +1223,63 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
     try
         {
-
             int numberOfFilesInJob = 0;
             int numberOfFilesCanceled = 0;
             int numberOfFilesFinished = 0;
             int numberOfFilesFailed = 0;
+
+            int numberOfFilesNotCanceled = 0;
+            int numberOfFilesNotCanceledNorFailed = 0;
+
             sql.begin();
 
+            // total number of file in the job
             sql <<
-                " SELECT "
-                "	COUNT(file_index) AS NumOfFiles, " // the total number of files within a job
-                "	COUNT( "
-                "		CASE WHEN NOT EXISTS ( "
-                "				SELECT NULL "
-                "				FROM t_file "
-                "				WHERE job_id = :jobId AND file_state <> 'CANCELED' "
-                "					AND file_index = tbl.file_index "
-                "		) "
-                "		THEN 1 END "
-                "	) AS NumOfCanceled, " // the number of canceled files in the job, files counts as canceled if all replicas has been canceled
-                "	COUNT( "
-                "		CASE WHEN EXISTS ( "
-                "			SELECT NULL "
-                "			FROM t_file "
-                "			WHERE  job_id = :jobId AND file_state = 'FINISHED' "
-                "				AND file_index = tbl.file_index "
-                "		) "
-                "		THEN 1 END "
-                "	) AS NumOfFinished, " // the number of finished files in the job, file counts as finished if at least one replica went to the finished state
-                "	COUNT( "
-                "		CASE WHEN NOT EXISTS ( "
-                "			SELECT NULL "
-                "			FROM t_file "
-                "			WHERE  job_id = :jobId AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
-                "				AND file_index = tbl.file_index "
-                "		) AND EXISTS ( "
-                "			SELECT NULL "
-                "			FROM t_file "
-                "			WHERE  job_id = :jobId AND file_state = 'FAILED' "
-                "				AND file_index = tbl.file_index "
-                "		) "
-                "		THEN 1 END "
-                "	) AS NumOfFailed " // the number of failed files in the job, file counts as failed if all the replicas went to failed state except replicas that were cancelled
-                " FROM "
-                "	( "
-                "		SELECT DISTINCT file_index "
-                "		FROM t_file "
-                "		WHERE job_id = :jobId  "
-                "	) tbl ",
-                soci::use(job_id),
-		soci::use(job_id),
-		soci::use(job_id),
-		soci::use(job_id),
-		soci::use(job_id),
-                soci::into(numberOfFilesInJob),
-                soci::into(numberOfFilesCanceled),
-                soci::into(numberOfFilesFinished),
-                soci::into(numberOfFilesFailed)
-                ;
+            	" SELECT COUNT(DISTINCT file_index) "
+            	" FROM t_file "
+            	" WHERE job_id = :job_id ",
+            	soci::use(job_id),
+            	soci::into(numberOfFilesInJob)
+            	;
 
+            // number of files that were not canceled
+            sql <<
+            	" SELECT COUNT(DISTINCT file_index) "
+            	" FROM t_file "
+            	" WHERE job_id = :jobId "
+            	" 	AND file_state <> 'CANCELED' ", // all the replicas have to be in CANCELED state in order to count a file as canceled
+            	soci::use(job_id),					// so if just one replica is in a different state it is enoght to count it as not canceled
+            	soci::into(numberOfFilesNotCanceled)
+            	;
+
+            // number of files that were canceled
+            numberOfFilesCanceled = numberOfFilesInJob - numberOfFilesNotCanceled;
+
+            // number of files that were finished
+            sql <<
+            	" SELECT COUNT(DISTINCT file_index) "
+            	" FROM t_file "
+            	" WHERE job_id = :jobId "
+            	"	AND file_state = 'FINISHED' ", // at least one replica has to be in FINISH state in order to count the file as finished
+            	soci::use(job_id),
+            	soci::into(numberOfFilesFinished)
+            	;
+
+            // number of files that were not canceled nor failed
+            sql <<
+            	" SELECT COUNT(DISTINCT file_index) "
+            	" FROM t_file "
+            	" WHERE job_id = :jobId "
+            	" 	AND file_state <> 'CANCELED' " // for not canceled files see above
+            	" 	AND file_state <> 'FAILED' ",  // all the replicas have to be either in CANCELED or FAILED state in order to count
+            	soci::use(job_id),				   // a files as failed so if just one replica is not in CANCEL neither in FAILED state
+            	soci::into(numberOfFilesNotCanceledNorFailed) //it is enought to count it as not canceld nor failed
+            	;
+
+            // number of files that failed
+            numberOfFilesFailed = numberOfFilesInJob - numberOfFilesNotCanceledNorFailed - numberOfFilesCanceled;
+
+            // agregated number of files in terminal states (FINISHED, FAILED and CANCELED)
             int numberOfFilesTerminal = numberOfFilesCanceled + numberOfFilesFailed + numberOfFilesFinished;
 
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
