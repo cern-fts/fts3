@@ -290,7 +290,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                       " SELECT DISTINCT f.source_se, f.dest_se FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id) "
-						      " WHERE f.file_state='SUBMITTED' AND j.vo_name = :vo_name ",
+						      " WHERE f.file_state='SUBMITTED' AND j.vo_name = :vo_name AND j.job_state IN ('ACTIVE', 'READY','SUBMITTED')",
                                                      soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -317,7 +317,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
 		   " j.bring_online, j.submit_time FROM t_job j LEFT JOIN t_file t ON (j.job_id = t.job_id)  WHERE "
 		   " j.finish_time is NULL AND j.vo_name = :vo AND j.cancel_job IS NULL AND  "
 		   " (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND t.source_se = :source AND t.dest_se = :dest AND "
-		   " t.file_state = 'SUBMITTED' ORDER BY j.priority DESC, j.submit_time DESC LIMIT :jobsNum";   
+		   " t.file_state = 'SUBMITTED' AND j.job_state IN ('ACTIVE', 'READY','SUBMITTED') ORDER BY j.priority DESC, j.submit_time DESC LIMIT :jobsNum";   
 	  
             std::set<std::string> jobIds;
 
@@ -581,7 +581,8 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "WHERE f.job_id = :jobId AND"
                                                          "    f.file_state = 'SUBMITTED' AND "							 
                                                          "    f.job_finished IS NULL AND "
-                                                         "    j.job_finished IS NULL AND "							 
+                                                         "    j.job_finished IS NULL AND "
+							 "    j.job_state IN ('ACTIVE', 'READY','SUBMITTED') AND "							 
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
                                                          " ORDER BY f.file_id ASC LIMIT :filesNum ",soci::use(jobId),
