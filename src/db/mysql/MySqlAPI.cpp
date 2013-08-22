@@ -5275,7 +5275,7 @@ void MySqlAPI::checkSanityState()
                         {
                             
                             sql << "UPDATE t_job SET "
-                                "    job_state = 'ACTIVE', job_finished = NULL, finish_time = NULL, "
+                                "    job_state = 'SUBMITTED', job_finished = NULL, finish_time = NULL, "
                                 "    reason = NULL "
                                 "    WHERE job_id = :jobId", soci::use(*i2);
                           
