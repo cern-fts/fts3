@@ -483,6 +483,8 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 
     try
         {
+            sql.begin();
+	    
             sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl",
                 soci::use(file->DEST_SURL),
                 soci::into(countSame);
@@ -490,7 +492,6 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
             if(countSame != 0)
                 return 0;
 
-            sql.begin();
             soci::statement stmt(sql);
 
             stmt.exchange(soci::use(status, "state"));
@@ -516,6 +517,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
                     jobStmt.define_and_bind();
                     jobStmt.execute(true);
                 }
+		
             sql.commit();
         }
     catch (std::exception& e)
@@ -1234,7 +1236,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN NOT EXISTS ( "
                 "				SELECT NULL "
                 "				FROM t_file "
-                "				WHERE job_id = :jobId AND transferHost= :hostname AND file_state <> 'CANCELED' "
+                "				WHERE job_id = :jobId AND file_state <> 'CANCELED' "
                 "					AND file_index = tbl.file_index "
                 "		) "
                 "		THEN 1 END "
@@ -1243,7 +1245,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE  job_id = :jobId AND transferHost= :hostname AND file_state = 'FINISHED' "
+                "			WHERE  job_id = :jobId AND file_state = 'FINISHED' "
                 "				AND file_index = tbl.file_index "
                 "		) "
                 "		THEN 1 END "
@@ -1252,12 +1254,12 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "		CASE WHEN NOT EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE  job_id = :jobId AND transferHost= :hostname AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
+                "			WHERE  job_id = :jobId AND (file_state <> 'FAILED' AND file_state <> 'CANCELED') "
                 "				AND file_index = tbl.file_index "
                 "		) AND EXISTS ( "
                 "			SELECT NULL "
                 "			FROM t_file "
-                "			WHERE  job_id = :jobId AND transferHost= :hostname AND file_state = 'FAILED' "
+                "			WHERE  job_id = :jobId AND file_state = 'FAILED' "
                 "				AND file_index = tbl.file_index "
                 "		) "
                 "		THEN 1 END "
@@ -1266,18 +1268,13 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                 "	( "
                 "		SELECT DISTINCT file_index "
                 "		FROM t_file "
-                "		WHERE job_id = :jobId AND transferHost= :hostname  "
+                "		WHERE job_id = :jobId  "
                 "	) tbl ",
                 soci::use(job_id),
-		soci::use(hostname),
 		soci::use(job_id),
-		soci::use(hostname),
 		soci::use(job_id),
-		soci::use(hostname),
 		soci::use(job_id),
-		soci::use(hostname),
 		soci::use(job_id),
-		soci::use(hostname),
                 soci::into(numberOfFilesInJob),
                 soci::into(numberOfFilesCanceled),
                 soci::into(numberOfFilesFinished),
@@ -2776,9 +2773,9 @@ void MySqlAPI::forkFailedRevertState(const std::string & jobId, int fileId)
         {
             sql.begin();
             sql << "UPDATE t_file SET file_state = 'SUBMITTED', transferhost='', start_time=NULL "
-                "WHERE file_id = :fileId AND job_id = :jobId AND "
+                "WHERE file_id = :fileId AND job_id = :jobId AND  transferhost= :hostname AND "
                 "      file_state NOT IN ('FINISHED','FAILED','CANCELED')",
-                soci::use(fileId), soci::use(jobId);
+                soci::use(fileId), soci::use(jobId), soci::use(hostname);
             sql.commit();
         }
     catch (std::exception& e)
@@ -4025,8 +4022,14 @@ int MySqlAPI::getMaxTimeInQueue()
     int maxTime = 0;
     try
         {
+	    soci::indicator isNull = soci::i_ok;
+                                       
             sql << "SELECT max_time_queue FROM t_server_config",
-                soci::into(maxTime);
+                soci::into(maxTime, isNull);
+
+	    //just in case soci it is reseting the value to NULL
+	    if(isNull != soci::i_null && maxTime > 0)
+	 	return maxTime;
         }
     catch (std::exception& e)
         {
@@ -5050,7 +5053,7 @@ void MySqlAPI::cancelWaitingFiles(std::set<std::string>& jobs)
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'CANCELED' "
-                        " WHERE file_id = :fileId ",
+                        " WHERE file_id = :fileId AND file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED')",
                         soci::use(it->get<int>("file_id"))
                         ;
                 }
