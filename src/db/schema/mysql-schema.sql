@@ -644,7 +644,6 @@ CREATE INDEX idx_report_job      ON t_job (vo_name);
 -- t_file(file_id) is primary key
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
-CREATE INDEX file_file_index ON t_file(file_id, file_index);
 CREATE INDEX file_file_throughput ON t_file(throughput);
 CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se);
 CREATE INDEX file_transferhost on t_file(TRANSFERHOST);

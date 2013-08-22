@@ -289,9 +289,8 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     "SELECT DISTINCT t_file.source_se, t_file.dest_se FROM t_file, t_job "
-						     "WHERE t_file.file_state='SUBMITTED' AND t_job.job_id = t_file.job_id "
-						     "AND t_job.vo_name = :vo_name ",
+                                                      " SELECT DISTINCT f.source_se, f.dest_se FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id) "
+						      " WHERE f.file_state='SUBMITTED' AND j.vo_name = :vo_name ",
                                                      soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -315,7 +314,7 @@ void MySqlAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::str
            query = " SELECT j.job_id, j.job_state, j.vo_name, j.priority, j.source_se, j.dest_se, j.agent_dn, "
 	   	   " j.submit_host, j.user_dn, j.user_cred, j.cred_id, j.space_token, j.storage_class, j.job_params, "
 		   " j.overwrite_flag, j.source_space_token, j.source_token_description, j.copy_pin_lifetime, j.checksum_method, "
-		   " j.bring_online, j.submit_time FROM t_job j JOIN t_file t ON (t.job_id = j.job_id)  WHERE "
+		   " j.bring_online, j.submit_time FROM t_job j LEFT JOIN t_file t ON (j.job_id = t.job_id)  WHERE "
 		   " j.finish_time is NULL AND j.vo_name = :vo AND j.cancel_job IS NULL AND  "
 		   " (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND t.source_se = :source AND t.dest_se = :dest AND "
 		   " t.file_state = 'SUBMITTED' ORDER BY j.priority DESC, j.submit_time DESC LIMIT :jobsNum";   
@@ -572,20 +571,20 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                     soci::rowset<TransferFiles> rs = (
                                                          sql.prepare <<
                                                          "SELECT "
-                                                         "       f1.file_state, f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
-                                                         "       f1.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                                                         "       f1.checksum, j.checksum_method, j.source_space_token, "
+                                                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                                                         "       f.checksum, j.checksum_method, j.source_space_token, "
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                                         "       f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index, f1.bringonline_token, "
-                                                         "       f1.source_se, f1.dest_se, f1.selection_strategy  "
-                                                         "FROM t_file f1, t_job j "
-                                                         "WHERE j.job_id = :jobId AND"
-                                                         "    f1.job_id = j.job_id AND "
-                                                         "    j.job_finished IS NULL AND "
-                                                         "    f1.wait_timestamp IS NULL AND "
-                                                         "    f1.file_state = 'SUBMITTED' AND "
-                                                         "    (f1.retry_timestamp is NULL OR f1.retry_timestamp < :tTime) "
-                                                         " ORDER BY f1.file_id ASC LIMIT :filesNum ",soci::use(jobId),
+                                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                                                         "       f.source_se, f.dest_se, f.selection_strategy  "
+                                                         "FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id) "
+                                                         "WHERE f.job_id = :jobId AND"
+                                                         "    f.file_state = 'SUBMITTED' AND "							 
+                                                         "    f.job_finished IS NULL AND "
+                                                         "    j.job_finished IS NULL AND "							 
+                                                         "    f.wait_timestamp IS NULL AND "
+                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
+                                                         " ORDER BY f.file_id ASC LIMIT :filesNum ",soci::use(jobId),
                                                          soci::use(tTime),
                                                          soci::use(filesNum)
                                                      );
@@ -2673,25 +2672,24 @@ void MySqlAPI::revertToSubmitted()
             soci::statement readyStmt = (sql.prepare << "SELECT t_file.start_time, t_file.file_id, t_file.job_id, t_job.reuse_job "
                                          "FROM t_file, t_job "
                                          "WHERE t_file.file_state = 'READY' AND t_file.finish_time IS NULL AND "
-                                         "      t_file.job_finished IS NULL AND t_file.job_id = t_job.job_id and t_file.transferhost=:hostname",
-                                         soci::into(startTime), soci::into(fileId), soci::into(jobId), soci::into(reuseJob, reuseInd),soci::use(hostname));
+                                         "      t_file.job_finished IS NULL AND t_file.job_id = t_job.job_id ",
+                                         soci::into(startTime), soci::into(fileId), soci::into(jobId), soci::into(reuseJob, reuseInd));
 
             if (readyStmt.execute(true))
                 {
                     do
                         {
                             time_t startTimestamp = timegm(&startTime);
-                            double diff = difftime(now2, startTimestamp);
-                            bool alive = ThreadSafeList::get_instance().isAlive(fileId);
+                            double diff = difftime(now2, startTimestamp);                            
 
-                            if (diff > 1200 && reuseJob != "Y" && !alive)
+                            if (diff > 800 && reuseJob != "Y")
                                 {
                                     FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     
                                     sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='' "
-                                        "WHERE file_id = :fileId AND file_state = 'READY' AND finish_time IS NULL AND "
+                                        "WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' AND finish_time IS NULL AND "
                                         "      job_finished IS NULL ",
-                                        soci::use(fileId);                                    
+                                        soci::use(fileId),soci::use(jobId);                  
                                 }
                             else
                                 {
