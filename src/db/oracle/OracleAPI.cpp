@@ -978,7 +978,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             if (checksumMethod.length() == 0)
                 s_job_statement->setNull(18, oracle::occi::OCCICHAR);
             else
-                s_job_statement->setString(18, "Y"); //checksum_method
+                s_job_statement->setString(18, checksumMethod.substr(0, 1)); //checksum_method
             if (reuse.length() == 0)
                 s_job_statement->setNull(19, oracle::occi::OCCISTRING);
             else
