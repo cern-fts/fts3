@@ -25,6 +25,8 @@
 
 #include "cred/cred-utility.h"
 
+extern bool stopThreads;
+
 namespace fts3
 {
 
@@ -32,6 +34,7 @@ namespace server
 {
 
 const string FileTransferExecutor::cmd = "fts_url_copy";
+
 
 FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName) :
     tfh(tfh),
@@ -61,7 +64,7 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
 
 void FileTransferExecutor::execute()
 {
-    while (active && queue.hasData())
+    while (active && queue.hasData() && !stopThreads)
         {
             try
                 {

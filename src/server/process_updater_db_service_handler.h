@@ -104,10 +104,14 @@ protected:
     {
         static unsigned int counter = 0;
 
-        while (stopThreads==false)   /*need to receive more than one messages at a time*/
+        while (1)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
+		        if(stopThreads && messages.empty()){
+				break;
+			}		    
+		    
                         ThreadSafeList::get_instance().checkExpiredMsg(messages);
 
                         if (!messages.empty())

@@ -201,10 +201,14 @@ protected:
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
-        while (stopThreads==false)   /*need to receive more than one messages at a time*/
+        while (1)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
+		        if(stopThreads && messages.empty() && queueMsgRecovery.empty() ){
+				break;
+			}
+		    
 
                         if(fs::is_empty(fs::path(STATUS_DIR)))
                             {

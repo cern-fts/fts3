@@ -125,10 +125,14 @@ protected:
         static unsigned int counterTimeoutWaiting = 0;
         static unsigned int counterCanceled = 0;
 
-        while (stopThreads==false)   /*need to receive more than one messages at a time*/
+        while (1)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
+		        if(stopThreads && requestIDs.empty() && messages.empty() && queueMsgRecovery.empty() ){
+				break;
+			}
+			 
                         /*also get jobs which have been canceled by the client*/
                         counterCanceled++;
                         if (counterCanceled >= 2)

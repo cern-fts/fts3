@@ -581,7 +581,7 @@ void MySqlAPI::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::strin
                                                          "WHERE f.job_id = :jobId AND"
                                                          "    f.file_state = 'SUBMITTED' AND "							 
                                                          "    f.job_finished IS NULL AND "
-                                                         "    j.job_finished IS NULL AND "
+                                                         "    f.finish_time IS NULL AND "
 							 "    j.job_state IN ('ACTIVE', 'READY','SUBMITTED') AND "							 
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
@@ -2661,27 +2661,21 @@ void MySqlAPI::revertToSubmitted()
     try
         {
             struct tm startTime;
-	    struct tm finish_time;
-	    struct tm job_finished;	    
             int fileId=0;
             std::string jobId, reuseJob;
             time_t now2 = convertToUTC(0);
-	    soci::indicator isNull1 = soci::i_ok;
-	    soci::indicator isNull2 = soci::i_ok;	    
 	    
 	    sql.begin();
 
             soci::indicator reuseInd = soci::i_ok;
-            soci::statement readyStmt = (sql.prepare << "SELECT t_file.start_time, t_file.file_id, t_file.job_id, t_job.reuse_job, t_file.finish_time, t_file.job_finished  "
+            soci::statement readyStmt = (sql.prepare << "SELECT t_file.start_time, t_file.file_id, t_file.job_id, t_job.reuse_job "
                                          " FROM t_file, t_job "
                                          " WHERE t_file.file_state = 'READY'  "
                                          " AND t_file.job_id = t_job.job_id ",
                                          soci::into(startTime), 
 					 soci::into(fileId), 
 					 soci::into(jobId), 
-					 soci::into(reuseJob, reuseInd), 
-					 soci::into(finish_time, isNull1), 
-					 soci::into(job_finished, isNull2));
+					 soci::into(reuseJob, reuseInd));
 
             if (readyStmt.execute(true))
                 {
@@ -2692,20 +2686,11 @@ void MySqlAPI::revertToSubmitted()
 
                             if (diff > 800 && reuseJob != "Y")
                                 {
-				    if (isNull1 == soci::i_null && isNull2 == soci::i_null){
                                     	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to be stalled, restart it" << commit;
                                     
-                                    	sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='' "
-                                        	"WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' AND finish_time IS NULL AND "
-                                        	"      job_finished IS NULL ",
-                                        	soci::use(fileId),soci::use(jobId);                  
-				   }else{
-                                    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "The transfer with file id " << fileId << " seems to have finished" << commit;
-                                    
-                                    	sql << "UPDATE t_file SET file_state = 'FINISHED', reason='', finish_time = UTC_TIMESTAMP(), job_finished = UTC_TIMESTAMP() "
-                                        	"WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' AND  finish_time IS NOT NULL AND job_finished IS NOT NULL",
+                                    	sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='',finish_time=NULL, job_finished=NULL "
+                                        	"WHERE file_id = :fileId AND job_id= :jobId AND file_state = 'READY' ",
                                         	soci::use(fileId),soci::use(jobId);                  				   
-				   }
                                 }
                             else
                                 {
@@ -2724,7 +2709,7 @@ void MySqlAPI::revertToSubmitted()
                                                     
                                                     sql << "UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :jobId ", soci::use(jobId);
 
-                                                    sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='' "
+                                                    sql << "UPDATE t_file SET file_state = 'SUBMITTED', reason='', transferhost='' "
                                                         "WHERE file_state = 'READY' AND finish_time IS NULL AND "
                                                         "      job_finished IS NULL AND file_id = :fileId",
                                                         soci::use(fileId);                                                   
@@ -4850,7 +4835,6 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 
     try
         {
-
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT "

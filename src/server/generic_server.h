@@ -43,7 +43,7 @@ public:
         queueHandler.executeTransfer_p();
 
         /*wait for status updates to be processed and then start sanity threads*/
-        sleep(5);
+        sleep(10);
 
         typename TRAITS::ProcessLogServiceType processLogHandler;
         processLogHandler.executeTransfer_p();

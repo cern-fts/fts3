@@ -117,10 +117,13 @@ protected:
         std::vector<struct message_updater>::iterator iter;
         std::vector<struct message_updater>::iterator iter_restore;
 
-        while (stopThreads==false)   /*need to receive more than one messages at a time*/
+        while (1)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
+		        if(stopThreads && messages.empty() && queueMsgRecovery.empty() ){
+				break;
+			}		    
 
                         if(fs::is_empty(fs::path(STALLED_DIR)))
                             {
