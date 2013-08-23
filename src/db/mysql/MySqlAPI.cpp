@@ -442,8 +442,6 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
             soci::indicator ind = soci::i_ok;
             int fileIndex=0;
 
-            sql.begin();
-
             sql <<
                 " SELECT file_index "
                 " FROM t_file "
@@ -452,6 +450,7 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                 soci::into(fileIndex, ind)
                 ;
 
+            sql.begin();
             // make sure it's not NULL
             if (ind == soci::i_ok)
                 {
@@ -1124,8 +1123,6 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
         {
             double throughput = 0;
 
-            sql.begin();
-
             bool staging = false;
 
             // query for the file state in DB
@@ -1134,6 +1131,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
                                              soci::use(file_id),
                                              soci::use(job_id)
                                          );
+            sql.begin();
 
             // check if the state is STAGING, there should be just one row
             soci::rowset<soci::row>::const_iterator it = rs.begin();
@@ -2065,8 +2063,9 @@ void MySqlAPI::initOptimizer(const std::string & source_hostname, const std::str
     try
         {
             unsigned foundRecords = 0;
-            sql.begin();
 
+            sql.begin();
+	    
             sql << "SELECT COUNT(*) FROM t_optimize WHERE source_se = :source AND dest_se=:dest",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(foundRecords);
@@ -2578,12 +2577,13 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId)
 
     try
         {
-            sql.begin();
+            
 
             std::string reuse;
             sql << "SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                 soci::use(jobId), soci::into(reuse);
 
+	    sql.begin();
             if (sql.got_data())
                 {
                     sql << "UPDATE t_file SET file_state = 'FAILED' WHERE job_id = :jobId AND file_state != 'FINISHED'",
@@ -3847,49 +3847,6 @@ int MySqlAPI::sumUpVoShares (std::string source, std::string destination, std::s
     return sum;
 }
 
-//boost::optional<unsigned int> MySqlAPI::getJobConfigCount(std::string job_id) {
-//    soci::session sql(*connectionPool);
-//
-//    boost::optional<unsigned int> opCount;
-//    try {
-//        int count = 0;
-//        soci::indicator isNull;
-//
-//        sql << "SELECT configuration_count FROM t_job WHERE job_id = :jobId",
-//                soci::use(job_id), soci::into(count, isNull);
-//
-//        if (isNull != soci::i_null) {
-//            opCount = count;
-//        }
-//
-//    }
-//    catch (std::exception& e) {
-//        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-//    }
-//
-//    return opCount;
-//}
-
-
-
-//void MySqlAPI::setJobConfigCount(std::string job_id, int count) {
-//    soci::session sql(*connectionPool);
-//
-//    try {
-//        sql.begin();
-//
-//        sql << "UPDATE t_job SET "
-//               "  configuration_count = :count "
-//               "WHERE job_id = :jobId",
-//               soci::use(count), soci::use(job_id);
-//
-//        sql.commit();
-//    }
-//    catch (std::exception& e) {
-//        sql.rollback();
-//        throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-//    }
-//}
 
 void MySqlAPI::setPriority(std::string job_id, int priority)
 {
