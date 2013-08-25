@@ -5245,13 +5245,12 @@ void MySqlAPI::checkSanityState()
 
     try
         {
-
             struct message_sanity msg;
             msg.checkSanityState = true;
             CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
+            if(!temp.getCleanUpSanityCheck()){
                 return;
-
+	    }
 
             sql.begin();
 
@@ -5919,73 +5918,83 @@ bool MySqlAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
 
     try
         {
-            sql.begin();
             if(msg.checkSanityState)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=1, executiontime = UTC_TIMESTAMP() "
+                    sql.begin();
+                    soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=1, t_checkSanityState = UTC_TIMESTAMP() "
                                         "where checkSanityState=0"
-                                        " AND (executiontime > (UTC_TIMESTAMP() - INTERVAL '15' minute)) "));
+                                        " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) "));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.checkSanityState = (rows > 0? true: false);
+                    sql.commit();
                     return msg.checkSanityState;
                 }
             else if(msg.setToFailOldQueuedJobs)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=1, executiontime = UTC_TIMESTAMP() "
+                    sql.begin();		
+                    soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = UTC_TIMESTAMP() "
                                         " where setToFailOldQueuedJobs=0"
-                                        " AND (executiontime > (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+                                        " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.setToFailOldQueuedJobs = (rows > 0? true: false);
+                    sql.commit();		    
                     return msg.setToFailOldQueuedJobs;
                 }
             else if(msg.forceFailTransfers)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=1, executiontime = UTC_TIMESTAMP() "
+                    sql.begin();		
+                    soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = UTC_TIMESTAMP() "
                                         " where forceFailTransfers=0"
-                                        " AND (executiontime > (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+                                        " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.forceFailTransfers = (rows > 0? true: false);
+                    sql.commit();		    
                     return msg.forceFailTransfers;
                 }
             else if(msg.revertToSubmitted)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=1, executiontime = UTC_TIMESTAMP() "
+                    sql.begin();		
+                    soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = UTC_TIMESTAMP() "
                                         " where revertToSubmitted=0"
-                                        " AND (executiontime > (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+                                        " AND (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.revertToSubmitted = (rows > 0? true: false);
+                    sql.commit();		    
                     return msg.revertToSubmitted;
                 }
             else if(msg.cancelWaitingFiles)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=1, executiontime = UTC_TIMESTAMP() "
+                    sql.begin();		
+                    soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = UTC_TIMESTAMP() "
                                         "  where cancelWaitingFiles=0"
-                                        " AND (executiontime > (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+                                        " AND (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.cancelWaitingFiles = (rows > 0? true: false);
+                    sql.commit();		    
                     return msg.cancelWaitingFiles;
                 }
             else if(msg.revertNotUsedFiles)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=1, executiontime = UTC_TIMESTAMP() "
+                    sql.begin();		
+                    soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = UTC_TIMESTAMP() "
                                         " where revertNotUsedFiles=0"
-                                        " AND (executiontime > (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
+                                        " AND (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '15' minute)) "
                                        ));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.revertNotUsedFiles = (rows > 0? true: false);
+                    sql.commit();		    
                     return msg.revertNotUsedFiles;
                 }
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -5999,13 +6008,11 @@ bool MySqlAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
 
 void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
 {
-
     try
         {
             sql.begin();
             if(msg.checkSanityState)
                 {
-                    sql.begin();
                     soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=0 where checkSanityState=1"));
                     st.execute(true);
                 }

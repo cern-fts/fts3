@@ -20,9 +20,14 @@ CREATE TABLE t_server_sanity (
   forceFailTransfers TINYINT(1) DEFAULT 0,
   setToFailOldQueuedJobs TINYINT(1) DEFAULT 0,
   checkSanityState TINYINT(1) DEFAULT 0,
-  executiontime          TIMESTAMP NULL DEFAULT NULL
+  t_revertToSubmitted          TIMESTAMP NULL DEFAULT NULL,
+  t_cancelWaitingFiles          TIMESTAMP NULL DEFAULT NULL,
+  t_revertNotUsedFiles          TIMESTAMP NULL DEFAULT NULL,
+  t_forceFailTransfers          TIMESTAMP NULL DEFAULT NULL,
+  t_setToFailOldQueuedJobs          TIMESTAMP NULL DEFAULT NULL,
+  t_checkSanityState          TIMESTAMP NULL DEFAULT NULL   
 ); 
-INSERT INTO t_server_sanity (revertToSubmitted,cancelWaitingFiles,revertNotUsedFiles,forceFailTransfers,setToFailOldQueuedJobs,checkSanityState,executiontime) values(0,0,0,0,0,0,UTC_TIMESTAMP());
+INSERT INTO t_server_sanity (revertToSubmitted,cancelWaitingFiles,revertNotUsedFiles,forceFailTransfers,setToFailOldQueuedJobs,checkSanityState,t_revertToSubmitted,t_cancelWaitingFiles,t_revertNotUsedFiles,t_forceFailTransfers,t_setToFailOldQueuedJobs,t_checkSanityState) values(0,0,0,0,0,0,UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP());
 
 --
 -- Holds various server configuration options
