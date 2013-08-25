@@ -77,7 +77,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessLogServiceHandler", desc)
     {
-	messages.reserve(1000);
+        messages.reserve(1000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -102,7 +102,7 @@ protected:
     std::vector<struct message_log> queueMsgRecovery;
     std::vector<struct message_log> messages;
 
-    void killRunninfJob(std::vector<int>& requestIDs)
+    void killRunningJob(std::vector<int>& requestIDs)
     {
         std::vector<int>::const_iterator iter;
         for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter)
@@ -129,10 +129,11 @@ protected:
             {
                 try
                     {
-		        if(stopThreads && requestIDs.empty() && messages.empty() && queueMsgRecovery.empty() ){
-				break;
-			}
-			 
+                        if(stopThreads && requestIDs.empty() && messages.empty() && queueMsgRecovery.empty() )
+                            {
+                                break;
+                            }
+
                         /*also get jobs which have been canceled by the client*/
                         counterCanceled++;
                         if (counterCanceled >= 2)
@@ -140,7 +141,7 @@ protected:
                                 DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
                                 if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
                                     {
-                                        killRunninfJob(requestIDs);
+                                        killRunningJob(requestIDs);
                                         requestIDs.clear(); /*clean the list*/
                                     }
                             }
@@ -255,21 +256,21 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);			
+                        sleep(2);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);			
+                        sleep(2);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message log thrown unhandled exception" << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);			
+                        sleep(2);
                     }
             }
     }

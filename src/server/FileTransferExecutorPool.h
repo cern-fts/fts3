@@ -63,22 +63,22 @@ public:
      */
     void join();
 
-	/**
-	 * Stops all the threads in the pool
-	 */
-	void stopAll();
+    /**
+     * Stops all the threads in the pool
+     */
+    void stopAll();
 
-	/**
-	 * @return gets the number of files that were scheduled by the executors in the pool
-	 */
-	int getNumberOfScheduled()
-	{
-		return scheduled;
-	}
+    /**
+     * @return gets the number of files that were scheduled by the executors in the pool
+     */
+    int getNumberOfScheduled()
+    {
+        return scheduled;
+    }
 
 private:
 
-	/// vector with executors
+    /// vector with executors
     vector<FileTransferExecutor*> executors;
 
     /// the next queue (executor) to be used

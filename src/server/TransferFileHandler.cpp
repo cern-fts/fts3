@@ -32,11 +32,11 @@ namespace server
 
 map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, list<TransferFiles*> >& files, GET_MAP_OPTS opt)
 {
-	if (init_cache.empty())
-		{
-			init_cache.resize(4); // there are four maps
+    if (init_cache.empty())
+        {
+            init_cache.resize(4); // there are four maps
 
-		    map<string, list<TransferFiles*> >::iterator it_v;
+            map<string, list<TransferFiles*> >::iterator it_v;
 
             map< string, set<FileIndex> > unique;
 
@@ -56,10 +56,10 @@ map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, li
 
                             TransferFiles* tmp = *it_tf;
 
-		                    init_cache[SOURCE_TO_DESTINATIONS][tmp->SOURCE_SE].insert(tmp->DEST_SE);
-		                    init_cache[SOURCE_TO_VOS][tmp->SOURCE_SE].insert(tmp->VO_NAME);
-		                    init_cache[DESTINATION_TO_SOURCES][tmp->DEST_SE].insert(tmp->SOURCE_SE);
-		                    init_cache[DESTINATION_TO_VOS][tmp->DEST_SE].insert(tmp->VO_NAME);
+                            init_cache[SOURCE_TO_DESTINATIONS][tmp->SOURCE_SE].insert(tmp->DEST_SE);
+                            init_cache[SOURCE_TO_VOS][tmp->SOURCE_SE].insert(tmp->VO_NAME);
+                            init_cache[DESTINATION_TO_SOURCES][tmp->DEST_SE].insert(tmp->SOURCE_SE);
+                            init_cache[DESTINATION_TO_VOS][tmp->DEST_SE].insert(tmp->VO_NAME);
 
                             // create index (job ID + file index)
                             FileIndex index((*it_tf)->JOB_ID, tmp->FILE_INDEX);
@@ -76,18 +76,18 @@ map< string, set<string> >& TransferFileHandler::getMapFromCache(map< string, li
                 }
         }
 
-	return init_cache[opt];
+    return init_cache[opt];
 }
 
 
 TransferFileHandler::TransferFileHandler(map< string, list<TransferFiles*> >& files) :
-			sourceToDestinations(getMapFromCache(files, SOURCE_TO_DESTINATIONS)),
-			sourceToVos(getMapFromCache(files, SOURCE_TO_VOS)),
-			destinationToSources(getMapFromCache(files, DESTINATION_TO_SOURCES)),
-			destinationToVos(getMapFromCache(files, DESTINATION_TO_VOS)),
-			db (DBSingleton::instance().getDBObjectInstance())
+    sourceToDestinations(getMapFromCache(files, SOURCE_TO_DESTINATIONS)),
+    sourceToVos(getMapFromCache(files, SOURCE_TO_VOS)),
+    destinationToSources(getMapFromCache(files, DESTINATION_TO_SOURCES)),
+    destinationToVos(getMapFromCache(files, DESTINATION_TO_VOS)),
+    db (DBSingleton::instance().getDBObjectInstance())
 {
-	init_cache.clear();
+    init_cache.clear();
 }
 
 TransferFileHandler::~TransferFileHandler()
@@ -269,15 +269,15 @@ const set<string> TransferFileHandler::getDestinationsVos(string se) const
 
 int TransferFileHandler::size()
 {
-	int sum = 0;
+    int sum = 0;
 
-	map< string, list<FileIndex> >::iterator it;
-	for (it = voToFileIndexes.begin(); it != voToFileIndexes.end(); it++)
-		{
-			sum += (unsigned int) it->second.size();
-		}
+    map< string, list<FileIndex> >::iterator it;
+    for (it = voToFileIndexes.begin(); it != voToFileIndexes.end(); it++)
+        {
+            sum += (unsigned int) it->second.size();
+        }
 
-	return sum;
+    return sum;
 }
 
 } /* namespace cli */

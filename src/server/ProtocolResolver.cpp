@@ -133,23 +133,23 @@ optional<ProtocolResolver::protocol> ProtocolResolver::getProtocolCfg(optional< 
     protocol ret;
 
     // set number of streams
-	ret.nostreams = cfg->NOSTREAMS;
+    ret.nostreams = cfg->NOSTREAMS;
 
     // not used for now but set anyway
-	ret.no_tx_activity_to = cfg->NO_TX_ACTIVITY_TO;
+    ret.no_tx_activity_to = cfg->NO_TX_ACTIVITY_TO;
 
-	// set TCP buffer size
-	ret.tcp_buffer_size = cfg->TCP_BUFFER_SIZE;
+    // set TCP buffer size
+    ret.tcp_buffer_size = cfg->TCP_BUFFER_SIZE;
 
     // set the timeout
-	ret.urlcopy_tx_to = cfg->URLCOPY_TX_TO;
+    ret.urlcopy_tx_to = cfg->URLCOPY_TX_TO;
 
     return ret;
 }
 
 optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> source, optional<protocol> destination)
 {
-	// make sure both source and destination protocol exists
+    // make sure both source and destination protocol exists
     if (!source) return destination;
     if (!destination) return source;
 
@@ -157,48 +157,48 @@ optional<ProtocolResolver::protocol> ProtocolResolver::merge(optional<protocol> 
 
     // iterate over all protocol parameters
     for (int i = 0; i < protocol::size; i++)
-    	{
-    		// if both are automatic use the automatic value
-			if (src_prot[i] == automatic && dst_prot[i] == automatic)
-				{
-					ret[i] = auto_prot[i];
-					auto_tuned = true;
-				}
-			// if only source uses automatic merge automatic value with destination
-			else if (src_prot[i] == automatic)
-				{
-					if (auto_prot[i] < dst_prot[i])
-						{
-							ret[i] = auto_prot[i];
-							auto_tuned = true;
-						}
-					else
-						{
-							ret[i] = dst_prot[i];
-						}
-				}
-			// if only destination uses automatic merge source with automatic value
-			else if (dst_prot[i] == automatic)
-				{
-					if (auto_prot[i] < src_prot[i])
-						{
-							ret[i] = auto_prot[i];
-							auto_tuned = true;
-						}
-					else
-						{
-							ret[i] = src_prot[i];
-						}
-				}
-			// otherwise automatic is not used at all so merge source with destination
-			else
-				{
-					ret[i] =
-							src_prot[i] < dst_prot[i] ?
-							src_prot[i] : dst_prot[i]
-							;
-				}
-    	}
+        {
+            // if both are automatic use the automatic value
+            if (src_prot[i] == automatic && dst_prot[i] == automatic)
+                {
+                    ret[i] = auto_prot[i];
+                    auto_tuned = true;
+                }
+            // if only source uses automatic merge automatic value with destination
+            else if (src_prot[i] == automatic)
+                {
+                    if (auto_prot[i] < dst_prot[i])
+                        {
+                            ret[i] = auto_prot[i];
+                            auto_tuned = true;
+                        }
+                    else
+                        {
+                            ret[i] = dst_prot[i];
+                        }
+                }
+            // if only destination uses automatic merge source with automatic value
+            else if (dst_prot[i] == automatic)
+                {
+                    if (auto_prot[i] < src_prot[i])
+                        {
+                            ret[i] = auto_prot[i];
+                            auto_tuned = true;
+                        }
+                    else
+                        {
+                            ret[i] = src_prot[i];
+                        }
+                }
+            // otherwise automatic is not used at all so merge source with destination
+            else
+                {
+                    ret[i] =
+                        src_prot[i] < dst_prot[i] ?
+                        src_prot[i] : dst_prot[i]
+                        ;
+                }
+        }
 
     return ret;
 }
@@ -248,7 +248,7 @@ bool ProtocolResolver::resolve()
 
 ProtocolResolver::protocol ProtocolResolver::autotune()
 {
-	protocol ret;
+    protocol ret;
 
     string source = file->SOURCE_SE;
     string destination = file->DEST_SE;

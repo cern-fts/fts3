@@ -214,6 +214,29 @@ public:
     boost::posix_time::time_duration::tick_type timestamp;
 };
 
+struct message_sanity
+{
+public:
+    message_sanity(): revertToSubmitted(false),
+        cancelWaitingFiles(false),
+        revertNotUsedFiles(false),
+        forceFailTransfers(false),
+        setToFailOldQueuedJobs(false),
+        checkSanityState(false)
+    {
+    }
+
+    ~message_sanity()
+    {
+    }
+    bool revertToSubmitted;
+    bool cancelWaitingFiles;
+    bool revertNotUsedFiles;
+    bool forceFailTransfers;
+    bool setToFailOldQueuedJobs;
+    bool checkSanityState;
+};
+
 
 
 

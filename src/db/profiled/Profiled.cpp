@@ -70,15 +70,20 @@ TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 }
 
 
-void ProfiledDB::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos)
+void ProfiledDB::getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos)
 {
     PROFILE_PREFIXED("DB::", db->getSubmittedJobs(jobs, vos));
 }
 
 
-void ProfiledDB::getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
+void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobId(jobs, files, reuse));
+    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files, reuse));
+}
+
+void ProfiledDB::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getByJobId(files));
 }
 
 
@@ -824,7 +829,7 @@ void ProfiledDB::setOptimizerMode(int mode)
 }
 
 void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId,
-        int retry, const std::string& reason)
+                                  int retry, const std::string& reason)
 {
     PROFILE_PREFIXED("DB::", db->setRetryTransfer(jobId, fileId, retry, reason));
 }

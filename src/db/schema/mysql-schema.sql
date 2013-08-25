@@ -1,6 +1,30 @@
 SET storage_engine=INNODB;
 
 --
+-- Distinct source_se/dest_se/vo_name pairs
+--
+CREATE TABLE t_distinct_se (
+  source_se    VARCHAR(255) NOT NULL,
+  dest_se    VARCHAR(255) NOT NULL,
+  vo_name     VARCHAR(255) NOT NULL,
+    CONSTRAINT t_distinct_se_pk PRIMARY KEY (source_se,dest_se,vo_name)
+);
+
+--
+-- Only one host at a time must run sanity checks
+--
+CREATE TABLE t_server_sanity (
+  revertToSubmitted TINYINT(1) DEFAULT 0,
+  cancelWaitingFiles TINYINT(1) DEFAULT 0,
+  revertNotUsedFiles TINYINT(1) DEFAULT 0,
+  forceFailTransfers TINYINT(1) DEFAULT 0,
+  setToFailOldQueuedJobs TINYINT(1) DEFAULT 0,
+  checkSanityState TINYINT(1) DEFAULT 0,
+  executiontime          TIMESTAMP NULL DEFAULT NULL
+); 
+INSERT INTO t_server_sanity (revertToSubmitted,cancelWaitingFiles,revertNotUsedFiles,forceFailTransfers,setToFailOldQueuedJobs,checkSanityState,executiontime) values(0,0,0,0,0,0,UTC_TIMESTAMP());
+
+--
 -- Holds various server configuration options
 --
 CREATE TABLE t_server_config (
@@ -627,36 +651,29 @@ CREATE TABLE t_stage_req (
 -- Index Section 
 --
 --
-
-
 -- t_job indexes:
 -- t_job(job_id) is primary key
 CREATE INDEX job_job_state    ON t_job(job_state);
-CREATE INDEX job_cred_id      ON t_job(user_dn(800),cred_id);
+CREATE INDEX job_vo_name      ON t_job(vo_name);
+CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
-CREATE INDEX job_submit_time     ON t_job(submit_time);
-CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
-CREATE INDEX job_cancel     ON t_job(cancel_job);
-CREATE INDEX job_reuse    ON t_job(reuse_job);
-CREATE INDEX idx_report_job      ON t_job (vo_name);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
+CREATE INDEX file_job_id     ON t_file(job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
-CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
-CREATE INDEX file_file_throughput ON t_file(throughput);
-CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se);
-CREATE INDEX file_transferhost on t_file(TRANSFERHOST);
-CREATE INDEX file_wait_timeout ON t_file(wait_timeout);
-CREATE INDEX file_job_state ON t_file(file_state);
+CREATE INDEX file_source_state ON t_file(source_se, file_state);
+CREATE INDEX file_dest_state ON t_file(dest_se, file_state);
+CREATE INDEX file_state_dest_surl ON t_file(file_state, dest_surl);
+CREATE INDEX job_reuse  ON t_job(reuse_job);
 
-CREATE INDEX optimize_active         ON t_optimize(active);
+
+
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
 
 CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
 CREATE INDEX t_server_config_retry         ON t_server_config(retry);
-
 
 
 

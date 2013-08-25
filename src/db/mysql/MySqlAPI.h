@@ -29,6 +29,33 @@ public:
     MySqlAPI();
     virtual ~MySqlAPI();
 
+    class CleanUpSanityChecks
+    {
+    public:
+        CleanUpSanityChecks(MySqlAPI* instanceLocal, soci::session& sql, struct message_sanity &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
+        {
+            returnValue = instanceLocal->assignSanityRuns(sql, msg);
+        }
+
+        ~CleanUpSanityChecks()
+        {
+            instanceLocal->resetSanityRuns(sql, msg);
+        }
+
+        bool getCleanUpSanityCheck()
+        {
+            return returnValue;
+        }
+
+        MySqlAPI* instanceLocal;
+        soci::session& sql;
+        struct message_sanity &msg;
+        bool returnValue;
+    };
+
+
+
+
     /**
      * Intialize database connection  by providing information from fts3config file
      **/
@@ -54,9 +81,13 @@ public:
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
+    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
-    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+    virtual void getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos);
+
+    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+
+    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
@@ -101,8 +132,6 @@ public:
     virtual bool getDebugMode(std::string source_hostname, std::string destin_hostname);
 
     virtual void setDebugMode(std::string source_hostname, std::string destin_hostname, std::string mode);
-
-    virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
     virtual void auditConfiguration(const std::string & dn, const std::string & config, const std::string & action);
 
@@ -307,6 +336,10 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
+    bool assignSanityRuns(soci::session& sql, struct message_sanity &msg);
+
+    void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
@@ -319,9 +352,11 @@ private:
                                int nostreams, int timeout, int buffersize,std::string source_hostname, std::string destin_hostname);
 
     int getOptimizerMode(soci::session& sql);
-    
+
     void countFileInTerminalStates(soci::session& sql, std::string jobId,
-                                           unsigned int& finished, unsigned int& cancelled, unsigned int& failed);    
+                                   unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
+
+
 
     int lowDefault;
     int highDefault;

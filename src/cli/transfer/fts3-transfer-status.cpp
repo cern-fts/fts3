@@ -138,10 +138,11 @@ int main(int ac, char* av[])
                                                                 ;
 
                                                             vector<string> retries;
-                                                            for (ri = stat->retries.begin(); ri != stat->retries.end(); ++ri) {
-                                                                retries.resize((*ri)->attempt);
-                                                                retries[(*ri)->attempt - 1] = (*ri)->reason;
-                                                            }
+                                                            for (ri = stat->retries.begin(); ri != stat->retries.end(); ++ri)
+                                                                {
+                                                                    retries.resize((*ri)->attempt);
+                                                                    retries[(*ri)->attempt - 1] = (*ri)->reason;
+                                                                }
 
                                                             cli->printer().file_list(values, retries);
                                                         }

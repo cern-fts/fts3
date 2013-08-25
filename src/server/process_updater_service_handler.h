@@ -85,7 +85,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessUpdaterServiceHandler", desc)
     {
-	messages.reserve(1000);
+        messages.reserve(1000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -121,13 +121,14 @@ protected:
             {
                 try
                     {
-		        if(stopThreads && messages.empty() && queueMsgRecovery.empty() ){
-				break;
-			}		    
+                        if(stopThreads && messages.empty() && queueMsgRecovery.empty() )
+                            {
+                                break;
+                            }
 
                         if(fs::is_empty(fs::path(STALLED_DIR)))
                             {
-                                sleep(1);
+                                sleep(2);
                                 continue;
                             }
 
@@ -150,7 +151,7 @@ protected:
 
                         if(messages.empty())
                             {
-                                sleep(2);
+                                sleep(3);
                                 continue;
                             }
                         else
@@ -169,7 +170,19 @@ protected:
                                                                                 << "\nTransferred: " << (*iter).transferred
                                                                                 << commit;
                                                 ThreadSafeList::get_instance().updateMsg(*iter);
+                                            }
+                                        else
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a stall message: "
+                                                                               << iter->msg_error_reason << commit;
+                                            }
+                                    }
 
+                                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                    {
+                                        if (iter->msg_errno == 0)
+                                            {
+                                                std::string job = std::string((*iter).job_id).substr(0, 36);
                                                 // Update progress
                                                 DBSingleton::instance().getDBObjectInstance()
                                                 ->updateFileTransferProgress(job, (*iter).file_id,
@@ -182,30 +195,32 @@ protected:
                                                                                << iter->msg_error_reason << commit;
                                             }
                                     }
+
+
                                 messages.clear();
                             }
-                        sleep(2);
+                        sleep(3);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);
+                        sleep(3);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);
+                        sleep(3);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(2);
+                        sleep(3);
                     }
             }
     }

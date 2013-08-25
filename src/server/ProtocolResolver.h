@@ -48,7 +48,7 @@ using namespace boost;
  */
 class ProtocolResolver
 {
-	/**
+    /**
      * protocol data:
      * - number of streams
      * - no activity timeout
@@ -57,9 +57,9 @@ class ProtocolResolver
      */
     struct protocol
     {
-        protocol():nostreams(4),no_tx_activity_to(0),tcp_buffer_size(0),urlcopy_tx_to(3600){}
-    
-    	int nostreams;
+        protocol():nostreams(4),no_tx_activity_to(0),tcp_buffer_size(0),urlcopy_tx_to(3600) {}
+
+        int nostreams;
         int no_tx_activity_to;
         int tcp_buffer_size;
         int urlcopy_tx_to;
@@ -68,7 +68,7 @@ class ProtocolResolver
 
         int& operator[] (const int index)
         {
-        	return ((int*) this)[index];
+            return ((int*) this)[index];
         }
     };
 

@@ -66,9 +66,11 @@ public:
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
+    virtual void getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos);
 
-    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+
+    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
@@ -326,7 +328,7 @@ private:
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
     int getOptimizerMode();
     void countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
-                                           unsigned int& finished, unsigned int& cancelled, unsigned int& failed);    
+                                   unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
     OptimizerSample optimizerObject;
     std::string ftsHostName;
     int lowDefault;

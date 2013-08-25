@@ -121,7 +121,7 @@ public:
                         if(retry == -1)  //unlimited times
                             {
                                 DBSingleton::instance().getDBObjectInstance()
-                                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                 return true;
                             }
@@ -130,7 +130,7 @@ public:
                                 if(retryTimes <= retry-1 )
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
-                                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                         SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }
@@ -205,21 +205,15 @@ protected:
             {
                 try
                     {
-		        if(stopThreads && messages.empty() && queueMsgRecovery.empty() ){
-				break;
-			}
-		    
+                        if(stopThreads && messages.empty() && queueMsgRecovery.empty() )
+                            {
+                                break;
+                            }
+
 
                         if(fs::is_empty(fs::path(STATUS_DIR)))
                             {
-                                usleep(400000);
-                                continue;
-                            }
-
-                        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
-                        if(!alive)
-                            {
-                                usleep(400000);
+                                sleep(1);
                                 continue;
                             }
 
@@ -282,28 +276,28 @@ protected:
                                 messages.clear();
                             }
 
-                        usleep(400000);
+                        sleep(1);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        usleep(400000);
+                        sleep(1);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        usleep(400000);
+                        sleep(1);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        usleep(400000);
+                        sleep(1);
                     }
             }
     }

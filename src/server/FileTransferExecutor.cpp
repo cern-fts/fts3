@@ -46,8 +46,8 @@ FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimi
     t(bind(&FileTransferExecutor::execute, this)),
     active(true),
     scheduled(0)
-    
-{    
+
+{
 }
 
 FileTransferExecutor::~FileTransferExecutor()
@@ -121,7 +121,7 @@ void FileTransferExecutor::execute()
 
                     if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
                         {
-                    		++scheduled;
+                            ++scheduled;
 
                             SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
                             bool isAutoTuned = false;

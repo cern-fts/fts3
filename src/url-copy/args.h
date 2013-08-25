@@ -23,11 +23,12 @@ public:
     bool logToStderr;
     bool reuseFile;
 
-    enum CompareChecksum {
-          CHECKSUM_DONT_CHECK = 0, // Do not check checksum
-          CHECKSUM_STRICT,          // Strict comparison
-          CHECKSUM_RELAXED          // Relaxed comparision. i.e. do not fail on empty checksum on source
-         } compareChecksum;
+    enum CompareChecksum
+    {
+        CHECKSUM_DONT_CHECK = 0, // Do not check checksum
+        CHECKSUM_STRICT,          // Strict comparison
+        CHECKSUM_RELAXED          // Relaxed comparision. i.e. do not fail on empty checksum on source
+    } compareChecksum;
 
     // Arguments
     std::string infosys;

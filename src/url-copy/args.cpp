@@ -212,7 +212,8 @@ int UrlCopyOpts::parse(int argc, char * const argv[])
 
 std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum& c)
 {
-    switch (c) {
+    switch (c)
+        {
         case UrlCopyOpts::CompareChecksum::CHECKSUM_DONT_CHECK:
             out << "No checksum comparison";
             break;
@@ -224,6 +225,6 @@ std::ostream& operator << (std::ostream& out, const UrlCopyOpts::CompareChecksum
             break;
         default:
             out << "Uknown value!";
-    }
+        }
     return out;
 }

@@ -21,4 +21,7 @@ TRUNCATE t_optimize;
 TRUNCATE t_optimize_mode;
 TRUNCATE t_optimizer_evolution;
 TRUNCATE t_server_config;
+TRUNCATE t_server_sanity;
+TRUNCATE t_distinct_se;
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
+INSERT INTO t_server_sanity (revertToSubmitted,cancelWaitingFiles,revertNotUsedFiles,forceFailTransfers,setToFailOldQueuedJobs,checkSanityState) values(0,0,0,0,0,0);

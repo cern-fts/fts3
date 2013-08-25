@@ -103,15 +103,17 @@ protected:
     void executeTransfer_a()
     {
         static unsigned int counter = 0;
+        static unsigned int counterFailAll = 0;
 
         while (1)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
-		        if(stopThreads && messages.empty()){
-				break;
-			}		    
-		    
+                        if(stopThreads && messages.empty())
+                            {
+                                break;
+                            }
+
                         ThreadSafeList::get_instance().checkExpiredMsg(messages);
 
                         if (!messages.empty())
@@ -130,25 +132,31 @@ protected:
                             }
 
                         /*set to fail all old queued jobs which have exceeded max queue time*/
-                        std::vector<std::string> jobs;
-                        DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
-                        if(!jobs.empty())
+                        counterFailAll++;
+                        if (counterFailAll == 50)
                             {
-                                std::vector<std::string>::const_iterator iter2;
-                                for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
+                                std::vector<std::string> jobs;
+                                DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
+                                if(!jobs.empty())
                                     {
-                                        SingleTrStateInstance::instance().sendStateMessage((*iter2), -1);
+                                        std::vector<std::string>::const_iterator iter2;
+                                        for (iter2 = jobs.begin(); iter2 != jobs.end(); ++iter2)
+                                            {
+                                                SingleTrStateInstance::instance().sendStateMessage((*iter2), -1);
+                                            }
+                                        jobs.clear();
                                     }
-                                jobs.clear();
+                                counterFailAll = 0;
                             }
-                        messages.clear();
 
                         counter++;
                         if (counter == 500)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter = 0;
-                            }	    
+                            }
+
+                        messages.clear();
                     }
                 catch (const std::exception& e)
                     {

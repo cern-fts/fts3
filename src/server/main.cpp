@@ -104,7 +104,7 @@ void _handle_sigint(int)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     boost::thread bt(taskTimer, 25);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(15);
+    sleep(25);
     theServer().stop();
     sleep(4);
     fts3_teardown_db_backend();
