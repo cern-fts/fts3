@@ -669,7 +669,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                          "       f.source_se, f.dest_se, f.selection_strategy  "
-                                                         "FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id) "
+                                                         "FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
                                                          "WHERE f.job_id = :jobId AND"
                                                          "    f.file_state = 'SUBMITTED' AND "
                                                          "    f.job_finished IS NULL AND "                                                       
@@ -1522,12 +1522,12 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
 
     try
         {
-            soci::rowset<soci::row> rs = (sql.prepare << "SELECT t_file.pid, t_file.job_id FROM t_file, t_job "
-                                          "WHERE t_file.job_id = t_job.job_id AND "
-                                          "      t_file.FILE_STATE = 'CANCELED' AND "
-                                          "      t_file.PID IS NOT NULL AND "
-                                          "      t_job.cancel_job = 'Y' AND t_file.job_finished IS NOT NULL AND "
-					  " t_job.job_finished >= date_sub(utc_timestamp(), interval 30 minute) ");
+            soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid, f.job_id FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                          "WHERE  "
+                                          "      f.FILE_STATE = 'CANCELED' AND "
+                                          "      f.PID IS NOT NULL AND "
+                                          "      j.cancel_job = 'Y' AND j.job_finished IS NOT NULL AND "
+					  " j.job_finished >= date_sub(utc_timestamp(), interval 30 minute) ");
 
             std::string jobId;
 
@@ -2544,12 +2544,12 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
 
             soci::statement stmt = (
                                        sql.prepare <<
-                                       " SELECT t_file.job_id, t_file.file_id, t_file.start_time, t_file.pid, t_file.internal_file_params, "
-                                       " t_file.transferHost, t_job.reuse_job "
-                                       " FROM t_file, t_job "
-                                       " WHERE t_job.job_id = t_file.job_id AND t_file.file_state='ACTIVE' AND pid IS NOT NULL "
-                                       " and t_file.job_finished IS NULL and t_file.start_time is not NULL "
-                                       " and t_file.internal_file_params is not null and t_file.transferHost is not null",
+                                       " SELECT f.job_id, f.file_id, f.start_time, f.pid, f.internal_file_params, "
+                                       " f.transferHost, j.reuse_job "
+                                       " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                       " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL "
+                                       " and f.job_finished IS NULL and f.start_time is not NULL "
+                                       " and f.internal_file_params is not null and f.transferHost is not null",
                                        soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
                                        soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
                                    );
@@ -2744,10 +2744,9 @@ void MySqlAPI::revertToSubmitted()
             sql.begin();
 
             soci::indicator reuseInd = soci::i_ok;
-            soci::statement readyStmt = (sql.prepare << "SELECT t_file.start_time, t_file.file_id, t_file.job_id, t_job.reuse_job "
-                                         " FROM t_file, t_job "
-                                         " WHERE t_file.file_state = 'READY'  "
-                                         " AND t_file.job_id = t_job.job_id ",
+            soci::statement readyStmt = (sql.prepare << "SELECT f.start_time, f.file_id, f.job_id, j.reuse_job "
+                                         " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                         " WHERE f.file_state = 'READY'  ",                                       
                                          soci::into(startTime),
                                          soci::into(fileId),
                                          soci::into(jobId),
@@ -4310,12 +4309,12 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT distinct(t_file.source_se) "
-                                                     " FROM t_file, t_job "
-                                                     " WHERE t_job.job_id = t_file.job_id "
-                                                     "	AND (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) "
-                                                     "	AND t_file.file_state = 'STAGING' "
-                                                     "	AND t_file.staging_start IS NULL and t_file.source_surl like 'srm%' "
+                                                     " SELECT distinct(f.source_se) "
+                                                     " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                                     " WHERE "
+                                                     "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                                     "	AND f.file_state = 'STAGING' "
+                                                     "	AND f.staging_start IS NULL and f.source_surl like 'srm%' "
                                                  );
 
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -4328,12 +4327,12 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 
                             sql <<
                                 " SELECT COUNT(*) "
-                                " FROM t_file, t_job "
-                                " WHERE t_job.job_id = t_file.job_id "
-                                " 	AND (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) "
-                                "	AND t_file.file_state = 'STAGING' "
-                                "	AND t_file.staging_start IS NOT NULL "
-                                "	AND t_file.source_se = :hostV  and t_file.source_surl like 'srm%'  ",
+                                " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                " WHERE "
+                                "       (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                "	AND f.file_state = 'STAGING' "
+                                "	AND f.staging_start IS NOT NULL "
+                                "	AND f.source_se = :hostV  and f.source_surl like 'srm%'  ",
                                 soci::use(hostV),
                                 soci::into(currentStagingFilesNoConfig)
                                 ;
@@ -4342,14 +4341,14 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 
                             soci::rowset<soci::row> rs2 = (
                                                               sql.prepare <<
-                                                              " SELECT t_file.source_surl, t_file.job_id, t_file.file_id, t_job.copy_pin_lifetime, t_job.bring_online "
-                                                              " FROM t_file, t_job "
-                                                              " WHERE t_job.job_id = t_file.job_id "
-                                                              " 	AND (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) "
-                                                              "	AND t_file.staging_start IS NULL "
-                                                              "	AND t_file.file_state = 'STAGING' "
-                                                              "	AND t_file.source_se = :source_se and t_file.source_surl like 'srm%'   "
-                                                              "	AND t_job.submit_host = :hostname "
+                                                              " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online "
+                                                              " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                                              " WHERE  "
+                                                              " (j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                                              "	AND f.staging_start IS NULL "
+                                                              "	AND f.file_state = 'STAGING' "
+                                                              "	AND f.source_se = :source_se and f.source_surl like 'srm%'   "
+                                                              "	AND j.submit_host = :hostname "
                                                               " LIMIT :limit",
                                                               soci::use(hostV),
                                                               soci::use(hostname),
@@ -4379,13 +4378,13 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
                     unsigned currentStagingFilesConfig = 0;
 
                     sql <<
-                        " SELECT COUNT(*) FROM t_file, t_job "
-                        " WHERE t_job.job_id = t_file.job_id "
-                        " 	AND (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) "
-                        "	AND t_file.file_state = 'STAGING' "
-                        "	AND t_file.STAGING_START IS NOT NULL "
-                        " 	AND t_job.vo_name = :vo_name "
-                        "	AND t_file.source_se = :source_se and t_file.source_surl like 'srm%'   ",
+                        " SELECT COUNT(*) FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                        " WHERE  "
+                        " 	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                        "	AND f.file_state = 'STAGING' "
+                        "	AND f.STAGING_START IS NOT NULL "
+                        " 	AND j.vo_name = :vo_name "
+                        "	AND f.source_se = :source_se and f.source_surl like 'srm%'   ",
                         soci::use(voName),
                         soci::use(hostName),
                         soci::into(currentStagingFilesConfig)
@@ -4395,15 +4394,15 @@ std::vector<message_bringonline> MySqlAPI::getBringOnlineFiles(std::string voNam
 
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT t_file.source_surl, t_file.job_id, t_file.file_id, t_job.copy_pin_lifetime, t_job.bring_online "
-                                                     " FROM t_file, t_job "
-                                                     " WHERE t_job.job_id = t_file.job_id "
-                                                     "	AND (t_job.BRING_ONLINE > 0 OR t_job.COPY_PIN_LIFETIME > 0) "
-                                                     " 	AND t_file.staging_START IS NULL "
-                                                     "	AND t_file.file_state = 'STAGING' "
-                                                     "	AND t_file.source_se = :source_se "
-                                                     "	AND t_job.vo_name = :vo_name and t_file.source_surl like 'srm%'   "
-                                                     "	AND t_job.SUBMIT_HOST = :hostname "
+                                                     " SELECT f.source_surl, f.job_id, f.file_id, j.copy_pin_lifetime, j.bring_online "
+                                                     " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                                     " WHERE  "
+                                                     "	(j.BRING_ONLINE > 0 OR j.COPY_PIN_LIFETIME > 0) "
+                                                     " 	AND f.staging_START IS NULL "
+                                                     "	AND f.file_state = 'STAGING' "
+                                                     "	AND f.source_se = :source_se "
+                                                     "	AND j.vo_name = :vo_name and f.source_surl like 'srm%'   "
+                                                     "	AND j.SUBMIT_HOST = :hostname "
                                                      " LIMIT :limit",
                                                      soci::use(hostName),
                                                      soci::use(voName),
@@ -4876,14 +4875,14 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
                                              " SELECT "
-                                             "	t_job.job_id, t_job.job_state, t_job.vo_name, "
-                                             "	t_job.job_metadata, t_job.retry AS retry_max, t_file.file_id, "
-                                             "	t_file.file_state, t_file.retry AS retry_counter, t_file.file_metadata, "
-                                             "	t_file.source_se, t_file.dest_se "
-                                             " FROM t_file, t_job "
-                                             " WHERE t_job.job_id = t_file.job_id "
-                                             " 	AND t_job.job_id = :jobId "
-                                             "	AND t_file.file_id = :fileId ",
+                                             "	j.job_id, j.job_state, j.vo_name, "
+                                             "	j.job_metadata, j.retry AS retry_max, f.file_id, "
+                                             "	f.file_state, f.retry AS retry_counter, f.file_metadata, "
+                                             "	f.source_se, f.dest_se "
+                                             " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                             " WHERE "
+                                             " 	j.job_id = :jobId "
+                                             "	AND f.file_id = :fileId ",
                                              soci::use(jobId),
                                              soci::use(fileId)
                                          );
@@ -5417,13 +5416,12 @@ void MySqlAPI::getFilesForNewSeCfg(std::string source, std::string destination, 
         {
             soci::rowset<int> rs = (
                                        sql.prepare <<
-                                       " select file_id "
-                                       " from t_file, t_job "
-                                       " where t_file.source_se like :source "
-                                       "	and t_file.dest_se like :destination "
-                                       "	and t_file.job_id = t_job.job_id "
-                                       "	and t_job.vo_name = :vo "
-                                       "	and t_file.file_state in ('READY', 'ACTIVE') ",
+                                       " select f.file_id "
+                                       " from t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                       " where f.source_se like :source "
+                                       "	and f.dest_se like :destination "
+                                       "	and j.vo_name = :vo "
+                                       "	and f.file_state in ('READY', 'ACTIVE') ",
                                        soci::use(source == "*" ? "%" : source),
                                        soci::use(destination == "*" ? "%" : destination),
                                        soci::use(vo)
@@ -5446,21 +5444,21 @@ void MySqlAPI::getFilesForNewGrCfg(std::string source, std::string destination, 
 
     std::string select;
     select +=
-        " select file_id "
-        " from t_file, t_job "
-        " where t_file.job_id = t_job.job_id "
-        "	and t_job.vo_name = :vo "
-        "	and t_file.file_state in ('READY', 'ACTIVE')";
+        " select f.file_id "
+        " from t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+        " where "
+        "	j.vo_name = :vo "
+        "	and f.file_state in ('READY', 'ACTIVE')";
     if (source != "*")
         select +=
-            "	and t_file.source_se in ( "
+            "	and f.source_se in ( "
             "		select member "
             "		from t_group_members "
             "		where groupName = :source "
             "	) ";
     if (destination != "*")
         select +=
-            "	and t_file.dest_se in ( "
+            "	and f.dest_se in ( "
             "		select member "
             "		from t_group_members "
             "		where groupName = :dest "
