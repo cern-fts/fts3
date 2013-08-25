@@ -409,7 +409,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                          "       f.source_se, f.dest_se, f.selection_strategy  "
-                                                         "FROM t_file f LEFT JOIN t_job j ON (f.job_id = j.job_id) "
+                                                         "FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
                                                          "WHERE f.file_state = 'SUBMITTED' AND  f.source_se = :source AND f.dest_se = :dest AND"
                                                          "    j.vo_name = :voName AND "
                                                          "    j.job_state IN ('ACTIVE', 'READY','SUBMITTED') AND "

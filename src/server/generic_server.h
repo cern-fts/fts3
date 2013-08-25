@@ -51,7 +51,7 @@ public:
         typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
         processUpdaterHandler.executeTransfer_p();
 	
-        wait for status updates to be processed and then start sanity threads*/
+        /*wait for status updates to be processed and then start sanity threads*/
         sleep(25);	
 
         typename TRAITS::ProcessServiceType processHandler;
