@@ -244,7 +244,7 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
 
 
 
-void MySqlAPI::getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos)
+void MySqlAPI::getSubmittedJobs(std::vector<std::string>& /*jobs*/, const std::string & /*vos*/)
 {
 
 }
@@ -296,7 +296,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     soci::row const& rVO = *iVO;
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
-                                                     sql.prepare << " select  distinct f.source_se, f.dest_se from t_job j LEFT JOIN t_file f "
+                                                     sql.prepare << " select  distinct f.source_se, f.dest_se from t_job j RIGHT JOIN t_file f "
 						     		    " ON (j.job_id = f.job_id) and j.vo_name = :vo_name and f.file_state='SUBMITTED' ",
                                                      		    soci::use(vo_name)
                                                  );
@@ -332,7 +332,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                          "       f.source_se, f.dest_se, f.selection_strategy  "
-                                                         "FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                                         "FROM t_job j RIGHT JOIN t_file f ON (j.job_id = f.job_id) "
                                                          "WHERE f.file_state = 'SUBMITTED' AND  f.source_se = :source AND f.dest_se = :dest AND"
                                                          "    j.vo_name = :voName AND "
                                                          "    j.job_state IN ('ACTIVE', 'READY','SUBMITTED') AND "
@@ -592,7 +592,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                          "       f.source_se, f.dest_se, f.selection_strategy  "
-                                                         "FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
+                                                         "FROM t_job j RIGHT JOIN t_file f ON (j.job_id = f.job_id) "
                                                          "WHERE f.job_id = :jobId AND"
                                                          "    f.file_state = 'SUBMITTED' AND "
                                                          "    f.job_finished IS NULL AND "                                                       
@@ -2660,7 +2660,7 @@ void MySqlAPI::revertToSubmitted()
             soci::indicator reuseInd = soci::i_ok;
             soci::statement readyStmt = (sql.prepare << "SELECT f.start_time, f.file_id, f.job_id, j.reuse_job "
                                          " FROM t_job j LEFT JOIN t_file f ON (j.job_id = f.job_id) "
-                                         " WHERE f.file_state = 'READY'  ",                                       
+                                         " WHERE f.file_state = 'READY' ",                                       
                                          soci::into(startTime),
                                          soci::into(fileId),
                                          soci::into(jobId),
