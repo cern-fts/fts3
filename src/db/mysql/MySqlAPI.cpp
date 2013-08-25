@@ -2732,8 +2732,8 @@ void MySqlAPI::revertToSubmitted()
 
             struct message_sanity msg;
             msg.revertToSubmitted = true;
-            CleanUpSanityChecks(this, sql, msg);
-            if(!msg.revertToSubmitted)
+            CleanUpSanityChecks temp(this, sql, msg);
+            if(!temp.getCleanUpSanityCheck())
                 return;
 
             struct tm startTime;
