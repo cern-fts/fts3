@@ -1,16 +1,6 @@
 SET storage_engine=INNODB;
 
 --
--- Distinct source_se/dest_se/vo_name pairs
---
-CREATE TABLE t_distinct_se (
-  source_se    VARCHAR(255) NOT NULL,
-  dest_se    VARCHAR(255) NOT NULL,
-  vo_name     VARCHAR(255) NOT NULL,
-    CONSTRAINT t_distinct_se_pk PRIMARY KEY (source_se,dest_se,vo_name)
-);
-
---
 -- Only one host at a time must run sanity checks
 --
 CREATE TABLE t_server_sanity (

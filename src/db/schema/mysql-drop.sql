@@ -26,5 +26,4 @@ DROP TABLE t_server_config;
 DROP TABLE t_profiling_info;
 DROP TABLE t_profiling_snapshot;
 DROP TABLE t_server_sanity;
-DROP TABLE t_distinct_se;
 

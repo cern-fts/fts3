@@ -246,85 +246,7 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
 
 void MySqlAPI::getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos)
 {
-    soci::session sql(*connectionPool);
 
-    try
-        {           
-            // Get uniqueue VOs
-            std::vector< std::string > distinctVO;
-            distinctVO.reserve(10);
-            std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-            distinct.reserve(1500); //approximation
-
-            soci::rowset<soci::row> rsVO = (
-                                               sql.prepare <<
-                                               " SELECT DISTINCT vo_name "
-                                               " FROM t_job "
-                                               " WHERE job_finished is NULL AND cancel_job IS NULL AND t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')"
-                                               <<
-                                               (vos == "*" ? "" : " AND t_job.vo_name IN " + vos)
-                                           );
-
-            for (soci::rowset<soci::row>::const_iterator iVO = rsVO.begin(); iVO != rsVO.end(); ++iVO)
-                {
-                    soci::row const& rVO = *iVO;
-                    std::string vo_name = rVO.get<std::string>("vo_name");
-                    soci::rowset<soci::row> rs = (
-                                                     sql.prepare <<
-                                                     " SELECT DISTINCT source_se, dest_se FROM t_distinct_se "
-                                                     " WHERE vo_name = :vo_name ",
-                                                     soci::use(vo_name)
-                                                 );
-                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                        {
-                            soci::row const& r = *i;
-                            distinct.push_back(
-                                boost::tuple< std::string, std::string, std::string>(
-                                    r.get<std::string>("source_se"),
-                                    r.get<std::string>("dest_se"),
-                                    vo_name
-                                )
-
-                            );
-                        }
-                }
-
-
-            // Query depends on vos
-            std::string query;
-
-            query = " SELECT j.job_id FROM t_job j LEFT JOIN t_file t ON (j.job_id = t.job_id)  WHERE "
-                    " j.job_finished is NULL AND j.vo_name = :vo AND j.cancel_job IS NULL AND  "
-                    " (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND t.file_state = 'SUBMITTED' AND t.source_se = :source AND t.dest_se = :dest "
-                    " ORDER BY j.priority DESC, j.submit_time DESC LIMIT 1";
-
-
-            // Iterate through pairs, getting jobs IF the VO has not run out of credits
-            // AND there are pending file transfers within the job
-            std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-            for (it = distinct.begin(); it != distinct.end(); ++it)
-                {
-                    boost::tuple<std::string, std::string, std::string>& triplet = *it;
-
-                    soci::rowset<std::string> rs = (
-                                                       sql.prepare <<
-                                                       query,
-                                                       soci::use(boost::get<2>(triplet)),
-                                                       soci::use(boost::get<0>(triplet)),
-                                                       soci::use(boost::get<1>(triplet))                                                   
-                                                   );
-
-                    for (soci::rowset<std::string>::const_iterator ji = rs.begin(); ji != rs.end(); ++ji)
-                        {
-                            std::string jobId = *ji;
-                            jobs.push_back(jobId);
-                        }
-                }
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
 }
 
 
@@ -374,7 +296,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     soci::row const& rVO = *iVO;
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
-                                                     sql.prepare << "select distinct source_se, dest_se, vo_name from t_distinct_se where vo_name = :vo_name ",
+                                                     sql.prepare << " select  distinct f.source_se, f.dest_se from t_job j LEFT JOIN t_file f "
+						     		    " ON (j.job_id = f.job_id) and j.vo_name = :vo_name and f.file_state='SUBMITTED' ",
                                                      		    soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -788,15 +711,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     soci::use(sourceSe),
                     soci::use(destSe),
                     soci::use(timeout)
-                                                   );
-						   
-		soci::statement distinctSe = (
-                    sql.prepare << "INSERT INTO t_distinct_se (source_se, dest_se, vo_name) "
-                        "VALUES (:source_se, :dest_se, :vo_name) "
-                        "ON DUPLICATE KEY UPDATE "
-                        "  source_se=:source_se, dest_se=:dest_se, vo_name=:vo_name",
-                        soci::use(sourceSe, "source_se"), soci::use(destSe, "dest_se"),soci::use(voName, "vo_name"));
-
+                                                   );						   
 
             std::vector<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
@@ -819,8 +734,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     else
                         {
                             pairStmt.execute();			    
-                        }			
-	          distinctSe.execute();			
+                        }				         		
                 }
 
             sql.commit();
