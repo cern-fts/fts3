@@ -1,8 +1,5 @@
 SET storage_engine=INNODB;
 
---
--- Only one host at a time must run sanity checks
---
 CREATE TABLE t_server_sanity (
   revertToSubmitted TINYINT(1) DEFAULT 0,
   cancelWaitingFiles TINYINT(1) DEFAULT 0,
@@ -17,7 +14,11 @@ CREATE TABLE t_server_sanity (
   t_setToFailOldQueuedJobs          TIMESTAMP NULL DEFAULT NULL,
   t_checkSanityState          TIMESTAMP NULL DEFAULT NULL   
 ); 
-INSERT INTO t_server_sanity (revertToSubmitted,cancelWaitingFiles,revertNotUsedFiles,forceFailTransfers,setToFailOldQueuedJobs,checkSanityState,t_revertToSubmitted,t_cancelWaitingFiles,t_revertNotUsedFiles,t_forceFailTransfers,t_setToFailOldQueuedJobs,t_checkSanityState) values(0,0,0,0,0,0,UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP());
+INSERT INTO t_server_sanity
+    (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState,
+     t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState)
+VALUES (0, 0, 0, 0, 0, 0,
+        UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP());
 
 --
 -- Holds various server configuration options
