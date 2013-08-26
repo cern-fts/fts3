@@ -851,7 +851,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
     TransferFiles* tr_files = NULL;
     std::vector<std::string>::const_iterator iter;
     std::string selecttag = "getByJobId";
-    
+
     std::vector<std::string> jobs;
 
     std::string select =
@@ -902,7 +902,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                 {
                     filesNum = mode_1[3];
                 }
-            
+
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
