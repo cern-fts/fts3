@@ -4386,6 +4386,12 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                     return;
                 }
 
+            struct message_sanity msg;
+            msg.forceFailTransfers = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+
             s = conn->createStatement(query, tag, pooledConnection);
             r = conn->createResultset(s, pooledConnection);
             while (r->next())
@@ -4759,6 +4765,12 @@ void OracleAPI::revertToSubmitted()
         {
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
+                return;
+
+            struct message_sanity msg;
+            msg.revertToSubmitted = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck())
                 return;
 
             s2 = conn->createStatement(query2, tag2, pooledConnection);
@@ -7956,6 +7968,12 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
             if (!pooledConnection)
                 return;
 
+            struct message_sanity msg;
+            msg.setToFailOldQueuedJobs = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+
             s3 = conn->createStatement(query3.str(), tag3, pooledConnection);
             r = conn->createResultset(s3, pooledConnection);
             while (r->next())
@@ -9837,6 +9855,12 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection) return;
 
+            struct message_sanity msg;
+            msg.cancelWaitingFiles = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+
             s = conn->createStatement(query, tag, pooledConnection);
             r = conn->createResultset(s, pooledConnection);
 
@@ -9919,6 +9943,12 @@ void OracleAPI::revertNotUsedFiles()
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection) return;
 
+            struct message_sanity msg;
+            msg.revertNotUsedFiles = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+
             s = conn->createStatement(update, tag, pooledConnection);
             s->executeUpdate();
 
@@ -9983,6 +10013,12 @@ void OracleAPI::checkSanityState()
         {
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection) return;
+
+            struct message_sanity msg;
+            msg.checkSanityState = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
 
             s[0] = conn->createStatement(sql[0], tag[0], pooledConnection);
             r[0] = conn->createResultset(s[0], pooledConnection);
@@ -11387,6 +11423,162 @@ void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
     conn->releasePooledConnection(pooledConnection);
+}
+
+
+bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &msg)
+{
+    long long rows = 0;
+
+    try
+        {
+            if(msg.checkSanityState)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set checkSanityState=1, t_checkSanityState = CURRENT_TIMESTAMP "
+                            "where checkSanityState=0"
+                             " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) ",
+                             "assignSanityRuns/checkSanityState", pooled);
+                    rows = stmt->executeUpdate();
+                    msg.checkSanityState = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.checkSanityState;
+                }
+            else if(msg.setToFailOldQueuedJobs)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = CURRENT_TIMESTAMP "
+                            " where setToFailOldQueuedJobs=0"
+                            " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
+                            "assignSanityRuns/setToFailOldQueuedJobs",
+                            pooled);
+                    rows = stmt->executeUpdate();
+                    msg.setToFailOldQueuedJobs = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.setToFailOldQueuedJobs;
+                }
+            else if(msg.forceFailTransfers)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = CURRENT_TIMESTAMP "
+                            " where forceFailTransfers=0"
+                            " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
+                            "assignSanityRuns/forceFailTransfers",
+                            pooled);
+                    rows = stmt->executeUpdate();
+                    msg.forceFailTransfers = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.forceFailTransfers;
+                }
+            else if(msg.revertToSubmitted)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = CURRENT_TIMESTAMP "
+                            " where revertToSubmitted=0"
+                            " AND (t_revertToSubmitted < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                            "assignSanityRuns/revertToSubmitted",
+                            pooled);
+                    rows = stmt->executeUpdate();
+                    msg.revertToSubmitted = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.revertToSubmitted;
+                }
+            else if(msg.cancelWaitingFiles)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = CURRENT_TIMESTAMP "
+                            "  where cancelWaitingFiles=0"
+                            " AND (t_cancelWaitingFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                            "assignSanityRuns/cancelWaitingFiles",
+                            pooled);
+                    rows = stmt->executeUpdate();
+                    msg.cancelWaitingFiles = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.cancelWaitingFiles;
+                }
+            else if(msg.revertNotUsedFiles)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = CURRENT_TIMESTAMP "
+                            " where revertNotUsedFiles=0"
+                            " AND (t_revertNotUsedFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                            "assignSanityRuns/revertNotUsedFiles",
+                            pooled);
+                    rows = stmt->executeUpdate();
+                    msg.revertNotUsedFiles = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.revertNotUsedFiles;
+                }
+        }
+    catch (std::exception& e)
+        {
+            conn->rollback(pooled);
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return false;
+}
+
+
+void OracleAPI::resetSanityRuns(SafeConnection& pooled, struct message_sanity &msg)
+{
+    try
+        {
+            if(msg.checkSanityState)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set checkSanityState=0 where checkSanityState=1",
+                            "resetSanityRuns/checkSanityState",
+                            pooled);
+                    stmt->executeUpdate();
+                }
+            else if(msg.setToFailOldQueuedJobs)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set setToFailOldQueuedJobs=0 where setToFailOldQueuedJobs=1",
+                            "resetSanityRuns/setToFailOldQueuedJobs",
+                            pooled);
+                    stmt->executeUpdate();
+                }
+            else if(msg.forceFailTransfers)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set forceFailTransfers=0 where forceFailTransfers=1",
+                            "resetSanityRuns/forceFailTransfers",
+                            pooled);
+                    stmt->executeUpdate();
+                }
+            else if(msg.revertToSubmitted)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set revertToSubmitted=0 where revertToSubmitted=1",
+                            "resetSanityRuns/revertToSubmitted",
+                            pooled);
+                    stmt->executeUpdate();
+                }
+            else if(msg.cancelWaitingFiles)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set cancelWaitingFiles=0 where cancelWaitingFiles=1",
+                            "resetSanityRuns/cancelWaitingFiles",
+                            pooled);
+                    stmt->executeUpdate();
+                }
+            else if(msg.revertNotUsedFiles)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                            "update t_server_sanity set revertNotUsedFiles=0 where revertNotUsedFiles=1",
+                            "resetSanityRuns/revertNotUsedFiles",
+                            pooled);
+                    stmt->executeUpdate();
+                }
+            conn->commit(pooled);
+        }
+    catch (std::exception& e)
+        {
+            conn->rollback(pooled);
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
 }
 
 

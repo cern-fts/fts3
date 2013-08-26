@@ -41,6 +41,31 @@ public:
     OracleAPI();
     virtual ~OracleAPI();
 
+    class CleanUpSanityChecks
+    {
+    public:
+        CleanUpSanityChecks(OracleAPI* instanceLocal,SafeConnection& pooled, struct message_sanity &msg):
+            instanceLocal(instanceLocal), pooled(pooled), msg(msg), returnValue(false)
+        {
+            returnValue = instanceLocal->assignSanityRuns(pooled, msg);
+        }
+
+        ~CleanUpSanityChecks()
+        {
+            instanceLocal->resetSanityRuns(pooled, msg);
+        }
+
+        bool getCleanUpSanityCheck()
+        {
+            return returnValue;
+        }
+
+        OracleAPI* instanceLocal;
+        SafeConnection& pooled;
+        struct message_sanity &msg;
+        bool returnValue;
+    };
+
     /**
      * Intialize database connection  by providing information from fts3config file
      **/
@@ -319,6 +344,11 @@ public:
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
+
+    // These are not exposed by the db interface
+    bool assignSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+
+    void resetSanityRuns(SafeConnection& conn, struct message_sanity &msg);
 
 private:
     OracleConnection *conn;
