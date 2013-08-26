@@ -244,12 +244,6 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
 
 
 
-void MySqlAPI::getSubmittedJobs(std::vector<std::string>& /*jobs*/, const std::string & /*vos*/)
-{
-
-}
-
-
 void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
 {
     soci::session sql(*connectionPool);
