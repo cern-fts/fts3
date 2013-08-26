@@ -2139,11 +2139,12 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             double nFailedLastHour=0, nFinishedLastHour=0;
             int nActive=0;
             double nFailedAll=0.0, nFinishedAll=0.0, throughput=0.0, avgThr = 0.0;
+	    soci::indicator isNull1 = soci::i_ok;
             soci::indicator isNull2 = soci::i_ok;
 
             sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
-                " source_se=:source and dest_se=:dst and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
-                " and job_finished >= date_sub(utc_timestamp(), interval 5 minute)",
+                " source_se=:source and dest_se=:dst and file_state='FINISHED' "
+                " and job_finished >= date_sub(utc_timestamp(), interval 1 minute)",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
             if (isNull2 == soci::i_null)
                 {
@@ -2158,8 +2159,16 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') and job_finished is null ",
                 soci::use(destin_hostname), soci::into(nActiveDest);
-
-            throughput = avgThr;          
+		
+		
+	    sql << "SELECT throughput from t_file where source_se=:source and dest_se=:dst and "
+	    	"file_state='FINISHED' order by FILE_ID DESC LIMIT 1",
+                soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1);
+            if (isNull1 == soci::i_null)
+                {
+                    throughput = 0.0;
+                }	    
+         
 
             soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                             "WHERE "
@@ -2325,7 +2334,7 @@ int MySqlAPI::getCredits(const std::string & source_hostname, const std::string 
 
     sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
         " source_se=:source and dest_se=:dst "
-        " and job_finished >= date_sub(utc_timestamp(), interval '5' minute)",
+        " and job_finished >= date_sub(utc_timestamp(), interval '1' minute)",
         soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull);
     if (isNull == soci::i_null)
         {
@@ -2340,22 +2349,15 @@ int MySqlAPI::getCredits(const std::string & source_hostname, const std::string 
         "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE')  and job_finished is null",
         soci::use(destin_hostname), soci::into(nActiveDest);
 
-    sql <<
-        " select throughput "
-        " from t_file "
-        " where source_se = :source "
-        " 	and dest_se = :dest "
-        "	and throughput is not NULL "
-        "	and throughput != 0 "
-        " order by job_finished DESC "
-        " LIMIT 1 ",
-        soci::use(source_hostname), soci::use(destin_hostname),
-        soci::into(throughput, isNull);
 
-    if (isNull == soci::i_null)
-        {
-            throughput = 0.0;
-        }
+    sql << "SELECT throughput from t_file where source_se=:source and dest_se=:dst and "
+	    "file_state='FINISHED' order by FILE_ID DESC LIMIT 1",
+            soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull);
+            if (isNull == soci::i_null)
+            {
+                    throughput = 0.0;
+            }	    
+         
 
     soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                     "WHERE "
