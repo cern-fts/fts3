@@ -55,7 +55,8 @@ extern std::string stackTrace;
 bool stopThreads = false;
 const char * const PROXY_NAME_PREFIX = "x509up_h";
 const std::string repository = "/tmp/";
-const char *hostcert = "/etc/grid-security/hostcert.pem";
+const char *hostcert = "/etc/grid-security/fts3hostcert.pem";
+const char *hostkey = "/etc/grid-security/fts3hostkey.pem";
 const char *configfile = "/etc/fts3/fts3config";
 
 // exp backoff for bringonline ops
@@ -342,6 +343,10 @@ int DoServer(int argc, char** argv)
             REGISTER_SIGNAL(SIGBUS);
             REGISTER_SIGNAL(SIGTRAP);
             REGISTER_SIGNAL(SIGSYS);
+	    
+            // Set X509_ environment variables properly
+            setenv("X509_USER_CERT", hostcert, 1);
+            setenv("X509_USER_KEY", hostkey, 1);	    
 
             //re-read here
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);

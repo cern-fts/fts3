@@ -606,7 +606,7 @@ CREATE TABLE t_file_retry_errors (
     CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
     CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
 );
-CREATE INDEX t_file_retry_fid ON t_file_retry_errors (file_id);
+
 
 -- 
 -- t_file_share_config the se configuration to be used by the job
@@ -663,20 +663,9 @@ CREATE INDEX file_state_dest_surl ON t_file(file_state, dest_surl);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
 
 
-
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
 
-CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
-CREATE INDEX t_server_config_retry         ON t_server_config(retry);
-
-
-
--- Config index
-
-CREATE INDEX idx_debug      ON t_debug (debug);
-CREATE INDEX idx_source      ON t_debug (source_se);
-CREATE INDEX idx_dest      ON t_debug (dest_se);
 -- 
 --
 -- Schema version
@@ -696,8 +685,6 @@ INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 
-CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
-CREATE INDEX t_file_backup_1            ON t_file_backup(file_id, job_id);
 
 -- Profiling information
 CREATE TABLE t_profiling_info (
