@@ -33,6 +33,57 @@
 using namespace FTS3_COMMON_NAMESPACE;
 using namespace oracle::occi;
 
+
+class ConnectionDeallocator {
+public:
+    ConnectionDeallocator(oracle::occi::StatelessConnectionPool* pool): pool(pool) {}
+
+    void operator () (oracle::occi::Connection* p) {
+        if (pool && p)
+            pool->releaseConnection(p);
+    }
+
+private:
+    oracle::occi::StatelessConnectionPool* pool;
+};
+typedef boost::shared_ptr<oracle::occi::Connection> SafeConnection;
+
+
+class StatementDeallocator {
+public:
+    StatementDeallocator(SafeConnection& conn, const std::string& tag):
+        conn(conn), tag(tag) {};
+
+    void operator () (oracle::occi::Statement* s) {
+        if (conn && s) {
+            if (tag.length() == 0)
+                conn->terminateStatement(s);
+            else
+                conn->terminateStatement(s, tag);
+        }
+    }
+
+private:
+    SafeConnection conn;
+    std::string tag;
+};
+typedef boost::shared_ptr<oracle::occi::Statement> SafeStatement;
+
+
+class ResultSetDeallocator {
+public:
+    ResultSetDeallocator(SafeStatement& stmt): stmt(stmt) {}
+
+   void operator () (oracle::occi::ResultSet* rs) {
+       if (stmt && rs)
+           stmt->closeResultSet(rs);
+   }
+private:
+    SafeStatement stmt;
+};
+typedef boost::shared_ptr<oracle::occi::ResultSet> SafeResultSet;
+
+
 /**
  * OracleConnection class declaration
  **/
@@ -45,7 +96,7 @@ public:
      * OracleConnection class ctr with parameters
      **/
 
-    OracleConnection(const std::string username,const  std::string password, const std::string connectString, int pooledConn);
+    OracleConnection(const std::string username, const  std::string password, const std::string connectString, int pooledConn);
 
     /**
      * OracleConnection class ctr
@@ -61,36 +112,24 @@ public:
     /**
      * OracleConnection get resultset
      **/
-    oracle::occi::ResultSet* createResultset(oracle::occi::Statement* s,oracle::occi::Connection* conn);
+    SafeResultSet createResultset(SafeStatement& stmt, SafeConnection&);
 
     /**
      * OracleConnection create a statement
      **/
-    oracle::occi::Statement* createStatement(std::string sql, std::string tag,oracle::occi::Connection* conn);
-
-    /**
-     * OracleConnection destroy a resultset
-     **/
-    void destroyResultset(oracle::occi::Statement* s, oracle::occi::ResultSet* r);
-
-    /**
-     * OracleConnection destroy a statement
-     **/
-    void destroyStatement(oracle::occi::Statement* s, std::string tag,oracle::occi::Connection* conn);
+    SafeStatement createStatement(std::string sql, std::string tag, SafeConnection& conn);
 
     /**
      * OracleConnection commit row in the database
      **/
-    void commit(oracle::occi::Connection* conn);
+    void commit(SafeConnection& conn);
 
     /**
      * OracleConnection rollback in case of an error
      **/
-    void rollback(oracle::occi::Connection* conn);
+    void rollback(SafeConnection& conn);
 
-    oracle::occi::Connection *getPooledConnection();
-
-    void releasePooledConnection(oracle::occi::Connection *conn);
+    SafeConnection getPooledConnection();
 
     /**
      * OracleConnection return the environment used in oracle
@@ -98,6 +137,19 @@ public:
     inline oracle::occi::Environment* getEnv()
     {
         return env;
+    }
+
+    /* For backwards compatibility */
+    void destroyResultset(SafeStatement&, SafeResultSet& r) {
+        r.reset();
+    }
+
+    void destroyStatement(SafeStatement& s, const std::string&, SafeConnection&) {
+        s.reset();
+    }
+
+    void releasePooledConnection(SafeConnection& c) {
+        c.reset();
     }
 
 private:

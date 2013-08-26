@@ -135,9 +135,9 @@ public:
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
-    virtual int getCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, oracle::occi::ResultSet** r, const std::string & source_hostname, const std::string & destin_hostname);
+    virtual int getCredits(SafeConnection& pooledConnection, SafeStatement s[], SafeResultSet r[], const std::string & source_hostname, const std::string & destin_hostname);
 
-    virtual void initVariablesForGetCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, std::string* query, std::string* tag, std::string basename);
+    virtual void initVariablesForGetCredits(SafeConnection& pooledConnection, SafeStatement s[], std::string* query, std::string* tag, std::string basename);
 
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
 
@@ -327,7 +327,7 @@ private:
     OracleTypeConversions *conv;
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
     int getOptimizerMode();
-    void countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
+    void countFileInTerminalStates(SafeConnection& pooledConnection, std::string jobId,
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
     OptimizerSample optimizerObject;
     std::string ftsHostName;

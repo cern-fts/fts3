@@ -115,9 +115,9 @@ bool OracleAPI::getInOutOfSe(const std::string & sourceSe, const std::string & d
                                 " and t_se.state='off' ";
 
     bool processSe = true;
-    oracle::occi::Statement* s_se = NULL;
-    oracle::occi::ResultSet* rSe = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s_se;
+    SafeResultSet rSe;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -191,11 +191,11 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
         }
 
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
-    TransferJobs* job = 0;
+    TransferJobs* job = NULL;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -284,11 +284,11 @@ void OracleAPI::getSubmittedJobs(std::vector<std::string>& jobs, const std::stri
         "	) "
         " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= :4 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -332,9 +332,6 @@ void OracleAPI::getSubmittedJobs(std::vector<std::string>& jobs, const std::stri
                 }
             conn->destroyResultset(s1, r1);
             conn->destroyStatement(s1, tag1, pooledConnection);
-            s1=NULL;
-            r1=NULL;
-
 
             s = conn->createStatement(query_stmt, tag, pooledConnection);
 
@@ -360,8 +357,6 @@ void OracleAPI::getSubmittedJobs(std::vector<std::string>& jobs, const std::stri
                 }
 
             conn->destroyStatement(s, tag, pooledConnection);
-            s=NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -430,12 +425,12 @@ void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<
         "	AND file_state = 'NOT_USED' "
         ;
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = 0;
-    oracle::occi::ResultSet* r1 = 0;
-    oracle::occi::Statement* s2 = 0;
-    oracle::occi::ResultSet* r2 = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -551,10 +546,10 @@ void OracleAPI::useFileReplica(std::string jobId, int fileId)
         "	AND file_state = 'NOT_USED'"
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s2;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -629,11 +624,11 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
 
     std::string query3 = "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:1 ";
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeStatement s2;
+    SafeStatement s3;
+    SafeResultSet r3;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -743,9 +738,9 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
         " 	(f1.retry_timestamp is NULL OR f1.retry_timestamp < :2) "
         " ORDER BY f1.file_id ASC) WHERE ROWNUM <= :3 ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -817,7 +812,6 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                             files[tr_files->VO_NAME].push_back(tr_files);
                         }
                     conn->destroyResultset(s, r);
-                    r=NULL;
                 }
 
             conn->destroyStatement(s, selecttag, pooledConnection);
@@ -879,9 +873,9 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
         " 	(f1.retry_timestamp is NULL OR f1.retry_timestamp < :2) "
         " ORDER BY f1.file_id ASC) WHERE ROWNUM <= :3 ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -946,7 +940,6 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                             files[tr_files->VO_NAME].push_back(tr_files);
                         }
                     conn->destroyResultset(s, r);
-                    r=NULL;
                 }
 
             conn->destroyStatement(s, selecttag, pooledConnection);
@@ -1018,9 +1011,9 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
         " ) "
         " VALUES (:1,:2,:3,:4,:5,:6,:7,:8, :9, :10, :11, :12, :13)";
 
-    oracle::occi::Statement* s_job_statement = NULL;
-    oracle::occi::Statement* s_file_statement = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s_job_statement;
+    SafeStatement s_file_statement;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -1162,9 +1155,9 @@ void OracleAPI::getTransferJobStatus(std::string requestID, bool archive, std::v
         }
 
     JobStatus* js = NULL;
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -1303,9 +1296,9 @@ void OracleAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::str
 
     tag.append("11");
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     try
@@ -1428,10 +1421,10 @@ void OracleAPI::getTransferFileStatus(std::string requestID, bool archive,
         }
 
 
-    FileTransferStatus* js = NULL;
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    FileTransferStatus* js = 0;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -1508,9 +1501,9 @@ void OracleAPI::getSe(Se* &se, std::string seName)
         "FROM t_se "
         "WHERE t_se.NAME=:1";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     try
@@ -1573,8 +1566,8 @@ void OracleAPI::addSe(std::string ENDPOINT, std::string SE_TYPE, std::string SIT
     std::string query = "INSERT INTO t_se (ENDPOINT, SE_TYPE, SITE, NAME, STATE, VERSION, HOST, SE_TRANSFER_TYPE, SE_TRANSFER_PROTOCOL,SE_CONTROL_PROTOCOL,GOCDB_ID) VALUES (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)";
     std::string tag = "addSe";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -1744,8 +1737,8 @@ void OracleAPI::updateSe(std::string ENDPOINT, std::string SE_TYPE, std::string 
     query.append(" WHERE NAME='");
     query.append(NAME);
     query.append("'");
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -1792,8 +1785,8 @@ void OracleAPI::deleteSe(std::string NAME)
     std::string query = "DELETE FROM T_SE WHERE NAME = :1";
     std::string tag = "deleteSe";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -1843,10 +1836,10 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
     std::stringstream query;
     bool isStagingState = false;
     std::string query1 = "select file_state from t_file where file_id=:1 and job_id=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -1867,8 +1860,6 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
                 }
             conn->destroyResultset(s1, r1);
             conn->destroyStatement(s1, tag1, pooledConnection);
-            s1=NULL;
-            r1=NULL;
 
             query << "UPDATE t_file SET file_state=:" << 1 << ", REASON=:" << ++index;
             if ((transfer_status.compare("FINISHED") == 0) || (transfer_status.compare("FAILED") == 0) || (transfer_status.compare("CANCELED") == 0))
@@ -1970,8 +1961,6 @@ bool OracleAPI::updateFileTransferStatus(double throughputIn, std::string job_id
             if(s->executeUpdate()!=0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s=NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2082,9 +2071,9 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
         "SET JOB_FINISHED=:1 "
         "WHERE job_id=:2 ";
 
-    oracle::occi::Statement* st = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement st;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -2113,7 +2102,6 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
                         }
                 }
             conn->destroyResultset(st, r);
-            r = NULL;
 
             //job finished
             if (finished == true)
@@ -2173,8 +2161,6 @@ bool OracleAPI::updateJobTransferStatus(int, std::string job_id, const std::stri
                 }
 
             conn->destroyStatement(st, "", pooledConnection);
-            st = NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2210,8 +2196,8 @@ void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, doub
     const std::string query    = "UPDATE t_file SET throughput = :1 "
                                  "WHERE job_id = :2 AND file_id = :3";
 
-    oracle::occi::Statement* st = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement st;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -2255,9 +2241,9 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
     std::vector<std::string>::const_iterator iter;
     time_t timed = time(NULL);
 
-    oracle::occi::Statement* st1 = NULL;
-    oracle::occi::Statement* st2 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement st1;
+    SafeStatement st2;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -2288,9 +2274,7 @@ void OracleAPI::cancelJob(std::vector<std::string>& requestIDs)
                 }
 
             conn->destroyStatement(st1, cancelJTag, pooledConnection);
-            st1 = NULL;
             conn->destroyStatement(st2, cancelFTag, pooledConnection);
-            st2 = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2328,10 +2312,10 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
     std::string update = "update t_job SET CANCEL_JOB='Y' where job_id=:1 AND cancel_job IS NULL ";
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeStatement s1;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -2397,9 +2381,9 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
     std::string query1 = "UPDATE t_credential_cache SET cert_request=:1, priv_key=:2, voms_attrs=:3 WHERE dlg_id=:4 AND dn=:5";
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s1;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -2424,8 +2408,6 @@ void OracleAPI::insertGrDPStorageCacheElement(std::string dlg_id, std::string dn
 
             conn->destroyStatement(s, tag, pooledConnection);
             conn->destroyStatement(s1, tag1, pooledConnection);
-            s = NULL;
-            s1 = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2462,8 +2444,8 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
     std::string query = "UPDATE t_credential_cache SET cert_request=:1, priv_key=:2, voms_attrs=:3 WHERE dlg_id=:4 AND dn=:5";
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -2480,7 +2462,6 @@ void OracleAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn
             if (s->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2512,9 +2493,9 @@ CredCache* OracleAPI::findGrDPStorageCacheElement(std::string delegationID, std:
     std::string query = "SELECT dlg_id, dn, voms_attrs, cert_request, priv_key FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2 ";
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -2574,8 +2555,8 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
     const std::string tag = "deleteGrDPStorageCacheElement";
     std::string query = "DELETE FROM t_credential_cache WHERE dlg_id = :1 AND dn = :2";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -2589,7 +2570,6 @@ void OracleAPI::deleteGrDPStorageCacheElement(std::string delegationID, std::str
             if (s->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2622,9 +2602,9 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
     const std::string tag1 = "updateGrDPStorageElementxxx";
     std::string query1 = "UPDATE t_credential SET proxy = :1, voms_attrs = :2, termination_time = :3 WHERE dlg_id = :4 AND dn = :5";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s1;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -2640,7 +2620,6 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
             s->executeUpdate();
             conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
 
             s1 = conn->createStatement(query1, tag1, pooledConnection);
             s1->setString(1, proxy);
@@ -2651,8 +2630,6 @@ void OracleAPI::insertGrDPStorageElement(std::string dlg_id, std::string dn, std
             s1->executeUpdate();
             conn->commit(pooledConnection);
             conn->destroyStatement(s1, tag1, pooledConnection);
-            s1 = NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2687,8 +2664,8 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
     std::string query = "UPDATE t_credential SET proxy = :1, voms_attrs = :2, termination_time = :3 WHERE dlg_id = :4 AND dn = :5";
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -2705,7 +2682,6 @@ void OracleAPI::updateGrDPStorageElement(std::string dlg_id, std::string dn, std
             if (s->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2739,9 +2715,9 @@ Cred* OracleAPI::findGrDPStorageElement(std::string delegationID, std::string dn
     std::string query = "SELECT dlg_id, dn, voms_attrs, proxy, termination_time FROM t_credential WHERE dlg_id = :1 AND dn = :2 ";
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -2801,8 +2777,8 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
     const std::string tag = "deleteGrDPStorageElement";
     std::string query = "DELETE FROM t_credential WHERE dlg_id = :1 AND dn = :2";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -2816,7 +2792,6 @@ void OracleAPI::deleteGrDPStorageElement(std::string delegationID, std::string d
             if (s->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -2848,9 +2823,9 @@ bool OracleAPI::getDebugMode(std::string source_hostname, std::string destin_hos
     bool debug = false;
     query = "SELECT source_se, dest_se, debug FROM t_debug WHERE source_se = :1 AND (dest_se = :2 or dest_se is null)";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -2921,9 +2896,9 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
             query2 = "insert into t_debug(source_se,dest_se,debug) values(:1,:2,:3)";
         }
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeStatement s2;
+    SafeConnection pooledConnection;
 
 
     try
@@ -2955,8 +2930,6 @@ void OracleAPI::setDebugMode(std::string source_hostname, std::string destin_hos
                 conn->commit(pooledConnection);
             conn->destroyStatement(s1, tag1, pooledConnection);
             conn->destroyStatement(s2, tag2, pooledConnection);
-            s1 = NULL;
-            s2 = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -3093,9 +3066,9 @@ void OracleAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const st
                          " , SYS_EXTRACT_UTC(t_job.submit_time) ) WHERE ROWNUM <=1 ";
         }
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -3165,8 +3138,8 @@ void OracleAPI::auditConfiguration(const std::string & dn, const std::string & c
     const std::string tag = "auditConfiguration";
     std::string query = "INSERT INTO t_config_audit (datetime, dn, config, action ) VALUES (:1, :2, :3, :4)";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -3245,18 +3218,18 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                                   " order by  SYS_EXTRACT_UTC(t_file.finish_time) desc";
 
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::ResultSet* r4 = NULL;
-    oracle::occi::Statement* s5 = NULL;
-    oracle::occi::ResultSet* r5 = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
+    SafeStatement s3;
+    SafeResultSet r3;
+    SafeStatement s4;
+    SafeResultSet r4;
+    SafeStatement s5;
+    SafeResultSet r5;
 
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -3276,8 +3249,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 }
             conn->destroyResultset(s5, r5);
             conn->destroyStatement(s5, tag5, pooledConnection);
-            s5 = NULL;
-            r5 = NULL;
 
             //check if more samples exist for this pair to be selected
             s2 = conn->createStatement(check_if_more_samples_exist, tag2, pooledConnection);
@@ -3290,8 +3261,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                 }
             conn->destroyResultset(s2, r2);
             conn->destroyStatement(s2, tag2, pooledConnection);
-            s2 = NULL;
-            r2 = NULL;
 
             //check if more samples are available
             if(check_if_more_samples_exist_count > 0 && timeoutTr == 0)
@@ -3317,8 +3286,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                         }
                     conn->destroyResultset(s3, r3);
                     conn->destroyStatement(s3, tag3, pooledConnection);
-                    s3 = NULL;
-                    r3 = NULL;
                 }
             else if(timeoutTr > 0)   //tr's started timing out, use decent defaults
                 {
@@ -3340,8 +3307,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                         }
                     conn->destroyResultset(s1, r1);
                     conn->destroyStatement(s1, tag1, pooledConnection);
-                    s1 = NULL;
-                    r1 = NULL;
 
                     //try to optimize
                     s4 = conn->createStatement(try_optimize, tag4, pooledConnection);
@@ -3365,8 +3330,6 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                         }
                     conn->destroyResultset(s4, r4);
                     conn->destroyStatement(s4, tag4, pooledConnection);
-                    s4 = NULL;
-                    r4 = NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -3437,8 +3400,8 @@ void OracleAPI::recordOptimizerUpdate(int active, double filesize, double throug
                         " VALUES "
                         " (CURRENT_TIMESTAMP, :1, :2, :3, :4, :5, :6, :7, :8)";
 
-    oracle::occi::Connection* pooledConnection = NULL;
-    oracle::occi::Statement*   s = NULL;
+    SafeConnection pooledConnection;
+    SafeStatement   s;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -3504,12 +3467,12 @@ bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, doubl
         " WHERE nostreams = :2 and buffer=:3 and source_se=:4 and dest_se=:5 "
         " and (active<=:6 or active is null) ";
 
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::Statement* s5 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s3;
+    SafeResultSet r3;
+    SafeStatement s2;
+    SafeStatement s4;
+    SafeStatement s5;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -3532,8 +3495,6 @@ bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, doubl
                 }
             conn->destroyResultset(s3, r3);
             conn->destroyStatement(s3, tag3, pooledConnection);
-            r3 = NULL;
-            s3 = NULL;
 
             time_t now = std::time(NULL);
 
@@ -3586,13 +3547,11 @@ bool OracleAPI::updateOptimizer(double throughputIn, int, double filesize, doubl
                     conn->destroyStatement(s5, tag5, pooledConnection);
                 }
             conn->destroyStatement(s2, tag2, pooledConnection);
-            s2 = NULL;
 
             s4 = conn->createStatement(query4, tag4, pooledConnection);
             if (s4->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s4, tag4, pooledConnection);
-            s4 = NULL;
 
             conn->releasePooledConnection(pooledConnection);
 
@@ -3662,10 +3621,10 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
     int foundRecords = 0;
 
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -3683,9 +3642,6 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                 }
             conn->destroyResultset(s1, r1);
             conn->destroyStatement(s1, tag1, pooledConnection);
-            r1 = NULL;
-            s1 = NULL;
-
 
             if (foundRecords == 0)
                 {
@@ -3705,7 +3661,6 @@ void OracleAPI::initOptimizer(const std::string & source_hostname, const std::st
                         }
                     conn->commit(pooledConnection);
                     conn->destroyStatement(s, tag, pooledConnection);
-                    s = NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -3750,9 +3705,9 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
     double dif;
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -3854,23 +3809,23 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                               " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
 
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::ResultSet* r4 = NULL;
-    oracle::occi::Statement* s5 = NULL;
-    oracle::occi::ResultSet* r5 = NULL;
-    oracle::occi::Statement* s6 = NULL;
-    oracle::occi::ResultSet* r6 = NULL;
-    oracle::occi::Statement* s7 = NULL;
-    oracle::occi::ResultSet* r7 = NULL;
-    oracle::occi::Statement* s8 = NULL;
-    oracle::occi::ResultSet* r8 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
+    SafeStatement s3;
+    SafeResultSet r3;
+    SafeStatement s4;
+    SafeResultSet r4;
+    SafeStatement s5;
+    SafeResultSet r5;
+    SafeStatement s6;
+    SafeResultSet r6;
+    SafeStatement s7;
+    SafeResultSet r7;
+    SafeStatement s8;
+    SafeResultSet r8;
+    SafeConnection pooledConnection;
 
 
     try
@@ -3912,8 +3867,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s8, r8);
             conn->destroyStatement(s8, tag8, pooledConnection);
-            s8 = NULL;
-            r8 = NULL;
 
             s7 = conn->createStatement(query_stmt7, tag7, pooledConnection);
             s7->setString(1, source_hostname);
@@ -3925,8 +3878,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s7, r7);
             conn->destroyStatement(s7, tag7, pooledConnection);
-            s7 = NULL;
-            r7 = NULL;
 
             s1 = conn->createStatement(query_stmt1, tag1, pooledConnection);
             s1->setString(1, source_hostname);
@@ -3937,8 +3888,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s1, r1);
             conn->destroyStatement(s1, tag1, pooledConnection);
-            s1 = NULL;
-            r1 = NULL;
 
             s2 = conn->createStatement(query_stmt2, tag2, pooledConnection);
             s2->setString(1, destin_hostname);
@@ -3949,8 +3898,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s2, r2);
             conn->destroyStatement(s2, tag2, pooledConnection);
-            s2 = NULL;
-            r2 = NULL;
 
             s3 = conn->createStatement(query_stmt3, tag3, pooledConnection);
             s3->setString(1, source_hostname);
@@ -3968,8 +3915,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s3, r3);
             conn->destroyStatement(s3, tag3, pooledConnection);
-            s3 = NULL;
-            r3 = NULL;
 
             s4 = conn->createStatement(query_stmt4, tag4, pooledConnection);
             s4->setString(1, source_hostname);
@@ -3981,8 +3926,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s4, r4);
             conn->destroyStatement(s4, tag4, pooledConnection);
-            s4 = NULL;
-            r4 = NULL;
 
             s5 = conn->createStatement(query_stmt5, tag5, pooledConnection);
             s5->setString(1, source_hostname);
@@ -3994,8 +3937,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s5, r5);
             conn->destroyStatement(s5, tag5, pooledConnection);
-            s5 = NULL;
-            r5 = NULL;
 
             s6 = conn->createStatement(query_stmt6, tag6, pooledConnection);
             s6->setString(1, source_hostname);
@@ -4007,8 +3948,6 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                 }
             conn->destroyResultset(s6, r6);
             conn->destroyStatement(s6, tag6, pooledConnection);
-            s6 = NULL;
-            r6 = NULL;
 
             if(numberOfFinished>0)
                 {
@@ -4131,10 +4070,10 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
     std::string tag[8];
     std::string query[8];
 
-    oracle::occi::Statement* s[8] = {NULL};
-    oracle::occi::ResultSet* r[8] = {NULL};
+    SafeStatement s[8];
+    SafeResultSet r[8];
 
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -4159,7 +4098,6 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
                 }
 
             conn->destroyResultset(s[0], r[0]);
-            r[0] = 0;
 
             ret += nActiveSource;
 
@@ -4174,7 +4112,6 @@ int OracleAPI::getSeOut(const std::string & source, const std::set<std::string> 
             for (int i = 0; i < 8; i++)
                 {
                     conn->destroyStatement(s[i], tag[i], pooledConnection);
-                    s[i] = NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -4219,10 +4156,10 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     std::string tag[8];
     std::string query[8];
 
-    oracle::occi::Statement* s[8] = {0};
-    oracle::occi::ResultSet* r[8] = {0};
+    SafeStatement s[8];
+    SafeResultSet r[8];
 
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -4246,7 +4183,6 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
                 }
 
             conn->destroyResultset(s[1], r[1]);
-            r[1] = 0;
 
             ret += nActiveDest;
 
@@ -4261,7 +4197,6 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
             for (int i = 0; i < 8; i++)
                 {
                     conn->destroyStatement(s[i], tag[i], pooledConnection);
-                    s[i] = NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -4298,7 +4233,7 @@ int OracleAPI::getSeIn(const std::set<std::string> & source, const std::string &
     return ret;
 }
 
-void OracleAPI::initVariablesForGetCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, std::string* query, std::string* tag, std::string basename)
+void OracleAPI::initVariablesForGetCredits(SafeConnection& pooledConnection, SafeStatement s[], std::string* query, std::string* tag, std::string basename)
 {
     tag[0] = basename + "0";
     tag[1] = basename + "1";
@@ -4380,7 +4315,7 @@ void OracleAPI::initVariablesForGetCredits(oracle::occi::Connection* pooledConne
     s[7] = conn->createStatement(query[7], tag[7], pooledConnection);
 }
 
-int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, oracle::occi::ResultSet** r, const std::string & source_hostname, const std::string & destin_hostname)
+int OracleAPI::getCredits(SafeConnection& pooledConnection, SafeStatement s[], SafeResultSet r[], const std::string & source_hostname, const std::string & destin_hostname)
 {
     int nActiveSource = 0, nActiveDest = 0;
     double nFailedLastHour = 0, nFinishedLastHour = 0;
@@ -4396,7 +4331,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
             avgThr = r[7]->getDouble(1);
         }
     conn->destroyResultset(s[7], r[7]);
-    r[7] = NULL;
 
     // get number of active for the source
     s[0]->setString(1, source_hostname);
@@ -4408,7 +4342,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
         }
 
     conn->destroyResultset(s[0], r[0]);
-    r[0] = NULL;
 
     // get number of active for the destination
     s[1]->setString(1, destin_hostname);
@@ -4420,7 +4353,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
         }
 
     conn->destroyResultset(s[1], r[1]);
-    r[1] = NULL;
 
     // get the throughput
     s[2]->setString(1, source_hostname);
@@ -4433,7 +4365,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
         }
 
     conn->destroyResultset(s[2], r[2]);
-    r[2] = NULL;
 
     // file state: FAILED and FINISHED (in last hour)
     s[3]->setString(1, source_hostname);
@@ -4448,7 +4379,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
         }
 
     conn->destroyResultset(s[3], r[3]);
-    r[3] = NULL;
 
     // number of active for the pair
     s[4]->setString(1, source_hostname);
@@ -4461,7 +4391,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
         }
 
     conn->destroyResultset(s[4], r[4]);
-    r[4] = NULL;
 
     // all finished in total
     s[5]->setString(1, source_hostname);
@@ -4474,7 +4403,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
         }
 
     conn->destroyResultset(s[5], r[5]);
-    r[5] = NULL;
 
     // all failed in total
     s[6]->setString(1, source_hostname);
@@ -4487,7 +4415,6 @@ int OracleAPI::getCredits(oracle::occi::Connection* pooledConnection, oracle::oc
         }
 
     conn->destroyResultset(s[6], r[6]);
-    r[6] = NULL;
 
     double ratioSuccessFailure = 0;
     if(nFinishedLastHour > 0)
@@ -4509,9 +4436,9 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
     const std::string tag1 = "setAllowedNoOptimize1";
     std::string query_stmt = "update t_file set INTERNAL_FILE_PARAMS=:1 where file_id=:2 and job_id=:3";
     std::string query_stmt1 = "update t_file set INTERNAL_FILE_PARAMS=:1 where job_id=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s1;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -4528,7 +4455,6 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
                     if (s1->executeUpdate() != 0)
                         conn->commit(pooledConnection);
                     conn->destroyStatement(s1, tag1, pooledConnection);
-                    s1 = NULL;
                 }
             else
                 {
@@ -4539,7 +4465,6 @@ void OracleAPI::setAllowedNoOptimize(const std::string & job_id, int file_id, co
                     if (s->executeUpdate() != 0)
                         conn->commit(pooledConnection);
                     conn->destroyStatement(s, tag, pooledConnection);
-                    s = NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -4582,10 +4507,10 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
 
     std::string query1 = "select count(*) from t_file where job_id=:1";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeStatement s1;
+    SafeResultSet r1;
     std::string job_id("");
     int file_id = 0;
     time_t start_time;
@@ -4600,7 +4525,7 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
     const std::string transfer_message = "Transfer has been forced-killed because it was stalled";
     const std::string status = "FAILED";
     double diff = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -4633,8 +4558,6 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                 }
                             conn->destroyResultset(s1, r1);
                             conn->destroyStatement(s1, tag1, pooledConnection);
-                            s1 = NULL;
-                            r1 = NULL;
                             terminateTime = 360 * countFiles;
                         }
                     else
@@ -4656,9 +4579,6 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                 }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
-            r = NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -4704,10 +4624,10 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
     std::string query_stmt_throuput4 = "update t_optimize set file_id=1 where nostreams=:1 and buffer=:2 and timeout=:3 and source_se=:4 and dest_se=:5";
     std::string query_stmt_throuput5 = "update t_file set INTERNAL_FILE_PARAMS=:1 where file_id=:2 and job_id=:3";
     std::string query_stmt_throuput6 = "update t_file set INTERNAL_FILE_PARAMS=:1 where job_id=:2";
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::Statement* s5 = NULL;
-    oracle::occi::Statement* s6 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s4;
+    SafeStatement s5;
+    SafeStatement s6;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -4725,7 +4645,6 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
             if (s4->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s4, tag4, pooledConnection);
-            s4 = NULL;
 
             std::stringstream params;
             params << "nostreams:" << nostreams << ",timeout:" << timeout << ",buffersize:" << buffersize;
@@ -4738,7 +4657,6 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
                     if (s5->executeUpdate() != 0)
                         conn->commit(pooledConnection);
                     conn->destroyStatement(s5, tag5, pooledConnection);
-                    s5 = NULL;
                 }
             else
                 {
@@ -4748,7 +4666,6 @@ void OracleAPI::setAllowed(const std::string & job_id, int file_id, const std::s
                     if (s6->executeUpdate() != 0)
                         conn->commit(pooledConnection);
                     conn->destroyStatement(s6, tag6, pooledConnection);
-                    s6 = NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -4789,12 +4706,12 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId)
     const std::string tag1 = "terminateReuseProcess11";
     std::string query = "select REUSE_JOB from t_job where job_id=:1 and REUSE_JOB is not null";
     std::string update = "update t_file set file_state='FAILED' where job_id=:1 and file_state != 'FINISHED' ";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    SafeStatement s;
+    SafeStatement s1;
+    SafeResultSet r;
     unsigned int updated = 0;
     bool ok = true;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -4820,9 +4737,6 @@ bool OracleAPI::terminateReuseProcess(const std::string & jobId)
                 conn->commit(pooledConnection);
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
-            r = NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -4864,8 +4778,8 @@ void OracleAPI::setPid(const std::string & jobId, int fileId, int pid)
 {
     const std::string tag = "setPid";
     std::string query = "update t_file set pid=:1 where job_id=:2 and file_id=:3";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -4881,7 +4795,6 @@ void OracleAPI::setPid(const std::string & jobId, int fileId, int pid)
             if (s->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -4911,10 +4824,10 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
 {
     const std::string tag = "setPidV";
     std::string query = "update t_file set pid=:1 where job_id=:2 and file_id=:3";
-    oracle::occi::Statement* s = NULL;
+    SafeStatement s;
     std::map<int, std::string>::const_iterator iter;
     unsigned int updated = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -4934,8 +4847,6 @@ void OracleAPI::setPidV(int pid, std::map<int, std::string>& pids)
             if (updated != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -4978,19 +4889,19 @@ void OracleAPI::revertToSubmitted()
 
     std::string query4 = " UPDATE t_job SET job_state = 'SUBMITTED' where job_id = :1";
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
+    SafeStatement s1;
+    SafeStatement s2;
+    SafeResultSet r2;
+    SafeStatement s3;
+    SafeResultSet r3;
+    SafeStatement s4;
 
     double diff = 0;
     int file_id = 0;
     std::string job_id("");
     std::string reuseFlag("");
     time_t start_time;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -5017,7 +4928,6 @@ void OracleAPI::revertToSubmitted()
                             s1->executeUpdate();
                             conn->commit(pooledConnection);
                             conn->destroyStatement(s1, tag1, pooledConnection);
-                            s1 = NULL;
                         }
                     else
                         {
@@ -5032,8 +4942,6 @@ void OracleAPI::revertToSubmitted()
                                 }
                             conn->destroyResultset(s3, r3);
                             conn->destroyStatement(s3, tag3, pooledConnection);
-                            s3 = NULL;
-                            r3 = NULL;
 
                             if(count > 0)
                                 terminateTime = count * 360;
@@ -5046,14 +4954,12 @@ void OracleAPI::revertToSubmitted()
                                     s4->executeUpdate();
                                     conn->commit(pooledConnection);
                                     conn->destroyStatement(s4, tag4, pooledConnection);
-                                    s4 = NULL;
 
                                     s1 = conn->createStatement(query1, tag1, pooledConnection);
                                     s1->setInt(1, file_id);
                                     s1->executeUpdate();
                                     conn->commit(pooledConnection);
                                     conn->destroyStatement(s1, tag1, pooledConnection);
-                                    s1 = NULL;
                                 }
                         }
                 }
@@ -5115,11 +5021,11 @@ void OracleAPI::backup()
     std::string query2 = "insert into t_file_backup select * from t_file  where job_id IN (select job_id from t_job_backup)";
     std::string query3 = "delete from t_file where file_id in (select file_id from t_file_backup)";
     std::string query4 = "delete from t_job where job_id in (select job_id from t_job_backup)";
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeStatement s2;
+    SafeStatement s3;
+    SafeStatement s4;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -5184,8 +5090,8 @@ void OracleAPI::forkFailedRevertState(const std::string & jobId, int fileId)
 {
     const std::string tag = "forkFailedRevertState";
     std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2 and file_state not in ('FINISHED','FAILED','CANCELED')";
-    oracle::occi::Statement* stmt = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement stmt;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -5229,10 +5135,10 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
 {
     const std::string tag = "forkFailedRevertStateV";
     std::string query = "update t_file set file_state='SUBMITTED' where file_id=:1 and job_id=:2 and file_state not in ('FINISHED','FAILED','CANCELED')";
-    oracle::occi::Statement* s = NULL;
+    SafeStatement s;
     std::map<int, std::string>::const_iterator iter;
     unsigned int updated = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -5251,7 +5157,6 @@ void OracleAPI::forkFailedRevertStateV(std::map<int, std::string>& pids)
             if (updated != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -5282,11 +5187,11 @@ bool OracleAPI::retryFromDead(std::vector<struct message_updater>& messages)
     const std::string transfer_status = "FAILED";
     const std::string transfer_message = "no FTS server had updated the transfer status the last 300 seconds, probably stalled in " + ftsHostName;
     const std::string status = "FAILED";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    SafeStatement s;
+    SafeResultSet r;
     std::string query = "select file_id from t_file where job_id=:1 and file_id=:2 and file_state='ACTIVE' and transferhost=:3 ";
     const std::string tag = "retryFormDead";
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -5353,11 +5258,11 @@ void OracleAPI::blacklistSe(std::string se, std::string vo, std::string status, 
     std::string updateTag = "blacklistSeUpdate";
     std::string insertTag = "blacklistSeInsert";
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeStatement s3;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -5456,9 +5361,9 @@ void OracleAPI::blacklistDn(std::string dn, std::string msg, std::string adm_dn)
 
     std::string insertTag = "blacklistDnInsert";
 
-    oracle::occi::Statement* s1 = NULL;
+    SafeStatement s1;
 
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -5527,9 +5432,9 @@ void OracleAPI::unblacklistSe(std::string se)
 
     std::string tag2 = "unblacklistSeUpdate";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s2;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -5604,9 +5509,9 @@ void OracleAPI::unblacklistDn(std::string dn)
 
     std::string tag2 = "unblacklistDnUpdate";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeStatement s2;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -5663,9 +5568,9 @@ bool OracleAPI::isSeBlacklisted(std::string se, std::string vo)
     std::string tag = "isSeBlacklisted";
     std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1 AND (vo IS NULL OR vo='' OR vo = :2)";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     bool ret = false;
 
 
@@ -5719,9 +5624,9 @@ bool OracleAPI::allowSubmitForBlacklistedSe(std::string se)
     std::string tag = "allowSubmitForBlacklistedSe";
     std::string stmt = "SELECT * FROM t_bad_ses WHERE se = :1 AND status = 'WAIT_AS'";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     bool ret = false;
 
     try
@@ -5775,9 +5680,9 @@ boost::optional<int> OracleAPI::getTimeoutForSe(std::string se)
     std::string tag = "getTimeoutForSe";
     std::string stmt = " SELECT wait_timeout FROM t_bad_ses WHERE se = :1 ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     boost::optional<int> ret;
 
     try
@@ -5835,9 +5740,9 @@ bool OracleAPI::isDnBlacklisted(std::string dn)
     std::string tag = "isDnBlacklisted";
     std::string stmt = "SELECT * FROM t_bad_dns WHERE dn = :1";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     bool ret = false;
 
 
@@ -5896,13 +5801,13 @@ bool OracleAPI::isFileReadyState(int fileID)
     std::string hostname("");
     std::string tag1 = "transferHost2";
     std::string query1 = "select transferHost from t_file where file_id=:1";
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     try
@@ -5980,10 +5885,10 @@ bool OracleAPI::checkGroupExists(const std::string & groupName)
 {
     const std::string tag = "checkGroupExists";
     std::string query = "select groupName from t_group_members where groupName=:1";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    SafeStatement s;
+    SafeResultSet r;
     bool groupExist = false;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6037,9 +5942,9 @@ void OracleAPI::getGroupMembers(const std::string & groupName, std::vector<std::
 {
     const std::string tag = "getGroupMembers";
     std::string query = "select member from t_group_members where groupName=:1";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6092,9 +5997,9 @@ std::string OracleAPI::getGroupForSe(const std::string se)
 {
     const std::string tag = "getGroupForSe";
     std::string query = "select groupName from t_group_members where member=:1";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     std::string ret;
@@ -6149,9 +6054,9 @@ void OracleAPI::addMemberToGroup(const std::string & groupName, std::vector<std:
 {
     std::string tag="addMemberToGroup";
     std::string query = "insert into t_group_members(member, groupName) values(:1, :2)";
-    oracle::occi::Statement* s = NULL;
+    SafeStatement s;
     std::vector<std::string>::const_iterator iter;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6195,9 +6100,9 @@ void OracleAPI::deleteMembersFromGroup(const std::string & groupName, std::vecto
 {
     std::string tag = "deleteMembersFromGroup";
     std::string query = "delete from t_group_members where groupName=:1 and member=:2";
-    oracle::occi::Statement* s = NULL;
+    SafeStatement s;
     std::vector<std::string>::const_iterator iter;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6254,8 +6159,8 @@ void OracleAPI::addLinkConfig(LinkConfig* cfg)
         "	auto_tuning"
         ") values(:1,:2,:3,:4,:5,:6,:7,:8,:9)";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -6308,8 +6213,8 @@ void OracleAPI::updateLinkConfig(LinkConfig* cfg)
         "update t_link_config "
         "set state=:1,symbolicName=:2,NOSTREAMS=:3,tcp_buffer_size=:4,URLCOPY_TX_TO=:5,no_tx_activity_to=:6, auto_tuning=:7 "
         "where source=:8 and destination=:9";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6359,8 +6264,8 @@ void OracleAPI::deleteLinkConfig(std::string source, std::string destination)
 {
     const std::string tag = "deleteLinkConfig";
     std::string query = "delete from t_link_config where source=:1 and destination=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6405,10 +6310,10 @@ LinkConfig* OracleAPI::getLinkConfig(std::string source, std::string destination
     std::string query =
         "select source, destination, state, symbolicName, nostreams, tcp_buffer_size, urlcopy_tx_to, no_tx_activity_to, auto_tuning "
         "from t_link_config where source=:1 and destination=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    SafeStatement s;
+    SafeResultSet r;
     LinkConfig* cfg = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6473,9 +6378,9 @@ bool OracleAPI::isThereLinkConfig(std::string source, std::string destination)
         "select count(*) "
         "from t_link_config "
         "where state='on' and source=:1 and destination=:2 ";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     bool ret = false;
@@ -6532,10 +6437,10 @@ std::pair<std::string, std::string>* OracleAPI::getSourceAndDestination(std::str
     std::string query =
         "select source,destination "
         "from t_link_config where symbolicName=:1";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    std::pair<std::string, std::string>* ret = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    std::pair<std::string, std::string>* ret = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6592,9 +6497,9 @@ bool OracleAPI::isGrInPair(std::string group)
     std::string query =
         "select * from t_link_config "
         "where ((source=:1 and destination<>'*') or (source<>'*' and destination=:1))";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     bool ret = false;
@@ -6651,9 +6556,9 @@ bool OracleAPI::isShareOnly(std::string se)
     std::string query =
         "select * from t_link_config "
         "where source=:1 and destination = '*' and auto_tuning = 'all' ";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     bool ret = false;
@@ -6714,8 +6619,8 @@ void OracleAPI::addShareConfig(ShareConfig* cfg)
         "	active"
         ") values(:1,:2,:3,:4)";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
     try
         {
 
@@ -6762,8 +6667,8 @@ void OracleAPI::updateShareConfig(ShareConfig* cfg)
         "update t_share_config "
         "set active=:1 "
         "where source=:2 and destination=:3 and vo=:4";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6808,8 +6713,8 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination, s
 {
     const std::string tag = "deleteShareConfig";
     std::string query = "delete from t_share_config where source=:1 and destination=:2 and vo=:3";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6853,8 +6758,8 @@ void OracleAPI::deleteShareConfig(std::string source, std::string destination)
 {
     const std::string tag = "deleteShareConfig2";
     std::string query = "delete from t_share_config where source=:1 and destination=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6899,10 +6804,10 @@ ShareConfig* OracleAPI::getShareConfig(std::string source, std::string destinati
     std::string query =
         "select source,destination,vo,active "
         "from t_share_config where source=:1 and destination=:2 and vo=:3";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    SafeStatement s;
+    SafeResultSet r;
     ShareConfig* cfg = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -6960,10 +6865,10 @@ std::vector<ShareConfig*> OracleAPI::getShareConfig(std::string source, std::str
     std::string query =
         "select source,destination,vo,active "
         "from t_share_config where source=:1 and destination=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    SafeStatement s;
+    SafeResultSet r;
     std::vector<ShareConfig*> ret;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -7022,8 +6927,8 @@ void OracleAPI::submitHost(const std::string & jobId)
 
     std::string tag = "submitHost";
     std::string query = "update t_job set submit_host=:1 where job_id=:2";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -7064,9 +6969,9 @@ std::string OracleAPI::transferHost(int fileId)
     std::string hostname("");
     std::string tag = "transferHost";
     std::string query = "select transferHost from t_file where file_id=:1";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     try
@@ -7116,11 +7021,11 @@ bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds)
 {
     const std::string tag = "isFileReadyStateV";
     std::string query = "select file_state from t_file where file_id=:1";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
+    SafeStatement s;
+    SafeResultSet r;
     std::string ready("");
     bool isReady = false;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
 
     try
@@ -7142,7 +7047,6 @@ bool OracleAPI::isFileReadyStateV(std::map<int, std::string>& fileIds)
                 }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -7175,9 +7079,9 @@ std::string OracleAPI::transferHostV(std::map<int, std::string>& fileIds)
     const std::string tag = "transferHostV";
     std::string host("");
     std::string query = "select transferHost from t_file where file_id=:1";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
 
     try
@@ -7195,7 +7099,6 @@ std::string OracleAPI::transferHostV(std::map<int, std::string>& fileIds)
                 }
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -7230,10 +7133,10 @@ bool OracleAPI::checkIfSeIsMemberOfAnotherGroup(const std::string & member)
     std::string tag = "checkIfSeIsMemberOfAnotherGroup";
     std::string stmt = "select groupName from t_group_members where member=:1 ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
+    SafeStatement s;
+    SafeResultSet r;
     bool ret = false;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -7292,8 +7195,8 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
                          " select :1, :2, :3, :4 from dual where not exists(select file_id, source, destination, vo "
                          " from t_file_share_config WHERE file_id = :1 AND source = :2 AND destination = :3 AND vo = :4)";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -7337,8 +7240,8 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
 //    std::string query = "delete from t_job_share_config where job_id = :1";
 //    std::string tag = "delJobShareConfig";
 //
-//    oracle::occi::Statement* s = NULL;
-//    oracle::occi::Connection* pooledConnection = NULL;
+//    SafeStatement s;
+//    SafeConnection pooledConnection;
 //
 //    try {
 //	pooledConnection = conn->getPooledConnection();
@@ -7372,9 +7275,9 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
 //    std::string tag = "getJobShareConfig";
 //    std::string query = " select source, destination, vo from t_job_share_config where job_id=:1 ";
 //
-//    oracle::occi::Statement* s = 0;
-//    oracle::occi::ResultSet* r = 0;
-//    oracle::occi::Connection* pooledConnection = NULL;
+//    SafeStatement s;
+//    SafeResultSet r;
+//    SafeConnection pooledConnection;
 //    std::vector< boost::tuple<std::string, std::string, std::string> > ret;
 //
 //
@@ -7427,10 +7330,10 @@ void OracleAPI::addFileShareConfig(int file_id, std::string source, std::string 
 //    std::string tag = "isThereJobShareConfig";
 //    std::string query = " select count(*) from t_job_share_config where job_id=:1 ";
 //
-//    oracle::occi::Statement* s = 0;
-//    oracle::occi::ResultSet* r = 0;
-//    oracle::occi::Connection* pooledConnection = NULL;
-//    unsigned int ret = 0;
+//    SafeStatement s;
+//    SafeResultSet r;
+//    SafeConnection pooledConnection;
+//    unsigned int ret;
 //
 //
 //    try {
@@ -7487,9 +7390,9 @@ int OracleAPI::countActiveTransfers(std::string source, std::string destination,
         "	c.vo = :3"
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     int ret = 0;
 
 
@@ -7557,11 +7460,10 @@ int OracleAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::
         "	c.vo = :2"
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     int ret = 0;
-
 
     try
         {
@@ -7625,9 +7527,9 @@ int OracleAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::s
         "	c.vo = :2"
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     int ret = 0;
 
 
@@ -7697,12 +7599,12 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
         "	AND vo IN "
         ;
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
 
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     int sum = 0;
 
@@ -7734,8 +7636,6 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
 
                     conn->destroyResultset(s1, r1);
                     conn->destroyStatement(s1, tag1, pooledConnection);
-                    s1 = 0;
-                    r1 = 0;
                 }
 
             std::string vos_str = "(";
@@ -7765,8 +7665,6 @@ int OracleAPI::sumUpVoShares (std::string source, std::string destination, std::
 
             conn->destroyResultset(s2, r2);
             conn->destroyStatement(s2, tag2, pooledConnection);
-            s2 = 0;
-            r2 = 0;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -7818,8 +7716,8 @@ void OracleAPI::setPriority(std::string job_id, int priority)
         "SET priority =:1 "
         "WHERE job_id = :2 ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -7868,12 +7766,12 @@ int OracleAPI::getRetry(const std::string & jobId)
         "select retry "
         "from t_job where job_id=:1 ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Statement* s1 = 0;
-    oracle::occi::ResultSet* r1 = 0;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeStatement s1;
+    SafeResultSet r1;
     int ret = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -7954,8 +7852,8 @@ void OracleAPI::setRetry(int retry)
         "UPDATE t_server_config "
         "SET retry =:1 ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
 
     try
@@ -7998,9 +7896,9 @@ int OracleAPI::getRetryTimes(const std::string & jobId, int fileId)
     std::string query =
         "select retry from t_file where job_id=:1 and file_id=:2 ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     int ret = 0;
 
 
@@ -8057,10 +7955,10 @@ int OracleAPI::getMaxTimeInQueue()
         "select max_time_queue "
         "from t_server_config ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
+    SafeStatement s;
+    SafeResultSet r;
     int ret = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -8112,9 +8010,9 @@ void OracleAPI::setMaxTimeInQueue(int afterXHours)
     const std::string tag = "setMaxTimeInQueue";
     std::string query = " UPDATE t_server_config set max_time_queue=:1 ";
 
-    oracle::occi::Statement* s = NULL;
+    SafeStatement s;
 
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -8150,7 +8048,7 @@ void OracleAPI::setMaxTimeInQueue(int afterXHours)
 
 bool OracleAPI::checkConnectionStatus()
 {
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     bool alive = false;
     try
@@ -8188,13 +8086,13 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
     std::string message = "Job has been canceled because it stayed in the queue for too long";
     std::stringstream query3;
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r = 0;
+    SafeStatement s1;
+    SafeStatement s2;
+    SafeStatement s3;
+    SafeResultSet r;
     std::vector<std::string> jobId;
     std::vector<std::string>::const_iterator iter;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     query3 << " select job_id from t_job where (SUBMIT_TIME < (CURRENT_TIMESTAMP - interval '";
     query3 << maxTime;
@@ -8279,9 +8177,9 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getPairsForSe(std:
         " where (source = :1 and destination <> '*') "
         "	or (source <> '*' and destination = :2) ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -8338,9 +8236,9 @@ std::vector<std::string> OracleAPI::getAllStandAlloneCfgs()
         " where DESTINATION = '*' "
         "	and auto_tuning <> 'all' ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -8395,9 +8293,9 @@ std::vector<std::string> OracleAPI::getAllShareOnlyCfgs()
         " where DESTINATION = '*' "
         "	and auto_tuning = 'all' ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -8448,9 +8346,9 @@ std::vector< std::pair<std::string, std::string> > OracleAPI::getAllPairCfgs()
     std::string tag = "getAllPairCfgs";
     std::string query = "select SOURCE, DESTINATION from T_LINK_CONFIG where SOURCE <> '*' and DESTINATION <> '*'";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -8500,10 +8398,10 @@ int OracleAPI::activeProcessesForThisHost()
     std::string tag = "activeProcessesForThisHost";
     std::string query = "select count(*) from t_file where file_state in ('READY','ACTIVE') and TRANSFERHOST=:1";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
+    SafeStatement s;
+    SafeResultSet r;
     int ret = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -8558,9 +8456,9 @@ std::vector< boost::tuple<std::string, std::string, int> >  OracleAPI::getVOBrin
     std::string tag = "getVOBringonlimeMax";
     std::string query = " select vo_name, host, concurrent_ops from t_stage_req";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
     std::vector< boost::tuple<std::string, std::string, int> > ret;
 
 
@@ -8642,19 +8540,19 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
         " and t_file.SOURCE_SURL like 'srm%' ";
 
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::ResultSet* r3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::ResultSet* r4 = NULL;
-    oracle::occi::Statement* s5 = NULL;
-    oracle::occi::ResultSet* r5 = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
+    SafeStatement s3;
+    SafeResultSet r3;
+    SafeStatement s4;
+    SafeResultSet r4;
+    SafeStatement s5;
+    SafeResultSet r5;
 
     std::vector<struct message_bringonline> ret;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
     unsigned int currentStagingFilesConfig = 0;
     unsigned int currentStagingFilesNoConfig = 0;
     unsigned int maxConfig = 0;
@@ -8678,8 +8576,6 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                         }
                     conn->destroyResultset(s4, r4);
                     conn->destroyStatement(s4, tag4, pooledConnection);
-                    s4=NULL;
-                    r4=NULL;
 
                     if(currentStagingFilesConfig > 0 )
                         {
@@ -8709,8 +8605,6 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                         }
                     conn->destroyResultset(s2, r2);
                     conn->destroyStatement(s2, tag2, pooledConnection);
-                    s2=NULL;
-                    r2=NULL;
                 }
             else
                 {
@@ -8756,13 +8650,9 @@ std::vector<struct message_bringonline> OracleAPI::getBringOnlineFiles(std::stri
                             conn->destroyResultset(s3, r3);
                         }
                     conn->destroyStatement(s5, tag5, pooledConnection);
-                    s5=NULL;
                     conn->destroyResultset(s1, r1);
                     conn->destroyStatement(s1, tag1, pooledConnection);
-                    s1=NULL;
-                    r1=NULL;
                     conn->destroyStatement(s3, tag3, pooledConnection);
-                    s3=NULL;
                 }
         }
     catch (oracle::occi::SQLException const &e)
@@ -8831,19 +8721,19 @@ void OracleAPI::bringOnlineReportStatus(const std::string & state, const std::st
     std::string query3 = " select reuse_job from t_job where job_id=:1 ";
     std::string query4 = " select count(*) from t_file where job_id=:1 and file_state='STAGING' ";
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
+    SafeStatement s1;
+    SafeStatement s2;
 
-    oracle::occi::Statement* s3 = 0;
-    oracle::occi::ResultSet* r3 = 0;
-    oracle::occi::Statement* s4 = 0;
-    oracle::occi::ResultSet* r4 = 0;
+    SafeStatement s3;
+    SafeResultSet r3;
+    SafeStatement s4;
+    SafeResultSet r4;
 
     time_t timed = time(NULL);
     std::string reuse("");
     int countTr = 0;
 
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeConnection pooledConnection;
     try
         {
             pooledConnection = conn->getPooledConnection();
@@ -9010,8 +8900,8 @@ void OracleAPI::addToken(const std::string & job_id, int file_id, const std::str
     const std::string tag = "addToken";
     std::string query = " UPDATE t_file set bringonline_token=:1 where job_id=:2 and file_id=:3 and file_state='STAGING' ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9052,9 +8942,9 @@ void OracleAPI::getCredentials(std::string & vo_name, const std::string & job_id
     std::string tag = "getCredentials";
     std::string query = "select USER_DN, CRED_ID, VO_NAME  from t_job where job_id=:1";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9115,9 +9005,9 @@ void OracleAPI::setMaxStageOp(const std::string& se, const std::string& vo, int 
         " WHERE vo_name = :1 AND host = :2 "
         ;
 
-    oracle::occi::Statement* s1 = 0, *s2 = 0, *s3 = 0;
-    oracle::occi::ResultSet* r1 = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1, s2, s3;
+    SafeResultSet r1;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9225,9 +9115,9 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
         "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
         ;
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     double nFailedLastHour = 0, nFinishedLastHour = 0;
     double ratioSuccessFailure = 0;
@@ -9253,10 +9143,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
                 }
 
             conn->destroyResultset(s, r);
-            r = NULL;
-
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
 
             if(nFinishedLastHour > 0)
                 {
@@ -9299,9 +9186,9 @@ double OracleAPI::getAvgThroughput(std::string source, std::string destination)
         ;
 
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::ResultSet* r = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     double avgThr = 0;
 
@@ -9320,9 +9207,7 @@ double OracleAPI::getAvgThroughput(std::string source, std::string destination)
                     avgThr = r->getDouble(1);
                 }
             conn->destroyResultset(s, r);
-            r = NULL;
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -9356,8 +9241,8 @@ void OracleAPI::updateProtocol(const std::string& jobId, int fileId, int nostrea
     const std::string tag = "updateProtocol1";
     std::string query = " UPDATE t_file set INTERNAL_FILE_PARAMS=:1, FILESIZE=:2 where job_id=:3 and file_id=:4 ";
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
     std::stringstream internalParams;
 
     try
@@ -9443,13 +9328,13 @@ void OracleAPI::cancelFilesInTheQueue(const std::string& se, const std::string& 
         "	) "
         ;
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::ResultSet* r2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
-    oracle::occi::Statement* s4 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
+    SafeStatement s3;
+    SafeStatement s4;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9603,9 +9488,9 @@ void OracleAPI::cancelJobsInTheQueue(const std::string& dn, std::vector<std::str
         ;
 
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9666,8 +9551,8 @@ void OracleAPI::transferLogFile(const std::string& filePath, const std::string& 
 {
     std::string tag = "transferLogFile";
     std::string query = "update t_file set T_LOG_FILE=:1, T_LOG_FILE_DEBUG=:2 where job_id=:3 and file_id=:4";
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9721,11 +9606,11 @@ struct message_state OracleAPI::getStateOfTransfer(const std::string& jobId, int
     std::string query1 = "select retry from t_server_config";
 
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Statement* s1 = 0;
-    oracle::occi::ResultSet* r1 = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeConnection pooledConnection;
     struct message_state ret;
 
     try
@@ -9812,9 +9697,9 @@ void OracleAPI::getFilesForJob(const std::string& jobId, std::vector<int>& files
     std::string tag = "getFilesForJob";
     std::string query = " select file_id from t_file where job_id=:1 ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9866,9 +9751,9 @@ void OracleAPI::getFilesForJobInCancelState(const std::string& jobId, std::vecto
     std::string tag = "getFilesForJobInCancelState";
     std::string query = " select file_id from t_file where job_id=:1 and file_state='CANCELED' ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -9942,9 +9827,9 @@ void OracleAPI::setFilesToWaiting(const std::string& se, const std::string& vo, 
         "	) "
         ;
 
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s1;
+    SafeStatement s2;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10029,8 +9914,8 @@ void OracleAPI::setFilesToWaiting(const std::string& dn, int timeout)
         "	)"
         ;
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10090,10 +9975,10 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
         " WHERE file_id = :1 "
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Statement* s2 = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeStatement s2;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10174,8 +10059,8 @@ void OracleAPI::revertNotUsedFiles()
         "	) "
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10214,9 +10099,9 @@ void OracleAPI::revertNotUsedFiles()
 void OracleAPI::checkSanityState()
 {
     std::string tag[] = {"sanity1", "sanity2", "sanity3", "sanity4", "sanity5", "sanity6", "sanity7", "sanity8", "sanity9", "sanity10", "sanity11", "sanity12","sanity13","sanity14"};
-    oracle::occi::Statement* s[9] = {NULL};
-    oracle::occi::ResultSet* r[9] = {NULL};
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s[9];
+    SafeResultSet r[9];
+    SafeConnection pooledConnection;
     std::string sql[] =
     {
         "SELECT job_id from t_job where job_state in ('ACTIVE','READY','SUBMITTED','STAGING') ",
@@ -10255,8 +10140,6 @@ void OracleAPI::checkSanityState()
                 }
             conn->destroyResultset(s[0], r[0]);
             conn->destroyStatement(s[0], tag[0], pooledConnection);
-            s[0] = NULL;
-            r[0] = NULL;
 
             s[1] = conn->createStatement(sql[1], tag[1], pooledConnection);
             s[2] = conn->createStatement(sql[2], tag[2], pooledConnection);
@@ -10275,7 +10158,6 @@ void OracleAPI::checkSanityState()
                             numberOfFiles = r[1]->getInt(1);
                         }
                     conn->destroyResultset(s[1], r[1]);
-                    r[1]=NULL;
 
                     if(numberOfFiles > 0)
                         {
@@ -10333,15 +10215,10 @@ void OracleAPI::checkSanityState()
                 }
 
             conn->destroyStatement(s[1], tag[1], pooledConnection);
-            s[1] = NULL;
             conn->destroyStatement(s[2], tag[2], pooledConnection);
-            s[2] = NULL;
             conn->destroyStatement(s[3], tag[3], pooledConnection);
-            s[3] = NULL;
             conn->destroyStatement(s[4], tag[4], pooledConnection);
-            s[4] = NULL;
             conn->destroyStatement(s[5], tag[5], pooledConnection);
-            s[5] = NULL;
 
             s[6] = conn->createStatement(sql[6], tag[6], pooledConnection);
             r[6] = conn->createResultset(s[6], pooledConnection);
@@ -10351,9 +10228,6 @@ void OracleAPI::checkSanityState()
                 }
             conn->destroyResultset(s[6], r[6]);
             conn->destroyStatement(s[6], tag[6], pooledConnection);
-            s[6] = NULL;
-            r[6] = NULL;
-
             s[7] = conn->createStatement(sql[7], tag[7], pooledConnection);
             s[8] = conn->createStatement(sql[8], tag[8], pooledConnection);
 
@@ -10367,7 +10241,6 @@ void OracleAPI::checkSanityState()
                             numberOfFilesRevert = r[7]->getInt(1);
                         }
                     conn->destroyResultset(s[7], r[7]);
-                    r[7] = NULL;
 
                     if(numberOfFilesRevert > 0)
                         {
@@ -10382,8 +10255,6 @@ void OracleAPI::checkSanityState()
 
             conn->destroyStatement(s[7], tag[7], pooledConnection);
             conn->destroyStatement(s[8], tag[8], pooledConnection);
-            s[7] = NULL;
-            s[8] = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -10422,7 +10293,7 @@ void OracleAPI::checkSanityState()
     conn->releasePooledConnection(pooledConnection);
 }
 
-void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
+void OracleAPI::countFileInTerminalStates(SafeConnection& pooledConnection, std::string jobId,
         unsigned int& finished, unsigned int& canceled, unsigned int& failed)
 {
     if (!pooledConnection) return;
@@ -10467,12 +10338,12 @@ void OracleAPI::countFileInTerminalStates(oracle::occi::Connection* pooledConnec
 
     std::string tagCanceled = "countFileInTerminalStatesCanceled";
 
-    oracle::occi::Statement* s1 = 0;
-    oracle::occi::ResultSet* r1 = 0;
-    oracle::occi::Statement* s2 = 0;
-    oracle::occi::ResultSet* r2 = 0;
-    oracle::occi::Statement* s3 = 0;
-    oracle::occi::ResultSet* r3 = 0;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeResultSet r2;
+    SafeStatement s3;
+    SafeResultSet r3;
 
     try
         {
@@ -10574,9 +10445,9 @@ void OracleAPI::getFilesForNewSeCfg(std::string source, std::string destination,
         "	and t_file.file_state in ('READY', 'ACTIVE') "
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10655,9 +10526,9 @@ void OracleAPI::getFilesForNewGrCfg(std::string source, std::string destination,
             tag += "2";
         }
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10720,8 +10591,8 @@ void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string 
         "	and vo = :4 "
         ;
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10737,7 +10608,6 @@ void OracleAPI::delFileShareConfig(int file_id, std::string source, std::string 
             if (s->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -10777,8 +10647,8 @@ void OracleAPI::delFileShareConfig(std::string group, std::string se)
         "	) "
         ;
 
-    oracle::occi::Statement* s = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -10794,7 +10664,6 @@ void OracleAPI::delFileShareConfig(std::string group, std::string se)
             if (s->executeUpdate() != 0)
                 conn->commit(pooledConnection);
             conn->destroyStatement(s, tag, pooledConnection);
-            s = NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -10835,9 +10704,9 @@ bool OracleAPI::hasStandAloneSeCfgAssigned(int file_id, std::string vo)
         "	) "
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     int count = 0;
 
@@ -10901,9 +10770,9 @@ bool OracleAPI::hasPairSeCfgAssigned(int file_id, std::string vo)
         "	) "
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     int count = 0;
 
@@ -10967,9 +10836,9 @@ bool OracleAPI::hasStandAloneGrCfgAssigned(int file_id, std::string vo)
         "	) "
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     int count = 0;
 
@@ -11033,9 +10902,9 @@ bool OracleAPI::hasPairGrCfgAssigned(int file_id, std::string vo)
         "	) "
         ;
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     int count = 0;
 
@@ -11091,9 +10960,9 @@ void OracleAPI::checkSchemaLoaded()
         " select count(*) "
         " from t_debug ";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     int count = 0;
 
@@ -11146,7 +11015,7 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
     std::string resetTag = "storeProfilingReset";
     std::string reset = "UPDATE t_profiling_snapshot SET "
                         "    cnt = 0, exceptions = 0, total = 0, average = 0";
-    oracle::occi::Statement* resetStmt = 0;
+    SafeStatement resetStmt;
 
     std::string updateTag = "storeProfilingUpdate";
     std::string update = "MERGE INTO t_profiling_snapshot p USING dual ON (scope = :1) "
@@ -11155,20 +11024,20 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
                          "WHEN MATCHED THEN UPDATE SET  "
                          "    cnt = :7, exceptions = :8, total = :9, average = :10";
 
-    oracle::occi::Statement* updateStmt = NULL;
+    SafeStatement updateStmt;
 
     std::string beatTag = "storeProfilingBeat";
     std::string beat    = "UPDATE t_profiling_info SET "
                           "    updated = :1, period = :2";
-    oracle::occi::Statement* beatStmt = NULL;
+    SafeStatement beatStmt;
 
     std::string insertBeatTag = "storeProfilingBeatInsert";
     std::string insertBeat = "INSERT INTO t_profiling_info (updated, period) "
                              "VALUES (:1, :2)";
-    oracle::occi::Statement* insertBeatStmt = NULL;
+    SafeStatement insertBeatStmt;
 
 
-    oracle::occi::Connection* pooledConn = NULL;
+    SafeConnection pooledConn;
 
     try
         {
@@ -11179,7 +11048,6 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
             resetStmt = conn->createStatement(reset, resetTag, pooledConn);
             resetStmt->executeUpdate();
             conn->destroyStatement(resetStmt, resetTag, pooledConn);
-            resetStmt = NULL;
 
             // Update values
             updateStmt = conn->createStatement(update, updateTag, pooledConn);
@@ -11201,7 +11069,6 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
                 }
 
             conn->destroyStatement(updateStmt, updateTag, pooledConn);
-            updateStmt = NULL;
 
             // New timestamp
             beatStmt = conn->createStatement(beat, beatTag, pooledConn);
@@ -11214,11 +11081,8 @@ void OracleAPI::storeProfiling(const fts3::ProfilingSubsystem* prof)
                     insertBeatStmt->setInt(2, prof->getInterval());
                     insertBeatStmt->executeUpdate();
                     conn->destroyStatement(insertBeatStmt, insertBeatTag, pooledConn);
-                    insertBeatStmt = NULL;
                 }
             conn->destroyStatement(beatStmt, beatTag, pooledConn);
-            beatStmt = NULL;
-
             conn->commit(pooledConn);
         }
     catch (oracle::occi::SQLException const &e)
@@ -11250,11 +11114,11 @@ void OracleAPI::setOptimizerMode(int mode)
     std::string insertTag = "setOptimizerMode2";
     std::string updateTag = "setOptimizerMode3";
 
-    oracle::occi::Connection* pooledConnection = NULL;
-    oracle::occi::Statement* s1 = NULL;
-    oracle::occi::ResultSet* r1 = NULL;
-    oracle::occi::Statement* s2 = NULL;
-    oracle::occi::Statement* s3 = NULL;
+    SafeConnection pooledConnection;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeStatement s2;
+    SafeStatement s3;
 
     int _mode = 0;
 
@@ -11336,9 +11200,9 @@ int OracleAPI::getOptimizerMode()
     std::string tag = "getOptimizerMode";
     std::string query = "select mode_opt from t_optimize_mode";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     int mode = 0;
 
@@ -11357,9 +11221,6 @@ int OracleAPI::getOptimizerMode()
 
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag, pooledConnection);
-            r=NULL;
-            s=NULL;
-
         }
     catch (oracle::occi::SQLException const &e)
         {
@@ -11401,9 +11262,9 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
         "    (file_id, attempt, datetime, reason) "
         "VALUES (:1, :2, :3, :4)";
 
-    oracle::occi::Statement* ssetRetryTimes = NULL;
-    oracle::occi::Statement* sLogError = NULL;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement ssetRetryTimes;
+    SafeStatement sLogError;
+    SafeConnection pooledConnection;
 
 
     try
@@ -11420,7 +11281,6 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             ssetRetryTimes->setInt(3,fileId);
             ssetRetryTimes->executeUpdate();
             conn->destroyStatement(ssetRetryTimes, tagsetRetryTimes, pooledConnection);
-            ssetRetryTimes = NULL;
 
             sLogError = conn->createStatement(queryLogError, tagLogError, pooledConnection);
             sLogError->setInt(1, fileId);
@@ -11429,7 +11289,6 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
             sLogError->setString(4, reason);
             sLogError->executeUpdate();
             conn->destroyStatement(sLogError, tagLogError, pooledConnection);
-            sLogError = NULL;
 
             conn->commit(pooledConnection);
         }
@@ -11470,11 +11329,11 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
 
     std::string query2setRetryTransfer2= "update t_job set job_state='ACTIVE' where job_id=:1  and job_state not in ('FAILED','CANCELED') ";
 
-    oracle::occi::Statement* ssetRetryTransfer = NULL;
-    oracle::occi::Statement* s2setRetryTransfer2 = NULL;
+    SafeStatement ssetRetryTransfer;
+    SafeStatement s2setRetryTransfer2;
 
-    oracle::occi::Statement* s1setRetryTransfer1 = NULL;
-    oracle::occi::ResultSet* rsetRetryTransfer1 = 0;
+    SafeStatement s1setRetryTransfer1;
+    SafeResultSet rsetRetryTransfer1;
 
     try
         {
@@ -11543,9 +11402,9 @@ void OracleAPI::setRetryTransfer(const std::string & jobId, int fileId, int retr
     std::string querysetRetryTimestamp = "select RETRY_DELAY from t_job where job_id=:1";
     std::string querysetRetryTimestamp1 = "update t_file set retry_timestamp=:1 where job_id=:2 and file_id=:3";
 
-    oracle::occi::Statement* setRetryTimestamp = 0;
-    oracle::occi::Statement* ssetRetryTimestamp1 = 0;
-    oracle::occi::ResultSet* retRetryTimestamp = 0;
+    SafeStatement setRetryTimestamp;
+    SafeStatement ssetRetryTimestamp1;
+    SafeResultSet retRetryTimestamp;
     //expressed in secs
     int retry_delay = 0;
     const int default_retry_delay = 7;
@@ -11627,9 +11486,9 @@ void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
     const std::string tag = "getTransferRetries";
     const std::string query = "SELECT attempt, datetime, reason from t_file_retry_errors WHERE file_id = :1";
 
-    oracle::occi::Statement* s = 0;
-    oracle::occi::ResultSet* r = 0;
-    oracle::occi::Connection* pooledConnection = NULL;
+    SafeStatement s;
+    SafeResultSet r;
+    SafeConnection pooledConnection;
 
     try
         {
@@ -11654,8 +11513,6 @@ void OracleAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
 
             conn->destroyResultset(s, r);
             conn->destroyStatement(s, tag, pooledConnection);
-            r=NULL;
-            s=NULL;
         }
     catch (oracle::occi::SQLException const &e)
         {

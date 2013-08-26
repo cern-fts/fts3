@@ -59,6 +59,7 @@ int taf_callback(Environment*, Connection*, void*, Connection::FailOverType foTy
     return 0;
 }
 
+
 OracleConnection::OracleConnection(const std::string username,const  std::string password, const std::string connectString, int pooledConn) : env(NULL), scPool(NULL), username_(username),
     password_(password), connectString_(connectString), maxConn(20), minConn(15), incrConn(1)
 {
@@ -111,16 +112,17 @@ OracleConnection::~OracleConnection()
     oracle::occi::Environment::terminateEnvironment (env);
 }
 
-oracle::occi::Connection* OracleConnection::getPooledConnection()
+SafeConnection OracleConnection::getPooledConnection()
 {
-    oracle::occi::Connection* tempConn = NULL;
     try
         {
             if (scPool)
                 {
+                    oracle::occi::Connection* tempConn = NULL;
                     tempConn = scPool->getConnection();
                     tempConn->setTAFNotify(taf_callback, NULL);
                     tempConn->setStmtCacheSize(500);
+                    return SafeConnection(tempConn, ConnectionDeallocator(scPool));
                 }
         }
     catch (const oracle::occi::SQLException& e)
@@ -131,26 +133,19 @@ oracle::occi::Connection* OracleConnection::getPooledConnection()
         {
             FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Unknown exception"));
         }
-    return tempConn;
+    return SafeConnection();
 }
 
-void OracleConnection::releasePooledConnection(oracle::occi::Connection *conn)
-{
-    if (conn)
-        if (scPool)
-            scPool->releaseConnection(conn);
-}
-
-oracle::occi::ResultSet* OracleConnection::createResultset(oracle::occi::Statement* s, oracle::occi::Connection*)
+SafeResultSet OracleConnection::createResultset(SafeStatement& s, SafeConnection&)
 {
     if (s)
-        return s->executeQuery();
+        return SafeResultSet(s->executeQuery(), ResultSetDeallocator(s));
     else
-        return NULL;
+        return SafeResultSet();
 
 }
 
-oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std::string tag, oracle::occi::Connection* conn)
+SafeStatement OracleConnection::createStatement(std::string sql, std::string tag, SafeConnection& conn)
 {
 
     if (conn)
@@ -161,65 +156,29 @@ oracle::occi::Statement* OracleConnection::createStatement(std::string sql, std:
                 {
                     s = conn->createStatement("", tag);
                     s->setAutoCommit(false);
-                    return s;
+                    return SafeStatement(s, StatementDeallocator(conn, tag));
                 }
             else
                 {
                     s = conn->createStatement(sql, tag);
                     s->setAutoCommit(false);
-                    return s;
-                }
-
-            return s;
-        }
-    return NULL;
-}
-
-void OracleConnection::destroyResultset(oracle::occi::Statement* s, oracle::occi::ResultSet* r)
-{
-    if (s)
-        {
-            if (r)
-                {
-                    s->closeResultSet(r);
+                    return SafeStatement(s, StatementDeallocator(conn, tag));
                 }
         }
-    r = NULL;
+    return SafeStatement();
 }
 
-void OracleConnection::destroyStatement(oracle::occi::Statement* s, std::string tag, oracle::occi::Connection* conn)
-{
-    if (conn)
-        {
-            if (tag.length() == 0)
-                {
-                    if (s)
-                        {
-                            conn->terminateStatement(s);
-                        }
-                }
-            else
-                {
-                    if (s)
-                        {
-                            if (conn)
-                                conn->terminateStatement(s, tag);
-                        }
-                }
-        }
-    s = NULL;
-}
 
-void OracleConnection::commit(oracle::occi::Connection*)
+
+void OracleConnection::commit(SafeConnection&)
 {
     //if (conn)
     //conn->commit();
 
 }
 
-void OracleConnection::rollback(oracle::occi::Connection* conn)
+void OracleConnection::rollback(SafeConnection& conn)
 {
     if (conn)
         conn->rollback();
-
 }
