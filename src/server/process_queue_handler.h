@@ -247,7 +247,7 @@ protected:
     					msgUpdater.timestamp = (*iter).timestamp;
     					msgUpdater.throughput = 0.0;
     					msgUpdater.transferred = 0.0;					
-					//ThreadSafeList::get_instance().updateMsg(msgUpdater);					
+					ThreadSafeList::get_instance().updateMsg(msgUpdater);					
 					
                                         if (iter->msg_errno == 0)
                                             {
