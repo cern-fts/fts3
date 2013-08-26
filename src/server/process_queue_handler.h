@@ -49,8 +49,7 @@ class ProcessQueueHandler : public TRAITS::ActiveObjectType
 {
 protected:
 
-    using TRAITS::ActiveObjectType::_enqueue;
-    std::string enableOptimization;
+    using TRAITS::ActiveObjectType::_enqueue;    
 
 public:
 
@@ -68,8 +67,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
-
-        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
+        
         messages.reserve(3000);
     }
 
@@ -90,9 +88,10 @@ public:
         this->_enqueue(op);
     }
 
-    bool updateDatabase(const struct message& msg)
+    static bool updateDatabase(const struct message& msg)
     {
         bool updated = true;
+	static std::string enableOptimization = theServerConfig().get<std::string > ("Optimizer");
         try
             {
                 std::string job = std::string(msg.job_id).substr(0, 36);
@@ -238,6 +237,7 @@ protected:
 
                         if(!messages.empty())
                             {
+			    
                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                                     {					
 					std::string jobId = std::string((*iter).job_id).substr(0, 36);
@@ -247,7 +247,7 @@ protected:
     					msgUpdater.timestamp = (*iter).timestamp;
     					msgUpdater.throughput = 0.0;
     					msgUpdater.transferred = 0.0;					
-					ThreadSafeList::get_instance().updateMsg(msgUpdater);					
+					//ThreadSafeList::get_instance().updateMsg(msgUpdater);					
 					
                                         if (iter->msg_errno == 0)
                                             {

@@ -456,7 +456,7 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
             sql <<
                 " SELECT file_index "
                 " FROM t_file "
-                " WHERE file_id = :fileId ",
+                " WHERE file_id = :fileId AND file_state = 'NOT_USED' ",
                 soci::use(fileId),
                 soci::into(fileIndex, ind)
                 ;
