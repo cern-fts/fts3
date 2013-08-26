@@ -54,15 +54,17 @@ void ThreadSafeList::checkExpiredMsg(std::vector<struct message_updater>& messag
     boost::posix_time::time_duration::tick_type timestamp2;
     boost::posix_time::time_duration::tick_type n_seconds = 0;
     for (iter = m_list.begin(); iter != m_list.end(); ++iter)
-        {
+    {
+	if(messages.fileID == iter->file_id){
             timestamp1 = milliseconds_since_epoch();
             timestamp2 = iter->timestamp;
             n_seconds =  timestamp1  - timestamp2;
-            if (n_seconds > 1500000)
+            if (n_seconds > 300000)
                 {
                     messages.push_back(*iter);
                 }
         }
+    }
 }
 
 bool ThreadSafeList::isAlive(int fileID)
@@ -91,7 +93,7 @@ bool ThreadSafeList::isAlive(int fileID)
                     timestamp1 = milliseconds_since_epoch();
                     timestamp2 = iter->timestamp;
                     n_seconds =  timestamp1  - timestamp2;
-                    if (n_seconds > 1500000 && fileID == iter->file_id)
+                    if (n_seconds > 300000 && fileID == iter->file_id)
                         {
                             return false;
                         }

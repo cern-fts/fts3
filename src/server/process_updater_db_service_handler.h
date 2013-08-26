@@ -133,7 +133,7 @@ protected:
 
                         /*set to fail all old queued jobs which have exceeded max queue time*/
                         counterFailAll++;
-                        if (counterFailAll == 50)
+                        if (counterFailAll == 10)
                             {
                                 std::vector<std::string> jobs;
                                 DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
@@ -150,7 +150,7 @@ protected:
                             }
 
                         counter++;
-                        if (counter == 500)
+                        if (counter == 10)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter = 0;
@@ -163,14 +163,14 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                                                        << e.what()
                                                        << commit;
-                        sleep(2);
+                        sleep(60);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                        sleep(2);
+                        sleep(60);
                     }
-                sleep(2);
+                sleep(60);
             }
     }
 

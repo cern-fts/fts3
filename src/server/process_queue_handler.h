@@ -198,6 +198,7 @@ protected:
     std::vector<struct message> queueMsgRecovery;
     std::vector<struct message> messages;
     std::vector<struct message>::const_iterator iter;
+    struct message_updater msgUpdater;
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
@@ -238,11 +239,19 @@ protected:
                         if(!messages.empty())
                             {
                                 for (iter = messages.begin(); iter != messages.end(); ++iter)
-                                    {
-
+                                    {					
+					std::string jobId = std::string((*iter).job_id).substr(0, 36);
+    					strcpy(msgUpdater.job_id, jobId.c_str());
+    					msgUpdater.file_id = (*iter).file_id;
+    					msgUpdater.process_id = (*iter).process_id;
+    					msgUpdater.timestamp = (*iter).timestamp;
+    					msgUpdater.throughput = 0.0;
+    					msgUpdater.transferred = 0.0;					
+					ThreadSafeList::get_instance().updateMsg(msgUpdater);					
+					
                                         if (iter->msg_errno == 0)
                                             {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << std::string((*iter).job_id).substr(0, 36)
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
                                                                                 << "\nFile id: " << (*iter).file_id
                                                                                 << "\nPid: " << (*iter).process_id
                                                                                 << "\nState: " << (*iter).transfer_status                                                                                

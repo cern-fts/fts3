@@ -522,7 +522,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 15);
+            boost::thread btUpdater(taskStatusUpdater, 60);
         }
     catch (std::exception& e)
         {
@@ -645,9 +645,6 @@ int main(int argc, char **argv)
             fileManagement->setJobId(opts.jobId);
             g_file_id = strArray[0];
             g_job_id = opts.jobId;
-
-            // Trigger immediately an update
-            taskStatusUpdater(0);
 
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
