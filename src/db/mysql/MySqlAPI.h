@@ -83,8 +83,6 @@ public:
 
     virtual void getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std::string & vos);
 
-    virtual void getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos);
-
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
     virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
