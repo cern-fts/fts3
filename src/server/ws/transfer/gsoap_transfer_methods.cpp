@@ -473,13 +473,15 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
                 }
             else
                 {
-                    throw Err_Custom("requestID <" + requestID + "> was not found");
+                    // throw Err_Custom("requestID <" + requestID + "> was not found");
+            		resp._getTransferJobStatusReturn = handleStatusExceptionForGLite(ctx, requestID);
                 }
         }
     catch (Err& ex)
         {
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
-            resp._getTransferJobStatusReturn = handleStatusExceptionForGLite(ctx, requestID);
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
         }
 
     return SOAP_OK;
@@ -604,6 +606,77 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
 int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__getTransferJobSummary2Response &resp)
 {
+    try
+        {
+            scoped_ptr<TransferJobs> job (
+                DBSingleton::instance()
+                .getDBObjectInstance()
+                ->getTransferJob(requestID, false)
+            );
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+
+            vector<JobStatus*> fileStatuses;
+            DBSingleton::instance()
+            .getDBObjectInstance()
+            ->getTransferJobStatus(requestID, false, fileStatuses);
+
+            if(!fileStatuses.empty())
+                {
+                    resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
+                    GSoapJobStatus status (ctx, **fileStatuses.begin());
+                    resp._getTransferJobSummary2Return->jobStatus = status;
+
+                    JobStatusHandler& handler = JobStatusHandler::getInstance();
+                    resp._getTransferJobSummary2Return->numActive = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_ACTIVE,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numCanceled = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_CANCELED,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numSubmitted = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_SUBMITTED,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numFinished = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_FINISHED,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numReady = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_READY,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numFailed = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_FAILED,
+                                fileStatuses
+                            );
+
+                    vector<JobStatus*>::iterator it;
+                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                        {
+                            delete *it;
+                        }
+
+                }
+            else
+                {
+                    // throw Err_Custom("requestID <" + requestID + "> was not found");
+            		resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
+                    resp._getTransferJobSummary2Return->jobStatus = handleStatusExceptionForGLite(ctx, requestID);
+                }
+
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
+
     // This method is a subset of getTransferJobSummary3
 //    tns3__JobRequest req;
 //    req.jobId   = _requestID;
