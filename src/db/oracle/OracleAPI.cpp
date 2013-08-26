@@ -239,162 +239,6 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
     return job;
 }
 
-void OracleAPI::getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos)
-{
-    std::string tag = "getSubmittedJobs";
-    std::string tag1 = "bringdistinct";
-    std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
-
-    std::string bring_distinct =
-        " SELECT distinct t_file.source_se, t_file.dest_se, t_job.vo_name "
-        " FROM t_job, t_file "
-        " WHERE t_file.job_id = t_job.job_id "
-        "	AND t_job.job_finished is NULL "
-        "	AND t_job.CANCEL_JOB is NULL "
-        " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
-        " 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
-        "	AND t_file.file_state='SUBMITTED' ";
-
-    if (vos != "*")
-        {
-            tag1 += 1;
-            bring_distinct +=
-                " AND t_job.VO_NAME IN " + vos ;
-
-        }
-
-    std::string query_stmt =
-        " SELECT "
-        " 	job_id "
-        "   from ( select "
-        " 	t_job.job_id "
-        " FROM t_job "
-        " WHERE "
-        " 	t_job.job_finished is NULL"
-        " 	AND t_job.CANCEL_JOB is NULL"
-        " 	AND t_job.VO_NAME=:1 "
-        " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
-        " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
-        " 	AND exists(	"
-        "		SELECT NULL "
-        "		FROM t_file "
-        "		WHERE t_file.job_id = t_job.job_id "
-        "			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
-        "			AND t_file.file_state = 'SUBMITTED'"
-        "	) "
-        " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= :4 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
-
-    SafeStatement s;
-    SafeResultSet r;
-    SafeStatement s1;
-    SafeResultSet r1;
-    SafeConnection pooledConnection;
-
-    try
-        {
-
-            int mode = getOptimizerMode();
-            if(mode==1)
-                {
-                    jobsNum = mode_1[2];
-                }
-            else if(mode==2)
-                {
-                    jobsNum = mode_2[2];
-                }
-            else if(mode==3)
-                {
-                    jobsNum = mode_3[2];
-                }
-            else
-                {
-                    jobsNum = mode_1[2];
-                }
-
-
-            pooledConnection = conn->getPooledConnection();
-            if (!pooledConnection)
-                return;
-
-            //get distinct vos
-            s1 = conn->createStatement(bring_distinct, tag1, pooledConnection);
-            r1 = conn->createResultset(s1, pooledConnection);
-            while (r1->next())
-                {
-
-                    distinct.push_back(
-                        boost::tuple< std::string, std::string, std::string >(
-                            r1->getString(3), //vo
-                            r1->getString(1), // source
-                            r1->getString(2)  // destination
-                        )
-                    );
-                }
-            conn->destroyResultset(s1, r1);
-            conn->destroyStatement(s1, tag1, pooledConnection);
-
-            s = conn->createStatement(query_stmt, tag, pooledConnection);
-
-            vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
-            for (it = distinct.begin(); it != distinct.end(); ++it)
-                {
-
-                    boost::tuple< std::string, std::string, std::string>& triplet = *it;
-
-                    s->setString(1, boost::get<0>(triplet)); // vo
-                    s->setString(2, boost::get<1>(triplet)); // source
-                    s->setString(3, boost::get<2>(triplet)); // destination
-                    s->setInt(4, jobsNum); // limit
-
-                    r = conn->createResultset(s, pooledConnection);
-
-                    while (r->next())
-                        {
-                            std::string jobId = r->getString(1);
-                            jobs.push_back(jobId);
-                        }
-                    conn->destroyResultset(s, r);
-                }
-
-            conn->destroyStatement(s, tag, pooledConnection);
-        }
-    catch (oracle::occi::SQLException const &e)
-        {
-            conn->rollback(pooledConnection);
-
-            if(s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
-
-            if(s1 && r1)
-                conn->destroyResultset(s1, r1);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-        }
-    catch (...)
-        {
-            conn->rollback(pooledConnection);
-
-            if(s && r)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, tag, pooledConnection);
-
-            if(s1 && r1)
-                conn->destroyResultset(s1, r1);
-            if (s1)
-                conn->destroyStatement(s1, tag1, pooledConnection);
-
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
-        }
-
-    conn->releasePooledConnection(pooledConnection);
-}
-
-
 void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files)
 {
 
@@ -842,129 +686,137 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
 
 void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
 {
-    TransferFiles* tr_files = NULL;
-    std::vector<std::string>::const_iterator iter;
-    std::string selecttag = "getByJobId";
+    // Queries
+    const std::string voQuery = " SELECT DISTINCT vo_name "
+                                " FROM t_job "
+                                " WHERE job_finished is NULL AND cancel_job IS NULL AND t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')";
+    const std::string voTag = "getByJobId/vo";
 
-    std::vector<std::string> jobs;
+    const std::string pairQuery = "SELECT DISTINCT f.source_se, f.dest_se from t_job j RIGHT JOIN t_file f "
+                                  " ON (j.job_id = f.job_id) WHERE j.vo_name = :1 and f.file_state='SUBMITTED' ";
+    const std::string pairTag = "getByJobId/pair";
 
-    std::string select =
-        "SELECT "
-        "		source_surl, dest_surl, job_id, vo_name, "
-        " 		file_id, overwrite_flag, USER_DN, CRED_ID, "
-        "		checksum, CHECKSUM_METHOD, SOURCE_SPACE_TOKEN, "
-        " 		SPACE_TOKEN, copy_pin_lifetime, bring_online, "
-        "		user_filesize, file_metadata, job_metadata, file_index, BRINGONLINE_TOKEN,"
-        "		source_se, dest_se, selection_strategy  "
-        "		from (select "
-        "		f1.source_surl, f1.dest_surl, f1.job_id, j.vo_name, "
-        " 		f1.file_id, j.overwrite_flag, j.USER_DN, j.CRED_ID, "
-        "		f1.checksum, j.CHECKSUM_METHOD, j.SOURCE_SPACE_TOKEN, "
-        " 		j.SPACE_TOKEN, j.copy_pin_lifetime, j.bring_online, "
-        "		f1.user_filesize, f1.file_metadata, j.job_metadata, f1.file_index, f1.BRINGONLINE_TOKEN,"
-        "		f1.source_se, f1.dest_se, f1.selection_strategy  "
-        "FROM t_file f1, t_job j "
-        "WHERE "
-        "	j.job_id = :1 AND "
-        "	j.job_id = f1.job_id AND "
-        "	f1.file_state ='SUBMITTED' AND "
-        "       j.job_finished is NULL AND "
-        "	f1.wait_timestamp IS NULL AND "
-        " 	(f1.retry_timestamp is NULL OR f1.retry_timestamp < :2) "
-        " ORDER BY f1.file_id ASC) WHERE ROWNUM <= :3 ";
+    const std::string transferQuery = "SELECT * FROM ("
+                                      "    SELECT "
+                                      "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                                      "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                                      "       f.checksum, j.checksum_method, j.source_space_token, "
+                                      "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                                      "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                                      "       f.source_se, f.dest_se, f.selection_strategy, rownum as rw  "
+                                      "    FROM t_job j RIGHT JOIN t_file f ON (j.job_id = f.job_id) "
+                                      "    WHERE f.file_state = 'SUBMITTED' AND  f.source_se = :1 AND f.dest_se = :2 AND"
+                                      "       j.vo_name = :3 AND "
+                                      "       j.job_state IN ('ACTIVE', 'READY','SUBMITTED') AND "
+                                      "       f.wait_timestamp IS NULL AND "
+                                      "       (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND "
+                                      "       (f.retry_timestamp is NULL OR f.retry_timestamp < :4) "
+                                      "       ORDER BY j.priority DESC, j.submit_time DESC"
+                                      ") WHERE rw < :5";
+    const std::string transferTag = "getByJobId/transfer";
 
-    SafeStatement s;
-    SafeResultSet r;
     SafeConnection pooledConnection;
 
     try
         {
-            int mode = getOptimizerMode();
-            if(mode==1)
-                {
-                    filesNum = mode_1[3];
-                }
-            else if(mode==2)
-                {
-                    filesNum = mode_2[3];
-                }
-            else if(mode==3)
-                {
-                    filesNum = mode_3[3];
-                }
-            else
-                {
-                    filesNum = mode_1[3];
-                }
-
-            pooledConnection = conn->getPooledConnection();
+            SafeConnection pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
 
-            s = conn->createStatement(select, selecttag, pooledConnection);
+            int mode = getOptimizerMode();
+            if(mode == 1)
+                filesNum = mode_1[3];
+            else if(mode == 2)
+                filesNum = mode_2[3];
+            else if(mode == 3)
+                filesNum = mode_3[3];
+            else
+                filesNum = mode_1[3];
 
-            for (iter = jobs.begin(); iter != jobs.end(); ++iter)
+            // Get pairs per VO
+            std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
+            distinct.reserve(1500); //approximation
+
+            SafeStatement voStmt = conn->createStatement(voQuery, voTag, pooledConnection);
+            SafeResultSet voRs = conn->createResultset(voStmt, pooledConnection);
+
+            while (voRs->next())
                 {
-                    time_t timed = time(NULL);
-                    std::string job_id = (*iter);
-                    s->setString(1, job_id);
-                    s->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); //submit_time
-                    s->setInt(3, filesNum);
-                    r = conn->createResultset(s, pooledConnection);
-                    while (r->next())
-                        {
-                            tr_files = new TransferFiles();
-                            tr_files->SOURCE_SURL = r->getString(1);
-                            tr_files->DEST_SURL = r->getString(2);
-                            tr_files->JOB_ID = r->getString(3);
-                            tr_files->VO_NAME = r->getString(4);
-                            tr_files->FILE_ID = r->getInt(5);
-                            tr_files->OVERWRITE = r->getString(6);
-                            tr_files->DN = r->getString(7);
-                            tr_files->CRED_ID = r->getString(8);
-                            tr_files->CHECKSUM = r->getString(9);
-                            tr_files->CHECKSUM_METHOD = r->getString(10);
-                            tr_files->SOURCE_SPACE_TOKEN = r->getString(11);
-                            tr_files->DEST_SPACE_TOKEN = r->getString(12);
-                            tr_files->PIN_LIFETIME = r->getInt(13);
-                            tr_files->BRINGONLINE = r->getInt(14);
-                            tr_files->USER_FILESIZE = r->getDouble(15);
-                            tr_files->FILE_METADATA = r->getString(16);
-                            tr_files->JOB_METADATA = r->getString(17);
-                            tr_files->FILE_INDEX = r->getInt(18);
-                            tr_files->BRINGONLINE_TOKEN = r->getString(19);
-                            tr_files->SOURCE_SE = r->getString(20);
-                            tr_files->DEST_SE = r->getString(21);
-                            tr_files->SELECTION_STRATEGY = r->getString(22);
+                    std::string voName = voRs->getString(1);
 
-                            files[tr_files->VO_NAME].push_back(tr_files);
+                    SafeStatement pairStmt = conn->createStatement(pairQuery, pairTag, pooledConnection);
+                    pairStmt->setString(1, voName);
+                    SafeResultSet pairRs = conn->createResultset(pairStmt, pooledConnection);
+                    while (pairRs->next())
+                        {
+                            distinct.push_back(
+                                    boost::tuple<std::string, std::string, std::string>
+                                        (pairRs->getString(1), pairRs->getString(2), voName));
                         }
-                    conn->destroyResultset(s, r);
                 }
 
-            conn->destroyStatement(s, selecttag, pooledConnection);
-        }
-    catch (oracle::occi::SQLException const &e)
-        {
-            conn->rollback(pooledConnection);
-            if (r && s)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, selecttag, pooledConnection);
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
-        }
-    catch (...)
-        {
-            conn->rollback(pooledConnection);
-            if (r && s)
-                conn->destroyResultset(s, r);
-            if (s)
-                conn->destroyStatement(s, selecttag, pooledConnection);
 
-            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
-        }
+            // Iterate through pairs, getting jobs IF the VO has not run out of credits
+            // AND there are pending file transfers within the job
+            std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
+            for (it = distinct.begin(); it != distinct.end(); ++it)
+                {
+                    boost::tuple<std::string, std::string, std::string>& triplet = *it;
 
-    conn->releasePooledConnection(pooledConnection);
+                    SafeStatement transferStmt = conn->createStatement(transferQuery, transferTag, pooledConnection);
+                    transferStmt->setString(1, boost::get<0>(triplet));
+                    transferStmt->setString(2, boost::get<1>(triplet));
+                    transferStmt->setString(3, boost::get<2>(triplet));
+                    transferStmt->setTimestamp(4, conv->toTimestamp(time(NULL), conn->getEnv()));
+                    transferStmt->setInt(5, filesNum);
+
+                    SafeResultSet transferRs = conn->createResultset(transferStmt, pooledConnection);
+                    while (transferRs->next())
+                        {
+                            TransferFiles* tFile = new TransferFiles();
+
+                            tFile->FILE_STATE  = transferRs->getString(1);
+                            tFile->SOURCE_SURL = transferRs->getString(2);
+                            tFile->DEST_SURL   = transferRs->getString(3);
+                            tFile->JOB_ID      = transferRs->getString(4);
+                            tFile->VO_NAME     = transferRs->getString(5);
+                            tFile->FILE_ID     = transferRs->getInt(6);
+                            tFile->OVERWRITE   = transferRs->getString(7);
+                            tFile->DN          = transferRs->getString(8);
+                            tFile->CRED_ID     = transferRs->getString(9);
+                            tFile->CHECKSUM    = transferRs->getString(10);
+                            tFile->CHECKSUM_METHOD = transferRs->getString(11);
+                            tFile->SOURCE_SPACE_TOKEN = transferRs->getString(12);
+                            tFile->DEST_SPACE_TOKEN   = transferRs->getString(13);
+                            tFile->PIN_LIFETIME  = transferRs->getInt(14);
+                            tFile->BRINGONLINE   = transferRs->getInt(15);
+                            tFile->USER_FILESIZE = transferRs->getNumber(16);
+                            tFile->FILE_METADATA = transferRs->getString(17);
+                            tFile->JOB_METADATA  = transferRs->getString(18);
+                            tFile->FILE_INDEX    = transferRs->getInt(19);
+                            tFile->BRINGONLINE_TOKEN = transferRs->getString(20);
+                            tFile->SOURCE_SE     = transferRs->getString(21);
+                            tFile->DEST_SE       = transferRs->getString(22);
+                            tFile->SELECTION_STRATEGY = transferRs->getString(23);
+
+                            files[boost::get<2>(triplet)].push_back(tFile);
+                        }
+                }
+        }
+    catch (std::exception& e)
+        {
+            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
+                {
+                    std::list<TransferFiles*>& l = i->second;
+                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
+                        {
+                            delete *it;
+                        }
+                    l.clear();
+                }
+            files.clear();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
 }
 
 

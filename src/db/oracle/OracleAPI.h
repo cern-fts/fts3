@@ -66,8 +66,6 @@ public:
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    virtual void getSubmittedJobs(std::vector<std::string>& jobs, const std::string & vos);
-
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
     virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
