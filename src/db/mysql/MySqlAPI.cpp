@@ -4155,7 +4155,7 @@ std::vector< std::pair<std::string, std::string> > MySqlAPI::getAllPairCfgs()
 
 int MySqlAPI::activeProcessesForThisHost()
 {
-/*
+
     soci::session sql(*connectionPool);
 
     unsigned active = 0;
@@ -4167,9 +4167,7 @@ int MySqlAPI::activeProcessesForThisHost()
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-    return active;
-    */
-    return 0;
+    return active;    
 }
 
 
