@@ -233,6 +233,7 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
     req.archive = false;
     req.offset  = _offset;
     req.limit   = _limit;
+    req.retries = false;
 
     impltns__getFileStatus3Response resp;
     int status = impltns__getFileStatus3(soap, &req, resp);
@@ -292,25 +293,27 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                     status->duration = tmp->finish_time - tmp->start_time;
                     status->numFailures = tmp->numFailures;
 
-                    DBSingleton::instance()
-                    .getDBObjectInstance()
-                    ->getTransferRetries(tmp->fileId, retries);
+                    // Retries only on request!
+                    if (req->retries) {
+                        DBSingleton::instance()
+                        .getDBObjectInstance()
+                        ->getTransferRetries(tmp->fileId, retries);
 
-                    std::vector<FileRetry*>::iterator ri;
-                    for (ri = retries.begin(); ri != retries.end(); ++ri)
-                        {
-                            tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(soap, -1);
-                            retry->attempt  = (*ri)->attempt;
-                            retry->datetime = (*ri)->datetime;
-                            retry->reason   = (*ri)->reason;
-                            status->retries.push_back(retry);
+                        std::vector<FileRetry*>::iterator ri;
+                        for (ri = retries.begin(); ri != retries.end(); ++ri)
+                            {
+                                tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(soap, -1);
+                                retry->attempt  = (*ri)->attempt;
+                                retry->datetime = (*ri)->datetime;
+                                retry->reason   = (*ri)->reason;
+                                status->retries.push_back(retry);
 
-                            delete *ri;
-                        }
-                    retries.clear();
+                                delete *ri;
+                            }
+                        retries.clear();
+                    }
 
                     resp.getFileStatusReturn->item.push_back(status);
-
                 }
             for (it = statuses.begin(); it < statuses.end(); ++it)
                 {

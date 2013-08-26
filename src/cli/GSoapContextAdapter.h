@@ -184,10 +184,12 @@ public:
      * @param archive if true, the archive will be queried
      * @param offset  query starting from this offset (i.e. files 100 in advance)
      * @param limit   query a limited number of files (i.e. only 50 results)
+     * @param retries get file retries
      * @param resp server response
      * @return The number of files returned
      */
     int getFileStatus (string jobId, bool archive, int offset, int limit,
+                       bool retries,
                        impltns__getFileStatusResponse& resp);
 
     /**

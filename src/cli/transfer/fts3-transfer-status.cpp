@@ -111,7 +111,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     impltns__getFileStatusResponse resp;
-                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, resp);
+                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli->detailed(), resp);
 
                                     if (cnt > 0 && resp._getFileStatusReturn)
                                         {
