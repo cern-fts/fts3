@@ -30,6 +30,7 @@ limitations under the License. */
 #include <boost/scoped_ptr.hpp>
 #include "producer_consumer_common.h"
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 
 extern bool stopThreads;
 
@@ -213,7 +214,7 @@ protected:
 
                         if(fs::is_empty(fs::path(STATUS_DIR)))
                             {
-                                sleep(1);
+                        	usleep(300000);
                                 continue;
                             }
 
@@ -244,8 +245,7 @@ protected:
                                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << std::string((*iter).job_id).substr(0, 36)
                                                                                 << "\nFile id: " << (*iter).file_id
                                                                                 << "\nPid: " << (*iter).process_id
-                                                                                << "\nState: " << (*iter).transfer_status
-                                                                                << "\nMessage: " << (*iter).transfer_message
+                                                                                << "\nState: " << (*iter).transfer_status                                                                                
                                                                                 << "\nSource: " << (*iter).source_se
                                                                                 << "\nDest: " << (*iter).dest_se << commit;
 
@@ -276,28 +276,28 @@ protected:
                                 messages.clear();
                             }
 
-                        sleep(1);
+                        usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        sleep(1);
+                        usleep(300000);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        sleep(1);
+                        usleep(300000);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
                         for (iter = messages.begin(); iter != messages.end(); ++iter)
                             queueMsgRecovery.push_back(*iter);
-                        sleep(1);
+                        usleep(300000);
                     }
             }
     }

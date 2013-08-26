@@ -489,18 +489,22 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
     soci::session sql(*connectionPool);
 
     unsigned int updated = 0;
-    int countSame = 0;
+    
 
     try
         {
             sql.begin();
-
-            sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl ",
+	    	    	    
+	    int countSame = 0;
+            
+	    sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl ",
                 soci::use(file->DEST_SURL),
                 soci::into(countSame);
 
-            if(countSame != 0)
+            if(countSame > 0){	        
                 return 0;
+	    }
+	    
 
             soci::statement stmt(sql);
 
@@ -514,7 +518,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
             stmt.define_and_bind();
             stmt.execute(true);
 
-            updated = (unsigned int) stmt.get_affected_rows();
+            updated = (unsigned int) stmt.get_affected_rows();	    	    
             if (updated > 0)
                 {
                     soci::statement jobStmt(sql);
@@ -527,7 +531,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
                     jobStmt.define_and_bind();
                     jobStmt.execute(true);
                 }
-
+		
             sql.commit();
         }
     catch (std::exception& e)
@@ -3106,7 +3110,7 @@ bool MySqlAPI::isFileReadyState(int fileID)
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 
-    return (isReadyState & isReadyHost);
+    return (isReadyState && isReadyHost);
 }
 
 

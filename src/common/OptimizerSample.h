@@ -70,7 +70,7 @@ public:
 
 private:
     std::vector<struct transfersStore> transfersStoreVector;
-    mutable ThreadTraits::MUTEX_R _mutex;
+    mutable ThreadTraits::MUTEX _mutex;
 
 };
 

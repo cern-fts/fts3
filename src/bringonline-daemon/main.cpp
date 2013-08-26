@@ -208,7 +208,6 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                             time_t now = time(NULL);
                             if ((*i).started == false)   //issue bringonline
                                 {
-                                    db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
 
                                     if((*i).pinlifetime > pinlifetime)
                                         {
@@ -221,6 +220,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                         }
 
                                     statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);
+                                   db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));				    
 
                                     if (statusA < 0)
                                         {

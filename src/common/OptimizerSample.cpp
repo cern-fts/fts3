@@ -59,11 +59,10 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                     destActive, double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput,
                                     double avgThr, int lowDefault, int highDefault)
 {
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     bool allowed = false;
     std::vector<struct transfersStore>::iterator iter;
     int activeInStore = 0;
-
 
     //check if this src/dest pair already exists
     if (transfersStoreVector.empty())
@@ -167,28 +166,28 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
 
     if (sourceActive == 0 && destActive == 0)
         {
-            return true;
+            allowed =  true;
         }
     else if (currentActive <= (trSuccessRateForPair >= 99? highDefault: lowDefault ) )
         {
-            return true;
+            allowed =  true;
         }
     else if(currentActive < activeInStore)
         {
-            return true;
+            allowed =  true;
         }
     else
         {
-            return false;
+            allowed =  false;
         }
-
+    
     return allowed;
 }
 
 int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string sourceSe, std::string destSe, int currentActive, int, int,
                                     double trSuccessRateForPair, double numberOfFinishedAll, double numberOfFailedAll, double throughput, double avgThr)
 {
-    ThreadTraits::LOCK_R lock(_mutex);
+    ThreadTraits::LOCK lock(_mutex);
     std::vector<struct transfersStore>::iterator iter;
     int activeInStore = 0;
 
