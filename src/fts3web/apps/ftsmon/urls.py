@@ -22,6 +22,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^jobs/?$', 'jobs.jobIndex'),
     url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)$', 'jobs.jobDetails'),
     url(r'^queue$', 'queue.queue'),
+    url(r'^queue/detailed$', 'queue.detailed'),
     url(r'^staging', 'jobs.staging'),
     url(r'^configuration$', 'statistics.configurationAudit'),
     

@@ -26,7 +26,7 @@ from urllib import urlencode
 
 
 @jsonify_paged
-def queueByPairs(httpRequest):
+def queue(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
     
@@ -46,7 +46,7 @@ def queueByPairs(httpRequest):
     return pairs
 
 @jsonify_paged
-def queueDetailed(httpRequest):
+def detailed(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
     
@@ -57,13 +57,3 @@ def queueDetailed(httpRequest):
    
     return transfers
 
-
-def queue(httpRequest):
-    get = httpRequest.GET
-    
-    filteredFields = ['source_se', 'dest_se', 'vo']
-    
-    if reduce(lambda a,b: a and b, map(lambda k: k in get and get[k], filteredFields)):
-        return queueDetailed(httpRequest)
-    else:
-        return queueByPairs(httpRequest)

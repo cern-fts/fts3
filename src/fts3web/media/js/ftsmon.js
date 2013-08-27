@@ -10,10 +10,12 @@ config(function($routeProvider) {
 			                 resolve:     JobViewCtrl.resolve,
 			                 reloadOnSearch: false}).
 
-	    when('/queue/', {templateUrl: STATIC_ROOT + 'html/jobs/queue.html',
+	    when('/queue/', {templateUrl: STATIC_ROOT + 'html/queue/queue.html',
 	    	             controller:  JobQueueCtrl,
-	    	             resolve:     JobQueueCtrl.resolve,
-	    	             reloadOnSearch: true}).
+	    	             resolve:     JobQueueCtrl.resolve}).
+        when('/queue/details', {templateUrl: STATIC_ROOT + 'html/queue/detailed.html',
+					            controller:  JobQueueDetailedCtrl,
+					            resolve:     JobQueueDetailedCtrl.resolve}).
 
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 });

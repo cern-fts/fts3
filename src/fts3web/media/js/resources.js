@@ -9,4 +9,14 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('unique/', {}, {
 		all: {method: 'GET', isArray: false}
 	})
+})
+.factory('QueuePairs', function($resource) {
+	return $resource('queue', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+.factory('Queue', function($resource) {
+	return $resource('queue/detailed', {}, {
+		query: {method: 'GET', isArray: false}
+	})
 });

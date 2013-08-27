@@ -139,16 +139,3 @@ JobViewCtrl.resolve = {
     	return deferred.promise;
     }
 }
-
-
-/**
- * Job queue
- */
-function JobQueueCtrl($location, $scope, jobs, Job, Unique) {
-	
-}
-
-
-JobQueueCtrl.resolve = {
-		
-}
