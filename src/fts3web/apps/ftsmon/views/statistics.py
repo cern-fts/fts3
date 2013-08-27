@@ -29,7 +29,7 @@ FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 @jsonify_paged
 def configurationAudit(httpRequest):
-    return ConfigAudit.objects.order_by('-datetime').all()
+    return ConfigAudit.objects.order_by('-datetime')
 
 
 

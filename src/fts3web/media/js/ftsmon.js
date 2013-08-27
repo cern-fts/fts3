@@ -34,6 +34,10 @@ config(function($routeProvider) {
         when('/errors/list', {templateUrl: STATIC_ROOT + 'html/errors/list.html',
 	                          controller:  FilesWithErrorCtrl,
 		                      resolve:     FilesWithErrorCtrl.resolve}).
+		                      
+        when('/configaudit', {templateUrl: STATIC_ROOT + 'html/config.html',
+		                      controller:  ConfigCtrl,
+			                  resolve:     ConfigCtrl.resolve}).
 							         
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })

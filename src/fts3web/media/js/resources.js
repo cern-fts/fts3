@@ -44,4 +44,9 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('errors/list', {}, {
 		query: {method: 'GET', isArray: false}
 	})
+})
+.factory('Configuration', function($resource) {
+	return $resource('configuration', {}, {
+		query: {method: 'GET', isArray: false}
+	})
 });
