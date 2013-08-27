@@ -47,15 +47,20 @@ config(function($routeProvider) {
 });
 
 /** Show loading **/
-
+var nLoading = 0;
 function loading($rootScope)
 {
-	$rootScope.loading = true;	
+	nLoading += 1;
+	if (nLoading)
+		$rootScope.loading = true;	
 }
 
 function stopLoading($rootScope)
 {
-	$rootScope.loading = false;
+	if (nLoading > 0)
+		nLoading -= 1;
+	if (!nLoading)
+		$rootScope.loading = false;
 }
 
 /** Join states with commas */
