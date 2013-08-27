@@ -18,8 +18,11 @@ BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
 Requires:  oracle-instantclient-basic%{?_isa}
-AutoReq: no
-AutoProv: yes
+
+%filter_from_requires libocci
+%filter_from_requires libclntsh
+%filter_from_requires libnnz11
+%filter_setup
 
 %description
 The File Transfer Service V3 oracle plug-in
