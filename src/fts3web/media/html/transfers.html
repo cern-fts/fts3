@@ -1,6 +1,5 @@
 <h3>
-    Showing {{queue.startIndex}} to {{queue.endIndex}} out of {{queue.count}}
-    for {{filter.source_se}} → {{filter.dest_se}} and VO {{filter.vo}}
+    Showing {{transfers.startIndex}} to {{transfers.endIndex}} out of {{transfers.count}}
 </h3>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
@@ -18,14 +17,14 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="q in queue.items" ng-class-odd="'odd'">
-            <td>{{q.file_id}}</td>
-            <td class="status {{q.file_state}}">{{q.file_state}}</td>
+        <tr ng-repeat="t in transfers.items" ng-class-odd="'odd'">
+            <td>{{t.file_id}}</td>
+            <td class="status {{t.file_state}}">{{t.file_state}}</td>
             <td>
-                <a href="#/job/{{q.job_id}}">{{q.job_id}}</a>
+                <a href="#/job/{{t.job_id}}">{{t.job_id}}</a>
             </td>
-            <td>{{q.source_surl}}</td>
-            <td>{{q.dest_surl}}</td>
+            <td>{{t.source_surl}}</td>
+            <td>{{t.dest_surl}}</td>
         </tr>
     </tbody>
 </table>

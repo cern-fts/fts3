@@ -198,3 +198,20 @@ def staging(httpRequest):
         
     return transfers
 
+
+@jsonify_paged
+def transferList(httpRequest):
+    filterForm = forms.FilterForm(httpRequest.GET)
+    filters    = setupFilters(filterForm)
+    
+    transfers = File.objects.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'})
+    if filters['state']:
+        transfers = transfers.filter(file_state__in = filters['state'])
+    if filters['source_se']:
+        transfers = transfers.filter(source_se = filters['source_se'])
+    if filters['dest_se']:
+        transfers = transfers.filter(dest_se = filters['dest_se'])
+    if filters['vo']:
+        transfers = transfers.filter(job__vo_name = filters['vo'])
+   
+    return transfers.order_by('-nullFinished')

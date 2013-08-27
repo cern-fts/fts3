@@ -1,15 +1,13 @@
-function JobQueueCtrl($location, $scope, queue, QueuePairs, Unique)
+
+function TransfersCtrl($location, $scope, transfers, Transfers)
 {
 	// Queue entries
-	$scope.queue = queue;
-	
-	// Unique pairs and vos
-	$scope.unique = Unique.all();
+	$scope.transfers = transfers;
 	
 	// Paginator	
 	$scope.pageMax   = 15;
-	$scope.page      = $scope.queue.page;
-	$scope.pageCount = $scope.queue.pageCount;
+	$scope.page      = $scope.transfers.page;
+	$scope.pageCount = $scope.transfers.pageCount;
 
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
@@ -19,8 +17,8 @@ function JobQueueCtrl($location, $scope, queue, QueuePairs, Unique)
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
-		filter.page = $scope.queue.page;
-    	$scope.queue = QueuePairs.query(filter);
+		filter.page = $scope.transfers.page;
+    	$scope.transfers = Transfers.query(filter);
 	}, 20000);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
@@ -45,8 +43,8 @@ function JobQueueCtrl($location, $scope, queue, QueuePairs, Unique)
 }
 
 
-JobQueueCtrl.resolve = {
-	queue: function($rootScope, $location, $q, QueuePairs) {
+TransfersCtrl.resolve = {
+	transfers: function($rootScope, $location, $q, Transfers) {
 		loading($rootScope);
 		
 		var deferred = $q.defer();
@@ -55,7 +53,7 @@ JobQueueCtrl.resolve = {
 		if (!page || page < 1)
 			page = 1;
 		
-		QueuePairs.query($location.search(), function(data) {
+		Transfers.query($location.search(), function(data) {
 			deferred.resolve(data);
 			stopLoading($rootScope);
 		});

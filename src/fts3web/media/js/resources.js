@@ -17,6 +17,11 @@ angular.module('ftsmon.resources', ['ngResource'])
 			    isArray: false},
 	})
 })
+.factory('Transfers', function($resource) {
+	return $resource('transfers', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
 .factory('Unique', function($resource) {
 	return $resource('unique/', {}, {
 		all: {method: 'GET', isArray: false}
@@ -24,11 +29,6 @@ angular.module('ftsmon.resources', ['ngResource'])
 })
 .factory('QueuePairs', function($resource) {
 	return $resource('queue', {}, {
-		query: {method: 'GET', isArray: false}
-	})
-})
-.factory('Queue', function($resource) {
-	return $resource('queue/detailed', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })

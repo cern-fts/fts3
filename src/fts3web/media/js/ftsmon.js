@@ -14,9 +14,9 @@ config(function($routeProvider) {
 	    when('/queue/',               {templateUrl: STATIC_ROOT + 'html/queue/queue.html',
 	    	                           controller:  JobQueueCtrl,
 	    	                           resolve:     JobQueueCtrl.resolve}).
-        when('/queue/details',        {templateUrl: STATIC_ROOT + 'html/queue/detailed.html',
-					                   controller:  JobQueueDetailedCtrl,
-					                   resolve:     JobQueueDetailedCtrl.resolve}).
+        when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
+					                   controller:  TransfersCtrl,
+					                   resolve:     TransfersCtrl.resolve}).
 
 		when('/staging/',             {templateUrl: STATIC_ROOT + 'html/staging.html',
 			                           controller:  StagingCtrl,

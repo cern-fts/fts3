@@ -45,15 +45,3 @@ def queue(httpRequest):
     
     return pairs
 
-@jsonify_paged
-def detailed(httpRequest):
-    filterForm = forms.FilterForm(httpRequest.GET)
-    filters    = setupFilters(filterForm)
-    
-    transfers = File.objects.filter(file_state__in = ['SUBMITTED', 'READY'])
-    transfers = transfers.filter(source_se = filters['source_se'],
-                                 dest_se = filters['dest_se'],
-                                 job__vo_name = filters['vo'])
-   
-    return transfers
-
