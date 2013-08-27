@@ -135,13 +135,14 @@ def _getAllPairs(notBefore, source = None, dest = None):
 def _getAveragePerPair(pairs, notBefore):
     avg = {}
     
-    for (source, dest) in pairs:
-        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES, finish_time__gt = notBefore)\
-                              .filter(source_se = source,
-                                      dest_se = dest)\
-                              .aggregate(Avg('tx_duration'), Avg('throughput'))
-        avg[(source, dest)] = {'avgDuration': pairAvg['tx_duration__avg'],
-                               'avgThroughput': pairAvg['throughput__avg']}
+    pairsAvg = File.objects.exclude(file_state__in = ACTIVE_STATES).filter(finish_time__gte = notBefore)\
+                              .values('source_se', 'dest_se', 'tx_duration', 'throughput')\
+                              .annotate(Avg('tx_duration'), Avg('throughput'))
+
+    for pair in pairsAvg:
+        sePair = (pair['source_se'], pair['dest_se'])
+        avg[sePair] = {'avgDuration': pair['tx_duration__avg'],
+                       'avgThroughput': pair['throughput__avg']}
     
     return avg
 
