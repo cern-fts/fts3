@@ -168,39 +168,26 @@ def archiveJobIndex(httpRequest):
     return jobs
 
 
-
-def _getJob(jobModel, fileModel, jobId, fstate = None):
-    try:
-        job   = jobModel.objects.get(job_id = jobId)
-        files = fileModel.objects.filter(job = jobId)
-        if fstate:
-            files = files.filter(file_state = fstate)
-        return (job, files)
-    except jobModel.DoesNotExist:
-        return (None, None)
-
-
 @jsonify
 def jobDetails(httpRequest, jobId):
-    # State filter
-    state = None
-    if 'state' in httpRequest.GET:
-        state = httpRequest.GET['state']
-    # Try t_job and t_file first
-    (job, files) = _getJob(Job, File, jobId, state)
-    # Otherwise, try the archive
-    if not job:
-        (job, files) = _getJob(JobArchive, FileArchive, jobId, state)
-        
-    if not job:
-        raise Http404
-    
-    #transferStateCount = File.objects.filter(job = jobId)\
-#                                     .values('file_state')\
-                                     #.annotate(count = Count('file_state'))
-
-    job.files = files                                   
+    try:
+        job = Job.objects.get(job_id = jobId)
+    except Job.DoesNotExist:
+        try:
+            job = JobArchive.objects.get(job_id = jobId)
+        except JobArchive.DoesNotExist:
+            raise Http404
     return job
+
+
+@jsonify_paged
+def jobFiles(httpRequest, jobId):
+    files = File.objects.filter(job_id = jobId)
+    if not files:
+        files = FileArchive.objects.filter(job_id = jobId)
+    if not files:
+        raise Http404
+    return files
 
 
 @jsonify_paged

@@ -6,8 +6,7 @@ config(function($routeProvider) {
 			       resolve:     JobListCtrl.resolve}).
 		when('/job/:jobId', {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
 			                 controller:  JobViewCtrl,
-			                 resolve:     JobViewCtrl.resolve,
-			                 reloadOnSearch: false}).
+			                 resolve:     JobViewCtrl.resolve}).
  		when('/archive', {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
 				          controller:  ArchiveCtrl,
 				          resolve:     ArchiveCtrl.resolve}).

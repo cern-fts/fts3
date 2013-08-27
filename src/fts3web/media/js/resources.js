@@ -5,6 +5,12 @@ angular.module('ftsmon.resources', ['ngResource'])
 			    isArray: false},
 	})
 })
+.factory('Files', function($resource) {
+	return $resource('jobs/:jobId/files', {}, {
+		query: {method: 'GET',
+			    isArray: false},
+	})
+})
 .factory('ArchivedJobs', function($resource) {
 	return $resource('archive', {}, {
 		query: {method: 'GET',

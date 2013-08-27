@@ -8,7 +8,7 @@
 	Reuse sessions: {{job.reuse_job}}
 </p>
 
-<h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{job.files.length}}</h4>
+<h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{files.count}}</h4>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
     max-size="pageMax" class="pagination" boundary-links="true"
@@ -28,7 +28,7 @@
 	        <th style="width: 10%">FINISH TIME</th>
         </tr>
     </thead>
-    <tbody ng-repeat="file in files" ng-class-odd="'odd'">
+    <tbody ng-repeat="file in files.items" ng-class-odd="'odd'">
         <tr>
             <td>{{file.file_id}}</td>
             <td>{{file.transferhost}}</td>

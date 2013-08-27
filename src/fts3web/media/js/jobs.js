@@ -96,22 +96,8 @@ ArchiveCtrl.resolve = {
 }
 
 /** Job view
- * Note: We paginate files client-side
- **/
-function JobViewSetFiles($location, $scope, page)
-{
-	var startIndex = (page - 1) * $scope.itemPerPage;
-	var endIndex   = (page) * $scope.itemPerPage;
-	
-	if (endIndex > $scope.job.files.length)
-		endIndex = $scope.job.files.length;
-		
-	$scope.files            = $scope.job.files.slice(startIndex, endIndex);
-	$scope.files.startIndex = startIndex;
-	$scope.files.endIndex   = endIndex; 
-}
-
-function JobViewCtrl($location, $scope, job, Job)
+ */
+function JobViewCtrl($location, $scope, job, files, Job, Files)
 {
 	var page = $location.search().page;
 	if (!page)
@@ -121,28 +107,22 @@ function JobViewCtrl($location, $scope, job, Job)
 	
 	$scope.job = job;
 	
+	// We paginate the files
 	$scope.pageMax    = 15;
-	$scope.pageCount  = Math.ceil($scope.job.files.length / $scope.itemPerPage);
-	$scope.page       = page ;
-	
-	JobViewSetFiles($location, $scope, page);
+	$scope.pageCount  = files.pageCount;
+	$scope.page       = files.page;
+	$scope.files      = files;
 	
 	$scope.pageChanged = function(newPage) {
 		$location.search({page: newPage});
-		JobViewSetFiles($location, $scope, newPage - 1);
 	}
 	
 	// Reloading
 	$scope.autoRefresh = setInterval(function() {
 		var filter   = $location.search();
 		filter.jobId = $scope.job.job_id;	
-    	$scope.job   = Job.query(filter, function() {
-    		var start = $scope.files.startIndex;
-    		var end   = $scope.files.endIndex;
-    		$scope.files = $scope.job.files.slice(start, end);
-    		$scope.files.startIndex = start;
-    		$scope.files.endIndex   = end;
-    	});
+    	$scope.job   = Job.query(filter);
+    	$scope.files = Files.query(filter);
 	}, 20000);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
@@ -157,9 +137,22 @@ JobViewCtrl.resolve = {
     	var deferred = $q.defer();
 
     	Job.query({jobId: $route.current.params.jobId}, function(data) {
-    		deferred.resolve(data);
-    		stopLoading($rootScope);
+			deferred.resolve(data);
+			stopLoading($rootScope);
     	});
+    	
+    	return deferred.promise;
+    },
+
+	files: function ($rootScope, $location, $route, $q, Files) {
+    	loading($rootScope);
+    	
+    	var deferred = $q.defer();
+
+		Files.query({jobId: $route.current.params.jobId}, function(data) {
+			deferred.resolve(data);
+			stopLoading($rootScope);
+		});
     	
     	return deferred.promise;
     }
