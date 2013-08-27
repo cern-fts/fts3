@@ -106,7 +106,7 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 	$scope.itemPerPage = 50;
 	
 	$scope.job = job;
-	
+
 	// We paginate the files
 	$scope.pageMax    = 15;
 	$scope.pageCount  = files.pageCount;
@@ -147,6 +147,11 @@ JobViewCtrl.resolve = {
     	Job.query({jobId: $route.current.params.jobId}, function(data) {
 			deferred.resolve(data);
 			stopLoading($rootScope);
+    	},
+    	function () {
+    		deferred.resolve(false);
+    		stopLoading($rootScope);
+    		$location.path('/404');
     	});
     	
     	return deferred.promise;
@@ -160,6 +165,11 @@ JobViewCtrl.resolve = {
 		Files.query({jobId: $route.current.params.jobId}, function(data) {
 			deferred.resolve(data);
 			stopLoading($rootScope);
+		},
+		function () {
+			deferred.resolve(false);
+			stopLoading($rootScope);
+			$location.path('/404');
 		});
     	
     	return deferred.promise;
