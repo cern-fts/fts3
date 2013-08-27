@@ -67,6 +67,9 @@ def pie(httpRequest):
                 values = strToArray(argv)
             elif arg == 'c':
                 colors = strToArray(argv)
+                for c in range(len(colors)):
+                    if len(colors[c]) > 1:
+                        colors[c] = '#' + colors[c]
                 
         if not values:
             return error(httpRequest, 'No values')

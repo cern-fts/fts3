@@ -22,7 +22,7 @@ from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 from jsonify import jsonify, jsonify_paged
 
 
-STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
+STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
 ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
@@ -33,10 +33,10 @@ def configurationAudit(httpRequest):
 
 
 
-def _getCountPerState(states, age = None):
+def _getCountPerState(age = None):
     count = {}
     
-    query = File.objects.filter(file_state__in = states)
+    query = File.objects
     if age:
         notBefore = datetime.utcnow() - age
         query = query.filter(Q(finish_time__gte = notBefore) | Q(finish_time__isnull = True))
@@ -46,7 +46,7 @@ def _getCountPerState(states, age = None):
     for row in query:
         count[row['file_state'].lower()] = row['number']
     
-    for s in filter(lambda s: s not in count, map(lambda s: s.lower(), states)):
+    for s in filter(lambda s: s not in count, map(lambda s: s.lower(), STATES)):
         count[s] = 0
     
     # Couple of aggregations
@@ -223,23 +223,21 @@ def _getRetriedStats(timewindow):
     retried = {}
     for f in retriedObjs:
         retried[f['file_state'].lower()] = f['number']
+    for s in [s for s in ['failed', 'finished'] if s not in retried]:
+        retried[s] = 0
     
     return retried    
 
 
 @jsonify
 def overview(httpRequest):
-    overall = _getCountPerState(STATES, timedelta(hours = 24))
-    lastHour = _getCountPerState(STATES, timedelta(hours = 1))
-    if lastHour['total'] > 0:
-        overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
-    else:
-        overall['rate'] = 0
-        
+    overall = _getCountPerState(timedelta(hours = 24))
+    lastHour = _getCountPerState(timedelta(hours = 1))
     retried = _getRetriedStats(timedelta(hours = 1))
         
     return {
-        'overall': overall,
+       'lastday': overall,
+       'lasthour': lastHour,
        'retried': retried
     }
     

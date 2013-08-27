@@ -1,0 +1,72 @@
+<h3>Statistics / Overview</h3>
+
+<div class="row-fluid">
+    <div class="row-fluid">
+		<div class="span6">
+			<h4>Queue</h4>
+			<table class="table">
+			    <thead>
+			        <tr>
+			            <th>Submitted</th>
+			            <th>Ready</th>
+			            <th>Active</th>
+			            <th>Staging</th>
+			        </tr>
+			    </thead>
+			    <tbody>
+			        <tr>
+			            <td>{{stats.lasthour.submitted}}</td>
+			            <td>{{stats.lasthour.ready}}</td>
+			            <td>{{stats.lasthour.active}}</td>
+			            <td>{{stats.lasthour.staging}}</td>
+			        </tr>
+			    </tbody>
+			</table>
+			<img ng-src="plot/pie?t=Queue&l=Submitted,Ready,Active,Staging&v={{stats.lasthour.submitted}},{{stats.lasthour.ready}},{{stats.lasthour.active}},{{stats.lasthour.staging}}&c=FFFFAB,99FFFF,AAAAFF,5959FF"/>
+		</div>
+		
+		<div class="span6">
+			<h4>For the last hour</h4>
+			<table class="table">
+			    <thead>
+			        <tr>
+			            <th>Succeeded</th>
+			            <th>Failed</th>
+			            <th>Canceled</th>
+			        </tr>
+			    </thead>
+			    <tbody>
+			        <tr>
+			            <td>{{stats.lasthour.finished}}</td>
+			            <td>{{stats.lasthour.failed}}</td>
+			            <td>{{stats.lasthour.canceled}}</td>
+			        </tr>
+			    </tbody>
+			</table>
+   			<img ng-src="plot/pie?t=1h&l=Succeeded,Failed,Canceled&v={{stats.lasthour.finished}},{{stats.lasthour.failed}},{{stats.lasthour.canceled}}&c=88FF88,FFAAAA,FF7777"/>
+		</div>
+	</div>
+	
+	<div class="row-fluid">
+		<div class="span6">
+	            <h4>For the last 24 hours</h4>
+	            <table class="table">
+	                <thead>
+	                    <tr>
+	                        <th>Succeeded</th>
+	                        <th>Failed</th>
+	                        <th>Canceled</th>
+	                    </tr>
+	                </thead>
+	                <tbody>
+	                    <tr>
+	                        <td>{{stats.lastday.finished}}</td>
+	                        <td>{{stats.lastday.failed}}</td>
+	                        <td>{{stats.lastday.canceled}}</td>
+	                    </tr>
+	                </tbody>
+	            </table>
+	            <img ng-src="plot/pie?t=24h&l=Succeeded,Failed,Canceled&v={{stats.lastday.finished}},{{stats.lastday.failed}},{{stats.lastday.canceled}}&c=88FF88,FFAAAA,FF7777"/>
+		</div>
+	</div>
+</div>

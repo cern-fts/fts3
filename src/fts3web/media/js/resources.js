@@ -61,4 +61,9 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('configuration', {}, {
 		query: {method: 'GET', isArray: false}
 	})
+})
+.factory('Statistics', function($resource) {
+	return $resource('stats/:sub', {}, {
+		query: {method: 'GET', isArray: false}
+	})
 });

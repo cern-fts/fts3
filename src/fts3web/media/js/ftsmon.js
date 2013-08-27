@@ -1,44 +1,48 @@
 angular.module('ftsmon', ['ftsmon.resources', 'ui.bootstrap']).
 config(function($routeProvider) {
 	$routeProvider.
-		when('/', {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-				   controller:  JobListCtrl,
-			       resolve:     JobListCtrl.resolve}).
-		when('/job/:jobId', {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
-			                 controller:  JobViewCtrl,
-			                 resolve:     JobViewCtrl.resolve}).
- 		when('/archive', {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-				          controller:  ArchiveCtrl,
-				          resolve:     ArchiveCtrl.resolve}).
+		when('/',                     {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
+				                       controller:  JobListCtrl,
+			                           resolve:     JobListCtrl.resolve}).
+		when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
+			                           controller:  JobViewCtrl,
+			                           resolve:     JobViewCtrl.resolve}).
+ 		when('/archive',              {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
+				                       controller:  ArchiveCtrl,
+				                       resolve:     ArchiveCtrl.resolve}).
 
-	    when('/queue/', {templateUrl: STATIC_ROOT + 'html/queue/queue.html',
-	    	             controller:  JobQueueCtrl,
-	    	             resolve:     JobQueueCtrl.resolve}).
-        when('/queue/details', {templateUrl: STATIC_ROOT + 'html/queue/detailed.html',
-					            controller:  JobQueueDetailedCtrl,
-					            resolve:     JobQueueDetailedCtrl.resolve}).
+	    when('/queue/',               {templateUrl: STATIC_ROOT + 'html/queue/queue.html',
+	    	                           controller:  JobQueueCtrl,
+	    	                           resolve:     JobQueueCtrl.resolve}).
+        when('/queue/details',        {templateUrl: STATIC_ROOT + 'html/queue/detailed.html',
+					                   controller:  JobQueueDetailedCtrl,
+					                   resolve:     JobQueueDetailedCtrl.resolve}).
 
-		when('/staging/', {templateUrl: STATIC_ROOT + 'html/staging.html',
-			               controller:  StagingCtrl,
-					       resolve:     StagingCtrl.resolve}).
+		when('/staging/',             {templateUrl: STATIC_ROOT + 'html/staging.html',
+			                           controller:  StagingCtrl,
+					                   resolve:     StagingCtrl.resolve}).
 					       
-        when('/optimizer/', {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
-				             controller:  OptimizerCtrl,
-						     resolve:     OptimizerCtrl.resolve}).
-        when('/optimizer/detailed', {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
-					                 controller:  OptimizerDetailedCtrl,
-							         resolve:     OptimizerDetailedCtrl.resolve}).
+        when('/optimizer/',           {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
+				                       controller:  OptimizerCtrl,
+						               resolve:     OptimizerCtrl.resolve}).
+        when('/optimizer/detailed',   {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
+					                   controller:  OptimizerDetailedCtrl,
+							           resolve:     OptimizerDetailedCtrl.resolve}).
 
-        when('/errors/', {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
-                          controller:  ErrorsCtrl,
-	                      resolve:     ErrorsCtrl.resolve}).
-        when('/errors/list', {templateUrl: STATIC_ROOT + 'html/errors/list.html',
-	                          controller:  FilesWithErrorCtrl,
-		                      resolve:     FilesWithErrorCtrl.resolve}).
+        when('/errors/',              {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
+                                       controller:  ErrorsCtrl,
+	                                   resolve:     ErrorsCtrl.resolve}).
+        when('/errors/list',          {templateUrl: STATIC_ROOT + 'html/errors/list.html',
+	                                   controller:  FilesWithErrorCtrl,
+		                               resolve:     FilesWithErrorCtrl.resolve}).
 		                      
-        when('/configaudit', {templateUrl: STATIC_ROOT + 'html/config.html',
-		                      controller:  ConfigCtrl,
-			                  resolve:     ConfigCtrl.resolve}).
+        when('/configaudit',          {templateUrl: STATIC_ROOT + 'html/config.html',
+		                               controller:  ConfigCtrl,
+			                           resolve:     ConfigCtrl.resolve}).
+			                  
+        when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
+			                           controller:  StatsOverviewCtrl,
+				                       resolve:     StatsOverviewCtrl.resolve}).
 							         
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })
