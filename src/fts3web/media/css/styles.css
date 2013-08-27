@@ -18,7 +18,11 @@ table.table {
 }
 
 table.table td {
-	overflow: auto;
+	overflow: hidden;
+}
+
+table.table td.hscroll {
+	overflow-x: auto;
 }
 
 table.table tr.agreggate {
