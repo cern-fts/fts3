@@ -1427,12 +1427,12 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     // Cancel job
                     sql << "UPDATE t_job SET job_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), cancel_job='Y' "
                         "                 ,reason = :reason "
-                        "WHERE job_id = :jobId AND job_state NOT IN ('FINISHEDDIRTY', 'FINISHED', 'FAILED')",
+                        "WHERE job_id = :jobId AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
                     // Cancel files
                     sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                         "                  reason = :reason "
-                        "WHERE job_id = :jobId AND file_state NOT IN ('FINISHED','FAILED')",
+                        "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
                 }
 

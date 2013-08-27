@@ -98,18 +98,34 @@ public:
 
 protected:
     std::vector<struct message_updater> messages;
+    
+    void killRunningJob(std::vector<int>& requestIDs)
+    {
+        std::vector<int>::const_iterator iter;
+        for (iter = requestIDs.begin(); iter != requestIDs.end(); ++iter)
+            {
+                int pid = *iter;
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
+                kill(pid, SIGTERM);
+            }
+    }    
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
-        static unsigned int counter = 0;
+        static unsigned int counter1 = 0;
         static unsigned int counterFailAll = 0;
+        static unsigned int countReverted = 0;
+        static unsigned int counter2 = 0;
+        static unsigned int counterTimeoutWaiting = 0;
+        static unsigned int counterCanceled = 0;	
+	std::vector<int> requestIDs;
 
         while (1)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
-                        if(stopThreads && messages.empty())
+                        if(stopThreads && messages.empty() && requestIDs.empty())
                             {
                                 break;
                             }
@@ -131,9 +147,72 @@ protected:
                                     }
                             }
 
+
+                        /*also get jobs which have been canceled by the client*/
+                        counterCanceled++;
+                        if (counterCanceled == 1)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                                if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
+                                    {
+                                        killRunningJob(requestIDs);
+                                        requestIDs.clear(); /*clean the list*/
+                                    }
+			      counterCanceled = 0;
+                            }
+
+
+                        /*revert to SUBMITTED if stayed in READY for too long (300 secs)*/
+                        countReverted++;
+                        if (countReverted == 30)
+                            {
+                                DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
+                                countReverted = 0;
+                            }
+
+                        /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
+                        counterTimeoutWaiting++;
+                        if (counterTimeoutWaiting == 30)
+                            {
+                                std::set<std::string> canceled;
+                                DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
+                                set<string>::const_iterator iterCan;
+                                if(!canceled.empty())
+                                    {
+                                        for (iterCan = canceled.begin(); iterCan != canceled.end(); ++iterCan)
+                                            {
+                                                SingleTrStateInstance::instance().sendStateMessage((*iterCan), -1);
+                                            }
+                                        canceled.clear();
+                                    }
+
+                                // sanity check to make sure there are no files that have all replicas in not used state
+                                DBSingleton::instance().getDBObjectInstance()->revertNotUsedFiles();
+
+                                counterTimeoutWaiting = 0;
+                            }
+
+                        /*force-fail stalled ACTIVE transfers*/
+                        counter1++;
+                        if (counter1 == 30)
+                            {
+                                std::map<int, std::string> collectJobs;
+                                DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
+                                if(!collectJobs.empty())
+                                    {
+                                        std::map<int, std::string>::const_iterator iterCollectJobs;
+                                        for (iterCollectJobs = collectJobs.begin(); iterCollectJobs != collectJobs.end(); ++iterCollectJobs)
+                                            {
+                                                SingleTrStateInstance::instance().sendStateMessage((*iterCollectJobs).second, (*iterCollectJobs).first);
+                                            }
+                                        collectJobs.clear();
+                                    }
+                                counter1 = 0;
+                            }
+
                         /*set to fail all old queued jobs which have exceeded max queue time*/
                         counterFailAll++;
-                        if (counterFailAll == 10)
+                        if (counterFailAll == 30)
                             {
                                 std::vector<std::string> jobs;
                                 DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
@@ -149,11 +228,11 @@ protected:
                                 counterFailAll = 0;
                             }
 
-                        counter++;
-                        if (counter == 10)
+                        counter2++;
+                        if (counter2 == 30)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
-                                counter = 0;
+                                counter2 = 0;
                             }
 
                         messages.clear();
@@ -163,14 +242,14 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                                                        << e.what()
                                                        << commit;
-                        sleep(60);
+                        sleep(10);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                        sleep(60);
+                        sleep(10);
                     }
-                sleep(60);
+                sleep(10);
             }
     }
 
