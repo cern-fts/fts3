@@ -33,6 +33,7 @@
             <td>
                 <i class="icon-plus" ng-click="file.show = !file.show"></i>
                 {{file.file_id}}
+                <i class="icon-refresh" ng-show="file.retry"></i>
             </td>
             <td>{{file.transferhost}}</td>
             <td title="{{file.source_surl}}">
