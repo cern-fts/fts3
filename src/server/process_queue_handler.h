@@ -220,20 +220,8 @@ protected:
                                                         << "\nState: " << (*iter).transfer_status
                                                         << "\nSource: " << (*iter).source_se
                                                         << "\nDest: " << (*iter).dest_se << commit;
-
-                        /*
-                            exceptional case when a url-copy process fails to start because thread creation failed due to lack of resource
-                            do not update the database with the failed state because it will be re-scheduled
-                        */
-                        if(std::string((*iter).transfer_message).find("thread_resource_error")!= string::npos ||
-                                std::string((*iter).transfer_message).find("globus_module_activate_proxy")!= string::npos)
-                            {
-                                continue;
-                            }
-                        else
-                            {
+                    
                                 updateDatabase((*iter));
-                            }
                     }
                 else
                     {
