@@ -204,7 +204,7 @@ def transferList(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
     
-    transfers = File.objects.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'})
+    transfers = File.objects#.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'})
     if filters['state']:
         transfers = transfers.filter(file_state__in = filters['state'])
     if filters['source_se']:
@@ -217,4 +217,4 @@ def transferList(httpRequest):
         notBefore=  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
         transfers = transfers.filter(Q(finish_time__isnull = True) | (Q(finish_time__gte = notBefore)))
    
-    return transfers.order_by('-nullFinished')
+    return transfers.order_by('-file_id')
