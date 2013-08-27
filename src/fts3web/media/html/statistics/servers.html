@@ -1,0 +1,33 @@
+<h3>Statistics / Servers</h3>
+<h4>For the last 24 hours</h4>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Server</th>
+            <th>Submissions received</th>
+            <th>Transfers picked</th>
+            <th>Transfers running</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="s in servers" ng-class-odd="'odd'">
+            <td>{{s.hostname}}</td>
+            <td>{{s.submissions}}</td>
+            <td>{{s.transfers}}</td>
+            <td>{{s.active}}</td>
+        </tr>
+    </tbody>
+</table>
+
+<div class="row-fluid">
+    <div class="span4">
+        <plot title="Submissions" list="servers" label="hostname" value="submissions"/>
+    </div>
+    <div class="span4">
+        <plot title="Executed" list="servers" label="hostname" value="transfers"/>
+    </div>
+    <div class="span4">
+        <plot title="Active" list="servers" label="hostname" value="active"/>
+    </div>
+</div>

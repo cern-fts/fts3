@@ -43,12 +43,75 @@ config(function($routeProvider) {
         when('/statistics/overview',  {templateUrl: STATIC_ROOT + 'html/statistics/overview.html',
 			                           controller:  StatsOverviewCtrl,
 				                       resolve:     StatsOverviewCtrl.resolve}).
+        when('/statistics/servers',   {templateUrl: STATIC_ROOT + 'html/statistics/servers.html',
+			                           controller:  StatsServersCtrl,
+				                       resolve:     StatsServersCtrl.resolve}).
 							         
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })
 .filter('escape', function() {
 	return window.escape;
+})
+.directive('plot', function() {
+	return {
+		restrict: 'E',
+		scope: 'isolate',
+		template: '<img ng-src="plot/pie?t={{title}}&l={{labels}}&v={{values}}&c={{colors}}"></img>',
+		link: function(scope, iterStartElement, attr) {
+			var list = scope.$eval(attr.list);
+			
+			// If label and value are specified, list is an array of
+			// objects, and label and value specify the fields to use
+			if (attr.label && attr.value)
+				plotArrayOfObjects(scope, list, attr.label, attr.value);
+			// If labels is specified, then list is an object, and labels
+			// specify the attributes to plot
+			else if (attr.labels)
+				plotObject(scope, list, attr.labels.split(','));
+			// Otherwise, we don't know!
+			else
+				throw new Error('Invalid usage of plot!');
+
+			// Set title and colors
+			scope.title  = attr.title;
+			if (attr.colors)
+				scope.colors = attr.colors; 
+		}
+	};
 });
+
+/** Pie plotting */
+function plotArrayOfObjects(scope, list, labelAttr, valueAttr)
+{
+	var labelStr = '', valueStr = '';
+	for (var i in list) {
+		var item = list[i];
+		labelStr += firstUpper(item[labelAttr]) + ',';
+		valueStr += item[valueAttr] + ',';
+	}
+	
+	scope.labels = labelStr;
+	scope.values = valueStr;
+}
+
+function plotObject(scope, obj, labelsAttr)
+{
+	var labelStr = '', valueStr = '';
+	for (var i in labelsAttr) {
+		var label = labelsAttr[i];
+		labelStr += firstUpper(label) + ',';
+		valueStr += obj[label] + ',';
+	}
+	
+	scope.labels = labelStr;
+	scope.values = valueStr;
+}
+
+/** First letter uppercase */
+function firstUpper(str)
+{
+	return str.charAt(0).toUpperCase() + str.substr(1).toLowerCase();
+}
 
 /** Show loading **/
 var nLoading = 0;
