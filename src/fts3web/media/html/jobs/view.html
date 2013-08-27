@@ -1,0 +1,74 @@
+<h3>Transfer '{{job.job_id}}' {{job.job_state}}</h3>
+
+<p>
+	Submitted by <span class="dn">'{{job.user_dn}}'</span><br/>
+	VO: <span class="vo">{{job.vo_name}}</span><br/>
+	Received by {{job.submit_host}}<br/>
+	Overwrite flag: {{job.overwrite_flag}}<br/>
+	Reuse sessions: {{job.reuse_job}}
+</p>
+
+<h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{job.files.length}}</h4>
+
+<pagination rotate="false" num-pages="pageCount" current-page="page"
+    max-size="pageMax" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+	        <th style="width: 5%">FILE ID</th>
+	        <th style="width: 8%">TRANSFER HOST</th>
+	        <th>SOURCE URL</th>
+	        <th>DEST URL</th>
+	        <th style="width: 8%">FILE STATE</th>
+	        <th style="width: 8%">FILE SIZE</th>
+	        <th style="width: 8%">THROUGHPUT</th>
+	        <th style="width: 10%">START TIME</th>
+	        <th style="width: 10%">FINISH TIME</th>
+        </tr>
+    </thead>
+    <tbody ng-repeat="file in files" ng-class-odd="'odd'">
+        <tr>
+            <td>{{file.file_id}}</td>
+            <td>{{file.transferhost}}</td>
+            <td title="{{file.source_surl}}">
+                {{file.source_surl}}
+            </td>
+            <td title="{{file.dest_surl}}">
+                {{file.dest_surl}}
+            </td>
+            <td class="{{file.file_state}}">
+                {{file.file_state}}
+            </td>
+            <td>{{file.filesize/(1024*1024)|number:2}} MB</td>
+            <td>{{file.throughput|number:2}} MB/s</td>
+            <td>{{file.start_time}}</td>
+            <td>{{file.finish_time}}</td>
+        </tr>
+        <tr style="background: #CCC">
+            <td colspan="9">
+                <ul>
+					<li>Attempts: {{file.retry}}</li>
+					<li>Duration: {{file.tx_duration}} seconds</li>
+					<li>Checksum: {{file.checksum}}</li>
+					<li>User specified size: {{file.user_filesize}}</li>
+					<li>Configuration: {{file.symbolicname}}</li>
+					<li>Parameters: {{file.internal_file_params}}</li>
+					<li>Log file:
+					   <p>
+					       <a href="//{{file.transferhost}}/{{file.log_file}}">
+					           {{file.log_file}}
+						   </a><br/>
+						   <span ng-switch="file.log_debug">
+	                       <a ng-switch-when="1" href="//{{file.transferhost}}/{{file.log_file}}.debug">
+	                           {{file.log_file}}.debug
+	                       </a>
+	                       </span>
+                       </p>
+				    </li>
+				</ul>
+            </td>
+        </tr>
+    </tbody>
+</table>

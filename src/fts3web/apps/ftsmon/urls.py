@@ -18,7 +18,7 @@
 from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('ftsmon.views',
-    url(r'^$', 'jobs.jobIndex'),
+    url(r'^$', 'index.index'),
     url(r'^jobs/?$', 'jobs.jobIndex'),
     url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)$', 'jobs.jobDetails'),
     url(r'^queue$', 'queue.queue'),
@@ -31,13 +31,6 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^stats/vo$', 'statistics.pervo'),
     url(r'^stats/profiling$', 'statistics.profiling'),
     
-    url(r'^json/uniqueSources/$', 'autocomplete.uniqueSources', {'archive': None}),
-    url(r'^json/uniqueDestinations/$', 'autocomplete.uniqueDestinations', {'archive': None}),
-    url(r'^json/uniqueVos/$', 'autocomplete.uniqueVos', {'archive': None}),
-    url(r'^json/uniqueSources/(?P<archive>[a-z]*?)$', 'autocomplete.uniqueSources'),
-    url(r'^json/uniqueDestinations/(?P<archive>[a-z]*)$', 'autocomplete.uniqueDestinations'),
-    url(r'^json/uniqueVos/(?P<archive>[a-z]*)$', 'autocomplete.uniqueVos'),
-    
     url(r'^plot/pie', 'plots.pie'),
     
     url(r'^optimizer/$', 'optimizer.optimizer'),
@@ -46,5 +39,7 @@ urlpatterns = patterns('ftsmon.views',
     url(r'^errors/$', 'errors.showErrors'),
     url(r'^errors/list$', 'errors.transfersWithError'),
     
-    url(r'^archive/$', 'jobs.archiveJobIndex')
+    url(r'^archive/$', 'jobs.archiveJobIndex'),
+    
+    url(r'^unique$', 'autocomplete.unique')
 )

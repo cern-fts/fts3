@@ -61,6 +61,9 @@ class JobBase(models.Model):
         
     def isFinished(self):
         return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
+    
+    def __str__(self):
+        return self.job_id
 
 
 
@@ -111,6 +114,9 @@ class FileBase(models.Model):
     bringonline_token = models.CharField(max_length = 255)
     log_file        = models.CharField(max_length = 2048, db_column = 't_log_file')
     log_debug       = models.IntegerField(db_column = 't_log_file_debug')
+    
+    def __str__(self):
+        return str(self.file_id)
     
     class Meta:
         abstract = True

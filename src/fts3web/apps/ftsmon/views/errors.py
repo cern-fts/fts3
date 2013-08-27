@@ -20,9 +20,9 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
 from ftsweb.models import File
-from utils import getPage
+from jsonify import jsonify_paged
 
-
+@jsonify_paged
 def showErrors(httpRequest):
     notbefore = datetime.utcnow() - timedelta(hours = 12)
     
@@ -32,12 +32,10 @@ def showErrors(httpRequest):
                        .annotate(count = Count('reason'))\
                        .order_by('-count')\
                        
-    # Render
-    return render(httpRequest, 'errors/errorCount.html',
-                  {'errors': errors,
-                   'request': httpRequest})
+    return errors
 
 
+@jsonify_paged
 def transfersWithError(httpRequest):
     if 'reason' not in httpRequest.GET or \
         not httpRequest.GET['reason']:
@@ -49,12 +47,4 @@ def transfersWithError(httpRequest):
     transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)\
                             .order_by('file_id')
                             
-    paginator = Paginator(transfers, 50)
-    
-    # Render
-    return render(httpRequest, 'errors/transfersWithError.html',
-                  {'transfers': getPage(paginator, httpRequest),
-                   'paginator': paginator,
-                   'reason': reason,
-                   'request': httpRequest
-                  })
+    return transfers

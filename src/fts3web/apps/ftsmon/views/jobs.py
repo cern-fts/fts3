@@ -15,13 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.core.paginator import Paginator
 from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
+from jsonify import jsonify, jsonify_paged
 from ftsmon import forms
 from ftsweb.models import Job, File, JobArchive, FileArchive
-from utils import getPage
 import datetime
 import json
 import time
@@ -140,13 +139,9 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
     return (msg, jobs)
 
 
-
+@jsonify_paged
 def jobIndex(httpRequest):
     states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING']
-    
-    # If jobId is in the request, redirect directly
-    if httpRequest.method == 'GET' and 'jobId' in httpRequest.GET:
-        return redirect('ftsmon.views.jobs.jobDetails', jobId = httpRequest.GET['jobId'])
     
     filterForm = forms.FilterForm(httpRequest.GET)
     filters = setupFilters(filterForm)
@@ -157,32 +152,20 @@ def jobIndex(httpRequest):
     if not filters['state']:
         filters['state'] = states
     
-    msg, jobs = jobListing(httpRequest, filters = filters)    
-    paginator = Paginator(jobs, 50)
-    return render(httpRequest, 'jobs/list.html',
-                  {'filterForm': filterForm,
-                   'jobs':       getPage(paginator, httpRequest),
-                   'paginator':  paginator,
-                   'filters':    filters,
-                   'message':    msg,
-                   'request':    httpRequest})
+    msg, jobs = jobListing(httpRequest, filters = filters)
+
+    return jobs
 
 
-
+@jsonify_paged
 def archiveJobIndex(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters = setupFilters(filterForm)
     filters['time_window'] = None
     
-    msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)    
-    paginator = Paginator(jobs, 50)
-    return render(httpRequest, 'jobs/archive.html',
-                  {'filterForm': filterForm,
-                   'jobs':       getPage(paginator, httpRequest),
-                   'paginator':  paginator,
-                   'filters':    filters,
-                   'message':    msg,
-                   'request':    httpRequest})
+    msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)
+
+    return jobs
 
 
 
@@ -197,7 +180,7 @@ def _getJob(jobModel, fileModel, jobId, fstate = None):
         return (None, None)
 
 
-
+@jsonify
 def jobDetails(httpRequest, jobId):
     # State filter
     state = None
@@ -212,28 +195,18 @@ def jobDetails(httpRequest, jobId):
     if not job:
         raise Http404
     
-    transferStateCount = File.objects.filter(job = jobId)\
-                                     .values('file_state')\
-                                     .annotate(count = Count('file_state'))
-                                     
-    paginator = Paginator(files, 50)
-    
-    return render(httpRequest, 'jobs/details.html',
-                  {'transferJob': job,
-                   'transferFiles': getPage(paginator, httpRequest),
-                   'paginator':  paginator,
-                   'trasferStateCount': transferStateCount,
-                   'stateFilter': state,
-                   'request': httpRequest})
+    #transferStateCount = File.objects.filter(job = jobId)\
+#                                     .values('file_state')\
+                                     #.annotate(count = Count('file_state'))
+
+    job.files = files                                   
+    return job
 
 
-
+@jsonify_paged
 def staging(httpRequest):
-  transfers = File.objects.filter(file_state = 'STAGING')
-  transfers = transfers.order_by('-job__submit_time', '-file_id')
-  paginator = Paginator(transfers, 50)
-  return render(httpRequest, 'jobs/staging.html',
-                {'transfers': getPage(paginator, httpRequest),
-                 'paginator': paginator,
-                 'request': httpRequest})
+    transfers = File.objects.filter(file_state = 'STAGING')
+    transfers = transfers.order_by('-job__submit_time', '-file_id')
+    
+    return staging
 

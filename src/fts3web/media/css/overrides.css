@@ -1,0 +1,16 @@
+.navbar-inner {
+	background: black;
+}
+
+.navbar .nav>li>a {
+	color: #CCC;
+	text-shadow: none;
+}
+
+.navbar .nav>li>a:hover {
+	color: white;
+}
+
+.odd {
+	background: #DDD;
+}

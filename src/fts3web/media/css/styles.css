@@ -1,0 +1,56 @@
+/* Layout */
+html {
+	overflow-y: scroll;
+	-moz-scrollbars-vertical;
+}
+
+div[role="main"] {
+    width: 90%;
+    margin: auto;
+    margin-top: 6em;
+    margin-bottom: 6em;
+}
+
+/* Tables */
+table.table {
+	font-family: monospace;
+	table-layout: fixed;
+}
+
+table.table td {
+	overflow: hidden;
+}
+
+/* Statuses */
+.ACTIVE {
+  background: #AAAAFF;
+}
+
+.CANCELED {
+  background: #FF7777;
+}
+
+.FAILED {
+    background: #FFAAAA;
+}
+
+.FINISHED {
+	background: #AAFFAA;
+}
+
+.FINISHEDDIRTY {
+	background: #AAAAAA;
+}
+
+.READY {
+  background: #99FFFF;
+}
+
+.STAGING {
+  background: #5959FF;
+}
+
+.SUBMITTED {
+    background: #FFFFAB;
+}
+

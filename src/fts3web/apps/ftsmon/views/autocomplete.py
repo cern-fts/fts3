@@ -15,60 +15,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
 import simplejson
+from datetime import datetime, timedelta
 from django.db.models import Q
 from django.http import HttpResponse
 from ftsweb.models import Job, JobArchive
+from jsonify import jsonify
 
 
-
-def uniqueSources(httpRequest, archive):
-    if archive:
-        model = JobArchive
-    else:
-        model = Job
-
-    query = model.objects.values('source_se').distinct('source_se')
-    if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
-        query = query.filter(source_se__icontains = httpRequest.GET['term'])
-
-    ses = []
-    for se in query:
-        ses.append(se['source_se'])
-    return HttpResponse(simplejson.dumps(ses), mimetype='application/json')
-
-
-
-def uniqueDestinations(httpRequest, archive):
-    if archive:
-        model = JobArchive
-    else:
-        model = Job
+@jsonify
+def unique(httpRequest):
+    notBefore = datetime.utcnow() - timedelta(hours = 12)
     
-    query = model.objects.values('dest_se').distinct('dest_se')
-    if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
-        query = query.filter(dest_se__icontains = httpRequest.GET['term'])
+    vos          = Job.objects.values('vo_name').distinct()
+    sources      = Job.objects.filter(Q(finish_time__isnull = True) | Q(finish_time__gte = notBefore))\
+                      .values('source_se').distinct()
+    destinations = Job.objects.filter(Q(finish_time__isnull = True) | Q(finish_time__gte = notBefore))\
+                      .values('dest_se').distinct()
     
-    ses = []
-    for se in query:
-        ses.append(se['dest_se'])
-    return HttpResponse(simplejson.dumps(ses), mimetype='application/json')
+    return {
+        'vos': [vo['vo_name'] for vo in vos.all()],
+        'sources': [source['source_se'] for source in sources.all()],
+        'destinations': [dest['dest_se'] for dest in destinations.all()]
+    }
 
-
-
-def uniqueVos(httpRequest, archive):
-    if archive:
-        model = JobArchive
-    else:
-        model = Job
-    
-    query = model.objects.values('vo_name').distinct('vo_name')
-    if 'term' in httpRequest.GET and str(httpRequest.GET['term']) != '':
-        query = query.filter(vo_name__icontains = httpRequest.GET['term'])
-    
-    vos = []
-    for vo in query:
-        vos.append(vo['vo_name'])
-
-    return HttpResponse(simplejson.dumps(vos), mimetype='application/json')
