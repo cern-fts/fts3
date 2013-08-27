@@ -1,24 +1,24 @@
-<h3>Transfer '{{job.job_id}}' {{job.job_state}}</h3>
+<h3>Transfer '{{job.job.job_id}}' {{job.job.job_state}}</h3>
 
 <p>
-	Submitted by <span class="dn">'{{job.user_dn}}'</span><br/>
-	VO: <span class="vo">{{job.vo_name}}</span><br/>
-	Received by {{job.submit_host}}<br/>
-	Overwrite flag: {{job.overwrite_flag}}<br/>
-	Reuse sessions: {{job.reuse_job}}<br/>
-	Job finished: {{job.job_finished}}<br/>
-	Finished time: {{job.finish_time}}
+	Submitted by <span class="dn">'{{job.job.user_dn}}'</span><br/>
+	VO: <span class="vo">{{job.job.vo_name}}</span><br/>
+	Received by {{job.job.submit_host}}<br/>
+	Overwrite flag: {{job.job.overwrite_flag}}<br/>
+	Reuse sessions: {{job.job.reuse_job}}<br/>
+	Job finished: {{job.job.job_finished}}<br/>
+	Finished time: {{job.job.finish_time}}
 </p>
 
 <h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{files.count}}</h4>
 <p class="btn-group" ng-click="filterByState()">
-    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
-    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
-    <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>ACTIVE</button>
-    <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
-    <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>FAILED</button>
-    <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
-    <button type="button" class="btn btn-small" ng-model="filter.state.not_used" btn-checkbox>NOT_USED</button>
+    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>{{job.states.SUBMITTED}} SUBMITTED</button>
+    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>{{job.states.READY}} READY</button>
+    <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>{{job.states.ACTIVE}} ACTIVE</button>
+    <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>{{job.states.CANCELED}} CANCELED</button>
+    <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>{{job.states.FAILED}} FAILED</button>
+    <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>{{job.states.FINISHED}} FINISHED</button>
+    <button type="button" class="btn btn-small" ng-model="filter.state.not_used" btn-checkbox>{{job.states.NOT_USED}} NOT_USED</button>
 </p>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"

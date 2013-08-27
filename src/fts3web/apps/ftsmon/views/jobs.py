@@ -172,12 +172,20 @@ def archiveJobIndex(httpRequest):
 def jobDetails(httpRequest, jobId):
     try:
         job = Job.objects.get(job_id = jobId)
+        count = File.objects.filter(job_id = jobId).values('file_state').annotate(count = Count('file_state'))
     except Job.DoesNotExist:
         try:
             job = JobArchive.objects.get(job_id = jobId)
+            count = FileArchive.objects.filter(job_id = jobId).values('file_state').annotate(count = Count('file_state'))
         except JobArchive.DoesNotExist:
             raise Http404
-    return job
+    
+    # Count as dictionary
+    stateCount = {}
+    for st in count:
+        stateCount[st['file_state']] = st['count']
+        
+    return {'job': job, 'states': stateCount}
 
 
 @jsonify_paged
