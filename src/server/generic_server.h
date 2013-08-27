@@ -42,8 +42,8 @@ public:
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();
 
-        typename TRAITS::ProcessLogServiceType processLogHandler;
-        processLogHandler.executeTransfer_p();
+        //typename TRAITS::ProcessLogServiceType processLogHandler;
+        //processLogHandler.executeTransfer_p();
 
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();
