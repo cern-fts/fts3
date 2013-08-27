@@ -5,7 +5,9 @@
 	VO: <span class="vo">{{job.vo_name}}</span><br/>
 	Received by {{job.submit_host}}<br/>
 	Overwrite flag: {{job.overwrite_flag}}<br/>
-	Reuse sessions: {{job.reuse_job}}
+	Reuse sessions: {{job.reuse_job}}<br/>
+	Job finished: {{job.job_finished}}<br/>
+	Finished time: {{job.finish_time}}
 </p>
 
 <h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{files.count}}</h4>
@@ -59,6 +61,8 @@
 					<li>User specified size: {{file.user_filesize}}</li>
 					<li>Configuration: {{file.symbolicname}}</li>
 					<li>Parameters: {{file.internal_file_params}}</li>
+					<li>Job finished: {{file.job_finished}}</li>
+					<li>Finished time: {{file.finish_time}}</li>
 					<li>Log file:
 					   <p>
 					       <a log="file.log_file" host="file.transferHost">
