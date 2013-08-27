@@ -49,7 +49,7 @@ class ProcessQueueHandler : public TRAITS::ActiveObjectType
 {
 protected:
 
-    using TRAITS::ActiveObjectType::_enqueue;    
+    using TRAITS::ActiveObjectType::_enqueue;
 
 public:
 
@@ -67,7 +67,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
-        
+        enableOptimization = theServerConfig().get<std::string > ("Optimizer");
         messages.reserve(3000);
     }
 
@@ -88,10 +88,9 @@ public:
         this->_enqueue(op);
     }
 
-    static bool updateDatabase(const struct message& msg)
+    bool updateDatabase(const struct message& msg)
     {
         bool updated = true;
-	static std::string enableOptimization = theServerConfig().get<std::string > ("Optimizer");
         try
             {
                 std::string job = std::string(msg.job_id).substr(0, 36);
@@ -194,10 +193,56 @@ public:
 
 protected:
 
-    std::vector<struct message> queueMsgRecovery;
     std::vector<struct message> messages;
-    std::vector<struct message>::const_iterator iter;
-    struct message_updater msgUpdater;
+    boost::thread_group g;
+    std::string enableOptimization;
+
+    void executeUpdate(std::vector<struct message>& messages)
+    {
+        std::vector<struct message>::const_iterator iter;
+        struct message_updater msgUpdater;
+        for (iter = messages.begin(); iter != messages.end(); ++iter)
+            {
+                std::string jobId = std::string((*iter).job_id).substr(0, 36);
+                strcpy(msgUpdater.job_id, jobId.c_str());
+                msgUpdater.file_id = (*iter).file_id;
+                msgUpdater.process_id = (*iter).process_id;
+                msgUpdater.timestamp = (*iter).timestamp;
+                msgUpdater.throughput = 0.0;
+                msgUpdater.transferred = 0.0;
+                ThreadSafeList::get_instance().updateMsg(msgUpdater);
+
+                if (iter->msg_errno == 0)
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
+                                                        << "\nFile id: " << (*iter).file_id
+                                                        << "\nPid: " << (*iter).process_id
+                                                        << "\nState: " << (*iter).transfer_status
+                                                        << "\nSource: " << (*iter).source_se
+                                                        << "\nDest: " << (*iter).dest_se << commit;
+
+                        /*
+                            exceptional case when a url-copy process fails to start because thread creation failed due to lack of resource
+                            do not update the database with the failed state because it will be re-scheduled
+                        */
+                        if(std::string((*iter).transfer_message).find("thread_resource_error")!= string::npos ||
+                                std::string((*iter).transfer_message).find("globus_module_activate_proxy")!= string::npos)
+                            {
+                                continue;
+                            }
+                        else
+                            {
+                                updateDatabase((*iter));
+                            }
+                    }
+                else
+                    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
+                                                       << iter->msg_error_reason << commit;
+                    }
+            }//end for
+    }
+
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
@@ -206,7 +251,7 @@ protected:
             {
                 try
                     {
-                        if(stopThreads && messages.empty() && queueMsgRecovery.empty() )
+                        if(stopThreads && messages.empty() )
                             {
                                 break;
                             }
@@ -214,19 +259,9 @@ protected:
 
                         if(fs::is_empty(fs::path(STATUS_DIR)))
                             {
-                        	usleep(300000);
+                                usleep(300000);
                                 continue;
-                            }
-
-                        if(!queueMsgRecovery.empty())
-                            {
-                                std::vector<struct message>::const_iterator iter;
-                                for (iter = queueMsgRecovery.begin(); iter != queueMsgRecovery.end(); ++iter)
-                                    {
-                                        updateDatabase(*iter);
-                                    }
-                                queueMsgRecovery.clear();
-                            }
+                            }                       
 
                         if (runConsumerStatus(messages) != 0)
                             {
@@ -237,75 +272,57 @@ protected:
 
                         if(!messages.empty())
                             {
-			    
-                                for (iter = messages.begin(); iter != messages.end(); ++iter)
-                                    {					
-					std::string jobId = std::string((*iter).job_id).substr(0, 36);
-    					strcpy(msgUpdater.job_id, jobId.c_str());
-    					msgUpdater.file_id = (*iter).file_id;
-    					msgUpdater.process_id = (*iter).process_id;
-    					msgUpdater.timestamp = (*iter).timestamp;
-    					msgUpdater.throughput = 0.0;
-    					msgUpdater.transferred = 0.0;					
-					ThreadSafeList::get_instance().updateMsg(msgUpdater);					
-					
-                                        if (iter->msg_errno == 0)
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
-                                                                                << "\nFile id: " << (*iter).file_id
-                                                                                << "\nPid: " << (*iter).process_id
-                                                                                << "\nState: " << (*iter).transfer_status                                                                                
-                                                                                << "\nSource: " << (*iter).source_se
-                                                                                << "\nDest: " << (*iter).dest_se << commit;
+                                if(messages.size() >= 8 )
+                                    {
+                                        std::size_t const half_size1 = messages.size() / 2;
+                                        std::vector<struct message> split_1(messages.begin(), messages.begin() + half_size1);
+                                        std::vector<struct message> split_2(messages.begin() + half_size1, messages.end());
 
-                                                /*
-                                                    exceptional case when a url-copy process fails to start because thread creation failed due to lack of resource
-                                                    do not update the database with the failed state because it will be re-scheduled
-                                                */
-                                                if(std::string((*iter).transfer_message).find("thread_resource_error")!= string::npos ||
-                                                        std::string((*iter).transfer_message).find("globus_module_activate_proxy")!= string::npos)
-                                                    {
-                                                        continue;
-                                                    }
-                                                else
-                                                    {
-                                                        bool dbUpdated = updateDatabase((*iter));
-                                                        if(!dbUpdated)
-                                                            {
-                                                                queueMsgRecovery.push_back((*iter));
-                                                            }
-                                                    }
-                                            }
-                                        else
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
-                                                                               << iter->msg_error_reason << commit;
-                                            }
-                                    }//end for
+                                        std::size_t const half_size2 = split_1.size() / 2;
+                                        std::vector<struct message> split_11(split_1.begin(), split_1.begin() + half_size2);
+                                        std::vector<struct message> split_21(split_1.begin() + half_size2, split_1.end());
+
+                                        std::size_t const half_size3 = split_2.size() / 2;
+                                        std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
+                                        std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
+
+                                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
+                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
+                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
+                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+
+                                        g.add_thread(t1);
+                                        g.add_thread(t2);
+                                        g.add_thread(t3);
+                                        g.add_thread(t4);
+
+                                        // wait for them
+                                        g.join_all();
+                                    }
+                                else    //end < 10
+                                    {
+                                        executeUpdate(messages);
+                                    }
                                 messages.clear();
                             }
-
                         usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-                        for (iter = messages.begin(); iter != messages.end(); ++iter)
-                            queueMsgRecovery.push_back(*iter);
+
                         usleep(300000);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-                        for (iter = messages.begin(); iter != messages.end(); ++iter)
-                            queueMsgRecovery.push_back(*iter);
+
                         usleep(300000);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
-                        for (iter = messages.begin(); iter != messages.end(); ++iter)
-                            queueMsgRecovery.push_back(*iter);
+
                         usleep(300000);
                     }
             }

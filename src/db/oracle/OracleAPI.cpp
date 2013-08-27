@@ -750,8 +750,8 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                     while (pairRs->next())
                         {
                             distinct.push_back(
-                                    boost::tuple<std::string, std::string, std::string>
-                                        (pairRs->getString(1), pairRs->getString(2), voName));
+                                boost::tuple<std::string, std::string, std::string>
+                                (pairRs->getString(1), pairRs->getString(2), voName));
                         }
                 }
 
@@ -11435,10 +11435,10 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             if(msg.checkSanityState)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set checkSanityState=1, t_checkSanityState = CURRENT_TIMESTAMP "
-                            "where checkSanityState=0"
-                             " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) ",
-                             "assignSanityRuns/checkSanityState", pooled);
+                                             "update t_server_sanity set checkSanityState=1, t_checkSanityState = CURRENT_TIMESTAMP "
+                                             "where checkSanityState=0"
+                                             " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) ",
+                                             "assignSanityRuns/checkSanityState", pooled);
                     rows = stmt->executeUpdate();
                     msg.checkSanityState = (rows > 0? true: false);
                     conn->commit(pooled);
@@ -11447,11 +11447,11 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.setToFailOldQueuedJobs)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = CURRENT_TIMESTAMP "
-                            " where setToFailOldQueuedJobs=0"
-                            " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
-                            "assignSanityRuns/setToFailOldQueuedJobs",
-                            pooled);
+                                             "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = CURRENT_TIMESTAMP "
+                                             " where setToFailOldQueuedJobs=0"
+                                             " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
+                                             "assignSanityRuns/setToFailOldQueuedJobs",
+                                             pooled);
                     rows = stmt->executeUpdate();
                     msg.setToFailOldQueuedJobs = (rows > 0? true: false);
                     conn->commit(pooled);
@@ -11460,11 +11460,11 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.forceFailTransfers)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = CURRENT_TIMESTAMP "
-                            " where forceFailTransfers=0"
-                            " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
-                            "assignSanityRuns/forceFailTransfers",
-                            pooled);
+                                             "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = CURRENT_TIMESTAMP "
+                                             " where forceFailTransfers=0"
+                                             " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
+                                             "assignSanityRuns/forceFailTransfers",
+                                             pooled);
                     rows = stmt->executeUpdate();
                     msg.forceFailTransfers = (rows > 0? true: false);
                     conn->commit(pooled);
@@ -11473,11 +11473,11 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.revertToSubmitted)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = CURRENT_TIMESTAMP "
-                            " where revertToSubmitted=0"
-                            " AND (t_revertToSubmitted < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
-                            "assignSanityRuns/revertToSubmitted",
-                            pooled);
+                                             "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = CURRENT_TIMESTAMP "
+                                             " where revertToSubmitted=0"
+                                             " AND (t_revertToSubmitted < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                                             "assignSanityRuns/revertToSubmitted",
+                                             pooled);
                     rows = stmt->executeUpdate();
                     msg.revertToSubmitted = (rows > 0? true: false);
                     conn->commit(pooled);
@@ -11486,11 +11486,11 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.cancelWaitingFiles)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = CURRENT_TIMESTAMP "
-                            "  where cancelWaitingFiles=0"
-                            " AND (t_cancelWaitingFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
-                            "assignSanityRuns/cancelWaitingFiles",
-                            pooled);
+                                             "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = CURRENT_TIMESTAMP "
+                                             "  where cancelWaitingFiles=0"
+                                             " AND (t_cancelWaitingFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                                             "assignSanityRuns/cancelWaitingFiles",
+                                             pooled);
                     rows = stmt->executeUpdate();
                     msg.cancelWaitingFiles = (rows > 0? true: false);
                     conn->commit(pooled);
@@ -11499,11 +11499,11 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.revertNotUsedFiles)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = CURRENT_TIMESTAMP "
-                            " where revertNotUsedFiles=0"
-                            " AND (t_revertNotUsedFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
-                            "assignSanityRuns/revertNotUsedFiles",
-                            pooled);
+                                             "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = CURRENT_TIMESTAMP "
+                                             " where revertNotUsedFiles=0"
+                                             " AND (t_revertNotUsedFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                                             "assignSanityRuns/revertNotUsedFiles",
+                                             pooled);
                     rows = stmt->executeUpdate();
                     msg.revertNotUsedFiles = (rows > 0? true: false);
                     conn->commit(pooled);
@@ -11527,49 +11527,49 @@ void OracleAPI::resetSanityRuns(SafeConnection& pooled, struct message_sanity &m
             if(msg.checkSanityState)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set checkSanityState=0 where checkSanityState=1",
-                            "resetSanityRuns/checkSanityState",
-                            pooled);
+                                             "update t_server_sanity set checkSanityState=0 where checkSanityState=1",
+                                             "resetSanityRuns/checkSanityState",
+                                             pooled);
                     stmt->executeUpdate();
                 }
             else if(msg.setToFailOldQueuedJobs)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set setToFailOldQueuedJobs=0 where setToFailOldQueuedJobs=1",
-                            "resetSanityRuns/setToFailOldQueuedJobs",
-                            pooled);
+                                             "update t_server_sanity set setToFailOldQueuedJobs=0 where setToFailOldQueuedJobs=1",
+                                             "resetSanityRuns/setToFailOldQueuedJobs",
+                                             pooled);
                     stmt->executeUpdate();
                 }
             else if(msg.forceFailTransfers)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set forceFailTransfers=0 where forceFailTransfers=1",
-                            "resetSanityRuns/forceFailTransfers",
-                            pooled);
+                                             "update t_server_sanity set forceFailTransfers=0 where forceFailTransfers=1",
+                                             "resetSanityRuns/forceFailTransfers",
+                                             pooled);
                     stmt->executeUpdate();
                 }
             else if(msg.revertToSubmitted)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set revertToSubmitted=0 where revertToSubmitted=1",
-                            "resetSanityRuns/revertToSubmitted",
-                            pooled);
+                                             "update t_server_sanity set revertToSubmitted=0 where revertToSubmitted=1",
+                                             "resetSanityRuns/revertToSubmitted",
+                                             pooled);
                     stmt->executeUpdate();
                 }
             else if(msg.cancelWaitingFiles)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set cancelWaitingFiles=0 where cancelWaitingFiles=1",
-                            "resetSanityRuns/cancelWaitingFiles",
-                            pooled);
+                                             "update t_server_sanity set cancelWaitingFiles=0 where cancelWaitingFiles=1",
+                                             "resetSanityRuns/cancelWaitingFiles",
+                                             pooled);
                     stmt->executeUpdate();
                 }
             else if(msg.revertNotUsedFiles)
                 {
                     SafeStatement stmt = conn->createStatement(
-                            "update t_server_sanity set revertNotUsedFiles=0 where revertNotUsedFiles=1",
-                            "resetSanityRuns/revertNotUsedFiles",
-                            pooled);
+                                             "update t_server_sanity set revertNotUsedFiles=0 where revertNotUsedFiles=1",
+                                             "resetSanityRuns/revertNotUsedFiles",
+                                             pooled);
                     stmt->executeUpdate();
                 }
             conn->commit(pooled);

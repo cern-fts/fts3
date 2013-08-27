@@ -220,7 +220,7 @@ void issueBringOnLineStatus(gfal2_context_t handle, std::string infosys)
                                         }
 
                                     statusA = gfal2_bring_online(handle, ((*i).url).c_str(), pinlifetime, bringonlineTimeout, token, sizeof (token), 1, &error);
-                                   db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));				    
+                                    db::DBSingleton::instance().getDBObjectInstance()->bringOnlineReportStatus("STARTED", "", (*i));
 
                                     if (statusA < 0)
                                         {
@@ -343,10 +343,10 @@ int DoServer(int argc, char** argv)
             REGISTER_SIGNAL(SIGBUS);
             REGISTER_SIGNAL(SIGTRAP);
             REGISTER_SIGNAL(SIGSYS);
-	    
+
             // Set X509_ environment variables properly
             setenv("X509_USER_CERT", hostcert, 1);
-            setenv("X509_USER_KEY", hostkey, 1);	    
+            setenv("X509_USER_KEY", hostkey, 1);
 
             //re-read here
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);

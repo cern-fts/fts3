@@ -167,7 +167,7 @@ void Reporter::constructMessageUpdater(std::string job_id, std::string file_id, 
             msg_updater->process_id = (int) getpid();
             msg_updater->timestamp = milliseconds_since_epoch();
             msg_updater->throughput = throughput;
-            msg_updater->transferred = transferred;	    
+            msg_updater->transferred = transferred;
             runProducerStall(*msg_updater);
         }
 }

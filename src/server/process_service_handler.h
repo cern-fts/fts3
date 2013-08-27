@@ -281,7 +281,7 @@ protected:
     }
 
     void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
-    {        
+    {
         std::string params = std::string("");
         ExecuteProcess *pr = NULL;
         std::string sourceSiteName("");
@@ -787,7 +787,7 @@ protected:
                                 drainMode = false;
                             }
 
-                        //check for available resources			
+                        //check for available resources
                         int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
                         if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
                             {
@@ -855,6 +855,7 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
+			    sleep(1);
                     }
                 catch (...)
                     {
@@ -869,8 +870,9 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
+			    sleep(1);
                     }
-                sleep(5);
+                sleep(1);
             } /*end while*/
     }
 

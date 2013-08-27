@@ -294,24 +294,25 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                     status->numFailures = tmp->numFailures;
 
                     // Retries only on request!
-                    if (req->retries) {
-                        DBSingleton::instance()
-                        .getDBObjectInstance()
-                        ->getTransferRetries(tmp->fileId, retries);
+                    if (req->retries)
+                        {
+                            DBSingleton::instance()
+                            .getDBObjectInstance()
+                            ->getTransferRetries(tmp->fileId, retries);
 
-                        std::vector<FileRetry*>::iterator ri;
-                        for (ri = retries.begin(); ri != retries.end(); ++ri)
-                            {
-                                tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(soap, -1);
-                                retry->attempt  = (*ri)->attempt;
-                                retry->datetime = (*ri)->datetime;
-                                retry->reason   = (*ri)->reason;
-                                status->retries.push_back(retry);
+                            std::vector<FileRetry*>::iterator ri;
+                            for (ri = retries.begin(); ri != retries.end(); ++ri)
+                                {
+                                    tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(soap, -1);
+                                    retry->attempt  = (*ri)->attempt;
+                                    retry->datetime = (*ri)->datetime;
+                                    retry->reason   = (*ri)->reason;
+                                    status->retries.push_back(retry);
 
-                                delete *ri;
-                            }
-                        retries.clear();
-                    }
+                                    delete *ri;
+                                }
+                            retries.clear();
+                        }
 
                     resp.getFileStatusReturn->item.push_back(status);
                 }
@@ -405,42 +406,42 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
 
 tns3__JobStatus* handleStatusExceptionForGLite(soap *ctx, string requestID)
 {
-	// the value to be returned
-	tns3__JobStatus* status;
+    // the value to be returned
+    tns3__JobStatus* status;
 
-	// For now since the glite clients are not compatible with exception from our gsoap version
-	// we do not rise an exception, instead we send the error string as the job status
-	// and at the begining of it we attache backspaces in order to erase 'Unknown transfer state '
+    // For now since the glite clients are not compatible with exception from our gsoap version
+    // we do not rise an exception, instead we send the error string as the job status
+    // and at the begining of it we attache backspaces in order to erase 'Unknown transfer state '
 
-	// the string that should be erased
-	string replace = "Unknown transfer state ";
+    // the string that should be erased
+    string replace = "Unknown transfer state ";
 
-	// backspace
-	const char bs = 8;
-	// error message
-	string msg = "getTransferJobStatus: RequestID <" + requestID + "> was not found";
+    // backspace
+    const char bs = 8;
+    // error message
+    string msg = "getTransferJobStatus: RequestID <" + requestID + "> was not found";
 
-	// add backspaces at the begining of the error message
-	for (int i = 0; i < replace.size(); i++)
-		msg = bs + msg;
+    // add backspaces at the begining of the error message
+    for (int i = 0; i < replace.size(); i++)
+        msg = bs + msg;
 
-	// create the status object
-	status = soap_new_tns3__JobStatus(ctx, -1);
+    // create the status object
+    status = soap_new_tns3__JobStatus(ctx, -1);
 
-	// create the string for the error message
-	status->jobStatus = soap_new_std__string(ctx, -1);
-	*status->jobStatus = msg;
+    // create the string for the error message
+    status->jobStatus = soap_new_std__string(ctx, -1);
+    *status->jobStatus = msg;
 
-	// set all the rest to NULLs
-	status->clientDN = 0;
-	status->jobID = 0;
-	status->numFiles = 0;
-	status->priority = 0;
-	status->reason = 0;
-	status->voName = 0;
-	status->submitTime = 0;
+    // set all the rest to NULLs
+    status->clientDN = 0;
+    status->jobID = 0;
+    status->numFiles = 0;
+    status->priority = 0;
+    status->reason = 0;
+    status->voName = 0;
+    status->submitTime = 0;
 
-	return status;
+    return status;
 }
 
 /// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
@@ -474,7 +475,7 @@ int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
             else
                 {
                     // throw Err_Custom("requestID <" + requestID + "> was not found");
-            		resp._getTransferJobStatusReturn = handleStatusExceptionForGLite(ctx, requestID);
+                    resp._getTransferJobStatusReturn = handleStatusExceptionForGLite(ctx, requestID);
                 }
         }
     catch (Err& ex)
@@ -662,7 +663,7 @@ int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__
             else
                 {
                     // throw Err_Custom("requestID <" + requestID + "> was not found");
-            		resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
+                    resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
                     resp._getTransferJobSummary2Return->jobStatus = handleStatusExceptionForGLite(ctx, requestID);
                 }
 
@@ -688,30 +689,30 @@ int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__
 //
 //    return status;
 
-	resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
+    resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
 
-	string replace = "Unknown transfer state ";
+    string replace = "Unknown transfer state ";
 
-	char bs = 8;
-	string msg = "getTransferJobStatus: RequestID <" + requestID + "> was not found";
+    char bs = 8;
+    string msg = "getTransferJobStatus: RequestID <" + requestID + "> was not found";
 
-	for (int i = 0; i < replace.size(); i++)
-		msg = bs + msg;
+    for (int i = 0; i < replace.size(); i++)
+        msg = bs + msg;
 
-	resp._getTransferJobSummary2Return->jobStatus = soap_new_tns3__JobStatus(ctx, -1);
+    resp._getTransferJobSummary2Return->jobStatus = soap_new_tns3__JobStatus(ctx, -1);
 
-	resp._getTransferJobSummary2Return->jobStatus->jobStatus = soap_new_std__string(ctx, -1);
-	*resp._getTransferJobSummary2Return->jobStatus->jobStatus = msg;
+    resp._getTransferJobSummary2Return->jobStatus->jobStatus = soap_new_std__string(ctx, -1);
+    *resp._getTransferJobSummary2Return->jobStatus->jobStatus = msg;
 
-	resp._getTransferJobSummary2Return->jobStatus->clientDN = 0;
-	resp._getTransferJobSummary2Return->jobStatus->jobID = 0;
-	resp._getTransferJobSummary2Return->jobStatus->numFiles = 0;
-	resp._getTransferJobSummary2Return->jobStatus->priority = 0;
-	resp._getTransferJobSummary2Return->jobStatus->reason = 0;
-	resp._getTransferJobSummary2Return->jobStatus->voName = 0;
-	resp._getTransferJobSummary2Return->jobStatus->submitTime = 0;
+    resp._getTransferJobSummary2Return->jobStatus->clientDN = 0;
+    resp._getTransferJobSummary2Return->jobStatus->jobID = 0;
+    resp._getTransferJobSummary2Return->jobStatus->numFiles = 0;
+    resp._getTransferJobSummary2Return->jobStatus->priority = 0;
+    resp._getTransferJobSummary2Return->jobStatus->reason = 0;
+    resp._getTransferJobSummary2Return->jobStatus->voName = 0;
+    resp._getTransferJobSummary2Return->jobStatus->submitTime = 0;
 
-	return SOAP_OK;
+    return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary3' (returns error code or SOAP_OK)

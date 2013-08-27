@@ -180,7 +180,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
             allowed =  false;
         }
-    
+
     return allowed;
 }
 

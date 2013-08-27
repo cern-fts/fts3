@@ -291,8 +291,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare << " select  distinct f.source_se, f.dest_se from t_file f where "
-						     		    " f.file_state='SUBMITTED' and f.job_id=(select j.job_id from t_job j "
-								    " where f.job_id=j.job_id and j.vo_name= :vo_name AND j.job_state IN ('ACTIVE', 'READY','SUBMITTED'))",
+                                                     " f.file_state='SUBMITTED' and f.job_id=(select j.job_id from t_job j "
+                                                     " where f.job_id=j.job_id and j.vo_name= :vo_name AND j.job_state IN ('ACTIVE', 'READY','SUBMITTED'))",
                                                      soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -490,22 +490,23 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
     soci::session sql(*connectionPool);
 
     unsigned int updated = 0;
-    
+
 
     try
         {
             sql.begin();
-	    	    	    
-	    int countSame = 0;
-            
-	    sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl ",
+
+            int countSame = 0;
+
+            sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl ",
                 soci::use(file->DEST_SURL),
                 soci::into(countSame);
 
-            if(countSame > 0){	        
-                return 0;
-	    }
-	    
+            if(countSame > 0)
+                {
+                    return 0;
+                }
+
 
             soci::statement stmt(sql);
 
@@ -519,7 +520,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
             stmt.define_and_bind();
             stmt.execute(true);
 
-            updated = (unsigned int) stmt.get_affected_rows();	    	    
+            updated = (unsigned int) stmt.get_affected_rows();
             if (updated > 0)
                 {
                     soci::statement jobStmt(sql);
@@ -532,7 +533,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
                     jobStmt.define_and_bind();
                     jobStmt.execute(true);
                 }
-		
+
             sql.commit();
         }
     catch (std::exception& e)
@@ -1153,6 +1154,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
 
 
             // check if the state is STAGING, there should be just one row
+	    std::string st;
             soci::rowset<soci::row>::const_iterator it = rs.begin();
             if (it != rs.end())
                 {
@@ -1160,6 +1162,9 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
                     std::string st = r.get<std::string>("file_state");
                     staging = (st == "STAGING");
                 }
+		
+	    if(st == "ACTIVE" && (transfer_status != "FAILED" ||  transfer_status != "FINISHED" ||  transfer_status != "CANCELED"))
+	    	return true;
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -1253,9 +1258,22 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
             int numberOfFilesNotCanceled = 0;
             int numberOfFilesNotCanceledNorFailed = 0;
+	    
+	    std::string currentState("");
 
             sql.begin();
-
+	    
+            // prevent multiple updates of the same state for the same job
+            sql <<
+                " SELECT job_state from t_job  "               
+                " WHERE job_id = :job_id ",
+                soci::use(job_id),
+                soci::into(currentState)
+                ;
+	   
+	    if(currentState == status)
+	    	return true;	    
+	    
             // total number of file in the job
             sql <<
                 " SELECT COUNT(DISTINCT file_index) "
