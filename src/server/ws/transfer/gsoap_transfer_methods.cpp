@@ -677,42 +677,6 @@ int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__
         }
 
     return SOAP_OK;
-
-    // This method is a subset of getTransferJobSummary3
-//    tns3__JobRequest req;
-//    req.jobId   = _requestID;
-//    req.archive = false;
-//
-//    impltns__getTransferJobSummary3Response resp;
-//    int status = impltns__getTransferJobSummary3(soap, &req, resp);
-//    _param_13._getTransferJobSummary2Return = resp.getTransferJobSummary2Return;
-//
-//    return status;
-
-    resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
-
-    string replace = "Unknown transfer state ";
-
-    char bs = 8;
-    string msg = "getTransferJobStatus: RequestID <" + requestID + "> was not found";
-
-    for (int i = 0; i < replace.size(); i++)
-        msg = bs + msg;
-
-    resp._getTransferJobSummary2Return->jobStatus = soap_new_tns3__JobStatus(ctx, -1);
-
-    resp._getTransferJobSummary2Return->jobStatus->jobStatus = soap_new_std__string(ctx, -1);
-    *resp._getTransferJobSummary2Return->jobStatus->jobStatus = msg;
-
-    resp._getTransferJobSummary2Return->jobStatus->clientDN = 0;
-    resp._getTransferJobSummary2Return->jobStatus->jobID = 0;
-    resp._getTransferJobSummary2Return->jobStatus->numFiles = 0;
-    resp._getTransferJobSummary2Return->jobStatus->priority = 0;
-    resp._getTransferJobSummary2Return->jobStatus->reason = 0;
-    resp._getTransferJobSummary2Return->jobStatus->voName = 0;
-    resp._getTransferJobSummary2Return->jobStatus->submitTime = 0;
-
-    return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary3' (returns error code or SOAP_OK)
