@@ -100,6 +100,11 @@ config(function($routeProvider) {
 		}
 	}
 })
+.run(function($rootScope, $location) {
+	$rootScope.searchJob = function() {
+		$location.path('/job/' + $rootScope.jobId);
+	}
+})
 ;
 
 /** Pie plotting */
