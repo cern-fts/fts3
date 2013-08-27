@@ -718,10 +718,11 @@ int main(int argc, char **argv)
                 logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
 
                 //set to active only for reuse
-		if (opts.reuseFile){
-                	logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
-                	reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
-		}
+                if (opts.reuseFile)
+                    {
+                        logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
+                        reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
+                    }
 
                 if (fexists(opts.proxy.c_str()) != 0)
                     {

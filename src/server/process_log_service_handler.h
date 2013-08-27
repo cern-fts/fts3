@@ -124,7 +124,7 @@ protected:
                                 sleep(2);
                                 continue;
                             }
-                      
+
 
                         if (runConsumerLog(messages) != 0)
                             {
@@ -164,7 +164,7 @@ protected:
                     }
                 catch (const fs::filesystem_error& ex)
                     {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;                        
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         sleep(2);
                     }
                 catch (Err& e)

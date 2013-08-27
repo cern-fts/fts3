@@ -375,7 +375,7 @@ protected:
                         std::string bringonlineToken("");
 
                         TransferFiles* tempUrl = NULL;
-                        
+
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::list<TransferFiles*>::const_iterator queueiter;
 
@@ -853,7 +853,7 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-			    sleep(1);
+                        sleep(1);
                     }
                 catch (...)
                     {
@@ -868,7 +868,7 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-			    sleep(1);
+                        sleep(1);
                     }
                 sleep(1);
             } /*end while*/

@@ -98,7 +98,7 @@ public:
 
 protected:
     std::vector<struct message_updater> messages;
-    
+
     void killRunningJob(std::vector<int>& requestIDs)
     {
         std::vector<int>::const_iterator iter;
@@ -108,7 +108,7 @@ protected:
                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Canceling and killing running processes: " << pid << commit;
                 kill(pid, SIGTERM);
             }
-    }    
+    }
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
@@ -118,8 +118,8 @@ protected:
         static unsigned int countReverted = 0;
         static unsigned int counter2 = 0;
         static unsigned int counterTimeoutWaiting = 0;
-        static unsigned int counterCanceled = 0;	
-	std::vector<int> requestIDs;
+        static unsigned int counterCanceled = 0;
+        std::vector<int> requestIDs;
 
         while (1)   /*need to receive more than one messages at a time*/
             {
@@ -158,7 +158,7 @@ protected:
                                         killRunningJob(requestIDs);
                                         requestIDs.clear(); /*clean the list*/
                                     }
-			      counterCanceled = 0;
+                                counterCanceled = 0;
                             }
 
 

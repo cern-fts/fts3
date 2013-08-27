@@ -90,7 +90,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
 
     for (iter = transfersStoreVector.begin(); iter < transfersStoreVector.end(); ++iter)
         {
-	
+
             if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
                 {
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished

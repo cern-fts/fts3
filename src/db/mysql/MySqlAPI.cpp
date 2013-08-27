@@ -1154,7 +1154,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
 
 
             // check if the state is STAGING, there should be just one row
-	    std::string st;
+            std::string st;
             soci::rowset<soci::row>::const_iterator it = rs.begin();
             if (it != rs.end())
                 {
@@ -1162,9 +1162,9 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
                     std::string st = r.get<std::string>("file_state");
                     staging = (st == "STAGING");
                 }
-		
-	    if(st == "ACTIVE" && (transfer_status != "FAILED" ||  transfer_status != "FINISHED" ||  transfer_status != "CANCELED"))
-	    	return true;
+
+            if(st == "ACTIVE" && (transfer_status != "FAILED" ||  transfer_status != "FINISHED" ||  transfer_status != "CANCELED"))
+                return true;
 
             soci::statement stmt(sql);
             std::ostringstream query;
@@ -1258,22 +1258,22 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
             int numberOfFilesNotCanceled = 0;
             int numberOfFilesNotCanceledNorFailed = 0;
-	    
-	    std::string currentState("");
+
+            std::string currentState("");
 
             sql.begin();
-	    
+
             // prevent multiple updates of the same state for the same job
             sql <<
-                " SELECT job_state from t_job  "               
+                " SELECT job_state from t_job  "
                 " WHERE job_id = :job_id ",
                 soci::use(job_id),
                 soci::into(currentState)
                 ;
-	   
-	    if(currentState == status)
-	    	return true;	    
-	    
+
+            if(currentState == status)
+                return true;
+
             // total number of file in the job
             sql <<
                 " SELECT COUNT(DISTINCT file_index) "
@@ -2497,7 +2497,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                             startTime = timegm(&startTimeSt); //from db
                             timeout = extractTimeout(params);
 
-                            int terminateTime = timeout + 3600;
+                            int terminateTime = timeout + 1000;
 
                             if (isNull != soci::i_null && reuse == "Y")
                                 {
