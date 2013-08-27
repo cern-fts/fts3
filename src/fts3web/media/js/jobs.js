@@ -70,6 +70,31 @@ JobListCtrl.resolve = {
     }
 }
 
+/** Archive */
+function ArchiveCtrl($location, $scope, jobs, ArchivedJobs, Unique)
+{
+	JobListCtrl($location, $scope, jobs, ArchivedJobs, Unique);
+}
+
+ArchiveCtrl.resolve = {
+	jobs: function($rootScope, $location, $q, ArchivedJobs) {
+    	loading($rootScope);
+    	
+    	var deferred = $q.defer();
+
+    	var page = $location.search().page;
+    	if (!page || page < 1)
+    		page = 1;
+    	
+    	ArchivedJobs.query($location.search(), function(data) {
+    		deferred.resolve(data);
+    		stopLoading($rootScope);
+    	});
+    	
+    	return deferred.promise;
+    }
+}
+
 /** Job view
  * Note: We paginate files client-side
  **/

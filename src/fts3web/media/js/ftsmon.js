@@ -4,11 +4,13 @@ config(function($routeProvider) {
 		when('/', {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
 				   controller:  JobListCtrl,
 			       resolve:     JobListCtrl.resolve}).
-
 		when('/job/:jobId', {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
 			                 controller:  JobViewCtrl,
 			                 resolve:     JobViewCtrl.resolve,
 			                 reloadOnSearch: false}).
+ 		when('/archive', {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
+				          controller:  ArchiveCtrl,
+				          resolve:     ArchiveCtrl.resolve}).
 
 	    when('/queue/', {templateUrl: STATIC_ROOT + 'html/queue/queue.html',
 	    	             controller:  JobQueueCtrl,

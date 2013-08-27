@@ -5,6 +5,12 @@ angular.module('ftsmon.resources', ['ngResource'])
 			    isArray: false},
 	})
 })
+.factory('ArchivedJobs', function($resource) {
+	return $resource('archive', {}, {
+		query: {method: 'GET',
+			    isArray: false},
+	})
+})
 .factory('Unique', function($resource) {
 	return $resource('unique/', {}, {
 		all: {method: 'GET', isArray: false}
