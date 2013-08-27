@@ -121,13 +121,15 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 	$scope.autoRefresh = setInterval(function() {
 		var filter   = $location.search();
 		filter.jobId = $scope.job.job_id;	
-    	$scope.job   = Job.query(filter);
+    	Job.query(filter, function(updatedJob) {
+    		$scope.job = updatedJob;
+    	})
     	// Do this in two steps so we can copy the show attribute
-    	var newFiles = Files.query(filter, function () {
-    		for(var i = 0; i < newFiles.items.length; i++) {
-        		newFiles.items[i].show = $scope.files.items[i].show;
+    	Files.query(filter, function (updatedFiles) {
+    		for(var i = 0; i < updatedFiles.items.length; i++) {
+    			updatedFiles.items[i].show = $scope.files.items[i].show;
         	}
-    		$scope.files = newFiles;
+    		$scope.files = updatedFiles;
     	});
 	}, 20000);
 	$scope.$on('$destroy', function() {
