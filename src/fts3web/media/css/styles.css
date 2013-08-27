@@ -22,9 +22,10 @@ table.table td {
 }
 
 /* Statuses */
-.status {
+td.status {
 	color: white;
-	background: gray;
+	text-align: center;
+	vertical-align: middle;
 }
 
 .ACTIVE {
