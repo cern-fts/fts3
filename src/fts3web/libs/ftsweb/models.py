@@ -151,7 +151,10 @@ class  ConfigAudit(models.Model):
 
     def simple_action(self):
         return self.action.split(' ')[0]
-
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+               self.datetime == b.datetime and self.config == b.config and self.dn == b.dn
 
 
 class Optimize(models.Model):
