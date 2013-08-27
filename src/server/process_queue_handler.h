@@ -197,50 +197,109 @@ protected:
     boost::thread_group g;
     std::string enableOptimization;
 
+
+    void getLogs()
+    {
+        try
+            {
+                std::vector<struct message_log> messages;
+                std::vector<struct message_log>::const_iterator iter;
+
+                if (runConsumerLog(messages) != 0)
+                    {
+                        char buffer[128]= {0};
+                        throw Err_System(std::string("Could not get the log messages: ") +
+                                         strerror_r(errno, buffer, sizeof(buffer)));
+                    }
+
+                if(!messages.empty())
+                    {
+                        for (iter = messages.begin(); iter != messages.end(); ++iter)
+                            {
+                                if (iter->msg_errno == 0)
+                                    {
+                                        std::string job = std::string((*iter).job_id).substr(0, 36);
+                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Log Monitor "
+                                                                        << "\nJob id: " << job
+                                                                        << "\nFile id: " << (*iter).file_id
+                                                                        << "\nLog path: " << (*iter).filePath << commit;
+                                        DBSingleton::instance().getDBObjectInstance()->
+                                        transferLogFile((*iter).filePath, job , (*iter).file_id, (*iter).debugFile);
+                                    }
+                                else
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a log message: "
+                                                                       << iter->msg_error_reason << commit;
+                                    }
+                            }
+                        messages.clear();
+                    }
+            }
+        catch (Err& e)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            }
+        catch (...)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            }
+    }
+
     void executeUpdate(std::vector<struct message>& messages)
     {
-        std::vector<struct message>::const_iterator iter;
-        std::vector<struct message>::const_iterator iterBreak;
-        struct message_updater msgUpdater;
-        for (iter = messages.begin(); iter != messages.end(); ++iter)
+        try
             {
-                if(stopThreads)
+                std::vector<struct message>::const_iterator iter;
+                std::vector<struct message>::const_iterator iterBreak;
+                struct message_updater msgUpdater;
+                for (iter = messages.begin(); iter != messages.end(); ++iter)
                     {
-                        for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iter)
+                        if(stopThreads)
                             {
-                                struct message msgBreak = (*iter);
-                                runProducerStatus( msgBreak);
+                                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iter)
+                                    {
+                                        struct message msgBreak = (*iter);
+                                        runProducerStatus( msgBreak);
+                                    }
+
+                                break;
                             }
 
-                        break;
-                    }
+                        std::string jobId = std::string((*iter).job_id).substr(0, 36);
+                        strcpy(msgUpdater.job_id, jobId.c_str());
+                        msgUpdater.file_id = (*iter).file_id;
+                        msgUpdater.process_id = (*iter).process_id;
+                        msgUpdater.timestamp = (*iter).timestamp;
+                        msgUpdater.throughput = 0.0;
+                        msgUpdater.transferred = 0.0;
+                        ThreadSafeList::get_instance().updateMsg(msgUpdater);
 
-                std::string jobId = std::string((*iter).job_id).substr(0, 36);
-                strcpy(msgUpdater.job_id, jobId.c_str());
-                msgUpdater.file_id = (*iter).file_id;
-                msgUpdater.process_id = (*iter).process_id;
-                msgUpdater.timestamp = (*iter).timestamp;
-                msgUpdater.throughput = 0.0;
-                msgUpdater.transferred = 0.0;
-                ThreadSafeList::get_instance().updateMsg(msgUpdater);
+                        if (iter->msg_errno == 0)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
+                                                                << "\nFile id: " << (*iter).file_id
+                                                                << "\nPid: " << (*iter).process_id
+                                                                << "\nState: " << (*iter).transfer_status
+                                                                << "\nSource: " << (*iter).source_se
+                                                                << "\nDest: " << (*iter).dest_se << commit;
 
-                if (iter->msg_errno == 0)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
-                                                        << "\nFile id: " << (*iter).file_id
-                                                        << "\nPid: " << (*iter).process_id
-                                                        << "\nState: " << (*iter).transfer_status
-                                                        << "\nSource: " << (*iter).source_se
-                                                        << "\nDest: " << (*iter).dest_se << commit;
-
-                        updateDatabase((*iter));
-                    }
-                else
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
-                                                       << iter->msg_error_reason << commit;
-                    }
-            }//end for
+                                updateDatabase((*iter));
+                            }
+                        else
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
+                                                               << iter->msg_error_reason << commit;
+                            }
+                    }//end for
+            }
+        catch (Err& e)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            }
+        catch (...)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            }
     }
 
 
@@ -304,6 +363,9 @@ protected:
                                     }
                                 messages.clear();
                             }
+
+                        /*get log file here*/
+                        getLogs();
                         usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
