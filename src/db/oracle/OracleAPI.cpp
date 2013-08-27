@@ -239,6 +239,223 @@ TransferJobs* OracleAPI::getTransferJob(std::string jobId, bool archive)
     return job;
 }
 
+void OracleAPI::getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos)
+{
+    TransferJobs* tr_jobs = NULL;
+    std::string tag = "getSubmittedJobs";
+    std::string tag1 = "bringdistinct";
+    std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
+
+    std::string bring_distinct =
+        " SELECT distinct t_file.source_se, t_file.dest_se, t_job.vo_name "
+        " FROM t_job, t_file "
+        " WHERE t_file.job_id = t_job.job_id "
+        "	AND t_job.job_finished is NULL "
+        "	AND t_job.CANCEL_JOB is NULL "
+        " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL)  "
+        " 	AND t_job.job_state in('ACTIVE', 'READY','SUBMITTED') "
+        "	AND t_file.file_state='SUBMITTED' ";
+
+    if (vos != "*")
+        {
+            tag1 += 1;
+            bring_distinct +=
+                " AND t_job.VO_NAME IN " + vos ;
+
+        }
+
+    std::string query_stmt =
+        " SELECT "
+        " 	job_id, "
+        " 	job_state, "
+        " 	vo_name,  "
+        " 	priority,  "
+        " 	source_se, "
+        " 	dest_se,  "
+        " 	agent_dn, "
+        " 	submit_host, "
+        " 	user_dn, "
+        " 	user_cred, "
+        " 	cred_id,  "
+        " 	space_token, "
+        " 	storage_class,  "
+        " 	job_params, "
+        " 	overwrite_flag, "
+        " 	source_space_token, "
+        " 	source_token_description,"
+        " 	copy_pin_lifetime, "
+        " 	checksum_method, "
+        " 	bring_online, "
+        "   submit_time "
+        "   from ( select "
+        " 	t_job.job_id, "
+        " 	t_job.job_state, "
+        " 	t_job.vo_name,  "
+        " 	t_job.priority,  "
+        " 	t_job.source_se, "
+        " 	t_job.dest_se,  "
+        " 	t_job.agent_dn, "
+        " 	t_job.submit_host, "
+        " 	t_job.user_dn, "
+        " 	t_job.user_cred, "
+        " 	t_job.cred_id,  "
+        " 	t_job.space_token, "
+        " 	t_job.storage_class,  "
+        " 	t_job.job_params, "
+        " 	t_job.overwrite_flag, "
+        " 	t_job.source_space_token, "
+        " 	t_job.source_token_description,"
+        " 	t_job.copy_pin_lifetime, "
+        " 	t_job.checksum_method, "
+        " 	t_job.bring_online, "
+        "   t_job.submit_time "
+        " FROM t_job "
+        " WHERE "
+        " 	t_job.job_finished is NULL"
+        " 	AND t_job.CANCEL_JOB is NULL"
+        " 	AND t_job.VO_NAME=:1 "
+        " 	AND (t_job.reuse_job='N' or t_job.reuse_job is NULL) "
+        " 	AND t_job.job_state in ('ACTIVE', 'READY','SUBMITTED') "
+        " 	AND exists(	"
+        "		SELECT NULL "
+        "		FROM t_file "
+        "		WHERE t_file.job_id = t_job.job_id "
+        "			AND t_file.source_se = :2 AND t_file.dest_se = :3 "
+        "			AND t_file.file_state = 'SUBMITTED'"
+        "	) "
+        " ORDER BY t_job.priority DESC, SYS_EXTRACT_UTC(t_job.submit_time)) WHERE ROWNUM <= :4 ORDER BY priority DESC, SYS_EXTRACT_UTC(submit_time)  ";
+
+    SafeStatement s;
+    SafeResultSet r;
+    SafeStatement s1;
+    SafeResultSet r1;
+    SafeConnection pooledConnection;
+
+    try
+        {
+
+            int mode = getOptimizerMode();
+            if(mode==1)
+                {
+                    jobsNum = mode_1[2];
+                }
+            else if(mode==2)
+                {
+                    jobsNum = mode_2[2];
+                }
+            else if(mode==3)
+                {
+                    jobsNum = mode_3[2];
+                }
+            else
+                {
+                    jobsNum = mode_1[2];
+                }
+
+
+            pooledConnection = conn->getPooledConnection();
+            if (!pooledConnection)
+                return;
+
+            //get distinct vos
+            s1 = conn->createStatement(bring_distinct, tag1, pooledConnection);
+            r1 = conn->createResultset(s1, pooledConnection);
+            while (r1->next())
+                {
+
+                    distinct.push_back(
+                        boost::tuple< std::string, std::string, std::string >(
+                            r1->getString(3), //vo
+                            r1->getString(1), // source
+                            r1->getString(2)  // destination
+                        )
+                    );
+                }
+            conn->destroyResultset(s1, r1);
+            conn->destroyStatement(s1, tag1, pooledConnection);
+
+            s = conn->createStatement(query_stmt, tag, pooledConnection);
+
+            vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
+            for (it = distinct.begin(); it != distinct.end(); ++it)
+                {
+
+                    boost::tuple< std::string, std::string, std::string>& triplet = *it;
+
+                    s->setString(1, boost::get<0>(triplet)); // vo
+                    s->setString(2, boost::get<1>(triplet)); // source
+                    s->setString(3, boost::get<2>(triplet)); // destination
+                    s->setInt(4, jobsNum); // limit
+
+                    r = conn->createResultset(s, pooledConnection);
+
+                    while (r->next())
+                        {
+                            tr_jobs = new TransferJobs();
+                            tr_jobs->JOB_ID = r->getString(1);
+                            tr_jobs->JOB_STATE = r->getString(2);
+                            tr_jobs->VO_NAME = r->getString(3);
+                            tr_jobs->PRIORITY = r->getInt(4);
+                            tr_jobs->SOURCE = r->getString(5);
+                            tr_jobs->DEST = r->getString(6);
+                            tr_jobs->AGENT_DN = r->getString(7);
+                            tr_jobs->SUBMIT_HOST = r->getString(8);
+                            tr_jobs->USER_DN = r->getString(9);
+                            tr_jobs->USER_CRED = r->getString(10);
+                            tr_jobs->CRED_ID = r->getString(11);
+                            tr_jobs->SPACE_TOKEN = r->getString(12);
+                            tr_jobs->STORAGE_CLASS = r->getString(13);
+                            tr_jobs->INTERNAL_JOB_PARAMS = r->getString(14);
+                            tr_jobs->OVERWRITE_FLAG = r->getString(15);
+                            tr_jobs->SOURCE_SPACE_TOKEN = r->getString(16);
+                            tr_jobs->SOURCE_TOKEN_DESCRIPTION = r->getString(17);
+                            tr_jobs->COPY_PIN_LIFETIME = r->getInt(18);
+                            tr_jobs->CHECKSUM_METHOD = r->getString(19);
+                            tr_jobs->BRINGONLINE = r->getInt(20);
+                            jobs.push_back(tr_jobs);
+                        }
+                    conn->destroyResultset(s, r);
+                }
+
+            conn->destroyStatement(s, tag, pooledConnection);
+        }
+    catch (oracle::occi::SQLException const &e)
+        {
+            conn->rollback(pooledConnection);
+
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            if(s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom(e.what()));
+        }
+    catch (...)
+        {
+            conn->rollback(pooledConnection);
+
+            if(s && r)
+                conn->destroyResultset(s, r);
+            if (s)
+                conn->destroyStatement(s, tag, pooledConnection);
+
+            if(s1 && r1)
+                conn->destroyResultset(s1, r1);
+            if (s1)
+                conn->destroyStatement(s1, tag1, pooledConnection);
+
+            FTS3_COMMON_EXCEPTION_THROW(Err_Custom("Oracle plug-in unknown exception"));
+        }
+
+    conn->releasePooledConnection(pooledConnection);
+}
+
+
 void OracleAPI::setFilesToNotUsed(std::string jobId, int fileIndex, std::vector<int>& files)
 {
 

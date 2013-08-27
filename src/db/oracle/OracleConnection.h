@@ -34,13 +34,11 @@ using namespace FTS3_COMMON_NAMESPACE;
 using namespace oracle::occi;
 
 
-class ConnectionDeallocator
-{
+class ConnectionDeallocator {
 public:
     ConnectionDeallocator(oracle::occi::StatelessConnectionPool* pool): pool(pool) {}
 
-    void operator () (oracle::occi::Connection* p)
-    {
+    void operator () (oracle::occi::Connection* p) {
         if (pool && p)
             pool->releaseConnection(p);
     }
@@ -51,21 +49,18 @@ private:
 typedef boost::shared_ptr<oracle::occi::Connection> SafeConnection;
 
 
-class StatementDeallocator
-{
+class StatementDeallocator {
 public:
     StatementDeallocator(SafeConnection& conn, const std::string& tag):
         conn(conn), tag(tag) {};
 
-    void operator () (oracle::occi::Statement* s)
-    {
-        if (conn && s)
-            {
-                if (tag.length() == 0)
-                    conn->terminateStatement(s);
-                else
-                    conn->terminateStatement(s, tag);
-            }
+    void operator () (oracle::occi::Statement* s) {
+        if (conn && s) {
+            if (tag.length() == 0)
+                conn->terminateStatement(s);
+            else
+                conn->terminateStatement(s, tag);
+        }
     }
 
 private:
@@ -75,16 +70,14 @@ private:
 typedef boost::shared_ptr<oracle::occi::Statement> SafeStatement;
 
 
-class ResultSetDeallocator
-{
+class ResultSetDeallocator {
 public:
     ResultSetDeallocator(SafeStatement& stmt): stmt(stmt) {}
 
-    void operator () (oracle::occi::ResultSet* rs)
-    {
-        if (stmt && rs)
-            stmt->closeResultSet(rs);
-    }
+   void operator () (oracle::occi::ResultSet* rs) {
+       if (stmt && rs)
+           stmt->closeResultSet(rs);
+   }
 private:
     SafeStatement stmt;
 };
@@ -147,18 +140,15 @@ public:
     }
 
     /* For backwards compatibility */
-    void destroyResultset(SafeStatement&, SafeResultSet& r)
-    {
+    void destroyResultset(SafeStatement&, SafeResultSet& r) {
         r.reset();
     }
 
-    void destroyStatement(SafeStatement& s, const std::string&, SafeConnection&)
-    {
+    void destroyStatement(SafeStatement& s, const std::string&, SafeConnection&) {
         s.reset();
     }
 
-    void releasePooledConnection(SafeConnection& c)
-    {
+    void releasePooledConnection(SafeConnection& c) {
         c.reset();
     }
 
