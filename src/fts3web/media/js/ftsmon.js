@@ -19,6 +19,12 @@ config(function($routeProvider) {
 		when('/staging/', {templateUrl: STATIC_ROOT + 'html/staging.html',
 			               controller:  StagingCtrl,
 					       resolve:     StagingCtrl.resolve}).
+        when('/optimizer/', {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
+				             controller:  OptimizerCtrl,
+						     resolve:     OptimizerCtrl.resolve}).
+        when('/optimizer/detailed', {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
+					                 controller:  OptimizerDetailedCtrl,
+							         resolve:     OptimizerDetailedCtrl.resolve}).
 
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 });

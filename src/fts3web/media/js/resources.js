@@ -24,4 +24,14 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('staging', {}, {
 		query: {method: 'GET', isArray: false}
 	})
+})
+.factory('Optimizer', function($resource) {
+	return $resource('optimizer', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+.factory('OptimizerDetailed', function($resource) {
+	return $resource('optimizer/detailed', {}, {
+		query: {method: 'GET', isArray: false}
+	})
 });
