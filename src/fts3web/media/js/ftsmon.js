@@ -49,6 +49,12 @@ config(function($routeProvider) {
         when('/statistics/pairs',     {templateUrl: STATIC_ROOT + 'html/statistics/pairs.html',
 		                               controller:  StatsPairsCtrl,
 				                       resolve:     StatsPairsCtrl.resolve}).
+        when('/statistics/vos',       {templateUrl: STATIC_ROOT + 'html/statistics/vos.html',
+                                       controller:  StatsVosCtrl,
+				                       resolve:     StatsVosCtrl.resolve}).
+        when('/statistics/profiling', {templateUrl: STATIC_ROOT + 'html/statistics/profiling.html',
+                                       controller:  StatsProfilingCtrl,
+                                       resolve:     StatsProfilingCtrl.resolve}).
 							         
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 })

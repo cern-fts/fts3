@@ -88,7 +88,7 @@ function StatsPairsCtrl($location, $scope, pairs, Pairs)
 	// Set timer to trigger autorefresh
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
-    	$scope.servers = Pairs.query(filter);
+    	$scope.pairs = Pairs.query(filter);
 	}, 20000);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
@@ -107,6 +107,76 @@ StatsPairsCtrl.resolve = {
     		page = 1;
     	
     	Pairs.query($location.search(), function(data) {
+    		deferred.resolve(data);
+    		stopLoading($rootScope);
+    	});
+    	
+    	return deferred.promise;
+	}
+}
+
+
+function StatsVosCtrl($location, $scope, vos, StatsVO)
+{
+	$scope.vos = vos;
+
+	// Set timer to trigger autorefresh
+	$scope.autoRefresh = setInterval(function() {
+		var filter = $location.search();
+    	$scope.vos = StatsVO.query(filter);
+	}, 20000);
+	$scope.$on('$destroy', function() {
+		clearInterval($scope.autoRefresh);
+	});
+}
+
+
+StatsVosCtrl.resolve = {
+	vos: function($rootScope, $location, $q, StatsVO) {
+    	loading($rootScope);
+    	
+    	var deferred = $q.defer();
+
+    	var page = $location.search().page;
+    	if (!page || page < 1)
+    		page = 1;
+    	
+    	StatsVO.query($location.search(), function(data) {
+    		deferred.resolve(data);
+    		stopLoading($rootScope);
+    	});
+    	
+    	return deferred.promise;
+	}
+}
+
+
+function StatsProfilingCtrl($location, $scope, profile, Profile)
+{
+	$scope.profile = profile;
+
+	// Set timer to trigger autorefresh
+	$scope.autoRefresh = setInterval(function() {
+		var filter = $location.search();
+    	$scope.profile = Profile.query(filter);
+	}, 20000);
+	$scope.$on('$destroy', function() {
+		clearInterval($scope.autoRefresh);
+	});
+}
+
+
+StatsProfilingCtrl.resolve = {
+	profile: function($rootScope, $location, $q, Profile) {
+    	loading($rootScope);
+    	
+    	var deferred = $q.defer();
+
+    	var page = $location.search().page;
+    	if (!page || page < 1)
+    		page = 1;
+    	
+    	Profile.query($location.search(), function(data) {
     		deferred.resolve(data);
     		stopLoading($rootScope);
     	});
