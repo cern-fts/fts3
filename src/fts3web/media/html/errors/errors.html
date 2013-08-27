@@ -1,0 +1,24 @@
+<h2>Unique errors</h2>
+
+<pagination rotate="false" num-pages="pageCount" current-page="page"
+    max-size="pageMax" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 5em">Count</th>
+            <th>Reason</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="error in errors.items" ng-class-odd="'odd'">
+            <td>{{error.count}}</td>
+            <td>
+                <a href="#/errors/list?reason={{error.reason | escape}}">
+                    {{error.reason}}
+                </a>
+            </td>
+        </tr>
+    </tbody>
+</table>

@@ -34,4 +34,14 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('optimizer/detailed', {}, {
 		query: {method: 'GET', isArray: false}
 	})
+})
+.factory('Errors', function($resource) {
+	return $resource('errors', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+.factory('FilesWithError', function($resource) {
+	return $resource('errors/list', {}, {
+		query: {method: 'GET', isArray: false}
+	})
 });

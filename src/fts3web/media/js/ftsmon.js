@@ -16,9 +16,11 @@ config(function($routeProvider) {
         when('/queue/details', {templateUrl: STATIC_ROOT + 'html/queue/detailed.html',
 					            controller:  JobQueueDetailedCtrl,
 					            resolve:     JobQueueDetailedCtrl.resolve}).
+
 		when('/staging/', {templateUrl: STATIC_ROOT + 'html/staging.html',
 			               controller:  StagingCtrl,
 					       resolve:     StagingCtrl.resolve}).
+					       
         when('/optimizer/', {templateUrl: STATIC_ROOT + 'html/optimizer/optimizer.html',
 				             controller:  OptimizerCtrl,
 						     resolve:     OptimizerCtrl.resolve}).
@@ -26,7 +28,17 @@ config(function($routeProvider) {
 					                 controller:  OptimizerDetailedCtrl,
 							         resolve:     OptimizerDetailedCtrl.resolve}).
 
+        when('/errors/', {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
+                          controller:  ErrorsCtrl,
+	                      resolve:     ErrorsCtrl.resolve}).
+        when('/errors/list', {templateUrl: STATIC_ROOT + 'html/errors/list.html',
+	                          controller:  FilesWithErrorCtrl,
+		                      resolve:     FilesWithErrorCtrl.resolve}).
+							         
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
+})
+.filter('escape', function() {
+	return window.escape;
 });
 
 /** Show loading **/

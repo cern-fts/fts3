@@ -45,6 +45,7 @@ def transfersWithError(httpRequest):
 
     notbefore = datetime.utcnow() - timedelta(hours = 12)
     transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)\
+                            .values('file_id', 'job_id', 'source_surl', 'dest_surl', 'job__vo_name')\
                             .order_by('file_id')
                             
     return transfers
