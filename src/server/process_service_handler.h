@@ -375,9 +375,7 @@ protected:
                         std::string bringonlineToken("");
 
                         TransferFiles* tempUrl = NULL;
-                        /*get the file for each job*/
-                        std::vector<TransferJobs*>::const_iterator iter2;
-
+                        
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::list<TransferFiles*>::const_iterator queueiter;
 
