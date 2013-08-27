@@ -11,6 +11,15 @@
 </p>
 
 <h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{files.count}}</h4>
+<p class="btn-group" ng-click="filterByState()">
+    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
+    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
+    <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>ACTIVE</button>
+    <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
+    <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>FAILED</button>
+    <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
+    <button type="button" class="btn btn-small" ng-model="filter.state.not_used" btn-checkbox>NOT_USED</button>
+</p>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
     max-size="pageMax" class="pagination" boundary-links="true"

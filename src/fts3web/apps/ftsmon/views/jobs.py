@@ -187,6 +187,10 @@ def jobFiles(httpRequest, jobId):
         files = FileArchive.objects.filter(job_id = jobId)
     if not files:
         raise Http404
+    
+    if 'state' in httpRequest.GET and httpRequest.GET['state']:
+        files = files.filter(file_state__in = httpRequest.GET['state'].split(','))
+    
     return files
 
 

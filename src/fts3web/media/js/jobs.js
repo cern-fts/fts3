@@ -117,6 +117,15 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 		$location.search({page: newPage});
 	}
 	
+	// Filtering by state
+	$scope.filter = {
+		state:       statesFromString($location.search().state)
+	}
+	
+	$scope.filterByState = function() {
+		$location.search({state: joinStates($scope.filter.state)});
+	}
+	
 	// Reloading
 	$scope.autoRefresh = setInterval(function() {
 		var filter   = $location.search();
