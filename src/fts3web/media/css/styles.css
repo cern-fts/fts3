@@ -22,35 +22,41 @@ table.table td {
 }
 
 /* Statuses */
+.status {
+	color: white;
+	background: gray;
+}
+
 .ACTIVE {
-  background: #AAAAFF;
+    background: #006dcc;
 }
 
 .CANCELED {
-  background: #FF7777;
+    background: #8a2822;
 }
 
 .FAILED {
-    background: #FFAAAA;
+    background: #bd362f;
 }
 
 .FINISHED {
-	background: #AAFFAA;
+	background: #5bb75b;
 }
 
 .FINISHEDDIRTY {
-	background: #AAAAAA;
+    background: #faa732;
 }
 
 .READY {
-  background: #99FFFF;
+    background: #9ed5ff;
 }
 
 .STAGING {
-  background: #5959FF;
+     background: #990099;
 }
 
 .SUBMITTED {
-    background: #FFFFAB;
+    color: black;
+    background: #fae932;
 }
 

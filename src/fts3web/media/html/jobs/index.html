@@ -24,7 +24,7 @@
             <td>
                 <a href=#/job/{{job.job_id}}>{{job.job_id}}</a></td>
             <td>{{job.submit_time}}</td>
-            <td class="{{job.job_state}}">{{job.job_state}}</td>
+            <td class="status {{job.job_state}}">{{job.job_state}}</td>
             <td>{{job.vo_name}}</td>
             <td>{{job.source_se}}</td>
             <td>{{job.dest_se}}</td>
@@ -50,14 +50,14 @@
 	
 	        <label for="state">State:</label>
 		    <p class="btn-group">
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
+		        <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>SUBMITTED</button>
+		        <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>READY</button>
 		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>ACTIVE</button>
 	            <br/>
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.failed" btn-checkbox>FAILED</button>
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
-		        <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.finisheddirty" btn-checkbox>FINISHED DIRTY</button>
+		        <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>CANCELED</button>
+		        <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>FAILED</button>
+		        <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>FINISHED</button>
+		        <button type="button" class="btn btn-warning btn-small" ng-model="filter.state.finisheddirty" btn-checkbox>FINISHED DIRTY</button>
 		    </p>
 	        
 			<label for="vo">VO:</label>

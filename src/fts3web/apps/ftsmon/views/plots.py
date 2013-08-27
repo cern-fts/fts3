@@ -55,7 +55,7 @@ def pie(httpRequest):
     #try:   
         labels = []
         values = []
-        colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+        colors = ['3366cc', '109618', 'ff9900', '990099', 'dc3912']
         title  = None
         
         for (arg, argv) in httpRequest.GET.iteritems():

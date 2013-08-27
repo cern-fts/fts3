@@ -20,7 +20,7 @@
     <tbody>
         <tr ng-repeat="q in queue.items" ng-class-odd="'odd'">
             <td>{{q.file_id}}</td>
-            <td class="{{q.file_state}}">{{q.file_state}}</td>
+            <td class="status {{q.file_state}}">{{q.file_state}}</td>
             <td>
                 <a href="#/job/{{q.job_id}}">{{q.job_id}}</a>
             </td>
