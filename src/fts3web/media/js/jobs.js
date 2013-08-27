@@ -129,7 +129,7 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 	// Reloading
 	$scope.autoRefresh = setInterval(function() {
 		var filter   = $location.search();
-		filter.jobId = $scope.job.job_id;	
+		filter.jobId = $scope.job.job.job_id;	
     	Job.query(filter, function(updatedJob) {
     		$scope.job = updatedJob;
     	})
