@@ -19,4 +19,9 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('queue/detailed', {}, {
 		query: {method: 'GET', isArray: false}
 	})
+})
+.factory('Staging', function($resource) {
+	return $resource('staging', {}, {
+		query: {method: 'GET', isArray: false}
+	})
 });

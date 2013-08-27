@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from decorator import decorator
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Model
 from django.db.models.query import ValuesQuerySet
 from django.core import serializers

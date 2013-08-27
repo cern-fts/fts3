@@ -16,6 +16,9 @@ config(function($routeProvider) {
         when('/queue/details', {templateUrl: STATIC_ROOT + 'html/queue/detailed.html',
 					            controller:  JobQueueDetailedCtrl,
 					            resolve:     JobQueueDetailedCtrl.resolve}).
+		when('/staging/', {templateUrl: STATIC_ROOT + 'html/staging.html',
+			               controller:  StagingCtrl,
+					       resolve:     StagingCtrl.resolve}).
 
 		otherwise({templateUrl: STATIC_ROOT + 'html/404.html'});
 });
