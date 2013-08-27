@@ -50,8 +50,10 @@ ErrorsCtrl.resolve = {
 
 function FilesWithErrorCtrl($location, $scope, files, FilesWithError)
 {
-	$scope.reason = $location.search().reason;
-	$scope.files = files
+	$scope.reason    = $location.search().reason;
+	$scope.files     = files
+	$scope.source_se = $location.search().source_se;
+	$scope.dest_se   = $location.search().dest_se;
 	
 	// Paginator	
 	$scope.pageMax   = 15;
