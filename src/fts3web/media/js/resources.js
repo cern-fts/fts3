@@ -71,4 +71,10 @@ angular.module('ftsmon.resources', ['ngResource'])
 	return $resource('stats/servers', {}, {
 		query: {method: 'GET', isArray: true}
 	})
-});
+})
+.factory('Pairs', function($resource) {
+	return $resource('stats/pairs', {}, {
+		query: {method: 'GET', isArray: false}
+	})
+})
+;

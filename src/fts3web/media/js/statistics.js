@@ -13,6 +13,7 @@ function StatsOverviewCtrl($location, $scope, stats, Statistics)
 	});
 }
 
+
 StatsOverviewCtrl.resolve = {
 	stats: function($rootScope, $location, $q, Statistics) {
     	loading($rootScope);
@@ -47,6 +48,7 @@ function StatsServersCtrl($location, $scope, servers, Servers)
 	});
 }
 
+
 StatsServersCtrl.resolve = {
 	servers: function($rootScope, $location, $q, Servers) {
     	loading($rootScope);
@@ -58,6 +60,53 @@ StatsServersCtrl.resolve = {
     		page = 1;
     	
     	Servers.query($location.search(), function(data) {
+    		deferred.resolve(data);
+    		stopLoading($rootScope);
+    	});
+    	
+    	return deferred.promise;
+	}
+}
+
+
+function StatsPairsCtrl($location, $scope, pairs, Pairs)
+{
+	$scope.pairs = pairs;
+	
+	// Filter
+	$scope.filterSource = function(source) {
+		var filter = $location.search();
+		filter.source_se = source;
+		$location.search(filter);
+	}
+	$scope.filterDestination = function(destination) {
+		var filter = $location.search();
+		filter.dest_se = destination;
+		$location.search(filter);
+	}
+	
+	// Set timer to trigger autorefresh
+	$scope.autoRefresh = setInterval(function() {
+		var filter = $location.search();
+    	$scope.servers = Pairs.query(filter);
+	}, 20000);
+	$scope.$on('$destroy', function() {
+		clearInterval($scope.autoRefresh);
+	});
+}
+
+
+StatsPairsCtrl.resolve = {
+	pairs: function($rootScope, $location, $q, Pairs) {
+    	loading($rootScope);
+    	
+    	var deferred = $q.defer();
+
+    	var page = $location.search().page;
+    	if (!page || page < 1)
+    		page = 1;
+    	
+    	Pairs.query($location.search(), function(data) {
     		deferred.resolve(data);
     		stopLoading($rootScope);
     	});

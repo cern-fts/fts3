@@ -278,7 +278,7 @@ def pairs(httpRequest):
     aggregate = {}
     aggregate['active']        = reduce(lambda a,b: _sumStatus(a, b),  map(lambda x: x['active'], pairs), {})
     aggregate['successRate']   = _avgField(pairs, 'successRate')
-    aggregate['avgThroughput'] = _avgField(pairs, 'avgThroughput')
+    aggregate['avgThroughput'] = reduce(lambda a, b: a + b, [x['avgThroughput'] for x in pairs if x['avgThroughput']], 0)
     aggregate['avgDuration']   = _avgField(pairs, 'avgDuration')
     
     return {'pairs': pairs,

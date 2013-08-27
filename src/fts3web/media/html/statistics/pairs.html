@@ -1,0 +1,49 @@
+<h3>Statistics - Per pair</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 25%">
+                <i class="icon-th-list"ng-click="filterSource('')"></i>
+                Source
+            </th>
+            <th style="width: 25%">
+                <i class="icon-th-list"ng-click="filterDestination('')"></i>
+                Destination
+            </th>
+            <th style="width: 20%">Transfers active</th>
+            <th style="width: 10%">Success rate</th>
+            <th style="width: 10%">Avg. Throughput</th>
+            <th style="width: 10%">Avg. Duration</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="p in pairs.pairs" ng-class-odd="'odd'">
+            <td>
+                <i class="icon-filter" ng-click="filterSource(p.source)"></i>
+                {{p.source}}
+            </td>
+            <td>
+                <i class="icon-filter" ng-click="filterDestination(p.destination)"></i>
+                {{p.destination}}
+            </td>
+            <td>
+                <span ng-repeat="(l, v) in p.active">{{v}} {{l}} </span>
+            </td>
+            <td>{{p.successRate|number:2}}%</td>
+            <td>{{p.avgThroughput|number:2}}</td>
+            <td>{{p.avgDuration|number:2}}</td>
+        </tr>
+        <tr class="agreggate">
+            <td colspan="2">Aggregate</td>
+            <td>
+                <span ng-repeat="(l, v) in pairs.aggregate.active">{{v}} {{l}} </span>
+             </td>
+            <td>{{pairs.aggregate.successRate|number:2}}%</td>
+            <td>{{pairs.aggregate.avgThroughput|number:2}}*</td>
+            <td>{{pairs.aggregate.avgDuration|number:2}}</td>
+        </tr>
+    </tbody>
+</table>
+
+<p><b>(*)</b> Sum of all the average throughputs.</p>

@@ -21,6 +21,10 @@ table.table td {
 	overflow: hidden;
 }
 
+table.table tr.agreggate {
+	background: #AAA;
+}
+
 /* Statuses */
 td.status {
 	color: white;
