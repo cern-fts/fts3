@@ -200,9 +200,21 @@ protected:
     void executeUpdate(std::vector<struct message>& messages)
     {
         std::vector<struct message>::const_iterator iter;
+        std::vector<struct message>::const_iterator iterBreak;	
         struct message_updater msgUpdater;
         for (iter = messages.begin(); iter != messages.end(); ++iter)
             {
+	       if(stopThreads)
+	       {
+	        for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iter){
+		 	struct message msgBreak = (*iter);
+		 	runProducerStatus( msgBreak);		 
+		}
+	       
+	       	break;
+	       }
+	    
+	    
                 std::string jobId = std::string((*iter).job_id).substr(0, 36);
                 strcpy(msgUpdater.job_id, jobId.c_str());
                 msgUpdater.file_id = (*iter).file_id;
@@ -243,7 +255,6 @@ protected:
                             {
                                 break;
                             }
-
 
                         if(fs::is_empty(fs::path(STATUS_DIR)))
                             {
