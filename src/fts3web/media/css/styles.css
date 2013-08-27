@@ -64,7 +64,7 @@ td.status {
      background: #990099;
 }
 
-.SUBMITTED {
+td.SUBMITTED, .SUBMITTED {
     color: black;
     background: #fae932;
 }
