@@ -8,6 +8,7 @@
             <th>Submissions received</th>
             <th>Transfers picked</th>
             <th>Transfers running</th>
+            <th>Logs</th>
         </tr>
     </thead>
     <tbody>
@@ -16,6 +17,10 @@
             <td>{{s.submissions}}</td>
             <td>{{s.transfers}}</td>
             <td>{{s.active}}</td>
+            <td>
+                <a log="'/var/log/fts3/fts3server.log'" host="s.hostname">FTS3</a>
+                <a log="'/var/log/fts3/fts3bringonline.log'" host="s.hostname">Bringonline</a>
+            </td>
         </tr>
     </tbody>
 </table>

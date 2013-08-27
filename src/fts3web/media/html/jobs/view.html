@@ -35,7 +35,7 @@
                 {{file.file_id}}
                 <i class="icon-refresh" ng-show="file.retry"></i>
             </td>
-            <td>{{file.transferhost}}</td>
+            <td>{{file.transferHost}}</td>
             <td title="{{file.source_surl}}">
                 {{file.source_surl}}
             </td>
@@ -61,11 +61,11 @@
 					<li>Parameters: {{file.internal_file_params}}</li>
 					<li>Log file:
 					   <p>
-					       <a href="//{{file.transferhost}}/{{file.log_file}}">
+					       <a log="file.log_file" host="file.transferHost">
 					           {{file.log_file}}
 						   </a><br/>
 						   <span ng-switch="file.log_debug">
-	                       <a ng-switch-when="1" href="//{{file.transferhost}}/{{file.log_file}}.debug">
+	                       <a ng-switch-when="1" log="file.log_file" host="file.transferHost">
 	                           {{file.log_file}}.debug
 	                       </a>
 	                       </span>

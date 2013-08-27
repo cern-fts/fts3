@@ -87,7 +87,20 @@ config(function($routeProvider) {
 				scope.colors = attr.colors; 
 		}
 	};
-});
+})
+.directive('log', function() {
+	return {
+		restrict: 'A',
+		scope: 'isolate',
+		replace: true,
+		template: '<a href="{{logUrl}}">{{log}}</a>',
+		link: function(scope, element, attr) {
+			scope.log = scope.$eval(attr.log);
+			scope.logUrl = LOG_BASE_URL.replace('%(host)', scope.$eval(attr.host)) + scope.log;
+		}
+	}
+})
+;
 
 /** Pie plotting */
 function plotArrayOfObjects(scope, list, labelAttr, valueAttr)
