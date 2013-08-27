@@ -12,13 +12,27 @@
 
 <h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{files.count}}</h4>
 <p class="btn-group" ng-click="filterByState()">
-    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.submitted" btn-checkbox>{{job.states.SUBMITTED}} SUBMITTED</button>
-    <button type="button" class="btn btn-info btn-small" ng-model="filter.state.ready" btn-checkbox>{{job.states.READY}} READY</button>
-    <button type="button" class="btn btn-primary btn-small" ng-model="filter.state.active" btn-checkbox>{{job.states.ACTIVE}} ACTIVE</button>
-    <button type="button" class="btn btn-danger  btn-small" ng-model="filter.state.canceled" btn-checkbox>{{job.states.CANCELED}} CANCELED</button>
-    <button type="button" class="btn btn-danger btn-small" ng-model="filter.state.failed" btn-checkbox>{{job.states.FAILED}} FAILED</button>
-    <button type="button" class="btn btn-success btn-small" ng-model="filter.state.finished" btn-checkbox>{{job.states.FINISHED}} FINISHED</button>
-    <button type="button" class="btn btn-small" ng-model="filter.state.not_used" btn-checkbox>{{job.states.NOT_USED}} NOT_USED</button>
+    <button type="button" class="btn btn-info btn-small"
+            ng-model="filter.state.submitted" btn-checkbox
+            ng-disabled="!job.states.SUBMITTED">{{job.states.SUBMITTED}} SUBMITTED</button>
+    <button type="button" class="btn btn-info btn-small"
+            ng-model="filter.state.ready" btn-checkbox
+            ng-disabled="!job.states.READY">{{job.states.READY}} READY</button>
+    <button type="button" class="btn btn-primary btn-small"
+            ng-model="filter.state.active" btn-checkbox
+            ng-disabled="!job.states.ACTIVE">{{job.states.ACTIVE}} ACTIVE</button>
+    <button type="button" class="btn btn-danger  btn-small"
+            ng-model="filter.state.canceled" btn-checkbox
+            ng-disabled="!job.states.CANCELED">{{job.states.CANCELED}} CANCELED</button>
+    <button type="button" class="btn btn-danger btn-small"
+            ng-model="filter.state.failed" btn-checkbox
+            ng-disabled="!job.states.FAILED">{{job.states.FAILED}} FAILED</button>
+    <button type="button" class="btn btn-success btn-small"
+            ng-model="filter.state.finished" btn-checkbox
+            ng-disabled="!job.states.FINISHED">{{job.states.FINISHED}} FINISHED</button>
+    <button type="button" class="btn btn-small"
+            ng-model="filter.state.not_used" btn-checkbox
+            ng-disabled="!job.states.NOT_USED">{{job.states.NOT_USED}} NOT_USED</button>
 </p>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
