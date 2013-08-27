@@ -1,6 +1,6 @@
 <h3>
     Showing {{jobs.startIndex}} to {{jobs.endIndex}} out of {{jobs.count}}
-     <button class="btn btn-mini" type="button" ng-click="filtersModal = true">Filter</button>
+    <button class="btn btn-mini" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
@@ -66,7 +66,7 @@
 		    </select>
 			
 			<label for="timewindow">Time window:</label>
-			<input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time"/>
+			<input type="number" placeholder="time window in hours" id="timewindow" ng-model="filter.time_window"/>
 	    </div>
 	    <div class="modal-footer">
 	        <button class="btn btn-success" ng-click="applyFilters()">Apply</button>

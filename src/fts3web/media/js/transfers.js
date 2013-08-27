@@ -1,8 +1,11 @@
 
-function TransfersCtrl($location, $scope, transfers, Transfers)
+function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 {
 	// Queue entries
 	$scope.transfers = transfers;
+	
+	// Unique values
+	$scope.unique = Unique.all();
 	
 	// Paginator	
 	$scope.pageMax   = 15;
@@ -26,17 +29,21 @@ function TransfersCtrl($location, $scope, transfers, Transfers)
 	
 	// Set up filters
 	$scope.filter = {
-		vo:        undefinedAsEmpty($location.search().vo),
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se)
+		vo:          undefinedAsEmpty($location.search().vo),
+		source_se:   undefinedAsEmpty($location.search().source_se),
+		dest_se:     undefinedAsEmpty($location.search().dest_se),
+		time_window: undefinedAsEmpty($location.search().time_window),
+		state:       statesFromString($location.search().state)
 	}
 	
 	$scope.applyFilters = function() {
 		$location.search({
-			page:      1,
-			vo:        validVo($scope.filter.vo),
-			source_se: $scope.filter.source_se,
-			dest_se:   $scope.filter.dest_se
+			page:         1,
+			vo:           validVo($scope.filter.vo),
+			source_se:    $scope.filter.source_se,
+			dest_se:      $scope.filter.dest_se,
+			time_window:  $scope.filter.time_window,
+			state:        joinStates($scope.filter.state)
 		});
 		$scope.filtersModal = false;
 	}	

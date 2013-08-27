@@ -170,6 +170,8 @@ function joinStates(states)
 		str += 'FINISHED,';
 	if (states.finisheddirty)
 		str += 'FINISHEDDIRTY,';
+	if (states.not_used)
+		str += 'NOT_USED,';
 	if (str.length > 0)
 		str = str.slice(0, -1);
 	return str;
@@ -197,6 +199,8 @@ function statesFromString(str)
 				st.finished = true;
 			if (states[i] == 'FINISHEDDIRTY')
 				st.finisheddirty = true;
+			if (states[i] == 'NOT_USED')
+				st.not_used = true;
 		}
 	}
 	

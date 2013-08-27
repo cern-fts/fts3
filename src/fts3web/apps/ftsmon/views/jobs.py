@@ -213,5 +213,8 @@ def transferList(httpRequest):
         transfers = transfers.filter(dest_se = filters['dest_se'])
     if filters['vo']:
         transfers = transfers.filter(job__vo_name = filters['vo'])
+    if filters['time_window']:
+        notBefore=  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
+        transfers = transfers.filter(Q(finish_time__isnull = True) | (Q(finish_time__gte = notBefore)))
    
     return transfers.order_by('-nullFinished')

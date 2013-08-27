@@ -5,7 +5,7 @@ function JobListCtrl($location, $scope, jobs, Job, Unique)
 	// Jobs
 	$scope.jobs = jobs;
 	
-	// All vos
+	// Unique values
 	$scope.unique = Unique.all();
 	
 	// Paginator	
@@ -30,21 +30,21 @@ function JobListCtrl($location, $scope, jobs, Job, Unique)
 	
 	// Set up filters
 	$scope.filter = {
-		vo:        undefinedAsEmpty($location.search().vo),
-		source_se: undefinedAsEmpty($location.search().source_se),
-		dest_se:   undefinedAsEmpty($location.search().dest_se),
-		time:      undefinedAsEmpty($location.search().time),
-		state:     statesFromString($location.search().state)
+		vo:          undefinedAsEmpty($location.search().vo),
+		source_se:   undefinedAsEmpty($location.search().source_se),
+		dest_se:     undefinedAsEmpty($location.search().dest_se),
+		time_window: undefinedAsEmpty($location.search().time_window),
+		state:       statesFromString($location.search().state)
 	}
 	
 	$scope.applyFilters = function() {
 		$location.search({
-			page:      1,
-			vo:        validVo($scope.filter.vo),
-			source_se: $scope.filter.source_se,
-			dest_se:   $scope.filter.dest_se,
-			time:      $scope.filter.time,
-			state:     joinStates($scope.filter.state)
+			page:        1,
+			vo:          validVo($scope.filter.vo),
+			source_se:   $scope.filter.source_se,
+			dest_se:     $scope.filter.dest_se,
+			time_window: $scope.filter.time_window,
+			state:       joinStates($scope.filter.state)
 		});
 		$scope.filtersModal = false;
 	}
