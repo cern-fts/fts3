@@ -85,7 +85,7 @@ function JobQueueDetailedCtrl($location, $scope, queue, Queue)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
 		filter.page = $scope.queue.page;
-    	$scope.queue = QueuePairs.query(filter);
+    	$scope.queue = Queue.query(filter);
 	}, 20000);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
