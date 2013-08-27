@@ -36,6 +36,15 @@ StatsOverviewCtrl.resolve = {
 function StatsServersCtrl($location, $scope, servers, Servers)
 {
 	$scope.servers = servers;
+	
+	// Set timer to trigger autorefresh
+	$scope.autoRefresh = setInterval(function() {
+		var filter = $location.search();
+    	$scope.servers = Servers.query(filter);
+	}, 20000);
+	$scope.$on('$destroy', function() {
+		clearInterval($scope.autoRefresh);
+	});
 }
 
 StatsServersCtrl.resolve = {
