@@ -662,7 +662,7 @@ CREATE INDEX file_source_state ON t_file(source_se, file_state);
 CREATE INDEX file_dest_state ON t_file(dest_se, file_state);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
 CREATE INDEX file_state_dest_surl ON t_file(file_state, dest_surl);
-
+CREATE INDEX file_source_dest ON t_file(source_se, dest_se);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
