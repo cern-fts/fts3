@@ -124,7 +124,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 2;
+                                    (*iter).numOfActivePerPair -= 1;
                                 }
 
                             (*iter).numFinished = numFinished;
@@ -253,7 +253,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                                 }
                             else if( trSuccessRateForPair < 99)
                                 {
-                                    (*iter).numOfActivePerPair -= 2;
+                                    (*iter).numOfActivePerPair -= 1;
                                 }
 
                             (*iter).numFinished = numFinished;
