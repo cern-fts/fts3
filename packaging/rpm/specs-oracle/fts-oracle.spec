@@ -17,7 +17,6 @@ BuildRequires:  glib2-devel%{?_isa}
 BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
-Requires:  oracle-instantclient-basic%{?_isa}
 
 AutoReq: no
 AutoProv: yes
