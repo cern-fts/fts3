@@ -19,9 +19,9 @@ BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
 Requires:  oracle-instantclient-basic%{?_isa}
 
-%filter_from_requires libocci
-%filter_from_requires libclntsh
-%filter_from_requires libnnz11
+%filter_requires_in libocci
+%filter_requires_in libclntsh
+%filter_requires_in libnnz11
 %filter_setup
 
 %description
