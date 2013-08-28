@@ -18,7 +18,7 @@ function OptimizerCtrl($location, $scope, optimizer, Optimizer)
 		var filter = $location.search();
 		filter.page = $scope.optimizer.page;
     	$scope.optimizer = Optimizer.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
@@ -50,7 +50,7 @@ function OptimizerDetailedCtrl($location, $scope, optimizer, OptimizerDetailed)
 		var filter = $location.search();
 		filter.page = $scope.optimizer.page;
     	$scope.optimizer = OptimizerDetailed.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});

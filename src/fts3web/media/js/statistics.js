@@ -7,7 +7,7 @@ function StatsOverviewCtrl($location, $scope, stats, Statistics)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
     	$scope.stats = Statistics.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
@@ -42,7 +42,7 @@ function StatsServersCtrl($location, $scope, servers, Servers)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
     	$scope.servers = Servers.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
@@ -89,7 +89,7 @@ function StatsPairsCtrl($location, $scope, pairs, Pairs)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
     	$scope.pairs = Pairs.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
@@ -124,7 +124,7 @@ function StatsVosCtrl($location, $scope, vos, StatsVO)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
     	$scope.vos = StatsVO.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
@@ -159,7 +159,7 @@ function StatsProfilingCtrl($location, $scope, profile, Profile)
 	$scope.autoRefresh = setInterval(function() {
 		var filter = $location.search();
     	$scope.profile = Profile.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});

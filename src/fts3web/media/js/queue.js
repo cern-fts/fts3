@@ -21,7 +21,7 @@ function JobQueueCtrl($location, $scope, queue, QueuePairs, Unique)
 		var filter = $location.search();
 		filter.page = $scope.queue.page;
     	$scope.queue = QueuePairs.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});

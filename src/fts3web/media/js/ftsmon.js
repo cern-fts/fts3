@@ -107,6 +107,9 @@ config(function($routeProvider) {
 })
 ;
 
+/** Refresh interval in ms */
+var REFRESH_INTERVAL = 60000;
+
 /** Pie plotting */
 function plotArrayOfObjects(scope, list, labelAttr, valueAttr)
 {

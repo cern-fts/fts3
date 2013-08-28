@@ -22,7 +22,7 @@ function TransfersCtrl($location, $scope, transfers, Transfers, Unique)
 		var filter = $location.search();
 		filter.page = $scope.transfers.page;
     	$scope.transfers = Transfers.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
