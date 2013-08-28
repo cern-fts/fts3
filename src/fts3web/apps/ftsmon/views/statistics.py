@@ -182,7 +182,7 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
     statesPerPair = _getFilesInStatePerPair(allPairs, None, notBefore)
         
     pairs = []
-    for pair in sorted(allPairs):
+    for pair in allPairs:
         p = {'source': pair[0], 'destination': pair[1]}
            
         if pair in statesPerPair:
@@ -212,7 +212,10 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
             p['avgThroughput'] = None
 
         pairs.append(p)
-    return pairs
+        
+    return sorted(pairs,
+                  key = lambda p: (p['active'].get('SUBMITTED', 0), p['active'].get('ACTIVE'), p['successRate'], p['avgThroughput']),
+                  reverse = True)
 
 
 
