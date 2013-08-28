@@ -179,7 +179,7 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
     allPairs      = _getAllPairs(notBefore, source_se, dest_se)
     avgsPerPair   = _getAveragePerPair(allPairs, notBefore)
     
-    statesPerPair = _getFilesInStatePerPair(allPairs, None, notBefore)
+    statesPerPair = _getFilesInStatePerPair(allPairs, FILE_TERMINAL_STATES, notBefore)
         
     pairs = []
     for pair in allPairs:
@@ -187,11 +187,6 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
            
         if pair in statesPerPair:
             states = statesPerPair[pair]
-            p['active'] = {}
-            # Active
-            for k in ACTIVE_STATES:
-                if k in states:
-                    p['active'][k] = states[k]
                 
             # Success rate
             terminal = dict((k, v) for k, v in states.items() if k in FILE_TERMINAL_STATES)
@@ -214,7 +209,7 @@ def _getStatsPerPair(source_se, dest_se, timewindow):
         pairs.append(p)
         
     return sorted(pairs,
-                  key = lambda p: (p['active'].get('SUBMITTED', 0), p['active'].get('ACTIVE'), p['successRate'], p['avgThroughput']),
+                  key = lambda p: (p['successRate'], p['avgThroughput']),
                   reverse = True)
 
 
@@ -280,7 +275,6 @@ def pairs(httpRequest):
     
     # Build aggregates
     aggregate = {}
-    aggregate['active']        = reduce(lambda a,b: _sumStatus(a, b),  map(lambda x: x['active'], pairs), {})
     aggregate['successRate']   = _avgField(pairs, 'successRate')
     aggregate['avgThroughput'] = _avgField(pairs, 'avgThroughput')
     aggregate['avgDuration']   = _avgField(pairs, 'avgDuration')

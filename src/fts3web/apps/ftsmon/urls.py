@@ -19,11 +19,12 @@ from django.conf.urls.defaults import patterns, url
 
 urlpatterns = patterns('ftsmon.views',
     url(r'^$', 'index.index'),
+    
+    url(r'^overview', 'overview.overview'),
     url(r'^jobs/?$', 'jobs.jobIndex'),
     url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)$', 'jobs.jobDetails'),
     url(r'^jobs/(?P<jobId>[a-fA-F0-9\-]+)/files$', 'jobs.jobFiles'),
     url(r'^transfers$', 'jobs.transferList'),
-    url(r'^queue$', 'queue.queue'),
     url(r'^staging', 'jobs.staging'),
     url(r'^configuration$', 'statistics.configurationAudit'),
     

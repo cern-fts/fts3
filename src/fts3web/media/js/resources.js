@@ -27,8 +27,8 @@ angular.module('ftsmon.resources', ['ngResource'])
 		all: {method: 'GET', isArray: false}
 	})
 })
-.factory('QueuePairs', function($resource) {
-	return $resource('queue', {}, {
+.factory('Overview', function($resource) {
+	return $resource('overview', {}, {
 		query: {method: 'GET', isArray: false}
 	})
 })
