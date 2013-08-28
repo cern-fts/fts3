@@ -234,11 +234,15 @@ protected:
                             }
                         messages.clear();
                     }
-            }
-        catch (Err& e)
+            }    
+        catch (const fs::filesystem_error& e)
             {
                 throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
             }
+        catch (std::exception& ex)
+	    {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+	    }		    
         catch (...)
             {
                 throw Err_Custom(std::string(__func__) + ": Caught exception ");
@@ -291,11 +295,15 @@ protected:
                                                                << iter->msg_error_reason << commit;
                             }
                     }//end for
-            }
-        catch (Err& e)
+            }    	    
+        catch (const fs::filesystem_error& e)
             {
                 throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
             }
+        catch (std::exception& ex)
+	    {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+	    }		    
         catch (...)
             {
                 throw Err_Custom(std::string(__func__) + ": Caught exception ");
@@ -374,12 +382,12 @@ protected:
 
                         usleep(300000);
                     }
-                catch (Err& e)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
+        	catch (std::exception& ex2)
+	    	    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex2.what() << commit;
 
-                        usleep(300000);
-                    }
+                        usleep(300000);		                    	
+	   	    }	    		     
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
