@@ -374,6 +374,8 @@ void MsgPrinter::gsoap_error_msg(string msg)
 
 void MsgPrinter::job_status(JobStatus js)
 {
+	// change the precision from msec to sec
+	js.submitTime /= 1000;
 
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.submitTime));
@@ -435,6 +437,9 @@ void MsgPrinter::job_summary(JobSummary js)
             cout << "\tFailed: " << js.numFailed << endl;
             return;
         }
+
+	// change the precision from msec to sec
+	js.status.submitTime /= 1000;
 
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.status.submitTime));
