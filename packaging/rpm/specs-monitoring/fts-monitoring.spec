@@ -1,6 +1,3 @@
-%{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print (get_python_lib())")}
-%{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
-
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
 Version: 3.1.5
@@ -18,14 +15,14 @@ Requires: mod_wsgi%{?_isa}
 Requires: python%{?_isa}
 Requires: python-matplotlib%{?_isa}
 
-# The source for this package was pulled from upstream's vcs.  Use the
-# following commands to generate the tarball:
-#  svn export https://svn.cern.ch/reps/fts3/tags/EPEL_release_1_EPEL_TESTING fts3
-#  tar -czvf fts-monitoring-0.0.1.tar.gz --directory=fts3 .
 Source0: https://grid-deployment.web.cern.ch/grid-deployment/dms/fts3/tar/%{name}-%{version}.tar.gz
 
 %description
-FTS v3 web application for monitoring
+FTS v3 web application for monitoring,
+it gives a detailed view of the current state of FTS
+including the queue with submitted transfer-jobs,
+the active, failed and finished transfers, as well
+as some statistics (e.g. success rate)
 
 
 %prep
@@ -39,9 +36,9 @@ shopt -s extglob
 mkdir -p %{buildroot}%{_datadir}/fts3web/
 mkdir -p %{buildroot}%{_sysconfdir}/fts3web/
 mkdir -p %{buildroot}%{_sysconfdir}/httpd/conf.d/ 
-cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/!(etc|httpd.conf.d) %{buildroot}%{_datadir}/fts3web/
-cp -r --no-preserve=ownership %{_builddir}/%{name}-%{version}/etc/fts3web         %{buildroot}%{_sysconfdir}
-install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/httpd/conf.d/ 
+cp -r -p !(etc|httpd.conf.d) %{buildroot}%{_datadir}/fts3web/
+cp -r -p etc/fts3web         %{buildroot}%{_sysconfdir}
+install -m 644 httpd.conf.d/ftsmon.conf           %{buildroot}%{_sysconfdir}/httpd/conf.d/ 
 
 %files
 %{_datadir}/fts3web
@@ -51,5 +48,11 @@ install -m 644 %{_builddir}/%{name}-%{version}/httpd.conf.d/ftsmon.conf         
 %doc LICENSE
 
 %changelog
- * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-2
+ * Wed Aug 28 2013 Michal Simon <michal.simon@cern.ch> - 3.1.1-1
+  - replacing '--no-preserve=ownership'
+  - python macros have been removed
+  - comments regarding svn have been removed
+  - '%{_builddir}/%{name}-%{version}/' prefix is not used anymore
+  - more detailed description
+ * Tue Apr 30 2013 Michal Simon <michal.simon@cern.ch> - 3.1.0-1
   - First EPEL release
