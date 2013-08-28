@@ -172,11 +172,11 @@ def archiveJobIndex(httpRequest):
 def jobDetails(httpRequest, jobId):
     try:
         job = Job.objects.get(job_id = jobId)
-        count = File.objects.filter(job_id = jobId).values('file_state').annotate(count = Count('file_state'))
+        count = File.objects.filter(job = jobId).values('file_state').annotate(count = Count('file_state'))
     except Job.DoesNotExist:
         try:
             job = JobArchive.objects.get(job_id = jobId)
-            count = FileArchive.objects.filter(job_id = jobId).values('file_state').annotate(count = Count('file_state'))
+            count = FileArchive.objects.filter(job = jobId).values('file_state').annotate(count = Count('file_state'))
         except JobArchive.DoesNotExist:
             raise Http404
     
@@ -190,9 +190,9 @@ def jobDetails(httpRequest, jobId):
 
 @jsonify_paged
 def jobFiles(httpRequest, jobId):
-    files = File.objects.filter(job_id = jobId)
+    files = File.objects.filter(job = jobId)
     if not files:
-        files = FileArchive.objects.filter(job_id = jobId)
+        files = FileArchive.objects.filter(job = jobId)
     if not files:
         raise Http404
     
