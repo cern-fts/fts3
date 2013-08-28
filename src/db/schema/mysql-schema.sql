@@ -1,5 +1,25 @@
 SET storage_engine=INNODB;
 
+CREATE TABLE t_server_sanity (
+  revertToSubmitted TINYINT(1) DEFAULT 0,
+  cancelWaitingFiles TINYINT(1) DEFAULT 0,
+  revertNotUsedFiles TINYINT(1) DEFAULT 0,
+  forceFailTransfers TINYINT(1) DEFAULT 0,
+  setToFailOldQueuedJobs TINYINT(1) DEFAULT 0,
+  checkSanityState TINYINT(1) DEFAULT 0,
+  t_revertToSubmitted          TIMESTAMP NULL DEFAULT NULL,
+  t_cancelWaitingFiles          TIMESTAMP NULL DEFAULT NULL,
+  t_revertNotUsedFiles          TIMESTAMP NULL DEFAULT NULL,
+  t_forceFailTransfers          TIMESTAMP NULL DEFAULT NULL,
+  t_setToFailOldQueuedJobs          TIMESTAMP NULL DEFAULT NULL,
+  t_checkSanityState          TIMESTAMP NULL DEFAULT NULL   
+); 
+INSERT INTO t_server_sanity
+    (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState,
+     t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState)
+VALUES (0, 0, 0, 0, 0, 0,
+        UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP());
+
 --
 -- Holds various server configuration options
 --
@@ -587,7 +607,7 @@ CREATE TABLE t_file_retry_errors (
     CONSTRAINT t_file_retry_errors_pk PRIMARY KEY(file_id, attempt),
     CONSTRAINT t_file_retry_fk FOREIGN KEY (file_id) REFERENCES t_file(file_id) ON DELETE CASCADE
 );
-CREATE INDEX t_file_retry_fid ON t_file_retry_errors (file_id);
+
 
 -- 
 -- t_file_share_config the se configuration to be used by the job
@@ -627,44 +647,26 @@ CREATE TABLE t_stage_req (
 -- Index Section 
 --
 --
-
-
 -- t_job indexes:
 -- t_job(job_id) is primary key
 CREATE INDEX job_job_state    ON t_job(job_state);
-CREATE INDEX job_cred_id      ON t_job(user_dn(800),cred_id);
+CREATE INDEX job_vo_name      ON t_job(vo_name);
+CREATE INDEX job_cred_id      ON t_job(user_dn,cred_id);
 CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
-CREATE INDEX job_submit_time     ON t_job(submit_time);
-CREATE INDEX job_priority_s_time     ON t_job(priority,submit_time);
-CREATE INDEX job_cancel     ON t_job(cancel_job);
-CREATE INDEX job_reuse    ON t_job(reuse_job);
-CREATE INDEX idx_report_job      ON t_job (vo_name);
 
 -- t_file indexes:
 -- t_file(file_id) is primary key
+CREATE INDEX file_job_id     ON t_file(job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
-CREATE INDEX file_job_id_a ON t_file(job_id, FINISH_TIME);
-CREATE INDEX file_file_throughput ON t_file(throughput);
-CREATE INDEX file_file_src_dest_job_id ON t_file(source_se, dest_se);
-CREATE INDEX file_transferhost on t_file(TRANSFERHOST);
-CREATE INDEX file_wait_timeout ON t_file(wait_timeout);
-CREATE INDEX file_job_state ON t_file(file_state);
+CREATE INDEX file_source_state ON t_file(source_se, file_state);
+CREATE INDEX file_dest_state ON t_file(dest_se, file_state);
+CREATE INDEX job_reuse  ON t_job(reuse_job);
+CREATE INDEX file_state_dest_surl ON t_file(file_state, dest_surl);
+CREATE INDEX file_source_dest ON t_file(source_se, dest_se);
 
-CREATE INDEX optimize_active         ON t_optimize(active);
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
 
-CREATE INDEX t_server_config_max_time         ON t_server_config(max_time_queue);
-CREATE INDEX t_server_config_retry         ON t_server_config(retry);
-
-
-
-
--- Config index
-
-CREATE INDEX idx_debug      ON t_debug (debug);
-CREATE INDEX idx_source      ON t_debug (source_se);
-CREATE INDEX idx_dest      ON t_debug (dest_se);
 -- 
 --
 -- Schema version
@@ -684,8 +686,6 @@ INSERT INTO t_schema_vers (major,minor,patch) VALUES (1,0,0);
 CREATE TABLE t_file_backup AS (SELECT * FROM t_file);
 CREATE TABLE t_job_backup  AS (SELECT * FROM t_job);
 
-CREATE INDEX t_job_backup_1            ON t_job_backup(job_id);
-CREATE INDEX t_file_backup_1            ON t_file_backup(file_id, job_id);
 
 -- Profiling information
 CREATE TABLE t_profiling_info (

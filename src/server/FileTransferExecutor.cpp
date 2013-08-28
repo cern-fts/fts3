@@ -25,6 +25,8 @@
 
 #include "cred/cred-utility.h"
 
+extern bool stopThreads;
+
 namespace fts3
 {
 
@@ -32,6 +34,7 @@ namespace server
 {
 
 const string FileTransferExecutor::cmd = "fts_url_copy";
+
 
 FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimize, bool monitoringMsg, string infosys, string ftsHostName) :
     tfh(tfh),
@@ -43,8 +46,8 @@ FileTransferExecutor::FileTransferExecutor(TransferFileHandler& tfh, bool optimi
     t(bind(&FileTransferExecutor::execute, this)),
     active(true),
     scheduled(0)
-    
-{    
+
+{
 }
 
 FileTransferExecutor::~FileTransferExecutor()
@@ -61,7 +64,7 @@ string FileTransferExecutor::prepareMetadataString(std::string text)
 
 void FileTransferExecutor::execute()
 {
-    while (active && queue.hasData())
+    while (active && queue.hasData() && !stopThreads)
         {
             try
                 {
@@ -118,7 +121,7 @@ void FileTransferExecutor::execute()
 
                     if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
                         {
-                    		++scheduled;
+                            ++scheduled;
 
                             SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
                             bool isAutoTuned = false;
@@ -375,6 +378,8 @@ void FileTransferExecutor::execute()
                                                 }
                                             else
                                                 {
+                                                    DBSingleton::instance().getDBObjectInstance()->updateFileTransferStatus(0.0, temp->JOB_ID, temp->FILE_ID, "ACTIVE", "",(int) pr->getPid(), 0, 0);
+                                                    DBSingleton::instance().getDBObjectInstance()->updateJobTransferStatus(0, temp->JOB_ID, "ACTIVE");
                                                     DBSingleton::instance().getDBObjectInstance()->setPid(temp->JOB_ID, temp->FILE_ID, pr->getPid());
                                                     struct message_updater msg;
                                                     strcpy(msg.job_id, std::string(temp->JOB_ID).c_str());

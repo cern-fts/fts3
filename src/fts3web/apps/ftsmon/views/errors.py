@@ -20,41 +20,46 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q, Count, Avg
 from django.shortcuts import render, redirect
 from ftsweb.models import File
-from utils import getPage
+from jsonify import jsonify_paged
 
-
+@jsonify_paged
 def showErrors(httpRequest):
     notbefore = datetime.utcnow() - timedelta(hours = 12)
+    errors = File.objects.filter(reason__isnull = False, finish_time__gte = notbefore)\
+                         .exclude(reason = '')\
+                         .values('reason', 'source_se', 'dest_se')\
+                         .annotate(count = Count('reason'))\
+                         .order_by('-count')
     
+    return errors
+  
+  
+def placeholder(request):
     errors = File.objects.filter(reason__isnull = False, finish_time__gte = notbefore)\
                        .exclude(reason = '')\
                        .values('reason')\
                        .annotate(count = Count('reason'))\
                        .order_by('-count')\
                        
-    # Render
-    return render(httpRequest, 'errors/errorCount.html',
-                  {'errors': errors,
-                   'request': httpRequest})
+    return errors
 
 
+@jsonify_paged
 def transfersWithError(httpRequest):
-    if 'reason' not in httpRequest.GET or \
-        not httpRequest.GET['reason']:
+    if 'reason' not in httpRequest.GET or not httpRequest.GET['reason']:
         return redirect('ftsmon.views.showErrors')
     
     reason = httpRequest.GET['reason']
 
     notbefore = datetime.utcnow() - timedelta(hours = 12)
-    transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)\
-                            .order_by('file_id')
-                            
-    paginator = Paginator(transfers, 50)
+    transfers = File.objects.filter(reason = reason, finish_time__gte = notbefore)
     
-    # Render
-    return render(httpRequest, 'errors/transfersWithError.html',
-                  {'transfers': getPage(paginator, httpRequest),
-                   'paginator': paginator,
-                   'reason': reason,
-                   'request': httpRequest
-                  })
+    if httpRequest.GET.get('source_se', None):
+        transfers = transfers.filter(source_se = httpRequest.GET['source_se'])
+    if httpRequest.GET.get('dest_se', None):
+        transfers = transfers.filter(dest_se = httpRequest.GET['dest_se'])
+    
+    transfers = transfers.values('file_id', 'job_id', 'source_surl', 'dest_surl', 'job__vo_name')\
+                         .order_by('file_id')
+                            
+    return transfers

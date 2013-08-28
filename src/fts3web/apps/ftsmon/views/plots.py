@@ -55,7 +55,7 @@ def pie(httpRequest):
     #try:   
         labels = []
         values = []
-        colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
+        colors = ['3366cc', '109618', 'ff9900', '990099', 'dc3912']
         title  = None
         
         for (arg, argv) in httpRequest.GET.iteritems():
@@ -66,7 +66,14 @@ def pie(httpRequest):
             elif arg == 'v':
                 values = strToArray(argv)
             elif arg == 'c':
-                colors = strToArray(argv)
+                cx = strToArray(argv)
+                if len(cx):
+                    colors = cx
+
+        # Append # if the color is a full RGB                    
+        for c in range(len(colors)):
+            if len(colors[c]) > 1:
+                colors[c] = '#' + colors[c]
                 
         if not values:
             return error(httpRequest, 'No values')

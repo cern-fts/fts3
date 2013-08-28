@@ -250,6 +250,7 @@
      <element name="archive" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
      <element name="offset" type="xsd:int" minOccurs="1" maxOccurs="1"/>
      <element name="limit" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+     <element name="retries" type="xsd:boolean" minOccurs="1" maxOccurs="1"/>
     </sequence>
    </complexType>
   

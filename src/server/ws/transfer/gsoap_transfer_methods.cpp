@@ -233,6 +233,7 @@ int fts3::impltns__getFileStatus(soap *soap, string _requestID, int _offset, int
     req.archive = false;
     req.offset  = _offset;
     req.limit   = _limit;
+    req.retries = false;
 
     impltns__getFileStatus3Response resp;
     int status = impltns__getFileStatus3(soap, &req, resp);
@@ -292,24 +293,28 @@ int fts3::impltns__getFileStatus3(soap *soap, fts3::tns3__FileRequest *req,
                     status->duration = tmp->finish_time - tmp->start_time;
                     status->numFailures = tmp->numFailures;
 
-                    DBSingleton::instance()
-                        .getDBObjectInstance()
-                        ->getTransferRetries(tmp->fileId, retries);
+                    // Retries only on request!
+                    if (req->retries)
+                        {
+                            DBSingleton::instance()
+                            .getDBObjectInstance()
+                            ->getTransferRetries(tmp->fileId, retries);
 
-                    std::vector<FileRetry*>::iterator ri;
-                    for (ri = retries.begin(); ri != retries.end(); ++ri) {
-                        tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(soap, -1);
-                        retry->attempt  = (*ri)->attempt;
-                        retry->datetime = (*ri)->datetime;
-                        retry->reason   = (*ri)->reason;
-                        status->retries.push_back(retry);
+                            std::vector<FileRetry*>::iterator ri;
+                            for (ri = retries.begin(); ri != retries.end(); ++ri)
+                                {
+                                    tns3__FileTransferRetry* retry = soap_new_tns3__FileTransferRetry(soap, -1);
+                                    retry->attempt  = (*ri)->attempt;
+                                    retry->datetime = (*ri)->datetime;
+                                    retry->reason   = (*ri)->reason;
+                                    status->retries.push_back(retry);
 
-                        delete *ri;
-                    }
-                    retries.clear();
+                                    delete *ri;
+                                }
+                            retries.clear();
+                        }
 
                     resp.getFileStatusReturn->item.push_back(status);
-
                 }
             for (it = statuses.begin(); it < statuses.end(); ++it)
                 {
@@ -399,21 +404,88 @@ int fts3::impltns__getFileStatus2(soap *soap, string _requestID, int _offset, in
     return SOAP_OK;
 }
 
-/// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
-int fts3::impltns__getTransferJobStatus(soap *soap, string _requestID,
-                                        struct impltns__getTransferJobStatusResponse &_param_11)
+tns3__JobStatus* handleStatusExceptionForGLite(soap *ctx, string requestID)
 {
+    // the value to be returned
+    tns3__JobStatus* status;
 
-    // This method is actually a subset of getTransferJobStatus2, so wrap it
-    fts3::tns3__JobRequest req;
-    req.jobId   = _requestID;
-    req.archive = false;
+    // For now since the glite clients are not compatible with exception from our gsoap version
+    // we do not rise an exception, instead we send the error string as the job status
+    // and at the begining of it we attache backspaces in order to erase 'Unknown transfer state '
 
-    impltns__getTransferJobStatus2Response resp;
-    int status = fts3::impltns__getTransferJobStatus2(soap, &req, resp);
-    _param_11._getTransferJobStatusReturn = resp.getTransferJobStatusReturn;
+    // the string that should be erased
+    string replace = "Unknown transfer state ";
+
+    // backspace
+    const char bs = 8;
+    // error message
+    string msg = "getTransferJobStatus: RequestID <" + requestID + "> was not found";
+
+    // add backspaces at the begining of the error message
+    for (int i = 0; i < replace.size(); i++)
+        msg = bs + msg;
+
+    // create the status object
+    status = soap_new_tns3__JobStatus(ctx, -1);
+
+    // create the string for the error message
+    status->jobStatus = soap_new_std__string(ctx, -1);
+    *status->jobStatus = msg;
+
+    // set all the rest to NULLs
+    status->clientDN = 0;
+    status->jobID = 0;
+    status->numFiles = 0;
+    status->priority = 0;
+    status->reason = 0;
+    status->voName = 0;
+    status->submitTime = 0;
 
     return status;
+}
+
+/// Web service operation 'getTransferJobStatus' (returns error code or SOAP_OK)
+int fts3::impltns__getTransferJobStatus(soap *ctx, string requestID,
+                                        struct impltns__getTransferJobStatusResponse &resp)
+{
+    try
+        {
+            scoped_ptr<TransferJobs> job (
+                DBSingleton::instance()
+                .getDBObjectInstance()
+                ->getTransferJob(requestID, false)
+            );
+
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
+
+            vector<JobStatus*> fileStatuses;
+            DBSingleton::instance().getDBObjectInstance()->getTransferJobStatus(requestID, false, fileStatuses);
+
+            if(!fileStatuses.empty())
+                {
+                    GSoapJobStatus status (ctx, **fileStatuses.begin());
+                    resp._getTransferJobStatusReturn = status;
+
+                    vector<JobStatus*>::iterator it;
+                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                        {
+                            delete *it;
+                        }
+                }
+            else
+                {
+                    // throw Err_Custom("requestID <" + requestID + "> was not found");
+                    resp._getTransferJobStatusReturn = handleStatusExceptionForGLite(ctx, requestID);
+                }
+        }
+    catch (Err& ex)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobStatus2' (returns error code or SOAP_OK)
@@ -533,19 +605,78 @@ int fts3::impltns__getTransferJobSummary(soap *soap, string _requestID,
 }
 
 /// Web service operation 'getTransferJobSummary2' (returns error code or SOAP_OK)
-int fts3::impltns__getTransferJobSummary2(soap *soap, string _requestID,
-        impltns__getTransferJobSummary2Response &_param_13)
+int fts3::impltns__getTransferJobSummary2(soap *ctx, string requestID, impltns__getTransferJobSummary2Response &resp)
 {
-    // This method is a subset of getTransferJobSummary3
-    tns3__JobRequest req;
-    req.jobId   = _requestID;
-    req.archive = false;
+    try
+        {
+            scoped_ptr<TransferJobs> job (
+                DBSingleton::instance()
+                .getDBObjectInstance()
+                ->getTransferJob(requestID, false)
+            );
+            AuthorizationManager::getInstance().authorize(ctx, AuthorizationManager::TRANSFER, job.get());
 
-    impltns__getTransferJobSummary3Response resp;
-    int status = impltns__getTransferJobSummary3(soap, &req, resp);
-    _param_13._getTransferJobSummary2Return = resp.getTransferJobSummary2Return;
+            vector<JobStatus*> fileStatuses;
+            DBSingleton::instance()
+            .getDBObjectInstance()
+            ->getTransferJobStatus(requestID, false, fileStatuses);
 
-    return status;
+            if(!fileStatuses.empty())
+                {
+                    resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
+                    GSoapJobStatus status (ctx, **fileStatuses.begin());
+                    resp._getTransferJobSummary2Return->jobStatus = status;
+
+                    JobStatusHandler& handler = JobStatusHandler::getInstance();
+                    resp._getTransferJobSummary2Return->numActive = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_ACTIVE,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numCanceled = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_CANCELED,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numSubmitted = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_SUBMITTED,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numFinished = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_FINISHED,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numReady = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_READY,
+                                fileStatuses
+                            );
+                    resp._getTransferJobSummary2Return->numFailed = handler.countInState(
+                                JobStatusHandler::FTS3_STATUS_FAILED,
+                                fileStatuses
+                            );
+
+                    vector<JobStatus*>::iterator it;
+                    for (it = fileStatuses.begin(); it < fileStatuses.end(); ++it)
+                        {
+                            delete *it;
+                        }
+
+                }
+            else
+                {
+                    // throw Err_Custom("requestID <" + requestID + "> was not found");
+                    resp._getTransferJobSummary2Return = soap_new_tns3__TransferJobSummary2(ctx, -1);
+                    resp._getTransferJobSummary2Return->jobStatus = handleStatusExceptionForGLite(ctx, requestID);
+                }
+
+        }
+    catch(Err& ex)
+        {
+
+            FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An exception has been caught: " << ex.what() << commit;
+            soap_receiver_fault(ctx, ex.what(), "TransferException");
+            return SOAP_FAULT;
+        }
+
+    return SOAP_OK;
 }
 
 /// Web service operation 'getTransferJobSummary3' (returns error code or SOAP_OK)

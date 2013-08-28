@@ -473,10 +473,18 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
             cout << "  State:       " << values[STATE] << endl;;
             cout << "  Reason:      " << values[REASON] << endl;
             cout << "  Duration:    " << values[DURATION] << endl;
-            cout << "  Retries: " << endl;
-            vector<string>::const_iterator i;
-            for (i = retries.begin(); i != retries.end(); ++i)
-                cout << "    " << *i << std::endl;
+
+            if (retries.size() > 0)
+                {
+                    cout << "  Retries: " << endl;
+                    vector<string>::const_iterator i;
+                    for (i = retries.begin(); i != retries.end(); ++i)
+                        cout << "    " << *i << std::endl;
+                }
+            else
+                {
+                    cout << "  Retries:     " << values[RETRIES] << endl;
+                }
             return;
         }
 
@@ -487,11 +495,18 @@ void MsgPrinter::file_list(vector<string> values, vector<string> retries)
     file.put("reason", values[REASON]);
     file.put("duration", values[DURATION]);
 
-    ptree retriesArray;
-    vector<string>::const_iterator i;
-    for (i = retries.begin(); i != retries.end(); ++i)
-        retriesArray.push_front(std::make_pair("", *i));
-    file.put_child("retries", retriesArray);
+    if (retries.size() > 0)
+        {
+            ptree retriesArray;
+            vector<string>::const_iterator i;
+            for (i = retries.begin(); i != retries.end(); ++i)
+                retriesArray.push_front(std::make_pair("", *i));
+            file.put_child("retries", retriesArray);
+        }
+    else
+        {
+            file.put("retries", values[RETRIES]);
+        }
 
     ptree& job = json_out.get_child("job");
     ptree::iterator it = job.begin();

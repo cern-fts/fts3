@@ -61,6 +61,9 @@ class JobBase(models.Model):
         
     def isFinished(self):
         return self.job_state not in ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
+    
+    def __str__(self):
+        return self.job_id
 
 
 
@@ -112,6 +115,9 @@ class FileBase(models.Model):
     log_file        = models.CharField(max_length = 2048, db_column = 't_log_file')
     log_debug       = models.IntegerField(db_column = 't_log_file_debug')
     
+    def __str__(self):
+        return str(self.file_id)
+    
     class Meta:
         abstract = True
 
@@ -145,7 +151,10 @@ class  ConfigAudit(models.Model):
 
     def simple_action(self):
         return self.action.split(' ')[0]
-
+    
+    def __eq__(self, b):
+        return isinstance(b, self.__class__) and \
+               self.datetime == b.datetime and self.config == b.config and self.dn == b.dn
 
 
 class Optimize(models.Model):

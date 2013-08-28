@@ -16,15 +16,15 @@
 # limitations under the License.
 
 from datetime import datetime, timedelta
-from django.shortcuts import render, redirect
 from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
 from ftsweb.models import Optimize, OptimizerEvolution, File, Job
 from ftsmon import forms
-
+from jsonify import jsonify, jsonify_paged
 		
 
+@jsonify_paged
 def optimizer(httpRequest):
 	# Initialize forms
 	filterForm    = forms.FilterForm(httpRequest.GET)
@@ -51,30 +51,10 @@ def optimizer(httpRequest):
 										   std_deviation  = StdDev('throughput'))
 	optimizations = optimizations.order_by('source_se', 'dest_se')
 	
-	# Paginate
-	paginator = Paginator(optimizations, 50)
-	try:
-		if 'page' in httpRequest.GET: 
-			optimizations = paginator.page(httpRequest.GET.get('page'))
-		else:
-			optimizations = paginator.page(1)
-	except PageNotAnInteger:
-		optimizations = paginator.page(1)
-	except EmptyPage:
-		optimizations = paginator.page(paginator.num_pages)
-		
-	extra_args = filterForm.args()	
-	
-	return render(httpRequest, 'optimizer/optimizer.html',
-					{'request': httpRequest,
-					'filterForm': filterForm,
-					'optimizations': optimizations,
-					'paginator': paginator,
-					'extra_args': extra_args
-					})
+	return optimizations
 
 
-
+@jsonify
 def optimizerDetailed(httpRequest):
 	hours = 48	
 	try:
@@ -113,13 +93,9 @@ def optimizerDetailed(httpRequest):
 	# Optimizer evolution
 	optimizerHistory = OptimizerEvolution.objects.filter(source_se = source_se, dest_se = dest_se,
 														 datetime__gte = notBefore).order_by('-datetime').all()[:50]
-	
-	return render(httpRequest, 'optimizer/details.html',
-					{'request': httpRequest,
-					 'source_se': source_se,
-					 'dest_se': dest_se,
-					 'fsizes': fsizes,
-					 'optimizerSnapshot': optimizerSnapshot,
-					 'optimizerHistory': optimizerHistory
-					})
-
+														 
+	return {
+		'fsizes': fsizes,
+		'snapshot': optimizerSnapshot,
+		'history': optimizerHistory
+	}

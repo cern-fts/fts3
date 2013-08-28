@@ -1,0 +1,18 @@
+<h3>Statistics - Per VO</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 15%">VO</th>
+            <th>Transfer states</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="(vo, states) in vos" ng-class-odd="'odd'">
+            <td>{{vo}}</td>
+            <td>
+                <span ng-repeat="(state, count) in states">{{count}} {{state}} </span>
+            </td>
+        </tr>
+    </tbody>
+</table>

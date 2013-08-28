@@ -100,30 +100,30 @@ public:
         t.join();
     }
 
-	/**
-	 * Stops the worker thread
-	 */
-	void stop()
-	{
-		active = false;
-		// t.interrupt();
-	}
+    /**
+     * Stops the worker thread
+     */
+    void stop()
+    {
+        active = false;
+        // t.interrupt();
+    }
 
-	/**
-	 * Gets the number of TransferFiles that were scheduled
-	 *
-	 * @return number of TransferFiles that were scheduled
-	 */
-	int getNumberOfScheduled()
-	{
-		return scheduled;
-	}
+    /**
+     * Gets the number of TransferFiles that were scheduled
+     *
+     * @return number of TransferFiles that were scheduled
+     */
+    int getNumberOfScheduled()
+    {
+        return scheduled;
+    }
 
 private:
 
-	/**
-	 * @return the metadata string
-	 */
+    /**
+     * @return the metadata string
+     */
     static string prepareMetadataString(std::string text);
 
     /// queue with all the tasks

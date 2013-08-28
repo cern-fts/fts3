@@ -117,7 +117,7 @@ bool FileTransferScheduler::schedule(bool optimize)
         {
             bool allowed = db->isTrAllowed(srcSeName, destSeName);
             // update file state to READY
-            if(allowed == true)
+            if(allowed)
                 {
                     unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
                     if(updated == 0) return false;

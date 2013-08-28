@@ -3,7 +3,7 @@
 
 Summary: FTS3 Web Application for monitoring
 Name: fts-monitoring
-Version: 3.1.3
+Version: 3.1.4
 Release: 1%{?dist}
 URL: https://svnweb.cern.ch/trac/fts3
 License: ASL 2.0

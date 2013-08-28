@@ -522,7 +522,7 @@ int main(int argc, char **argv)
     try
         {
             /*send an update message back to the server to indicate it's alive*/
-            boost::thread btUpdater(taskStatusUpdater, 10);
+            boost::thread btUpdater(taskStatusUpdater, 60);
         }
     catch (std::exception& e)
         {
@@ -646,9 +646,6 @@ int main(int argc, char **argv)
             g_file_id = strArray[0];
             g_job_id = opts.jobId;
 
-            // Trigger immediately an update
-            taskStatusUpdater(0);
-
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
             reporter.buffersize = opts.tcpBuffersize;
@@ -720,10 +717,12 @@ int main(int argc, char **argv)
                 logger.INFO() << "Job metadata:" << replaceMetadataString(opts.jobMetadata) << std::endl;
                 logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
 
-                //set to active
-                logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
-                reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
-
+                //set to active only for reuse
+                if (opts.reuseFile)
+                    {
+                        logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
+                        reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
+                    }
 
                 if (fexists(opts.proxy.c_str()) != 0)
                     {

@@ -1,5 +1,5 @@
 Name: fts-oracle
-Version: 3.1.3
+Version: 3.1.4
 Release: 1%{?dist}
 Summary: File Transfer Service V3 oracle plug-in
 Group: Applications/Internet
@@ -18,6 +18,11 @@ BuildRequires:  oracle-instantclient-devel%{?_isa}
 BuildRequires:  libuuid-devel%{?_isa}
 Requires(pre):  shadow-utils
 Requires:  oracle-instantclient-basic%{?_isa}
+
+%filter_from_requires libocci
+%filter_from_requires libclntsh
+%filter_from_requires libnnz11
+%filter_setup
 
 %description
 The File Transfer Service V3 oracle plug-in

@@ -111,7 +111,7 @@ int main(int ac, char* av[])
                                 {
                                     // do the request
                                     impltns__getFileStatusResponse resp;
-                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, resp);
+                                    cnt = ctx.getFileStatus(jobId, archive, offset, DEFAULT_LIMIT, cli->detailed(), resp);
 
                                     if (cnt > 0 && resp._getFileStatusReturn)
                                         {
@@ -138,10 +138,11 @@ int main(int ac, char* av[])
                                                                 ;
 
                                                             vector<string> retries;
-                                                            for (ri = stat->retries.begin(); ri != stat->retries.end(); ++ri) {
-                                                                retries.resize((*ri)->attempt);
-                                                                retries[(*ri)->attempt - 1] = (*ri)->reason;
-                                                            }
+                                                            for (ri = stat->retries.begin(); ri != stat->retries.end(); ++ri)
+                                                                {
+                                                                    retries.resize((*ri)->attempt);
+                                                                    retries[(*ri)->attempt - 1] = (*ri)->reason;
+                                                                }
 
                                                             cli->printer().file_list(values, retries);
                                                         }

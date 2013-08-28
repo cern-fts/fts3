@@ -36,6 +36,7 @@ TransferStatusCli::TransferStatusCli()
     specific.add_options()
     ("list,l", "List status for all files.")
     ("archive,a", "Query the archive.")
+    ("detailed,d", "Retrieve details (i.e. transfer retries)")
     ("dump-failed,F", "Dump failed transfers into a file that can be used as input for submission")
     ;
 }
@@ -73,4 +74,10 @@ bool TransferStatusCli::queryArchived()
 bool TransferStatusCli::dumpFailed()
 {
     return vm.count("dump-failed");
+}
+
+
+bool TransferStatusCli::detailed()
+{
+    return vm.count("detailed");
 }

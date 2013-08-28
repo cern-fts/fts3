@@ -1,0 +1,31 @@
+<h3>Transfers with the error '{{reason}}'</h3>
+<h4>For {{source_se}} → {{dest_se}}</h4>
+
+<pagination rotate="false" num-pages="pageCount" current-page="page"
+    max-size="pageMax" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+    
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width: 10%">File id</th>
+            <th style="width: 20%">Job Id</th>
+            <th style="width: 10%">VO</th>
+            <th style="width: 30%">Source</th>
+            <th style="width: 30%">Destination</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr ng-repeat="file in files.items" ng-class-odd="'odd'">
+            <td>{{file.file_id}}</td>
+            <td>
+                <a href="#/job/{{file.job_id}}">
+                    {{file.job_id}}
+                </a>
+            </td>
+            <td>{{file.job__vo_name}}</td>
+            <td>{{file.source_surl}}</td>
+            <td>{{file.dest_surl}}</td>
+        </tr>
+    </tbody>
+</table>

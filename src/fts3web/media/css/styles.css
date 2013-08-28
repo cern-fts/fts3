@@ -1,0 +1,74 @@
+/* Layout */
+html {
+	overflow-y: scroll;
+	-moz-scrollbars-vertical;
+}
+
+div[role="main"] {
+    width: 90%;
+    margin: auto;
+    margin-top: 6em;
+    margin-bottom: 6em;
+}
+
+/* Tables */
+table.table {
+	font-family: monospace;
+	table-layout: fixed;
+}
+
+table.table td {
+	overflow: hidden;
+}
+
+table.table td.hscroll {
+	overflow-x: auto;
+}
+
+table.table tr.agreggate {
+	background: #AAA;
+}
+
+/* Statuses */
+td.status {
+	color: white;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.ACTIVE {
+    background: #006dcc;
+}
+
+.CANCELED {
+    background: #8a2822;
+}
+
+.FAILED {
+    background: #bd362f;
+}
+
+.FINISHED {
+	background: #5bb75b;
+}
+
+.FINISHEDDIRTY {
+    background: #faa732;
+}
+
+.READY {
+    background: #9ed5ff;
+}
+
+.STAGING {
+     background: #990099;
+}
+
+td.SUBMITTED, .SUBMITTED {
+    color: black;
+    background: #fae932;
+}
+
+.NOT_USED {
+	background: #AAA;
+}

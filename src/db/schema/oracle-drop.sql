@@ -34,5 +34,6 @@ drop table T_FILE_SHARE_CONFIG  cascade constraints;
 
 drop table t_profiling_info;
 drop table t_profiling_snapshot;
+drop table t_server_sanity;
 
 exit;

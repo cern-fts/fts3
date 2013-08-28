@@ -42,17 +42,17 @@ public:
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();
 
-        /*wait for status updates to be processed and then start sanity threads*/
-        sleep(5);
-
-        typename TRAITS::ProcessLogServiceType processLogHandler;
-        processLogHandler.executeTransfer_p();
+        //typename TRAITS::ProcessLogServiceType processLogHandler;
+        //processLogHandler.executeTransfer_p();
 
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();
 
         typename TRAITS::ProcessUpdaterServiceType processUpdaterHandler;
         processUpdaterHandler.executeTransfer_p();
+
+        /*wait for status updates to be processed and then start sanity threads*/
+        sleep(25);
 
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();

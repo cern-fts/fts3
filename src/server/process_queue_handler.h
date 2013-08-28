@@ -30,6 +30,7 @@ limitations under the License. */
 #include <boost/scoped_ptr.hpp>
 #include "producer_consumer_common.h"
 #include <boost/filesystem.hpp>
+#include <boost/thread.hpp>
 
 extern bool stopThreads;
 
@@ -49,7 +50,6 @@ class ProcessQueueHandler : public TRAITS::ActiveObjectType
 protected:
 
     using TRAITS::ActiveObjectType::_enqueue;
-    std::string enableOptimization;
 
 public:
 
@@ -67,7 +67,6 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessQueueHandler", desc)
     {
-
         enableOptimization = theServerConfig().get<std::string > ("Optimizer");
         messages.reserve(3000);
     }
@@ -121,7 +120,7 @@ public:
                         if(retry == -1)  //unlimited times
                             {
                                 DBSingleton::instance().getDBObjectInstance()
-                                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                 SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                 return true;
                             }
@@ -130,7 +129,7 @@ public:
                                 if(retryTimes <= retry-1 )
                                     {
                                         DBSingleton::instance().getDBObjectInstance()
-                                                ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
+                                        ->setRetryTransfer(job, msg.file_id, retryTimes+1, msg.transfer_message);
                                         SingleTrStateInstance::instance().sendStateMessage(job, msg.file_id);
                                         return true;
                                     }
@@ -194,39 +193,140 @@ public:
 
 protected:
 
-    std::vector<struct message> queueMsgRecovery;
     std::vector<struct message> messages;
-    std::vector<struct message>::const_iterator iter;
+    boost::thread_group g;
+    std::string enableOptimization;
+
+
+    void getLogs()
+    {
+        try
+            {
+                std::vector<struct message_log> messages;
+                std::vector<struct message_log>::const_iterator iter;
+
+                if (runConsumerLog(messages) != 0)
+                    {
+                        char buffer[128]= {0};
+                        throw Err_System(std::string("Could not get the log messages: ") +
+                                         strerror_r(errno, buffer, sizeof(buffer)));
+                    }
+
+                if(!messages.empty())
+                    {
+                        for (iter = messages.begin(); iter != messages.end(); ++iter)
+                            {
+                                if (iter->msg_errno == 0)
+                                    {
+                                        std::string job = std::string((*iter).job_id).substr(0, 36);
+                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Log Monitor "
+                                                                        << "\nJob id: " << job
+                                                                        << "\nFile id: " << (*iter).file_id
+                                                                        << "\nLog path: " << (*iter).filePath << commit;
+                                        DBSingleton::instance().getDBObjectInstance()->
+                                        transferLogFile((*iter).filePath, job , (*iter).file_id, (*iter).debugFile);
+                                    }
+                                else
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a log message: "
+                                                                       << iter->msg_error_reason << commit;
+                                    }
+                            }
+                        messages.clear();
+                    }
+            }    
+        catch (const fs::filesystem_error& e)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            }
+        catch (std::exception& ex)
+	    {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+	    }		    
+        catch (...)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            }
+    }
+
+    void executeUpdate(std::vector<struct message>& messages)
+    {
+        try
+            {
+                std::vector<struct message>::const_iterator iter;
+                std::vector<struct message>::const_iterator iterBreak;
+                struct message_updater msgUpdater;
+                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                    {
+                        if(stopThreads)
+                            {
+                                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iter)
+                                    {
+                                        struct message msgBreak = (*iter);
+                                        runProducerStatus( msgBreak);
+                                    }
+
+                                break;
+                            }
+
+                        std::string jobId = std::string((*iter).job_id).substr(0, 36);
+                        strcpy(msgUpdater.job_id, jobId.c_str());
+                        msgUpdater.file_id = (*iter).file_id;
+                        msgUpdater.process_id = (*iter).process_id;
+                        msgUpdater.timestamp = (*iter).timestamp;
+                        msgUpdater.throughput = 0.0;
+                        msgUpdater.transferred = 0.0;
+                        ThreadSafeList::get_instance().updateMsg(msgUpdater);
+
+                        if (iter->msg_errno == 0)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << jobId
+                                                                << "\nFile id: " << (*iter).file_id
+                                                                << "\nPid: " << (*iter).process_id
+                                                                << "\nState: " << (*iter).transfer_status
+                                                                << "\nSource: " << (*iter).source_se
+                                                                << "\nDest: " << (*iter).dest_se << commit;
+
+                                updateDatabase((*iter));
+                            }
+                        else
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
+                                                               << iter->msg_error_reason << commit;
+                            }
+                    }//end for
+            }    	    
+        catch (const fs::filesystem_error& e)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            }
+        catch (std::exception& ex)
+	    {
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+	    }		    
+        catch (...)
+            {
+                throw Err_Custom(std::string(__func__) + ": Caught exception ");
+            }
+    }
+
 
     /* ---------------------------------------------------------------------- */
     void executeTransfer_a()
     {
-        while (stopThreads==false)   /*need to receive more than one messages at a time*/
+        while (1)   /*need to receive more than one messages at a time*/
             {
                 try
                     {
+                        if(stopThreads && messages.empty() )
+                            {
+                                break;
+                            }
 
                         if(fs::is_empty(fs::path(STATUS_DIR)))
                             {
-                                usleep(400000);
+                                usleep(300000);
                                 continue;
-                            }
-
-                        bool alive = DBSingleton::instance().getDBObjectInstance()->checkConnectionStatus();
-                        if(!alive)
-                            {
-                                usleep(400000);
-                                continue;
-                            }
-
-                        if(!queueMsgRecovery.empty())
-                            {
-                                std::vector<struct message>::const_iterator iter;
-                                for (iter = queueMsgRecovery.begin(); iter != queueMsgRecovery.end(); ++iter)
-                                    {
-                                        updateDatabase(*iter);
-                                    }
-                                queueMsgRecovery.clear();
                             }
 
                         if (runConsumerStatus(messages) != 0)
@@ -238,68 +338,61 @@ protected:
 
                         if(!messages.empty())
                             {
-                                for (iter = messages.begin(); iter != messages.end(); ++iter)
+                                if(messages.size() >= 8 )
                                     {
+                                        std::size_t const half_size1 = messages.size() / 2;
+                                        std::vector<struct message> split_1(messages.begin(), messages.begin() + half_size1);
+                                        std::vector<struct message> split_2(messages.begin() + half_size1, messages.end());
 
-                                        if (iter->msg_errno == 0)
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Job id:" << std::string((*iter).job_id).substr(0, 36)
-                                                                                << "\nFile id: " << (*iter).file_id
-                                                                                << "\nPid: " << (*iter).process_id
-                                                                                << "\nState: " << (*iter).transfer_status
-                                                                                << "\nMessage: " << (*iter).transfer_message
-                                                                                << "\nSource: " << (*iter).source_se
-                                                                                << "\nDest: " << (*iter).dest_se << commit;
+                                        std::size_t const half_size2 = split_1.size() / 2;
+                                        std::vector<struct message> split_11(split_1.begin(), split_1.begin() + half_size2);
+                                        std::vector<struct message> split_21(split_1.begin() + half_size2, split_1.end());
 
-                                                /*
-                                                    exceptional case when a url-copy process fails to start because thread creation failed due to lack of resource
-                                                    do not update the database with the failed state because it will be re-scheduled
-                                                */
-                                                if(std::string((*iter).transfer_message).find("thread_resource_error")!= string::npos ||
-                                                        std::string((*iter).transfer_message).find("globus_module_activate_proxy")!= string::npos)
-                                                    {
-                                                        continue;
-                                                    }
-                                                else
-                                                    {
-                                                        bool dbUpdated = updateDatabase((*iter));
-                                                        if(!dbUpdated)
-                                                            {
-                                                                queueMsgRecovery.push_back((*iter));
-                                                            }
-                                                    }
-                                            }
-                                        else
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a status message: "
-                                                                               << iter->msg_error_reason << commit;
-                                            }
-                                    }//end for
+                                        std::size_t const half_size3 = split_2.size() / 2;
+                                        std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
+                                        std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
+
+                                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
+                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
+                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
+                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+
+                                        g.add_thread(t1);
+                                        g.add_thread(t2);
+                                        g.add_thread(t3);
+                                        g.add_thread(t4);
+
+                                        // wait for them
+                                        g.join_all();
+                                    }
+                                else    //end < 10
+                                    {
+                                        executeUpdate(messages);
+                                    }
                                 messages.clear();
                             }
 
-                        usleep(400000);
+                        /*get log file here*/
+                        getLogs();
+                        usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
-                        for (iter = messages.begin(); iter != messages.end(); ++iter)
-                            queueMsgRecovery.push_back(*iter);
-                        usleep(400000);
+
+                        usleep(300000);
                     }
-                catch (Err& e)
-                    {
-                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
-                        for (iter = messages.begin(); iter != messages.end(); ++iter)
-                            queueMsgRecovery.push_back(*iter);
-                        usleep(400000);
-                    }
+        	catch (std::exception& ex2)
+	    	    {
+                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex2.what() << commit;
+
+                        usleep(300000);		                    	
+	   	    }	    		     
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue thrown unhandled exception" << commit;
-                        for (iter = messages.begin(); iter != messages.end(); ++iter)
-                            queueMsgRecovery.push_back(*iter);
-                        usleep(400000);
+
+                        usleep(300000);
                     }
             }
     }

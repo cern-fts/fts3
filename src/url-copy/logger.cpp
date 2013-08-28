@@ -85,11 +85,12 @@ int Logger::redirectTo(const std::string& path, bool debug)
         {
             std::string debugPath = path + ".debug";
             FILE* freopenExec = freopen(debugPath.c_str(), "w", stderr);
-	    if(!freopenExec){ //try again
-	    	freopenExec = freopen(debugPath.c_str(), "w", stderr);
-            	chmod(debugPath.c_str(), 0644);	    
-	    }
-            chmod(debugPath.c_str(), 0644);	    
+            if(!freopenExec)  //try again
+                {
+                    freopenExec = freopen(debugPath.c_str(), "w", stderr);
+                    chmod(debugPath.c_str(), 0644);
+                }
+            chmod(debugPath.c_str(), 0644);
         }
     return 0;
 }

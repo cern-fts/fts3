@@ -15,13 +15,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.core.paginator import Paginator
 from django.db.models import Q, Count, Avg
 from django.http import Http404
 from django.shortcuts import render, redirect
+from jsonify import jsonify, jsonify_paged
 from ftsmon import forms
 from ftsweb.models import Job, File, JobArchive, FileArchive
-from utils import getPage
 import datetime
 import json
 import time
@@ -140,13 +139,9 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
     return (msg, jobs)
 
 
-
+@jsonify_paged
 def jobIndex(httpRequest):
     states = ['FAILED', 'FINISHEDDIRTY', 'FINISHED', 'CANCELED', 'ACTIVE', 'STAGING']
-    
-    # If jobId is in the request, redirect directly
-    if httpRequest.method == 'GET' and 'jobId' in httpRequest.GET:
-        return redirect('ftsmon.views.jobs.jobDetails', jobId = httpRequest.GET['jobId'])
     
     filterForm = forms.FilterForm(httpRequest.GET)
     filters = setupFilters(filterForm)
@@ -157,83 +152,81 @@ def jobIndex(httpRequest):
     if not filters['state']:
         filters['state'] = states
     
-    msg, jobs = jobListing(httpRequest, filters = filters)    
-    paginator = Paginator(jobs, 50)
-    return render(httpRequest, 'jobs/list.html',
-                  {'filterForm': filterForm,
-                   'jobs':       getPage(paginator, httpRequest),
-                   'paginator':  paginator,
-                   'filters':    filters,
-                   'message':    msg,
-                   'request':    httpRequest})
+    msg, jobs = jobListing(httpRequest, filters = filters)
+
+    return jobs
 
 
-
+@jsonify_paged
 def archiveJobIndex(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters = setupFilters(filterForm)
     filters['time_window'] = None
     
-    msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)    
-    paginator = Paginator(jobs, 50)
-    return render(httpRequest, 'jobs/archive.html',
-                  {'filterForm': filterForm,
-                   'jobs':       getPage(paginator, httpRequest),
-                   'paginator':  paginator,
-                   'filters':    filters,
-                   'message':    msg,
-                   'request':    httpRequest})
+    msg, jobs = jobListing(httpRequest, jobModel = JobArchive, filters = filters)
+
+    return jobs
 
 
-
-def _getJob(jobModel, fileModel, jobId, fstate = None):
-    try:
-        job   = jobModel.objects.get(job_id = jobId)
-        files = fileModel.objects.filter(job = jobId)
-        if fstate:
-            files = files.filter(file_state = fstate)
-        return (job, files)
-    except jobModel.DoesNotExist:
-        return (None, None)
-
-
-
+@jsonify
 def jobDetails(httpRequest, jobId):
-    # State filter
-    state = None
-    if 'state' in httpRequest.GET:
-        state = httpRequest.GET['state']
-    # Try t_job and t_file first
-    (job, files) = _getJob(Job, File, jobId, state)
-    # Otherwise, try the archive
-    if not job:
-        (job, files) = _getJob(JobArchive, FileArchive, jobId, state)
+    try:
+        job = Job.objects.get(job_id = jobId)
+        count = File.objects.filter(job_id = jobId).values('file_state').annotate(count = Count('file_state'))
+    except Job.DoesNotExist:
+        try:
+            job = JobArchive.objects.get(job_id = jobId)
+            count = FileArchive.objects.filter(job_id = jobId).values('file_state').annotate(count = Count('file_state'))
+        except JobArchive.DoesNotExist:
+            raise Http404
+    
+    # Count as dictionary
+    stateCount = {}
+    for st in count:
+        stateCount[st['file_state']] = st['count']
         
-    if not job:
+    return {'job': job, 'states': stateCount}
+
+
+@jsonify_paged
+def jobFiles(httpRequest, jobId):
+    files = File.objects.filter(job_id = jobId)
+    if not files:
+        files = FileArchive.objects.filter(job_id = jobId)
+    if not files:
         raise Http404
     
-    transferStateCount = File.objects.filter(job = jobId)\
-                                     .values('file_state')\
-                                     .annotate(count = Count('file_state'))
-                                     
-    paginator = Paginator(files, 50)
+    if 'state' in httpRequest.GET and httpRequest.GET['state']:
+        files = files.filter(file_state__in = httpRequest.GET['state'].split(','))
     
-    return render(httpRequest, 'jobs/details.html',
-                  {'transferJob': job,
-                   'transferFiles': getPage(paginator, httpRequest),
-                   'paginator':  paginator,
-                   'trasferStateCount': transferStateCount,
-                   'stateFilter': state,
-                   'request': httpRequest})
+    return files
 
 
-
+@jsonify_paged
 def staging(httpRequest):
-  transfers = File.objects.filter(file_state = 'STAGING')
-  transfers = transfers.order_by('-job__submit_time', '-file_id')
-  paginator = Paginator(transfers, 50)
-  return render(httpRequest, 'jobs/staging.html',
-                {'transfers': getPage(paginator, httpRequest),
-                 'paginator': paginator,
-                 'request': httpRequest})
+    transfers = File.objects.filter(file_state = 'STAGING')
+    transfers = transfers.order_by('-job__submit_time', '-file_id')
+    transfers = transfers.extra(select = {'vo_name': 'vo_name', 'bring_online': 'bring_online', 'copy_pin_lifetime': 'copy_pin_lifetime'})
+        
+    return transfers
 
+
+@jsonify_paged
+def transferList(httpRequest):
+    filterForm = forms.FilterForm(httpRequest.GET)
+    filters    = setupFilters(filterForm)
+    
+    transfers = File.objects#.extra(select = {'nullFinished': 'coalesce(finish_time, CURRENT_TIMESTAMP)'})
+    if filters['state']:
+        transfers = transfers.filter(file_state__in = filters['state'])
+    if filters['source_se']:
+        transfers = transfers.filter(source_se = filters['source_se'])
+    if filters['dest_se']:
+        transfers = transfers.filter(dest_se = filters['dest_se'])
+    if filters['vo']:
+        transfers = transfers.filter(job__vo_name = filters['vo'])
+    if filters['time_window']:
+        notBefore=  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
+        transfers = transfers.filter(Q(finish_time__isnull = True) | (Q(finish_time__gte = notBefore)))
+   
+    return transfers.order_by('-file_id')

@@ -94,6 +94,10 @@ public:
      */
     bool dumpFailed();
 
+    /**
+     * If true, be more detailed
+     */
+    bool detailed();
 };
 
 }

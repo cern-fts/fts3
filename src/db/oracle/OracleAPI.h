@@ -41,6 +41,31 @@ public:
     OracleAPI();
     virtual ~OracleAPI();
 
+    class CleanUpSanityChecks
+    {
+    public:
+        CleanUpSanityChecks(OracleAPI* instanceLocal,SafeConnection& pooled, struct message_sanity &msg):
+            instanceLocal(instanceLocal), pooled(pooled), msg(msg), returnValue(false)
+        {
+            returnValue = instanceLocal->assignSanityRuns(pooled, msg);
+        }
+
+        ~CleanUpSanityChecks()
+        {
+            instanceLocal->resetSanityRuns(pooled, msg);
+        }
+
+        bool getCleanUpSanityCheck()
+        {
+            return returnValue;
+        }
+
+        OracleAPI* instanceLocal;
+        SafeConnection& pooled;
+        struct message_sanity &msg;
+        bool returnValue;
+    };
+
     /**
      * Intialize database connection  by providing information from fts3config file
      **/
@@ -66,9 +91,9 @@ public:
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    virtual void getSubmittedJobs(std::vector<TransferJobs*>& jobs, const std::string & vos);
+    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
-    virtual void getByJobId(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
@@ -133,9 +158,9 @@ public:
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
 
-    virtual int getCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, oracle::occi::ResultSet** r, const std::string & source_hostname, const std::string & destin_hostname);
+    virtual int getCredits(SafeConnection& pooledConnection, SafeStatement s[], SafeResultSet r[], const std::string & source_hostname, const std::string & destin_hostname);
 
-    virtual void initVariablesForGetCredits(oracle::occi::Connection* pooledConnection, oracle::occi::Statement** s, std::string* query, std::string* tag, std::string basename);
+    virtual void initVariablesForGetCredits(SafeConnection& pooledConnection, SafeStatement s[], std::string* query, std::string* tag, std::string basename);
 
     virtual void setAllowed(const std::string & job_id, int file_id, const std::string & source_se, const std::string & dest, int nostreams, int timeout, int buffersize);
 
@@ -320,13 +345,18 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
+    // These are not exposed by the db interface
+    bool assignSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+
+    void resetSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+
 private:
     OracleConnection *conn;
     OracleTypeConversions *conv;
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
     int getOptimizerMode();
-    void countFileInTerminalStates(oracle::occi::Connection* pooledConnection, std::string jobId,
-                                           unsigned int& finished, unsigned int& cancelled, unsigned int& failed);    
+    void countFileInTerminalStates(SafeConnection& pooledConnection, std::string jobId,
+                                   unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
     OptimizerSample optimizerObject;
     std::string ftsHostName;
     int lowDefault;

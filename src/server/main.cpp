@@ -99,12 +99,12 @@ void fts3_teardown_db_backend()
 
 void _handle_sigint(int)
 {
+    stopThreads = true;
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
-    stopThreads = true;
-    boost::thread bt(taskTimer, 20);
+    boost::thread bt(taskTimer, 25);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(4);
+    sleep(35);
     theServer().stop();
     sleep(4);
     fts3_teardown_db_backend();

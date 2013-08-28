@@ -1,4 +1,27 @@
 --
+-- Only one host at a time must run sanity checks
+--
+CREATE TABLE t_server_sanity (
+  revertToSubmitted         INT DEFAULT 0,
+  cancelWaitingFiles        INT DEFAULT 0,
+  revertNotUsedFiles        INT DEFAULT 0,
+  forceFailTransfers        INT DEFAULT 0,
+  setToFailOldQueuedJobs    INT DEFAULT 0,
+  checkSanityState          INT DEFAULT 0,
+  t_revertToSubmitted       TIMESTAMP WITH TIME ZONE,
+  t_cancelWaitingFiles      TIMESTAMP WITH TIME ZONE,
+  t_revertNotUsedFiles      TIMESTAMP WITH TIME ZONE,
+  t_forceFailTransfers      TIMESTAMP WITH TIME ZONE,
+  t_setToFailOldQueuedJobs  TIMESTAMP WITH TIME ZONE,
+  t_checkSanityState        TIMESTAMP WITH TIME ZONE
+); 
+INSERT INTO t_server_sanity
+    (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState,
+     t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState)
+VALUES (0, 0, 0, 0, 0, 0,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+--
 -- Holds various server configuration options
 --
 CREATE TABLE t_server_config (

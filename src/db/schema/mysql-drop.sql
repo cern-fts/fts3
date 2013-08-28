@@ -23,7 +23,7 @@ DROP TABLE t_optimizer_evolution;
 DROP TABLE t_optimize;
 DROP TABLE t_optimize_mode;
 DROP TABLE t_server_config;
-
 DROP TABLE t_profiling_info;
-DROP TABLE t_profiling_snapshot
+DROP TABLE t_profiling_snapshot;
+DROP TABLE t_server_sanity;
 

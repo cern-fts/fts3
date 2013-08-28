@@ -17,28 +17,26 @@
 
 from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
-from django.shortcuts import render, redirect
 from ftsweb.models import Job, File, ConfigAudit
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo
+from jsonify import jsonify, jsonify_paged
 
 
-STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING']
+STATES               = ['SUBMITTED', 'READY', 'ACTIVE', 'FAILED', 'FINISHED', 'CANCELED', 'STAGING', 'NOT_USED']
 ACTIVE_STATES        = ['SUBMITTED', 'READY', 'ACTIVE', 'STAGING']
 FILE_TERMINAL_STATES = ['FINISHED', 'FAILED', 'CANCELED']
 
 
-
+@jsonify_paged
 def configurationAudit(httpRequest):
-    configs = ConfigAudit.objects.order_by('-datetime')
-    return render(httpRequest, 'configurationAudit.html',
-                  {'configs': configs})
+    return ConfigAudit.objects.order_by('-datetime')
 
 
 
-def _getCountPerState(states, age = None):
+def _getCountPerState(age = None):
     count = {}
     
-    query = File.objects.filter(file_state__in = states)
+    query = File.objects
     if age:
         notBefore = datetime.utcnow() - age
         query = query.filter(Q(finish_time__gte = notBefore) | Q(finish_time__isnull = True))
@@ -48,7 +46,7 @@ def _getCountPerState(states, age = None):
     for row in query:
         count[row['file_state'].lower()] = row['number']
     
-    for s in filter(lambda s: s not in count, map(lambda s: s.lower(), states)):
+    for s in filter(lambda s: s not in count, map(lambda s: s.lower(), STATES)):
         count[s] = 0
     
     # Couple of aggregations
@@ -103,20 +101,17 @@ def _getTransferAndSubmissionPerHost(timewindow):
 
 
 def _getStateCountPerVo(timewindow):
-    perVoDict = {}
+    perVo = {}
     query = File.objects.values('file_state', 'job__vo_name')\
                         .filter(Q(finish_time__gte = datetime.utcnow() - timewindow) | Q(finish_time__isnull = True))\
                         .annotate(count = Count('file_state'))\
                         .order_by('file_state')
     for voJob in query:
         vo = voJob['job__vo_name']
-        if vo not in perVoDict:
-            perVoDict[vo] = []
-        perVoDict[vo].append((voJob['file_state'], voJob['count']))
-        
-    perVo = []
-    for (vo, states) in perVoDict.iteritems():
-        perVo.append({'vo': vo, 'states': states})
+        if vo not in perVo:
+            perVo[vo] = {}
+        perVo[vo][voJob['file_state']] = voJob['count']
+
     return perVo
 
 
@@ -140,13 +135,14 @@ def _getAllPairs(notBefore, source = None, dest = None):
 def _getAveragePerPair(pairs, notBefore):
     avg = {}
     
-    for (source, dest) in pairs:
-        pairAvg = File.objects.exclude(file_state__in = ACTIVE_STATES, finish_time__gt = notBefore)\
-                              .filter(source_se = source,
-                                      dest_se = dest)\
-                              .aggregate(Avg('tx_duration'), Avg('throughput'))
-        avg[(source, dest)] = {'avgDuration': pairAvg['tx_duration__avg'],
-                               'avgThroughput': pairAvg['throughput__avg']}
+    pairsAvg = File.objects.exclude(file_state__in = ACTIVE_STATES).filter(finish_time__gte = notBefore)\
+                              .values('source_se', 'dest_se', 'tx_duration', 'throughput')\
+                              .annotate(Avg('tx_duration'), Avg('throughput'))
+
+    for pair in pairsAvg:
+        sePair = (pair['source_se'], pair['dest_se'])
+        avg[sePair] = {'avgDuration': pair['tx_duration__avg'],
+                       'avgThroughput': pair['throughput__avg']}
     
     return avg
 
@@ -228,31 +224,29 @@ def _getRetriedStats(timewindow):
     retried = {}
     for f in retriedObjs:
         retried[f['file_state'].lower()] = f['number']
+    for s in [s for s in ['failed', 'finished'] if s not in retried]:
+        retried[s] = 0
     
     return retried    
 
 
-
+@jsonify
 def overview(httpRequest):
-    overall = _getCountPerState(STATES, timedelta(hours = 24))
-    lastHour = _getCountPerState(STATES, timedelta(hours = 1))
-    if lastHour['total'] > 0:
-        overall['rate'] = (lastHour['finished'] * 100.0) / lastHour['total']
-    else:
-        overall['rate'] = 0
-        
+    overall = _getCountPerState(timedelta(hours = 24))
+    lastHour = _getCountPerState(timedelta(hours = 1))
     retried = _getRetriedStats(timedelta(hours = 1))
         
-    return render(httpRequest, 'statistics/overview.html',
-                  {'overall': overall,
-                   'retried': retried})
+    return {
+       'lastday': overall,
+       'lasthour': lastHour,
+       'retried': retried
+    }
     
 
-
+@jsonify
 def servers(httpRequest):
     servers = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
-    return render(httpRequest, 'statistics/servers.html',
-                  {'servers': servers})
+    return servers
 
 
 
@@ -275,7 +269,7 @@ def _sumStatus(stDictA, stDictB):
     return r
 
 
-
+@jsonify
 def pairs(httpRequest):
     source_se = httpRequest.GET['source_se'] if 'source_se' in httpRequest.GET else None  
     dest_se   = httpRequest.GET['dest_se'] if 'dest_se' in httpRequest.GET else None    
@@ -288,20 +282,17 @@ def pairs(httpRequest):
     aggregate['avgThroughput'] = _avgField(pairs, 'avgThroughput')
     aggregate['avgDuration']   = _avgField(pairs, 'avgDuration')
     
-    return render(httpRequest, 'statistics/pairs.html',
-                  {'pairs': pairs,
-                   'aggregate': aggregate,
-                   'request': httpRequest})
+    return {'pairs': pairs,
+            'aggregate': aggregate
+    }
 
 
-
+@jsonify
 def pervo(httpRequest):
-    vos = _getStateCountPerVo(timedelta(minutes = 30));
-    return render(httpRequest, 'statistics/vos.html',
-                  {'vos': vos})
+    return _getStateCountPerVo(timedelta(minutes = 30))
 
 
-
+@jsonify
 def profiling(httpRequest):
     profiling = {}
     
@@ -316,6 +307,4 @@ def profiling(httpRequest):
     profiles = ProfilingSnapshot.objects.filter(cnt__gt = 0).order_by('total')
     profiling['profiles'] = profiles.all()
     
-    return render(httpRequest, 'statistics/profiling.html',
-                  {'profiling': profiling,
-                   'request': httpRequest})
+    return profiling

@@ -192,6 +192,7 @@ public:
     ) :
         TRAITS::ActiveObjectType("ProcessServiceHandler", desc)
     {
+        cmd = "fts_url_copy";
         maximumThreads = getMaxThreads();
 
         execPoolSize = theServerConfig().get<int> ("InternalThreadPool");
@@ -228,7 +229,6 @@ public:
         else
             monitoringMessages = true;
 
-        jobs2.reserve(3000);
     }
 
     /* ---------------------------------------------------------------------- */
@@ -253,11 +253,13 @@ protected:
     SiteName siteResolver;
     std::string ftsHostName;
     std::string allowedVOs;
-    std::vector<TransferJobs*> jobs2;
+    std::vector<TransferJobs*> jobsReuse;
     rlim_t maximumThreads;
     std::string infosys;
     bool monitoringMessages;
     int execPoolSize;
+    std::string cmd;
+
 
     std::string extractHostname(const std::string &surl)
     {
@@ -278,9 +280,8 @@ protected:
         fout.close();
     }
 
-    void executeUrlcopy(std::vector<TransferJobs*>& jobs22, bool reuse)
+    void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
     {
-        const std::string cmd = "fts_url_copy";
         std::string params = std::string("");
         ExecuteProcess *pr = NULL;
         std::string sourceSiteName("");
@@ -295,113 +296,58 @@ protected:
 
         if (reuse == false)
             {
-                if (!jobs22.empty())
+                std::map< std::string, std::list<TransferFiles*> > voQueues;
+                DBSingleton::instance().getDBObjectInstance()->getByJobId(voQueues);
+
+                // create transfer-file handler
+                TransferFileHandler tfh(voQueues);
+
+                //init optimizer here to avoid duplicates
+                std::map< std::string, std::list<TransferFiles*> >::const_iterator i;
+                for (i = voQueues.begin(); i != voQueues.end(); ++i)
                     {
-                        std::map< std::string, std::list<TransferFiles*> > voQueues;
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs22, voQueues, reuse);
-
-                        // create transfer-file handler
-                        TransferFileHandler tfh(voQueues);
-			
-                        //init optimizer here to avoid duplicates
-                        std::map< std::string, std::list<TransferFiles*> >::const_iterator i;
-	 	                for (i = voQueues.begin(); i != voQueues.end(); ++i) { 
-	 	                    std::list<TransferFiles*>::const_iterator j; 
-	 	                    for (j = i->second.begin(); j != i->second.end(); ++j) { 
-	 	                        TransferFiles* temp = *j; 
-	 	                        DBSingleton::instance().getDBObjectInstance()->initOptimizer(temp->SOURCE_SE, temp->DEST_SE, 0);
-	 	                    } 	 	                    
-	 	                } 
-
-                        // the worker thread pool
-                        FileTransferExecutorPool execPool(execPoolSize, tfh, monitoringMessages, infosys, ftsHostName);
-
-                        // loop until all files have been served
-
-                        int initial_size = tfh.size();
-
-
-                        while (!tfh.empty())
+                        std::list<TransferFiles*>::const_iterator j;
+                        for (j = i->second.begin(); j != i->second.end(); ++j)
                             {
-                                PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
-
-                                // iterate over all VOs
-                                set<string>::iterator it_vo;
-                                for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
-                                    {
-
-                                        if (stopThreads)
-                                            {
-                                                /** cleanup resources */
-                                                std::vector<TransferJobs*>::const_iterator iter22;
-                                                for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
-                                                    {
-                                                        if(*iter22)
-                                                            delete *iter22;
-                                                    }
-                                                jobs22.clear();
-                                                execPool.stopAll();
-                                                return;
-                                            }
-
-                                        int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
-                                            {
-                                                /*verify it's correct, you never know */
-                                                int countTr = proc_find(cmd.c_str());
-                                                if (countTr == -1)
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to open proc fs" << commit;
-                                                    }
-                                                else if(countTr == 0)
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is not right, active in db " <<  currentActiveTransfers << " and proc fs " << countTr << commit;
-                                                    }
-                                                else
-                                                    {
-                                                        if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
-                                                            {
-                                                                /*do nothing*/
-                                                            }
-                                                        else
-                                                            {
-                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
-                                                                sleep(1);
-                                                                continue;
-                                                            }
-                                                    }
-                                            }
-
-                                        long unsigned int freeRam = getAvailableMemory();
-                                        if (freeRam != 0 && freeRam < 100 && currentActiveTransfers > 20)
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
-                                                sleep(1);
-                                                continue;
-                                            }
-
-                                        execPool.add(tfh.get(*it_vo), enableOptimization.compare("true") == 0);
-                                    }
+                                TransferFiles* temp = *j;
+                                DBSingleton::instance().getDBObjectInstance()->initOptimizer(temp->SOURCE_SE, temp->DEST_SE, 0);
                             }
-
-                        // wait for all the workers to finish
-                        execPool.join();
-
-                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
-
-                        /** cleanup resources */
-                        std::vector<TransferJobs*>::const_iterator iter22;
-                        for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
-                            {
-                                if(*iter22)
-                                    delete *iter22;
-                            }
-                        jobs22.clear();
                     }
+
+                // the worker thread pool
+                FileTransferExecutorPool execPool(execPoolSize, tfh, monitoringMessages, infosys, ftsHostName);
+
+                // loop until all files have been served
+
+                int initial_size = tfh.size();
+
+
+                while (!tfh.empty())
+                    {
+                        PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
+
+                        // iterate over all VOs
+                        set<string>::iterator it_vo;
+                        for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
+                            {
+                                if (stopThreads)
+                                    {
+                                        execPool.stopAll();
+                                        return;
+                                    }
+
+                                execPool.add(tfh.get(*it_vo), enableOptimization.compare("true") == 0);
+                            }
+                    }
+
+                // wait for all the workers to finish
+                execPool.join();
+
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
             }
         else     /*reuse session*/
             {
-                if (!jobs22.empty())
+                if (!jobsReuse2.empty())
                     {
                         bool manualConfigExists = false;
                         std::vector<std::string> urls;
@@ -429,22 +375,26 @@ protected:
                         std::string bringonlineToken("");
 
                         TransferFiles* tempUrl = NULL;
-                        /*get the file for each job*/
-                        std::vector<TransferJobs*>::const_iterator iter2;
 
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::list<TransferFiles*>::const_iterator queueiter;
 
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId(jobs22, voQueues, reuse);
+                        DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues, reuse);
 
                         if (voQueues.empty())
                             {
-                                jobs22.clear();
+                                std::vector<TransferJobs*>::iterator iter2;
+                                for (iter2 = jobsReuse2.begin(); iter2 != jobsReuse2.end(); ++iter2)
+                                    {
+                                        if(*iter2)
+                                            delete *iter2;
+                                    }
+                                jobsReuse2.clear();
                                 return;
                             }
 
                         // since there will be just one VO pick it (TODO)
-                        std::string vo = jobs22.front()->VO_NAME;
+                        std::string vo = jobsReuse2.front()->VO_NAME;
 
                         for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                             {
@@ -453,43 +403,6 @@ protected:
                                     {
                                         return;
                                     }
-
-                                int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
-                                if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
-                                    {
-                                        /*verify it's correct, you never know */
-                                        int countTr = proc_find(cmd.c_str());
-                                        if (countTr == -1)
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to open proc fs" << commit;
-                                            }
-                                        else if(countTr == 0)
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is not right, active in db " <<  currentActiveTransfers << " and proc fs " << countTr << commit;
-                                            }
-                                        else
-                                            {
-                                                if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
-                                                    {
-                                                        /*do nothing*/
-                                                    }
-                                                else
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
-                                                        sleep(1);
-                                                        continue;
-                                                    }
-                                            }
-                                    }
-
-                                long unsigned int freeRam = getAvailableMemory();
-                                if (freeRam != 0 && freeRam < 100)
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
-                                        sleep(1);
-                                        continue;
-                                    }
-
 
                                 TransferFiles* temp = (TransferFiles*) * queueiter;
                                 tempUrl = temp;
@@ -536,12 +449,13 @@ protected:
                         if(!tempUrl)
                             {
                                 /** cleanup resources */
-                                for (iter2 = jobs22.begin(); iter2 != jobs22.end(); ++iter2)
+                                std::vector<TransferJobs*>::iterator iter2;
+                                for (iter2 = jobsReuse2.begin(); iter2 != jobsReuse2.end(); ++iter2)
                                     {
                                         if(*iter2)
                                             delete *iter2;
                                     }
-                                jobs22.clear();
+                                jobsReuse2.clear();
                                 for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                                     {
                                         if(*queueiter)
@@ -829,14 +743,7 @@ protected:
                                 params.clear();
                             }
 
-
-                        std::vector<TransferJobs*>::const_iterator iter22;
-                        for (iter22 = jobs22.begin(); iter22 != jobs22.end(); ++iter22)
-                            {
-                                if(*iter22)
-                                    delete *iter22;
-                            }
-                        jobs22.clear();
+                        jobsReuse2.clear();
 
                         for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                             {
@@ -862,17 +769,6 @@ protected:
                     {
                         if (stopThreads)
                             {
-                                if (!jobs2.empty())
-                                    {
-                                        std::vector<TransferJobs*>::const_iterator iter2;
-                                        for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
-                                            {
-                                                if(*iter2)
-                                                    delete *iter2;
-                                            }
-                                        jobs2.clear();
-                                    }
-                                sleep(1);
                                 return;
                             }
 
@@ -889,64 +785,92 @@ protected:
                                 drainMode = false;
                             }
 
-
-                        /*get jobs in submitted state*/
-                        DBSingleton::instance().getDBObjectInstance()->getSubmittedJobs(jobs2, allowedVOs);
-
-                        if (!jobs2.empty())
+                        //check for available resources
+                        int currentActiveTransfers = DBSingleton::instance().getDBObjectInstance()->activeProcessesForThisHost();
+                        if (maximumThreads != 0 && currentActiveTransfers != 0 && (currentActiveTransfers * 8) >= static_cast<int>(maximumThreads))
                             {
-                                executeUrlcopy(jobs2, false);
+                                /*verify it's correct, you never know */
+                                int countTr = proc_find(cmd.c_str());
+                                if (countTr == -1)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to open proc fs" << commit;
+                                    }
+                                else if(countTr == 0)
+                                    {
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Something is not right, active in db " <<  currentActiveTransfers << " and proc fs " << countTr << commit;
+                                    }
+                                else
+                                    {
+                                        if(countTr < currentActiveTransfers || (countTr * 8) <= static_cast<int>(maximumThreads))
+                                            {
+                                                /*do nothing*/
+                                            }
+                                        else
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Enforced soft limits, currently " << currentActiveTransfers << " are running" << commit;
+                                                continue;
+                                            }
+                                    }
                             }
+
+                        long unsigned int freeRam = getAvailableMemory();
+                        if (freeRam != 0 && freeRam < 100 && currentActiveTransfers > 20)
+                            {
+                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
+                                continue;
+                            }
+
+                        /*check for non-reused jobs*/
+                        executeUrlcopy(jobsReuse, false);
 
 
                         /* --- session reuse section ---*/
                         /*get jobs in submitted state and session reuse on*/
-                        DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobs2, allowedVOs);
-                        if (!jobs2.empty())
-                            {
-                                executeUrlcopy(jobs2, true);
-                            }
+                        DBSingleton::instance().getDBObjectInstance()->getSubmittedJobsReuse(jobsReuse, allowedVOs);
 
-                        if (!jobs2.empty())
+                        if (!jobsReuse.empty())
                             {
+                                executeUrlcopy(jobsReuse, true);
                                 std::vector<TransferJobs*>::iterator iter2;
-                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                                for (iter2 = jobsReuse.begin(); iter2 != jobsReuse.end(); ++iter2)
                                     {
                                         if(*iter2)
                                             delete *iter2;
                                     }
-                                jobs2.clear();
+                                jobsReuse.clear();
                             }
                     }
                 catch (std::exception& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
-                        if (!jobs2.empty())
+                        if (!jobsReuse.empty())
                             {
                                 std::vector<TransferJobs*>::iterator iter2;
-                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                                for (iter2 = jobsReuse.begin(); iter2 != jobsReuse.end(); ++iter2)
                                     {
                                         if(*iter2)
                                             delete *iter2;
                                     }
-                                jobs2.clear();
+                                jobsReuse.clear();
                             }
+                        sleep(1);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
-                        if (!jobs2.empty())
+                        if (!jobsReuse.empty())
                             {
                                 std::vector<TransferJobs*>::iterator iter2;
-                                for (iter2 = jobs2.begin(); iter2 != jobs2.end(); ++iter2)
+                                for (iter2 = jobsReuse.begin(); iter2 != jobsReuse.end(); ++iter2)
                                     {
                                         if(*iter2)
                                             delete *iter2;
                                     }
-                                jobs2.clear();
+                                jobsReuse.clear();
                             }
+                        sleep(1);
                     }
-                usleep(400000);
+                sleep(1);
             } /*end while*/
     }
 
