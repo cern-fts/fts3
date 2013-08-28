@@ -332,8 +332,15 @@ void MsgPrinter::error_msg(string msg)
 
 void MsgPrinter::gsoap_error_msg(string msg)
 {
+	// remove backspaces if any in the string
+	string::size_type  pos;
+	while((pos = msg.find(8)) != string::npos)
+	{
+		msg.erase(pos, 1);
+	}
 
-    string::size_type pos = msg.find("\"\nDetail: ", 0);
+
+    pos = msg.find("\"\nDetail: ", 0);
 
 //	regex re (".*\"(.+)\"\nDetail: (.+)\n");
 
