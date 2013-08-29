@@ -25,7 +25,10 @@ function pairState(pair)
 function mergeAttrs(a, b)
 {
 	for (var attr in b) {
-		a[attr] = b[attr];
+		if (typeof(b[attr]) == 'string')
+			a[attr] = b[attr];
+		else
+			a[attr] = '';
 	}
 	return a;
 }
