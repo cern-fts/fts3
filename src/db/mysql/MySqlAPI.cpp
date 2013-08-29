@@ -2164,7 +2164,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
             sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
                 " source_se=:source and dest_se=:dst and file_state='FINISHED' "
-                " and job_finished >= date_sub(utc_timestamp(), interval '15' minute)",
+                " and job_finished >= date_sub(utc_timestamp(), interval '5' minute)",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
             if (isNull2 == soci::i_null)
                 {
@@ -2215,14 +2215,14 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                "      file_state = 'FINISHED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) ",
+                "      file_state = 'FINISHED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(nFinishedAll);
 
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                "      file_state = 'FAILED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) ",
+                "      file_state = 'FAILED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(nFailedAll);
 
