@@ -2162,7 +2162,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             soci::indicator isNull1 = soci::i_ok;
             soci::indicator isNull2 = soci::i_ok;
 
-            sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
+            sql << " SELECT ROUND(SUM( filesize * throughput ) / SUM( filesize ),2) as Average FROM t_file "
                 " source_se=:source and dest_se=:dst and file_state='FINISHED' "
                 " and job_finished >= date_sub(utc_timestamp(), interval '5' minute)",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
@@ -2181,7 +2181,7 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 soci::use(destin_hostname), soci::into(nActiveDest);
 
 
-            sql << "SELECT throughput from t_file where source_se=:source and dest_se=:dst and "
+            sql << "SELECT ROUND(SUM( filesize * throughput ) / SUM( filesize ),2) as LastTr from t_file where source_se=:source and dest_se=:dst and "
                 "file_state='FINISHED' order by FILE_ID DESC LIMIT 1",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1);
             if (isNull1 == soci::i_null)

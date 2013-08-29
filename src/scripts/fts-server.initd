@@ -61,7 +61,7 @@ stop() {
     echo -n $"Stopping $prog: "
     # stop it here, often "killproc $prog"
     rm -f "$lockfile" && success || failure 
-    killproc -d 20 $prog
+    pkill -TERM $prog
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile
