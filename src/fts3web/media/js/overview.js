@@ -1,25 +1,33 @@
 
 function pairState(pair)
 {
+	var klasses;
+
 	// No active with submitted is bad, and so it is
 	// less than three active and more than three submitted
 	if ((!pair.active && pair.submitted) || (pair.active < 3 && pair.submitted >= 3))
-		return 'error';
+		klasses = 'bad-state';
 	// Very high rate of failures, that's pretty bad
-	if ((!pair.finished && pair.failed) || (pair.finished / pair.failed <= 0.8))
-		return 'error';
+	else if ((!pair.finished && pair.failed) || (pair.finished / pair.failed <= 0.8))
+		klasses = 'bad-state';
 	// Less than three actives is so-so
-	if (pair.active < 3)
-		return 'warning';
+	else if (pair.active < 3)
+		klasses = 'underused';
 	// More than three active, that's good enough
-	if (pair.active >= 3)
-		return 'success';
+	else if (pair.active >= 3)
+		klasses = 'good-state';
 	// High rate of success, that's good
-	if ((pair.finished && !pair.failed) || (pair.finished / pair.failed >= 0.9))
-		return 'success';
-	
+	else if ((pair.finished && !pair.failed) || (pair.finished / pair.failed >= 0.9))
+		klasses = 'good-state';
 	// Meh
-	return 'info';
+	else
+		klasses = '';
+	
+	// If any active, always give that
+	if (pair.active)
+		klasses += ' active';	
+	
+	return klasses;
 }
 
 function mergeAttrs(a, b)

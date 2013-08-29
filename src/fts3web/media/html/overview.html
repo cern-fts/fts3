@@ -1,10 +1,6 @@
 <h2>Overview</h2>
-<p>
-    Please, note that the terminal status shown here are only from the last 4 hours.
-</p>
-
 <h3>
-    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}}
+    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last 4 hours.
     <button class="btn btn-mini" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
@@ -16,19 +12,22 @@
     <thead>
         <tr>
             <th style="width: 25%">
-                <i class="icon-th-list"ng-click="filterBy({source_se: ''})"></i>
+                <i class="icon-th-list" ng-click="filterBy({source_se: ''})"></i>
                 Source
             </th>
             <th style="width: 25%">
-                <i class="icon-th-list"ng-click="filterBy({dest_se: ''})"></i>
+                <i class="icon-th-list" ng-click="filterBy({dest_se: ''})"></i>
                 Destination
             </th>
             <th style="width: 10%">
-                <i class="icon-th-list"ng-click="filterBy({vo: ''})"></i>
+                <i class="icon-th-list" ng-click="filterBy({vo: ''})"></i>
                 VO
             </th>
             <th style="width: 10%">Submitted</th>
-            <th style="width: 10%">Active</th>
+            <th style="width: 10%">
+                <i class="icon-order"></i>
+                Active
+            </th>
             <th style="width: 10%">Succeeded</th>
             <th style="width: 10%">Failed</th>
             <th style="width: 10%">Current throughput</th>
@@ -37,6 +36,7 @@
     <tbody>
         <tr ng-repeat="o in overview.items"
             ng-class-odd="'odd'"
+            class="overview"
             ng-class="pairState(o)">
 			<td>
                 <i class="icon-filter" ng-click="filterBy({source_se: o.source_se})"></i>
@@ -73,6 +73,19 @@
         </tr>
     </tbody>
 </table>
+
+<div>
+    <p>
+        <span class="label label-important">Bad shape</span>
+        There are submitted but no active, less than 3 active with more than 3 submitted, or a failure rate &gt;= 20%<br/>
+        <span class="label label-warning">Underused</span>
+        Less than three actives, but no submitted waiting.<br/>
+        <span class="label label-success">Good shape</span>
+        Success rate &gt;= 90%, or more than three actives with a failure rate &lt; 20%.<br/>
+        <span class="label">Nothing special</span>
+        No active, no submitted, success rate between 80% and 90%.
+    </ul>
+</div>
 
 <!-- Modals -->
 <div modal="filtersModal" close="filtersModal = false" options="opts">
