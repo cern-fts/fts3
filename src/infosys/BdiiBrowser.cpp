@@ -269,7 +269,7 @@ bool BdiiBrowser::isVoAllowed(string se, string vo)
     return true;
 }
 
-string BdiiBrowser::baseToStr(string& base)
+string BdiiBrowser::baseToStr(const string& base)
 {
 
     if (base == GLUE1) return "glue1";
@@ -278,7 +278,7 @@ string BdiiBrowser::baseToStr(string& base)
     return string();
 }
 
-bool BdiiBrowser::checkIfInUse(string& base)
+bool BdiiBrowser::checkIfInUse(const string& base)
 {
 
     string base_str = baseToStr(base);

@@ -24,6 +24,8 @@
 
 #include "SiteNameRetriever.h"
 
+#include "common/logger.h"
+
 namespace fts3
 {
 namespace infosys
@@ -97,7 +99,14 @@ string SiteNameRetriever::getFromBdii(string se)
              FIND_SE_SITE_ATTR_GLUE1
          );
 
-    if (rs.empty()) return string();
+    if (rs.empty())
+    	{
+    		if (bdii.checkIfInUse(BdiiBrowser::GLUE2) || bdii.checkIfInUse(BdiiBrowser::GLUE1))
+    			{
+    				FTS3_COMMON_LOGGER_NEWLOG (ERR) << "SE: " << se << " has not been found in the BDII" << commit;
+    			}
+    		return string();
+    	}
 
     list<string> values = rs.front()[ATTR_GLUE1_LINK];
     string site = BdiiBrowser::parseForeingKey(values, ATTR_GLUE1_SITE);

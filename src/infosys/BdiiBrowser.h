@@ -124,6 +124,15 @@ public:
      */
     static string parseForeingKey(list<string> values, const char *attr);
 
+    /**
+     * Checks in the fts3config if the given base (glue1 or glue2) is currently in use
+     *
+     * @param base - the base (glue1 or glue2) that will be checked
+     *
+     * @return true if the base is in use, false otherwise
+     */
+    bool checkIfInUse(const string& base);
+
 private:
 
     /**
@@ -156,22 +165,13 @@ private:
     bool isValid();
 
     /**
-     * Checks in the fts3config if the given base (glue1 or glue2) is currently in use
-     *
-     * @param base - the base (glue1 or glue2) that will be checked
-     *
-     * @return true if the base is in use, false otherwise
-     */
-    bool checkIfInUse(string& base);
-
-    /**
      * Converts the base string from BDII to ordinary string
      *
      * @param base - BDII base
      *
      * @return respective string value
      */
-    string baseToStr(string& base);
+    string baseToStr(const string& base);
 
     /**
      * Parses BDII reply
