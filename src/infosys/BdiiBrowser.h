@@ -288,7 +288,6 @@ private:
 template<typename R>
 list< map<string, R> > BdiiBrowser::browse(string base, string query, const char **attr)
 {
-
     signal(SIGPIPE, SIG_IGN);
     // check in the fts3config file if the 'base' (glue1 or glue2) is in use, if no return an empty result set
     if (!checkIfInUse(base)) return list< map<string, R> >();
@@ -296,7 +295,7 @@ list< map<string, R> > BdiiBrowser::browse(string base, string query, const char
     // check in the fts3config if the host name for BDII was specified, if no return an empty result set
     if (!theServerConfig().get<bool>("Infosys")) return list< map<string, R> >();
 
-    // check if the connection is valied
+    // check if the connection is valid
     if (!isValid())
         {
 

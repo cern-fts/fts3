@@ -79,7 +79,7 @@ string SiteNameRetriever::getFromBdii(string se)
             BdiiBrowser::GLUE2,
             FIND_SE_SITE_GLUE2(se),
             FIND_SE_SITE_ATTR_GLUE2
-                                            );
+		);
 
     if (!rs.empty())
         {
