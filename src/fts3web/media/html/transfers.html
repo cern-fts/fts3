@@ -10,11 +10,13 @@
 <table class="table">
     <thead>
         <tr>
-            <th style="width: 5%">FILE ID</th>
-            <th style="width: 10%">FILE STATE</th>
-            <th style="width: 15%">JOB ID</th>
-            <th style="width: 30%">SOURCE</th>
-            <th style="width: 30%">DESTINATION</th>
+            <th style="width: 5%">File Id</th>
+            <th style="width: 10%">File state</th>
+            <th style="width: 15%">Job Id</th>
+            <th style="width: 23%">Source</th>
+            <th style="width: 23%">Destination</th>
+            <th style="width: 12%">Submision time</th>
+            <th style="width: 12%">Start time</th>
         </tr>
     </thead>
     <tbody>
@@ -24,8 +26,10 @@
             <td>
                 <a href="#/job/{{t.job_id}}">{{t.job_id}}</a>
             </td>
-            <td class="hscroll">{{t.source_surl}}</td>
-            <td class="hscroll">{{t.dest_surl}}</td>
+            <td class="hscroll">{{t.source_se}}</td>
+            <td class="hscroll">{{t.dest_se}}</td>
+            <td>{{t.job__submit_time}}</td>
+            <td>{{t.start_time}}</td>
         </tr>
     </tbody>
 </table>
