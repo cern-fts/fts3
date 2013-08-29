@@ -2479,7 +2479,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
                                        " SELECT f.job_id, f.file_id, f.start_time, f.pid, f.internal_file_params, "
                                        " f.transferHost, j.reuse_job "
                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                       " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL and job_finished is NULL "
+                                       " WHERE f.file_state='ACTIVE' AND f.pid IS NOT NULL and f.job_finished is NULL "
                                        " and f.internal_file_params is not null and f.transferHost is not null",
                                        soci::into(jobId), soci::into(fileId), soci::into(startTimeSt),
                                        soci::into(pid), soci::into(params), soci::into(tHost), soci::into(reuse, isNull)
