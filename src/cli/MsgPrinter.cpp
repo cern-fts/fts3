@@ -332,12 +332,12 @@ void MsgPrinter::error_msg(string msg)
 
 void MsgPrinter::gsoap_error_msg(string msg)
 {
-	// remove backspaces if any in the string
-	string::size_type  pos;
-	while((pos = msg.find(8)) != string::npos)
-	{
-		msg.erase(pos, 1);
-	}
+    // remove backspaces if any in the string
+    string::size_type  pos;
+    while((pos = msg.find(8)) != string::npos)
+        {
+            msg.erase(pos, 1);
+        }
 
 
     pos = msg.find("\"\nDetail: ", 0);
@@ -374,8 +374,8 @@ void MsgPrinter::gsoap_error_msg(string msg)
 
 void MsgPrinter::job_status(JobStatus js)
 {
-	// change the precision from msec to sec
-	js.submitTime /= 1000;
+    // change the precision from msec to sec
+    js.submitTime /= 1000;
 
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.submitTime));
@@ -438,8 +438,8 @@ void MsgPrinter::job_summary(JobSummary js)
             return;
         }
 
-	// change the precision from msec to sec
-	js.status.submitTime /= 1000;
+    // change the precision from msec to sec
+    js.status.submitTime /= 1000;
 
     char time_buff[20];
     strftime(time_buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&js.status.submitTime));

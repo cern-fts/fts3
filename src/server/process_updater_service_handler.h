@@ -128,7 +128,7 @@ protected:
 
                         if(fs::is_empty(fs::path(STALLED_DIR)))
                             {
-                                sleep(30);
+                                sleep(5);
                                 continue;
                             }
 
@@ -151,7 +151,7 @@ protected:
 
                         if(messages.empty())
                             {
-                                sleep(30);
+                                sleep(5);
                                 continue;
                             }
                         else
@@ -199,28 +199,28 @@ protected:
 
                                 messages.clear();
                             }
-                        sleep(30);
+                        sleep(5);
                     }
                 catch (const fs::filesystem_error& ex)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << ex.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(30);
+                        sleep(5);
                     }
                 catch (Err& e)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << e.what() << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(30);
+                        sleep(5);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
                         for (iter_restore = messages.begin(); iter_restore != messages.end(); ++iter_restore)
                             queueMsgRecovery.push_back(*iter_restore);
-                        sleep(30);
+                        sleep(5);
                     }
             }
     }

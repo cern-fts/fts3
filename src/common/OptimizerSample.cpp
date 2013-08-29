@@ -92,40 +92,21 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
         {
 
             if ((*iter).source.compare(sourceSe) == 0 && (*iter).dest.compare(destSe) == 0)
-                {
+                {		   		   
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished
                         {
-                            if(trSuccessRateForPair >= 99 && throughput > (*iter).throughput)
+                            if((*iter).numOfActivePerPair <= currentActive && trSuccessRateForPair >= 99 && throughput != 0 && throughput > (*iter).throughput && avgThr != 0 && avgThr > (*iter).avgThr)
                                 {
-                                    (*iter).numOfActivePerPair = ((*iter).numOfActivePerPair + currentActive + 1) - currentActive;
-
+                                        (*iter).numOfActivePerPair = ((*iter).numOfActivePerPair + currentActive + 1) - currentActive;                                   
                                 }
-                            else if( trSuccessRateForPair >= 99 && throughput == (*iter).throughput)
+                            else if((*iter).numOfActivePerPair <= currentActive && trSuccessRateForPair >= 99 && throughput != 0 && throughput <= (*iter).throughput && avgThr != 0 && avgThr <= (*iter).avgThr)
                                 {
-                                    if(throughput > avgThr )
-                                        {
-                                            (*iter).numOfActivePerPair += 0;
-                                        }
-                                    else
-                                        {
-                                            (*iter).numOfActivePerPair -= 1;
-                                        }
+                                        (*iter).numOfActivePerPair += 0;                                   
                                 }
-                            else if( trSuccessRateForPair >= 99 && throughput < (*iter).throughput)
-                                {
-                                    if(throughput > avgThr)
-                                        {
-                                            (*iter).numOfActivePerPair += 0;
-                                        }
-                                    else
-                                        {
-                                            (*iter).numOfActivePerPair -= 1;
-                                        }
-                                }
-                            else if( trSuccessRateForPair < 99)
-                                {
-                                    (*iter).numOfActivePerPair -= 2;
-                                }
+			    else
+			        {
+					(*iter).numOfActivePerPair = currentActive+1;
+			        }
 
                             (*iter).numFinished = numFinished;
                             (*iter).numFailed = numFailed;
@@ -149,12 +130,15 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                         }
                     else
                         {
-                            if((*iter).numOfActivePerPair > currentActive)
-                                (*iter).numOfActivePerPair += 0;
-                            else
-                                (*iter).numOfActivePerPair = currentActive;
-                        }
+                            if((*iter).numOfActivePerPair != currentActive)
+                                (*iter).numOfActivePerPair += 0;                            
 
+                            (*iter).numFinished = numFinished;
+                            (*iter).numFailed = numFailed;
+                            (*iter).successRate = trSuccessRateForPair;
+                            (*iter).numberOfFinishedAll = numberOfFinishedAll;
+                            (*iter).numberOfFailedAll = numberOfFailedAll;                            
+                        }
 
                     if((*iter).numOfActivePerPair <=0 )
                         activeInStore = 0;

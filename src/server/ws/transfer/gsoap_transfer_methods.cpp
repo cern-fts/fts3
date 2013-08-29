@@ -879,24 +879,24 @@ int fts3::impltns__cancel(soap *soap, impltns__ArrayOf_USCOREsoapenc_USCOREstrin
         }
     catch(Err& ex)
         {
-    		// the string that has to be erased
-    		const string erase = "SOAP fault: SOAP-ENV:Server - ";
-    		// Backspace character
-    		const char bs = 8;
-    		// glite error message that is used in case that transfer could not be canceled because it is in terminal state
-    		string glite_err_msg = "Cancel failed (nothing was done).";
-    		// add the backspaces at the front of the message in orger to erased unwanted text
-    		for (int i = 0; i < erase.size(); i++)
-    			{
-    				glite_err_msg = bs + glite_err_msg;
-    			}
-    		// check if we want to replace the original message with the glite one
-    		string err_msg (ex.what());
-    		if (err_msg.find("does not exist") != string::npos)
-    			{
-    				err_msg = glite_err_msg;
-    			}
-    		// handle the exception
+            // the string that has to be erased
+            const string erase = "SOAP fault: SOAP-ENV:Server - ";
+            // Backspace character
+            const char bs = 8;
+            // glite error message that is used in case that transfer could not be canceled because it is in terminal state
+            string glite_err_msg = "Cancel failed (nothing was done).";
+            // add the backspaces at the front of the message in orger to erased unwanted text
+            for (int i = 0; i < erase.size(); i++)
+                {
+                    glite_err_msg = bs + glite_err_msg;
+                }
+            // check if we want to replace the original message with the glite one
+            string err_msg (ex.what());
+            if (err_msg.find("does not exist") != string::npos)
+                {
+                    err_msg = glite_err_msg;
+                }
+            // handle the exception
             FTS3_COMMON_LOGGER_NEWLOG (ERR) << "An exception has been caught: " << ex.what() << commit;
             soap_receiver_fault(soap, err_msg.c_str(), 0);
 
