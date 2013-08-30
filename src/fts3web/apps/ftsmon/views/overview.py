@@ -30,7 +30,7 @@ from urllib import urlencode
 def overview(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
-    notBefore  = datetime.utcnow() - timedelta(hours = 4)
+    notBefore  = datetime.utcnow() - timedelta(hours = 1)
     
     pairs = File.objects.filter(file_state__in = ['SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'CANCELED', 'FAILED'])\
                 .filter(Q(finish_time__isnull = True) | Q(finish_time__gte = notBefore))
