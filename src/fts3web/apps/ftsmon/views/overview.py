@@ -32,7 +32,7 @@ def overview(httpRequest):
     filters    = setupFilters(filterForm)
     notBefore  = datetime.utcnow() - timedelta(hours = 1)
     
-    pairs = File.objects.filter(file_state__in = ['SUBMITTED', 'READY', 'ACTIVE', 'FINISHED', 'CANCELED', 'FAILED'])\
+    pairs = File.objects\
                 .filter(Q(finish_time__isnull = True) | Q(finish_time__gte = notBefore))
     
     if filters['vo']:
