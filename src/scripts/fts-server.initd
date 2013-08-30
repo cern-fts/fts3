@@ -34,11 +34,9 @@ export X509_USER_KEY=/etc/grid-security/fts3hostkey.pem
 
 start() {
     echo -n $"Starting $prog: "
-    sleep 10
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure   
-    # start 30 threads in the pool
     daemon fts_server 
     retval=$?
     echo
