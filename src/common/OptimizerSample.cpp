@@ -93,7 +93,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                 {
                     if( ((*iter).numberOfFinishedAll != numberOfFinishedAll) || ((*iter).numberOfFailedAll != numberOfFailedAll))  //one more tr finished
                         {
-                            if(trSuccessRateForPair >= 99 && throughput != 0 && avgThr !=0 && (throughput >= avgThr && throughput >= (*iter).throughput))
+                            if(trSuccessRateForPair >= 99 && throughput != 0 && avgThr !=0 && (throughput >= avgThr || throughput >= (*iter).throughput))
                                 {
                                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                                     (*iter).numberOfFailedAll = numberOfFailedAll;
