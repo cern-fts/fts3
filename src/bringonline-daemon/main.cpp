@@ -135,7 +135,7 @@ void _handle_sigint(int)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     stopThreads = true;
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopping" << commit;
-    sleep(3);
+    sleep(10);
     fts3_teardown_db_backend();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "BRINGONLINE daemon stopped" << commit;
     exit(0);
