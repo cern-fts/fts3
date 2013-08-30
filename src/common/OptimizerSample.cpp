@@ -98,18 +98,31 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                                     (*iter).numberOfFailedAll = numberOfFailedAll;
                                     (*iter).throughput = throughput;
+				    (*iter).numOfActivePerPair += 1;
                                     return  true;
                                 }
+			    else
+			        {
+                                    (*iter).numberOfFinishedAll = numberOfFinishedAll;
+                                    (*iter).numberOfFailedAll = numberOfFailedAll;
+                                    (*iter).throughput = throughput;
+				    (*iter).numOfActivePerPair -= 1;				
+				}
                         }
 		    
                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                     (*iter).numberOfFailedAll = numberOfFailedAll;
                     (*iter).throughput = throughput;
+		    (*iter).numOfActivePerPair = currentActive;
 
                     if (sourceActive == 0 && destActive == 0)
                         {
                             return true;
                         }
+                    else if ((*iter).numOfActivePerPair < currentActive)
+                        {
+                            return true;
+                        }			
                     else if (currentActive <= (trSuccessRateForPair >= 99? highDefault: lowDefault ) )
                         {
                             return true;
