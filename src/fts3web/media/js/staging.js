@@ -21,7 +21,7 @@ function StagingCtrl($location, $scope, staging, Staging)
 		var filter = $location.search();
 		filter.page = $scope.staging.page;
     	$scope.staging = Staging.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});

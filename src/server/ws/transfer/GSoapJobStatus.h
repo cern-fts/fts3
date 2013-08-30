@@ -57,7 +57,8 @@ public:
         me->voName = soap_new_std__string(ctx, -1);
         *me->voName = status.voName;
 
-        me->submitTime = status.submitTime;
+        // change sec precision to msec precision so it is compatible with old glite cli
+        me->submitTime = status.submitTime * 1000;
         me->numFiles = status.numFiles;
         me->priority = status.priority;
     }

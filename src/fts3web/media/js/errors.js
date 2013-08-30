@@ -20,7 +20,7 @@ function ErrorsCtrl($location, $scope, errors, Errors)
 		var filter = $location.search();
 		filter.page = $scope.errors.page;
     	$scope.errors = Errors.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});

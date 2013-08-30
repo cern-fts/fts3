@@ -10,9 +10,9 @@
 	    </title>
 		<link rel="shortcut icon" href="{% getSetting 'SITE_LOGO_SMALL' %}" />
 		
-		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular.js"></script>
-		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular-resource.js"></script>
-		<script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.4.0.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular.js"></script>
+		<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.5/angular-resource.js"></script>
+		<script src="{{STATIC_URL}}js/ui-bootstrap-tpls-0.5.0.min.js"></script>
 		
 		<script>var STATIC_ROOT="{{STATIC_URL}}";</script>
 		<script>var LOG_BASE_URL="{% getSetting 'LOG_BASE_URL' %}";</script>
@@ -21,7 +21,7 @@
 		<script src="{{STATIC_URL}}js/resources.js"></script>
 		<script src="{{STATIC_URL}}js/jobs.js"></script>
 		<script src="{{STATIC_URL}}js/transfers.js"></script>
-		<script src="{{STATIC_URL}}js/queue.js"></script>
+		<script src="{{STATIC_URL}}js/overview.js"></script>
 		<script src="{{STATIC_URL}}js/staging.js"></script>
 		<script src="{{STATIC_URL}}js/optimizer.js"></script>
 		<script src="{{STATIC_URL}}js/errors.js"></script>
@@ -47,9 +47,9 @@
 						  <img style="height: 24px" src="{% getSetting 'SITE_LOGO' %}">
 						</span>
 						<ul class="nav">
-							<li><a href="#">Jobs</a></li>
+						    <li><a href="#">Overview</a></li>
+							<li><a href="#jobs">Jobs</a></li>
 					        <li><a href="#transfers">Transfers</a></li>
-							<li><a href="#queue">Queue</a></li>
 							<li><a href="#staging">Staging</a></li>
 							<li><a href="#optimizer">Optimizer</a></li>
 							<li><a href="#errors">Error reasons</a></li>

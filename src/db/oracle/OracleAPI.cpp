@@ -2046,7 +2046,7 @@ void OracleAPI::updateFileTransferProgress(std::string job_id, int file_id, doub
 {
     const std::string queryTag = "updateFileTransferProgress";
     const std::string query    = "UPDATE t_file SET throughput = :1 "
-                                 "WHERE job_id = :2 AND file_id = :3";
+                                 "WHERE job_id = :2 AND file_id = :3  and (throughput is NULL or throughput=0)";
 
     SafeStatement st;
     SafeConnection pooledConnection;

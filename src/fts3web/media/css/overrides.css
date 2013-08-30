@@ -12,7 +12,7 @@
 }
 
 .odd {
-	background: #DDD;
+	background: #E5E5E5;
 }
 
 .navbar .nav li.dropdown.open>.dropdown-toggle, .navbar .nav li.dropdown.active>.dropdown-toggle, .navbar .nav li.dropdown.open.active>.dropdown-toggle {

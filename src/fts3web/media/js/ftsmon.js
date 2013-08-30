@@ -1,9 +1,12 @@
 angular.module('ftsmon', ['ftsmon.resources', 'ui.bootstrap']).
 config(function($routeProvider) {
 	$routeProvider.
-		when('/',                     {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
-				                       controller:  JobListCtrl,
-			                           resolve:     JobListCtrl.resolve}).
+		when('/',                     {templateUrl: STATIC_ROOT + 'html/overview.html',
+				                       controller:  OverviewCtrl,
+			                           resolve:     OverviewCtrl.resolve}).
+        when('/jobs',                 {templateUrl: STATIC_ROOT + 'html/jobs/index.html',
+					                       controller:  JobListCtrl,
+				                           resolve:     JobListCtrl.resolve}).
 		when('/job/:jobId',           {templateUrl: STATIC_ROOT + 'html/jobs/view.html',
 			                           controller:  JobViewCtrl,
 			                           resolve:     JobViewCtrl.resolve}).
@@ -11,9 +14,6 @@ config(function($routeProvider) {
 				                       controller:  ArchiveCtrl,
 				                       resolve:     ArchiveCtrl.resolve}).
 
-	    when('/queue/',               {templateUrl: STATIC_ROOT + 'html/queue/queue.html',
-	    	                           controller:  JobQueueCtrl,
-	    	                           resolve:     JobQueueCtrl.resolve}).
         when('/transfers',            {templateUrl: STATIC_ROOT + 'html/transfers.html',
 					                   controller:  TransfersCtrl,
 					                   resolve:     TransfersCtrl.resolve}).
@@ -100,12 +100,30 @@ config(function($routeProvider) {
 		}
 	}
 })
+.directive('optionalInt', function() {
+	return {
+		restrict: 'A',
+		scope: 'isolate',
+		replace: false,
+		template: '{{ value }} {{ suffix }}',
+		link: function(scope, element, attr) {
+			scope.value = scope.$eval(attr.optionalInt);
+			if (scope.value == null || scope.value == undefined)
+				scope.value = '-';
+			else
+				scope.suffix = attr.suffix;
+		}
+	}
+})
 .run(function($rootScope, $location) {
 	$rootScope.searchJob = function() {
 		$location.path('/job/' + $rootScope.jobId);
 	}
 })
 ;
+
+/** Refresh interval in ms */
+var REFRESH_INTERVAL = 60000;
 
 /** Pie plotting */
 function plotArrayOfObjects(scope, list, labelAttr, valueAttr)

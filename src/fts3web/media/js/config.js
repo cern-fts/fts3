@@ -18,7 +18,7 @@ function ConfigCtrl($location, $scope, config, Configuration)
 		var filter = $location.search();
 		filter.page = $scope.config.page;
     	$scope.config = Configuration.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});

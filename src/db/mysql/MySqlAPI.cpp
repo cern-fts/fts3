@@ -329,7 +329,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "       f.source_se, f.dest_se, f.selection_strategy  "
                                                          "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                          "WHERE f.file_state = 'SUBMITTED' AND  f.source_se = :source AND f.dest_se = :dest AND"
-                                                         "    j.vo_name = :voName AND j.job_finished is null AND "                                                        
+                                                         "    j.vo_name = :voName AND j.job_finished is null AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
@@ -1202,16 +1202,24 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
             if (filesize > 0 && duration > 0 && transfer_status == "FINISHED")
                 {
                     if(throughputIn != 0.0)
-                        throughput = convertKbToMb(throughputIn);
+                        {
+                            throughput = convertKbToMb(throughputIn);
+                        }
                     else
-                        throughput = convertBtoM(filesize, duration);
+                        {
+                            throughput = convertBtoM(filesize, duration);
+                        }
                 }
             else if (filesize > 0 && duration <= 0 && transfer_status == "FINISHED")
                 {
                     if(throughputIn != 0.0)
-                        throughput = convertKbToMb(throughputIn);
+                        {
+                            throughput = convertKbToMb(throughputIn);
+                        }
                     else
-                        throughput = convertBtoM(filesize, 1);
+                        {
+                            throughput = convertBtoM(filesize, 1);
+                        }
                 }
             else
                 {
@@ -1400,7 +1408,7 @@ void MySqlAPI::updateFileTransferProgress(std::string /*job_id*/, int file_id, d
             throughput = convertKbToMb(throughput);
             sql.begin();
             sql << "UPDATE t_file SET throughput = :throughput "
-                "WHERE file_id = :fileId",
+                "WHERE file_id = :fileId and (throughput is NULL or throughput=0)",
                 soci::use(throughput), soci::use(file_id);
             sql.commit();
         }
@@ -2158,15 +2166,14 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             soci::indicator isNull1 = soci::i_ok;
             soci::indicator isNull2 = soci::i_ok;
 
-            sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
+            sql << " SELECT ROUND(SUM( filesize * throughput ) / SUM( filesize ),2) as Average FROM t_file where "
                 " source_se=:source and dest_se=:dst and file_state='FINISHED' "
-                " and job_finished >= date_sub(utc_timestamp(), interval 1 minute)",
+                " and job_finished >= date_sub(utc_timestamp(), interval '15' minute) ",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
             if (isNull2 == soci::i_null)
                 {
                     avgThr = 0.0;
                 }
-
 
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE') and job_finished is null",
@@ -2177,19 +2184,18 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 soci::use(destin_hostname), soci::into(nActiveDest);
 
 
-            sql << "SELECT throughput from t_file where source_se=:source and dest_se=:dst and "
-                "file_state='FINISHED' order by FILE_ID DESC LIMIT 1",
+            sql << "SELECT ROUND((filesize * throughput)/filesize,2) from t_file where source_se=:source and dest_se=:dst and "
+                " file_state='FINISHED' and job_finished >= date_sub(utc_timestamp(), interval '15' minute) order by FILE_ID DESC LIMIT 1 ",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1);
             if (isNull1 == soci::i_null)
                 {
                     throughput = 0.0;
                 }
 
-
             soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                             "WHERE "
                                             "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                            "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) AND "
+                                            "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '15' minute)) AND "
                                             "      file_state IN ('FAILED','FINISHED') ",
                                             soci::use(source_hostname), soci::use(destin_hostname));
 
@@ -2211,14 +2217,14 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                "      file_state = 'FINISHED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
+                "      file_state = 'FINISHED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '15' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(nFinishedAll);
 
             sql << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                "      file_state = 'FAILED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
+                "      file_state = 'FAILED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '15' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
                 soci::into(nFailedAll);
 

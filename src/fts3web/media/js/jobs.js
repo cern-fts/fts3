@@ -23,7 +23,7 @@ function JobListCtrl($location, $scope, jobs, Job, Unique)
 		var filter = $location.search();
 		filter.page = $scope.jobs.page;
     	$scope.jobs = Job.query(filter);
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});
@@ -140,7 +140,7 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
         	}
     		$scope.files = updatedFiles;
     	});
-	}, 20000);
+	}, REFRESH_INTERVAL);
 	$scope.$on('$destroy', function() {
 		clearInterval($scope.autoRefresh);
 	});

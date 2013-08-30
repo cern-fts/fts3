@@ -27,6 +27,9 @@
 
 extern bool stopThreads;
 
+
+
+
 namespace fts3
 {
 

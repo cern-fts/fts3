@@ -3,15 +3,14 @@
 <table class="table">
     <thead>
         <tr>
-            <th style="width: 25%">
+            <th style="width: 35%">
                 <i class="icon-th-list"ng-click="filterSource('')"></i>
                 Source
             </th>
-            <th style="width: 25%">
+            <th style="width: 35%">
                 <i class="icon-th-list"ng-click="filterDestination('')"></i>
                 Destination
             </th>
-            <th style="width: 20%">Transfers active</th>
             <th style="width: 10%">Success rate</th>
             <th style="width: 10%">Avg. Throughput</th>
             <th style="width: 10%">Avg. Duration</th>
@@ -26,9 +25,6 @@
             <td>
                 <i class="icon-filter" ng-click="filterDestination(p.destination)"></i>
                 {{p.destination}}
-            </td>
-            <td>
-                <span ng-repeat="(l, v) in p.active">{{v}} {{l}} </span>
             </td>
             <td ng-switch="p.successRate">
                 <span ng-switch-when="null">-</span>
@@ -47,9 +43,6 @@
         </tr>
         <tr class="agreggate">
             <td colspan="2">Aggregate</td>
-            <td>
-                <span ng-repeat="(l, v) in pairs.aggregate.active">{{v}} {{l}} </span>
-             </td>
             <td>{{pairs.aggregate.successRate|number:2}}%</td>
             <td>{{pairs.aggregate.avgThroughput|number:2}}</td>
             <td>{{pairs.aggregate.avgDuration|number:2}}</td>
