@@ -1140,7 +1140,7 @@ int fts3::impltns__prioritySet(soap* ctx, string job_id, int priority, impltns__
             string cmd = "fts-set-priority " + job_id + " " + lexical_cast<string>(priority);
 
             DBSingleton::instance().getDBObjectInstance()->setPriority(job_id, priority);
-            DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "set_priority");
+            //DBSingleton::instance().getDBObjectInstance()->auditConfiguration(dn, cmd, "set_priority");
             // log it
             FTS3_COMMON_LOGGER_NEWLOG (INFO) << "User: " << dn << " had set priority of transfer job: " << job_id << " to " << priority << commit;
 
