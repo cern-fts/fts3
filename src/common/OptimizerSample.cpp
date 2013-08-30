@@ -101,7 +101,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                     return  true;
                                 }
                         }
-
+		    
                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                     (*iter).numberOfFailedAll = numberOfFailedAll;
                     (*iter).throughput = throughput;
