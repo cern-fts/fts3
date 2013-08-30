@@ -81,7 +81,7 @@ string SiteNameRetriever::getFromBdii(string se)
             BdiiBrowser::GLUE2,
             FIND_SE_SITE_GLUE2(se),
             FIND_SE_SITE_ATTR_GLUE2
-		);
+                                            );
 
     if (!rs.empty())
         {
@@ -100,13 +100,13 @@ string SiteNameRetriever::getFromBdii(string se)
          );
 
     if (rs.empty())
-    	{
-    		if (bdii.checkIfInUse(BdiiBrowser::GLUE2) || bdii.checkIfInUse(BdiiBrowser::GLUE1))
-    			{
-    				FTS3_COMMON_LOGGER_NEWLOG (ERR) << "SE: " << se << " has not been found in the BDII" << commit;
-    			}
-    		return string();
-    	}
+        {
+            if (bdii.checkIfInUse(BdiiBrowser::GLUE2) || bdii.checkIfInUse(BdiiBrowser::GLUE1))
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << "SE: " << se << " has not been found in the BDII" << commit;
+                }
+            return string();
+        }
 
     list<string> values = rs.front()[ATTR_GLUE1_LINK];
     string site = BdiiBrowser::parseForeingKey(values, ATTR_GLUE1_SITE);
