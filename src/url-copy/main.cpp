@@ -303,7 +303,7 @@ void taskStatusUpdater(int time)
 
 void log_stack(int sig)
 {
-    if(sig == SIGSEGV || sig == SIGBUS)
+    if(sig == SIGSEGV || sig == SIGBUS || sig == SIGABRT)
         {
             const int stack_size = 25;
             void * array[stack_size]= {0};
@@ -342,7 +342,7 @@ void signalHandler(int signum)
             errorMessage += stackTrace;
             abnormalTermination("FAILED", errorMessage, "Error");
         }
-    else if (signum == 2)
+    else if (signum == 2 || signum == 15)
         {
             if (propagated == false)
                 {
