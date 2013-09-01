@@ -3066,7 +3066,7 @@ void OracleAPI::fetchOptimizationConfig2(OptimizerSample* ops, const std::string
                                   " t_file.file_state='FAILED' "
                                   " and t_file.reason like '%operation timeout%' and t_file.source_se=:1 "
                                   " and t_file.dest_se=:2  "
-                                  " and (t_file.finish_time > (CURRENT_TIMESTAMP - interval '30' minute)) "
+                                  " and (t_file.finish_time > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute)) "
                                   " order by  SYS_EXTRACT_UTC(t_file.finish_time) desc";
 
 
@@ -3250,7 +3250,7 @@ void OracleAPI::recordOptimizerUpdate(int active, double filesize, double throug
     std::string query = "INSERT INTO t_optimizer_evolution "
                         " (datetime, source_se, dest_se, nostreams, timeout, active, throughput, buffer, filesize) "
                         " VALUES "
-                        " (CURRENT_TIMESTAMP, :1, :2, :3, :4, :5, :6, :7, :8)";
+                        " (SYS_EXTRACT_UTC(SYSTIMESTAMP), :1, :2, :3, :4, :5, :6, :7, :8)";
 
     SafeConnection pooledConnection;
     SafeStatement   s;
@@ -3641,24 +3641,24 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     std::string query_stmt2 = " select count(*) from  t_file where t_file.file_state in ('READY','ACTIVE') and t_file.dest_se=:1";
 
     std::string query_stmt3 = " select file_state from t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
-                              " and file_state in ('FAILED','FINISHED') and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute)) order by "
+                              " and file_state in ('FAILED','FINISHED') and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute)) order by "
                               " SYS_EXTRACT_UTC(t_file.FINISH_TIME) desc ";
 
     std::string query_stmt4 = " select count(*) from  t_file where  t_file.source_se=:1 and t_file.dest_se=:2 "
                               " and file_state in ('READY','ACTIVE') ";
 
     std::string query_stmt5 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
-                              " and file_state = 'FINISHED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
+                              " and file_state = 'FINISHED' and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute))";
 
     std::string query_stmt6 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
-                              " and file_state = 'FAILED' and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
+                              " and file_state = 'FAILED' and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute))";
 
     std::string query_stmt7 = " select throughput from (select throughput from  t_file where source_se=:1 and dest_se=:2 and throughput is not NULL "
                               " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
 
     std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
                               " and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
-                              " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
+                              " and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute))";
 
 
     SafeStatement s1;
@@ -4128,7 +4128,7 @@ void OracleAPI::initVariablesForGetCredits(SafeConnection& pooledConnection, Saf
         "WHERE "
         "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
         "      file_state IN ('FAILED','FINISHED') AND "
-        "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
+        "      (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '1' hour))"
         ;
 
     query[4] =
@@ -4155,7 +4155,7 @@ void OracleAPI::initVariablesForGetCredits(SafeConnection& pooledConnection, Saf
 
     query[7] = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se = :1 and dest_se = :2 "
                " and file_state = 'FINISHED' and throughput is not NULL and throughput != 0 "
-               " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '5' minute))";
+               " and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute))";
 
     s[0] = conn->createStatement(query[0], tag[0], pooledConnection);
     s[1] = conn->createStatement(query[1], tag[1], pooledConnection);
@@ -7958,7 +7958,7 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
     std::vector<std::string>::const_iterator iter;
     SafeConnection pooledConnection;
 
-    query3 << " select job_id from t_job where (SUBMIT_TIME < (CURRENT_TIMESTAMP - interval '";
+    query3 << " select job_id from t_job where (SUBMIT_TIME < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '";
     query3 << maxTime;
     query3 << "' hour(5))) and job_state in ('SUBMITTED','READY')  ";
 
@@ -8982,7 +8982,7 @@ double OracleAPI::getSuccessRate(std::string source, std::string destination)
         "WHERE "
         "      t_file.source_se = :1 AND t_file.dest_se = :2 AND "
         "      file_state IN ('FAILED','FINISHED') AND "
-        "      (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
+        "      (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '1' hour))"
         ;
 
     SafeStatement s;
@@ -9052,7 +9052,7 @@ double OracleAPI::getAvgThroughput(std::string source, std::string destination)
     std::string query =
         " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se = :1 and dest_se = :2 "
         " and file_state = 'FINISHED' and throughput is not NULL and throughput != 0 "
-        " and (t_file.FINISH_TIME > (CURRENT_TIMESTAMP - interval '1' hour))"
+        " and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '1' hour))"
         ;
 
 
@@ -11435,9 +11435,9 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             if(msg.checkSanityState)
                 {
                     SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set checkSanityState=1, t_checkSanityState = CURRENT_TIMESTAMP "
+                                             "update t_server_sanity set checkSanityState=1, t_checkSanityState = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
                                              "where checkSanityState=0"
-                                             " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) ",
+                                             " AND (t_checkSanityState < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '30' minute)) ",
                                              "assignSanityRuns/checkSanityState", pooled);
                     rows = stmt->executeUpdate();
                     msg.checkSanityState = (rows > 0? true: false);
@@ -11447,9 +11447,9 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.setToFailOldQueuedJobs)
                 {
                     SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = CURRENT_TIMESTAMP "
+                                             "update t_server_sanity set setToFailOldQueuedJobs=1, t_setToFailOldQueuedJobs = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
                                              " where setToFailOldQueuedJobs=0"
-                                             " AND (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
+                                             " AND (t_setToFailOldQueuedJobs < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '15' minute)) ",
                                              "assignSanityRuns/setToFailOldQueuedJobs",
                                              pooled);
                     rows = stmt->executeUpdate();
@@ -11460,9 +11460,9 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.forceFailTransfers)
                 {
                     SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = CURRENT_TIMESTAMP "
+                                             "update t_server_sanity set forceFailTransfers=1, t_forceFailTransfers = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
                                              " where forceFailTransfers=0"
-                                             " AND (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '15' minute)) ",
+                                             " AND (t_forceFailTransfers < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '15' minute)) ",
                                              "assignSanityRuns/forceFailTransfers",
                                              pooled);
                     rows = stmt->executeUpdate();
@@ -11473,9 +11473,9 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.revertToSubmitted)
                 {
                     SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = CURRENT_TIMESTAMP "
+                                             "update t_server_sanity set revertToSubmitted=1, t_revertToSubmitted = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
                                              " where revertToSubmitted=0"
-                                             " AND (t_revertToSubmitted < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                                             " AND (t_revertToSubmitted < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '15' minute)) ",
                                              "assignSanityRuns/revertToSubmitted",
                                              pooled);
                     rows = stmt->executeUpdate();
@@ -11486,9 +11486,9 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.cancelWaitingFiles)
                 {
                     SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = CURRENT_TIMESTAMP "
+                                             "update t_server_sanity set cancelWaitingFiles=1, t_cancelWaitingFiles = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
                                              "  where cancelWaitingFiles=0"
-                                             " AND (t_cancelWaitingFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                                             " AND (t_cancelWaitingFiles < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '15' minute)) ",
                                              "assignSanityRuns/cancelWaitingFiles",
                                              pooled);
                     rows = stmt->executeUpdate();
@@ -11499,9 +11499,9 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
             else if(msg.revertNotUsedFiles)
                 {
                     SafeStatement stmt = conn->createStatement(
-                                             "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = CURRENT_TIMESTAMP "
+                                             "update t_server_sanity set revertNotUsedFiles=1, t_revertNotUsedFiles = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
                                              " where revertNotUsedFiles=0"
-                                             " AND (t_revertNotUsedFiles < (CURRENT_TIMESTAMP - INTERVAL '15' minute)) ",
+                                             " AND (t_revertNotUsedFiles < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '15' minute)) ",
                                              "assignSanityRuns/revertNotUsedFiles",
                                              pooled);
                     rows = stmt->executeUpdate();
