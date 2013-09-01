@@ -37,7 +37,6 @@ start() {
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
     touch "$lockfile" && success || failure   
-    sleep 5
     daemon fts_bringonline
     retval=$?
     echo
