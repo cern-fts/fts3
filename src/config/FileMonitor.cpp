@@ -78,23 +78,23 @@ void FileMonitor::stop()
 
 void FileMonitor::run (FileMonitor* const me)
 {
-	struct stat st;
+    struct stat st;
 
     // monitor the file
     while (me->running)
         {
-    		// we will check the timestamp periodically every minute
-			sleep(60);
-			// check the timestamp
-			stat (me->path.c_str(), &st);
-			time_t new_timestamp = st.st_mtime;
-			// compare with the old one
-			if (new_timestamp != me->timestamp)
-				{
-					// if the file has been changed reload the configuration
-					me->timestamp = new_timestamp;
-					me->sc->read(0, 0);
-				}
+            // we will check the timestamp periodically every minute
+            sleep(60);
+            // check the timestamp
+            stat (me->path.c_str(), &st);
+            time_t new_timestamp = st.st_mtime;
+            // compare with the old one
+            if (new_timestamp != me->timestamp)
+                {
+                    // if the file has been changed reload the configuration
+                    me->timestamp = new_timestamp;
+                    me->sc->read(0, 0);
+                }
         }
 }
 

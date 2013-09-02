@@ -28,9 +28,9 @@ limitations under the License. */
 using namespace std;
 
 Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
-        source_se(""), dest_se(""),
-        msg(NULL), msg_updater(NULL), msg_log(NULL),
-        isTerminalSent(false)
+    source_se(""), dest_se(""),
+    msg(NULL), msg_updater(NULL), msg_log(NULL),
+    isTerminalSent(false)
 {
     msg = new struct message();
     msg_updater = new struct message_updater();
@@ -77,27 +77,30 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s)
 }
 
 void Reporter::sendMessage(double throughput, bool retry,
-        const string& job_id, const string& file_id,
-        const string& transfer_status, const string& transfer_message,
-        double timeInSecs, double filesize)
+                           const string& job_id, const string& file_id,
+                           const string& transfer_status, const string& transfer_message,
+                           double timeInSecs, double filesize)
 {
-    try {
-        msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
-    }
-    catch (...) {
-        return;
-    }
+    try
+        {
+            msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
+        }
+    catch (...)
+        {
+            return;
+        }
 
     strncpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
     strncpy(msg->transfer_status, transfer_status.c_str(), sizeof(msg->transfer_status));
 
-    if (transfer_message.length() > 0) {
-        std::string trmsg(transfer_message);
-        if (trmsg.length() >= 1023)
-            trmsg = trmsg.substr(0, 1023);
-        trmsg = ReplaceNonPrintableCharacters(trmsg);
-        strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
-    }
+    if (transfer_message.length() > 0)
+        {
+            std::string trmsg(transfer_message);
+            if (trmsg.length() >= 1023)
+                trmsg = trmsg.substr(0, 1023);
+            trmsg = ReplaceNonPrintableCharacters(trmsg);
+            strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
+        }
 
     msg->process_id = (int) getpid();
     msg->timeInSecs = timeInSecs;
@@ -117,9 +120,9 @@ void Reporter::sendMessage(double throughput, bool retry,
 }
 
 void Reporter::sendTerminal(double throughput, bool retry,
-        const string& job_id, const string& file_id,
-        const string& transfer_status, const string& transfer_message,
-        double timeInSecs, double filesize)
+                            const string& job_id, const string& file_id,
+                            const string& transfer_status, const string& transfer_message,
+                            double timeInSecs, double filesize)
 {
     // Did we send it already?
     if (isTerminalSent)
@@ -127,20 +130,22 @@ void Reporter::sendTerminal(double throughput, bool retry,
     isTerminalSent = true;
     // Not sent, so send it now and raise the flag
     sendMessage(throughput, retry, job_id, file_id,
-            transfer_status, transfer_message,
-            timeInSecs, filesize);
+                transfer_status, transfer_message,
+                timeInSecs, filesize);
 
 }
 
 void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
-        double throughput, double transferred)
+                        double throughput, double transferred)
 {
-    try {
-        msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
-    }
-    catch (...) {
-        return;
-    }
+    try
+        {
+            msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
+        }
+    catch (...)
+        {
+            return;
+        }
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
     msg_updater->process_id = (int) getpid();
     msg_updater->timestamp = milliseconds_since_epoch();
@@ -154,14 +159,16 @@ void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
 
 
 void Reporter::sendLog(const std::string& job_id, const std::string& file_id,
-        const std::string& logFileName, bool debug)
+                       const std::string& logFileName, bool debug)
 {
-    try {
-        msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
-    }
-    catch (...) {
-        return;
-    }
+    try
+        {
+            msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
+        }
+    catch (...)
+        {
+            return;
+        }
 
     strncpy(msg_log->job_id, job_id.c_str(), sizeof(msg_log->job_id));
     strncpy(msg_log->filePath, logFileName.c_str(), sizeof(msg_log->filePath));

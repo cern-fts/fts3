@@ -136,9 +136,9 @@ void ServerConfig::read
 {
     _read<ServerConfigReader> (argc, argv);
 
-   	cfgmonitor.start(
-   			get<std::string>("configfile")
-   		);
+    cfgmonitor.start(
+        get<std::string>("configfile")
+    );
 }
 
 /* ---------------------------------------------------------------------- */

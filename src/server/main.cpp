@@ -104,13 +104,16 @@ void _handle_sigint(int)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
     boost::thread bt(taskTimer, 60);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
-    sleep(20);
-    try{
-    theServer().stop();
-    fts3_teardown_db_backend();
-    }catch(...){
-    	FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
-    }
+    sleep(10);
+    try
+        {
+            theServer().stop();
+            fts3_teardown_db_backend();
+        }
+    catch(...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Unexpected exception when forcing the database teardown" << commit;
+        }
     StaticSslLocking::kill_locks();
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopped" << commit;
     exit(0);

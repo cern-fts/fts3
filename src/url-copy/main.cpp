@@ -236,10 +236,10 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     std::string moveFile = fileManagement->archive();
     if (strArray[0].length() > 0)
         reporter.sendLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                                     UrlCopyOpts::getInstance().debug);
+                         UrlCopyOpts::getInstance().debug);
     else
         reporter.sendLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
-                                     UrlCopyOpts::getInstance().debug);
+                         UrlCopyOpts::getInstance().debug);
 
     if (moveFile.length() != 0)
         {
@@ -294,7 +294,7 @@ void taskStatusUpdater(int time)
                     Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
                                                  << std::endl;
                     reporter.sendPing(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
-                                                     throughput, transferred_bytes);
+                                      throughput, transferred_bytes);
                 }
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
