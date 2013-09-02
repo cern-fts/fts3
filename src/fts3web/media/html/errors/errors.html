@@ -1,4 +1,9 @@
-<h3>Unique errors</h3>
+<h3>
+    Unique errors
+    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
+</h3>
+
+<h4>{{errors.startIndex}} to {{errors.endIndex}} out of {{errors.count}}</h4>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
     max-size="pageMax" class="pagination" boundary-links="true"
@@ -30,3 +35,20 @@
 <pagination rotate="false" num-pages="pageCount" current-page="page"
     max-size="pageMax" class="pagination" boundary-links="true"
     on-select-page="pageChanged(page)"></pagination>
+
+<!-- Modals -->
+<div modal="filtersModal" close="filtersModal = false" options="opts">
+    <form ng-submit="filterReason(filter.contains)" autocomplete="off">
+        <div class="modal-header">
+            <h3>Search in the reason</h3>
+        </div>
+        <div class="modal-body">
+            <label for="reason">Reason contains:</label>
+            <input type="text" placeholder="reason" id="reason" ng-model="filter.contains"/>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-success" ng-click="filterReason(filter.contains)">Apply</button>
+            <button class="btn btn-danger" ng-click="filtersModal = false">Cancel</button>
+        </div>
+    </form>
+</div>
