@@ -75,126 +75,85 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s)
 
 void Reporter::constructMessage(double throughput, bool retry, string job_id, string file_id, string transfer_status, string transfer_message, double timeInSecs, double filesize)
 {
-    try
-        {
-            strcpy(msg->job_id, job_id.c_str());
-            msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
-            strcpy(msg->transfer_status, transfer_status.c_str());
-            if(transfer_message.length() > 0 && transfer_message.length() >= 1023)
-                {
-                    transfer_message = transfer_message.substr(0, 1023);
-                    transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-                    strcpy(msg->transfer_message, transfer_message.c_str());
-                }
-            else if(transfer_message.length() > 0 && transfer_message.length() < 1023)
-                {
-                    transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-                    strcpy(msg->transfer_message, transfer_message.c_str());
-                }
-            else
-                {
-                    memset(msg->transfer_message, 0, sizeof (msg->transfer_message));
-                }
+    try {
+        msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
+    }
+    catch (...) {
+        return;
+    }
 
-            msg->process_id = (int) getpid();
-            msg->timeInSecs = timeInSecs;
-            msg->filesize = filesize;
-            msg->nostreams = nostreams;
-            msg->timeout = timeout;
-            msg->buffersize = buffersize;
-            strcpy(msg->source_se, source_se.c_str());
-            strcpy(msg->dest_se, dest_se.c_str());
-            msg->timestamp = milliseconds_since_epoch();
-            msg->retry = retry;
-            msg->throughput = throughput;
-            runProducerStatus(*msg);
-        }
-    catch (...)
-        {
-            //second attempt to resend the message
-            strcpy(msg->job_id, job_id.c_str());
-            msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
-            strcpy(msg->transfer_status, transfer_status.c_str());
-            if(transfer_message.length() > 0 && transfer_message.length() >= 1023)
-                {
-                    transfer_message = transfer_message.substr(0, 1023);
-                    transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-                    strcpy(msg->transfer_message, transfer_message.c_str());
-                }
-            else if(transfer_message.length() > 0 && transfer_message.length() < 1023)
-                {
-                    transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-                    strcpy(msg->transfer_message, transfer_message.c_str());
-                }
-            else
-                {
-                    memset(msg->transfer_message, 0, sizeof (msg->transfer_message));
-                }
+    strncpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
+    strncpy(msg->transfer_status, transfer_status.c_str(), sizeof(msg->transfer_status));
 
-            msg->process_id = (int) getpid();
-            msg->timeInSecs = timeInSecs;
-            msg->filesize = filesize;
-            msg->nostreams = nostreams;
-            msg->timeout = timeout;
-            msg->buffersize = buffersize;
-            strcpy(msg->source_se, source_se.c_str());
-            strcpy(msg->dest_se, dest_se.c_str());
-            msg->timestamp = milliseconds_since_epoch();
-            msg->retry = retry;
-            msg->throughput = throughput;
-            runProducerStatus(*msg);
+    if(transfer_message.length() > 0 && transfer_message.length() >= 1023)
+        {
+            transfer_message = transfer_message.substr(0, 1023);
+            transfer_message = ReplaceNonPrintableCharacters(transfer_message);
+            strncpy(msg->transfer_message, transfer_message.c_str(), sizeof(msg->transfer_message));
         }
+    else if(transfer_message.length() > 0 && transfer_message.length() < 1023)
+        {
+            transfer_message = ReplaceNonPrintableCharacters(transfer_message);
+            strncpy(msg->transfer_message, transfer_message.c_str(), sizeof(msg->transfer_message));
+        }
+    else
+        {
+            memset(msg->transfer_message, 0, sizeof (msg->transfer_message));
+        }
+
+    msg->process_id = (int) getpid();
+    msg->timeInSecs = timeInSecs;
+    msg->filesize = filesize;
+    msg->nostreams = nostreams;
+    msg->timeout = timeout;
+    msg->buffersize = buffersize;
+    strncpy(msg->source_se, source_se.c_str(), sizeof(msg->source_se));
+    strncpy(msg->dest_se, dest_se.c_str(), sizeof(msg->dest_se));
+    msg->timestamp = milliseconds_since_epoch();
+    msg->retry = retry;
+    msg->throughput = throughput;
+
+    // Try twice
+    if (runProducerStatus(*msg) != 0)
+        runProducerStatus(*msg);
 }
 
 
 void Reporter::constructMessageUpdater(std::string job_id, std::string file_id, double throughput, double transferred)
 {
-    try
-        {
-            strcpy(msg_updater->job_id, job_id.c_str());
-            msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
-            msg_updater->process_id = (int) getpid();
-            msg_updater->timestamp = milliseconds_since_epoch();
-            msg_updater->throughput = throughput;
-            msg_updater->transferred = transferred;
-            runProducerStall(*msg_updater);
-        }
-    catch (...)
-        {
-            //attempt to resend the message
-            strcpy(msg_updater->job_id, job_id.c_str());
-            msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
-            msg_updater->process_id = (int) getpid();
-            msg_updater->timestamp = milliseconds_since_epoch();
-            msg_updater->throughput = throughput;
-            msg_updater->transferred = transferred;
-            runProducerStall(*msg_updater);
-        }
+    try {
+        msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
+    }
+    catch (...) {
+        return;
+    }
+    strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
+    msg_updater->process_id = (int) getpid();
+    msg_updater->timestamp = milliseconds_since_epoch();
+    msg_updater->throughput = throughput;
+    msg_updater->transferred = transferred;
+    // Try twice
+    if (runProducerStall(*msg_updater) == 0)
+        runProducerStall(*msg_updater);
 }
 
 
 
 void Reporter::constructMessageLog(std::string job_id, std::string file_id, std::string logFileName, bool debug)
 {
-    try
-        {
-            strcpy(msg_log->job_id, job_id.c_str());
-            msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
-            strcpy(msg_log->filePath, logFileName.c_str());
-            strcpy(msg_log->host, hostname.c_str());
-            msg_log->debugFile = debug;
-            msg_log->timestamp = milliseconds_since_epoch();
-            runProducerLog(*msg_log);
-        }
-    catch (...)
-        {
-            //attempt to resend the message
-            strcpy(msg_log->job_id, job_id.c_str());
-            msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
-            strcpy(msg_log->filePath, logFileName.c_str());
-            strcpy(msg_log->host, hostname.c_str());
-            msg_log->debugFile = debug;
-            msg_log->timestamp = milliseconds_since_epoch();
-            runProducerLog(*msg_log);
-        }
+    try {
+        msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
+    }
+    catch (...) {
+        return;
+    }
+
+    strncpy(msg_log->job_id, job_id.c_str(), sizeof(msg_log->job_id));
+    strncpy(msg_log->filePath, logFileName.c_str(), sizeof(msg_log->filePath));
+    strncpy(msg_log->host, hostname.c_str(), sizeof(msg_log->host));
+    msg_log->debugFile = debug;
+    msg_log->timestamp = milliseconds_since_epoch();
+    // Try twice
+    if (runProducerLog(*msg_log) == 0)
+        runProducerLog(*msg_log);
 }
