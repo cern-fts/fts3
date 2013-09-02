@@ -36,6 +36,10 @@
     </tbody>
 </table>
 
+<pagination rotate="false" num-pages="pageCount" current-page="page"
+    max-size="pageMax" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
+
 <!-- Modals -->
 <div modal="filtersModal" close="filtersModal = false" options="opts">
     <form ng-submit="applyFilters()" autocomplete="off">

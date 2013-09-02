@@ -1,6 +1,6 @@
 <h2>Overview</h2>
 <h3>
-    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last hour.
+    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last hour
     <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
@@ -73,6 +73,10 @@
         </tr>
     </tbody>
 </table>
+
+<pagination rotate="false" num-pages="pageCount" current-page="page"
+    max-size="pageMax" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
 
 <div>
     <p>
