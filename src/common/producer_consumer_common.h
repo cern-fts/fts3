@@ -25,6 +25,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <vector>
+#include <map>
 #include <string>
 #include <iostream>
 #include <time.h>
@@ -67,7 +68,7 @@ int runProducerStall(struct message_updater &msg);
 
 
 //for checking the log file path
-int runConsumerLog(std::vector<struct message_log>& messages);
+int runConsumerLog(std::map<int, struct message_log>& messages);
 
 int runProducerLog(struct message_log &msg);
 

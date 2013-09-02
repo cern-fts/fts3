@@ -53,14 +53,6 @@ struct sort_functor_status
 };
 
 
-struct sort_functor_log
-{
-    bool operator()(const message_log & a, const message_log & b) const
-    {
-        return a.timestamp < b.timestamp;
-    }
-};
-
 struct sort_functor_monitoring
 {
     bool operator()(const message_monitoring & a, const message_monitoring & b) const
@@ -221,7 +213,7 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
 }
 
 
-int runConsumerLog(std::vector<struct message_log>& messages)
+int runConsumerLog(std::map<int, struct message_log>& messages)
 {
     string dir = string(LOG_DIR);
     vector<string> files = vector<string>();
@@ -241,7 +233,7 @@ int runConsumerLog(std::vector<struct message_log>& messages)
                         readElements = fread(&msg, sizeof(msg), 1, fp);
 
                     if (readElements == 1)
-                        messages.push_back(msg);
+                        messages[msg.file_id] = msg;
                     else
                         msg.set_error(EBADMSG);
 
@@ -254,7 +246,6 @@ int runConsumerLog(std::vector<struct message_log>& messages)
                 }
         }
     files.clear();
-    std::sort(messages.begin(), messages.end(), sort_functor_log());
 
     return 0;
 }

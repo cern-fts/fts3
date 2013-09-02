@@ -196,75 +196,32 @@ protected:
     std::vector<struct message> messages;
     boost::thread_group g;
     std::string enableOptimization;
+    std::map<int, struct message_log> messagesLog;
 
 
-    void getLogs()
-    {
-        try
-            {
-                std::vector<struct message_log> messages;
-                std::vector<struct message_log>::const_iterator iter;
-
-                if (runConsumerLog(messages) != 0)
-                    {
-                        char buffer[128]= {0};
-                        throw Err_System(std::string("Could not get the log messages: ") +
-                                         strerror_r(errno, buffer, sizeof(buffer)));
-                    }
-
-                if(!messages.empty())
-                    {
-                        for (iter = messages.begin(); iter != messages.end(); ++iter)
-                            {
-                                if (iter->msg_errno == 0)
-                                    {
-                                        std::string job = std::string((*iter).job_id).substr(0, 36);
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Process Log Monitor "
-                                                                        << "\nJob id: " << job
-                                                                        << "\nFile id: " << (*iter).file_id
-                                                                        << "\nLog path: " << (*iter).filePath << commit;
-                                        DBSingleton::instance().getDBObjectInstance()->
-                                        transferLogFile((*iter).filePath, job , (*iter).file_id, (*iter).debugFile);
-                                    }
-                                else
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a log message: "
-                                                                       << iter->msg_error_reason << commit;
-                                    }
-                            }
-                        messages.clear();
-                    }
-            }
-        catch (const fs::filesystem_error& e)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-            }
-        catch (std::exception& ex)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
-            }
-        catch (...)
-            {
-                throw Err_Custom(std::string(__func__) + ": Caught exception ");
-            }
-    }
-
-    void executeUpdate(std::vector<struct message>& messages)
+    void executeUpdate(std::vector<struct message>& messages, std::map<int, struct message_log>& messagesLog)
     {
         try
             {
                 std::vector<struct message>::const_iterator iter;
-                std::vector<struct message>::const_iterator iterBreak;
                 struct message_updater msgUpdater;
                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                     {
                         if(stopThreads)
                             {
-                                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iter)
+			        std::vector<struct message>::const_iterator iterBreak;
+                                for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
                                     {
-                                        struct message msgBreak = (*iter);
+                                        struct message msgBreak = (*iterBreak);
                                         runProducerStatus( msgBreak);
                                     }
+				    
+				std::map<int, struct message_log>::const_iterator iterLogBreak;
+                                for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
+                                    {
+                                        struct message_log msgLogBreak = (*iterLogBreak).second;
+                                        runProducerLog( msgLogBreak );
+                                    }				
 
                                 break;
                             }
@@ -277,6 +234,16 @@ protected:
                         msgUpdater.throughput = 0.0;
                         msgUpdater.transferred = 0.0;
                         ThreadSafeList::get_instance().updateMsg(msgUpdater);
+
+                        if(!messagesLog.empty())
+                            {
+                                std::map<int, struct message_log>::const_iterator iterLog = messagesLog.find(msgUpdater.file_id);
+                                if(iterLog != messagesLog.end())
+                                    {
+                                        DBSingleton::instance().getDBObjectInstance()->
+                                        transferLogFile( ((*iterLog).second).filePath, jobId , ((*iterLog).second).file_id, ((*iterLog).second).debugFile);
+                                    }
+                            }
 
                         if (iter->msg_errno == 0)
                             {
@@ -318,7 +285,7 @@ protected:
             {
                 try
                     {
-                        if(stopThreads && messages.empty() )
+                        if(stopThreads && messages.empty() && messagesLog.empty() )
                             {
                                 break;
                             }
@@ -334,6 +301,15 @@ protected:
                                 char buffer[128]= {0};
                                 throw Err_System(std::string("Could not get the status messages: ") +
                                                  strerror_r(errno, buffer, sizeof(buffer)));
+                            }
+
+                        if (!fs::is_empty(fs::path(LOG_DIR)))
+                            {
+                                if(runConsumerLog(messagesLog) != 0)
+                                    {
+                                        char buffer[128]= {0};
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the log messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
+                                    }
                             }
 
                         if(!messages.empty())
@@ -352,10 +328,10 @@ protected:
                                         std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
                                         std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
 
-                                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
-                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
-                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
-                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+                                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11),boost::ref(messagesLog)));
+                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21),boost::ref(messagesLog)));
+                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12),boost::ref(messagesLog)));
+                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22),boost::ref(messagesLog)));
 
                                         g.add_thread(t1);
                                         g.add_thread(t2);
@@ -365,15 +341,13 @@ protected:
                                         // wait for them
                                         g.join_all();
                                     }
-                                else    //end < 10
+                                else    //end < 8
                                     {
-                                        executeUpdate(messages);
+                                        executeUpdate(messages, messagesLog);
                                     }
                                 messages.clear();
                             }
-
-                        /*get log file here*/
-                        getLogs();
+                        messagesLog.clear();
                         usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
