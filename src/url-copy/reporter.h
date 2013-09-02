@@ -18,9 +18,13 @@
 
 #pragma once
 
-#include <iostream>
 #include <ctime>
-
+#include <iostream>
+#ifdef __STDC_NO_ATOMICS__
+#include <atomic>
+#else
+#include <stdatomic.h>
+#endif
 
 class Reporter
 {
@@ -28,14 +32,27 @@ class Reporter
 public:
     Reporter();
     ~Reporter();
+
+    // Send to the server a message with the current status
     void sendMessage(double throughput, bool retry,
             const std::string& job_id, const std::string& file_id,
             const std::string& transfer_status, const std::string& transfer_message,
             double timeInSecs,  double fileSize);
+
+    // Same as before, but it can be run only once!
+    void sendTerminal(double throughput, bool retry,
+            const std::string& job_id, const std::string& file_id,
+            const std::string& transfer_status, const std::string& transfer_message,
+            double timeInSecs,  double fileSize);
+
+    // Let the server know that we are alive, and how are we doing
     void sendPing(const std::string& job_id, const std::string& file_id,
             double throughput, double transferred);
+
+    // Send to the server the log file
     void sendLog(const std::string& job_id, const std::string& file_id,
             const std::string& logFileName, bool debug);
+
     unsigned int nostreams;
     unsigned int timeout;
     unsigned int buffersize;
@@ -44,8 +61,14 @@ public:
     static std::string ReplaceNonPrintableCharacters(std::string s);
 
 private:
-    struct message* msg;
+    struct message*         msg;
     struct message_updater* msg_updater;
-    struct message_log* msg_log;
-    std::string           hostname;
+    struct message_log*     msg_log;
+    std::string             hostname;
+
+#ifdef __STDC_NO_ATOMICS__
+    std::atomic<bool> isTerminalSent;
+#else
+    std::atomic_bool isTerminalSent;
+#endif
 };

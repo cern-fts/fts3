@@ -229,9 +229,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
     if (strArray[0].length() > 0)
-        reporter.sendMessage(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
+        reporter.sendTerminal(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
     else
-        reporter.sendMessage(throughput, retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
+        reporter.sendTerminal(throughput, retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
 
     std::string moveFile = fileManagement->archive();
     if (strArray[0].length() > 0)
@@ -1088,7 +1088,7 @@ stop:
                     if (!terminalState)
                         {
                             logger.INFO() << "Report FAILED back to the server" << std::endl;
-                            reporter.sendMessage(throughput, retry, opts.jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
+                            reporter.sendTerminal(throughput, retry, opts.jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
                         }
                 }
             else
@@ -1098,7 +1098,7 @@ stop:
                     reporter.nostreams = opts.nStreams;
                     reporter.buffersize = opts.tcpBuffersize;
                     logger.INFO() << "Report FINISHED back to the server" << std::endl;
-                    reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
+                    reporter.sendTerminal(throughput, false, opts.jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
