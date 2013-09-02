@@ -100,18 +100,22 @@ config(function($routeProvider) {
 		}
 	}
 })
-.directive('optionalInt', function() {
+.directive('optionalNumber', function() {
 	return {
 		restrict: 'A',
 		scope: 'isolate',
 		replace: false,
-		template: '{{ value|number:2 }} {{ suffix }}',
+		template: '{{ value }} {{ suffix }}',
 		link: function(scope, element, attr) {
-			scope.value = scope.$eval(attr.optionalInt);
-			if (scope.value == null || scope.value == undefined)
+			scope.value = scope.$eval(attr.optionalNumber);
+			scope.decimals = scope.$eval(attr.decimals);
+			if (scope.value == null || scope.value == undefined) {
 				scope.value = '-';
-			else
+			}
+			else {
+				scope.value = Number(scope.value).toFixed(scope.decimals);
 				scope.suffix = attr.suffix;
+			}
 		}
 	}
 })
