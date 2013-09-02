@@ -59,7 +59,7 @@ stop() {
     echo -n $"Stopping $prog: "
     # stop it here, often "killproc $prog"
     rm -f "$lockfile" && success || failure 
-    killproc -d 5 $prog
+    killproc $prog -2
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile
