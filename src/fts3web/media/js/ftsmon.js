@@ -105,7 +105,7 @@ config(function($routeProvider) {
 		restrict: 'A',
 		scope: 'isolate',
 		replace: false,
-		template: '{{ value }} {{ suffix }}',
+		template: '{{ value|number:2 }} {{ suffix }}',
 		link: function(scope, element, attr) {
 			scope.value = scope.$eval(attr.optionalInt);
 			if (scope.value == null || scope.value == undefined)
