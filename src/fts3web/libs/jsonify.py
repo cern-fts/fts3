@@ -61,7 +61,11 @@ def getPage(paginator, request):
 @decorator
 def jsonify_paged(f, *args, **kwargs):
     d = f(*args, **kwargs)
-    paginator = Paginator(d, 50)
+    
+    if args[0].GET.get('page', 0) != 'all':
+        paginator = Paginator(d, 50)
+    else:
+        paginator = Paginator(d, len(d))
     page = getPage(paginator, args[0])
     
     paged = {
