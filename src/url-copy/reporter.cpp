@@ -73,7 +73,10 @@ std::string Reporter::ReplaceNonPrintableCharacters(string s)
         }
 }
 
-void Reporter::constructMessage(double throughput, bool retry, string job_id, string file_id, string transfer_status, string transfer_message, double timeInSecs, double filesize)
+void Reporter::sendMessage(double throughput, bool retry,
+        const string& job_id, const string& file_id,
+        const string& transfer_status, const string& transfer_message,
+        double timeInSecs, double filesize)
 {
     try {
         msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
@@ -85,21 +88,13 @@ void Reporter::constructMessage(double throughput, bool retry, string job_id, st
     strncpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
     strncpy(msg->transfer_status, transfer_status.c_str(), sizeof(msg->transfer_status));
 
-    if(transfer_message.length() > 0 && transfer_message.length() >= 1023)
-        {
-            transfer_message = transfer_message.substr(0, 1023);
-            transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-            strncpy(msg->transfer_message, transfer_message.c_str(), sizeof(msg->transfer_message));
-        }
-    else if(transfer_message.length() > 0 && transfer_message.length() < 1023)
-        {
-            transfer_message = ReplaceNonPrintableCharacters(transfer_message);
-            strncpy(msg->transfer_message, transfer_message.c_str(), sizeof(msg->transfer_message));
-        }
-    else
-        {
-            memset(msg->transfer_message, 0, sizeof (msg->transfer_message));
-        }
+    if (transfer_message.length() > 0) {
+        std::string trmsg(transfer_message);
+        if (trmsg.length() >= 1023)
+            trmsg = trmsg.substr(0, 1023);
+        trmsg = ReplaceNonPrintableCharacters(trmsg);
+        strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
+    }
 
     msg->process_id = (int) getpid();
     msg->timeInSecs = timeInSecs;
@@ -119,7 +114,8 @@ void Reporter::constructMessage(double throughput, bool retry, string job_id, st
 }
 
 
-void Reporter::constructMessageUpdater(std::string job_id, std::string file_id, double throughput, double transferred)
+void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
+        double throughput, double transferred)
 {
     try {
         msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
@@ -139,7 +135,8 @@ void Reporter::constructMessageUpdater(std::string job_id, std::string file_id, 
 
 
 
-void Reporter::constructMessageLog(std::string job_id, std::string file_id, std::string logFileName, bool debug)
+void Reporter::sendLog(const std::string& job_id, const std::string& file_id,
+        const std::string& logFileName, bool debug)
 {
     try {
         msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
