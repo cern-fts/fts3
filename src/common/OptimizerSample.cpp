@@ -109,11 +109,13 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                     (*iter).numOfActivePerPair -= 1;
                                 }
                         }
-
-                    (*iter).numberOfFinishedAll = numberOfFinishedAll;
-                    (*iter).numberOfFailedAll = numberOfFailedAll;
-                    (*iter).throughput = throughput;
-                    (*iter).numOfActivePerPair = currentActive;
+                    else
+		        {
+                    		(*iter).numberOfFinishedAll = numberOfFinishedAll;
+                    		(*iter).numberOfFailedAll = numberOfFailedAll;
+                    		(*iter).throughput = throughput;
+                    		(*iter).numOfActivePerPair = currentActive;
+		    	}
 
                     if (sourceActive == 0 && destActive == 0)
                         {
