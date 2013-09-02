@@ -36,7 +36,8 @@ start() {
     echo -n $"Starting $prog: "
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
-    touch "$lockfile" && success || failure   
+    touch "$lockfile" && success || failure 
+    sleep 25  
     daemon fts_server 
     retval=$?
     echo

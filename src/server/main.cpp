@@ -102,7 +102,7 @@ void _handle_sigint(int)
     stopThreads = true;
     if (stackTrace.length() > 0)
         FTS3_COMMON_LOGGER_NEWLOG(ERR) << stackTrace << commit;
-    boost::thread bt(taskTimer, 60);
+    boost::thread bt(taskTimer, 20);
     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "FTS server stopping" << commit;
     sleep(10);
     try
