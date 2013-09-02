@@ -342,7 +342,7 @@ void signalHandler(int signum)
             errorMessage += stackTrace;
             abnormalTermination("FAILED", errorMessage, "Error");
         }
-    else if (signum == 2 || signum == 15)
+    else if (signum == SIGINT || signum == SIGTERM)
         {
             if (propagated == false)
                 {
@@ -352,7 +352,7 @@ void signalHandler(int signum)
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
         }
-    else if (signum == 10)
+    else if (signum == SIGUSR1)
         {
             if (propagated == false)
                 {
