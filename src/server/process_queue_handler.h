@@ -26,6 +26,7 @@ limitations under the License. */
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 #include <sstream>
 #include <boost/scoped_ptr.hpp>
 #include "producer_consumer_common.h"
@@ -196,7 +197,9 @@ protected:
     std::vector<struct message> messages;
     boost::thread_group g;
     std::string enableOptimization;
-
+    
+    std::map<int, struct message_log> messagesLog;
+    std::map<int, struct message_log>::const_iterator iterLog;    
 
     void getLogs()
     {
@@ -205,7 +208,7 @@ protected:
                 std::vector<struct message_log> messages;
                 std::vector<struct message_log>::const_iterator iter;
 
-                if (runConsumerLog(messages) != 0)
+                if (runConsumerLog(messagesLog) != 0)
                     {
                         char buffer[128]= {0};
                         throw Err_System(std::string("Could not get the log messages: ") +
@@ -249,13 +252,15 @@ protected:
             }
     }
 
-    void executeUpdate(std::vector<struct message>& messages)
+    void executeUpdate(std::vector<struct message>& messages, std::map<int, struct message_log> messagesLog)
     {
         try
             {
                 std::vector<struct message>::const_iterator iter;
                 std::vector<struct message>::const_iterator iterBreak;
                 struct message_updater msgUpdater;
+		std::map<int, struct message_log>::iterator itLog;
+		
                 for (iter = messages.begin(); iter != messages.end(); ++iter)
                     {
                         if(stopThreads)
@@ -277,6 +282,14 @@ protected:
                         msgUpdater.throughput = 0.0;
                         msgUpdater.transferred = 0.0;
                         ThreadSafeList::get_instance().updateMsg(msgUpdater);
+			
+			if(!messagesLog.empty()){
+				itLog = messagesLog.find(msgUpdater.file_id);
+				if(itLog != myMap.end()){
+				        std::string jobLog = std::string((*itLog)->second).job_id).substr(0, 36);
+					DBSingleton::instance().getDBObjectInstance()->transferLogFile(((*itLog)->second).filePath, jobLog , ((*itLog)->second).file_id, ((*itLog)->second).debugFile);
+				}
+			}
 
                         if (iter->msg_errno == 0)
                             {
@@ -335,6 +348,14 @@ protected:
                                 throw Err_System(std::string("Could not get the status messages: ") +
                                                  strerror_r(errno, buffer, sizeof(buffer)));
                             }
+			    
+                	if (runConsumerLog(messagesLog) != 0)
+                    	   {
+                        	char buffer[128]= {0};
+                        	throw Err_System(std::string("Could not get the log messages: ") +
+                                         strerror_r(errno, buffer, sizeof(buffer)));
+                   	   }
+			    
 
                         if(!messages.empty())
                             {
@@ -352,10 +373,10 @@ protected:
                                         std::vector<struct message> split_12(split_2.begin(), split_2.begin() + half_size3);
                                         std::vector<struct message> split_22(split_2.begin() + half_size3, split_2.end());
 
-                                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11)));
-                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21)));
-                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12)));
-                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22)));
+                                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_11),boost::ref(messagesLog)));
+                                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_21),boost::ref(messagesLog)));
+                                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_12),boost::ref(messagesLog)));
+                                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessQueueHandler::executeUpdate, this, boost::ref(split_22),boost::ref(messagesLog)));
 
                                         g.add_thread(t1);
                                         g.add_thread(t2);
@@ -367,13 +388,14 @@ protected:
                                     }
                                 else    //end < 10
                                     {
-                                        executeUpdate(messages);
+                                        executeUpdate(messages, messagesLog);
                                     }
                                 messages.clear();
+				messagesLog.clear()
                             }
 
                         /*get log file here*/
-                        getLogs();
+                        //getLogs();
                         usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
