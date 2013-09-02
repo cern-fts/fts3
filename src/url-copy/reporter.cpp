@@ -124,12 +124,12 @@ void Reporter::sendTerminal(double throughput, bool retry,
     // Did we send it already?
     if (isTerminalSent)
         return;
-
+    isTerminalSent = true;
     // Not sent, so send it now and raise the flag
     sendMessage(throughput, retry, job_id, file_id,
             transfer_status, transfer_message,
             timeInSecs, filesize);
-    isTerminalSent = true;
+
 }
 
 void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
