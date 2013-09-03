@@ -152,7 +152,7 @@ protected:
                         counterCanceled++;
                         if (counterCanceled == 1)
                             {
-                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);				
+                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
                                 if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
                                     {
                                         killRunningJob(requestIDs);

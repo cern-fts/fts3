@@ -2161,7 +2161,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 
     std::string query = " select t_file.pid, t_file.job_id from t_file, t_job where t_file.job_id=t_job.job_id and "
                         " t_file.FILE_STATE IN ('ACTIVE','READY') and t_file.PID IS NOT NULL  "
-			" and t_file.TRANSFERHOST=:1 AND t_job.cancel_job = 'Y' ";    
+                        " and t_file.TRANSFERHOST=:1 AND t_job.cancel_job = 'Y' ";
 
 
     SafeStatement s;
@@ -2184,7 +2184,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 }
 
             conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag, pooledConnection);            
+            conn->destroyStatement(s, tag, pooledConnection);
 
         }
     catch (oracle::occi::SQLException const &e)
