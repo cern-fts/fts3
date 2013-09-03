@@ -1464,7 +1464,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
                                           "WHERE  "
                                           "      f.FILE_STATE IN ('ACTIVE','READY') AND "
                                           "      f.PID IS NOT NULL AND "
-                                          "      j.cancel_job = 'Y' and transferhost=:hostname ",soci::use(hostname));
+                                          "      j.cancel_job = 'Y' and transferhost=:hostname and j.job_state='CANCELED' ",soci::use(hostname));
 
             std::string jobId;
 
