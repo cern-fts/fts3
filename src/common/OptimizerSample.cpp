@@ -124,7 +124,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                     else if (currentActive <= (trSuccessRateForPair >= 99? highDefault: lowDefault ) )
                         {
                             return true;
-                        }			
+                        }
                     else if (currentActive < (*iter).numOfActivePerPair)
                         {
                             return true;

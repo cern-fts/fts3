@@ -1439,7 +1439,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     // Cancel files
                     sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                         "                  reason = :reason "
-                        "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
+                        "WHERE job_id = :jobId AND file_state NOT IN ('ACTIVE','READY','CANCELED','FINISHED','FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
                 }
 
@@ -1462,9 +1462,9 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
         {
             soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid, f.job_id FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                           "WHERE  "
-                                          "      f.FILE_STATE = 'CANCELED' AND "
+                                          "      f.FILE_STATE IN ('ACTIVE','READY') AND "
                                           "      f.PID IS NOT NULL AND "
-                                          "      j.cancel_job = 'Y' AND j.job_finished IS NOT NULL ");
+                                          "      j.cancel_job = 'Y' and transferhost=:hostname ",soci::use(hostname));
 
             std::string jobId;
 

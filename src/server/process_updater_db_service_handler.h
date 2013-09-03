@@ -152,7 +152,7 @@ protected:
                         counterCanceled++;
                         if (counterCanceled == 1)
                             {
-                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);
+                                DBSingleton::instance().getDBObjectInstance()->getCancelJob(requestIDs);				
                                 if (!requestIDs.empty())   /*if canceled jobs found and transfer already started, kill them*/
                                     {
                                         killRunningJob(requestIDs);
@@ -161,10 +161,9 @@ protected:
                                 counterCanceled = 0;
                             }
 
-
                         /*revert to SUBMITTED if stayed in READY for too long (300 secs)*/
                         countReverted++;
-                        if (countReverted == 30)
+                        if (countReverted == 300)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->revertToSubmitted();
                                 countReverted = 0;
@@ -172,7 +171,7 @@ protected:
 
                         /*this routine is called periodically every 300 ms so 10,000 corresponds to 5 min*/
                         counterTimeoutWaiting++;
-                        if (counterTimeoutWaiting == 30)
+                        if (counterTimeoutWaiting == 300)
                             {
                                 std::set<std::string> canceled;
                                 DBSingleton::instance().getDBObjectInstance()->cancelWaitingFiles(canceled);
@@ -194,7 +193,7 @@ protected:
 
                         /*force-fail stalled ACTIVE transfers*/
                         counter1++;
-                        if (counter1 == 30)
+                        if (counter1 == 300)
                             {
                                 std::map<int, std::string> collectJobs;
                                 DBSingleton::instance().getDBObjectInstance()->forceFailTransfers(collectJobs);
@@ -212,7 +211,7 @@ protected:
 
                         /*set to fail all old queued jobs which have exceeded max queue time*/
                         counterFailAll++;
-                        if (counterFailAll == 30)
+                        if (counterFailAll == 300)
                             {
                                 std::vector<std::string> jobs;
                                 DBSingleton::instance().getDBObjectInstance()->setToFailOldQueuedJobs(jobs);
@@ -229,7 +228,7 @@ protected:
                             }
 
                         counter2++;
-                        if (counter2 == 30)
+                        if (counter2 == 300)
                             {
                                 DBSingleton::instance().getDBObjectInstance()->checkSanityState();
                                 counter2 = 0;
@@ -242,14 +241,14 @@ protected:
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown exception "
                                                        << e.what()
                                                        << commit;
-                        sleep(10);
+                        sleep(1);
                     }
                 catch (...)
                     {
                         FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message updater thrown unhandled exception" << commit;
-                        sleep(10);
+                        sleep(1);
                     }
-                sleep(10);
+                sleep(1);
             }
     }
 

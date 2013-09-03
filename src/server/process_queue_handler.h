@@ -209,19 +209,19 @@ protected:
                     {
                         if(stopThreads)
                             {
-			        std::vector<struct message>::const_iterator iterBreak;
+                                std::vector<struct message>::const_iterator iterBreak;
                                 for (iterBreak = messages.begin(); iterBreak != messages.end(); ++iterBreak)
                                     {
                                         struct message msgBreak = (*iterBreak);
                                         runProducerStatus( msgBreak);
                                     }
-				    
-				std::map<int, struct message_log>::const_iterator iterLogBreak;
+
+                                std::map<int, struct message_log>::const_iterator iterLogBreak;
                                 for (iterLogBreak = messagesLog.begin(); iterLogBreak != messagesLog.end(); ++iterLogBreak)
                                     {
                                         struct message_log msgLogBreak = (*iterLogBreak).second;
                                         runProducerLog( msgLogBreak );
-                                    }				
+                                    }
 
                                 break;
                             }
@@ -290,17 +290,14 @@ protected:
                                 break;
                             }
 
-                        if(fs::is_empty(fs::path(STATUS_DIR)))
+                        if(!fs::is_empty(fs::path(STATUS_DIR)))
                             {
-                                usleep(300000);
-                                continue;
-                            }
-
-                        if (runConsumerStatus(messages) != 0)
-                            {
-                                char buffer[128]= {0};
-                                throw Err_System(std::string("Could not get the status messages: ") +
-                                                 strerror_r(errno, buffer, sizeof(buffer)));
+                                if (runConsumerStatus(messages) != 0)
+                                    {
+                                        char buffer[128]= {0};
+                                        throw Err_System(std::string("Could not get the status messages: ") +
+                                                         strerror_r(errno, buffer, sizeof(buffer)));
+                                    }
                             }
 
                         if (!fs::is_empty(fs::path(LOG_DIR)))
@@ -347,7 +344,18 @@ protected:
                                     }
                                 messages.clear();
                             }
-                        messagesLog.clear();
+
+                        if(!messagesLog.empty())
+                            {
+                                std::map<int, struct message_log>::const_iterator iterLog;
+                                for (iterLog = messagesLog.begin(); iterLog != messagesLog.end(); iterLog++)
+                                    {
+                                        std::string jobId = std::string(((*iterLog).second).job_id).substr(0, 36);
+                                        DBSingleton::instance().getDBObjectInstance()->
+                                        transferLogFile( ((*iterLog).second).filePath, jobId , ((*iterLog).second).file_id, ((*iterLog).second).debugFile);
+                                    }
+                                messagesLog.clear();
+                            }
                         usleep(300000);
                     }
                 catch (const fs::filesystem_error& ex)
