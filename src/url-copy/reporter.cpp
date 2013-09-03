@@ -35,7 +35,8 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     msg = new struct message();
     msg_updater = new struct message_updater();
     msg_log = new struct message_log();
-    char chname[MAXHOSTNAMELEN];
+    
+    char chname[MAXHOSTNAMELEN]={0};
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
 }
