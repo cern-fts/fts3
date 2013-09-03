@@ -7,7 +7,9 @@
 	Overwrite flag: {{job.job.overwrite_flag}}<br/>
 	Reuse sessions: {{job.job.reuse_job}}<br/>
 	Job finished: {{job.job.job_finished}}<br/>
-	Finished time: {{job.job.finish_time}}
+	Finished time: {{job.job.finish_time}}<br/>
+	Metadata:
+	<pre>{{job.job.job_metadata}}</pre>
 </p>
 
 <h4>Showing {{files.startIndex}} to {{files.endIndex}} out of {{files.count}}</h4>
@@ -98,6 +100,9 @@
 	                       </a>
 	                       </span>
                        </p>
+				    </li>
+				    <li>Metadata:
+				        <pre>{{file.file_metadata}}</pre>
 				    </li>
 				</ul>
             </td>

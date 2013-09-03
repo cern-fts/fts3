@@ -48,6 +48,17 @@ function JobListCtrl($location, $scope, jobs, Job, Unique)
 		});
 		$scope.filtersModal = false;
 	}
+	
+	// Method to set class depending on the metadata value
+	$scope.classFromMetadata = function(job) {
+		var metadata = job.job_metadata;
+		if (metadata) {
+			metadata = eval('(' + metadata + ')');
+			if ('label' in metadata)
+				return 'label-' + metadata.label;
+		}
+		return '';
+	}
 }
 
 

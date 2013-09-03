@@ -124,7 +124,7 @@ protected:
     _t_vars _vars;
 
     /// configuration file monitor
-    //FileMonitor cfgmonitor;
+    FileMonitor cfgmonitor;
 
     ///
     bool reading;

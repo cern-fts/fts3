@@ -28,7 +28,6 @@
 
 #include "config_dev.h"
 
-#include <sys/inotify.h>
 #include <string>
 
 #include <boost/thread.hpp>
@@ -55,21 +54,14 @@ public:
 
 private:
 
-    string getDir(string path);
-    string getFile(string path);
-
     ServerConfig* sc;
 
-    string file;
+    string path;
     bool running;
-
-    int fd;
-    int wd;
 
     scoped_ptr<thread> monitor_thread;
 
-    static const int EVENT_SIZE = sizeof (inotify_event);
-    static const int EVENT_BUF_LEN = 1024 * (EVENT_SIZE + 16);
+    time_t timestamp;
 };
 
 FTS3_CONFIG_NAMESPACE_END

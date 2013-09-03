@@ -93,37 +93,39 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                 {
                     if( ((*iter).numberOfFinishedAll != numberOfFinishedAll) || ((*iter).numberOfFailedAll != numberOfFailedAll))  //one more tr finished
                         {
-                            if(trSuccessRateForPair >= 99 && throughput != 0 && avgThr !=0 && (throughput >= avgThr || throughput >= (*iter).throughput))
+                            if(trSuccessRateForPair == 100 && throughput != 0 && avgThr !=0 && (throughput > avgThr || throughput > (*iter).throughput))
                                 {
                                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                                     (*iter).numberOfFailedAll = numberOfFailedAll;
                                     (*iter).throughput = throughput;
-				    (*iter).numOfActivePerPair += 1;
+                                    (*iter).numOfActivePerPair += 1;
                                     return  true;
                                 }
-			    else
-			        {
+                            else
+                                {
                                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                                     (*iter).numberOfFailedAll = numberOfFailedAll;
                                     (*iter).throughput = throughput;
-				    (*iter).numOfActivePerPair -= 1;				
-				}
+                                    (*iter).numOfActivePerPair -= 1;
+                                }
                         }
-		    
-                    (*iter).numberOfFinishedAll = numberOfFinishedAll;
-                    (*iter).numberOfFailedAll = numberOfFailedAll;
-                    (*iter).throughput = throughput;
-		    (*iter).numOfActivePerPair = currentActive;
+                    else
+                        {
+                            (*iter).numberOfFinishedAll = numberOfFinishedAll;
+                            (*iter).numberOfFailedAll = numberOfFailedAll;
+                            (*iter).throughput = throughput;
+                            (*iter).numOfActivePerPair = currentActive;
+                        }
 
                     if (sourceActive == 0 && destActive == 0)
                         {
                             return true;
                         }
-                    else if ((*iter).numOfActivePerPair < currentActive)
+                    else if (currentActive <= (trSuccessRateForPair >= 99? highDefault: lowDefault ) )
                         {
                             return true;
-                        }			
-                    else if (currentActive <= (trSuccessRateForPair >= 99? highDefault: lowDefault ) )
+                        }
+                    else if (currentActive < (*iter).numOfActivePerPair)
                         {
                             return true;
                         }
@@ -171,7 +173,7 @@ int OptimizerSample::getFreeCredits(int numFinished, int numFailed, std::string 
                 {
                     if((*iter).numberOfFinishedAll != numberOfFinishedAll)  //one more tr finished
                         {
-                            if(trSuccessRateForPair >= 99 && throughput > (*iter).throughput)
+                            if(trSuccessRateForPair == 100 && throughput > (*iter).throughput)
                                 {
                                     (*iter).numOfActivePerPair = ((*iter).numOfActivePerPair + currentActive + 1) - currentActive;
 

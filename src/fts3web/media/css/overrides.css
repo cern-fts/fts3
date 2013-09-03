@@ -33,3 +33,16 @@
 .navbar-search .search-query {
 	font-size: 80%;
 }
+
+
+.icon-plus {
+	cursor: pointer;
+}
+
+.icon-filter {
+	cursor: pointer;
+}
+
+.icon-th-list {
+	cursor: pointer;
+}

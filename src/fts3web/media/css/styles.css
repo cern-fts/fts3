@@ -1,3 +1,5 @@
+@import url("labels.css");
+
 /* Layout */
 html {
 	overflow-y: scroll;
@@ -66,7 +68,7 @@ td.status {
 
 td.SUBMITTED, .SUBMITTED {
     color: black;
-    background: #fae932;
+    background: #FFFF88;
 }
 
 .NOT_USED {

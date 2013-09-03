@@ -52,7 +52,7 @@ public:
         processUpdaterHandler.executeTransfer_p();
 
         /*wait for status updates to be processed and then start sanity threads*/
-        sleep(25);
+        sleep(15);
 
         typename TRAITS::ProcessServiceType processHandler;
         processHandler.executeTransfer_p();

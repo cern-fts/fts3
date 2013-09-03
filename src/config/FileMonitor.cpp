@@ -28,6 +28,8 @@
 
 #include "common/logger.h"
 
+#include <sys/stat.h>
+
 FTS3_CONFIG_NAMESPACE_START
 
 using namespace fts3::common;
@@ -46,12 +48,6 @@ FileMonitor::~FileMonitor()
             running = false;
             monitor_thread->interrupt();
         }
-
-    // remove the filey from the watch list.
-    inotify_rm_watch(fd, wd);
-
-    // closing the INOTIFY instance
-    close(fd);
 }
 
 void FileMonitor::start(string path)
@@ -60,21 +56,13 @@ void FileMonitor::start(string path)
     if (running) return;
     // set the running state
     running = true;
+    // set the path to the file
+    this->path = path;
 
-    file = getFile(path);
-
-    // creating the INOTIFY instance
-    fd = inotify_init();
-    // checking for error
-    if (fd < 0)
-        {
-            // todo
-            //FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An error occurred during 'notify_init()': " << strerror(errno) << commit;
-        }
-
-    // add the file into watch list
-    wd = inotify_add_watch(fd, getDir(path).c_str(), IN_MODIFY);
-
+    // check the timestamp
+    struct stat st;
+    stat (path.c_str(), &st);
+    timestamp = st.st_mtime;
 
     // start monitoring thread
     monitor_thread.reset (
@@ -90,56 +78,24 @@ void FileMonitor::stop()
 
 void FileMonitor::run (FileMonitor* const me)
 {
+    struct stat st;
 
-    char buffer[EVENT_BUF_LEN];
     // monitor the file
     while (me->running)
         {
-            // read to determine the event change happens on the given file. Actually this read blocks until the change event occurs
-            ssize_t length = read(me->fd, buffer, EVENT_BUF_LEN);
-
-            // checking for error
-            if (length < 0)
+            // we will check the timestamp periodically every minute
+            sleep(60);
+            // check the timestamp
+            stat (me->path.c_str(), &st);
+            time_t new_timestamp = st.st_mtime;
+            // compare with the old one
+            if (new_timestamp != me->timestamp)
                 {
-                    // todo
-                    // FTS3_COMMON_LOGGER_NEWLOG (INFO) << "An error occurred while monitoring the config file: " << strerror(errno)  << commit;
-                }
-
-            // actually read return the list of change events happens. Here, read the change event one by one and process it accordingly.
-            for (int i = 0; i < length;)
-                {
-                    inotify_event *event = (inotify_event*) &buffer[i];
-                    if (event->len)
-                        {
-                            if (me->file == event->name && (event->mask & IN_MODIFY))
-                                {
-                                    if (me->sc)
-                                        {
-                                            // todo it might be a good idea to save the option the program was start with at the beginning
-                                            me->sc->read(0, 0);
-                                        }
-                                    break;
-                                }
-                        }
-                    i += EVENT_SIZE + event->len;
+                    // if the file has been changed reload the configuration
+                    me->timestamp = new_timestamp;
+                    me->sc->read(0, 0);
                 }
         }
-}
-
-string FileMonitor::getDir(string path)
-{
-    static const regex re("(.+)/[^/]+");
-    smatch what;
-    regex_match(path, what, re, match_extra);
-    return what[1];
-}
-
-string FileMonitor::getFile(string path)
-{
-    static const regex re(".+/([^/]+)");
-    smatch what;
-    regex_match(path, what, re, match_extra);
-    return what[1];
 }
 
 FTS3_CONFIG_NAMESPACE_END

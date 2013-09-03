@@ -36,7 +36,8 @@ start() {
     echo -n $"Starting $prog: "
     # if not running, start it up here, usually something like "daemon $exec"
     if [ ! -f $lockfile ] ; then
-    touch "$lockfile" && success || failure   
+    touch "$lockfile" && success || failure 
+    sleep 10  
     daemon fts_bringonline
     retval=$?
     echo
@@ -59,7 +60,7 @@ stop() {
     echo -n $"Stopping $prog: "
     # stop it here, often "killproc $prog"
     rm -f "$lockfile" && success || failure 
-    killproc -d 5 $prog
+    killproc $prog -2
     retval=$?
     echo
     [ $retval -eq 0 ] && rm -f $lockfile

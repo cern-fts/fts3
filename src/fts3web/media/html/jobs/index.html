@@ -1,6 +1,6 @@
 <h3>
     Showing {{jobs.startIndex}} to {{jobs.endIndex}} out of {{jobs.count}}
-    <button class="btn btn-mini" type="button" ng-click="filtersModal = true">Filter</button>
+    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
@@ -20,7 +20,7 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="job in jobs.items" ng-class-odd="'odd'">
+        <tr ng-repeat="job in jobs.items" ng-class-odd="'odd'" ng-class="classFromMetadata(job)">
             <td>
                 <a href=#/job/{{job.job_id}}>{{job.job_id}}</a></td>
             <td>{{job.submit_time}}</td>
@@ -32,6 +32,10 @@
         </tr>
     </tbody>
 </table>
+
+<pagination rotate="false" num-pages="pageCount" current-page="page"
+    max-size="pageMax" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
 
 <!-- Modals -->
 <div modal="filtersModal" close="filtersModal = false" options="opts">

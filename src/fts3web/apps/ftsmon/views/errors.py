@@ -26,21 +26,15 @@ from jsonify import jsonify_paged
 def showErrors(httpRequest):
     notbefore = datetime.utcnow() - timedelta(hours = 12)
     errors = File.objects.filter(reason__isnull = False, finish_time__gte = notbefore)\
-                         .exclude(reason = '')\
-                         .values('reason', 'source_se', 'dest_se')\
+                         .exclude(reason = '')
+                         
+    if httpRequest.GET.get('contains', None):
+        errors = errors.filter(reason__contains = httpRequest.GET['contains'])
+                         
+    errors = errors .values('reason', 'source_se', 'dest_se')\
                          .annotate(count = Count('reason'))\
                          .order_by('-count')
     
-    return errors
-  
-  
-def placeholder(request):
-    errors = File.objects.filter(reason__isnull = False, finish_time__gte = notbefore)\
-                       .exclude(reason = '')\
-                       .values('reason')\
-                       .annotate(count = Count('reason'))\
-                       .order_by('-count')\
-                       
     return errors
 
 

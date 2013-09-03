@@ -33,7 +33,7 @@ using namespace FTS3_COMMON_NAMESPACE;
 
 /* ---------------------------------------------------------------------- */
 
-ServerConfig::ServerConfig() : /*cfgmonitor (this),*/ reading(0), getting(0)
+ServerConfig::ServerConfig() : cfgmonitor (this), reading(0), getting(0)
 {
     // EMPTY
 }
@@ -136,11 +136,9 @@ void ServerConfig::read
 {
     _read<ServerConfigReader> (argc, argv);
 
-    //TODO, enable it later
-    /*if (monitor)
-    	cfgmonitor.start(
-    			get<std::string>("configfile")
-    		);*/
+    cfgmonitor.start(
+        get<std::string>("configfile")
+    );
 }
 
 /* ---------------------------------------------------------------------- */

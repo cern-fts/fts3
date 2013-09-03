@@ -10,6 +10,17 @@ function ErrorsCtrl($location, $scope, errors, Errors)
 	$scope.page      = $scope.errors.page;
 	$scope.pageCount = $scope.errors.pageCount;
 	
+	// Filter
+	$scope.filterReason = function(reason) {
+		if (typeof(reason) == 'string')
+			$location.search('contains', reason);
+		$scope.filtersModal = false;
+	}
+	
+	$scope.filter = {
+		'contains': undefinedAsEmpty($location.search().contains)
+	}
+	
 	// On page change, reload
 	$scope.pageChanged = function(newPage) {
 		$location.search('page', newPage);

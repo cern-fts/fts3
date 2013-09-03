@@ -22,7 +22,6 @@ limitations under the License. */
 #include "transfer_web_service.h"
 #include "process_service.h"
 #include "process_updater_service.h"
-#include "process_log_service.h"
 #include "process_updater_db_service.h"
 #include "process_queue.h"
 
@@ -36,7 +35,6 @@ struct ServerTraits
     typedef ProcessService ProcessServiceType;
     typedef ProcessUpdaterService ProcessUpdaterServiceType;
     typedef ProcessUpdaterDBService ProcessUpdaterDBServiceType;
-    typedef ProcessLogService ProcessLogServiceType;
     typedef ProcessQueue ProcessQueueType;
     typedef ThreadPool::ThreadPool ThreadPoolType;
 };

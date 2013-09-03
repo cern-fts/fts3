@@ -658,8 +658,6 @@ CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
 -- t_file(file_id) is primary key
 CREATE INDEX file_job_id     ON t_file(job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
-CREATE INDEX file_source_state ON t_file(source_se, file_state);
-CREATE INDEX file_dest_state ON t_file(dest_se, file_state);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
 CREATE INDEX file_state_dest_surl ON t_file(file_state, dest_surl);
 CREATE INDEX file_source_dest ON t_file(source_se, dest_se);

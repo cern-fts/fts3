@@ -229,17 +229,17 @@ void abnormalTermination(const std::string& classification, const std::string&, 
     reporter.buffersize = UrlCopyOpts::getInstance().tcpBuffersize;
 
     if (strArray[0].length() > 0)
-        reporter.constructMessage(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
+        reporter.sendTerminal(throughput, retry, g_job_id, strArray[0], classification, errorMessage, diff, source_size);
     else
-        reporter.constructMessage(throughput, retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
+        reporter.sendTerminal(throughput, retry, g_job_id, g_file_id, classification, errorMessage, diff, source_size);
 
     std::string moveFile = fileManagement->archive();
     if (strArray[0].length() > 0)
-        reporter.constructMessageLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                                     UrlCopyOpts::getInstance().debug);
+        reporter.sendLog(g_job_id, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
+                         UrlCopyOpts::getInstance().debug);
     else
-        reporter.constructMessageLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
-                                     UrlCopyOpts::getInstance().debug);
+        reporter.sendLog(g_job_id, g_file_id, fileManagement->_getLogArchivedFileFullPath(),
+                         UrlCopyOpts::getInstance().debug);
 
     if (moveFile.length() != 0)
         {
@@ -287,14 +287,14 @@ void taskStatusUpdater(int time)
                 {
                     Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
                                                  << std::endl;
-                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance().jobId, strArray[0], throughput, transferred_bytes);
+                    reporter.sendPing(UrlCopyOpts::getInstance().jobId, strArray[0], throughput, transferred_bytes);
                 }
             else
                 {
                     Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
                                                  << std::endl;
-                    reporter.constructMessageUpdater(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
-                                                     throughput, transferred_bytes);
+                    reporter.sendPing(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
+                                      throughput, transferred_bytes);
                 }
             boost::this_thread::sleep(boost::posix_time::seconds(time));
         }
@@ -303,7 +303,7 @@ void taskStatusUpdater(int time)
 
 void log_stack(int sig)
 {
-    if(sig == SIGSEGV || sig == SIGBUS)
+    if(sig == SIGSEGV || sig == SIGBUS || sig == SIGABRT)
         {
             const int stack_size = 25;
             void * array[stack_size]= {0};
@@ -342,7 +342,7 @@ void signalHandler(int signum)
             errorMessage += stackTrace;
             abnormalTermination("FAILED", errorMessage, "Error");
         }
-    else if (signum == 2)
+    else if (signum == SIGINT || signum == SIGTERM)
         {
             if (propagated == false)
                 {
@@ -352,7 +352,7 @@ void signalHandler(int signum)
                     abnormalTermination("CANCELED", errorMessage, "Abort");
                 }
         }
-    else if (signum == 10)
+    else if (signum == SIGUSR1)
         {
             if (propagated == false)
                 {
@@ -692,8 +692,8 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->getLogFilePath(),
-                                             opts.debug);
+                reporter.sendLog(opts.jobId, strArray[0], fileManagement->getLogFilePath(),
+                                 opts.debug);
 
                 gfalt_set_user_data(params, NULL, NULL);
 
@@ -721,7 +721,7 @@ int main(int argc, char **argv)
                 if (opts.reuseFile)
                     {
                         logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
-                        reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
+                        reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
                     }
 
                 if (fexists(opts.proxy.c_str()) != 0)
@@ -925,7 +925,7 @@ int main(int argc, char **argv)
                 reporter.timeout = opts.timeout;
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
-                reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "UPDATE", "", diff, source_size);
+                reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "UPDATE", "", diff, source_size);
 
 
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
@@ -1088,7 +1088,7 @@ stop:
                     if (!terminalState)
                         {
                             logger.INFO() << "Report FAILED back to the server" << std::endl;
-                            reporter.constructMessage(throughput, retry, opts.jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
+                            reporter.sendTerminal(throughput, retry, opts.jobId, strArray[0], "FAILED", errorMessage, diff, source_size);
                         }
                 }
             else
@@ -1098,7 +1098,7 @@ stop:
                     reporter.nostreams = opts.nStreams;
                     reporter.buffersize = opts.tcpBuffersize;
                     logger.INFO() << "Report FINISHED back to the server" << std::endl;
-                    reporter.constructMessage(throughput, false, opts.jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
+                    reporter.sendTerminal(throughput, false, opts.jobId, strArray[0], "FINISHED", errorMessage, diff, source_size);
                     /*unpin the file here and report the result in the log file...*/
                     g_clear_error(&tmp_err);
 
@@ -1127,8 +1127,8 @@ stop:
             std::string archiveErr = fileManagement->archive();
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
-            reporter.constructMessageLog(opts.jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
-                                         opts.debug);
+            reporter.sendLog(opts.jobId, strArray[0], fileManagement->_getLogArchivedFileFullPath(),
+                             opts.debug);
         }//end for reuse loop
 
     if (params)

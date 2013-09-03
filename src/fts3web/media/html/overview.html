@@ -1,7 +1,7 @@
 <h2>Overview</h2>
 <h3>
-    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last hour.
-    <button class="btn btn-mini" type="button" ng-click="filtersModal = true">Filter</button>
+    Showing {{overview.startIndex}} to {{overview.endIndex}} out of {{overview.count}} from the last hour
+    <button class="btn btn-mini btn-info" type="button" ng-click="filtersModal = true">Filter</button>
 </h3>
 
 <pagination rotate="false" num-pages="pageCount" current-page="page"
@@ -51,28 +51,32 @@
                 {{ o.vo_name }}</td>
 			<td>
                 <a href="#/transfers?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&state=SUBMITTED">
-                    <span optional-int="o.submitted"></span>
+                    <span optional-number="o.submitted"></span>
                 </a>
 			</td>
             <td>
                 <a href="#/transfers?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&state=ACTIVE">
-                    <span optional-int="o.active"></span>
+                    <span optional-number="o.active"></span>
                 </a>
             </td>
             <td>
                 <a href="#/transfers?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&state=FINISHED">
-                    <span optional-int="o.finished"></span>
+                    <span optional-number="o.finished" decimals="0"></span>
                 </a>
             </td>
             <td>
                 <a href="#/transfers?source_se={{o.source_se}}&dest_se={{o.dest_se}}&vo={{o.vo_name}}&state=FAILED">
-                    <span optional-int="o.failed"></span>
+                    <span optional-number="o.failed" decimals="0"></span>
                 </a>
             </td>
-            <td><span optional-int="o.current" suffix="MB/s"></span></td>
+            <td><span optional-number="o.current" suffix="MB/s" decimals="2"></span></td>
         </tr>
     </tbody>
 </table>
+
+<pagination rotate="false" num-pages="pageCount" current-page="page"
+    max-size="pageMax" class="pagination" boundary-links="true"
+    on-select-page="pageChanged(page)"></pagination>
 
 <div>
     <p>
