@@ -2171,9 +2171,10 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             soci::indicator isNull1 = soci::i_ok;
             soci::indicator isNull2 = soci::i_ok;
 
-            sql << " SELECT ROUND(SUM( filesize * throughput ) / SUM( filesize ),2) as Average FROM t_file where "
-                " source_se=:source and dest_se=:dst and file_state='FINISHED' "
-                " and job_finished >= date_sub(utc_timestamp(), interval '5' minute) ",
+            sql << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+	    	   " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+		   " and (start_time >= date_sub(utc_timestamp(), interval '30' minute) OR job_finished >= date_sub(utc_timestamp(), interval '30' minute))  "
+		   " order by FILE_ID DESC LIMIT 30 ",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
             if (isNull2 == soci::i_null)
                 {
@@ -2189,8 +2190,10 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 soci::use(destin_hostname), soci::into(nActiveDest);
 
 
-            sql << "SELECT ROUND((filesize * throughput)/filesize,2) from t_file where source_se=:source and dest_se=:dst and "
-                " file_state='FINISHED' and job_finished >= date_sub(utc_timestamp(), interval '5' minute) order by FILE_ID DESC LIMIT 1 ",
+            sql << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+	    	   " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+		   " and (start_time >= date_sub(utc_timestamp(), interval '10' minute) OR job_finished >= date_sub(utc_timestamp(), interval '10' minute))  "
+		   " order by FILE_ID DESC LIMIT 10 ",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1);
             if (isNull1 == soci::i_null)
                 {
