@@ -35,8 +35,8 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     msg = new struct message();
     msg_updater = new struct message_updater();
     msg_log = new struct message_log();
-    
-    char chname[MAXHOSTNAMELEN]={0};
+
+    char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
     hostname.assign(chname);
 }
@@ -94,7 +94,7 @@ void Reporter::sendMessage(double throughput, bool retry,
     strncpy(msg->job_id, job_id.c_str(), sizeof(msg->job_id));
     msg->job_id[sizeof(msg->job_id) -1] = '\0';
     strncpy(msg->transfer_status, transfer_status.c_str(), sizeof(msg->transfer_status));
-    msg->transfer_status[sizeof(msg->transfer_status) -1] = '\0';    
+    msg->transfer_status[sizeof(msg->transfer_status) -1] = '\0';
 
     if (transfer_message.length() > 0)
         {
@@ -103,7 +103,7 @@ void Reporter::sendMessage(double throughput, bool retry,
                 trmsg = trmsg.substr(0, 1023);
             trmsg = ReplaceNonPrintableCharacters(trmsg);
             strncpy(msg->transfer_message, trmsg.c_str(), sizeof(msg->transfer_message));
-    	    msg->transfer_message[sizeof(msg->transfer_message) -1] = '\0';    	    
+            msg->transfer_message[sizeof(msg->transfer_message) -1] = '\0';
         }
 
     msg->process_id = (int) getpid();
@@ -113,9 +113,9 @@ void Reporter::sendMessage(double throughput, bool retry,
     msg->timeout = timeout;
     msg->buffersize = buffersize;
     strncpy(msg->source_se, source_se.c_str(), sizeof(msg->source_se));
-    msg->source_se[sizeof(msg->source_se) -1] = '\0';    	        
+    msg->source_se[sizeof(msg->source_se) -1] = '\0';
     strncpy(msg->dest_se, dest_se.c_str(), sizeof(msg->dest_se));
-    msg->dest_se[sizeof(msg->dest_se) -1] = '\0';    	            
+    msg->dest_se[sizeof(msg->dest_se) -1] = '\0';
     msg->timestamp = milliseconds_since_epoch();
     msg->retry = retry;
     msg->throughput = throughput;
@@ -153,7 +153,7 @@ void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
             return;
         }
     strncpy(msg_updater->job_id, job_id.c_str(), sizeof(msg_updater->job_id));
-    msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';    	                
+    msg_updater->job_id[sizeof(msg_updater->job_id) -1] = '\0';
     msg_updater->process_id = (int) getpid();
     msg_updater->timestamp = milliseconds_since_epoch();
     msg_updater->throughput = throughput;
@@ -178,11 +178,11 @@ void Reporter::sendLog(const std::string& job_id, const std::string& file_id,
         }
 
     strncpy(msg_log->job_id, job_id.c_str(), sizeof(msg_log->job_id));
-    msg_log->job_id[sizeof(msg_log->job_id) -1] = '\0';    	                    
+    msg_log->job_id[sizeof(msg_log->job_id) -1] = '\0';
     strncpy(msg_log->filePath, logFileName.c_str(), sizeof(msg_log->filePath));
-    msg_log->filePath[sizeof(msg_log->filePath) -1] = '\0';    	                        
+    msg_log->filePath[sizeof(msg_log->filePath) -1] = '\0';
     strncpy(msg_log->host, hostname.c_str(), sizeof(msg_log->host));
-    msg_log->host[sizeof(msg_log->host) -1] = '\0';    	                            
+    msg_log->host[sizeof(msg_log->host) -1] = '\0';
     msg_log->debugFile = debug;
     msg_log->timestamp = milliseconds_since_epoch();
     // Try twice

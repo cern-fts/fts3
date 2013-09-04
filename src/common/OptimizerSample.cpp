@@ -93,11 +93,10 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                 {
                     if( ((*iter).numberOfFinishedAll != numberOfFinishedAll) || ((*iter).numberOfFailedAll != numberOfFailedAll))  //one more tr finished
                         {
-                            if(trSuccessRateForPair == 100 && throughput != 0 && avgThr !=0 && (throughput > avgThr || throughput > (*iter).throughput))
+                            if(trSuccessRateForPair == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr )
                                 {
                                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                                     (*iter).numberOfFailedAll = numberOfFailedAll;
-                                    (*iter).throughput = throughput;
                                     (*iter).numOfActivePerPair += 1;
                                     return  true;
                                 }
@@ -105,7 +104,6 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 {
                                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                                     (*iter).numberOfFailedAll = numberOfFailedAll;
-                                    (*iter).throughput = throughput;
                                     (*iter).numOfActivePerPair -= 1;
                                 }
                         }
@@ -113,7 +111,6 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                         {
                             (*iter).numberOfFinishedAll = numberOfFinishedAll;
                             (*iter).numberOfFailedAll = numberOfFailedAll;
-                            (*iter).throughput = throughput;
                             (*iter).numOfActivePerPair = currentActive;
                         }
 
@@ -121,7 +118,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                         {
                             return true;
                         }
-                    else if (currentActive <= (trSuccessRateForPair >= 99? highDefault: lowDefault ) )
+                    else if (currentActive <= (trSuccessRateForPair == 100? highDefault: lowDefault ) )
                         {
                             return true;
                         }

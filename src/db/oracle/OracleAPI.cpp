@@ -712,7 +712,7 @@ void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& f
                                       "       (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND "
                                       "       (f.retry_timestamp is NULL OR f.retry_timestamp < :4) "
                                       "       ORDER BY j.priority DESC, j.submit_time DESC"
-                                      ") WHERE rw < :5";
+                                      ") WHERE rw <= :5";
     const std::string transferTag = "getByJobId/transfer";
 
     SafeConnection pooledConnection;
@@ -2161,7 +2161,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
 
     std::string query = " select t_file.pid, t_file.job_id from t_file, t_job where t_file.job_id=t_job.job_id and "
                         " t_file.FILE_STATE IN ('ACTIVE','READY') and t_file.PID IS NOT NULL  "
-			" and t_file.TRANSFERHOST=:1 AND t_job.cancel_job = 'Y' ";    
+                        " and t_file.TRANSFERHOST=:1 AND t_job.cancel_job = 'Y' ";
 
 
     SafeStatement s;
@@ -2184,7 +2184,7 @@ void OracleAPI::getCancelJob(std::vector<int>& requestIDs)
                 }
 
             conn->destroyResultset(s, r);
-            conn->destroyStatement(s, tag, pooledConnection);            
+            conn->destroyStatement(s, tag, pooledConnection);
 
         }
     catch (oracle::occi::SQLException const &e)
@@ -3643,12 +3643,20 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
     std::string query_stmt6 = " select count(*) from  t_file where t_file.source_se=:1 and t_file.dest_se=:2 "
                               " and file_state = 'FAILED' and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute))";
 
-    std::string query_stmt7 = " select throughput from (select throughput from  t_file where source_se=:1 and dest_se=:2 and throughput is not NULL "
-                              " and throughput != 0  order by FINISH_TIME DESC) where rownum=1";
+    std::string query_stmt7 =   " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from ( select filesize, throughput from t_file where "
+		   		" source_se=:1 and dest_se=:2 "
+	    	   		" and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+		   		" and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '10' minute) OR "
+				" job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute)) "
+		   		" order by FILE_ID DESC)  where rownum <= 10 ";			      
 
-    std::string query_stmt8 = " select ROUND(AVG(throughput),2) AS Average  from t_file where source_se=:1 and dest_se=:2 "
-                              " and file_state='FINISHED' and throughput is not NULL and throughput != 0 "
-                              " and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute))";
+    std::string query_stmt8 =   " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from ( select filesize, throughput from t_file where "
+		   		" source_se=:1 and dest_se=:2 "
+	    	   		" and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+		   		" and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute) OR "
+				" job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute)) "
+		   		" order by FILE_ID DESC) where rownum <= 30 ";			      
+
 
 
     SafeStatement s1;
