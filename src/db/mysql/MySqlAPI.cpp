@@ -2758,7 +2758,6 @@ void MySqlAPI::backup()
         {
             sql << "SET autocommit=0";
             sql << "SET tx_isolation = 'READ-UNCOMMITTED'";
-            sql.commit();
 
             sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
                 "WHERE job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
