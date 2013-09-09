@@ -105,8 +105,7 @@ void MySqlMonitoring::getVONames(std::vector<std::string>& vos)
         {
             soci::rowset<std::string> rs = (sql.prepare << "SELECT DISTINCT(vo_name) "
                                             "FROM t_job "
-                                            "WHERE (finish_time > :notBefore OR finish_time IS NULL)",
-                                            soci::use(notBefore));
+                                            "WHERE job_finished is NULL ");
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     vos.push_back(*i);
@@ -130,8 +129,8 @@ void MySqlMonitoring::getSourceAndDestSEForVO(const std::string& vo,
             soci::rowset<SourceAndDestSE> rs = (sql.prepare << "SELECT DISTINCT source_se, dest_se "
                                                 "FROM t_job "
                                                 "WHERE vo_name = :vo AND "
-                                                "      (finish_time > :notBefore OR finish_time IS NULL)",
-                                                soci::use(vo), soci::use(notBefore));
+                                                "      job_finished is NULL ",
+                                                soci::use(vo) );
             for (soci::rowset<SourceAndDestSE>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     pairs.push_back(*i);
@@ -157,7 +156,7 @@ unsigned MySqlMonitoring::numberOfJobsInState(const SourceAndDestSE& pair,
                 "WHERE job_state = :state AND "
                 "      source_se = :source AND "
                 "      dest_se   = :dest AND "
-                "      (finish_time > :notBefore OR finish_time IS NULL)",
+                "      (job_finished > :notBefore OR job_finished IS NULL)",
                 soci::use(state),
                 soci::use(pair.sourceStorageElement), soci::use(pair.destinationStorageElement),
                 soci::use(notBefore), soci::into(count);
@@ -316,11 +315,9 @@ unsigned MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
 
             if (!vo.empty())
                 {
-                    query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-                          "    (t_file.finish_time > :notBefore OR t_file.finish_time IS NULL) AND "
+                    query << "SELECT COUNT(*) FROM t_file, t_job WHERE "                         
                           "    t_file.job_id = t_job.job_id AND "
                           "    t_job.vo_name = :vo ";
-                    stmt.exchange(soci::use(notBefore));
                     stmt.exchange(soci::use(vo));
                 }
             else
@@ -371,7 +368,6 @@ unsigned  MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
             soci::statement stmt(sql);
 
             query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
-                  "    (t_file.finish_time > :notBefore OR t_file.finish_time IS NULL) AND "
                   "    t_file.job_id = t_job.job_id AND "
                   "    t_job.source_se = :src AND t_job.dest_se = :dest ";
 
