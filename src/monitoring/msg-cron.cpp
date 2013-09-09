@@ -272,7 +272,8 @@ public:
                         //text.resize(text.size() - 1);
                     }
 
-                text.resize(text.size() - 1);
+                if(!distinctVOs.empty())
+                    text.resize(text.size() - 1);
                 text += "]}";
                 text += 4; /*add EOT ctrl character*/
 

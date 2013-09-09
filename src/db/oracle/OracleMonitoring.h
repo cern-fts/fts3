@@ -30,6 +30,7 @@
 #include "OracleConnection.h"
 #include "OracleTypeConversions.h"
 #include "threadtraits.h"
+#include "definitions.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -41,6 +42,31 @@ class OracleMonitoring: public MonitoringDbIfce
 public:
     OracleMonitoring();
     ~OracleMonitoring();
+
+    class CleanUpSanityChecks
+    {
+    public:
+        CleanUpSanityChecks(OracleMonitoring* instanceLocal,SafeConnection& pooled, struct message_sanity &msg):
+            instanceLocal(instanceLocal), pooled(pooled), msg(msg), returnValue(false)
+        {
+            returnValue = instanceLocal->assignSanityRuns(pooled, msg);
+        }
+
+        ~CleanUpSanityChecks()
+        {
+            instanceLocal->resetSanityRuns(pooled, msg);
+        }
+
+        bool getCleanUpSanityCheck()
+        {
+            return returnValue;
+        }
+
+        OracleMonitoring* instanceLocal;
+        SafeConnection& pooled;
+        struct message_sanity &msg;
+        bool returnValue;
+    };
 
     void init(const std::string& username, const std::string& password, const std::string& connectString, int pooledConn);
 
@@ -80,6 +106,11 @@ public:
     void averageThroughputPerSePair(std::vector<SePairThroughput>& avgThroughput);
 
     void getJobVOAndSites(const std::string& jobId, JobVOAndSites& voAndSites);
+
+    // These are not exposed by the db interface
+    bool assignSanityRuns(SafeConnection& conn, struct message_sanity &msg);
+
+    void resetSanityRuns(SafeConnection& conn, struct message_sanity &msg);
 
 private:
     OracleConnection *conn;

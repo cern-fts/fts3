@@ -653,7 +653,7 @@ int main(int argc, char** argv)
                             exit(1);
                         }
                 }
-            sleep(15);
+            sleep(5);
         }
 
     return 0;

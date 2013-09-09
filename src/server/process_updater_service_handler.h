@@ -184,10 +184,13 @@ protected:
                                             {
                                                 std::string job = std::string((*iter).job_id).substr(0, 36);
                                                 // Update progress
-                                                DBSingleton::instance().getDBObjectInstance()
-                                                ->updateFileTransferProgress(job, (*iter).file_id,
-                                                                             (*iter).throughput,
-                                                                             (*iter).transferred);
+                                                if((*iter).throughput != 0 && (*iter).transferred != 0)
+                                                    {
+                                                        DBSingleton::instance().getDBObjectInstance()
+                                                        ->updateFileTransferProgress(job, (*iter).file_id,
+                                                                                     (*iter).throughput,
+                                                                                     (*iter).transferred);
+                                                    }
                                             }
                                         else
                                             {

@@ -23,4 +23,9 @@ TRUNCATE t_optimizer_evolution;
 TRUNCATE t_server_config;
 TRUNCATE t_server_sanity;
 INSERT INTO t_server_config (retry,max_time_queue) values(0,0);
-INSERT INTO t_server_sanity (revertToSubmitted,cancelWaitingFiles,revertNotUsedFiles,forceFailTransfers,setToFailOldQueuedJobs,checkSanityState,t_revertToSubmitted,t_cancelWaitingFiles,t_revertNotUsedFiles,t_forceFailTransfers,t_setToFailOldQueuedJobs,t_checkSanityState) values(0,0,0,0,0,0,UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP(),UTC_TIMESTAMP());
+INSERT INTO t_server_sanity
+    (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState, cleanUpRecords, msgcron,
+     t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState, t_cleanUpRecords, t_msgcron)
+VALUES (0, 0, 0, 0, 0, 0, 0, 0,
+        UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP(), UTC_TIMESTAMP());
+

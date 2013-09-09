@@ -18,7 +18,11 @@ lockfile=/var/lock/subsys/fts-msg-cron
 
 
 if [ -f $lockfile ]; then
-	/usr/sbin/fts_msg_cron > /dev/null 2>&1
+        pgrep fts_msg_cron
+	retval=$?
+        if [ $retval -eq 1 ] ; then
+		/usr/sbin/fts_msg_cron > /dev/null 2>&1
+	fi
 fi
 
  

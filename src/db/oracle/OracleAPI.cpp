@@ -3644,18 +3644,18 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
                               " and file_state = 'FAILED' and (t_file.FINISH_TIME > (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute))";
 
     std::string query_stmt7 =   " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from ( select filesize, throughput from t_file where "
-		   		" source_se=:1 and dest_se=:2 "
-	    	   		" and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
-		   		" and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '10' minute) OR "
-				" job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute)) "
-		   		" order by FILE_ID DESC)  where rownum <= 10 ";			      
+                                " source_se=:1 and dest_se=:2 "
+                                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                " and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '10' minute) OR "
+                                " job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute)) "
+                                " order by FILE_ID DESC)  where rownum <= 10 ";
 
     std::string query_stmt8 =   " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from ( select filesize, throughput from t_file where "
-		   		" source_se=:1 and dest_se=:2 "
-	    	   		" and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
-		   		" and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute) OR "
-				" job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute)) "
-		   		" order by FILE_ID DESC) where rownum <= 30 ";			      
+                                " source_se=:1 and dest_se=:2 "
+                                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                " and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute) OR "
+                                " job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute)) "
+                                " order by FILE_ID DESC) where rownum <= 30 ";
 
 
 
@@ -4388,7 +4388,10 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             msg.forceFailTransfers = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;
+                {
+                    conn->releasePooledConnection(pooledConnection);
+                    return;
+                }
 
             s = conn->createStatement(query, tag, pooledConnection);
             r = conn->createResultset(s, pooledConnection);
@@ -4769,7 +4772,10 @@ void OracleAPI::revertToSubmitted()
             msg.revertToSubmitted = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;
+                {
+                    conn->releasePooledConnection(pooledConnection);
+                    return;
+                }
 
             s2 = conn->createStatement(query2, tag2, pooledConnection);
             r2 = conn->createResultset(s2, pooledConnection);
@@ -4893,6 +4899,15 @@ void OracleAPI::backup()
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
+
+            struct message_sanity msg;
+            msg.cleanUpRecords = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck())
+                {
+                    conn->releasePooledConnection(pooledConnection);
+                    return;
+                }
 
             s1 = conn->createStatement(query1, "", pooledConnection);
             s1->executeUpdate();
@@ -7970,7 +7985,10 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
             msg.setToFailOldQueuedJobs = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;
+                {
+                    conn->releasePooledConnection(pooledConnection);
+                    return;
+                }
 
             s3 = conn->createStatement(query3.str(), tag3, pooledConnection);
             r = conn->createResultset(s3, pooledConnection);
@@ -9857,7 +9875,10 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             msg.cancelWaitingFiles = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;
+                {
+                    conn->releasePooledConnection(pooledConnection);
+                    return;
+                }
 
             s = conn->createStatement(query, tag, pooledConnection);
             r = conn->createResultset(s, pooledConnection);
@@ -9945,7 +9966,10 @@ void OracleAPI::revertNotUsedFiles()
             msg.revertNotUsedFiles = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;
+                {
+                    conn->releasePooledConnection(pooledConnection);
+                    return;
+                }
 
             s = conn->createStatement(update, tag, pooledConnection);
             s->executeUpdate();
@@ -10016,7 +10040,10 @@ void OracleAPI::checkSanityState()
             msg.checkSanityState = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
             if(!temp.getCleanUpSanityCheck())
-                return;
+                {
+                    conn->releasePooledConnection(pooledConnection);
+                    return;
+                }
 
             s[0] = conn->createStatement(sql[0], tag[0], pooledConnection);
             r[0] = conn->createResultset(s[0], pooledConnection);
@@ -11507,6 +11534,32 @@ bool OracleAPI::assignSanityRuns(SafeConnection& pooled, struct message_sanity &
                     conn->commit(pooled);
                     return msg.revertNotUsedFiles;
                 }
+            else if(msg.cleanUpRecords)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                                             "update t_server_sanity set cleanUpRecords=1, t_cleanUpRecords = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
+                                             " where cleanUpRecords=0"
+                                             " AND (t_cleanUpRecords < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '3' day)) ",
+                                             "assignSanityRuns/cleanUpRecords",
+                                             pooled);
+                    rows = stmt->executeUpdate();
+                    msg.cleanUpRecords = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.cleanUpRecords;
+                }
+            else if(msg.msgCron)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                                             "update t_server_sanity set msgcron=1, t_msgcron = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
+                                             " where msgcron=0"
+                                             " AND (t_msgcron < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '1' day)) ",
+                                             "assignSanityRuns/msgcron",
+                                             pooled);
+                    rows = stmt->executeUpdate();
+                    msg.msgCron = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.msgCron;
+                }
         }
     catch (std::exception& e)
         {
@@ -11567,6 +11620,22 @@ void OracleAPI::resetSanityRuns(SafeConnection& pooled, struct message_sanity &m
                     SafeStatement stmt = conn->createStatement(
                                              "update t_server_sanity set revertNotUsedFiles=0 where revertNotUsedFiles=1",
                                              "resetSanityRuns/revertNotUsedFiles",
+                                             pooled);
+                    stmt->executeUpdate();
+                }
+            else if(msg.cleanUpRecords)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                                             "update t_server_sanity set cleanUpRecords=0 where cleanUpRecords=1",
+                                             "resetSanityRuns/cleanUpRecords",
+                                             pooled);
+                    stmt->executeUpdate();
+                }
+            else if(msg.msgCron)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                                             "update t_server_sanity set msgcron=0 where msgcron=1",
+                                             "resetSanityRuns/msgcron",
                                              pooled);
                     stmt->executeUpdate();
                 }

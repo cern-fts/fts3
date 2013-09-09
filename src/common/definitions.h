@@ -222,7 +222,9 @@ public:
         revertNotUsedFiles(false),
         forceFailTransfers(false),
         setToFailOldQueuedJobs(false),
-        checkSanityState(false)
+        checkSanityState(false),
+        cleanUpRecords(false),
+        msgCron(false)
     {
     }
 
@@ -235,6 +237,8 @@ public:
     bool forceFailTransfers;
     bool setToFailOldQueuedJobs;
     bool checkSanityState;
+    bool cleanUpRecords;
+    bool msgCron;
 };
 
 

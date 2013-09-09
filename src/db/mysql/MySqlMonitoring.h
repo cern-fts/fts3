@@ -20,6 +20,7 @@
 #include <common_dev.h>
 #include <soci.h>
 #include "MonitoringDbIfce.h"
+#include "definitions.h"
 
 using namespace FTS3_COMMON_NAMESPACE;
 
@@ -28,6 +29,31 @@ class MySqlMonitoring: public MonitoringDbIfce
 public:
     MySqlMonitoring();
     ~MySqlMonitoring();
+
+    class CleanUpSanityChecks
+    {
+    public:
+        CleanUpSanityChecks(MySqlMonitoring* instanceLocal, soci::session& sql, struct message_sanity &msg):instanceLocal(instanceLocal), sql(sql), msg(msg), returnValue(false)
+        {
+            returnValue = instanceLocal->assignSanityRuns(sql, msg);
+        }
+
+        ~CleanUpSanityChecks()
+        {
+            instanceLocal->resetSanityRuns(sql, msg);
+        }
+
+        bool getCleanUpSanityCheck()
+        {
+            return returnValue;
+        }
+
+        MySqlMonitoring* instanceLocal;
+        soci::session& sql;
+        struct message_sanity &msg;
+        bool returnValue;
+    };
+
 
     void init(const std::string& username, const std::string& password, const std::string& connectString, int pooledConn);
 
@@ -67,6 +93,10 @@ public:
     void averageThroughputPerSePair(std::vector<SePairThroughput>& avgThroughput);
 
     void getJobVOAndSites(const std::string& jobId, JobVOAndSites& voAndSites);
+
+    bool assignSanityRuns(soci::session& sql, struct message_sanity &msg);
+
+    void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
 
 private:
     size_t                poolSize;

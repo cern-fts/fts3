@@ -90,7 +90,7 @@ OracleConnection::OracleConnection(const std::string username,const  std::string
                 {
                     // Create a homogenous connection pool
                     scPool = env->createStatelessConnectionPool
-                             (username, password, connectString, maxConn,
+                             (username_, password_, connectString_, maxConn,
                               minConn, incrConn, oracle::occi::StatelessConnectionPool::HOMOGENEOUS);
                     scPool->setStmtCacheSize(500);
                 }

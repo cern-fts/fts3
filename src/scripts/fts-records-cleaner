@@ -18,7 +18,11 @@ lockfile=/var/lock/subsys/fts-records-cleaner
 
 
 if [ -f $lockfile ]; then
-	/usr/sbin/fts_db_cleaner > /dev/null 2>&1
+        pgrep fts_db_cleaner
+	retval=$?
+        if [ $retval -eq 1 ] ; then
+		/usr/sbin/fts_db_cleaner > /dev/null 2>&1
+	fi
 fi
 
  
