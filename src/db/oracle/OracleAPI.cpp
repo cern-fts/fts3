@@ -4387,8 +4387,10 @@ void OracleAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
             struct message_sanity msg;
             msg.forceFailTransfers = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
-            if(!temp.getCleanUpSanityCheck())
+            if(!temp.getCleanUpSanityCheck()){
+	    	conn->releasePooledConnection(pooledConnection);
                 return;
+	    }
 
             s = conn->createStatement(query, tag, pooledConnection);
             r = conn->createResultset(s, pooledConnection);
@@ -4768,8 +4770,10 @@ void OracleAPI::revertToSubmitted()
             struct message_sanity msg;
             msg.revertToSubmitted = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
-            if(!temp.getCleanUpSanityCheck())
+            if(!temp.getCleanUpSanityCheck()){
+	    	conn->releasePooledConnection(pooledConnection);	    
                 return;
+	    }
 
             s2 = conn->createStatement(query2, tag2, pooledConnection);
             r2 = conn->createResultset(s2, pooledConnection);
@@ -4893,6 +4897,14 @@ void OracleAPI::backup()
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
+		
+            struct message_sanity msg;
+            msg.cleanUpRecords = true;
+            CleanUpSanityChecks temp(this, pooledConnection, msg);
+            if(!temp.getCleanUpSanityCheck()){
+	    	conn->releasePooledConnection(pooledConnection);	    
+                return;
+	    }		
 
             s1 = conn->createStatement(query1, "", pooledConnection);
             s1->executeUpdate();
@@ -7969,8 +7981,10 @@ void OracleAPI::setToFailOldQueuedJobs(std::vector<std::string>& jobs)
             struct message_sanity msg;
             msg.setToFailOldQueuedJobs = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
-            if(!temp.getCleanUpSanityCheck())
+            if(!temp.getCleanUpSanityCheck()){
+	    	conn->releasePooledConnection(pooledConnection);	    
                 return;
+	    }
 
             s3 = conn->createStatement(query3.str(), tag3, pooledConnection);
             r = conn->createResultset(s3, pooledConnection);
@@ -9856,8 +9870,10 @@ void OracleAPI::cancelWaitingFiles(std::set<std::string>& jobs)
             struct message_sanity msg;
             msg.cancelWaitingFiles = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
-            if(!temp.getCleanUpSanityCheck())
+            if(!temp.getCleanUpSanityCheck()){
+	    	conn->releasePooledConnection(pooledConnection);	    
                 return;
+	    }
 
             s = conn->createStatement(query, tag, pooledConnection);
             r = conn->createResultset(s, pooledConnection);
@@ -9944,8 +9960,10 @@ void OracleAPI::revertNotUsedFiles()
             struct message_sanity msg;
             msg.revertNotUsedFiles = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
-            if(!temp.getCleanUpSanityCheck())
+            if(!temp.getCleanUpSanityCheck()){
+	    	conn->releasePooledConnection(pooledConnection);	    
                 return;
+	    }
 
             s = conn->createStatement(update, tag, pooledConnection);
             s->executeUpdate();
@@ -10015,8 +10033,10 @@ void OracleAPI::checkSanityState()
             struct message_sanity msg;
             msg.checkSanityState = true;
             CleanUpSanityChecks temp(this, pooledConnection, msg);
-            if(!temp.getCleanUpSanityCheck())
+            if(!temp.getCleanUpSanityCheck()){
+	    	conn->releasePooledConnection(pooledConnection);	    
                 return;
+	    }
 
             s[0] = conn->createStatement(sql[0], tag[0], pooledConnection);
             r[0] = conn->createResultset(s[0], pooledConnection);
