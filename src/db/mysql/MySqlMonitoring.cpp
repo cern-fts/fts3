@@ -81,7 +81,7 @@ void MySqlMonitoring::init(const std::string& username, const std::string& passw
             soci::session& sql = connectionPool.at(i);
             sql.open(soci::mysql, connStr);
 
-            connectionPool.at(i) << "SET tx_isolation = 'READ-COMMITTED'";
+            connectionPool.at(i) << "SET tx_isolation = 'READ-UNCOMMITTED'";
 
             soci::mysql_session_backend* be = static_cast<soci::mysql_session_backend*>(sql.get_backend());
             mysql_options(static_cast<MYSQL*>(be->conn_), MYSQL_OPT_RECONNECT, &reconnect);
@@ -103,6 +103,12 @@ void MySqlMonitoring::getVONames(std::vector<std::string>& vos)
 
     try
         {
+            struct message_sanity msg;
+            msg.msgCron = true;
+            CleanUpSanityChecks temp(this, sql, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+
             soci::rowset<std::string> rs = (sql.prepare << "SELECT DISTINCT(vo_name) "
                                             "FROM t_job "
                                             "WHERE job_finished is NULL ");
@@ -315,7 +321,7 @@ unsigned MySqlMonitoring::numberOfTransfersInState(const std::string& vo,
 
             if (!vo.empty())
                 {
-                    query << "SELECT COUNT(*) FROM t_file, t_job WHERE "                         
+                    query << "SELECT COUNT(*) FROM t_file, t_job WHERE "
                           "    t_file.job_id = t_job.job_id AND "
                           "    t_job.vo_name = :vo ";
                     stmt.exchange(soci::use(vo));
@@ -505,3 +511,55 @@ void MySqlMonitoring::getJobVOAndSites(const std::string& jobId, JobVOAndSites& 
             throw Err_Custom(std::string(__func__) + ": " + e.what());
         }
 }
+
+
+bool MySqlMonitoring::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
+{
+
+    long long rows = 0;
+
+    try
+        {
+            if(msg.msgCron)
+                {
+                    sql.begin();
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = UTC_TIMESTAMP() "
+                                        " where msgcron=0"
+                                        " AND (t_msgcron < (UTC_TIMESTAMP() - INTERVAL '1' day)) "
+                                       ));
+                    st.execute(true);
+                    rows = st.get_affected_rows();
+                    msg.msgCron = (rows > 0? true: false);
+                    sql.commit();
+                    return msg.msgCron;
+                }
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return false;
+}
+
+
+void MySqlMonitoring::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
+{
+    try
+        {
+            sql.begin();
+            if(msg.msgCron)
+                {
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=0 where msgcron=1"));
+                    st.execute(true);
+                }
+            sql.commit();
+        }
+    catch (std::exception& e)
+        {
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+

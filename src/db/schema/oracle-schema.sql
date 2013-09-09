@@ -8,18 +8,22 @@ CREATE TABLE t_server_sanity (
   forceFailTransfers        INT DEFAULT 0,
   setToFailOldQueuedJobs    INT DEFAULT 0,
   checkSanityState          INT DEFAULT 0,
+  cleanUpRecords            INT DEFAULT 0,
+  msgcron            	    INT DEFAULT 0,
   t_revertToSubmitted       TIMESTAMP WITH TIME ZONE,
   t_cancelWaitingFiles      TIMESTAMP WITH TIME ZONE,
   t_revertNotUsedFiles      TIMESTAMP WITH TIME ZONE,
   t_forceFailTransfers      TIMESTAMP WITH TIME ZONE,
   t_setToFailOldQueuedJobs  TIMESTAMP WITH TIME ZONE,
-  t_checkSanityState        TIMESTAMP WITH TIME ZONE
+  t_checkSanityState        TIMESTAMP WITH TIME ZONE,
+  t_cleanUpRecords          TIMESTAMP WITH TIME ZONE,
+  t_msgcron                 TIMESTAMP WITH TIME ZONE  
 ); 
 INSERT INTO t_server_sanity
-    (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState,
-     t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState)
-VALUES (0, 0, 0, 0, 0, 0,
-        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    (revertToSubmitted, cancelWaitingFiles, revertNotUsedFiles, forceFailTransfers, setToFailOldQueuedJobs, checkSanityState, cleanUpRecords, msgcron
+     t_revertToSubmitted, t_cancelWaitingFiles, t_revertNotUsedFiles, t_forceFailTransfers, t_setToFailOldQueuedJobs, t_checkSanityState, t_cleanUpRecords, t_msgcron)
+VALUES (0, 0, 0, 0, 0, 0, 0, 0,
+        CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 --
 -- Holds various server configuration options

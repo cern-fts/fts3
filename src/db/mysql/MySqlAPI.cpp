@@ -2172,9 +2172,9 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             soci::indicator isNull2 = soci::i_ok;
 
             sql << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
-	    	   " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
-		   " and (start_time >= date_sub(utc_timestamp(), interval '30' minute) OR job_finished >= date_sub(utc_timestamp(), interval '30' minute))  "
-		   " order by FILE_ID DESC LIMIT 30 ",
+                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                " and (start_time >= date_sub(utc_timestamp(), interval '30' minute) OR job_finished >= date_sub(utc_timestamp(), interval '30' minute))  "
+                " order by FILE_ID DESC LIMIT 30 ",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
             if (isNull2 == soci::i_null)
                 {
@@ -2191,9 +2191,9 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
 
 
             sql << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
-	    	   " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
-		   " and (start_time >= date_sub(utc_timestamp(), interval '10' minute) OR job_finished >= date_sub(utc_timestamp(), interval '10' minute))  "
-		   " order by FILE_ID DESC LIMIT 10 ",
+                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                " and (start_time >= date_sub(utc_timestamp(), interval '10' minute) OR job_finished >= date_sub(utc_timestamp(), interval '10' minute))  "
+                " order by FILE_ID DESC LIMIT 10 ",
                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1);
             if (isNull1 == soci::i_null)
                 {
@@ -2756,6 +2756,13 @@ void MySqlAPI::backup()
 
     try
         {
+            struct message_sanity msg;
+            msg.cleanUpRecords = true;
+            CleanUpSanityChecks temp(this, sql, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+
+
             sql << "SET autocommit=0";
             sql << "SET tx_isolation = 'READ-UNCOMMITTED'";
 
@@ -5938,6 +5945,32 @@ bool MySqlAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
                     sql.commit();
                     return msg.revertNotUsedFiles;
                 }
+            else if(msg.cleanUpRecords)
+                {
+                    sql.begin();
+                    soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=1, t_cleanUpRecords = UTC_TIMESTAMP() "
+                                        " where cleanUpRecords=0"
+                                        " AND (t_cleanUpRecords < (UTC_TIMESTAMP() - INTERVAL '3' day)) "
+                                       ));
+                    st.execute(true);
+                    rows = st.get_affected_rows();
+                    msg.cleanUpRecords = (rows > 0? true: false);
+                    sql.commit();
+                    return msg.cleanUpRecords;
+                }
+            else if(msg.msgCron)
+                {
+                    sql.begin();
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=1, t_msgcron = UTC_TIMESTAMP() "
+                                        " where msgcron=0"
+                                        " AND (t_msgcron < (UTC_TIMESTAMP() - INTERVAL '1' day)) "
+                                       ));
+                    st.execute(true);
+                    rows = st.get_affected_rows();
+                    msg.msgCron = (rows > 0? true: false);
+                    sql.commit();
+                    return msg.msgCron;
+                }
         }
     catch (std::exception& e)
         {
@@ -5982,6 +6015,16 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
             else if(msg.revertNotUsedFiles)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=0 where revertNotUsedFiles=1"));
+                    st.execute(true);
+                }
+            else if(msg.cleanUpRecords)
+                {
+                    soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=0 where cleanUpRecords=1"));
+                    st.execute(true);
+                }
+            else if(msg.msgCron)
+                {
+                    soci::statement st((sql.prepare << "update t_server_sanity set msgcron=0 where msgcron=1"));
                     st.execute(true);
                 }
             sql.commit();

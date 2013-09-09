@@ -67,6 +67,15 @@ void OracleMonitoring::getVONames(std::vector<std::string>& vos)
     SafeConnection pooledConnection;
     pooledConnection = conn->getPooledConnection();
 
+    struct message_sanity msg;
+    msg.msgCron = true;
+    CleanUpSanityChecks temp(this, pooledConnection, msg);
+    if(!temp.getCleanUpSanityCheck())
+        {
+            conn->releasePooledConnection(pooledConnection);
+            return;
+        }
+
 
     SafeStatement s = conn->createStatement(query, tag, pooledConnection);
     s->setTimestamp(1, notBefore);
@@ -556,3 +565,56 @@ void OracleMonitoring::getJobVOAndSites(const std::string& jobId, JobVOAndSites&
     conn->destroyStatement(s, tag, pooledConnection);
     conn->releasePooledConnection(pooledConnection);
 }
+
+
+bool OracleMonitoring::assignSanityRuns(SafeConnection& pooled, struct message_sanity &msg)
+{
+    long long rows = 0;
+
+    try
+        {
+            if(msg.msgCron)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                                             "update t_server_sanity set msgcron=1, t_msgcron = SYS_EXTRACT_UTC(SYSTIMESTAMP) "
+                                             " where msgcron=0"
+                                             " AND (t_msgcron < (SYS_EXTRACT_UTC(SYSTIMESTAMP) - INTERVAL '1' day)) ",
+                                             "assignSanityRuns/msgcron",
+                                             pooled);
+                    rows = stmt->executeUpdate();
+                    msg.msgCron = (rows > 0? true: false);
+                    conn->commit(pooled);
+                    return msg.msgCron;
+                }
+        }
+    catch (std::exception& e)
+        {
+            conn->rollback(pooled);
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+
+    return false;
+}
+
+
+void OracleMonitoring::resetSanityRuns(SafeConnection& pooled, struct message_sanity &msg)
+{
+    try
+        {
+            if(msg.msgCron)
+                {
+                    SafeStatement stmt = conn->createStatement(
+                                             "update t_server_sanity set msgcron=0 where msgcron=1",
+                                             "resetSanityRuns/msgcron",
+                                             pooled);
+                    stmt->executeUpdate();
+                }
+            conn->commit(pooled);
+        }
+    catch (std::exception& e)
+        {
+            conn->rollback(pooled);
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
