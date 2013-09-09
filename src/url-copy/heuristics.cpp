@@ -115,9 +115,9 @@ unsigned adjustTimeoutBasedOnSize(off_t sizeInBytes,
 
     // Reasonable time to wait per MB transferred
     // If input timeout is 0, give it a little more room
-    long double timeoutPerMB = 2;
+    long double timeoutPerMB = 1;
     if (timeout == 0)
-        timeoutPerMB = 3;
+        timeoutPerMB = 2;
 
     // Reasonable time to wait for the transfer itself
     unsigned transferTimeout = adjustTimeout(sizeInBytes);
