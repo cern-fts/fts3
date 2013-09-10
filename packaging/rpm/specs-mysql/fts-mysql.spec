@@ -26,6 +26,16 @@ The File Transfer Service V3 mysql plug-in
 %setup -qc
 
 %build
+# Make sure the version in the spec file and the version used
+# for building matches
+fts_cmake_ver=`sed -n 's/^set(VERSION_\(MAJOR\|MINOR\|PATCH\) \([0-9]\+\).*/\2/p' CMakeLists.txt | paste -sd '.'`
+if [ "$fts_cmake_ver" != "%{version}" ]; then
+    echo "The version in the spec file does not match the CMakeLists.txt version!"
+    echo "$fts_cmake_ver != %{version}"
+    exit 1
+fi
+
+# Build
 mkdir build
 cd build
 %cmake -DMYSQLBUILD=ON -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_INSTALL_PREFIX='' ..
