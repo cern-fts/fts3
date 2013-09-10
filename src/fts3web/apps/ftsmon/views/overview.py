@@ -24,6 +24,7 @@ from ftsweb.models import File
 from jobs import setupFilters
 from jsonify import jsonify_paged
 from urllib import urlencode
+from util import getOrderBy
 
 
 @jsonify_paged
@@ -64,11 +65,7 @@ def overview(httpRequest):
         objs.append(obj)
     
     # Ordering
-    orderBy   = httpRequest.GET.get('orderby', None)
-    orderDesc = False
-    if orderBy and orderBy[0] == '-':
-        orderBy = orderBy[1:]
-        orderDesc = True
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
 
     if orderBy == 'active':
         sortingMethod = lambda o: (o.get('active', 0), o.get('submitted', 0))

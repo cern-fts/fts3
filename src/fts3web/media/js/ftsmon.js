@@ -154,9 +154,9 @@ config(function($routeProvider) {
 			// Bind the method
 			replacement.bind('click', function() {
 				if (orderedDesc && field == orderedBy)
-					$location.search({orderby: field});
+					$location.search('orderby', field);
 				else
-					$location.search({orderby: '-' + field});
+					$location.search('orderby', '-' + field);
 				scope.$apply();
 			});
 			

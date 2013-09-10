@@ -21,6 +21,7 @@ from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
 from ftsmon import forms
 from ftsweb.models import Job, File, JobArchive, FileArchive
+from util import getOrderBy
 import datetime
 import json
 import time
@@ -121,8 +122,14 @@ def jobListing(httpRequest, jobModel = Job, filters = None):
                        'vo_name', 'source_space_token', 'space_token',
                        'priority', 'user_dn', 'reason',
                        'job_metadata', 'nullFinished', 'source_se', 'dest_se')
+    
     # Ordering
-    jobs = jobs.order_by('-nullFinished', '-submit_time')
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+
+    if orderBy == 'submit_time' and not orderDesc:
+        jobs = jobs.order_by('nullFinished', 'submit_time')
+    else:    
+        jobs = jobs.order_by('-nullFinished', '-submit_time')
     
     # Wrap with a metadata filterer
     msg = None
