@@ -10,3 +10,9 @@ def getOrderBy(request):
         orderBy = orderBy[1:]
     
     return (orderBy, orderDesc)
+
+
+def orderedField(field, desc):
+    if desc:
+        return '-' + field
+    return field

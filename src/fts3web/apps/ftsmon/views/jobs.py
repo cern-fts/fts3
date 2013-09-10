@@ -21,7 +21,7 @@ from django.shortcuts import render, redirect
 from jsonify import jsonify, jsonify_paged
 from ftsmon import forms
 from ftsweb.models import Job, File, JobArchive, FileArchive
-from util import getOrderBy
+from util import getOrderBy, orderedField
 import datetime
 import json
 import time
@@ -205,7 +205,20 @@ def jobFiles(httpRequest, jobId):
     
     if 'state' in httpRequest.GET and httpRequest.GET['state']:
         files = files.filter(file_state__in = httpRequest.GET['state'].split(','))
-    
+        
+    # Ordering
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+    if orderBy == 'id':
+        files = files.order_by(orderedField('file_id', orderDesc))
+    elif orderBy == 'size':
+        files = files.order_by(orderedField('filesize', orderDesc))
+    elif orderBy == 'throughput':
+        files = files.order_by(orderedField('throughput', orderDesc))
+    elif orderBy == 'start_time':
+        files = files.order_by(orderedField('start_time', orderDesc))
+    elif orderBy == 'end_time':
+        files = files.order_by(orderedField('end_time', orderDesc))
+        
     return files
 
 
