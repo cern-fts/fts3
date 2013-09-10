@@ -338,7 +338,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
-                                                         " ORDER BY j.priority DESC, j.submit_time DESC LIMIT :filesNum ",
+                                                         " ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
                                                          soci::use(boost::get<0>(triplet)),
                                                          soci::use(boost::get<1>(triplet)),
                                                          soci::use(boost::get<2>(triplet)),

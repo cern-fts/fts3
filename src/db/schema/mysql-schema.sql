@@ -663,7 +663,6 @@ CREATE INDEX job_jobfinished_id     ON t_job(job_finished);
 CREATE INDEX file_job_id     ON t_file(job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
-CREATE INDEX file_state_dest_surl ON t_file(file_state, dest_surl);
 CREATE INDEX file_source_dest ON t_file(source_se, dest_se);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
