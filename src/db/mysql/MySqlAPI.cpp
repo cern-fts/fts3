@@ -295,7 +295,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     soci::row const& rVO = *iVO;
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
-                                                     sql.prepare << " select distinct f.source_se, f.dest_se from t_file f where  "
+                                                     sql.prepare << " select distinct f.source_se, f.dest_se from t_file f IGNORE INDEX(file_state_dest_surl) where "
 						     		    " f.file_state='SUBMITTED' AND  exists (select null from t_job j where "
 								    " j.vo_name=:vo_name and f.job_id=j.job_id) ",
                                                      soci::use(vo_name)
