@@ -236,6 +236,10 @@ def transferList(httpRequest):
     filterForm = forms.FilterForm(httpRequest.GET)
     filters    = setupFilters(filterForm)
     
+    # Force a time window
+    if not filters['time_window']:
+        filters['time_window'] = 12
+    
     transfers = File.objects.extra(select = {'nullFinished': 'coalesce(t_file.finish_time, CURRENT_TIMESTAMP)'})
     if filters['state']:
         transfers = transfers.filter(file_state__in = filters['state'])
@@ -248,10 +252,23 @@ def transferList(httpRequest):
     if filters['vo']:
         transfers = transfers.filter(job__vo_name = filters['vo'])
     if filters['time_window']:
-        notBefore=  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
+        notBefore =  datetime.datetime.utcnow() - datetime.timedelta(hours = filters['time_window'])
         transfers = transfers.filter(Q(finish_time__isnull = True) | (Q(finish_time__gte = notBefore)))
    
     transfers = transfers.values('nullFinished', 'file_id', 'file_state', 'job_id',
                                  'source_se', 'dest_se', 'start_time', 'job__submit_time', 'job__priority')
-                         
-    return transfers.order_by('-nullFinished', '-job__priority', '-file_id')
+
+    # Ordering
+    (orderBy, orderDesc) = getOrderBy(httpRequest)
+    if orderBy == 'id':
+        transfers = transfers.order_by(orderedField('file_id', orderDesc))
+    elif orderBy == 'priority':
+        transfers = transfers.order_by(orderedField('job__priority', orderDesc))
+    elif orderBy == 'submit_time':
+        transfers = transfers.order_by(orderedField('job__submit_time', orderDesc))
+    elif orderBy == 'start_time':
+        transfers = transfers.order_by(orderedField('start_time', orderDesc))
+    else:
+        transfers = transfers.order_by('-nullFinished', '-job__priority', '-file_id')
+     
+    return transfers
