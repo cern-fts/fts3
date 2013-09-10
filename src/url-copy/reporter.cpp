@@ -30,7 +30,7 @@ using namespace std;
 Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     source_se(""), dest_se(""),
     msg(NULL), msg_updater(NULL), msg_log(NULL),
-    isTerminalSent(false)
+    isTerminalSent(false),reuse(false)
 {
     msg = new struct message();
     msg_updater = new struct message_updater();
@@ -131,9 +131,12 @@ void Reporter::sendTerminal(double throughput, bool retry,
                             double timeInSecs, double filesize)
 {
     // Did we send it already?
-    if (isTerminalSent)
-        return;
-    isTerminalSent = true;
+    if(!reuse)
+        {
+            if (isTerminalSent)
+                return;
+            isTerminalSent = true;
+        }
     // Not sent, so send it now and raise the flag
     sendMessage(throughput, retry, job_id, file_id,
                 transfer_status, transfer_message,
