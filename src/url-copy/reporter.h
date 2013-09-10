@@ -59,6 +59,10 @@ public:
     std::string source_se;
     std::string dest_se;
     static std::string ReplaceNonPrintableCharacters(std::string s);
+    void setReuseTransfer(bool state)
+    {
+        reuse = state;
+    }
 
 private:
     struct message*         msg;
@@ -71,4 +75,6 @@ private:
 #else
     std::atomic_bool isTerminalSent;
 #endif
+
+    bool reuse;
 };
