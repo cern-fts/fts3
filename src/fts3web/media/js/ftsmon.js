@@ -119,6 +119,52 @@ config(function($routeProvider) {
 		}
 	}
 })
+.directive('orderBy', ['$location', function($location) {
+	return {
+		restrict: 'A',
+		scope: 'isolate',
+		replace: true,
+		link: function(scope, element, attr) {
+			var content = element.text();
+			var field = attr.orderBy;
+			var orderedBy = $location.search().orderby;
+			if (!orderedBy)
+				orderedBy = '';
+			
+			// Differentiate between field and ordering (asc/desc)
+			var orderedDesc = false;
+			if (orderedBy && orderedBy[0] == '-') {
+				orderedDesc = true;
+				orderedBy = orderedBy.slice(1);
+			}
+			
+			// Now, add the icon if this is the field used for the ordering
+			var icon = '';
+			if (orderedBy == field) {
+				if (orderedDesc)
+					icon = '<i class="icon-arrow-down"></i>';
+				else
+					icon = '<i class="icon-arrow-up"></i>';
+			}
+			
+			// HTML
+			var html = '<span class="orderby">' + icon + content + '</span>';
+			var replacement = angular.element(html);
+			
+			// Bind the method
+			replacement.bind('click', function() {
+				if (orderedDesc && field == orderedBy)
+					$location.search({orderby: field});
+				else
+					$location.search({orderby: '-' + field});
+				scope.$apply();
+			});
+			
+			// Replace
+			element.replaceWith(replacement);
+		}
+	}
+}])
 .run(function($rootScope, $location) {
 	$rootScope.searchJob = function() {
 		$location.path('/job/' + $rootScope.jobId);

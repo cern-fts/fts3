@@ -95,3 +95,8 @@ td.SUBMITTED, .SUBMITTED {
 .overview.underused {
 	border-left: solid 4px #f89406;
 }
+
+/* Ordering */
+.orderby {
+    cursor: pointer;
+}

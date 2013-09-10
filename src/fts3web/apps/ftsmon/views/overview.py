@@ -63,5 +63,23 @@ def overview(httpRequest):
         obj['vo_name']   = triplet[2]
         objs.append(obj)
     
-    return sorted(objs, key = lambda o: (o.get('submitted', 0), o.get('active', 0)), reverse = True)
+    # Ordering
+    orderBy   = httpRequest.GET.get('orderby', None)
+    orderDesc = False
+    if orderBy and orderBy[0] == '-':
+        orderBy = orderBy[1:]
+        orderDesc = True
+
+    if orderBy == 'active':
+        sortingMethod = lambda o: (o.get('active', 0), o.get('submitted', 0))
+    elif orderBy == 'finished':
+        sortingMethod = lambda o: (o.get('finished', 0), o.get('failed', 0))
+    elif orderBy == 'failed':
+        sortingMethod = lambda o: (o.get('failed', 0), o.get('finished', 0))
+    elif orderBy == 'throughput':
+        sortingMethod = lambda o: (o.get('current', 0), o.get('active', 0))
+    else:
+        sortingMethod = lambda o: (o.get('submitted', 0), o.get('active', 0))
+    
+    return sorted(objs, key = sortingMethod, reverse = orderDesc)
 
