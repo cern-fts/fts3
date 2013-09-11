@@ -1,9 +1,12 @@
 
 
-function ErrorsCtrl($location, $scope, errors, Errors)
+function ErrorsCtrl($location, $scope, errors, Errors, Unique)
 {
 	// Errors
 	$scope.errors = errors;
+	
+	// Unique values
+	$scope.unique = Unique.all();
 	
 	// Paginator	
 	$scope.pageMax   = 15;
@@ -11,14 +14,15 @@ function ErrorsCtrl($location, $scope, errors, Errors)
 	$scope.pageCount = $scope.errors.pageCount;
 	
 	// Filter
-	$scope.filterReason = function(reason) {
-		if (typeof(reason) == 'string')
-			$location.search('contains', reason);
+	$scope.filterReason = function(filter) {
+		$location.search(filter);
 		$scope.filtersModal = false;
 	}
 	
 	$scope.filter = {
-		'contains': undefinedAsEmpty($location.search().contains)
+		contains:  undefinedAsEmpty($location.search().contains),
+		source_se: undefinedAsEmpty($location.search().source_se),
+		dest_se:   undefinedAsEmpty($location.search().dest_se),
 	}
 	
 	// On page change, reload

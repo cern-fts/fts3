@@ -134,7 +134,7 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 	}
 	
 	$scope.filterByState = function() {
-		$location.search({state: joinStates($scope.filter.state)});
+		$location.search('state', joinStates($scope.filter.state));
 	}
 	
 	// Reloading

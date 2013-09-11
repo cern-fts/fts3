@@ -23,14 +23,21 @@
                 <i class="icon-th-list" ng-click="filterBy({vo: ''})"></i>
                 VO
             </th>
-            <th style="width: 10%">Submitted</th>
             <th style="width: 10%">
-                <i class="icon-order"></i>
-                Active
+                <span order-by="submitted">Submitted</span>
             </th>
-            <th style="width: 10%">Succeeded</th>
-            <th style="width: 10%">Failed</th>
-            <th style="width: 10%">Current throughput</th>
+            <th style="width: 10%">
+                <span order-by="active">Active</span>
+            </th>
+            <th style="width: 10%">
+                <span order-by="finished">Succeeded</span>
+            </th>
+            <th style="width: 10%">
+                <span order-by="failed">Failed</span>
+            </th>
+            <th style="width: 10%">
+                <span order-by="throughput">Current throughput</span>
+            </th>
         </tr>
     </thead>
     <tbody>

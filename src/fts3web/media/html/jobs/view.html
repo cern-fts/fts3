@@ -9,6 +9,7 @@
 	Reuse sessions: {{job.job.reuse_job}}<br/>
 	Job finished: {{job.job.job_finished}}<br/>
 	Finished time: {{job.job.finish_time}}<br/>
+	Cancel flag: {{job.job.cancel_job}}<br/>
 	Metadata:
 	<pre>{{job.job.job_metadata}}</pre>
 </p>
@@ -45,15 +46,25 @@
 <table class="table">
     <thead>
         <tr>
-	        <th style="width: 8%">FILE ID</th>
-	        <th style="width: 8%">TRANSFER HOST</th>
+	        <th style="width: 8%">
+	           <span order-by="id">File ID</span>
+            </th>
+	        <th style="width: 8%">Transfer Host</th>
 	        <th>SOURCE URL</th>
 	        <th>DEST URL</th>
-	        <th style="width: 8%">FILE STATE</th>
-	        <th style="width: 8%">FILE SIZE</th>
-	        <th style="width: 8%">THROUGHPUT</th>
-	        <th style="width: 10%">START TIME</th>
-	        <th style="width: 10%">FINISH TIME</th>
+	        <th style="width: 8%">File State</th>
+	        <th style="width: 8%">
+	           <span order-by="size">File Size</span>
+            </th>
+	        <th style="width: 8%">
+	           <span order-by="throughput">Throughput</span>
+            </th>
+	        <th style="width: 10%">
+	           <span order-by="start_time">Start Time</span>
+            </th>
+	        <th style="width: 10%">
+	           <span order-by="finish_time">Finish time</span>
+            </th>
         </tr>
     </thead>
     <tbody ng-repeat="file in files.items" ng-class-odd="'odd'">

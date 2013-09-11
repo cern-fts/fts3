@@ -30,6 +30,10 @@ def showErrors(httpRequest):
                          
     if httpRequest.GET.get('contains', None):
         errors = errors.filter(reason__contains = httpRequest.GET['contains'])
+    if httpRequest.GET.get('source_se', None):
+        errors = errors.filter(source_se = httpRequest.GET['source_se'])
+    if httpRequest.GET.get('dest_se', None):
+        errors = errors.filter(dest_se = httpRequest.GET['dest_se'])
                          
     errors = errors .values('reason', 'source_se', 'dest_se')\
                          .annotate(count = Count('reason'))\
