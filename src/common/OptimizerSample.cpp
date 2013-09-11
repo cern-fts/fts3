@@ -97,7 +97,7 @@ bool OptimizerSample::transferStart(int numFinished, int numFailed, std::string 
                                 {
                                     (*iter).numberOfFinishedAll = numberOfFinishedAll;
                                     (*iter).numberOfFailedAll = numberOfFailedAll;
-                                    (*iter).numOfActivePerPair += 1;
+                                    (*iter).numOfActivePerPair = ((*iter).numOfActivePerPair + currentActive + 1) - currentActive;
                                     return  true;
                                 }
                             else
