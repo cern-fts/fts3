@@ -112,6 +112,8 @@ bool FileTransferScheduler::schedule(bool optimize)
 {
 
     vector<int> notUsed;
+    
+    try{
 
     if(optimize && cfgs.empty())
         {
@@ -214,6 +216,16 @@ bool FileTransferScheduler::schedule(bool optimize)
                 }
             notUsed.clear();
         }
+	
+    }catch(std::exception& e)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception " << e.what() <<  commit;		    
+                }
+            catch(...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception unknown" <<  commit;
+		    
+                }
 
     return true;
 }

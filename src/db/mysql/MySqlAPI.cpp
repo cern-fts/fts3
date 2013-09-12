@@ -3140,6 +3140,7 @@ bool MySqlAPI::isDnBlacklisted(std::string dn)
 
 
 /********* section for the new config API **********/
+/********* section for the new config API **********/
 bool MySqlAPI::isFileReadyState(int fileID)
 {
     soci::session sql(*connectionPool);
@@ -3147,16 +3148,19 @@ bool MySqlAPI::isFileReadyState(int fileID)
     bool isReadyHost = false;
     std::string host;
     std::string state;
+    soci::indicator isNull = soci::i_ok;
 
     try
         {
             sql.begin();
 
             sql << "SELECT file_state, transferHost FROM t_file WHERE file_id = :fileId",
-                soci::use(fileID), soci::into(state), soci::into(host);
+                soci::use(fileID), soci::into(state), soci::into(host, isNull);
 
             isReadyState = (state == "READY");
-            isReadyHost = (host == hostname);
+	    
+	    if (isNull != soci::i_null)
+            	isReadyHost = (host == hostname);
 
             sql.commit();
         }
