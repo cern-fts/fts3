@@ -35,14 +35,15 @@ export X509_USER_KEY=/etc/grid-security/fts3hostkey.pem
 start() {
     echo -n $"Starting $prog: "
     # if not running, start it up here, usually something like "daemon $exec"
-    if [ ! -f $lockfile ] ; then
-    touch "$lockfile" && success || failure 
-    sleep 25  
-    daemon fts_server 
-    retval=$?
-    echo
-    [ $retval -eq 0 ] && touch $lockfile
-    return $retval
+    pgrep fts_server
+    retval=$?    
+    if [ ! -f $lockfile ] && [ $retval -eq 1 ] ; then
+    	touch "$lockfile" && success || failure  
+    	daemon fts_server 
+    	retval=$?
+    	echo
+   	 [ $retval -eq 0 ] && touch $lockfile
+    	return $retval
     else
         pgrep fts_server
 	retval=$?
@@ -61,7 +62,13 @@ stop() {
     # stop it here, often "killproc $prog"
     rm -f "$lockfile" && success || failure 
     killproc $prog -2
+    sleep 25
+    pgrep fts_server
     retval=$?
+    if [ $retval -eq 0 ] ; then
+        killproc $prog -9
+    	retval=$?
+    fi
     echo
     [ $retval -eq 0 ] && rm -f $lockfile
     return $retval

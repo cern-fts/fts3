@@ -295,9 +295,10 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     soci::row const& rVO = *iVO;
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
-                                                     sql.prepare << " select distinct f.source_se, f.dest_se from t_file f IGNORE INDEX(file_state_dest_surl) where "
-						     		    " f.file_state='SUBMITTED' AND  exists (select null from t_job j where "
-								    " j.vo_name=:vo_name and f.job_id=j.job_id) ",
+                                                     sql.prepare << " select  distinct f.source_se, f.dest_se from t_file f  "
+						     		    " INNER JOIN t_job j ON (f.job_id = j.job_id) and j.vo_name = :vo_name "
+								    " and j.job_state in ('ACTIVE','READY','SUBMITTED') and "
+								    " f.file_state='SUBMITTED' ",
                                                      soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -335,6 +336,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                          "WHERE f.file_state = 'SUBMITTED' AND  f.source_se = :source AND f.dest_se = :dest AND"
                                                          "    j.vo_name = :voName AND j.job_finished is null AND "
+							 "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
@@ -1520,14 +1522,32 @@ void MySqlAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn,
 
     try
         {
+            soci::statement stmt(sql);
+
+            stmt.exchange(soci::use(cert_request, "certRequest"));
+            stmt.exchange(soci::use(priv_key, "privKey"));
+            stmt.exchange(soci::use(voms_attrs, "vomsAttrs"));
+            stmt.exchange(soci::use(dlg_id, "dlgId"));
+            stmt.exchange(soci::use(dn, "dn"));
+
+            stmt.alloc();
+
+            stmt.prepare("UPDATE t_credential_cache SET "
+                         "    cert_request = :certRequest, "
+                         "    priv_key = :privKey, "
+                         "    voms_attrs = :vomsAttrs "
+                         "WHERE dlg_id = :dlgId AND dn=:dn");
+
+            stmt.define_and_bind();
+
             sql.begin();
-            sql << "UPDATE t_credential_cache SET "
-                "    cert_request = :certRequest, "
-                "    priv_key = :privKey, "
-                "    voms_attrs = :vomsAttrs "
-                "WHERE dlg_id = :dlgId AND dn=:dn",
-                soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs),
-                soci::use(dlg_id), soci::use(dn);
+            stmt.execute(true);
+            if (stmt.get_affected_rows() == 0) {
+                std::ostringstream msg;
+                msg << "No entries updated in t_credential_cache! "
+                    << dn << " (" << dlg_id << ")";
+                throw Err_Custom(msg.str());
+            }
             sql.commit();
         }
     catch (std::exception& e)
