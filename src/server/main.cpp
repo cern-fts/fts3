@@ -40,6 +40,7 @@ limitations under the License. */
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 #include "profiler/Profiler.h"
+#include <fstream>
 
 namespace fs = boost::filesystem;
 using boost::thread;
@@ -55,6 +56,63 @@ const char *configfile = "/etc/fts3/fts3config";
 /* -------------------------------------------------------------------------- */
 
 /* -------------------------------------------------------------------------- */
+
+
+int proc_find()
+{
+    DIR* dir=NULL;
+    struct dirent* ent=NULL;
+    char* endptr=NULL;
+    char buf[512]= {0};
+    unsigned count = 0;
+    const char* name = "fts_server";
+
+    if (!(dir = opendir("/proc")))
+        {
+            return -1;
+        }
+			   
+
+    while((ent = readdir(dir)) != NULL)
+        {
+            /* if endptr is not a null character, the directory is not
+             * entirely numeric, so ignore it */
+            long lpid = strtol(ent->d_name, &endptr, 10);
+            if (*endptr != '\0')
+                {
+                    continue;
+                }
+
+            /* try to open the cmdline file */
+            snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);  		   	
+            FILE* fp = fopen(buf, "r");
+
+            if (fp)
+                {
+                    if (fgets(buf, sizeof(buf), fp) != NULL)
+                        {
+                            /* check the first token in the file, the program name */
+                            char* first = NULL;
+                            first = strtok(buf, " ");			    	   
+
+                            if (first && strstr(first, name))
+                                {
+                                    fclose(fp);
+                                    fp = NULL;
+                                    ++count;
+				    break;
+                                }
+                        }
+                    if(fp)
+                        fclose(fp);
+                }
+
+        }   
+    closedir(dir);
+    return count;
+}
+
+
 static void taskTimer(int time)
 {
     boost::this_thread::sleep(boost::posix_time::seconds(time));
@@ -441,7 +499,7 @@ int main(int argc, char** argv)
     pid_t child;
     //very first check before it goes to deamon mode
     try
-        {
+        {	
             if (fexists(configfile) != 0)
                 {
                     std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;
@@ -556,14 +614,17 @@ int main(int argc, char** argv)
             waitpid(-1, &status, 0);
             if (!WIFSTOPPED(status))
                 {
-                    result = fork();
-                    if (result == 0)
+                    if( 1 == proc_find() )
                         {
-                            result = DoServer(argc, argv);
-                        }
-                    if (result < 0)
-                        {
-                            exit(1);
+                            result = fork();
+                            if (result == 0)
+                                {
+                                    result = DoServer(argc, argv);
+                                }
+                            if (result < 0)
+                                {
+                                    exit(1);
+                                }
                         }
                 }
             sleep(5);
