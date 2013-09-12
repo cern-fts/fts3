@@ -295,8 +295,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     soci::row const& rVO = *iVO;
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
-                                                     sql.prepare << " select  distinct f.source_se, f.dest_se from t_file f IGNORE INDEX(file_state_dest_surl)  "
-						     		    " INNER JOIN t_job j ON (f.job_id = j.job_id) and j.vo_name = :vo_name and f.file_state='SUBMITTED' ",
+                                                     sql.prepare << " select  distinct f.source_se, f.dest_se from t_file f  "
+						     		    " INNER JOIN t_job j ON (f.job_id = j.job_id) and j.vo_name = :vo_name and "
+								    " f.file_state='SUBMITTED' ",
                                                      soci::use(vo_name)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
