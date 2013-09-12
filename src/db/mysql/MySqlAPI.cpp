@@ -1520,14 +1520,32 @@ void MySqlAPI::updateGrDPStorageCacheElement(std::string dlg_id, std::string dn,
 
     try
         {
+            soci::statement stmt(sql);
+
+            stmt.exchange(soci::use(cert_request, "certRequest"));
+            stmt.exchange(soci::use(priv_key, "privKey"));
+            stmt.exchange(soci::use(voms_attrs, "vomsAttrs"));
+            stmt.exchange(soci::use(dlg_id, "dlgId"));
+            stmt.exchange(soci::use(dn, "dn"));
+
+            stmt.alloc();
+
+            stmt.prepare("UPDATE t_credential_cache SET "
+                         "    cert_request = :certRequest, "
+                         "    priv_key = :privKey, "
+                         "    voms_attrs = :vomsAttrs "
+                         "WHERE dlg_id = :dlgId AND dn=:dn");
+
+            stmt.define_and_bind();
+
             sql.begin();
-            sql << "UPDATE t_credential_cache SET "
-                "    cert_request = :certRequest, "
-                "    priv_key = :privKey, "
-                "    voms_attrs = :vomsAttrs "
-                "WHERE dlg_id = :dlgId AND dn=:dn",
-                soci::use(cert_request), soci::use(priv_key), soci::use(voms_attrs),
-                soci::use(dlg_id), soci::use(dn);
+            stmt.execute(true);
+            if (stmt.get_affected_rows() == 0) {
+                std::ostringstream msg;
+                msg << "No entries updated in t_credential_cache! "
+                    << dn << " (" << dlg_id << ")";
+                throw Err_Custom(msg.str());
+            }
             sql.commit();
         }
     catch (std::exception& e)
