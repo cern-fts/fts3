@@ -180,13 +180,11 @@ public:
             }
         catch (std::exception& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
-                throw;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;               
             }
         catch (...)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception" << commit;
-                throw;
             }
         return updated;
     }
@@ -265,15 +263,15 @@ protected:
             }
         catch (const fs::filesystem_error& e)
             {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
             }
         catch (std::exception& ex)
             {
-                throw Err_Custom(std::string(__func__) + ": Caught exception " + ex.what());
+		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;		
             }
         catch (...)
             {
-                throw Err_Custom(std::string(__func__) + ": Caught exception ");
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << commit;
             }
     }
 
@@ -295,8 +293,7 @@ protected:
                                 if (runConsumerStatus(messages) != 0)
                                     {
                                         char buffer[128]= {0};
-                                        throw Err_System(std::string("Could not get the status messages: ") +
-                                                         strerror_r(errno, buffer, sizeof(buffer)));
+                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Could not get the status messages:" << strerror_r(errno, buffer, sizeof(buffer)) << commit;
                                     }
                             }
 
