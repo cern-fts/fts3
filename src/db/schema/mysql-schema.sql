@@ -664,6 +664,7 @@ CREATE INDEX file_job_id     ON t_file(job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
 CREATE INDEX file_source_dest ON t_file(source_se, dest_se);
+CREATE INDEX t_waittimeout ON t_file(wait_timeout);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
