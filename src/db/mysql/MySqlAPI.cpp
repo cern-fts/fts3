@@ -44,7 +44,7 @@ static time_t convertToUTC(int advance)
 
     struct tm *utc;
     utc = gmtime(&now);
-    return timegm(utc);
+    return mktime(utc);
 }
 
 static std::string _getTrTimestampUTC()
@@ -52,7 +52,7 @@ static std::string _getTrTimestampUTC()
     time_t now = time(NULL);
     struct tm* tTime;
     tTime = gmtime(&now);
-    time_t msec = timegm(tTime) * 1000; //the number of milliseconds since the epoch
+    time_t msec = mktime(tTime) * 1000; //the number of milliseconds since the epoch
     std::ostringstream oss;
     oss << fixed << msec;
     return oss.str();
@@ -2163,7 +2163,7 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
 
             if (sql.got_data())
                 {
-                    time_t termTimestamp = timegm(&termTime);
+                    time_t termTimestamp = mktime(&termTime);
                     time_t now = convertToUTC(0);
                     expired = (difftime(termTimestamp, now) <= 0);
                 }
@@ -2526,7 +2526,7 @@ void MySqlAPI::forceFailTransfers(std::map<int, std::string>& collectJobs)
 
                     do
                         {
-                            startTime = timegm(&startTimeSt); //from db
+                            startTime = mktime(&startTimeSt); //from db
                             timeout = extractTimeout(params);
 
                             int terminateTime = timeout + 1000;
@@ -2721,7 +2721,7 @@ void MySqlAPI::revertToSubmitted()
                 {
                     do
                         {
-                            time_t startTimestamp = timegm(&startTime);
+                            time_t startTimestamp = mktime(&startTime);
                             double diff = difftime(now2, startTimestamp);
 
                             if (diff > 1500 && reuseJob != "Y")
