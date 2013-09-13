@@ -2191,30 +2191,40 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
             soci::indicator isNull1 = soci::i_ok;
             soci::indicator isNull2 = soci::i_ok;
 
-            sql << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+            soci::statement stmt = (
+                                       sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
                 " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
                 " and (start_time >= date_sub(utc_timestamp(), interval '30' minute) OR job_finished >= date_sub(utc_timestamp(), interval '30' minute))  "
                 " order by FILE_ID DESC LIMIT 30 ",
-                soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2);
+                soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
+		stmt.execute(true);		
+		
             if (isNull2 == soci::i_null)
                 {
                     avgThr = 0.0;
                 }
 
-            sql << "SELECT COUNT(*) FROM t_file "
+            soci::statement stmt1 = (
+                                       sql.prepare << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE') ",
-                soci::use(source_hostname), soci::into(nActiveSource);
+                soci::use(source_hostname), soci::into(nActiveSource));
+	    stmt1.execute(true);	
+	    
 
-            sql << "SELECT COUNT(*) FROM t_file "
+            soci::statement stmt2 = (
+                                       sql.prepare << "SELECT COUNT(*) FROM t_file "
                 "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') ",
-                soci::use(destin_hostname), soci::into(nActiveDest);
+                soci::use(destin_hostname), soci::into(nActiveDest));
+	    stmt2.execute(true);
 
-
-            sql << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+            soci::statement stmt3 = (
+                                       sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
                 " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
                 " and (start_time >= date_sub(utc_timestamp(), interval '10' minute) OR job_finished >= date_sub(utc_timestamp(), interval '10' minute))  "
                 " order by FILE_ID DESC LIMIT 10 ",
-                soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1);
+                soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1));
+	    stmt3.execute(true);
+	    		
             if (isNull1 == soci::i_null)
                 {
                     throughput = 0.0;
@@ -2235,26 +2245,35 @@ bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::strin
                 }
 
 
-            sql << "SELECT COUNT(*) FROM t_file "
+            soci::statement stmt4 = (
+                                       sql.prepare << " SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                 "      file_state in ('READY','ACTIVE') ",
                 soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(nActive);
+                soci::into(nActive));
+	    stmt4.execute(true);		
 
-            sql << "SELECT COUNT(*) FROM t_file "
+
+            soci::statement stmt5 = (
+                                       sql.prepare << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                 "      file_state = 'FINISHED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(nFinishedAll);
+                soci::into(nFinishedAll));
+	    stmt5.execute(true);				
+	    
 
-            sql << "SELECT COUNT(*) FROM t_file "
+            soci::statement stmt6 = (
+                                       sql.prepare << "SELECT COUNT(*) FROM t_file "
                 "WHERE "
                 "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
                 "      file_state = 'FAILED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
                 soci::use(source_hostname), soci::use(destin_hostname),
-                soci::into(nFailedAll);
+                soci::into(nFailedAll));
+	    stmt6.execute(true);				
+	    
 
             double ratioSuccessFailure = 0;
             if(nFinishedLastHour > 0)
