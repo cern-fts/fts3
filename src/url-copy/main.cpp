@@ -336,6 +336,7 @@ void signalHandler(int signum)
             propagated = true;
 
             logger.ERROR() << "Transfer process died " << g_job_id << std::endl;
+            logger.ERROR() << "Received signal " << signum << std::endl;
             logger.ERROR() << stackTrace << std::endl;
 
             errorMessage = "Transfer process died " + g_job_id;
