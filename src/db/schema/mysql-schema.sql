@@ -596,6 +596,8 @@ CREATE TABLE t_file (
 
   t_log_file        VARCHAR(2048),
   t_log_file_debug  INTEGER,
+  
+  hashed_id INTEGER UNSIGNED,
     
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );
@@ -665,6 +667,7 @@ CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
 CREATE INDEX file_source_dest ON t_file(source_se, dest_se);
 CREATE INDEX t_waittimeout ON t_file(wait_timeout);
+CREATE INDEX file_id_hashed ON t_file(hashed_id);
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 
