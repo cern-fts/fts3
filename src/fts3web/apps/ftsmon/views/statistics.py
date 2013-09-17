@@ -94,7 +94,7 @@ def _getTransferAndSubmissionPerHost(timewindow):
         else:                t = 0
         if h in active:      a = active[h]
         else:                a = 0
-        servers[h] = {'hostname': h, 'submissions': s, 'transfers': t, 'active': a}
+        servers[h] = {'submissions': s, 'transfers': t, 'active': a}
         
     return servers
 
@@ -248,8 +248,8 @@ def _getHostHeartBeatAndSegment():
     if hostCount == 0:
         return {}
     
-    segmentSize = 0xFFFFFFFF / hostCount
-    segmentMod  = 0xFFFFFFFF % hostCount
+    segmentSize = 0xFFFF / hostCount
+    segmentMod  = 0xFFFF % hostCount
     
     hosts = {}
     index = 0
@@ -258,13 +258,13 @@ def _getHostHeartBeatAndSegment():
             'beat'    : h.beat,
             'index'   : index,
             'segment' : {
-                'start': "%08X" % (segmentSize * index),
-                'end'  : "%08X" % (segmentSize * (index + 1) - 1),
+                'start': "%04X" % (segmentSize * index),
+                'end'  : "%04X" % (segmentSize * (index + 1) - 1),
             }
         }
         
         if index == hostCount - 1:
-            hosts[h.hostname]['segment']['end'] = "%08X" % (segmentSize * (index + 1) + segmentMod)
+            hosts[h.hostname]['segment']['end'] = "%04X" % (segmentSize * (index + 1) + segmentMod)
         
         index += 1       
     
@@ -277,7 +277,10 @@ def servers(httpRequest):
     
     servers = beats
     for k in servers:
-        servers[k].update(transfers.get(k, {}))
+        if k in transfers:
+            servers[k].update(transfers.get(k))
+        else:
+            servers[k].update({'transfers': 0, 'active': 0, 'submissions': 1})
     
     return servers
 

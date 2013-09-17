@@ -13,8 +13,8 @@
         </tr>
     </thead>
     <tbody>
-        <tr ng-repeat="s in servers" ng-class-odd="'odd'">
-            <td>{{s.hostname}}</td>
+        <tr ng-repeat="(k, s) in servers" ng-class-odd="'odd'">
+            <td>{{k}}</td>
             <td>[{{s.segment.start}}, {{s.segment.end}}]</td>
             <td>{{s.submissions}}</td>
             <td>{{s.transfers}}</td>
