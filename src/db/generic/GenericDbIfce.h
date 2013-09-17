@@ -366,6 +366,18 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries) = 0;
 
+    /**
+     * Signals that the server is alive
+     * The total number of running (alive) servers is put in count
+     * The index of this specific machine is put in index
+     * A default implementation is provided, as this is used for optimization,
+     * so it is not mandatory.
+     */
+    virtual void updateHeartBeat(unsigned* index, unsigned* count) {
+        *index = 0;
+        *count = 1;
+    }
+
 };
 
 

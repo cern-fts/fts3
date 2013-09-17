@@ -832,3 +832,8 @@ void ProfiledDB::getTransferRetries(int fileId, std::vector<FileRetry*>& retries
 {
     PROFILE_PREFIXED("DB::", db->getTransferRetries(fileId, retries));
 }
+
+void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count)
+{
+    PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count));
+}

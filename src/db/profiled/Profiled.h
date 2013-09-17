@@ -305,6 +305,8 @@ public:
     void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
 
     void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
+
+    void updateHeartBeat(unsigned* index, unsigned* count);
 };
 
 
