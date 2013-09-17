@@ -377,8 +377,8 @@ public:
     virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end) {
         *index = 0;
         *count = 1;
-        *start = 0x00000000;
-        *end   = 0xFFFFFFFF;
+        *start = 0x0000;
+        *end   = 0xFFFF;
     }
 
 };

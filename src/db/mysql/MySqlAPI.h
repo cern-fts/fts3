@@ -54,8 +54,6 @@ public:
     };
 
 
-
-
     /**
      * Intialize database connection  by providing information from fts3config file
      **/
@@ -362,4 +360,11 @@ private:
     int highDefault;
     int jobsNum;
     int filesNum;
+
+    struct HashSegment {
+        unsigned start;
+        unsigned end;
+
+        HashSegment(): start(0), end(0xFFFF) {}
+    } hashSegment;
 };

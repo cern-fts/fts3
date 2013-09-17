@@ -287,7 +287,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                sql.prepare <<
                                                " SELECT DISTINCT vo_name "
                                                " FROM t_job "
-                                               " WHERE job_finished is NULL AND cancel_job IS NULL AND t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')"
+                                               " WHERE job_finished is NULL AND cancel_job IS NULL AND "
+                                               "    t_job.job_state IN ('ACTIVE', 'READY','SUBMITTED')"
                                            );
 
             for (soci::rowset<soci::row>::const_iterator iVO = rsVO.begin(); iVO != rsVO.end(); ++iVO)
@@ -296,10 +297,10 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare << " select  distinct f.source_se, f.dest_se from t_file f  "
-						     		    " INNER JOIN t_job j ON (f.job_id = j.job_id) and j.vo_name = :vo_name "
-								    " and j.job_state in ('ACTIVE','READY','SUBMITTED') and "
-								    " f.file_state='SUBMITTED' ",
-                                                     soci::use(vo_name)
+                                                     " INNER JOIN t_job j ON (f.job_id = j.job_id) and j.vo_name = :vo_name "
+                                                     " and j.job_state in ('ACTIVE','READY','SUBMITTED') and "
+                                                     " f.file_state='SUBMITTED' AND f.hashed_id BETWEEN :hStart AND :hEnd ",
+                                                     soci::use(vo_name), soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
@@ -336,15 +337,17 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                                          "WHERE f.file_state = 'SUBMITTED' AND  f.source_se = :source AND f.dest_se = :dest AND"
                                                          "    j.vo_name = :voName AND j.job_finished is null AND "
-							 "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                                         "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND "
-                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
+                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                                                         "    f.hashed_id BETWEEN :hStart and :hEnd "
                                                          " ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
                                                          soci::use(boost::get<0>(triplet)),
                                                          soci::use(boost::get<1>(triplet)),
                                                          soci::use(boost::get<2>(triplet)),
                                                          soci::use(tTime),
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                          soci::use(filesNum)
                                                      );
 
@@ -603,9 +606,11 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "    f.file_state = 'SUBMITTED' AND "
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
-                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
+                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                                                         "    f.hashed_id BETWEEN :hStart AND :hEnd "
                                                          " LIMIT :filesNum ",soci::use(jobId),
                                                          soci::use(tTime),
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                          soci::use(filesNum)
                                                      );
 
@@ -716,8 +721,11 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     soci::use(fileIndex),
                     soci::use(sourceSe),
                     soci::use(destSe),
-                    soci::use(timeout)
-                                                   );
+                    soci::use(timeout));
+
+            soci::statement updateHashedId = (sql.prepare <<
+                    "UPDATE t_file SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
+            );
 
             std::vector<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
@@ -741,6 +749,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                         {
                             pairStmt.execute();
                         }
+
+                    // Update hash
+                    updateHashedId.execute();
                 }
 
             sql.commit();
@@ -6117,11 +6128,11 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             sql.commit();
 
             // Calculate start and end hash values
-            unsigned segsize = 0xFFFFFFFF / *count;
-            unsigned segmod  = 0xFFFFFFFF % *count;
+            unsigned segsize = 0xFFFF / *count;
+            unsigned segmod  = 0xFFFF % *count;
 
-            *start = segsize * (*index);
-            *end   = segsize * (*index + 1) - 1;
+            this->hashSegment.start = *start = segsize * (*index);
+            this->hashSegment.end   =*end   = segsize * (*index + 1) - 1;
 
             // Last one take over what is left
             if (*index == *count - 1)

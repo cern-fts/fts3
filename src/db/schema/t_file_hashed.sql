@@ -28,7 +28,7 @@ ALTER TABLE t_file ADD hashed_id INTEGER UNSIGNED DEFAULT 0; -- 6 min for 307k r
 
 -- Populate new field
 UPDATE t_file
-    SET hashed_id =  CONV(SUBSTRING(MD5(file_id) FROM 1 FOR 8), 16, 10); -- 1 min for 307k
+    SET hashed_id =  CONV(SUBSTRING(MD5(file_id) FROM 1 FOR 4), 16, 10); -- 1 min for 307k
 
 -- Add index
 CREATE INDEX file_id_hashed ON t_file(hashed_id); -- 7 min for 307k
