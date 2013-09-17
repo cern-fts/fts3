@@ -338,6 +338,8 @@ public:
 
     void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
 
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;

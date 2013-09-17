@@ -46,9 +46,17 @@ private:
     void beat_impl(void)
     {
         while (!stopThreads) {
-            unsigned index, count;
-            db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count);
-            FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count << commit;
+            unsigned index, count, start, end;
+            try {
+                db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end);
+                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
+                                                << " [" << std::hex << start << ':' << std::hex << end << ']'
+                                                << commit;
+            }
+            catch (const std::exception& e) {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Hearbeat failed: " << e.what() << commit;
+            }
+
             sleep(60);
         }
     }

@@ -6079,6 +6079,60 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
         }
 }
 
+
+
+void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            // Update beat
+            sql << "INSERT INTO t_hosts (hostname, beat) VALUES (:host, UTC_TIMESTAMP()) "
+                   "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
+                   soci::use(hostname);
+
+            // Total number of working instances
+            sql << "SELECT COUNT(hostname) FROM t_hosts "
+                   "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
+                   soci::into(*count);
+
+            // This instance index
+            // Mind that MySQL does not have rownum
+            soci::rowset<std::string> rsHosts = (sql.prepare <<
+                                               "SELECT hostname FROM t_hosts "
+                                               "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)"
+                                               "ORDER BY hostname");
+
+            soci::rowset<std::string>::const_iterator i;
+            for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
+                {
+                    std::string& host = *i;
+                    if (host == hostname)
+                        break;
+                }
+
+            sql.commit();
+
+            // Calculate start and end hash values
+            unsigned segsize = 0xFFFFFFFF / *count;
+            unsigned segmod  = 0xFFFFFFFF % *count;
+
+            *start = segsize * (*index);
+            *end   = segsize * (*index + 1) - 1;
+
+            // Last one take over what is left
+            if (*index == *count - 1)
+                *end += segmod + 1;
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
 // the class factories
 
 extern "C" GenericDbIfce* create()

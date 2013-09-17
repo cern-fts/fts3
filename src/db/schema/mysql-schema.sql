@@ -646,7 +646,13 @@ CREATE TABLE t_stage_req (
   ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
 );
 
-
+--
+-- Host hearbeats
+--
+CREATE TABLE t_hosts (
+    hostname    VARCHAR(64) PRIMARY KEY NOT NULL,
+    beat        TIMESTAMP NULL DEFAULT NULL
+);
 
 --
 --

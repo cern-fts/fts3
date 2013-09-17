@@ -372,15 +372,16 @@ public:
      * The index of this specific machine is put in index
      * A default implementation is provided, as this is used for optimization,
      * so it is not mandatory.
+     * start and end are set to the interval of hash values this host will process
      */
-    virtual void updateHeartBeat(unsigned* index, unsigned* count) {
+    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end) {
         *index = 0;
         *count = 1;
+        *start = 0x00000000;
+        *end   = 0xFFFFFFFF;
     }
 
 };
-
-
 
 
 
