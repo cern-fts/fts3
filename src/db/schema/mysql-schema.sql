@@ -597,7 +597,7 @@ CREATE TABLE t_file (
   t_log_file        VARCHAR(2048),
   t_log_file_debug  INTEGER,
   
-  hashed_id INTEGER UNSIGNED,
+  hashed_id INTEGER UNSIGNED DEFAULT 0,
     
   FOREIGN KEY (job_id) REFERENCES t_job(job_id)
 );

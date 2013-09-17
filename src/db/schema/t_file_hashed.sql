@@ -24,7 +24,7 @@ COMMIT;
 
 BEGIN;
 -- Add the new field
-ALTER TABLE t_file ADD hashed_id INTEGER UNSIGNED; -- 6 min for 307k rows
+ALTER TABLE t_file ADD hashed_id INTEGER UNSIGNED DEFAULT 0; -- 6 min for 307k rows
 
 -- Populate new field
 UPDATE t_file
