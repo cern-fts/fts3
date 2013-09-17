@@ -17,7 +17,7 @@
 
 from datetime import datetime, timedelta
 from django.db.models import Q, Count, Avg
-from ftsweb.models import Job, File, ConfigAudit
+from ftsweb.models import Job, File, ConfigAudit, Host
 from ftsweb.models import ProfilingSnapshot, ProfilingInfo
 from jsonify import jsonify, jsonify_paged
 
@@ -86,7 +86,7 @@ def _getTransferAndSubmissionPerHost(timewindow):
     for t in query:
         active[t['transferHost']] = t['count']
         
-    servers = []
+    servers = {}
     for h in hostnames:
         if h in submissions: s = submissions[h]
         else:                s = 0
@@ -94,7 +94,7 @@ def _getTransferAndSubmissionPerHost(timewindow):
         else:                t = 0
         if h in active:      a = active[h]
         else:                a = 0
-        servers.append({'hostname': h, 'submissions': s, 'transfers': t, 'active': a})
+        servers[h] = {'hostname': h, 'submissions': s, 'transfers': t, 'active': a}
         
     return servers
 
@@ -241,9 +241,44 @@ def overview(httpRequest):
     }
     
 
+def _getHostHeartBeatAndSegment():
+    allHosts = Host.objects.order_by('hostname').filter(beat__gte = datetime.utcnow() - timedelta(minutes = 2))
+    hostCount = len(allHosts)
+    
+    if hostCount == 0:
+        return {}
+    
+    segmentSize = 0xFFFFFFFF / hostCount
+    segmentMod  = 0xFFFFFFFF % hostCount
+    
+    hosts = {}
+    index = 0
+    for h in allHosts:
+        hosts[h.hostname] = {
+            'beat'    : h.beat,
+            'index'   : index,
+            'segment' : {
+                'start': "%08X" % (segmentSize * index),
+                'end'  : "%08X" % (segmentSize * (index + 1) - 1),
+            }
+        }
+        
+        if index == hostCount - 1:
+            hosts[h.hostname]['segment']['end'] = "%08X" % (segmentSize * (index + 1) + segmentMod)
+        
+        index += 1       
+    
+    return hosts
+
 @jsonify
 def servers(httpRequest):
-    servers = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
+    beats     = _getHostHeartBeatAndSegment()
+    transfers = _getTransferAndSubmissionPerHost(timedelta(hours = 12))
+    
+    servers = beats
+    for k in servers:
+        servers[k].update(transfers.get(k, {}))
+    
     return servers
 
 
