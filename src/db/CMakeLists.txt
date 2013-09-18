@@ -16,7 +16,7 @@ add_subdirectory(schema)
 endif ()
 
 if (ALLBUILD STREQUAL "ON")
-add_subdirectory(oracle)
+#add_subdirectory(oracle)
 add_subdirectory(mysql)
 add_subdirectory(python)
 add_subdirectory(schema)

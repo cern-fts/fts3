@@ -256,7 +256,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
                                                sql.prepare <<
                                                " SELECT DISTINCT vo_name "
                                                " FROM t_job "
-                                               " WHERE  job_finished is null "
+                                               " WHERE job_finished is null "
                                            );
 
             for (soci::rowset<soci::row>::const_iterator iVO = rsVO.begin(); iVO != rsVO.end(); ++iVO)
@@ -264,9 +264,12 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
                     soci::row const& rVO = *iVO;
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
-                                                     sql.prepare << " select distinct source_se, dest_se from t_file use index(file_vo_name) WHERE  "
-                                                     " vo_name = :vo_name AND "
-                                                     " f.file_state = 'SUBMITTED' AND f.hashed_id BETWEEN :hStart AND :hEnd ",
+                                                     sql.prepare <<
+                                                     " SELECT DISTINCT source_se, dest_se "
+                                                     " FROM t_file USE INDEX (file_vo_name)"
+                                                     " WHERE vo_name = :vo_name AND "
+                                                     "      file_state = 'SUBMITTED' AND "
+                                                     "      hashed_id BETWEEN :hStart AND :hEnd ",
                                                      soci::use(vo_name), soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -340,17 +343,21 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                          " FROM t_job j, t_file f "
                                                          " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
                                                          "    f.source_se = :source AND f.dest_se = :dest AND "
-                                                         "    f.vo_name = :vo_name and f.wait_timestamp IS NULL AND "
+                                                         "    f.vo_name = :vo_name AND "
+                                                         "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
-                                                         "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND "
-                                                         "    f.hashed_id BETWEEN :hStart and :hEnd "
-                                                         " ORDER BY j1.priority DESC, j1.submit_time LIMIT :filesNum",
+                                                         "    f.hashed_id BETWEEN :hStart and :hEnd AND "
+                                                         "    EXISTS ( "
+                                                         "        SELECT NULL FROM t_job j1 "
+                                                         "        WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                                         "              (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
+                                                         "        ORDER BY j1.priority DESC, j1.submit_time) LIMIT :filesNum",
                                                          soci::use(boost::get<0>(triplet)),
                                                          soci::use(boost::get<1>(triplet)),
                                                          soci::use(boost::get<2>(triplet)),
                                                          soci::use(tTime),
                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                         soci::use(boost::get<2>(triplet)),
                                                          soci::use(filesNum)
                                                      );
 

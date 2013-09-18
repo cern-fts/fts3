@@ -384,7 +384,3 @@ public:
     virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO() = 0;
 
 };
-
-};
-
-
