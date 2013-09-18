@@ -685,7 +685,7 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
 
 
 void OracleAPI::getByJobId(
-        std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
+        std::vector<boost::tuple<std::string, std::string, std::string> >& /*distinct*/,
         std::map<std::string, std::list<TransferFiles*> >& files)
 {
     // Queries
@@ -3647,14 +3647,14 @@ bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::stri
 
     std::string query_stmt7 =   " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from ( select filesize, throughput from t_file where "
                                 " source_se=:1 and dest_se=:2 "
-                                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
                                 " and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '10' minute) OR "
                                 " job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '5' minute)) "
                                 " order by FILE_ID DESC)  where rownum <= 10 ";
 
     std::string query_stmt8 =   " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from ( select filesize, throughput from t_file where "
                                 " source_se=:1 and dest_se=:2 "
-                                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                " and file_state in ('ACTIVE','FINISHED') and throughput > 0  and filesize > 0 "
                                 " and (start_time >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute) OR "
                                 " job_finished >= (SYS_EXTRACT_UTC(SYSTIMESTAMP) - interval '30' minute)) "
                                 " order by FILE_ID DESC) where rownum <= 30 ";
