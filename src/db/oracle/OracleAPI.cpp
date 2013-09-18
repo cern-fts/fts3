@@ -684,7 +684,9 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
 }
 
 
-void OracleAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
+void OracleAPI::getByJobId(
+        std::vector<boost::tuple<std::string, std::string, std::string> >& distinct,
+        std::map<std::string, std::list<TransferFiles*> >& files)
 {
     // Queries
     const std::string voQuery = " SELECT DISTINCT vo_name "
@@ -11648,6 +11650,10 @@ void OracleAPI::resetSanityRuns(SafeConnection& pooled, struct message_sanity &m
         }
 }
 
+std::vector<boost::tuple<std::string, std::string, std::string> > OracleAPI::distinctSrcDestVO()
+{
+    return std::vector<boost::tuple<std::string, std::string, std::string> >();
+}
 
 // the class factories
 
