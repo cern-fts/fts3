@@ -723,8 +723,15 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     soci::use(destSe),
                     soci::use(timeout));
 
+            // When reuse is enabled, we hash the job id instead of the file ID
+            // This guarantees that the whole set belong to the same machine, but keeping
+            // the load balance between hosts
             soci::statement updateHashedId = (sql.prepare <<
                     "UPDATE t_file SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
+            );
+
+            soci::statement updateHashedIdWithJobId = (sql.prepare <<
+                    "UPDATE t_file SET hashed_id = conv(substring(md5(job_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
             );
 
             std::vector<job_element_tupple>::const_iterator iter;
@@ -751,7 +758,10 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                         }
 
                     // Update hash
-                    updateHashedId.execute();
+                    if (reuse != "Y")
+                        updateHashedId.execute();
+                    else
+                        updateHashedIdWithJobId.execute();
                 }
 
             sql.commit();
