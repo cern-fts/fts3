@@ -855,7 +855,7 @@ protected:
                             }
 
                         long unsigned int freeRam = getAvailableMemory();
-                        if (freeRam != 0 && freeRam < 100)
+                        if (freeRam != 0 && freeRam < 300)
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
                                 continue;
