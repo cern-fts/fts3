@@ -85,7 +85,7 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
-    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
+    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
@@ -338,6 +338,8 @@ public:
 
     void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
 
+    virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO();
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
@@ -360,4 +362,6 @@ private:
     int highDefault;
     int jobsNum;
     int filesNum;
+
+    mutable ThreadTraits::MUTEX_R _mutex;
 };

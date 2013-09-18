@@ -117,7 +117,7 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse) = 0;
 
-    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files) = 0;
+    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 
     virtual void getSe(Se* &se, std::string seName) = 0;
 
@@ -365,6 +365,8 @@ public:
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason) = 0;
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries) = 0;
+
+    virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO() = 0;
 
 };
 
