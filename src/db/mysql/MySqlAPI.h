@@ -83,7 +83,7 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
-    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
+    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
@@ -338,6 +338,8 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
 
+    virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO();
+
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
@@ -367,4 +369,6 @@ private:
 
         HashSegment(): start(0), end(0xFFFF) {}
     } hashSegment;
+
+    mutable ThreadTraits::MUTEX_R _mutex;
 };
