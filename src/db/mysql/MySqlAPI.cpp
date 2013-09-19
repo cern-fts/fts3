@@ -256,7 +256,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
                                                sql.prepare <<
                                                " SELECT DISTINCT vo_name "
                                                " FROM t_job "
-                                               " WHERE  job_finished is not null "
+                                               " WHERE job_finished is null "
                                            );
 
             for (soci::rowset<soci::row>::const_iterator iVO = rsVO.begin(); iVO != rsVO.end(); ++iVO)
@@ -264,10 +264,13 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
                     soci::row const& rVO = *iVO;
                     std::string vo_name = rVO.get<std::string>("vo_name");
                     soci::rowset<soci::row> rs = (
-                                                     sql.prepare << " select distinct source_se, dest_se from t_file use index(file_vo_name) WHERE  "
-                                                     " vo_name = :vo_name AND "
-                                                     " file_state='SUBMITTED' ",
-                                                     soci::use(vo_name)
+                                                     sql.prepare <<
+                                                     " SELECT DISTINCT source_se, dest_se "
+                                                     " FROM t_file USE INDEX (file_vo_name)"
+                                                     " WHERE vo_name = :vo_name AND "
+                                                     "      file_state = 'SUBMITTED' AND "
+                                                     "      hashed_id BETWEEN :hStart AND :hEnd ",
+                                                     soci::use(vo_name), soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
@@ -337,22 +340,28 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                          "       f.source_se, f.dest_se, f.selection_strategy  "
-                                                         " FROM t_job j, t_file f where j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
-                                                         " f.source_se = :source AND f.dest_se = :dest "
-                                                         " AND f.vo_name = :vo_name and f.wait_timestamp IS NULL AND     "
-                                                         " (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) and "
-                                                         " j.job_state in ('ACTIVE','READY','SUBMITTED') and exists "
-                                                         " (select null from t_job j1 where j.job_id = j1.job_id and j1.job_state in ('ACTIVE','READY','SUBMITTED')   "
-                                                         " AND  (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) and j1.vo_name=:vo_name ORDER BY j1.priority DESC, j1.submit_time) LIMIT :filesNum",
+                                                         " FROM t_job j, t_file f "
+                                                         " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
+                                                         "    f.source_se = :source AND f.dest_se = :dest AND "
+                                                         "    f.vo_name = :vo_name AND "
+                                                         "    f.wait_timestamp IS NULL AND "
+                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                                                         "    f.hashed_id BETWEEN :hStart and :hEnd AND "
+                                                         "    EXISTS ( "
+                                                         "        SELECT NULL FROM t_job j1 "
+                                                         "        WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                                         "              (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
+                                                         "        ORDER BY j1.priority DESC, j1.submit_time) LIMIT :filesNum",
                                                          soci::use(boost::get<0>(triplet)),
                                                          soci::use(boost::get<1>(triplet)),
                                                          soci::use(boost::get<2>(triplet)),
                                                          soci::use(tTime),
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                          soci::use(boost::get<2>(triplet)),
                                                          soci::use(filesNum)
                                                      );
 
-		    ThreadTraits::LOCK_R lock(_mutex);				     
+                    ThreadTraits::LOCK_R lock(_mutex);
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             TransferFiles const& tfile = *ti;                            
@@ -607,9 +616,11 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "    f.file_state = 'SUBMITTED' AND "
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
-                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) "
+                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                                                         "    f.hashed_id BETWEEN :hStart AND :hEnd "
                                                          " LIMIT :filesNum ",soci::use(jobId),
                                                          soci::use(tTime),
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
                                                          soci::use(filesNum)
                                                      );
 
@@ -720,8 +731,18 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     soci::use(fileIndex),
                     soci::use(sourceSe),
                     soci::use(destSe),
-                    soci::use(timeout)
-                                                   );
+                    soci::use(timeout));
+
+            // When reuse is enabled, we hash the job id instead of the file ID
+            // This guarantees that the whole set belong to the same machine, but keeping
+            // the load balance between hosts
+            soci::statement updateHashedId = (sql.prepare <<
+                    "UPDATE t_file SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
+            );
+
+            soci::statement updateHashedIdWithJobId = (sql.prepare <<
+                    "UPDATE t_file SET hashed_id = conv(substring(md5(job_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
+            );
 
             std::vector<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
@@ -745,6 +766,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                         {
                             pairStmt.execute();
                         }
+
+                    // Update hash
+                    if (reuse != "Y")
+                        updateHashedId.execute();
+                    else
+                        updateHashedIdWithJobId.execute();
                 }
 
             sql.commit();
@@ -6081,6 +6108,60 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
     catch (std::exception& e)
         {
             sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+}
+
+
+
+void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+{
+    soci::session sql(*connectionPool);
+
+    try
+        {
+            sql.begin();
+
+            // Update beat
+            sql << "INSERT INTO t_hosts (hostname, beat) VALUES (:host, UTC_TIMESTAMP()) "
+                   "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
+                   soci::use(hostname);
+
+            // Total number of working instances
+            sql << "SELECT COUNT(hostname) FROM t_hosts "
+                   "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
+                   soci::into(*count);
+
+            // This instance index
+            // Mind that MySQL does not have rownum
+            soci::rowset<std::string> rsHosts = (sql.prepare <<
+                                               "SELECT hostname FROM t_hosts "
+                                               "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)"
+                                               "ORDER BY hostname");
+
+            soci::rowset<std::string>::const_iterator i;
+            for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))
+                {
+                    std::string& host = *i;
+                    if (host == hostname)
+                        break;
+                }
+
+            sql.commit();
+
+            // Calculate start and end hash values
+            unsigned segsize = 0xFFFF / *count;
+            unsigned segmod  = 0xFFFF % *count;
+
+            this->hashSegment.start = *start = segsize * (*index);
+            this->hashSegment.end   =*end   = segsize * (*index + 1) - 1;
+
+            // Last one take over what is left
+            if (*index == *count - 1)
+                *end += segmod + 1;
+        }
+    catch (std::exception& e)
+        {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }

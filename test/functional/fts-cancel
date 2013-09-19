@@ -20,7 +20,7 @@ class TestCancel(base.TestBase):
 			self.client.cancel(jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'CANCELED')
+			self.assertEqual('CANCELED', state)
 
 
 

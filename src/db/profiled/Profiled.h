@@ -306,6 +306,8 @@ public:
 
     void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
 
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+
     std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO();
 };
 

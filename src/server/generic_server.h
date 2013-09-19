@@ -42,6 +42,9 @@ public:
         typename TRAITS::ProcessQueueType queueHandler;
         queueHandler.executeTransfer_p();
 
+        typename TRAITS::HeartBeatType heartBeatHandler;
+        heartBeatHandler.beat();
+
         //typename TRAITS::ProcessLogServiceType processLogHandler;
         //processLogHandler.executeTransfer_p();
 

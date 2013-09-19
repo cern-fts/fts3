@@ -596,6 +596,8 @@ CREATE TABLE t_file (
 
   t_log_file        VARCHAR(2048),
   t_log_file_debug  INTEGER,
+
+  hashed_id INTEGER UNSIGNED DEFAULT 0,
 --
 -- The VO that owns this job
   vo_name              VARCHAR(50),  
@@ -647,7 +649,13 @@ CREATE TABLE t_stage_req (
   ,CONSTRAINT stagereq_pk PRIMARY KEY (vo_name, host)
 );
 
-
+--
+-- Host hearbeats
+--
+CREATE TABLE t_hosts (
+    hostname    VARCHAR(64) PRIMARY KEY NOT NULL,
+    beat        TIMESTAMP NULL DEFAULT NULL
+);
 
 --
 --
@@ -669,12 +677,11 @@ CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
 CREATE INDEX file_source_dest ON t_file(source_se, dest_se);
 CREATE INDEX t_waittimeout ON t_file(wait_timeout);
+CREATE INDEX file_id_hashed ON t_file(hashed_id);
 CREATE INDEX t_retry_timestamp ON t_file(retry_timestamp);
 CREATE INDEX t_file_select ON t_file(dest_se, source_se, job_finished, file_state );
 CREATE INDEX file_vo_name_state ON t_file(file_state, vo_name);
 CREATE INDEX file_vo_name ON t_file( vo_name, source_se, dest_se, file_state);
-
-
 
 CREATE INDEX optimize_source_a         ON t_optimize(source_se,dest_se);
 

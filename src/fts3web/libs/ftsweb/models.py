@@ -208,3 +208,12 @@ class ProfilingInfo(models.Model):
     
     class Meta:
         db_table = 't_profiling_info'
+
+
+
+class Host(models.Model):
+    hostname = models.CharField(primary_key = True, max_length = 64)
+    beat     = models.DateTimeField()
+    
+    class Meta:
+        db_table = 't_hosts'

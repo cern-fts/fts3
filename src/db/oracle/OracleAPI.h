@@ -93,7 +93,7 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
-    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
+    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
@@ -344,6 +344,8 @@ public:
     virtual void setRetryTransfer(const std::string & jobId, int fileId, int retry, const std::string& reason);
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries);
+
+    virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO();
 
     // These are not exposed by the db interface
     bool assignSanityRuns(SafeConnection& conn, struct message_sanity &msg);

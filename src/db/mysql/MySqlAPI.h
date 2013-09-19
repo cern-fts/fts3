@@ -54,8 +54,6 @@ public:
     };
 
 
-
-
     /**
      * Intialize database connection  by providing information from fts3config file
      **/
@@ -338,6 +336,8 @@ public:
 
     void resetSanityRuns(soci::session& sql, struct message_sanity &msg);
 
+    void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
+
     virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO();
 
 private:
@@ -362,6 +362,13 @@ private:
     int highDefault;
     int jobsNum;
     int filesNum;
+
+    struct HashSegment {
+        unsigned start;
+        unsigned end;
+
+        HashSegment(): start(0), end(0xFFFF) {}
+    } hashSegment;
 
     mutable ThreadTraits::MUTEX_R _mutex;
 };
