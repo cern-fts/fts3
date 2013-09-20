@@ -5846,7 +5846,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
     soci::session sql(*connectionPool);
 
     //expressed in secs, default delay
-    const int default_retry_delay = 60;
+    const int default_retry_delay = 120;
     int retry_delay = 0;
 
     try
