@@ -113,106 +113,120 @@ bool FileTransferScheduler::schedule(bool optimize)
 
     vector<int> notUsed;
 
-    if(optimize && cfgs.empty())
+    try
         {
-            bool allowed = db->isTrAllowed(srcSeName, destSeName);
-            // update file state to READY
-            if(allowed)
+
+            if(optimize && cfgs.empty())
                 {
-                    unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-                    if(updated == 0) return false;
-                    // set all other files that were generated due to a multi-source/destination submission to NOT_USED
-                    db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
-                    if(!notUsed.empty())
+                    bool allowed = db->isTrAllowed(srcSeName, destSeName);
+                    // update file state to READY
+                    if(allowed)
                         {
-                            std::vector<int>::const_iterator iter;
-                            for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                            unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+                            if(updated == 0) return false;
+                            // set all other files that were generated due to a multi-source/destination submission to NOT_USED
+                            db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
+                            if(!notUsed.empty())
                                 {
-                                    SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                                    std::vector<int>::const_iterator iter;
+                                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                                        {
+                                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                                        }
+                                    notUsed.clear();
                                 }
-                            notUsed.clear();
+                            return true;
                         }
-                    return true;
-                }
-            return false;
-        }
-
-    vector< boost::shared_ptr<ShareConfig> >::iterator it;
-
-    for (it = cfgs.begin(); it != cfgs.end(); ++it)
-        {
-
-            string source = (*it)->source;
-            string destination = (*it)->destination;
-            string vo = (*it)->vo;
-
-            boost::shared_ptr<ShareConfig>& cfg = *it;
-
-            if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
-
-            // check if the configuration allows this type of transfer-job
-            if (!cfg->active_transfers)
-                {
-                    // failed to allocate active transfers credits to transfer-job
-                    string msg = getNoCreditsErrMsg(cfg.get());
-                    // set file status to failed
-                    db->updateFileTransferStatus(
-                        0.0,
-                        file->JOB_ID,
-                        file->FILE_ID,
-                        JobStatusHandler::FTS3_STATUS_FAILED,
-                        msg,
-                        0,
-                        0,
-                        0
-                    );
-                    // set job states if necessary
-                    db->updateJobTransferStatus(
-                        file->FILE_ID,
-                        file->JOB_ID,
-                        JobStatusHandler::FTS3_STATUS_FAILED
-                    );
-                    // log it
-                    FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;
-                    // the file has been resolved as FAILED, it won't be scheduled
                     return false;
                 }
 
-            int active_transfers = 0;
+            vector< boost::shared_ptr<ShareConfig> >::iterator it;
 
-            if (source == Configuration::wildcard)
+            for (it = cfgs.begin(); it != cfgs.end(); ++it)
                 {
-                    active_transfers = db->countActiveOutboundTransfersUsingDefaultCfg(srcSeName, vo);
+
+                    string source = (*it)->source;
+                    string destination = (*it)->destination;
+                    string vo = (*it)->vo;
+
+                    boost::shared_ptr<ShareConfig>& cfg = *it;
+
+                    if (!cfg.get()) continue; // if the configuration has been deleted in the meanwhile continue
+
+                    // check if the configuration allows this type of transfer-job
+                    if (!cfg->active_transfers)
+                        {
+                            // failed to allocate active transfers credits to transfer-job
+                            string msg = getNoCreditsErrMsg(cfg.get());
+                            // set file status to failed
+                            db->updateFileTransferStatus(
+                                0.0,
+                                file->JOB_ID,
+                                file->FILE_ID,
+                                JobStatusHandler::FTS3_STATUS_FAILED,
+                                msg,
+                                0,
+                                0,
+                                0
+                            );
+                            // set job states if necessary
+                            db->updateJobTransferStatus(
+                                file->FILE_ID,
+                                file->JOB_ID,
+                                JobStatusHandler::FTS3_STATUS_FAILED
+                            );
+                            // log it
+                            FTS3_COMMON_LOGGER_NEWLOG (ERR) << msg << commit;
+                            // the file has been resolved as FAILED, it won't be scheduled
+                            return false;
+                        }
+
+                    int active_transfers = 0;
+
+                    if (source == Configuration::wildcard)
+                        {
+                            active_transfers = db->countActiveOutboundTransfersUsingDefaultCfg(srcSeName, vo);
+                            if (cfg->active_transfers - active_transfers > 0) continue;
+                            return false;
+                        }
+
+                    if (destination == Configuration::wildcard)
+                        {
+                            active_transfers = db->countActiveInboundTransfersUsingDefaultCfg(destSeName, vo);
+                            if (cfg->active_transfers - active_transfers > 0) continue;
+                            return false;
+                        }
+
+                    active_transfers = db->countActiveTransfers(source, destination, vo);
                     if (cfg->active_transfers - active_transfers > 0) continue;
                     return false;
                 }
 
-            if (destination == Configuration::wildcard)
+            // update file state to READY
+            unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
+            if(updated == 0)
+                return false;
+            // set all other files that were generated due to a multi-source/destination submission to NOT_USED
+            db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
+            if(!notUsed.empty())
                 {
-                    active_transfers = db->countActiveInboundTransfersUsingDefaultCfg(destSeName, vo);
-                    if (cfg->active_transfers - active_transfers > 0) continue;
-                    return false;
+                    std::vector<int>::const_iterator iter;
+                    for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
+                        {
+                            SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
+                        }
+                    notUsed.clear();
                 }
 
-            active_transfers = db->countActiveTransfers(source, destination, vo);
-            if (cfg->active_transfers - active_transfers > 0) continue;
-            return false;
         }
-
-    // update file state to READY
-    unsigned updated = db->updateFileStatus(file, JobStatusHandler::FTS3_STATUS_READY);
-    if(updated == 0)
-        return false;
-    // set all other files that were generated due to a multi-source/destination submission to NOT_USED
-    db->setFilesToNotUsed(file->JOB_ID, file->FILE_INDEX, notUsed);
-    if(!notUsed.empty())
+    catch(std::exception& e)
         {
-            std::vector<int>::const_iterator iter;
-            for (iter = notUsed.begin(); iter != notUsed.end(); ++iter)
-                {
-                    SingleTrStateInstance::instance().sendStateMessage(file->JOB_ID, (*iter));
-                }
-            notUsed.clear();
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception " << e.what() <<  commit;
+        }
+    catch(...)
+        {
+            FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception unknown" <<  commit;
+
         }
 
     return true;

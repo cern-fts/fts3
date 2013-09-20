@@ -77,6 +77,10 @@ config(function($routeProvider) {
 			// specify the attributes to plot
 			else if (attr.labels)
 				plotObject(scope, list, attr.labels.split(','));
+			// If only value is specified, then the list is a dictionary,
+			// value specify the field to plot for each entry
+			else if (attr.value)
+				plotDictionary(scope, list, attr.value);
 			// Otherwise, we don't know!
 			else
 				throw new Error('Invalid usage of plot!');
@@ -200,6 +204,20 @@ function plotObject(scope, obj, labelsAttr)
 	
 	scope.labels = labelStr;
 	scope.values = valueStr;
+}
+
+function plotDictionary(scope, list, value)
+{
+	var labelStr = '', valueStr = '';
+	for (var i  in list) {
+		if (i[0] != '$') {
+			labelStr += i + ',';
+			valueStr += list[i][value] + ',';
+		}
+	}
+	
+	scope.labels = labelStr;
+	scope.values = valueStr;	
 }
 
 /** First letter uppercase */

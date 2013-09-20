@@ -71,7 +71,7 @@ int proc_find()
         {
             return -1;
         }
-			   
+
 
     while((ent = readdir(dir)) != NULL)
         {
@@ -84,7 +84,7 @@ int proc_find()
                 }
 
             /* try to open the cmdline file */
-            snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);  		   	
+            snprintf(buf, sizeof(buf), "/proc/%ld/cmdline", lpid);
             FILE* fp = fopen(buf, "r");
 
             if (fp)
@@ -93,21 +93,21 @@ int proc_find()
                         {
                             /* check the first token in the file, the program name */
                             char* first = NULL;
-                            first = strtok(buf, " ");			    	   
+                            first = strtok(buf, " ");
 
                             if (first && strstr(first, name))
                                 {
                                     fclose(fp);
                                     fp = NULL;
                                     ++count;
-				    break;
+                                    break;
                                 }
                         }
                     if(fp)
                         fclose(fp);
                 }
 
-        }   
+        }
     closedir(dir);
     return count;
 }
@@ -423,6 +423,10 @@ int DoServer(int argc, char** argv)
 
             //re-read here
             FTS3_CONFIG_NAMESPACE::theServerConfig().read(argc, argv, true);
+	    
+            // Set X509_ environment variables properly - reset here is case the child crashes
+            setenv("X509_USER_CERT", hostcert, 1);
+            setenv("X509_USER_KEY", hostkey, 1);	    
 
             std::string logDir = theServerConfig().get<std::string > ("TransferLogDirectory");
             if (logDir.length() > 0)
@@ -499,7 +503,7 @@ int main(int argc, char** argv)
     pid_t child;
     //very first check before it goes to deamon mode
     try
-        {	
+        {
             if (fexists(configfile) != 0)
                 {
                     std::cerr << "fts3 server config file " << configfile << " doesn't exist" << std::endl;

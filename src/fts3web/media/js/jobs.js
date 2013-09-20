@@ -125,7 +125,7 @@ function JobViewCtrl($location, $scope, job, files, Job, Files)
 	$scope.files      = files;
 	
 	$scope.pageChanged = function(newPage) {
-		$location.search({page: newPage});
+		$location.search('page', newPage);
 	}
 	
 	// Filtering by state

@@ -117,7 +117,7 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse) = 0;
 
-    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files) = 0;
+    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 
     virtual void getSe(Se* &se, std::string seName) = 0;
 
@@ -366,9 +366,21 @@ public:
 
     virtual void getTransferRetries(int fileId, std::vector<FileRetry*>& retries) = 0;
 
+    /**
+     * Signals that the server is alive
+     * The total number of running (alive) servers is put in count
+     * The index of this specific machine is put in index
+     * A default implementation is provided, as this is used for optimization,
+     * so it is not mandatory.
+     * start and end are set to the interval of hash values this host will process
+     */
+    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end) {
+        *index = 0;
+        *count = 1;
+        *start = 0x0000;
+        *end   = 0xFFFF;
+    }
+
+    virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO() = 0;
+
 };
-
-
-
-
-

@@ -19,7 +19,7 @@ class TestUserChecksum(base.TestBase):
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'FINISHED')
+			self.assertEqual('FINISHED', state)
 			dstChecksum = self.surl.checksum(dst)
 			self.assertEqual(srcChecksum, dstChecksum)
 
@@ -46,7 +46,8 @@ class TestUserChecksum(base.TestBase):
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'FAILED')
+			self.assertEqual('FAILED', state)
+
 
 	def test_withBadUserChecksumNoFlag(self):
 		"""
@@ -60,7 +61,7 @@ class TestUserChecksum(base.TestBase):
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'FAILED')
+			self.assertEqual('FAILED', state)
 
 
 

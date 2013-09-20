@@ -180,7 +180,7 @@ public:
             }
         catch (std::exception& e)
             {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;               
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message queue updateDatabase throw exception " << e.what() << commit;
             }
         catch (...)
             {
@@ -263,11 +263,11 @@ protected:
             }
         catch (const fs::filesystem_error& e)
             {
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << e.what() << commit;
             }
         catch (std::exception& ex)
             {
-		FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;		
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Caught exception " << ex.what() << commit;
             }
         catch (...)
             {

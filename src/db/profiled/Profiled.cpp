@@ -75,9 +75,14 @@ void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std
     PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files, reuse));
 }
 
-void ProfiledDB::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
+std::vector< boost::tuple<std::string, std::string, std::string> > ProfiledDB::distinctSrcDestVO()
 {
-    PROFILE_PREFIXED("DB::", db->getByJobId(files));
+    PROFILE_PREFIXED("DB::", return db->distinctSrcDestVO());
+}
+
+void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
+{
+    PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
 }
 
 
@@ -831,4 +836,9 @@ void ProfiledDB::setRetryTransfer(const std::string & jobId, int fileId,
 void ProfiledDB::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
 {
     PROFILE_PREFIXED("DB::", db->getTransferRetries(fileId, retries));
+}
+
+void ProfiledDB::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+{
+    PROFILE_PREFIXED("DB::", db->updateHeartBeat(index, count, start, end));
 }

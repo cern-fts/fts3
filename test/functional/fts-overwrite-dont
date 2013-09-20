@@ -21,7 +21,7 @@ class TestOverwriteDont(base.TestBase):
 			logging.info("Got job id %s" % jobId)
 			state = self.client.poll(jobId)
 			logging.info("Finished with %s" % state)
-			self.assertEqual(state, 'FAILED')
+			self.assertEqual('FAILED', state)
 
 
 
