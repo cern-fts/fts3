@@ -2368,7 +2368,7 @@ int MySqlAPI::getSeOut(const std::string & source, const std::set<std::string> &
             std::string source_hostname = source;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE') and job_finished is null ",
+                "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE')  ",
                 soci::use(source_hostname), soci::into(nActiveSource);
 
             ret += nActiveSource;
@@ -2404,7 +2404,7 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
             std::string destin_hostname = destination;
 
             sql << "SELECT COUNT(*) FROM t_file "
-                "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') and job_finished is null",
+                "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') ",
                 soci::use(destin_hostname), soci::into(nActiveDest);
 
             ret += nActiveDest;
@@ -3813,7 +3813,7 @@ int MySqlAPI::countActiveTransfers(std::string source, std::string destination, 
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY')  AND job_finished is null AND"
+                "WHERE t_file.file_state in ('ACTIVE','READY')  AND "
                 "      t_file_share_config.file_id = t_file.file_id AND "
                 "      t_file_share_config.source = :source AND "
                 "      t_file_share_config.destination = :dest AND "
@@ -3838,7 +3838,7 @@ int MySqlAPI::countActiveOutboundTransfersUsingDefaultCfg(std::string se, std::s
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY')  AND job_finished is null AND "
+                "WHERE t_file.file_state in ('ACTIVE','READY')  AND "
                 "      t_file.source_se = :source AND "
                 "      t_file.file_id = t_file_share_config.file_id AND "
                 "      t_file_share_config.source = '(*)' AND "
@@ -3863,7 +3863,7 @@ int MySqlAPI::countActiveInboundTransfersUsingDefaultCfg(std::string se, std::st
     try
         {
             sql << "SELECT COUNT(*) FROM t_file, t_file_share_config "
-                "WHERE t_file.file_state in ('ACTIVE','READY') AND job_finished is null AND "
+                "WHERE t_file.file_state in ('ACTIVE','READY') AND "
                 "      t_file.dest_se = :dest AND "
                 "      t_file.file_id = t_file_share_config.file_id AND "
                 "      t_file_share_config.source = '*' AND "
@@ -4272,7 +4272,7 @@ int MySqlAPI::activeProcessesForThisHost()
     unsigned active = 0;
     try
         {
-            sql << "select count(*) from t_file where TRANSFERHOST=:host AND file_state in ('READY','ACTIVE') and job_finished is null ", soci::use(hostname), soci::into(active);
+            sql << "select count(*) from t_file where TRANSFERHOST=:host AND file_state in ('READY','ACTIVE')  ", soci::use(hostname), soci::into(active);
         }
     catch (std::exception& e)
         {
@@ -4682,7 +4682,7 @@ double MySqlAPI::getSuccessRate(std::string source, std::string destination)
                                                "SELECT file_state FROM t_file "
                                                "WHERE "
                                                "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                               "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '30' minute)) AND "
+                                               "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '15' minute)) AND "
                                                "      file_state IN ('FAILED','FINISHED') ",
                                                soci::use(source), soci::use(destination)
                                            )
@@ -4722,7 +4722,7 @@ double MySqlAPI::getAvgThroughput(std::string source, std::string destination)
             sql <<
                 " select ROUND(AVG(throughput),2) AS Average  from t_file where"
                 " source_se=:source and dest_se=:dst "
-                " and job_finished >= date_sub(utc_timestamp(), interval '30' minute)",
+                " and job_finished >= date_sub(utc_timestamp(), interval '15' minute)",
                 soci::use(source),soci::use(destination), soci::into(avgThr, isNull);
             if (isNull == soci::i_null)
                 {
@@ -4760,9 +4760,9 @@ void MySqlAPI::cancelFilesInTheQueue(const std::string& se, const std::string& v
                                          (
                                              sql.prepare <<
                                              " SELECT f.file_id, f.job_id, file_index "
-                                             " FROM t_job j, t_file f "
-                                             " WHERE j.job_id = f.job_id AND (f.source_se = :se OR f.dest_se = :se) "
-                                             "	AND j.vo_name = :vo "
+                                             " FROM t_file f "
+                                             " WHERE  (f.source_se = :se OR f.dest_se = :se) "
+                                             "	AND f.vo_name = :vo "
                                              " 	AND f.file_state IN ('ACTIVE', 'READY', 'SUBMITTED', 'NOT_USED') ",
                                              soci::use(se),
                                              soci::use(se),
@@ -5282,7 +5282,7 @@ void MySqlAPI::checkSanityState()
 
             soci::rowset<std::string> rs = (
                                                sql.prepare <<
-                                               " select job_id from t_job where job_state in ('ACTIVE','READY','SUBMITTED','STAGING') "
+                                               " select job_id from t_job where job_finished is null "
                                            );
 
             for (soci::rowset<std::string>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -5442,11 +5442,11 @@ void MySqlAPI::getFilesForNewSeCfg(std::string source, std::string destination, 
             soci::rowset<int> rs = (
                                        sql.prepare <<
                                        " select f.file_id "
-                                       " from t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                       " from t_file f  "
                                        " where f.source_se like :source "
                                        "	and f.dest_se like :destination "
-                                       "	and j.vo_name = :vo "
-                                       "	and f.file_state in ('READY', 'ACTIVE') and j.job_finished is null",
+                                       "	and f.vo_name = :vo "
+                                       "	and f.file_state in ('READY', 'ACTIVE') ",
                                        soci::use(source == "*" ? "%" : source),
                                        soci::use(destination == "*" ? "%" : destination),
                                        soci::use(vo)
@@ -5470,10 +5470,10 @@ void MySqlAPI::getFilesForNewGrCfg(std::string source, std::string destination, 
     std::string select;
     select +=
         " select f.file_id "
-        " from t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+        " from t_file f "
         " where "
-        "	j.vo_name = :vo "
-        "	and f.file_state in ('READY', 'ACTIVE') and j.job_finished is null ";
+        "	f.vo_name = :vo "
+        "	and f.file_state in ('READY', 'ACTIVE')  ";
     if (source != "*")
         select +=
             "	and f.source_se in ( "
@@ -5846,7 +5846,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
     soci::session sql(*connectionPool);
 
     //expressed in secs, default delay
-    const int default_retry_delay = 7;
+    const int default_retry_delay = 120;
     int retry_delay = 0;
 
     try
