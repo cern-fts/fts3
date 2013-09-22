@@ -2387,6 +2387,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                             jobsNum = mode_1[0];
                             highDefault = mode_1[1];
                         }
+			
+		    if(ratioSuccessFailure == 100)
+		    	highDefault = mode_3[1];	
 
 
                     soci::statement stmt7 = (
