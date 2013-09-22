@@ -2399,9 +2399,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                 sql.prepare << "SELECT active FROM t_optimize_active "
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
-                    stmt8.execute(true);
-		    
-		    //std::cout << "SAMPLE = " << source_hostname << "  " << 	destin_hostname << "  " << maxActive << "  " << active << "  " << throughput << "  " << avgThr << std::endl;	    		    
+                    stmt8.execute(true);		    
 
                     sql.begin();
                     
