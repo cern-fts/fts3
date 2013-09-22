@@ -244,7 +244,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
 
     soci::session sql(*connectionPool);
 
-// Get uniqueue VOs
+    // Get uniqueue VOs
     std::vector< std::string > distinctVO;
     distinctVO.reserve(10);
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
@@ -266,7 +266,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
                                                      " SELECT DISTINCT source_se, dest_se "
-                                                     " FROM t_file USE INDEX (file_vo_name)"
+                                                     " FROM t_file "
                                                      " WHERE vo_name = :vo_name AND "
                                                      "      file_state = 'SUBMITTED' AND "
                                                      "      hashed_id BETWEEN :hStart AND :hEnd ",
@@ -301,6 +301,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
+    soci::indicator isNull = soci::i_ok;
 
     try
         {
@@ -330,6 +331,24 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
             for (it = distinct.begin(); it != distinct.end(); ++it)
                 {
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
+
+                    int limit = 0;
+                    int maxActive = 0;
+                    sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+                        soci::use(boost::get<0>(triplet)),
+                        soci::use(boost::get<1>(triplet)),
+                        soci::into(limit);
+
+                    sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                        soci::use(boost::get<0>(triplet)),
+                        soci::use(boost::get<1>(triplet)),
+                        soci::into(maxActive, isNull);
+
+                    if (isNull != soci::i_null){
+                        filesNum = maxActive - limit;
+			if(filesNum <=0 )
+				continue;
+		    }
 
                     soci::rowset<TransferFiles> rs = (
                                                          sql.prepare <<
@@ -364,7 +383,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                     ThreadTraits::LOCK_R lock(_mutex);
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
-                            TransferFiles const& tfile = *ti;                            
+                            TransferFiles const& tfile = *ti;
                             files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
                         }
                 }
@@ -737,12 +756,12 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
             // This guarantees that the whole set belong to the same machine, but keeping
             // the load balance between hosts
             soci::statement updateHashedId = (sql.prepare <<
-                    "UPDATE t_file SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
-            );
+                                              "UPDATE t_file SET hashed_id = conv(substring(md5(file_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
+                                             );
 
             soci::statement updateHashedIdWithJobId = (sql.prepare <<
                     "UPDATE t_file SET hashed_id = conv(substring(md5(job_id) from 1 for 4), 16, 10) WHERE file_id = LAST_INSERT_ID()"
-            );
+                                                      );
 
             std::vector<job_element_tupple>::const_iterator iter;
             for (iter = src_dest_pair.begin(); iter != src_dest_pair.end(); ++iter)
@@ -756,6 +775,8 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                     fileIndex = iter->fileIndex;
                     sourceSe = iter->source_se;
                     destSe = iter->dest_se;
+
+                    sql << "INSERT IGNORE INTO t_optimize_active (source_se, dest_se) VALUES (:sourceSe, :destSe) ", soci::use(sourceSe), soci::use(destSe);
 
                     if (iter->wait_timeout.is_initialized())
                         {
@@ -2208,141 +2229,198 @@ bool MySqlAPI::isCredentialExpired(const std::string & dlg_id, const std::string
     return !expired;
 }
 
-
-
-bool MySqlAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)
+bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::string & destin_hostname)
 {
     soci::session sql(*connectionPool);
 
+    int maxActive = 0;
+    int active = 0;
     bool allowed = false;
+    soci::indicator isNull = soci::i_ok;
+
     try
         {
-            int nActiveSource=0, nActiveDest=0;
-            double nFailedLastHour=0, nFinishedLastHour=0;
-            int nActive=0;
-            double nFailedAll=0.0, nFinishedAll=0.0, throughput=0.0, avgThr = 0.0;
-            soci::indicator isNull1 = soci::i_ok;
-            soci::indicator isNull2 = soci::i_ok;
-
-            soci::statement stmt = (
-                                       sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
-                                       " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
-                                       " and (start_time >= date_sub(utc_timestamp(), interval '30' minute) OR job_finished >= date_sub(utc_timestamp(), interval '30' minute))  "
-                                       " LIMIT 30 ",
-                                       soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
-            stmt.execute(true);
-
-            if (isNull2 == soci::i_null)
-                {
-                    avgThr = 0.0;
-                }
-
             soci::statement stmt1 = (
-                                        sql.prepare << "SELECT COUNT(*) FROM t_file "
-                                        "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE') ",
-                                        soci::use(source_hostname), soci::into(nActiveSource));
+                                        sql.prepare << "SELECT active FROM t_optimize_active "
+                                        "WHERE source_se = :source AND dest_se = :dest_se ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive, isNull));
             stmt1.execute(true);
 
-
             soci::statement stmt2 = (
-                                        sql.prepare << "SELECT COUNT(*) FROM t_file "
-                                        "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE') ",
-                                        soci::use(destin_hostname), soci::into(nActiveDest));
+                                        sql.prepare << "SELECT count(*) FROM t_file "
+                                        "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
             stmt2.execute(true);
 
-            soci::statement stmt3 = (
-                                        sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
-                                        " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
-                                        " and (start_time >= date_sub(utc_timestamp(), interval '10' minute) OR job_finished >= date_sub(utc_timestamp(), interval '10' minute))  "
-                                        " LIMIT 10 ",
-                                        soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1));
-            stmt3.execute(true);
-
-            if (isNull1 == soci::i_null)
+            if (isNull != soci::i_null)
                 {
-                    throughput = 0.0;
+                    if(active < maxActive)
+                        allowed = true;
                 }
+        }
+    catch (std::exception& e)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+        }
+    return allowed;
+}
 
-            soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                            "WHERE "
-                                            "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                            "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) AND "
-                                            "      file_state IN ('FAILED','FINISHED') ",
-                                            soci::use(source_hostname), soci::use(destin_hostname));
 
-            for (soci::rowset<std::string>::const_iterator i = rs.begin();
-                    i != rs.end(); ++i)
+
+bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::string & /*destin_hostname1*/)
+{
+    soci::session sql(*connectionPool);
+
+    int allowed = false;
+    soci::indicator isNull = soci::i_ok;
+    
+    try
+        {
+            soci::rowset<soci::row> rs = ( sql.prepare << " select o.source_se, o.dest_se from t_optimize_active o where "
+	    						  " exists (select null from t_file f where o.source_se=f.source_se and "
+							  " o.dest_se=f.dest_se and f.file_state='SUBMITTED') ");
+							  
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
-                    if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-                    else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+                    std::string source_hostname = i->get<std::string>("source_se");
+                    std::string destin_hostname = i->get<std::string>("dest_se");
+
+                    double nFailedLastHour=0, nFinishedLastHour=0;
+                    double throughput=0.0, avgThr = 0.0;
+                    int active = 0;
+                    int maxActive = 0;
+                    soci::indicator isNull1 = soci::i_ok;
+                    soci::indicator isNull2 = soci::i_ok;
+
+                    soci::statement stmt = (
+                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+                                               " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                               " and (start_time >= date_sub(utc_timestamp(), interval '15' minute) OR job_finished >= date_sub(utc_timestamp(), interval '15' minute))  "
+                                               " LIMIT 30 ",
+                                               soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
+                    stmt.execute(true);
+
+                    if (isNull2 == soci::i_null)
+                        {
+                            avgThr = 0.0;
+                        }
+
+                    soci::statement stmt3 = (
+                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+                                                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                                " and (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR job_finished >= date_sub(utc_timestamp(), interval '5' minute))  "
+                                                " LIMIT 5 ",
+                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1));
+                    stmt3.execute(true);
+
+                    if (isNull1 == soci::i_null)
+                        {
+                            throughput = 0.0;
+                        }
+
+                    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
+                                                    "WHERE "
+                                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
+                                                    "      (t_file.job_finished > (UTC_TIMESTAMP() - interval '1' minute)) AND "
+                                                    "      file_state IN ('FAILED','FINISHED') ",
+                                                    soci::use(source_hostname), soci::use(destin_hostname));
+
+                    for (soci::rowset<std::string>::const_iterator i = rs.begin();
+                            i != rs.end(); ++i)
+                        {
+                            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
+                            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
+                        }
+
+                    double ratioSuccessFailure = 0;
+                    if(nFinishedLastHour > 0)
+                        {
+                            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
+                        }
+
+                    int mode = getOptimizerMode(sql);
+                    if(mode==1)
+                        {
+                            lowDefault = mode_1[0];
+                            highDefault = mode_1[1];
+                        }
+                    else if(mode==2)
+                        {
+                            lowDefault = mode_2[0];
+                            highDefault = mode_2[1];
+                        }
+                    else if(mode==3)
+                        {
+                            lowDefault = mode_3[0];
+                            highDefault = mode_3[1];
+                        }
+                    else
+                        {
+                            jobsNum = mode_1[0];
+                            highDefault = mode_1[1];
+                        }
+
+
+                    soci::statement stmt7 = (
+                                                sql.prepare << "SELECT count(*) FROM t_file "
+                                                "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
+                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
+                    stmt7.execute(true);
+
+                    soci::statement stmt8 = (
+                                                sql.prepare << "SELECT active FROM t_optimize_active "
+                                                "WHERE source_se = :source AND dest_se = :dest_se ",
+                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
+                    stmt8.execute(true);		    
+
+                    sql.begin();
+                    if(active == 0 && isNull != soci::i_null && maxActive > 0 )
+                        {
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(maxActive), soci::use(source_hostname), soci::use(destin_hostname);
+                        }
+		    else if(active == 0 && isNull == soci::i_null )
+		        {
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(highDefault), soci::use(source_hostname), soci::use(destin_hostname);
+			}
+                    else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
+                        {
+                            active = (maxActive + active + 2) - active;
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                        }
+                    else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
+                        {   
+			    if(active < highDefault || maxActive < highDefault)
+			    	active = highDefault;
+			    else
+                                active = maxActive;			
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                        }
+                    else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
+                        {
+			    if(active < highDefault || maxActive < highDefault)
+			    	active = highDefault;
+			    else
+                                active = (maxActive + active - 1) - active;			
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                        }									
+                    else if (ratioSuccessFailure < 100)
+                        {
+			    if(active < highDefault || maxActive < highDefault)
+			    	active = highDefault;
+			    else
+                                active = (maxActive + active - 2) - active;
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                        }
+                    else
+                        {
+			    if(active < highDefault || maxActive < highDefault)
+			    	active = highDefault;
+			    else
+			        active = maxActive;
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                        }
+                    sql.commit();
                 }
-
-
-            soci::statement stmt4 = (
-                                        sql.prepare << " SELECT COUNT(*) FROM t_file "
-                                        "WHERE "
-                                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                        "      file_state in ('READY','ACTIVE') ",
-                                        soci::use(source_hostname), soci::use(destin_hostname),
-                                        soci::into(nActive));
-            stmt4.execute(true);
-
-
-            soci::statement stmt5 = (
-                                        sql.prepare << "SELECT COUNT(*) FROM t_file "
-                                        "WHERE "
-                                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                        "      file_state = 'FINISHED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
-                                        soci::use(source_hostname), soci::use(destin_hostname),
-                                        soci::into(nFinishedAll));
-            stmt5.execute(true);
-
-
-            soci::statement stmt6 = (
-                                        sql.prepare << "SELECT COUNT(*) FROM t_file "
-                                        "WHERE "
-                                        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                        "      file_state = 'FAILED' AND (t_file.job_finished > (UTC_TIMESTAMP() - interval '5' minute)) ",
-                                        soci::use(source_hostname), soci::use(destin_hostname),
-                                        soci::into(nFailedAll));
-            stmt6.execute(true);
-
-
-            double ratioSuccessFailure = 0;
-            if(nFinishedLastHour > 0)
-                {
-                    ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-                }
-
-            int mode = getOptimizerMode(sql);
-            if(mode==1)
-                {
-                    lowDefault = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-            else if(mode==2)
-                {
-                    lowDefault = mode_2[0];
-                    highDefault = mode_2[1];
-                }
-            else if(mode==3)
-                {
-                    lowDefault = mode_3[0];
-                    highDefault = mode_3[1];
-                }
-            else
-                {
-                    jobsNum = mode_1[0];
-                    highDefault = mode_1[1];
-                }
-
-
-
-            allowed = optimizerObject.transferStart((int) nFinishedLastHour, (int) nFailedLastHour,
-                                                    source_hostname, destin_hostname,
-                                                    nActive, nActiveSource, nActiveDest,
-                                                    ratioSuccessFailure,
-                                                    nFinishedAll, nFailedAll,throughput, avgThr, lowDefault, highDefault );
         }
     catch (std::exception& e)
         {
@@ -2427,88 +2505,33 @@ int MySqlAPI::getSeIn(const std::set<std::string> & source, const std::string & 
 int MySqlAPI::getCredits(const std::string & source_hostname, const std::string & destin_hostname)
 {
     soci::session sql(*connectionPool);
-
-    int nActiveSource = 0, nActiveDest = 0;
-    double nFailedLastHour = 0, nFinishedLastHour = 0;
-    int nActive = 0;
-    double nFailedAll = 0, nFinishedAll = 0, throughput = 0, avgThr = 0.0;
+    int freeCredits = 0;
+    int limit = 0;
+    int maxActive = 0;
     soci::indicator isNull = soci::i_ok;
-
-    sql << " select ROUND(AVG(throughput),2) AS Average  from t_file where"
-        " source_se=:source and dest_se=:dst "
-        " and job_finished >= date_sub(utc_timestamp(), interval '1' minute)",
-        soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull);
-    if (isNull == soci::i_null)
+    
+    try
         {
-            avgThr = 0.0;
+            sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
+                soci::use(source_hostname),
+                soci::use(destin_hostname),
+                soci::into(limit);
+
+            sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
+                soci::use(source_hostname),
+                soci::use(destin_hostname),
+                soci::into(maxActive, isNull);
+
+            if (isNull != soci::i_null)
+                freeCredits = maxActive - limit;
+
         }
-
-    sql << "SELECT COUNT(*) FROM t_file "
-        "WHERE t_file.source_se = :source AND t_file.file_state in ('READY','ACTIVE') and job_finished is null",
-        soci::use(source_hostname), soci::into(nActiveSource);
-
-    sql << "SELECT COUNT(*) FROM t_file "
-        "WHERE t_file.dest_se = :dst AND t_file.file_state in ('READY','ACTIVE')  and job_finished is null",
-        soci::use(destin_hostname), soci::into(nActiveDest);
-
-
-    sql << "SELECT throughput from t_file where source_se=:source and dest_se=:dst and "
-        "file_state='FINISHED' order by FILE_ID DESC LIMIT 1",
-        soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull);
-    if (isNull == soci::i_null)
+    catch (std::exception& e)
         {
-            throughput = 0.0;
+            sql.rollback();
+            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
-
-
-    soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
-                                    "WHERE "
-                                    "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-                                    "      (t_file.job_finished > (UTC_TIMESTAMP - interval '5' minute)) AND"
-                                    "      file_state IN ('FAILED','FINISHED') ",
-                                    soci::use(source_hostname), soci::use(destin_hostname));
-
-    for (soci::rowset<std::string>::const_iterator i = rs.begin();
-            i != rs.end(); ++i)
-        {
-            if      (i->compare("FAILED") == 0)   nFailedLastHour+=1.0;
-            else if (i->compare("FINISHED") == 0) ++nFinishedLastHour+=1.0;
-        }
-
-
-    sql << "SELECT COUNT(*) FROM t_file "
-        "WHERE "
-        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-        "      file_state in ('READY','ACTIVE')  and job_finished is null",
-        soci::use(source_hostname), soci::use(destin_hostname),
-        soci::into(nActive);
-
-    sql << "SELECT COUNT(*) FROM t_file "
-        "WHERE "
-        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-        "      file_state = 'FINISHED' AND job_finished > (UTC_TIMESTAMP - interval '5' minute)",
-        soci::use(source_hostname), soci::use(destin_hostname),
-        soci::into(nFinishedAll);
-
-    sql << "SELECT COUNT(*) FROM t_file "
-        "WHERE "
-        "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
-        "      file_state = 'FAILED' AND job_finished > (UTC_TIMESTAMP - interval '5' minute)",
-        soci::use(source_hostname), soci::use(destin_hostname),
-        soci::into(nFailedAll);
-
-    double ratioSuccessFailure = 0;
-    if(nFinishedLastHour > 0)
-        {
-            ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-        }
-
-
-    return optimizerObject.getFreeCredits((int) nFinishedLastHour, (int) nFailedLastHour,
-                                          source_hostname, destin_hostname,
-                                          nActive, nActiveSource, nActiveDest,
-                                          ratioSuccessFailure,
-                                          nFinishedAll, nFailedAll, throughput, avgThr);
+    return freeCredits;
 }
 
 
@@ -6124,20 +6147,20 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
 
             // Update beat
             sql << "INSERT INTO t_hosts (hostname, beat) VALUES (:host, UTC_TIMESTAMP()) "
-                   "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
-                   soci::use(hostname);
+                "  ON DUPLICATE KEY UPDATE beat = UTC_TIMESTAMP()",
+                soci::use(hostname);
 
             // Total number of working instances
             sql << "SELECT COUNT(hostname) FROM t_hosts "
-                   "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
-                   soci::into(*count);
+                "  WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)",
+                soci::into(*count);
 
             // This instance index
             // Mind that MySQL does not have rownum
             soci::rowset<std::string> rsHosts = (sql.prepare <<
-                                               "SELECT hostname FROM t_hosts "
-                                               "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)"
-                                               "ORDER BY hostname");
+                                                 "SELECT hostname FROM t_hosts "
+                                                 "WHERE beat >= DATE_SUB(UTC_TIMESTAMP(), interval 2 minute)"
+                                                 "ORDER BY hostname");
 
             soci::rowset<std::string>::const_iterator i;
             for (*index = 0, i = rsHosts.begin(); i != rsHosts.end(); ++i, ++(*index))

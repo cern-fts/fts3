@@ -141,6 +141,8 @@ public:
 
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
 
+    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest);
+
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
@@ -343,7 +345,6 @@ public:
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
-    OptimizerSample       optimizerObject;
     std::string           hostname;
 
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
@@ -363,7 +364,8 @@ private:
     int jobsNum;
     int filesNum;
 
-    struct HashSegment {
+    struct HashSegment
+    {
         unsigned start;
         unsigned end;
 

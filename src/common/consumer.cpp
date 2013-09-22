@@ -92,8 +92,8 @@ int getDir (string dir, vector<string> &files)
                     int stCheck = stat(copyFilename.c_str(), &st);
                     if(stCheck==0 && st.st_size > 0)
                         files.push_back(copyFilename);
-		    else
-		        unlink(copyFilename.c_str());
+                    else
+                        unlink(copyFilename.c_str());
                 }
         }
     closedir(dp);

@@ -117,6 +117,8 @@ public:
 
     bool isTrAllowed(const std::string & source_se, const std::string & dest);
 
+    bool isTrAllowed2(const std::string & source_se, const std::string & dest);
+
     int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
     int getSeIn(const std::set<std::string> & source, const std::string & destination);

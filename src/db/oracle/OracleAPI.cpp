@@ -34,7 +34,7 @@ static std::string _getTrTimestampUTC()
     time_t now = time(NULL);
     struct tm* tTime;
     tTime = gmtime(&now);
-    time_t msec = timegm(tTime) * 1000; //the number of milliseconds since the epoch
+    time_t msec = mktime(tTime) * 1000; //the number of milliseconds since the epoch
     std::ostringstream oss;
     oss << fixed << msec;
     return oss.str();
@@ -685,8 +685,8 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
 
 
 void OracleAPI::getByJobId(
-        std::vector<boost::tuple<std::string, std::string, std::string> >& /*distinct*/,
-        std::map<std::string, std::list<TransferFiles*> >& files)
+    std::vector<boost::tuple<std::string, std::string, std::string> >& /*distinct*/,
+    std::map<std::string, std::list<TransferFiles*> >& files)
 {
     // Queries
     const std::string voQuery = " SELECT DISTINCT vo_name "
@@ -3603,6 +3603,11 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
         }
     conn->releasePooledConnection(pooledConnection);
     return valid;
+}
+
+bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::string & destin_hostname)
+{
+	return isTrAllowed(source_hostname, destin_hostname);
 }
 
 bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)

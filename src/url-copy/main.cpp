@@ -776,10 +776,11 @@ int main(int argc, char **argv)
                     {
                         // Set checksum check
                         gfalt_set_checksum_check(params, TRUE, NULL);
-                        if (opts.compareChecksum == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED) {
-                            gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
-                            gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", TRUE, NULL);
-                        }
+                        if (opts.compareChecksum == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED)
+                            {
+                                gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
+                                gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", TRUE, NULL);
+                            }
 
                         if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
                             {

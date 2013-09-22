@@ -304,7 +304,7 @@ protected:
         if (reuse == false)
             {
                 std::map< std::string, std::list<TransferFiles*> > voQueues;
-                std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();		
+                std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
 
                 if(distinct.size() >= 8 )
                     {
@@ -818,7 +818,7 @@ protected:
                                 if (!drainMode)
                                     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Set to drain mode, no more transfers for this instance!" << commit;
                                 drainMode = true;
-                                sleep(1);
+                                sleep(2);
                                 continue;
                             }
                         else
@@ -855,7 +855,7 @@ protected:
                             }
 
                         long unsigned int freeRam = getAvailableMemory();
-                        if (freeRam != 0 && freeRam < 300)
+                        if (freeRam != 0 && freeRam < 150)
                             {
                                 FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Enforced limits, free RAM is " << freeRam << "MB and " << currentActiveTransfers << " are running" << commit;
                                 continue;
@@ -894,7 +894,7 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(1);
+                        sleep(2);
                     }
                 catch (...)
                     {
@@ -909,9 +909,9 @@ protected:
                                     }
                                 jobsReuse.clear();
                             }
-                        sleep(1);
+                        sleep(2);
                     }
-                sleep(1);
+                sleep(2);
             } /*end while*/
     }
 
