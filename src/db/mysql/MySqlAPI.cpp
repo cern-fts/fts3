@@ -367,7 +367,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                         soci::use(boost::get<1>(triplet)),
                         soci::into(maxActive, isNull);
 
-                    /* here I need to check if there is a manual config for source_se or dest_se so as not to limit the files fetched */
+                    /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
                     if (isNull != soci::i_null && !manualConfig)
                         {
                             filesNum = maxActive - limit;
