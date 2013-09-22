@@ -358,6 +358,7 @@ private:
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
 
 
+    bool manualConfigExists(soci::session& sql, const std::string & source, const std::string & dest);
 
     int lowDefault;
     int highDefault;

@@ -226,7 +226,6 @@ bool FileTransferScheduler::schedule(bool optimize)
     catch(...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception unknown" <<  commit;
-
         }
 
     return true;

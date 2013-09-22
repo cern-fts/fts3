@@ -3607,7 +3607,7 @@ bool OracleAPI::isCredentialExpired(const std::string & dlg_id, const std::strin
 
 bool OracleAPI::isTrAllowed2(const std::string & source_hostname, const std::string & destin_hostname)
 {
-	return isTrAllowed(source_hostname, destin_hostname);
+    return isTrAllowed(source_hostname, destin_hostname);
 }
 
 bool OracleAPI::isTrAllowed(const std::string & source_hostname, const std::string & destin_hostname)
