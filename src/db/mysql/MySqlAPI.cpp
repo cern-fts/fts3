@@ -2240,6 +2240,29 @@ bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::stri
 
     try
         {
+                    int mode = getOptimizerMode(sql);
+                    if(mode==1)
+                        {
+                            lowDefault = mode_1[0];
+                            highDefault = mode_1[1];
+                        }
+                    else if(mode==2)
+                        {
+                            lowDefault = mode_2[0];
+                            highDefault = mode_2[1];
+                        }
+                    else if(mode==3)
+                        {
+                            lowDefault = mode_3[0];
+                            highDefault = mode_3[1];
+                        }
+                    else
+                        {
+                            jobsNum = mode_1[0];
+                            highDefault = mode_1[1];
+                        }
+	
+	
             soci::statement stmt1 = (
                                         sql.prepare << "SELECT active FROM t_optimize_active "
                                         "WHERE source_se = :source AND dest_se = :dest_se ",
@@ -2257,6 +2280,11 @@ bool MySqlAPI::isTrAllowed2(const std::string & source_hostname, const std::stri
                     if(active < maxActive)
                         allowed = true;
                 }
+	    
+	    if(active < highDefault){
+	    	allowed = true;
+	    }
+	
         }
     catch (std::exception& e)
         {
@@ -2374,25 +2402,15 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     stmt8.execute(true);		    
 
                     sql.begin();
-                    if(active == 0 && isNull != soci::i_null && maxActive > 0 )
+                    
+		    if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
                         {
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(maxActive), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
-		    else if(active == 0 && isNull == soci::i_null )
-		        {
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(highDefault), soci::use(source_hostname), soci::use(destin_hostname);
-			}
-                    else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
-                        {
-                            active = (maxActive + active + 2) - active;
+                            active = maxActive + 2;
                             sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                         }
                     else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
                         {   
-			    if(active < highDefault || maxActive < highDefault)
-			    	active = highDefault;
-			    else
-                                active = maxActive;			
+                            active = maxActive;			
                             sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                         }
                     else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
@@ -2400,7 +2418,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 			    if(active < highDefault || maxActive < highDefault)
 			    	active = highDefault;
 			    else
-                                active = (maxActive + active - 1) - active;			
+                                active = maxActive - 1;			
                             sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                         }									
                     else if (ratioSuccessFailure < 100)
@@ -2408,9 +2426,15 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 			    if(active < highDefault || maxActive < highDefault)
 			    	active = highDefault;
 			    else
-                                active = (maxActive + active - 2) - active;
+                                active = maxActive - 2;
                             sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
+                        }		                       
+		    else if(active == 0 && isNull == soci::i_null )
+		        {
+			    if(active < highDefault)
+			    	active = highDefault;			    		
+                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+			}
                     else
                         {
 			    if(active < highDefault || maxActive < highDefault)
@@ -2419,6 +2443,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 			        active = maxActive;
                             sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                         }
+			
                     sql.commit();
                 }
         }
