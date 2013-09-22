@@ -2322,9 +2322,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     soci::statement stmt = (
                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
-                                               " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                               " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
                                                " and (start_time >= date_sub(utc_timestamp(), interval '15' minute) OR job_finished >= date_sub(utc_timestamp(), interval '15' minute))  "
-                                               " LIMIT 30 ",
+                                               " ORDER BY file_id DESC LIMIT 30 ",
                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
                     stmt.execute(true);
 
@@ -2335,9 +2335,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     soci::statement stmt3 = (
                                                 sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
-                                                " and file_state in ('ACTIVE','FINISHED') and throughput<> 0 "
+                                                " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
                                                 " and (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR job_finished >= date_sub(utc_timestamp(), interval '5' minute))  "
-                                                " LIMIT 5 ",
+                                                " ORDER BY file_id DESC LIMIT 5 ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1));
                     stmt3.execute(true);
 
@@ -2399,13 +2399,15 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                 sql.prepare << "SELECT active FROM t_optimize_active "
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
-                    stmt8.execute(true);		    
+                    stmt8.execute(true);
+		    
+		    //std::cout << "SAMPLE = " << source_hostname << "  " << 	destin_hostname << "  " << maxActive << "  " << active << "  " << throughput << "  " << avgThr << std::endl;	    		    
 
                     sql.begin();
                     
 		    if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
                         {
-                            active = maxActive + 2;
+                            active = (maxActive + active + 2) - active;
                             sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                         }
                     else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
@@ -2415,7 +2417,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }
                     else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
                         {
-			    if(active < highDefault || maxActive < highDefault)
+			    if(active < highDefault && maxActive < highDefault)
 			    	active = highDefault;
 			    else
                                 active = maxActive - 1;			
@@ -2423,7 +2425,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }									
                     else if (ratioSuccessFailure < 100)
                         {
-			    if(active < highDefault || maxActive < highDefault)
+			    if(active < highDefault && maxActive < highDefault)
 			    	active = highDefault;
 			    else
                                 active = maxActive - 2;
@@ -2431,13 +2433,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }		                       
 		    else if(active == 0 && isNull == soci::i_null )
 		        {
-			    if(active < highDefault)
-			    	active = highDefault;			    		
+			    active = highDefault;			    		
                             sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
 			}
                     else
                         {
-			    if(active < highDefault || maxActive < highDefault)
+			    if(active < highDefault && maxActive < highDefault)
 			    	active = highDefault;
 			    else
 			        active = maxActive;
