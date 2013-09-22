@@ -2739,8 +2739,6 @@ bool MySqlAPI::terminateReuseProcess(const std::string & jobId)
 
     try
         {
-
-
             std::string reuse;
             sql << "SELECT reuse_job FROM t_job WHERE job_id = :jobId AND reuse_job IS NOT NULL",
                 soci::use(jobId), soci::into(reuse);
@@ -2822,7 +2820,6 @@ void MySqlAPI::revertToSubmitted()
 
     try
         {
-
             struct message_sanity msg;
             msg.revertToSubmitted = true;
             CleanUpSanityChecks temp(this, sql, msg);
