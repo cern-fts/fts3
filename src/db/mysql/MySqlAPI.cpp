@@ -244,33 +244,19 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
 
     soci::session sql(*connectionPool);
 
-    // Get uniqueue VOs
-    std::vector< std::string > distinctVO;
-    distinctVO.reserve(10);
     std::vector< boost::tuple<std::string, std::string, std::string> > distinct;
     distinct.reserve(1500); //approximation
 
     try
-        {
-            soci::rowset<soci::row> rsVO = (
-                                               sql.prepare <<
-                                               " SELECT DISTINCT vo_name "
-                                               " FROM t_job "
-                                               " WHERE job_finished is null "
-                                           );
-
-            for (soci::rowset<soci::row>::const_iterator iVO = rsVO.begin(); iVO != rsVO.end(); ++iVO)
-                {
-                    soci::row const& rVO = *iVO;
-                    std::string vo_name = rVO.get<std::string>("vo_name");
+        {            
                     soci::rowset<soci::row> rs = (
                                                      sql.prepare <<
-                                                     " SELECT DISTINCT source_se, dest_se "
+                                                     " SELECT DISTINCT source_se, dest_se, vo_name "
                                                      " FROM t_file "
-                                                     " WHERE vo_name = :vo_name AND "
+                                                     " WHERE "
                                                      "      file_state = 'SUBMITTED' AND "
                                                      "      hashed_id BETWEEN :hStart AND :hEnd ",
-                                                     soci::use(vo_name), soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                                     soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                  );
                     for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                         {
@@ -279,12 +265,11 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
                                 boost::tuple< std::string, std::string, std::string>(
                                     r.get<std::string>("source_se"),
                                     r.get<std::string>("dest_se"),
-                                    vo_name
+                                    r.get<std::string>("vo_name")
                                 )
 
                             );
                         }
-                }
         }
     catch (std::exception& e)
         {
