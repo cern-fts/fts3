@@ -104,7 +104,7 @@ static int extractTimeout(std::string & str)
 
 
 
-MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), lowDefault(2), highDefault(4), jobsNum(3), filesNum(5)
+MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), lowDefault(3), highDefault(5), jobsNum(3), filesNum(5)
 {
     char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
@@ -115,6 +115,8 @@ MySqlAPI::MySqlAPI(): poolSize(10), connectionPool(NULL), lowDefault(2), highDef
 
 MySqlAPI::~MySqlAPI()
 {
+    if(connectionPool)
+        delete connectionPool;
 }
 
 
@@ -126,7 +128,6 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
 
     try
         {
-
             connectionPool = new soci::connection_pool(pooledConn);
 
             // From connectString, get host and db
@@ -179,6 +180,8 @@ void MySqlAPI::init(std::string username, std::string password, std::string conn
         }
     catch (std::exception& e)
         {
+            if(connectionPool)
+                delete connectionPool;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
@@ -233,6 +236,8 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
         }
     catch (std::exception& e)
         {
+            if(job)
+                delete job;
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
     return job;
@@ -248,28 +253,28 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
     distinct.reserve(1500); //approximation
 
     try
-        {            
-                    soci::rowset<soci::row> rs = (
-                                                     sql.prepare <<
-                                                     " SELECT DISTINCT source_se, dest_se, vo_name "
-                                                     " FROM t_file "
-                                                     " WHERE "
-                                                     "      file_state = 'SUBMITTED' AND "
-                                                     "      hashed_id BETWEEN :hStart AND :hEnd ",
-                                                     soci::use(hashSegment.start), soci::use(hashSegment.end)
-                                                 );
-                    for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                        {
-                            soci::row const& r = *i;
-                            distinct.push_back(
-                                boost::tuple< std::string, std::string, std::string>(
-                                    r.get<std::string>("source_se"),
-                                    r.get<std::string>("dest_se"),
-                                    r.get<std::string>("vo_name")
-                                )
+        {
+            soci::rowset<soci::row> rs = (
+                                             sql.prepare <<
+                                             " SELECT DISTINCT source_se, dest_se, vo_name "
+                                             " FROM t_file "
+                                             " WHERE "
+                                             "      file_state = 'SUBMITTED' AND "
+                                             "      hashed_id BETWEEN :hStart AND :hEnd ",
+                                             soci::use(hashSegment.start), soci::use(hashSegment.end)
+                                         );
+            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                {
+                    soci::row const& r = *i;
+                    distinct.push_back(
+                        boost::tuple< std::string, std::string, std::string>(
+                            r.get<std::string>("source_se"),
+                            r.get<std::string>("dest_se"),
+                            r.get<std::string>("vo_name")
+                        )
 
-                            );
-                        }
+                    );
+                }
         }
     catch (std::exception& e)
         {
@@ -338,7 +343,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                 {
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
 
-                    bool manualConfig = manualConfigExists(sql, boost::get<0>(triplet), boost::get<1>(triplet));		    
+                    bool manualConfig = manualConfigExists(sql, boost::get<0>(triplet), boost::get<1>(triplet));
 
                     int limit = 0;
                     int maxActive = 0;
@@ -861,6 +866,13 @@ void MySqlAPI::getTransferJobStatus(std::string requestID, bool archive, std::ve
         }
     catch (std::exception& e)
         {
+            std::vector< JobStatus* >::iterator it;
+            for (it = jobs.begin(); it != jobs.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
 }
@@ -957,6 +969,13 @@ void MySqlAPI::listRequests(std::vector<JobStatus*>& jobs, std::vector<std::stri
         }
     catch (std::exception& e)
         {
+            std::vector< JobStatus* >::iterator it;
+            for (it = jobs.begin(); it != jobs.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            jobs.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
 }
@@ -1014,6 +1033,13 @@ void MySqlAPI::getTransferFileStatus(std::string requestID, bool archive,
         }
     catch (std::exception& e)
         {
+            std::vector< FileTransferStatus* >::iterator it;
+            for (it = files.begin(); it != files.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
 }
@@ -1040,7 +1066,8 @@ void MySqlAPI::getSe(Se* &se, std::string seName)
         }
     catch (std::exception& e)
         {
-            delete se;
+            if(se)
+                delete se;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
 }
@@ -1643,7 +1670,8 @@ CredCache* MySqlAPI::findGrDPStorageCacheElement(std::string delegationID, std::
         }
     catch (std::exception& e)
         {
-            delete cred;
+            if(cred)
+                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
 
@@ -1749,7 +1777,8 @@ Cred* MySqlAPI::findGrDPStorageElement(std::string delegationID, std::string dn)
         }
     catch (std::exception& e)
         {
-            delete cred;
+            if(cred)
+                delete cred;
             throw Err_Custom(std::string(__func__) + ": Caught exception " +  e.what());
         }
 
@@ -2315,6 +2344,28 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
     try
         {
+            int mode = getOptimizerMode(sql);
+            if(mode==1)
+                {
+                    lowDefault = mode_1[0];
+                    highDefault = mode_1[1];
+                }
+            else if(mode==2)
+                {
+                    lowDefault = mode_2[0];
+                    highDefault = mode_2[1];
+                }
+            else if(mode==3)
+                {
+                    lowDefault = mode_3[0];
+                    highDefault = mode_3[1];
+                }
+            else
+                {
+                    jobsNum = mode_1[0];
+                    highDefault = mode_1[1];
+                }
+
             soci::rowset<soci::row> rs = ( sql.prepare << " select o.source_se, o.dest_se from t_optimize_active o where "
                                            " exists (select null from t_file f where o.source_se=f.source_se and "
                                            " o.dest_se=f.dest_se and f.file_state='SUBMITTED') ");
@@ -2375,28 +2426,6 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     if(nFinishedLastHour > 0)
                         {
                             ratioSuccessFailure = nFinishedLastHour/(nFinishedLastHour + nFailedLastHour) * (100.0/1.0);
-                        }
-
-                    int mode = getOptimizerMode(sql);
-                    if(mode==1)
-                        {
-                            lowDefault = mode_1[0];
-                            highDefault = mode_1[1];
-                        }
-                    else if(mode==2)
-                        {
-                            lowDefault = mode_2[0];
-                            highDefault = mode_2[1];
-                        }
-                    else if(mode==3)
-                        {
-                            lowDefault = mode_3[0];
-                            highDefault = mode_3[1];
-                        }
-                    else
-                        {
-                            jobsNum = mode_1[0];
-                            highDefault = mode_1[1];
                         }
 
                     if(ratioSuccessFailure == 100)
@@ -5991,6 +6020,14 @@ void MySqlAPI::getTransferRetries(int fileId, std::vector<FileRetry*>& retries)
         }
     catch (std::exception& e)
         {
+            std::vector< FileRetry* >::iterator it;
+            for (it = retries.begin(); it != retries.end(); ++it)
+                {
+                    if(*it)
+                        delete (*it);
+                }
+            retries.clear();
+
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
 }
