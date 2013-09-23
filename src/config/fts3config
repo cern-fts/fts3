@@ -19,7 +19,7 @@ DbPassword=replacethis
 DbConnectString=replacethis
 
 #Number of db connections in the pool (use even number, e.g. 2,4,6,8,etc OR 1 for a single connection)
-DbThreadsNum=30
+DbThreadsNum=25
 
 #The alias used for the FTS endpoint, will be published as such in the dashboard transfers UI http://dashb-wlcg-transfers.cern.ch/ui/
 Alias=replacethis
