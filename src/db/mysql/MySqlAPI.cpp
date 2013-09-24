@@ -352,10 +352,7 @@ bool MySqlAPI::manualConfigExists(soci::session& sql, const std::string & source
     int count = 0;
     try
         {
-            sql << "SELECT COUNT(*) FROM t_share_config WHERE (source = :source OR destination = :dest)", soci::use(source),soci::use(dest),soci::into(count);
-            if(count > 0)
-                return true;
-            sql << "SELECT COUNT(*) FROM t_file, t_file_share_config WHERE (source = :source OR destination = :dest)", soci::use(source),soci::use(dest),soci::into(count);
+            sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')", soci::use(source),soci::use(dest),soci::into(count);
             if(count > 0)
                 return true;
             sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)", soci::use(source),soci::use(dest),soci::into(count);
