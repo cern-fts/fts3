@@ -125,7 +125,7 @@ static std::string _getTrTimestampUTC()
 
 static double convertBtoM( double byte,  double duration)
 {
-    return ceil((((byte / duration) / 1024) / 1024) * 100 + 0.5) / 100;
+    return ((((byte / duration) / 1024) / 1024) * 100) / 100;
 }
 
 
@@ -143,7 +143,7 @@ static double my_round(double x, unsigned int digits)
 
 static double convertKbToMb(double throughput)
 {
-    return throughput != 0.0? my_round((throughput / 1024), 2): 0.0;
+    return throughput != 0.0? my_round((throughput / 1024), 6): 0.0;
 }
 
 static int extractTimeout(std::string & str)
@@ -1288,13 +1288,12 @@ void MySqlAPI::deleteSe(std::string NAME)
 bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id, int file_id, std::string transfer_status, std::string transfer_message,
                                         int process_id, double filesize, double duration)
 {
-
     bool ok = true;
     soci::session sql(*connectionPool);
 
     try
         {
-            double throughput = 0;
+            double throughput = 0.0;
 
             bool staging = false;
 
@@ -1384,7 +1383,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
                 }
             else
                 {
-                    throughput = 0;
+                    throughput = 0.0;
                 }
 
             query << "   , pid = :pid, filesize = :filesize, tx_duration = :duration, throughput = :throughput "
@@ -2448,7 +2447,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     soci::indicator isNull2 = soci::i_ok;
 
                     soci::statement stmt = (
-                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from t_file where source_se=:source and dest_se=:dst "
                                                " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
                                                " and (start_time >= date_sub(utc_timestamp(), interval '15' minute) OR job_finished >= date_sub(utc_timestamp(), interval '15' minute))  "
                                                " ORDER BY job_finished DESC LIMIT 30 ",
@@ -2461,7 +2460,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }
 
                     soci::statement stmt3 = (
-                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,2)) from t_file where source_se=:source and dest_se=:dst "
+                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from t_file where source_se=:source and dest_se=:dst "
                                                 " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
                                                 " and (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR job_finished >= date_sub(utc_timestamp(), interval '5' minute))  "
                                                 " ORDER BY job_finished DESC LIMIT 5 ",
@@ -2510,7 +2509,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     stmt8.execute(true);
 
 		    //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);		    
 
                     if(changed)
                         {
