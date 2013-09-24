@@ -19,6 +19,7 @@ limitations under the License. */
 
 #include "generic_server.h"
 #include "heartbeat.h"
+#include "heartbeatActive.h"
 #include "threadpool.h"
 #include "transfer_web_service.h"
 #include "process_service.h"
@@ -39,6 +40,7 @@ struct ServerTraits
     typedef ProcessQueue ProcessQueueType;
     typedef ThreadPool::ThreadPool ThreadPoolType;
     typedef HearBeat HeartBeatType;
+    typedef HearBeatActive HeartBeatTypeActive;
 };
 
 /* -------------------------------------------------------------------------- */

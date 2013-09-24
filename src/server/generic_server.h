@@ -45,8 +45,8 @@ public:
         typename TRAITS::HeartBeatType heartBeatHandler;
         heartBeatHandler.beat();
 
-        //typename TRAITS::ProcessLogServiceType processLogHandler;
-        //processLogHandler.executeTransfer_p();
+        typename TRAITS::HeartBeatTypeActive heartBeatHandlerActive;
+        heartBeatHandlerActive.beat();
 
         typename TRAITS::ProcessUpdaterDBServiceType processUpdaterDBHandler;
         processUpdaterDBHandler.executeTransfer_p();

@@ -118,7 +118,7 @@ bool FileTransferScheduler::schedule(bool optimize)
 
             if(optimize && cfgs.empty())
                 {
-                    bool allowed = db->isTrAllowed(srcSeName, destSeName);
+                    bool allowed = db->isTrAllowed2(srcSeName, destSeName);
                     // update file state to READY
                     if(allowed)
                         {
@@ -226,7 +226,6 @@ bool FileTransferScheduler::schedule(bool optimize)
     catch(...)
         {
             FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread exception unknown" <<  commit;
-
         }
 
     return true;

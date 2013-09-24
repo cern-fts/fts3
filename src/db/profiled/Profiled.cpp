@@ -256,6 +256,11 @@ bool ProfiledDB::isTrAllowed(const std::string & source_se, const std::string & 
     PROFILE_PREFIXED("DB::", return db->isTrAllowed(source_se, dest));
 }
 
+bool ProfiledDB::isTrAllowed2(const std::string & source_se, const std::string & dest)
+{
+    PROFILE_PREFIXED("DB::", return db->isTrAllowed2(source_se, dest));
+}
+
 
 int ProfiledDB::getSeOut(const std::string & source, const std::set<std::string> & destination)
 {

@@ -154,6 +154,8 @@ public:
 
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
 
+    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest);
+
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);

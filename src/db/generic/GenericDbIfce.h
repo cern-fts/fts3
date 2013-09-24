@@ -177,6 +177,8 @@ public:
 
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest) = 0;
 
+    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest) = 0;
+
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination) = 0;
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination) = 0;
@@ -374,7 +376,8 @@ public:
      * so it is not mandatory.
      * start and end are set to the interval of hash values this host will process
      */
-    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end) {
+    virtual void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end)
+    {
         *index = 0;
         *count = 1;
         *start = 0x0000;

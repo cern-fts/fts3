@@ -184,7 +184,8 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
                                          << std::endl;
-            throughput        = (double) avg;
+            if(throughput != 0) 
+	    	throughput        = (double) avg;
             transferred_bytes = (double) trans;
         }
 
@@ -383,7 +384,7 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
     static const GQuark SRM_DOMAIN = g_quark_from_static_string("SRM");
 
     msg_ifce* msg = msg_ifce::getInstance();
-    std::string timestampStr = _to_string<long double>(e->timestamp, std::dec);
+    std::string timestampStr = boost::lexical_cast<std::string>(e->timestamp);
 
     Logger::getInstance().INFO() << '[' << timestampStr << "] "
                                  << sideStr[e->side] << ' '
@@ -394,12 +395,12 @@ static void event_logger(const gfalt_event_t e, gpointer /*udata*/)
     if (e->stage == GFAL_EVENT_TRANSFER_ENTER)
         {
             msg->set_timestamp_transfer_started(&tr_completed, timestampStr);
-            transfer_start = (double) e->timestamp;
+            transfer_start = boost::lexical_cast<double>(e->timestamp);
         }
     else if (e->stage == GFAL_EVENT_TRANSFER_EXIT)
         {
             msg->set_timestamp_transfer_completed(&tr_completed, timestampStr);
-            transfer_complete = (double) e->timestamp;
+            transfer_complete = boost::lexical_cast<double>(e->timestamp);
         }
 
     else if (e->stage == GFAL_EVENT_CHECKSUM_ENTER && e->side == GFAL_EVENT_SOURCE)
@@ -776,10 +777,11 @@ int main(int argc, char **argv)
                     {
                         // Set checksum check
                         gfalt_set_checksum_check(params, TRUE, NULL);
-                        if (opts.compareChecksum == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED) {
-                            gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
-                            gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", TRUE, NULL);
-                        }
+                        if (opts.compareChecksum == UrlCopyOpts::CompareChecksum::CHECKSUM_RELAXED)
+                            {
+                                gfal2_set_opt_boolean(handle, "SRM PLUGIN", "ALLOW_EMPTY_SOURCE_CHECKSUM", TRUE, NULL);
+                                gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SKIP_SOURCE_CHECKSUM", TRUE, NULL);
+                            }
 
                         if (!opts.checksumValue.empty() && opts.checksumValue != "x")   //user provided checksum
                             {
@@ -1078,7 +1080,7 @@ int main(int argc, char **argv)
                 gfalt_set_user_data(params, NULL, NULL);
             }//logStream
 stop:
-            diff = transferDuration(transfer_start, transfer_complete);
+            diff = transferDuration(transfer_start, transfer_complete);	    
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);

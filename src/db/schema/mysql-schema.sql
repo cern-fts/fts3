@@ -657,6 +657,13 @@ CREATE TABLE t_hosts (
     beat        TIMESTAMP NULL DEFAULT NULL
 );
 
+
+CREATE TABLE t_optimize_active (
+  source_se    VARCHAR(255) NOT NULL,
+  dest_se      VARCHAR(255) NOT NULL,
+  active INTEGER UNSIGNED DEFAULT 5,
+  CONSTRAINT t_optimize_active_pk PRIMARY KEY (source_se, dest_se)
+);
 --
 --
 -- Index Section 

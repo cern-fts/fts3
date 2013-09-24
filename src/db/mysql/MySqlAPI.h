@@ -141,6 +141,8 @@ public:
 
     virtual bool isTrAllowed(const std::string & source_se, const std::string & dest);
 
+    virtual bool isTrAllowed2(const std::string & source_se, const std::string & dest);
+
     virtual int getSeOut(const std::string & source, const std::set<std::string> & destination);
 
     virtual int getSeIn(const std::set<std::string> & source, const std::string & destination);
@@ -343,7 +345,6 @@ public:
 private:
     size_t                poolSize;
     soci::connection_pool* connectionPool;
-    OptimizerSample       optimizerObject;
     std::string           hostname;
 
     bool getInOutOfSe(const std::string& sourceSe, const std::string& destSe);
@@ -357,13 +358,17 @@ private:
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
 
 
+    bool manualConfigExists(soci::session& sql, const std::string & source, const std::string & dest);
+
+    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr);
 
     int lowDefault;
     int highDefault;
     int jobsNum;
     int filesNum;
 
-    struct HashSegment {
+    struct HashSegment
+    {
         unsigned start;
         unsigned end;
 
@@ -371,4 +376,5 @@ private:
     } hashSegment;
 
     mutable ThreadTraits::MUTEX_R _mutex;
+    std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
 };
