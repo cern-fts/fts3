@@ -360,6 +360,8 @@ private:
 
     bool manualConfigExists(soci::session& sql, const std::string & source, const std::string & dest);
 
+    bool getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr);
+
     int lowDefault;
     int highDefault;
     int jobsNum;
@@ -374,4 +376,5 @@ private:
     } hashSegment;
 
     mutable ThreadTraits::MUTEX_R _mutex;
+    std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
 };

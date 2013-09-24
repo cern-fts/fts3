@@ -34,6 +34,70 @@
 using namespace FTS3_COMMON_NAMESPACE;
 
 
+
+bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr)
+{
+    bool returnValue = false;
+
+    if(filesMemStore.empty())
+        {
+            boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+            filesMemStore.push_back(record);
+        }
+    else
+        {
+            bool found = false;
+            std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator itFind;
+            for (itFind = filesMemStore.begin(); itFind < filesMemStore.end(); ++itFind)
+                {
+                    boost::tuple<std::string, std::string, double, double, double>& tupleRecord = *itFind;
+                    std::string sourceLocal = boost::get<0>(tupleRecord);
+                    std::string destLocal = boost::get<1>(tupleRecord);
+                    if(sourceLocal == source && destLocal == dest)
+                        {
+                            found = true;
+                            break;
+                        }
+                }
+            if (!found)
+                {
+                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+                    filesMemStore.push_back(record);
+                }
+
+            std::vector< boost::tuple<std::string, std::string, double, double, double> >::iterator it =  filesMemStore.begin();
+            while (it != filesMemStore.end())
+                {
+                    boost::tuple<std::string, std::string, double, double, double>& tupleRecord = *it;
+                    std::string sourceLocal = boost::get<0>(tupleRecord);
+                    std::string destLocal = boost::get<1>(tupleRecord);
+                    double rateLocal = boost::get<2>(tupleRecord);
+                    double thrLocal = boost::get<3>(tupleRecord);
+                    double avgThrLocal = boost::get<4>(tupleRecord);
+
+                    if(sourceLocal == source && destLocal == dest)
+                        {
+                            if(rateLocal != rate || thrLocal != thr || avgThrLocal != avgThr)
+                                {
+                                    it = filesMemStore.erase(it);
+                                    boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
+                                    filesMemStore.push_back(record);
+                                    returnValue = true;
+                                    break;
+
+                                }
+                            break;
+                        }
+                    else
+                        {
+                            ++it;
+                        }
+                }
+        }
+
+    return returnValue;
+}
+
 static time_t convertToUTC(int advance)
 {
     time_t now;
@@ -1336,6 +1400,7 @@ bool MySqlAPI::updateFileTransferStatus(double throughputIn, std::string job_id,
             stmt.execute(true);
 
             sql.commit();
+
         }
     catch (std::exception& e)
         {
@@ -2443,55 +2508,58 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
                     stmt8.execute(true);
-		    
-		    //std::cout << "SAMPLE -------------> " <<  ratioSuccessFailure << "  " << throughput << "  " << avgThr << std::endl;
 
-                    sql.begin();
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);
 
-                    if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
+                    if(changed)
                         {
-                            active = maxActive + 1;
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
-                    else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
-                        {
-			    if(mode==2 || mode==3)
-                            	active = maxActive + 1;
-			    else
-                            	active = maxActive;			    
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
-                    else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
-                        {
-                            if(active < highDefault || maxActive < highDefault)
-                                active = highDefault;
-                            else
-                                active = maxActive - 1;
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
-                    else if (ratioSuccessFailure < 100 && throughput != 0 && avgThr !=0)
-                        {
-                            if(active < highDefault || maxActive < highDefault)
-                                active = highDefault;
-                            else
-                                active = maxActive - 2;
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
-                    else if(active == 0 && isNull == soci::i_null )
-                        {
-                            active = highDefault;
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
-                    else
-                        {
-                            if(active < highDefault || maxActive < highDefault)
-                                active = highDefault;
-                            else
-                                active = maxActive;
-                            sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
-                        }
+                            sql.begin();
 
-                    sql.commit();
+                            if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput > avgThr)
+                                {
+                                    active = maxActive + 1;
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                }
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput == avgThr)
+                                {
+                                    if(mode==2 || mode==3)
+                                        active = maxActive + 1;
+                                    else
+                                        active = maxActive;
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                }
+                            else if(ratioSuccessFailure == 100 && throughput != 0 && avgThr !=0 && throughput < avgThr)
+                                {
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
+                                    else
+                                        active = maxActive - 1;
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                }
+                            else if (ratioSuccessFailure < 100 && throughput != 0 && avgThr !=0)
+                                {
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
+                                    else
+                                        active = maxActive - 2;
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                }
+                            else if(active == 0 && isNull == soci::i_null )
+                                {
+                                    active = highDefault;
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                }
+                            else
+                                {
+                                    if(active < highDefault || maxActive < highDefault)
+                                        active = highDefault;
+                                    else
+                                        active = maxActive;
+                                    sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
+                                }
+
+                            sql.commit();
+                        }
                 }
         }
     catch (std::exception& e)
