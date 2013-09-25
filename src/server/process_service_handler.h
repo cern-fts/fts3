@@ -289,214 +289,505 @@ protected:
 
     void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
     {
-        std::string params = std::string("");
-        ExecuteProcess *pr = NULL;
-        std::string sourceSiteName("");
-        std::string destSiteName("");
-        std::string source_hostname("");
-        std::string destin_hostname("");
-        SeProtocolConfig protocol;
-        bool protocolExists;
-        std::string proxy_file("");
-        bool debug = false;
-        OptimizerSample* opt_config = NULL;
-
-        if (reuse == false)
+        try
             {
-                std::map< std::string, std::list<TransferFiles*> > voQueues;
-                std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
+                std::string params = std::string("");
+                ExecuteProcess *pr = NULL;
+                std::string sourceSiteName("");
+                std::string destSiteName("");
+                std::string source_hostname("");
+                std::string destin_hostname("");
+                SeProtocolConfig protocol;
+                bool protocolExists;
+                std::string proxy_file("");
+                bool debug = false;
+                OptimizerSample* opt_config = NULL;
 
-                if(distinct.size() >= 8 )
+                if (reuse == false)
                     {
-                        std::size_t const half_size1 = distinct.size() / 2;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_2(distinct.begin() + half_size1, distinct.end());
-
-                        std::size_t const half_size2 = split_1.size() / 2;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_11(split_1.begin(), split_1.begin() + half_size2);
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_21(split_1.begin() + half_size2, split_1.end());
-
-                        std::size_t const half_size3 = split_2.size() / 2;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
-                        std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
-
-                        boost::thread *t1 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_11),boost::ref(voQueues)));
-                        boost::thread *t2 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_21),boost::ref(voQueues)));
-                        boost::thread *t3 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_12),boost::ref(voQueues)));
-                        boost::thread *t4 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_22),boost::ref(voQueues)));
-
-                        g.add_thread(t1);
-                        g.add_thread(t2);
-                        g.add_thread(t3);
-                        g.add_thread(t4);
-
-                        // wait for them
-                        g.join_all();
-                    }
-                else    //end < 8
-                    {
-                        fetchFiles(distinct, voQueues);
-                    }
-
-                distinct.clear();
-
-                // create transfer-file handler
-                TransferFileHandler tfh(voQueues);
-
-                //init optimizer here to avoid duplicates
-                std::map< std::string, std::list<TransferFiles*> >::const_iterator i;
-                for (i = voQueues.begin(); i != voQueues.end(); ++i)
-                    {
-                        std::list<TransferFiles*>::const_iterator j;
-                        for (j = i->second.begin(); j != i->second.end(); ++j)
-                            {
-                                TransferFiles* temp = *j;
-                                DBSingleton::instance().getDBObjectInstance()->initOptimizer(temp->SOURCE_SE, temp->DEST_SE, 0);
-                            }
-                    }
-
-                // the worker thread pool
-                FileTransferExecutorPool execPool(execPoolSize, tfh, monitoringMessages, infosys, ftsHostName);
-
-                // loop until all files have been served
-
-                int initial_size = tfh.size();
-
-
-                while (!tfh.empty())
-                    {
-                        PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
-
-                        // iterate over all VOs
-                        set<string>::iterator it_vo;
-                        for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
-                            {
-                                if (stopThreads)
-                                    {
-                                        execPool.stopAll();
-                                        return;
-                                    }
-
-                                execPool.add(tfh.get(*it_vo), enableOptimization.compare("true") == 0);
-                            }
-                    }
-
-                // wait for all the workers to finish
-                execPool.join();
-
-                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
-            }
-        else     /*reuse session*/
-            {
-                if (!jobsReuse2.empty())
-                    {
-                        bool manualConfigExists = false;
-                        std::vector<std::string> urls;
-                        std::map<int, std::string> fileIds;
-                        std::string job_id = std::string("");
-                        std::string vo_name = std::string("");
-                        std::string cred_id = std::string("");
-                        std::string dn = std::string("");
-                        std::string overwrite = std::string("");
-                        std::string source_space_token = std::string("");
-                        std::string dest_space_token = std::string("");
-                        int file_id = 0;
-                        std::string checksum = std::string("");
-                        std::stringstream url;
-                        std::string surl = std::string("");
-                        std::string durl = std::string("");
-                        int pinLifetime = -1;
-                        int bringOnline = -1;
-                        int BufSize = 0;
-                        int StreamsperFile = 0;
-                        int Timeout = 0;
-                        double userFilesize = 0;
-                        std::string jobMetadata("");
-                        std::string fileMetadata("");
-                        std::string bringonlineToken("");
-
-                        TransferFiles* tempUrl = NULL;
-
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
-                        std::list<TransferFiles*>::const_iterator queueiter;
+                        std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
 
-                        DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues, reuse);
-
-                        if (voQueues.empty())
+                        if(distinct.size() >= 8 )
                             {
-                                std::vector<TransferJobs*>::iterator iter2;
-                                for (iter2 = jobsReuse2.begin(); iter2 != jobsReuse2.end(); ++iter2)
-                                    {
-                                        if(*iter2)
-                                            delete *iter2;
-                                    }
-                                jobsReuse2.clear();
-                                return;
+                                std::size_t const half_size1 = distinct.size() / 2;
+                                std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
+                                std::vector< boost::tuple<std::string, std::string, std::string> > split_2(distinct.begin() + half_size1, distinct.end());
+
+                                std::size_t const half_size2 = split_1.size() / 2;
+                                std::vector< boost::tuple<std::string, std::string, std::string> > split_11(split_1.begin(), split_1.begin() + half_size2);
+                                std::vector< boost::tuple<std::string, std::string, std::string> > split_21(split_1.begin() + half_size2, split_1.end());
+
+                                std::size_t const half_size3 = split_2.size() / 2;
+                                std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
+                                std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
+
+                                boost::thread *t1 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_11),boost::ref(voQueues)));
+                                boost::thread *t2 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_21),boost::ref(voQueues)));
+                                boost::thread *t3 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_12),boost::ref(voQueues)));
+                                boost::thread *t4 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_22),boost::ref(voQueues)));
+
+                                g.add_thread(t1);
+                                g.add_thread(t2);
+                                g.add_thread(t3);
+                                g.add_thread(t4);
+
+                                // wait for them
+                                g.join_all();
+                            }
+                        else    //end < 8
+                            {
+                                fetchFiles(distinct, voQueues);
                             }
 
-                        // since there will be just one VO pick it (TODO)
-                        std::string vo = jobsReuse2.front()->VO_NAME;
+                        distinct.clear();
 
-                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                        // create transfer-file handler
+                        TransferFileHandler tfh(voQueues);
+
+                        //init optimizer here to avoid duplicates
+                        std::map< std::string, std::list<TransferFiles*> >::const_iterator i;
+                        for (i = voQueues.begin(); i != voQueues.end(); ++i)
                             {
-                                PROFILE_SCOPE("executeUrlcopy::for[reuse]");
-                                if (stopThreads)
+                                std::list<TransferFiles*>::const_iterator j;
+                                for (j = i->second.begin(); j != i->second.end(); ++j)
                                     {
+                                        TransferFiles* temp = *j;
+                                        DBSingleton::instance().getDBObjectInstance()->initOptimizer(temp->SOURCE_SE, temp->DEST_SE, 0);
+                                    }
+                            }
+
+                        // the worker thread pool
+                        FileTransferExecutorPool execPool(execPoolSize, tfh, monitoringMessages, infosys, ftsHostName);
+
+                        // loop until all files have been served
+
+                        int initial_size = tfh.size();
+
+
+                        while (!tfh.empty())
+                            {
+                                PROFILE_SCOPE("executeUrlcopy::while[!reuse]");
+
+                                // iterate over all VOs
+                                set<string>::iterator it_vo;
+                                for (it_vo = tfh.begin(); it_vo != tfh.end(); it_vo++)
+                                    {
+                                        if (stopThreads)
+                                            {
+                                                execPool.stopAll();
+                                                return;
+                                            }
+
+                                        execPool.add(tfh.get(*it_vo), enableOptimization.compare("true") == 0);
+                                    }
+                            }
+
+                        // wait for all the workers to finish
+                        execPool.join();
+
+                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Threadpool processed: " << initial_size << " files (" << execPool.getNumberOfScheduled() << " have been scheduled)" << commit;
+                    }
+                else     /*reuse session*/
+                    {
+                        if (!jobsReuse2.empty())
+                            {
+                                bool manualConfigExists = false;
+                                std::vector<std::string> urls;
+                                std::map<int, std::string> fileIds;
+                                std::string job_id = std::string("");
+                                std::string vo_name = std::string("");
+                                std::string cred_id = std::string("");
+                                std::string dn = std::string("");
+                                std::string overwrite = std::string("");
+                                std::string source_space_token = std::string("");
+                                std::string dest_space_token = std::string("");
+                                int file_id = 0;
+                                std::string checksum = std::string("");
+                                std::stringstream url;
+                                std::string surl = std::string("");
+                                std::string durl = std::string("");
+                                int pinLifetime = -1;
+                                int bringOnline = -1;
+                                int BufSize = 0;
+                                int StreamsperFile = 0;
+                                int Timeout = 0;
+                                double userFilesize = 0;
+                                std::string jobMetadata("");
+                                std::string fileMetadata("");
+                                std::string bringonlineToken("");
+
+                                TransferFiles* tempUrl = NULL;
+
+                                std::map< std::string, std::list<TransferFiles*> > voQueues;
+                                std::list<TransferFiles*>::const_iterator queueiter;
+
+                                DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues, reuse);
+
+                                if (voQueues.empty())
+                                    {
+                                        std::vector<TransferJobs*>::iterator iter2;
+                                        for (iter2 = jobsReuse2.begin(); iter2 != jobsReuse2.end(); ++iter2)
+                                            {
+                                                if(*iter2)
+                                                    delete *iter2;
+                                            }
+                                        jobsReuse2.clear();
                                         return;
                                     }
 
-                                TransferFiles* temp = (TransferFiles*) * queueiter;
-                                tempUrl = temp;
-                                surl = temp->SOURCE_SURL;
-                                durl = temp->DEST_SURL;
-                                job_id = temp->JOB_ID;
-                                vo_name = temp->VO_NAME;
-                                cred_id = temp->CRED_ID;
-                                dn = temp->DN;
-                                file_id = temp->FILE_ID;
-                                overwrite = temp->OVERWRITE;
-                                source_hostname = temp->SOURCE_SE;
-                                destin_hostname = temp->DEST_SE;
-                                source_space_token = temp->SOURCE_SPACE_TOKEN;
-                                dest_space_token = temp->DEST_SPACE_TOKEN;
-                                pinLifetime = temp->PIN_LIFETIME;
-                                bringOnline = temp->BRINGONLINE;
-                                userFilesize = temp->USER_FILESIZE;
-                                jobMetadata = prepareMetadataString(temp->JOB_METADATA);
-                                fileMetadata = prepareMetadataString(temp->FILE_METADATA);
-                                bringonlineToken = temp->BRINGONLINE_TOKEN;
+                                // since there will be just one VO pick it (TODO)
+                                std::string vo = jobsReuse2.front()->VO_NAME;
 
-                                if (fileMetadata.length() <= 0)
-                                    fileMetadata = "x";
-                                if (bringonlineToken.length() <= 0)
-                                    bringonlineToken = "x";
-                                if (std::string(temp->CHECKSUM_METHOD).length() > 0)
+                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                                     {
-                                        if (std::string(temp->CHECKSUM).length() > 0)
-                                            checksum = temp->CHECKSUM;
+                                        PROFILE_SCOPE("executeUrlcopy::for[reuse]");
+                                        if (stopThreads)
+                                            {
+                                                return;
+                                            }
+
+                                        TransferFiles* temp = (TransferFiles*) * queueiter;
+                                        tempUrl = temp;
+                                        surl = temp->SOURCE_SURL;
+                                        durl = temp->DEST_SURL;
+                                        job_id = temp->JOB_ID;
+                                        vo_name = temp->VO_NAME;
+                                        cred_id = temp->CRED_ID;
+                                        dn = temp->DN;
+                                        file_id = temp->FILE_ID;
+                                        overwrite = temp->OVERWRITE;
+                                        source_hostname = temp->SOURCE_SE;
+                                        destin_hostname = temp->DEST_SE;
+                                        source_space_token = temp->SOURCE_SPACE_TOKEN;
+                                        dest_space_token = temp->DEST_SPACE_TOKEN;
+                                        pinLifetime = temp->PIN_LIFETIME;
+                                        bringOnline = temp->BRINGONLINE;
+                                        userFilesize = temp->USER_FILESIZE;
+                                        jobMetadata = prepareMetadataString(temp->JOB_METADATA);
+                                        fileMetadata = prepareMetadataString(temp->FILE_METADATA);
+                                        bringonlineToken = temp->BRINGONLINE_TOKEN;
+
+                                        if (fileMetadata.length() <= 0)
+                                            fileMetadata = "x";
+                                        if (bringonlineToken.length() <= 0)
+                                            bringonlineToken = "x";
+                                        if (std::string(temp->CHECKSUM_METHOD).length() > 0)
+                                            {
+                                                if (std::string(temp->CHECKSUM).length() > 0)
+                                                    checksum = temp->CHECKSUM;
+                                                else
+                                                    checksum = "x";
+                                            }
                                         else
-                                            checksum = "x";
+                                            {
+                                                checksum = "x";
+                                            }
+
+                                        url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata << " " << bringonlineToken;
+                                        urls.push_back(url.str());
+                                        url.str("");
+                                    }
+
+                                if(!tempUrl)
+                                    {
+                                        /** cleanup resources */
+                                        std::vector<TransferJobs*>::iterator iter2;
+                                        for (iter2 = jobsReuse2.begin(); iter2 != jobsReuse2.end(); ++iter2)
+                                            {
+                                                if(*iter2)
+                                                    delete *iter2;
+                                            }
+                                        jobsReuse2.clear();
+                                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                                            {
+                                                if(*queueiter)
+                                                    delete *queueiter;
+                                            }
+                                        voQueues[vo].clear();
+                                        fileIds.clear();
+                                        return;
+                                    }
+
+                                sourceSiteName = siteResolver.getSiteName(surl);
+                                destSiteName = siteResolver.getSiteName(durl);
+
+                                createJobFile(job_id, urls);
+
+                                /*check if manual config exist for this pair and vo*/
+                                vector< boost::shared_ptr<ShareConfig> > cfgs;
+                                ConfigurationAssigner cfgAssigner(tempUrl);
+                                cfgAssigner.assign(cfgs);
+
+                                bool optimize = false;
+
+                                if (enableOptimization.compare("true") == 0 && cfgs.empty())
+                                    {
+                                        optimize = true;
+                                        opt_config = new OptimizerSample();
+                                        DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
+                                        BufSize = opt_config->getBufSize();
+                                        StreamsperFile = opt_config->getStreamsperFile();
+                                        Timeout = opt_config->getTimeout();
+                                        delete opt_config;
+                                        opt_config = NULL;
                                     }
                                 else
                                     {
-                                        checksum = "x";
+                                        manualConfigExists = true;
                                     }
 
-                                url << std::fixed << file_id << " " << surl << " " << durl << " " << checksum << " " << userFilesize << " " << fileMetadata << " " << bringonlineToken;
-                                urls.push_back(url.str());
-                                url.str("");
-                            }
-
-                        if(!tempUrl)
-                            {
-                                /** cleanup resources */
-                                std::vector<TransferJobs*>::iterator iter2;
-                                for (iter2 = jobsReuse2.begin(); iter2 != jobsReuse2.end(); ++iter2)
+                                FileTransferScheduler scheduler(tempUrl, cfgs);
+                                if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
                                     {
-                                        if(*iter2)
-                                            delete *iter2;
+                                        bool isAutoTuned = false;
+                                        std::stringstream internalParams;
+                                        if (optimize && manualConfigExists == false)
+                                            {
+                                                DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
+                                            }
+                                        else
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
+                                                ProtocolResolver resolver(tempUrl, cfgs);
+                                                protocolExists = resolver.resolve();
+                                                if (protocolExists)
+                                                    {
+                                                        manualConfigExists = true;
+                                                        protocol.NOSTREAMS = resolver.getNoStreams();
+                                                        protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
+                                                        protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
+                                                        protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
+
+                                                        if (protocol.NOSTREAMS >= 0)
+                                                            internalParams << "nostreams:" << protocol.NOSTREAMS;
+                                                        if (protocol.URLCOPY_TX_TO >= 0)
+                                                            internalParams << ",timeout:" << protocol.URLCOPY_TX_TO;
+                                                        if (protocol.TCP_BUFFER_SIZE >= 0)
+                                                            internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
+                                                    }
+                                                else
+                                                    {
+                                                        internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
+                                                    }
+
+                                                if (resolver.isAuto())
+                                                    {
+                                                        isAutoTuned = true;
+                                                        DBSingleton::instance().getDBObjectInstance()->setAllowed(
+                                                            job_id,
+                                                            -1,
+                                                            source_hostname,
+                                                            destin_hostname,
+                                                            resolver.getNoStreams(),
+                                                            resolver.getNoTxActiveTo(),
+                                                            resolver.getTcpBufferSize()
+                                                        );
+                                                    }
+                                                else
+                                                    {
+                                                        DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(
+                                                            job_id,
+                                                            0,
+                                                            internalParams.str()
+                                                        );
+                                                    }
+                                            }
+
+                                        proxy_file = get_proxy_cert(
+                                                         dn, // user_dn
+                                                         cred_id, // user_cred
+                                                         vo_name, // vo_name
+                                                         "",
+                                                         "", // assoc_service
+                                                         "", // assoc_service_type
+                                                         false,
+                                                         "");
+
+                                        /*set all to ready, special case for session reuse*/
+                                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
+                                            {
+                                                TransferFiles* temp = (TransferFiles*) * queueiter;
+                                                DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
+                                                fileIds.insert(std::make_pair<int, std::string > (temp->FILE_ID, temp->JOB_ID));
+                                                SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
+                                            }
+
+                                        debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
+                                        if (debug == true)
+                                            {
+                                                params.append(" -F ");
+                                            }
+
+                                        if (manualConfigExists)
+                                            {
+                                                params.append(" -N ");
+                                            }
+
+                                        if (isAutoTuned)
+                                            {
+                                                params.append(" -O ");
+                                            }
+
+                                        if (monitoringMessages)
+                                            {
+                                                params.append(" -P ");
+                                            }
+
+                                        if (proxy_file.length() > 0)
+                                            {
+                                                params.append(" -proxy ");
+                                                params.append(proxy_file);
+                                            }
+
+                                        params.append(" -G ");
+                                        params.append(" -a ");
+                                        params.append(job_id);
+                                        params.append(" -C ");
+                                        params.append(vo_name);
+                                        if (sourceSiteName.length() > 0)
+                                            {
+                                                params.append(" -D ");
+                                                params.append(sourceSiteName);
+                                            }
+                                        if (destSiteName.length() > 0)
+                                            {
+                                                params.append(" -E ");
+                                                params.append(destSiteName);
+                                            }
+                                        if (std::string(overwrite).length() > 0)
+                                            {
+                                                params.append(" -d ");
+                                            }
+                                        if (optimize && manualConfigExists == false)
+                                            {
+                                                params.append(" -e ");
+                                                params.append(boost::lexical_cast<std::string > (StreamsperFile));
+                                            }
+                                        else
+                                            {
+                                                if (protocol.NOSTREAMS >= 0)
+                                                    {
+                                                        params.append(" -e ");
+                                                        params.append(boost::lexical_cast<std::string > (protocol.NOSTREAMS));
+                                                    }
+                                                else
+                                                    {
+                                                        params.append(" -e ");
+                                                        params.append(boost::lexical_cast<std::string > (DEFAULT_NOSTREAMS));
+                                                    }
+                                            }
+                                        if (optimize && manualConfigExists == false)
+                                            {
+                                                params.append(" -f ");
+                                                params.append(boost::lexical_cast<std::string > (BufSize));
+                                            }
+                                        else
+                                            {
+                                                if (protocol.TCP_BUFFER_SIZE >= 0)
+                                                    {
+                                                        params.append(" -f ");
+                                                        params.append(boost::lexical_cast<std::string > (protocol.TCP_BUFFER_SIZE));
+                                                    }
+                                                else
+                                                    {
+                                                        params.append(" -f ");
+                                                        params.append(boost::lexical_cast<std::string > (DEFAULT_BUFFSIZE));
+                                                    }
+                                            }
+                                        if (optimize && manualConfigExists == false)
+                                            {
+                                                params.append(" -h ");
+                                                params.append(boost::lexical_cast<std::string > (Timeout));
+                                            }
+                                        else
+                                            {
+                                                if (protocol.URLCOPY_TX_TO >= 0)
+                                                    {
+                                                        params.append(" -h ");
+                                                        params.append(boost::lexical_cast<std::string > (protocol.URLCOPY_TX_TO));
+                                                    }
+                                                else
+                                                    {
+                                                        params.append(" -h ");
+                                                        params.append(boost::lexical_cast<std::string > (DEFAULT_TIMEOUT));
+                                                    }
+                                            }
+                                        if (std::string(source_space_token).length() > 0)
+                                            {
+                                                params.append(" -k ");
+                                                params.append(source_space_token);
+                                            }
+                                        if (std::string(dest_space_token).length() > 0)
+                                            {
+                                                params.append(" -j ");
+                                                params.append(dest_space_token);
+                                            }
+
+                                        if (pinLifetime > 0)
+                                            {
+                                                params.append(" -t ");
+                                                params.append(boost::lexical_cast<std::string > (pinLifetime));
+                                            }
+
+                                        if (bringOnline > 0)
+                                            {
+                                                params.append(" -H ");
+                                                params.append(boost::lexical_cast<std::string > (bringOnline));
+                                            }
+
+                                        if (jobMetadata.length() > 0)
+                                            {
+                                                params.append(" -J ");
+                                                params.append(jobMetadata);
+                                            }
+
+                                        params.append(" -M ");
+                                        params.append(infosys);
+
+                                        bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);
+
+                                        if (ready)
+                                            {
+                                                FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
+                                                pr = new ExecuteProcess(cmd, params);
+                                                if (pr)
+                                                    {
+                                                        /*check if fork failed , check if execvp failed, */
+                                                        if (-1 == pr->executeProcessShell())
+                                                            {
+                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
+                                                                DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
+                                                            }
+                                                        else
+                                                            {
+                                                                DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);
+                                                                std::map<int, std::string>::const_iterator iterFileIds;
+                                                                for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
+                                                                    {
+                                                                        struct message_updater msg;
+                                                                        if(std::string(job_id).length() <= 37)
+                                                                            {
+                                                                                strcpy(msg.job_id, std::string(job_id).c_str());
+                                                                                msg.file_id = iterFileIds->first;
+                                                                                msg.process_id = (int) pr->getPid();
+                                                                                msg.timestamp = milliseconds_since_epoch();
+                                                                                ThreadSafeList::get_instance().push_back(msg);
+                                                                            }
+                                                                        else
+                                                                            {
+                                                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
+                                                                            }
+                                                                    }
+                                                            }
+                                                        delete pr;
+                                                    }
+                                            }
+                                        params.clear();
                                     }
+
                                 jobsReuse2.clear();
+
                                 for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
                                     {
                                         if(*queueiter)
@@ -504,297 +795,17 @@ protected:
                                     }
                                 voQueues[vo].clear();
                                 fileIds.clear();
-                                return;
+
                             }
-
-                        sourceSiteName = siteResolver.getSiteName(surl);
-                        destSiteName = siteResolver.getSiteName(durl);
-
-                        createJobFile(job_id, urls);
-
-                        /*check if manual config exist for this pair and vo*/
-                        vector< boost::shared_ptr<ShareConfig> > cfgs;
-                        ConfigurationAssigner cfgAssigner(tempUrl);
-                        cfgAssigner.assign(cfgs);
-
-                        bool optimize = false;
-
-                        if (enableOptimization.compare("true") == 0 && cfgs.empty())
-                            {
-                                optimize = true;
-                                opt_config = new OptimizerSample();
-                                DBSingleton::instance().getDBObjectInstance()->fetchOptimizationConfig2(opt_config, source_hostname, destin_hostname);
-                                BufSize = opt_config->getBufSize();
-                                StreamsperFile = opt_config->getStreamsperFile();
-                                Timeout = opt_config->getTimeout();
-                                delete opt_config;
-                                opt_config = NULL;
-                            }
-                        else
-                            {
-                                manualConfigExists = true;
-                            }
-
-                        FileTransferScheduler scheduler(tempUrl, cfgs);
-                        if (scheduler.schedule(optimize))   /*SET TO READY STATE WHEN TRUE*/
-                            {
-                                bool isAutoTuned = false;
-                                std::stringstream internalParams;
-                                if (optimize && manualConfigExists == false)
-                                    {
-                                        DBSingleton::instance().getDBObjectInstance()->setAllowed(job_id, -1, source_hostname, destin_hostname, StreamsperFile, Timeout, BufSize);
-                                    }
-                                else
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Check link config for: " << source_hostname << " -> " << destin_hostname << " -> " << vo_name << commit;
-                                        ProtocolResolver resolver(tempUrl, cfgs);
-                                        protocolExists = resolver.resolve();
-                                        if (protocolExists)
-                                            {
-                                                manualConfigExists = true;
-                                                protocol.NOSTREAMS = resolver.getNoStreams();
-                                                protocol.NO_TX_ACTIVITY_TO = resolver.getNoTxActiveTo();
-                                                protocol.TCP_BUFFER_SIZE = resolver.getTcpBufferSize();
-                                                protocol.URLCOPY_TX_TO = resolver.getUrlCopyTxTo();
-
-                                                if (protocol.NOSTREAMS >= 0)
-                                                    internalParams << "nostreams:" << protocol.NOSTREAMS;
-                                                if (protocol.URLCOPY_TX_TO >= 0)
-                                                    internalParams << ",timeout:" << protocol.URLCOPY_TX_TO;
-                                                if (protocol.TCP_BUFFER_SIZE >= 0)
-                                                    internalParams << ",buffersize:" << protocol.TCP_BUFFER_SIZE;
-                                            }
-                                        else
-                                            {
-                                                internalParams << "nostreams:" << DEFAULT_NOSTREAMS << ",timeout:" << DEFAULT_TIMEOUT << ",buffersize:" << DEFAULT_BUFFSIZE;
-                                            }
-
-                                        if (resolver.isAuto())
-                                            {
-                                                isAutoTuned = true;
-                                                DBSingleton::instance().getDBObjectInstance()->setAllowed(
-                                                    job_id,
-                                                    -1,
-                                                    source_hostname,
-                                                    destin_hostname,
-                                                    resolver.getNoStreams(),
-                                                    resolver.getNoTxActiveTo(),
-                                                    resolver.getTcpBufferSize()
-                                                );
-                                            }
-                                        else
-                                            {
-                                                DBSingleton::instance().getDBObjectInstance()->setAllowedNoOptimize(
-                                                    job_id,
-                                                    0,
-                                                    internalParams.str()
-                                                );
-                                            }
-                                    }
-
-                                proxy_file = get_proxy_cert(
-                                                 dn, // user_dn
-                                                 cred_id, // user_cred
-                                                 vo_name, // vo_name
-                                                 "",
-                                                 "", // assoc_service
-                                                 "", // assoc_service_type
-                                                 false,
-                                                 "");
-
-                                /*set all to ready, special case for session reuse*/
-                                for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
-                                    {
-                                        TransferFiles* temp = (TransferFiles*) * queueiter;
-                                        DBSingleton::instance().getDBObjectInstance()->updateFileStatus(temp, "READY");
-                                        fileIds.insert(std::make_pair<int, std::string > (temp->FILE_ID, temp->JOB_ID));
-                                        SingleTrStateInstance::instance().sendStateMessage(temp->JOB_ID, temp->FILE_ID);
-                                    }
-
-                                debug = DBSingleton::instance().getDBObjectInstance()->getDebugMode(source_hostname, destin_hostname);
-                                if (debug == true)
-                                    {
-                                        params.append(" -F ");
-                                    }
-
-                                if (manualConfigExists)
-                                    {
-                                        params.append(" -N ");
-                                    }
-
-                                if (isAutoTuned)
-                                    {
-                                        params.append(" -O ");
-                                    }
-
-                                if (monitoringMessages)
-                                    {
-                                        params.append(" -P ");
-                                    }
-
-                                if (proxy_file.length() > 0)
-                                    {
-                                        params.append(" -proxy ");
-                                        params.append(proxy_file);
-                                    }
-
-                                params.append(" -G ");
-                                params.append(" -a ");
-                                params.append(job_id);
-                                params.append(" -C ");
-                                params.append(vo_name);
-                                if (sourceSiteName.length() > 0)
-                                    {
-                                        params.append(" -D ");
-                                        params.append(sourceSiteName);
-                                    }
-                                if (destSiteName.length() > 0)
-                                    {
-                                        params.append(" -E ");
-                                        params.append(destSiteName);
-                                    }
-                                if (std::string(overwrite).length() > 0)
-                                    {
-                                        params.append(" -d ");
-                                    }
-                                if (optimize && manualConfigExists == false)
-                                    {
-                                        params.append(" -e ");
-                                        params.append(boost::lexical_cast<std::string > (StreamsperFile));
-                                    }
-                                else
-                                    {
-                                        if (protocol.NOSTREAMS >= 0)
-                                            {
-                                                params.append(" -e ");
-                                                params.append(boost::lexical_cast<std::string > (protocol.NOSTREAMS));
-                                            }
-                                        else
-                                            {
-                                                params.append(" -e ");
-                                                params.append(boost::lexical_cast<std::string > (DEFAULT_NOSTREAMS));
-                                            }
-                                    }
-                                if (optimize && manualConfigExists == false)
-                                    {
-                                        params.append(" -f ");
-                                        params.append(boost::lexical_cast<std::string > (BufSize));
-                                    }
-                                else
-                                    {
-                                        if (protocol.TCP_BUFFER_SIZE >= 0)
-                                            {
-                                                params.append(" -f ");
-                                                params.append(boost::lexical_cast<std::string > (protocol.TCP_BUFFER_SIZE));
-                                            }
-                                        else
-                                            {
-                                                params.append(" -f ");
-                                                params.append(boost::lexical_cast<std::string > (DEFAULT_BUFFSIZE));
-                                            }
-                                    }
-                                if (optimize && manualConfigExists == false)
-                                    {
-                                        params.append(" -h ");
-                                        params.append(boost::lexical_cast<std::string > (Timeout));
-                                    }
-                                else
-                                    {
-                                        if (protocol.URLCOPY_TX_TO >= 0)
-                                            {
-                                                params.append(" -h ");
-                                                params.append(boost::lexical_cast<std::string > (protocol.URLCOPY_TX_TO));
-                                            }
-                                        else
-                                            {
-                                                params.append(" -h ");
-                                                params.append(boost::lexical_cast<std::string > (DEFAULT_TIMEOUT));
-                                            }
-                                    }
-                                if (std::string(source_space_token).length() > 0)
-                                    {
-                                        params.append(" -k ");
-                                        params.append(source_space_token);
-                                    }
-                                if (std::string(dest_space_token).length() > 0)
-                                    {
-                                        params.append(" -j ");
-                                        params.append(dest_space_token);
-                                    }
-
-                                if (pinLifetime > 0)
-                                    {
-                                        params.append(" -t ");
-                                        params.append(boost::lexical_cast<std::string > (pinLifetime));
-                                    }
-
-                                if (bringOnline > 0)
-                                    {
-                                        params.append(" -H ");
-                                        params.append(boost::lexical_cast<std::string > (bringOnline));
-                                    }
-
-                                if (jobMetadata.length() > 0)
-                                    {
-                                        params.append(" -J ");
-                                        params.append(jobMetadata);
-                                    }
-
-                                params.append(" -M ");
-                                params.append(infosys);
-
-                                bool ready = DBSingleton::instance().getDBObjectInstance()->isFileReadyStateV(fileIds);
-
-                                if (ready)
-                                    {
-                                        FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Transfer params: " << cmd << " " << params << commit;
-                                        pr = new ExecuteProcess(cmd, params);
-                                        if (pr)
-                                            {
-                                                /*check if fork failed , check if execvp failed, */
-                                                if (-1 == pr->executeProcessShell())
-                                                    {
-                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Transfer failed to spawn " << commit;
-                                                        DBSingleton::instance().getDBObjectInstance()->forkFailedRevertStateV(fileIds);
-                                                    }
-                                                else
-                                                    {
-                                                        DBSingleton::instance().getDBObjectInstance()->setPidV(pr->getPid(), fileIds);
-                                                        std::map<int, std::string>::const_iterator iterFileIds;
-                                                        for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
-                                                            {
-                                                                struct message_updater msg;
-                                                                if(std::string(job_id).length() <= 37)
-                                                                    {
-                                                                        strcpy(msg.job_id, std::string(job_id).c_str());
-                                                                        msg.file_id = iterFileIds->first;
-                                                                        msg.process_id = (int) pr->getPid();
-                                                                        msg.timestamp = milliseconds_since_epoch();
-                                                                        ThreadSafeList::get_instance().push_back(msg);
-                                                                    }
-                                                                else
-                                                                    {
-                                                                        FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Message length overun" << std::string(job_id).length() << commit;
-                                                                    }
-                                                            }
-                                                    }
-                                                delete pr;
-                                            }
-                                    }
-                                params.clear();
-                            }
-
-                        jobsReuse2.clear();
-
-                        for (queueiter = voQueues[vo].begin(); queueiter != voQueues[vo].end(); ++queueiter)
-                            {
-                                if(*queueiter)
-                                    delete *queueiter;
-                            }
-                        voQueues[vo].clear();
-                        fileIds.clear();
-
                     }
+            }
+        catch (std::exception& e)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler " << e.what() << commit;
+            }
+        catch (...)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in process_service_handler!" << commit;
             }
     }
 

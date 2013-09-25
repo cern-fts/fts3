@@ -184,8 +184,8 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
                                          << std::endl;
-            if(throughput != 0) 
-	    	throughput        = (double) avg;
+            if(throughput != 0)
+                throughput        = (double) avg;
             transferred_bytes = (double) trans;
         }
 
@@ -1080,7 +1080,7 @@ int main(int argc, char **argv)
                 gfalt_set_user_data(params, NULL, NULL);
             }//logStream
 stop:
-            diff = transferDuration(transfer_start, transfer_complete);	    
+            diff = transferDuration(transfer_start, transfer_complete);
             msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, errorScope);
             msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, reasonClass);
             msg_ifce::getInstance()->set_failure_phase(&tr_completed, errorPhase);

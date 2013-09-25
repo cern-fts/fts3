@@ -446,7 +446,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                          "        SELECT NULL FROM t_job j1 "
                                                          "        WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                                          "              (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
-                                                         "        ORDER BY j1.priority DESC, j1.submit_time) LIMIT :filesNum",
+                                                         "        ORDER BY j1.priority DESC, j1.submit_time) LIMIT :filesNum ",
                                                          soci::use(boost::get<0>(triplet)),
                                                          soci::use(boost::get<1>(triplet)),
                                                          soci::use(boost::get<2>(triplet)),
@@ -471,7 +471,8 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-                            delete *it;
+			    if(*ikt)
+                            	delete *it;
                         }
                     l.clear();
                 }
@@ -614,7 +615,7 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 
             sql << "select count(*) from t_file where file_state in ('READY','ACTIVE') and dest_surl=:destUrl and vo_name=:vo_name ",
                 soci::use(file->DEST_SURL),
-		soci::use(file->VO_NAME),
+                soci::use(file->VO_NAME),
                 soci::into(countSame);
 
             if(countSame > 0)
@@ -2506,8 +2507,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
                     stmt8.execute(true);
 
-		    //only apply the logic below if any of these values changes
-                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);		    
+                    //only apply the logic below if any of these values changes
+                    bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);
 
                     if(changed)
                         {
