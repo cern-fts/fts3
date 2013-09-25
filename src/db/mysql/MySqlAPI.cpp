@@ -1961,7 +1961,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
 
             if (vos != "*")
                 {
-                    query += "    t_job.vo_name IN " + vos + " ";
+                    query += " AND t_job.vo_name IN " + vos + " ";
                 }
 
             query += "ORDER BY priority DESC, submit_time "
