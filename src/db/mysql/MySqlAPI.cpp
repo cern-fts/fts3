@@ -471,7 +471,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-			    if(*ikt)
+			    if(*it)
                             	delete *it;
                         }
                     l.clear();
