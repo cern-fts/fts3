@@ -340,11 +340,7 @@ protected:
                         else    //end < 8
                             {
                                 fetchFiles(distinct, voQueues);
-                            }
-
-                        distinct.clear();
-			if(voQueues.empty())
-				return;
+                            }											
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);

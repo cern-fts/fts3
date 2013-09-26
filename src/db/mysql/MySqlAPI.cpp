@@ -330,14 +330,21 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     soci::row const& r = *i;
+		    
+		    std::string source_se = r.get<std::string>("source_se");
+		    std::string dest_se = r.get<std::string>("dest_se");		    
+		    std::string vo_name = r.get<std::string>("vo_name");
+		    
+		    if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0){		    		    		    
                     distinct.push_back(
                         boost::tuple< std::string, std::string, std::string>(
-                            r.get<std::string>("source_se"),
-                            r.get<std::string>("dest_se"),
-                            r.get<std::string>("vo_name")
+                            source_se,
+                            dest_se,
+                            vo_name
                         )
 
                     );
+		    }
                 }
         }
     catch (std::exception& e)
@@ -395,8 +402,8 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                     filesNum = mode_1[3];
                 }
 
-
-
+	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved optimizer mode" << commit;
+		
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
             std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
@@ -405,18 +412,23 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
 
                     bool manualConfig = manualConfigExists(sql, boost::get<0>(triplet), boost::get<1>(triplet));
+		    
+		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved manualConfigExists" << commit;
 
                     int limit = 0;
                     int maxActive = 0;
                     sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
                         soci::use(boost::get<0>(triplet)),
                         soci::use(boost::get<1>(triplet)),
-                        soci::into(limit);
+                        soci::into(limit);						
 
                     sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
                         soci::use(boost::get<0>(triplet)),
                         soci::use(boost::get<1>(triplet)),
                         soci::into(maxActive, isNull);
+
+
+		     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved active and max active" << commit;
 
                     /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
                     if (isNull != soci::i_null && !manualConfig)
@@ -456,6 +468,8 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                          soci::use(filesNum)
                                                      );
 
+		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved TransferFiles" << commit;		    
+
                     ThreadTraits::LOCK_R lock(_mutex);
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
@@ -478,7 +492,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                 }
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
+        }	
 }
 
 
@@ -5994,7 +6008,7 @@ int MySqlAPI::getOptimizerMode(soci::session& sql)
         }
     catch (std::exception& e)
         {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            throw Err_Custom(std::string(__func__) + ": Caught mode exception " + e.what());
         }
 
     return mode;
