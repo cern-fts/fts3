@@ -374,7 +374,6 @@ private:
 
         HashSegment(): start(0), end(0xFFFF) {}
     } hashSegment;
-
-    mutable ThreadTraits::MUTEX_R _mutex;
+    
     std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
 };

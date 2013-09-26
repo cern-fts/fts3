@@ -261,6 +261,7 @@ protected:
     int execPoolSize;
     std::string cmd;
     boost::thread_group g;
+    mutable ThreadTraits::MUTEX_R _mutex;
 
 
     std::string extractHostname(const std::string &surl)
@@ -284,7 +285,18 @@ protected:
 
     void fetchFiles(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& voQueues)
     {
-        DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+        ThreadTraits::LOCK_R lock(_mutex);
+        try
+          {
+        	DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+	  }catch (std::exception& e)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in fetchFiles " << e.what() << commit;
+            }
+        catch (...)
+            {
+                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in fetchFiles!" << commit;
+            }
     }
 
     void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
@@ -310,7 +322,7 @@ protected:
 			if(distinct.empty())
 				return;
 
-                        if(distinct.size() >= 8 )
+                        if(distinct.size() >= 4 )
                             {
                                 std::size_t const half_size1 = distinct.size() / 2;
                                 std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
@@ -337,7 +349,7 @@ protected:
                                 // wait for them
                                 g.join_all();
                             }
-                        else    //end < 8
+                        else    //end < 4
                             {
                                 fetchFiles(distinct, voQueues);
                             }											

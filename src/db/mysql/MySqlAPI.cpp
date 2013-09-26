@@ -370,6 +370,10 @@ bool MySqlAPI::manualConfigExists(soci::session& sql, const std::string & source
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
     return false;
 }
 
@@ -470,7 +474,6 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 
 		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved TransferFiles" << commit;		    
 
-                    ThreadTraits::LOCK_R lock(_mutex);
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             TransferFiles const& tfile = *ti;
@@ -492,7 +495,11 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                 }
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }	
+        }
+    catch (...)
+        {
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }			
 }
 
 
