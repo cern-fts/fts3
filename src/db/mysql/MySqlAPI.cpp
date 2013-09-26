@@ -405,8 +405,6 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                 {
                     filesNum = mode_1[3];
                 }
-
-	    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved optimizer mode" << commit;
 		
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
@@ -415,9 +413,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                 {
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
 
-                    bool manualConfig = manualConfigExists(sql, boost::get<0>(triplet), boost::get<1>(triplet));
-		    
-		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved manualConfigExists" << commit;
+                    bool manualConfig = manualConfigExists(sql, boost::get<0>(triplet), boost::get<1>(triplet));		    
 
                     int limit = 0;
                     int maxActive = 0;
@@ -430,9 +426,6 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                         soci::use(boost::get<0>(triplet)),
                         soci::use(boost::get<1>(triplet)),
                         soci::into(maxActive, isNull);
-
-
-		     FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved active and max active" << commit;
 
                     /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
                     if (isNull != soci::i_null && !manualConfig)
@@ -471,8 +464,6 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                                                          soci::use(boost::get<2>(triplet)),
                                                          soci::use(filesNum)
                                                      );
-
-		    FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Retrieved TransferFiles" << commit;		    
 
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
