@@ -256,6 +256,12 @@ CREATE TABLE t_share_config (
   CONSTRAINT t_share_config_fk FOREIGN KEY (source, destination) REFERENCES t_link_config (source, destination) ON DELETE CASCADE
 );
 
+CREATE TABLE t_activity_share_config (
+  vo 			 VARCHAR(100) NOT NULL PRIMARY KEY,
+  activity_share DOUBLE check (activity_share >= 0 AND activity_share <= 1),
+  active		 VARCHAR(3) check (active in ('on', 'off'))
+);
+
 --
 -- blacklist of bad SEs that should not be transferred to
 --
