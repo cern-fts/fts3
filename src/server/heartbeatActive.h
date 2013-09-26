@@ -48,7 +48,7 @@ private:
         while (!stopThreads)
             {
                 db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
-                sleep(30);
+                sleep(60);
             }
     }
 };
