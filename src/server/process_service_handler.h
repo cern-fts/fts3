@@ -307,6 +307,8 @@ protected:
                     {
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
+			if(distinct.empty())
+				return;
 
                         if(distinct.size() >= 8 )
                             {
@@ -341,6 +343,8 @@ protected:
                             }
 
                         distinct.clear();
+			if(voQueues.empty())
+				return;
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
