@@ -287,9 +287,10 @@ protected:
     {
         ThreadTraits::LOCK_R lock(_mutex);
         try
-          {
-        	DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
-	  }catch (std::exception& e)
+            {
+                DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+            }
+        catch (std::exception& e)
             {
                 FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in fetchFiles " << e.what() << commit;
             }
@@ -319,8 +320,8 @@ protected:
                     {
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
                         std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
-			if(distinct.empty())
-				return;
+                        if(distinct.empty())
+                            return;
 
                         if(distinct.size() >= 4 )
                             {
@@ -352,7 +353,7 @@ protected:
                         else    //end < 4
                             {
                                 fetchFiles(distinct, voQueues);
-                            }											
+                            }
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);

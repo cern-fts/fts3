@@ -72,9 +72,8 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
-		    double thrLocal = boost::get<3>(tupleRecord);
-		    double avgThrLocal = boost::get<4>(tupleRecord);
-                    
+                    double thrLocal = boost::get<3>(tupleRecord);
+
                     if(sourceLocal == source && destLocal == dest)
                         {
                             if(rateLocal != rate || thrLocal != thr)
@@ -330,21 +329,22 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
                     soci::row const& r = *i;
-		    
-		    std::string source_se = r.get<std::string>("source_se");
-		    std::string dest_se = r.get<std::string>("dest_se");		    
-		    std::string vo_name = r.get<std::string>("vo_name");
-		    
-		    if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0){		    		    		    
-                    distinct.push_back(
-                        boost::tuple< std::string, std::string, std::string>(
-                            source_se,
-                            dest_se,
-                            vo_name
-                        )
 
-                    );
-		    }
+                    std::string source_se = r.get<std::string>("source_se");
+                    std::string dest_se = r.get<std::string>("dest_se");
+                    std::string vo_name = r.get<std::string>("vo_name");
+
+                    if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0)
+                        {
+                            distinct.push_back(
+                                boost::tuple< std::string, std::string, std::string>(
+                                    source_se,
+                                    dest_se,
+                                    vo_name
+                                )
+
+                            );
+                        }
                 }
         }
     catch (std::exception& e)
@@ -354,28 +354,7 @@ std::vector< boost::tuple<std::string, std::string, std::string> > MySqlAPI::dis
     return 	distinct;
 }
 
-bool MySqlAPI::manualConfigExists(soci::session& sql, const std::string & source, const std::string & dest)
-{
-    int count = 0;
-    try
-        {
-            sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')", soci::use(source),soci::use(dest),soci::into(count);
-            if(count > 0)
-                return true;
-            sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)", soci::use(source),soci::use(dest),soci::into(count);
-            if(count > 0)
-                return true;
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    catch (...)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }	
-    return false;
-}
+
 
 void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
 {
@@ -385,6 +364,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
     struct tm tTime;
     gmtime_r(&now, &tTime);
     soci::indicator isNull = soci::i_ok;
+
 
     try
         {
@@ -405,22 +385,33 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                 {
                     filesNum = mode_1[3];
                 }
-		
+
+
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
             std::vector< boost::tuple<std::string, std::string, std::string> >::iterator it;
             for (it = distinct.begin(); it != distinct.end(); ++it)
                 {
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
+                    int count = 0;
+                    bool manualConfigExists = false;
 
-                    bool manualConfig = manualConfigExists(sql, boost::get<0>(triplet), boost::get<1>(triplet));		    
+                    sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
+                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                    if(count > 0)
+                        manualConfigExists = true;
+                    sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                    if(count > 0)
+                        manualConfigExists = true;
+
 
                     int limit = 0;
                     int maxActive = 0;
                     sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
                         soci::use(boost::get<0>(triplet)),
                         soci::use(boost::get<1>(triplet)),
-                        soci::into(limit);						
+                        soci::into(limit);
 
                     sql << "select active from t_optimize_active where source_se=:source_se and dest_se=:dest_se",
                         soci::use(boost::get<0>(triplet)),
@@ -428,7 +419,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                         soci::into(maxActive, isNull);
 
                     /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
-                    if (isNull != soci::i_null && !manualConfig)
+                    if (isNull != soci::i_null && !manualConfigExists)
                         {
                             filesNum = maxActive - limit;
                             if(filesNum <=0 )
@@ -479,8 +470,8 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
                     std::list<TransferFiles*>& l = i->second;
                     for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
                         {
-			    if(*it)
-                            	delete *it;
+                            if(*it)
+                                delete *it;
                         }
                     l.clear();
                 }
@@ -490,7 +481,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
     catch (...)
         {
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }			
+        }
 }
 
 
@@ -2505,8 +2496,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     if(ratioSuccessFailure == 100)
                         highDefault = mode_3[1];
-		    else
-			highDefault = mode_2[1];
+                    else
+                        highDefault = mode_2[1];
 
                     soci::statement stmt7 = (
                                                 sql.prepare << "SELECT count(*) FROM t_file "

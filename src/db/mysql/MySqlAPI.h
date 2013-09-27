@@ -358,8 +358,6 @@ private:
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
 
 
-    bool manualConfigExists(soci::session& sql, const std::string & source, const std::string & dest);
-
     bool getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr);
 
     int lowDefault;
@@ -374,6 +372,6 @@ private:
 
         HashSegment(): start(0), end(0xFFFF) {}
     } hashSegment;
-    
+
     std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
 };
