@@ -83,6 +83,12 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
+    virtual std::map<std::string, double> getActivityShareConf(std::string vo);
+
+    virtual std::set<std::string> getActivitiesInQueue(std::string src, std::string dst, std::string vo);
+
+    virtual std::map<std::string, int> getFilesNumPerActivity(std::string src, std::string dst, std::string vo, int filesNum);
+
     virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
