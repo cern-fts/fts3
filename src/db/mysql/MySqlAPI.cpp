@@ -72,10 +72,12 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
+		    double thrLocal = boost::get<3>(tupleRecord);
+		    double avgThrLocal = boost::get<4>(tupleRecord);
                     
                     if(sourceLocal == source && destLocal == dest)
                         {
-                            if(rateLocal != rate)
+                            if(rateLocal != rate || thrLocal != thr)
                                 {
                                     it = filesMemStore.erase(it);
                                     boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
