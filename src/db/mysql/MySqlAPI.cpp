@@ -2505,7 +2505,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     if(ratioSuccessFailure == 100)
                         highDefault = mode_3[1];
-
+		    else
+			highDefault = mode_2[1];
 
                     soci::statement stmt7 = (
                                                 sql.prepare << "SELECT count(*) FROM t_file "
