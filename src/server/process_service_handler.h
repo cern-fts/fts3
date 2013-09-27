@@ -260,10 +260,7 @@ protected:
     bool monitoringMessages;
     int execPoolSize;
     std::string cmd;
-    boost::thread_group g;
-    mutable ThreadTraits::MUTEX_R _mutex;
-
-
+ 
     std::string extractHostname(const std::string &surl)
     {
         Uri u0 = Uri::Parse(surl);
@@ -283,22 +280,6 @@ protected:
         fout.close();
     }
 
-    void fetchFiles(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& voQueues)
-    {
-        ThreadTraits::LOCK_R lock(_mutex);
-        try
-            {
-                DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
-            }
-        catch (std::exception& e)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in fetchFiles " << e.what() << commit;
-            }
-        catch (...)
-            {
-                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Exception in fetchFiles!" << commit;
-            }
-    }
 
     void executeUrlcopy(std::vector<TransferJobs*>& jobsReuse2, bool reuse)
     {
@@ -322,38 +303,8 @@ protected:
                         std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
                         if(distinct.empty())
                             return;
-
-                        if(distinct.size() >= 4 )
-                            {
-                                std::size_t const half_size1 = distinct.size() / 2;
-                                std::vector< boost::tuple<std::string, std::string, std::string> > split_1(distinct.begin(), distinct.begin() + half_size1);
-                                std::vector< boost::tuple<std::string, std::string, std::string> > split_2(distinct.begin() + half_size1, distinct.end());
-
-                                std::size_t const half_size2 = split_1.size() / 2;
-                                std::vector< boost::tuple<std::string, std::string, std::string> > split_11(split_1.begin(), split_1.begin() + half_size2);
-                                std::vector< boost::tuple<std::string, std::string, std::string> > split_21(split_1.begin() + half_size2, split_1.end());
-
-                                std::size_t const half_size3 = split_2.size() / 2;
-                                std::vector< boost::tuple<std::string, std::string, std::string> > split_12(split_2.begin(), split_2.begin() + half_size3);
-                                std::vector< boost::tuple<std::string, std::string, std::string> > split_22(split_2.begin() + half_size3, split_2.end());
-
-                                boost::thread *t1 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_11),boost::ref(voQueues)));
-                                boost::thread *t2 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_21),boost::ref(voQueues)));
-                                boost::thread *t3 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_12),boost::ref(voQueues)));
-                                boost::thread *t4 = new boost::thread(boost::bind(&ProcessServiceHandler::fetchFiles, this, boost::ref(split_22),boost::ref(voQueues)));
-
-                                g.add_thread(t1);
-                                g.add_thread(t2);
-                                g.add_thread(t3);
-                                g.add_thread(t4);
-
-                                // wait for them
-                                g.join_all();
-                            }
-                        else    //end < 4
-                            {
-                                fetchFiles(distinct, voQueues);
-                            }
+                        
+			DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
