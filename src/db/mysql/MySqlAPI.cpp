@@ -2461,7 +2461,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from t_file where source_se=:source and dest_se=:dst "
                                                " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
                                                " and (start_time >= date_sub(utc_timestamp(), interval '15' minute) OR job_finished >= date_sub(utc_timestamp(), interval '15' minute))  "
-                                               " ORDER BY job_finished DESC LIMIT 30 ",
+                                               " ORDER BY job_finished DESC LIMIT 15 ",
                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
                     stmt.execute(true);
 
