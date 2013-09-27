@@ -72,12 +72,10 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                     std::string sourceLocal = boost::get<0>(tupleRecord);
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
-                    double thrLocal = boost::get<3>(tupleRecord);
-                    double avgThrLocal = boost::get<4>(tupleRecord);
-
+                    
                     if(sourceLocal == source && destLocal == dest)
                         {
-                            if(rateLocal != rate || thrLocal != thr || avgThrLocal != avgThr)
+                            if(rateLocal != rate)
                                 {
                                     it = filesMemStore.erase(it);
                                     boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
@@ -2545,7 +2543,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                                     if(active < highDefault || maxActive < highDefault)
                                         active = highDefault;
                                     else
-                                        active = maxActive - 2;
+                                        active = maxActive - 1;
                                     sql << "update t_optimize_active set active=:active where source_se=:source and dest_se=:dest ",soci::use(active), soci::use(source_hostname), soci::use(destin_hostname);
                                 }
                             else if (ratioSuccessFailure < 100 && throughput != 0 && avgThr !=0)
