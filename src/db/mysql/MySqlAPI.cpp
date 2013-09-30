@@ -625,8 +625,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 									 soci::use(boost::get<2>(triplet)),
 									 soci::use(filesNum)
 								 );
-
-							ThreadTraits::LOCK_R lock(_mutex);
+							
 							for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
 								{
 									TransferFiles const& tfile = *ti;
@@ -682,8 +681,7 @@ void MySqlAPI::getByJobId(std::vector< boost::tuple<std::string, std::string, st
 											 soci::use(boost::get<2>(triplet)),
 											 soci::use(it_act->second)
 										 );
-
-									ThreadTraits::LOCK_R lock(_mutex);
+									
 									for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
 										{
 											TransferFiles const& tfile = *ti;
