@@ -75,14 +75,9 @@ void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std
     PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files, reuse));
 }
 
-std::vector< boost::tuple<std::string, std::string, std::string> > ProfiledDB::distinctSrcDestVO()
+void ProfiledDB::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)
 {
-    PROFILE_PREFIXED("DB::", return db->distinctSrcDestVO());
-}
-
-void ProfiledDB::getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files)
-{
-    PROFILE_PREFIXED("DB::", db->getByJobId(distinct, files));
+    PROFILE_PREFIXED("DB::", db->getByJobId(files));
 }
 
 

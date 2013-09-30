@@ -59,7 +59,7 @@ public:
 
     void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
-    void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files);
+    void getByJobId( std::map< std::string, std::list<TransferFiles*> >& files);
 
     void getSe(Se* &se, std::string seName);
 
@@ -310,7 +310,6 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
 
-    std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO();
 };
 
 

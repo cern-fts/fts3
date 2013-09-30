@@ -83,13 +83,7 @@ public:
 
     virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
 
-    virtual std::map<std::string, double> getActivityShareConf(std::string vo);
-
-    virtual std::set<std::string> getActivitiesInQueue(std::string src, std::string dst, std::string vo);
-
-    virtual std::map<std::string, int> getFilesNumPerActivity(std::string src, std::string dst, std::string vo, int filesNum);
-
-    virtual void getByJobId(std::vector< boost::tuple<std::string, std::string, std::string> >& distinct, std::map< std::string, std::list<TransferFiles*> >& files);
+    virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files);
 
     virtual void getSe(Se* &se, std::string seName);
 
@@ -346,7 +340,11 @@ public:
 
     void updateHeartBeat(unsigned* index, unsigned* count, unsigned* start, unsigned* end);
 
-    virtual std::vector< boost::tuple<std::string, std::string, std::string> > distinctSrcDestVO();
+    std::map<std::string, double> getActivityShareConf(soci::session& sql, std::string vo);
+
+    std::set<std::string> getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo);
+
+    std::map<std::string, int> getFilesNumPerActivity(soci::session& sql, std::string src, std::string dst, std::string vo, int filesNum);
 
 private:
     size_t                poolSize;
@@ -381,6 +379,5 @@ private:
         HashSegment(): start(0), end(0xFFFF) {}
     } hashSegment;
 
-    mutable ThreadTraits::MUTEX_R _mutex;
     std::vector< boost::tuple<std::string, std::string, double, double, double> > filesMemStore;
 };

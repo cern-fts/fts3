@@ -260,7 +260,7 @@ protected:
     bool monitoringMessages;
     int execPoolSize;
     std::string cmd;
- 
+
     std::string extractHostname(const std::string &surl)
     {
         Uri u0 = Uri::Parse(surl);
@@ -300,11 +300,8 @@ protected:
                 if (reuse == false)
                     {
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
-                        if(distinct.empty())
-                            return;
-                        
-			DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId( voQueues);
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
