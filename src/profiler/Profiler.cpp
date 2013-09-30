@@ -141,7 +141,7 @@ unsigned ProfilingSubsystem::getInterval() const
 
 std::ostream& fts3::operator << (std::ostream& out, const Profile& prof)
 {
-    out << "executed " << std::setw(3) << prof.nCalled << " times, "
+    out << "executed " << std::setw(3) << std::dec << prof.nCalled << " times, "
         <<  "thrown " << std::setw(3) << prof.nExceptions << " exceptions, average of "
         << prof.getAverage() << "ms";
     return out;
