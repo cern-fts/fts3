@@ -184,8 +184,7 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
                                          << std::endl;
-            if(throughput != 0)
-                throughput        = (double) avg;
+            throughput        = (double) avg;
             transferred_bytes = (double) trans;
         }
 
@@ -286,13 +285,13 @@ void taskStatusUpdater(int time)
         {
             if (strArray[0].length() > 0)
                 {
-                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
+                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : " <<  throughput << "  " <<  transferred_bytes
                                                  << std::endl;
                     reporter.sendPing(UrlCopyOpts::getInstance().jobId, strArray[0], throughput, transferred_bytes);
                 }
             else
                 {
-                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive!"
+                    Logger::getInstance().INFO() << "Sending back to the server url-copy is still alive : "  <<  throughput << "  " <<  transferred_bytes
                                                  << std::endl;
                     reporter.sendPing(UrlCopyOpts::getInstance().jobId, UrlCopyOpts::getInstance().fileId,
                                       throughput, transferred_bytes);
@@ -932,7 +931,6 @@ int main(int argc, char **argv)
                 reporter.nostreams = opts.nStreams;
                 reporter.buffersize = opts.tcpBuffersize;
                 reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "UPDATE", "", diff, source_size);
-
 
                 gfalt_set_tcp_buffer_size(params, opts.tcpBuffersize, NULL);
                 gfalt_set_monitor_callback(params, &call_perf, NULL);

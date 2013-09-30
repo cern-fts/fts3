@@ -300,11 +300,11 @@ protected:
                 if (reuse == false)
                     {
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
-                        std::vector< boost::tuple<std::string, std::string, std::string> > distinct = DBSingleton::instance().getDBObjectInstance()->distinctSrcDestVO();
-                        if(distinct.empty())
-                            return;
                         
-			DBSingleton::instance().getDBObjectInstance()->getByJobId(distinct, voQueues);
+			DBSingleton::instance().getDBObjectInstance()->getByJobId(voQueues);
+			
+			if(voQueues.empty())
+				return;
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);

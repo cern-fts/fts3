@@ -170,27 +170,13 @@ protected:
                                                                                 << "\nTransferred: " << (*iter).transferred
                                                                                 << commit;
                                                 ThreadSafeList::get_instance().updateMsg(*iter);
-                                            }
-                                        else
-                                            {
-                                                FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Failed to read a stall message: "
-                                                                               << iter->msg_error_reason << commit;
-                                            }
-                                    }
-
-                                for (iter = messages.begin(); iter != messages.end(); ++iter)
-                                    {
-                                        if (iter->msg_errno == 0)
-                                            {
-                                                std::string job = std::string((*iter).job_id).substr(0, 36);
-                                                // Update progress
-                                                if((*iter).throughput != 0 && (*iter).transferred != 0)
+ 						if((*iter).throughput != 0 && (*iter).transferred != 0)
                                                     {
                                                         DBSingleton::instance().getDBObjectInstance()
                                                         ->updateFileTransferProgress(job, (*iter).file_id,
                                                                                      (*iter).throughput,
                                                                                      (*iter).transferred);
-                                                    }
+                                                    }						
                                             }
                                         else
                                             {
@@ -198,7 +184,6 @@ protected:
                                                                                << iter->msg_error_reason << commit;
                                             }
                                     }
-
 
                                 messages.clear();
                             }
