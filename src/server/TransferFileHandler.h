@@ -84,11 +84,16 @@ private:
 
     optional<FileIndex> getIndex(string vo);
 
+    optional< pair<string, string> > getNextPair(string vo);
+
     map< string, set<string> >& getMapFromCache(map< string, list<TransferFiles*> >& files, GET_MAP_OPTS opt);
 
+    // maps file indexes to file replicas
     map< FileIndex, list<TransferFiles*> > fileIndexToFiles;
 
-    map< string, list<FileIndex> > voToFileIndexes;
+    // maps VOs to file indexes
+    // file indexes are organized in map: source-destination pair is mapped to file indexes
+    map< string, map< pair<string, string>, list<FileIndex> > > voToFileIndexes;
 
     set<string> vos;
 
@@ -96,6 +101,9 @@ private:
 
     /// mutex that ensures thread safety
     mutex m;
+
+    /// next pair in given VO queue
+    map< string, map< pair<string, string>, list<FileIndex> >::iterator > nextPairForVo;
 
     /// cache for the following maps
     vector< map< string, set<string> > > init_cache;
