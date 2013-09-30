@@ -36,7 +36,7 @@ class Bully:
 
   def spawn(self, src, dst):
     return subprocess.Popen(['fts-transfer-submit',
-                             '-s', self.endpoint,
+                             '-o', '-s', self.endpoint,
                              src, dst])
 
   def __call__(self):
