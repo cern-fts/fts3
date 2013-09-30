@@ -184,8 +184,8 @@ static void call_perf(gfalt_transfer_status_t h, const char*, const char*, gpoin
                                          << ", inst KB/sec:" << inst
                                          << ", elapsed:" << elapsed
                                          << std::endl;
-            if(throughput != 0)
-                throughput        = (double) avg;
+
+            throughput        = (double) avg;
             transferred_bytes = (double) trans;
         }
 
