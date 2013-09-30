@@ -280,7 +280,7 @@ def servers(httpRequest):
         if k in transfers:
             servers[k].update(transfers.get(k))
         else:
-            servers[k].update({'transfers': 0, 'active': 0, 'submissions': 1})
+            servers[k].update({'transfers': 0, 'active': 0, 'submissions': 0})
     
     return servers
 
