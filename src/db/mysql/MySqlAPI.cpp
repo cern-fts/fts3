@@ -405,7 +405,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     if (isNull != soci::i_null && !manualConfigExists)
                         {
                             filesNum = maxActive - limit;
-                            if(filesNum <=0 )
+                            if(maxActive > 0 && filesNum <=0 )
                                 continue;
                         }
 
