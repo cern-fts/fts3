@@ -28,7 +28,10 @@ config(function($routeProvider) {
         when('/optimizer/detailed',   {templateUrl: STATIC_ROOT + 'html/optimizer/detailed.html',
 					                   controller:  OptimizerDetailedCtrl,
 							           resolve:     OptimizerDetailedCtrl.resolve}).
-
+        when('/optimizer/active',     {templateUrl: STATIC_ROOT + 'html/optimizer/active.html',
+			                           controller:  OptimizerActiveCtrl,
+							           resolve:     OptimizerActiveCtrl.resolve}).
+							           
         when('/errors/',              {templateUrl: STATIC_ROOT + 'html/errors/errors.html',
                                        controller:  ErrorsCtrl,
 	                                   resolve:     ErrorsCtrl.resolve}).

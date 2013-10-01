@@ -19,9 +19,11 @@ from datetime import datetime, timedelta
 from django.db.models import Max, Avg, StdDev, Count, Min
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import Http404
-from ftsweb.models import Optimize, OptimizerEvolution, File, Job
+from ftsweb.models import Optimize, OptimizerEvolution, OptimizeActive
+from ftsweb.models import File, Job
 from ftsmon import forms
 from jsonify import jsonify, jsonify_paged
+from util import getOrderBy, orderedField
 		
 
 @jsonify_paged
@@ -100,3 +102,24 @@ def optimizerDetailed(httpRequest):
 		'snapshot': optimizerSnapshot,
 		'history': optimizerHistory
 	}
+
+
+@jsonify_paged
+def optimizerActive(httpRequest):
+	active = OptimizeActive.objects
+	
+	source_se = httpRequest.GET.get('source_se', None)
+	dest_se   = httpRequest.GET.get('dest_se', None)
+	
+	if source_se:
+		active = active.filter(source_se = source_se)
+	if dest_se:
+		active = active.filter(dest_se = dest_se)
+	
+	(orderBy, orderDesc) = getOrderBy(httpRequest)
+	if orderBy == 'active':
+		active = active.order_by(orderedField('active', orderDesc))
+	else:
+		active = active.order_by('source_se', 'dest_se')
+	
+	return active

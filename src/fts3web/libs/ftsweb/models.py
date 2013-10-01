@@ -19,7 +19,6 @@ from django.db import models
 from settings.database import DATABASES
 
 
-
 class JobBase(models.Model):
     job_id          = models.CharField(max_length = 36, primary_key = True)
     job_state       = models.CharField(max_length = 32)
@@ -66,17 +65,14 @@ class JobBase(models.Model):
         return self.job_id
 
 
-
 class Job(JobBase):
     class Meta:
         db_table = 't_job'
 
 
-
 class JobArchive(JobBase):
     class Meta:
         db_table = 't_job_backup'
-
 
 
 class FileBase(models.Model):
@@ -122,19 +118,16 @@ class FileBase(models.Model):
         abstract = True
 
 
-
 class File(FileBase):
     job = models.ForeignKey('Job', db_column = 'job_id', related_name = '+')
     class Meta:
         db_table = 't_file' 
 
 
-
 class FileArchive(FileBase):
     job = models.ForeignKey('JobArchive', db_column = 'job_id', related_name = '+')        
     class Meta:
         db_table = 't_file_backup'
-
 
 
 class  ConfigAudit(models.Model):
@@ -184,6 +177,22 @@ class Optimize(models.Model):
         db_table = 't_optimize'
 
 
+class OptimizeActive(models.Model):
+    source_se  = models.CharField(max_length = 255)
+    dest_se    = models.CharField(max_length = 255)
+    active     = models.IntegerField(primary_key = True)
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        
+        return self.source_se == other.source_se and \
+               self.dest_se   == other.dest_se
+    
+    class Meta:
+        db_table = 't_optimize_active'
+
+
 class OptimizerEvolution(models.Model):
     datetime     = models.DateTimeField(primary_key = True) 
     source_se    = models.CharField(max_length = 255)
@@ -199,7 +208,6 @@ class OptimizerEvolution(models.Model):
         db_table = 't_optimizer_evolution'
 
 
-
 class ProfilingSnapshot(models.Model):
     scope      = models.CharField(primary_key = True, max_length = 255)
     cnt        = models.IntegerField()
@@ -211,14 +219,12 @@ class ProfilingSnapshot(models.Model):
         db_table = 't_profiling_snapshot'
 
 
-
 class ProfilingInfo(models.Model):
     updated = models.DateTimeField(primary_key = True)
     period  = models.IntegerField()
     
     class Meta:
         db_table = 't_profiling_info'
-
 
 
 class Host(models.Model):
