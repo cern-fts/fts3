@@ -355,9 +355,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
                     std::string source_se = r.get<std::string>("source_se");
                     std::string dest_se = r.get<std::string>("dest_se");
-                    std::string vo_name = r.get<std::string>("vo_name");
-		    
-		    std::cout << "DISTINCT ---> " << source_se << " " << dest_se << " " << vo_name << std::endl;		    		    
+                    std::string vo_name = r.get<std::string>("vo_name");		    
 
                     if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0)
                         {
@@ -372,7 +370,6 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                         }
                 }			
 		
-	    sleep(50);	
 		
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
@@ -445,13 +442,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             TransferFiles const& tfile = *ti;
-			    std::cout << "DISTINCT 2 " << tfile.SOURCE_SE << " " << tfile.DEST_SE << std::endl;
                             files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
                         }
-                }
-		
-		
-		sleep(50);
+                }				
         }
     catch (std::exception& e)
         {
