@@ -6265,7 +6265,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                 "      reuse_job = 'Y'",
                 soci::use(jobId);
 
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL "
+            sql << "UPDATE t_file SET file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL, t_log_file=NULL, t_log_file_debug=NULL "
                 "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                 soci::use(fileId), soci::use(jobId);
 
