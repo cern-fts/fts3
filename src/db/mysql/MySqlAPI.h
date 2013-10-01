@@ -360,9 +360,7 @@ private:
 
     void countFileInTerminalStates(soci::session& sql, std::string jobId,
                                    unsigned int& finished, unsigned int& cancelled, unsigned int& failed);
-
-
-    bool manualConfigExists(soci::session& sql, const std::string & source, const std::string & dest);
+ 
 
     bool getChangedFile (std::string source, std::string dest, double rate, double thr, double avgThr);
 

@@ -76,11 +76,10 @@ bool MySqlAPI::getChangedFile (std::string source, std::string dest, double rate
                     std::string destLocal = boost::get<1>(tupleRecord);
                     double rateLocal = boost::get<2>(tupleRecord);
                     double thrLocal = boost::get<3>(tupleRecord);
-                    double avgThrLocal = boost::get<4>(tupleRecord);
 
                     if(sourceLocal == source && destLocal == dest)
                         {
-                            if(rateLocal != rate || thrLocal != thr || avgThrLocal != avgThr)
+                            if(rateLocal != rate || thrLocal != thr)
                                 {
                                     it = filesMemStore.erase(it);
                                     boost::tuple<std::string, std::string, double, double, double> record(source, dest, rate, thr, avgThr);
@@ -310,25 +309,6 @@ TransferJobs* MySqlAPI::getTransferJob(std::string jobId, bool archive)
     return job;
 }
 
-
-bool MySqlAPI::manualConfigExists(soci::session& sql, const std::string & source, const std::string & dest)
-{
-    int count = 0;
-    try
-        {
-            sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')", soci::use(source),soci::use(dest),soci::into(count);
-            if(count > 0)
-                return true;
-            sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)", soci::use(source),soci::use(dest),soci::into(count);
-            if(count > 0)
-                return true;
-        }
-    catch (std::exception& e)
-        {
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
-    return false;
-}
 
 std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql, std::string vo)
 {
@@ -574,11 +554,20 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
             for (it = distinct.begin(); it != distinct.end(); ++it)
                 {
                     boost::tuple<std::string, std::string, std::string>& triplet = *it;
-
-                    bool manualConfig = manualConfigExists(sql, boost::get<0>(triplet), boost::get<1>(triplet));
-
+                    int count = 0;
+                    bool manualConfigExists = false;
                     int limit = 0;
-                    int maxActive = 0;
+                    int maxActive = 0;		    
+
+                    sql << "SELECT COUNT(*) FROM t_link_config WHERE (source = :source OR source = '*') AND (destination = :dest OR destination = '*')",
+                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                    if(count > 0)
+                        manualConfigExists = true;
+                    sql << "SELECT COUNT(*) FROM t_group_members WHERE (member=:source OR member=:dest)",
+                        soci::use(boost::get<0>(triplet)),soci::use(boost::get<1>(triplet)),soci::into(count);
+                    if(count > 0)
+                        manualConfigExists = true;
+
                     sql << " select count(*) from t_file where source_se=:source_se and dest_se=:dest_se and file_state in ('READY','ACTIVE') ",
                         soci::use(boost::get<0>(triplet)),
                         soci::use(boost::get<1>(triplet)),
@@ -590,10 +579,10 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                         soci::into(maxActive, isNull);
 
                     /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
-                    if (isNull != soci::i_null && !manualConfig)
+                    if (isNull != soci::i_null && !manualConfigExists)
                         {
                             filesNum = maxActive - limit;
-                            if(filesNum <=0 )
+                            if(maxActive > 0 && filesNum <=0 )
                                 continue;
                         }
 
@@ -622,7 +611,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                                  "        SELECT NULL FROM t_job j1 "
                                                                  "        WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                                                  "              (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
-                                                                 "        ORDER BY j1.priority DESC, j1.submit_time) LIMIT :filesNum",
+                                                                 "        ) ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum",
                                                                  soci::use(boost::get<0>(triplet)),
                                                                  soci::use(boost::get<1>(triplet)),
                                                                  soci::use(boost::get<2>(triplet)),
@@ -642,7 +631,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                         {
                             std::map<std::string, int>::iterator it_act;
 
-                            for (it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); it_act++)
+                            for (it_act = activityFilesNum.begin(); it_act != activityFilesNum.end(); ++it_act)
                                 {
                                     if (it_act->second == 0) continue;
 
@@ -711,6 +700,21 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
             files.clear();
             throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
         }
+    catch (...)
+        {
+            for (std::map< std::string, std::list<TransferFiles*> >::iterator i = files.begin(); i != files.end(); ++i)
+                {
+                    std::list<TransferFiles*>& l = i->second;
+                    for (std::list<TransferFiles*>::iterator it = l.begin(); it != l.end(); ++it)
+                        {
+                            if(*it)
+                                delete *it;
+                        }
+                    l.clear();
+                }
+            files.clear();	
+            throw Err_Custom(std::string(__func__) + ": Caught exception ");
+        }	
 }
 
 
@@ -2678,10 +2682,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     soci::indicator isNull2 = soci::i_ok;
 
                     soci::statement stmt = (
-                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from t_file where source_se=:source and dest_se=:dst "
-                                               " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
-                                               " and (start_time >= date_sub(utc_timestamp(), interval '15' minute) OR job_finished >= date_sub(utc_timestamp(), interval '15' minute))  "
-                                               " ORDER BY job_finished DESC LIMIT 30 ",
+                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from "
+					       			" (SELECT filesize, throughput from t_file where source_se=:source and dest_se=:dest and file_state " 
+								" in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0  and "
+								" (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
+								" job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+								" ORDER BY job_finished DESC LIMIT 6, 12) as f ",
                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
                     stmt.execute(true);
 
@@ -2691,10 +2697,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }
 
                     soci::statement stmt3 = (
-                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from t_file where source_se=:source and dest_se=:dst "
-                                                " and file_state in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0 "
-                                                " and (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR job_finished >= date_sub(utc_timestamp(), interval '5' minute))  "
-                                                " ORDER BY job_finished DESC LIMIT 5 ",
+                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from "
+					       			" (SELECT filesize, throughput from t_file where source_se=:source and dest_se=:dest and file_state " 
+								" in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0  and "
+								" (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
+								" job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+								" ORDER BY job_finished DESC LIMIT 5) as f ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1));
                     stmt3.execute(true);
 
@@ -2725,7 +2733,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     if(ratioSuccessFailure == 100)
                         highDefault = mode_3[1];
-
+                    else
+                        highDefault = mode_2[1];
 
                     soci::statement stmt7 = (
                                                 sql.prepare << "SELECT count(*) FROM t_file "
@@ -6256,7 +6265,7 @@ void MySqlAPI::setRetryTransfer(const std::string & jobId, int fileId, int retry
                 "      reuse_job = 'Y'",
                 soci::use(jobId);
 
-            sql << "UPDATE t_file SET file_state = 'SUBMITTED' "
+            sql << "UPDATE t_file SET file_state = 'SUBMITTED', start_time=NULL, transferHost=NULL "
                 "WHERE  file_id = :fileId AND  job_id = :jobId AND file_state NOT IN ('FINISHED','SUBMITTED','FAILED','CANCELED')",
                 soci::use(fileId), soci::use(jobId);
 
