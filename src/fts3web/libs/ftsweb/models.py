@@ -167,11 +167,21 @@ class Optimize(models.Model):
     throughput = models.FloatField()
     buffer     = models.IntegerField()
     filesize   = models.FloatField()
-    datetime   = models.DateTimeField() 
+    datetime   = models.DateTimeField()
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        
+        fields = ['file_id', 'source_se', 'dest_se', 'nostreams', 'timeout',
+                  'active', 'throughput', 'buffer', 'filesize', 'datetime']
+        
+        return reduce(lambda a,b: a and b,
+                      map(lambda attr: getattr(self, attr) == getattr(other, attr),
+                         fields)) 
     
     class Meta:
         db_table = 't_optimize'
-
 
 
 class OptimizerEvolution(models.Model):
