@@ -162,7 +162,7 @@ void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
     msg_updater->throughput = throughput;
     msg_updater->transferred = transferred;
     // Try twice
-    if (runProducerStall(*msg_updater) == 0)
+    if (runProducerStall(*msg_updater) != 0)
         runProducerStall(*msg_updater);
 }
 
@@ -189,6 +189,6 @@ void Reporter::sendLog(const std::string& job_id, const std::string& file_id,
     msg_log->debugFile = debug;
     msg_log->timestamp = milliseconds_since_epoch();
     // Try twice
-    if (runProducerLog(*msg_log) == 0)
+    if (runProducerLog(*msg_log) != 0)
         runProducerLog(*msg_log);
 }
