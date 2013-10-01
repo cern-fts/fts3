@@ -84,17 +84,18 @@ Options:
 		return (EX_OK, "FTS %s" % version)
 
 
-probe = FtsProbe(sys.argv)
-(status, msg) = probe()
+if __name__ == '__main__':
+	probe = FtsProbe(sys.argv)
+	(status, msg) = probe()
 
-if status == EX_OK:
-	print "OK -", msg
-elif status == EX_WARNING:
-	print "WARNING -", msg
-elif status == EX_CRITICAL:
-	print "CRITICAL -", msg
-else:
-	print "UNKNOWN -", msg
+	if status == EX_OK:
+		print "OK -", msg
+	elif status == EX_WARNING:
+		print "WARNING -", msg
+	elif status == EX_CRITICAL:
+		print "CRITICAL -", msg
+	else:
+		print "UNKNOWN -", msg
 
-sys.exit(status)
+	sys.exit(status)
 
