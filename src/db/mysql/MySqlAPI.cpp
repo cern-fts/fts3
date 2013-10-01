@@ -346,7 +346,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                              " FROM t_file "
                                              " WHERE "
                                              "      file_state = 'SUBMITTED' AND "
-                                             "      hashed_id BETWEEN :hStart AND :hEnd ",
+                                             "      (hashed_id >= :hStart AND hashed_id <= :hEnd) ",
                                              soci::use(hashSegment.start), soci::use(hashSegment.end)
                                          );
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
@@ -356,6 +356,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     std::string source_se = r.get<std::string>("source_se");
                     std::string dest_se = r.get<std::string>("dest_se");
                     std::string vo_name = r.get<std::string>("vo_name");
+		    
+		    std::cout << "DISTINCT ---> " << source_se << " " << dest_se << " " << vo_name << std::endl;		    		    
 
                     if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0)
                         {
@@ -368,8 +370,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
                             );
                         }
-                }		
+                }			
 		
+	    sleep(50);	
 		
             // Iterate through pairs, getting jobs IF the VO has not run out of credits
             // AND there are pending file transfers within the job
@@ -424,7 +427,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "    f.vo_name = :vo_name AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    f.hashed_id BETWEEN :hStart and :hEnd AND "
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
                                                          "    EXISTS ( "
                                                          "        SELECT NULL FROM t_job j1 "
                                                          "        WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
@@ -442,9 +445,13 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             TransferFiles const& tfile = *ti;
+			    std::cout << "DISTINCT 2 " << tfile.SOURCE_SE << " " << tfile.DEST_SE << std::endl;
                             files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
                         }
                 }
+		
+		
+		sleep(50);
         }
     catch (std::exception& e)
         {
@@ -712,7 +719,7 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    f.hashed_id BETWEEN :hStart AND :hEnd "
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
                                                          " LIMIT :filesNum ",soci::use(jobId),
                                                          soci::use(tTime),
                                                          soci::use(hashSegment.start), soci::use(hashSegment.end),
