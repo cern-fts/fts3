@@ -361,10 +361,9 @@ std::map<std::string, double> MySqlAPI::getActivityShareConf(soci::session& sql,
     return ret;
 }
 
-std::set<std::string> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
+std::map<std::string, long long> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::string src, std::string dst, std::string vo)
 {
-
-    std::set<std::string> ret;
+    std::map<std::string, long long> ret;
 
     time_t now = time(NULL);
     struct tm tTime;
@@ -372,10 +371,9 @@ std::set<std::string> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::st
 
     try
         {
-
             soci::rowset<soci::row> rs = (
                                              sql.prepare <<
-                                             " SELECT DISTINCT file_metadata "
+                                             " SELECT file_metadata, COUNT(DISTINCT f.job_id, file_index) AS count "
                                              " FROM t_job j, t_file f "
                                              " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND "
                                              "	f.source_se = :source AND f.dest_se = :dest AND "
@@ -388,7 +386,8 @@ std::set<std::string> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::st
                                              "		WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
                                              "			(j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
                                              "		ORDER BY j1.priority DESC, j1.submit_time "
-                                             "	) ",
+                                             "	) "
+                                             " GROUP BY file_metadata ",
                                              soci::use(src),
                                              soci::use(dst),
                                              soci::use(vo),
@@ -402,12 +401,13 @@ std::set<std::string> MySqlAPI::getActivitiesInQueue(soci::session& sql, std::st
                 {
                     if (it->get_indicator("file_metadata") == soci::i_null)
                         {
-                            ret.insert("default");
+                            ret["default"] = it->get<long long>("count");
                         }
                     else
                         {
-                            std::string val = it->get<std::string>("file_metadata");
-                            ret.insert(val.empty() ? "default" : val);
+                            std::string activityShare = it->get<std::string>("file_metadata");
+                            long long nFiles = it->get<long long>("count");
+                            ret[activityShare.empty() ? "default" : activityShare] = nFiles;
                         }
                 }
         }
@@ -433,51 +433,40 @@ std::map<std::string, int> MySqlAPI::getFilesNumPerActivity(soci::session& sql, 
             if (activityShares.empty()) return activityFilesNum;
 
             // get the activities in the queue
-            std::set<std::string> activitiesInQueue = getActivitiesInQueue(sql, src, dst, vo);
+            std::map<std::string, long long> activitiesInQueue = getActivitiesInQueue(sql, src, dst, vo);
 
             // sum of all activity shares in the queue (needed for normalization)
             double sum = 0;
 
-            std::set<std::string>::iterator it;
+            std::map<std::string, long long>::iterator it;
             for (it = activitiesInQueue.begin(); it != activitiesInQueue.end(); it++)
                 {
-                    sum += activityShares[*it];
-                }
-
-            std::map< std::string, double > intervals;
-
-            double tmp = 0;
-
-            // determin the probability for each activity
-            for (it = activitiesInQueue.begin(); it != activitiesInQueue.end(); it++)
-                {
-                    tmp += activityShares[*it] / sum;
-                    intervals[*it] = tmp;
-                }
-
-            // if the sum equals to 0 all activities in the queue are 0
-            if (sum == 0)
-                {
-                    for (it = activitiesInQueue.begin(); it != activitiesInQueue.end(); it++)
-                        {
-                            activityFilesNum[*it] = 0;
-                        }
-
-                    return activityFilesNum;
+                    sum += activityShares[it->first];
                 }
 
             // assign slots to activities
             for (int i = 0; i < filesNum; i++)
                 {
+            		// if sum <= 0 there is nothing to assign
+            		if (sum <= 0) break;
                     // a random number from (0, 1)
                     double r = ((double) rand() / (RAND_MAX));
+                    // interval corresponding to given activity
+                    double interval = 0;
 
-                    // iterate over intervals and determin the activity
                     for (it = activitiesInQueue.begin(); it != activitiesInQueue.end(); it++)
                         {
-                            if (r < intervals[*it])
+                    		// if there are no more files for this activity continue
+                    		if (it->second <= 0) continue;
+                    		// calculate the interval
+                    		interval += activityShares[it->first] / sum;
+                    		// if the slot has been assigned to the given activity ...
+                    		if (r < interval)
                                 {
-                                    ++activityFilesNum[*it];
+                                    ++activityFilesNum[it->first];
+                                    --it->second;
+                                    // if there are no more files for the given ativity remove it from the sum
+                                    if (it->second == 0) sum -= activityShares[it->first];
                                     break;
                                 }
                         }
