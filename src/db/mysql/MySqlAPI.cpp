@@ -2670,13 +2670,13 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     soci::indicator isNull1 = soci::i_ok;
                     soci::indicator isNull2 = soci::i_ok;
 
-                    soci::statement stmt = (
+                   soci::statement stmt = (
                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) "
-					       			" from t_file where source_se=:source and dest_se=:dest and file_state " 
-								" in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0  and "
-								" (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-								" job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-								" ORDER BY job_finished DESC LIMIT 10 ",
+					       			" from (SELECT filesize, throughput from t_file where source_se=:source_se and "
+								" dest_se=:dest_se and file_state  in ('ACTIVE','FINISHED') and throughput > 0 and "
+								" filesize > 0  and  (start_time >= date_sub(utc_timestamp(), interval '5' minute) "
+								" OR  job_finished >= date_sub(utc_timestamp(), interval '5' minute))  "
+								" ORDER BY job_finished DESC LIMIT 6, 12) as f ",
                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
                     stmt.execute(true);
 
