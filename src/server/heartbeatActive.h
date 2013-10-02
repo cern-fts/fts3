@@ -47,8 +47,18 @@ private:
     {
         while (!stopThreads)
             {
-                db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
-                sleep(30);
+	    	try{
+                	db::DBSingleton::instance().getDBObjectInstance()->isTrAllowed("", "");
+                	sleep(60);
+		}
+            catch(std::exception& e)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive " << e.what() <<  commit;
+                }
+            catch(...)
+                {
+                    FTS3_COMMON_LOGGER_NEWLOG(ERR) << "Process thread HeartBeatHandlerActive unknown" <<  commit;
+                }		
             }
     }
 };
