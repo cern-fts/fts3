@@ -52,7 +52,7 @@ private:
                     {
                         db::DBSingleton::instance().getDBObjectInstance()->updateHeartBeat(&index, &count, &start, &end);
                         FTS3_COMMON_LOGGER_NEWLOG(INFO) << "Systole: host " << index << " out of " << count
-                                                        << " [" << std::hex << start << ':' << std::hex << end << ']'
+                                                        << " [" << start << ':' << end << ']'
                                                         << commit;
                     }
                 catch (const std::exception& e)
