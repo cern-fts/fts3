@@ -404,7 +404,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
                     if (isNull != soci::i_null && !manualConfigExists)
                         {			    
-                           filesNum = (maxActive - limit);
+                            filesNum = (maxActive - limit);
                             if(filesNum <=0 )
                                 continue;
                         }			 
@@ -442,7 +442,6 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             TransferFiles const& tfile = *ti;
-			    std::cout << "DISTINCT " << tfile.SOURCE_SE << " " << tfile.DEST_SE << std::endl;
                             files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
                         }
                 }				
