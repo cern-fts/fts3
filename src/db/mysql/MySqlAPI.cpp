@@ -355,7 +355,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
                     std::string source_se = r.get<std::string>("source_se");
                     std::string dest_se = r.get<std::string>("dest_se");
-                    std::string vo_name = r.get<std::string>("vo_name");		    
+                    std::string vo_name = r.get<std::string>("vo_name");		    		   
 
                     if(source_se.length()>0 && dest_se.length()>0 && vo_name.length()>0)
                         {
@@ -403,11 +403,11 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
                     /* need to check whether a manual config exists for source_se or dest_se so as not to limit the files */
                     if (isNull != soci::i_null && !manualConfigExists)
-                        {
-                            filesNum = maxActive - limit;
-                            if(maxActive > 0 && filesNum <=0 )
+                        {			    
+                           filesNum = (maxActive - limit);
+                            if(filesNum <=0 )
                                 continue;
-                        }
+                        }			 
 
                     soci::rowset<TransferFiles> rs = (
                                                          sql.prepare <<
@@ -442,6 +442,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                     for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                         {
                             TransferFiles const& tfile = *ti;
+			    std::cout << "DISTINCT " << tfile.SOURCE_SE << " " << tfile.DEST_SE << std::endl;
                             files[tfile.VO_NAME].push_back(new TransferFiles(tfile));
                         }
                 }				
@@ -476,6 +477,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
             files.clear();	
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
         }
+	
+	
+	sleep(200);
 }
 
 
@@ -2459,12 +2463,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }
 
                     soci::statement stmt3 = (
-                                                sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from "
-					       			" (SELECT filesize, throughput from t_file where source_se=:source and dest_se=:dest and file_state " 
+                                                sql.prepare << "  SELECT avg(ROUND((filesize * throughput)/filesize,5)) "
+					       			" from t_file where source_se=:source and dest_se=:dest and file_state " 
 								" in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0  and "
 								" (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
 								" job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-								" ORDER BY job_finished DESC LIMIT 5) as f ",
+								" ORDER BY job_finished DESC LIMIT 5 ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1));
                     stmt3.execute(true);
 
