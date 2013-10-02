@@ -475,10 +475,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                 }
             files.clear();	
             throw Err_Custom(std::string(__func__) + ": Caught exception ");
-        }
-	
-	
-	sleep(200);
+        }	
 }
 
 
