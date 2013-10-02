@@ -2654,7 +2654,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     highDefault = mode_1[1];
                 }
 
-            soci::rowset<soci::row> rs = ( sql.prepare << " select  distint o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+            soci::rowset<soci::row> rs = ( sql.prepare << " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
 	    						  " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
 							  " f.file_state='SUBMITTED'");
 
