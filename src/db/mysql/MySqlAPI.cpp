@@ -4184,6 +4184,8 @@ int MySqlAPI::getRetry(const std::string & jobId)
     soci::session sql(*connectionPool);
 
     int nRetries = 0;
+    soci::indicator isNull = soci::i_ok;
+    
     try
         {
 
@@ -4192,10 +4194,10 @@ int MySqlAPI::getRetry(const std::string & jobId)
                 " FROM t_job "
                 " WHERE job_id = :jobId ",
                 soci::use(jobId),
-                soci::into(nRetries)
+                soci::into(nRetries, isNull)
                 ;
 
-            if (nRetries == 0)
+            if (isNull != soci::i_null && nRetries == 0)
                 {
                     sql <<
                         " SELECT retry "
@@ -4203,7 +4205,7 @@ int MySqlAPI::getRetry(const std::string & jobId)
                         soci::into(nRetries)
                         ;
                 }
-            else if (nRetries < 0)
+            else if (isNull != soci::i_null && nRetries < 0)
                 {
                     nRetries = 0;
                 }
@@ -4222,10 +4224,12 @@ int MySqlAPI::getRetryTimes(const std::string & jobId, int fileId)
     soci::session sql(*connectionPool);
 
     int nRetries = 0;
+    soci::indicator isNull = soci::i_ok;
+    
     try
         {
             sql << "SELECT retry FROM t_file WHERE file_id = :fileId AND job_id = :jobId ",
-                soci::use(fileId), soci::use(jobId), soci::into(nRetries);
+                soci::use(fileId), soci::use(jobId), soci::into(nRetries, isNull);		
         }
     catch (std::exception& e)
         {
