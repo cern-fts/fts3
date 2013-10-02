@@ -6550,12 +6550,15 @@ void MySqlAPI::updateHeartBeat(unsigned* index, unsigned* count, unsigned* start
             unsigned segsize = 0xFFFF / *count;
             unsigned segmod  = 0xFFFF % *count;
 
-            this->hashSegment.start = *start = segsize * (*index);
-            this->hashSegment.end   = *end   = segsize * (*index + 1) - 1;
+            *start = segsize * (*index);
+            *end   = segsize * (*index + 1) - 1;
 
             // Last one take over what is left
             if (*index == *count - 1)
                 *end += segmod + 1;
+		
+	    this->hashSegment.start = *start;
+	    this->hashSegment.end   = *end;
         }
     catch (std::exception& e)
         {
