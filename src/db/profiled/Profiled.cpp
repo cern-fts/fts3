@@ -26,21 +26,18 @@ void ProfiledDB::init(std::string username, std::string password, std::string co
     db->init(username, password, connectString, pooledConn);
 }
 
-void ProfiledDB::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
-                                const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                                const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                                const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                                const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                                int bringonline, std::string metadata,
-                                int retry, int retryDelay, std::string sourceSe, std::string destinationSe)
+void ProfiledDB::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
+        const std::string & DN, const std::string & cred,
+        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+        const std::string & sourceSe, const std::string & destinationSe,
+        const JobParameterHandler & params)
 {
-    PROFILE_PREFIXED("DB::", db->submitPhysical(jobId, src_dest_pair, paramFTP,
-                     DN, cred, voName, myProxyServer,
-                     delegationID, spaceToken, overwrite,
-                     sourceSpaceToken, sourceSpaceTokenDescription, copyPinLifeTime,
-                     failNearLine, checksumMethod, reuse,
-                     bringonline, metadata,
-                     retry, retryDelay, sourceSe, destinationSe));
+    PROFILE_PREFIXED("DB::", db->submitPhysical(
+                     jobId, src_dest_pair,
+                     DN, cred,
+                     voName, myProxyServer, delegationID,
+                     sourceSe, destinationSe,
+                     params));
 }
 
 void ProfiledDB::getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs)

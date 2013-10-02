@@ -821,17 +821,26 @@ void OracleAPI::getByJobId(std::map<std::string, std::list<TransferFiles*> >& fi
 
 
 
-void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> job_elements, const std::string & paramFTP,
-                               const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                               const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                               const std::string & sourceSpaceToken, const std::string &, int copyPinLifeTime,
-                               const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                               int bringonline, std::string metadata,
-                               int retry, int retryDelay, std::string sourceSe, std::string destinationSe)
+void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> job_elements,
+        const std::string & DN, const std::string & cred,
+        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+        const std::string & sourceSe, const std::string & destinationSe,
+        const JobParameterHandler & params)
 {
+    const int         bringOnline      = params.get<int>(JobParameterHandler::BRING_ONLINE);
+    const std::string checksumMethod   = params.get(JobParameterHandler::CHECKSUM_METHOD);
+    const int         copyPinLifeTime  = params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME);
+    const std::string failNearLine     = params.get(JobParameterHandler::FAIL_NEARLINE);
+    const std::string metadata         = params.get(JobParameterHandler::JOB_METADATA);
+    const std::string overwrite        = params.get(JobParameterHandler::OVERWRITEFLAG);
+    const std::string paramFTP         = params.get(JobParameterHandler::GRIDFTP);
+    const int         retry            = params.get<int>(JobParameterHandler::RETRY);
+    const int         retryDelay       = params.get<int>(JobParameterHandler::RETRY_DELAY);
+    const std::string reuse            = params.get(JobParameterHandler::REUSE);
+    const std::string sourceSpaceToken = params.get(JobParameterHandler::SPACETOKEN_SOURCE);
+    const std::string spaceToken       = params.get(JobParameterHandler::SPACETOKEN);
 
-
-    const std::string initial_state = bringonline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
+    const std::string initial_state = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     time_t timed = time(NULL);
     const std::string currenthost = ftsHostName; //current hostname
     const std::string tag_job_statement = "tag_job_statement";
@@ -899,7 +908,7 @@ void OracleAPI::submitPhysical(const std::string & jobId, std::vector<job_elemen
             else
                 s_job_statement->setString(19, "Y"); //reuse session for this job
 
-            s_job_statement->setInt(20, bringonline); //reuse session for this job
+            s_job_statement->setInt(20, bringOnline); //reuse session for this job
             s_job_statement->setString(21, metadata); // job metadata
             s_job_statement->setInt(22, retry); // number of retries
             s_job_statement->setInt(23, retryDelay); // delay between retries

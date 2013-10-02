@@ -973,18 +973,29 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
 
 
 
-void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
-                              const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                              const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                              const std::string & sourceSpaceToken, const std::string &, int copyPinLifeTime,
-                              const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                              int bring_online, std::string metadata,
-                              int retry, int retryDelay, std::string sourceSe, std::string destinationSe)
+void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
+        const std::string & DN, const std::string & cred,
+        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+        const std::string & sourceSe, const std::string & destinationSe,
+        const JobParameterHandler & params)
 {
+    const int         bringOnline      = params.get<int>(JobParameterHandler::BRING_ONLINE);
+    const std::string checksumMethod   = params.get(JobParameterHandler::CHECKSUM_METHOD);
+    const int         copyPinLifeTime  = params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME);
+    const std::string failNearLine     = params.get(JobParameterHandler::FAIL_NEARLINE);
+    const std::string metadata         = params.get(JobParameterHandler::JOB_METADATA);
+    const std::string overwrite        = params.get(JobParameterHandler::OVERWRITEFLAG);
+    const std::string paramFTP         = params.get(JobParameterHandler::GRIDFTP);
+    const int         retry            = params.get<int>(JobParameterHandler::RETRY);
+    const int         retryDelay       = params.get<int>(JobParameterHandler::RETRY_DELAY);
+    const std::string reuse            = params.get(JobParameterHandler::REUSE);
+    const std::string sourceSpaceToken = params.get(JobParameterHandler::SPACETOKEN_SOURCE);
+    const std::string spaceToken       = params.get(JobParameterHandler::SPACETOKEN);
 
-    const std::string initialState = bring_online > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
+
+    const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
-    const std::string params;
+    const std::string jobParams;
 
     soci::session sql(*connectionPool);
 
@@ -1008,10 +1019,10 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                 "        :reuseJob, :bring_online, :retry, :retryDelay, :job_metadata,				  "
                 "		:sourceSe, :destSe)															  ",
                 soci::use(jobId), soci::use(initialState), soci::use(paramFTP), soci::use(DN), soci::use(cred), soci::use(priority),
-                soci::use(voName), soci::use(params), soci::use(hostname), soci::use(delegationID),
+                soci::use(voName), soci::use(jobParams), soci::use(hostname), soci::use(delegationID),
                 soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                 soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
-                soci::use(reuse, reuseIndicator), soci::use(bring_online),
+                soci::use(reuse, reuseIndicator), soci::use(bringOnline),
                 soci::use(retry), soci::use(retryDelay), soci::use(metadata),
                 soci::use(sourceSe), soci::use(destinationSe);
 

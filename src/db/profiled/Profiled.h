@@ -38,14 +38,11 @@ public:
 
     void init(std::string username, std::string password, std::string connectString, int pooledConn);
 
-    void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
-                        const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                        const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                        const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                        const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                        int bringonline, std::string metadata,
-                        int retry, int retryDelay, std::string sourceSe, std::string destinationSe);
-
+    void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
+                        const std::string & DN, const std::string & cred,
+                        const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                        const std::string & sourceSe, const std::string & destinationSe,
+                        const JobParameterHandler & params);
 
     void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs);
 

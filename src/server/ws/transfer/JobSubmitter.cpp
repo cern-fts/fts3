@@ -468,8 +468,6 @@ void JobSubmitter::init(tns3__TransferParams *jobParams)
     id = UuidGenerator::generateUUID();
     FTS3_COMMON_LOGGER_NEWLOG (DEBUG) << "Generated uuid " << id << commit;
 
-    sourceSpaceTokenDescription = "";
-
     if (jobParams)
         {
             params(jobParams->keys, jobParams->values);
@@ -518,26 +516,14 @@ string JobSubmitter::submit()
     db->submitPhysical (
         id,
         jobs,
-        params.get(JobParameterHandler::GRIDFTP),
         dn,
         cred,
         vo,
         string(),
         delegationId,
-        params.get(JobParameterHandler::SPACETOKEN),
-        params.get(JobParameterHandler::OVERWRITEFLAG),
-        params.get(JobParameterHandler::SPACETOKEN_SOURCE),
-        sourceSpaceTokenDescription,
-        params.get<int>(JobParameterHandler::COPY_PIN_LIFETIME),
-        params.get(JobParameterHandler::FAIL_NEARLINE),
-        params.get(JobParameterHandler::CHECKSUM_METHOD),
-        params.get(JobParameterHandler::REUSE),
-        params.get<int>(JobParameterHandler::BRING_ONLINE),
-        params.get<string>(JobParameterHandler::JOB_METADATA),
-        params.get<int>(JobParameterHandler::RETRY),
-        params.get<int>(JobParameterHandler::RETRY_DELAY),
         sourceSe,
-        destinationSe
+        destinationSe,
+        params
     );
 
     //send state message

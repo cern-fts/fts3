@@ -33,6 +33,7 @@
 #include <set>
 #include <list>
 #include "JobStatus.h"
+#include "JobParameterHandler.h"
 #include "FileTransferStatus.h"
 #include "SePair.h"
 #include "TransferJobSummary.h"
@@ -95,14 +96,11 @@ public:
     /**
      * Submit a transfer request to be stored in the database
      **/
-    virtual void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair, const std::string & paramFTP,
-                                const std::string & DN, const std::string & cred, const std::string & voName, const std::string & myProxyServer,
-                                const std::string & delegationID, const std::string & spaceToken, const std::string & overwrite,
-                                const std::string & sourceSpaceToken, const std::string & sourceSpaceTokenDescription, int copyPinLifeTime,
-                                const std::string & failNearLine, const std::string & checksumMethod, const std::string & reuse,
-                                int bringonline, std::string metadata,
-                                int retry, int retryDelay, std::string sourceSe, std::string destinationSe) = 0;
-
+    virtual void submitPhysical(const std::string & jobId, std::vector<job_element_tupple> src_dest_pair,
+                                const std::string & DN, const std::string & cred,
+                                const std::string & voName, const std::string & myProxyServer, const std::string & delegationID,
+                                const std::string & sourceSe, const std::string & destinationSe,
+                                const JobParameterHandler & params) = 0;
 
     virtual void getTransferJobStatus(std::string requestID, bool archive, std::vector<JobStatus*>& jobs) = 0;
 

@@ -97,9 +97,9 @@ public:
      *
      * @return parameter value
      */
-    inline string get(string name)
+    inline string get(string name) const
     {
-        return parameters[name];
+        return parameters.at(name);
     }
 
     /**
@@ -111,9 +111,9 @@ public:
      * @return parameter value
      */
     template<typename T>
-    inline T get(string name)
+    inline T get(string name) const
     {
-        return lexical_cast<T>(parameters[name]);
+        return lexical_cast<T>(parameters.at(name));
     }
 
     /**
