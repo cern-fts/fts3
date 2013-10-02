@@ -2654,9 +2654,9 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     highDefault = mode_1[1];
                 }
 
-            soci::rowset<soci::row> rs = ( sql.prepare << " select o.source_se, o.dest_se from t_optimize_active o where "
-                                           " exists (select null from t_file f where o.source_se=f.source_se and "
-                                           " o.dest_se=f.dest_se and f.file_state='SUBMITTED') ");
+            soci::rowset<soci::row> rs = ( sql.prepare << " select o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+	    						  " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
+							  " f.file_state='SUBMITTED'");
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -2671,12 +2671,12 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     soci::indicator isNull2 = soci::i_ok;
 
                     soci::statement stmt = (
-                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) from "
-					       			" (SELECT filesize, throughput from t_file where source_se=:source and dest_se=:dest and file_state " 
+                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) "
+					       			" from t_file where source_se=:source and dest_se=:dest and file_state " 
 								" in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0  and "
 								" (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
 								" job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-								" ORDER BY job_finished DESC LIMIT 6, 12) as f ",
+								" ORDER BY job_finished DESC LIMIT 10 ",
                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
                     stmt.execute(true);
 
