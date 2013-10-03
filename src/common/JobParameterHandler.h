@@ -99,7 +99,10 @@ public:
      */
     inline string get(string name) const
     {
-        return parameters.at(name);
+        if (parameters.count(name))
+            return parameters.at(name);
+        else
+            return std::string();
     }
 
     /**
@@ -113,7 +116,7 @@ public:
     template<typename T>
     inline T get(string name) const
     {
-        return lexical_cast<T>(parameters.at(name));
+        return lexical_cast<T>(this->get(name));
     }
 
     /**
