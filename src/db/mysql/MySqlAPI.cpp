@@ -2427,9 +2427,10 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     highDefault = mode_1[1];
                 }
 
-            soci::rowset<soci::row> rs = ( sql.prepare << " select distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
-	    						  " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
-							  " f.file_state='SUBMITTED' ");
+            soci::rowset<soci::row> rs = ( sql.prepare <<
+                              " select  distinct o.source_se, o.dest_se from t_optimize_active o INNER JOIN "
+                              " t_file f ON (o.source_se = f.source_se) where o.dest_se=f.dest_se and "
+                              " f.file_state='SUBMITTED'");
 
             for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
                 {
@@ -2438,41 +2439,60 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
 
                     double nFailedLastHour=0, nFinishedLastHour=0;
                     double throughput=0.0, avgThr = 0.0;
+                    double filesize = 0.0;
                     int active = 0;
                     int maxActive = 0;
-                    soci::indicator isNull1 = soci::i_ok;
-                    soci::indicator isNull2 = soci::i_ok;
 
-                    soci::statement stmt = (
-                                               sql.prepare << " SELECT avg(ROUND((filesize * throughput)/filesize,5)) "
-					       			" from (SELECT filesize, throughput from t_file where source_se=:source_se and "
-								" dest_se=:dest_se and file_state  in ('ACTIVE','FINISHED') and throughput > 0 and "
-								" filesize > 0  and  (start_time >= date_sub(utc_timestamp(), interval '5' minute) "
-								" OR  job_finished >= date_sub(utc_timestamp(), interval '5' minute))  "
-								" ORDER BY job_finished DESC LIMIT 6, 12) as f ",
-                                               soci::use(source_hostname),soci::use(destin_hostname), soci::into(avgThr, isNull2));
-                    stmt.execute(true);
+                    // Weighted average for the 12 less newest transfers
+                    soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
+                                " SELECT filesize, throughput "
+                                " FROM t_file "
+                                " WHERE source_se = :source_se AND dest_se = :dest_se AND "
+                                "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                                "       filesize > 0 AND (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
+                                "                         job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+                                " ORDER BY job_finished DESC LIMIT 6, 12",
+                                soci::use(source_hostname), soci::use(destin_hostname));
 
-                    if (isNull2 == soci::i_null)
+                    double totalSize = 0.0;
+                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
+                         j != rsSizeAndThroughput.end(); ++j)
                         {
-                            avgThr = 0.0;
+                            filesize   = j->get<double>("filesize");
+                            throughput = j->get<double>("throughput");
+
+                            totalSize += filesize;
+                            avgThr    += filesize * throughput;
                         }
+                    if (totalSize > 0)
+                        avgThr /= totalSize;
 
-                    soci::statement stmt3 = (
-                                                sql.prepare << "  SELECT avg(ROUND((filesize * throughput)/filesize,5)) "
-					       			" from t_file where source_se=:source and dest_se=:dest and file_state " 
-								" in ('ACTIVE','FINISHED') and throughput > 0 and filesize > 0  and "
-								" (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
-								" job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
-								" ORDER BY job_finished DESC LIMIT 5 ",
-                                                soci::use(source_hostname),soci::use(destin_hostname), soci::into(throughput, isNull1));
-                    stmt3.execute(true);
+                    // Weighted average for the 5 newest transfers
+                    rsSizeAndThroughput = (sql.prepare <<
+                                " SELECT filesize, throughput "
+                                " FROM t_file "
+                                " WHERE source_se = :source AND dest_se = :dest AND "
+                                "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
+                                "       filesize > 0  AND "
+                                "       (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
+                                "        job_finished >= date_sub(utc_timestamp(), interval '5' minute)) "
+                                " ORDER BY job_finished DESC LIMIT 5 ",
+                                soci::use(source_hostname),soci::use(destin_hostname));
 
-                    if (isNull1 == soci::i_null)
+                    throughput = 0.0;
+                    totalSize = 0.0;
+                    for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
+                         j != rsSizeAndThroughput.end(); ++j)
                         {
-                            throughput = 0.0;
+                            filesize    = j->get<double>("filesize");
+                            throughput += (j->get<double>("throughput") * filesize);
+                            totalSize  += filesize;
                         }
+                    if (totalSize > 0)
+                        throughput /= totalSize;
 
+
+                    // Ratio of success
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
                                                     "WHERE "
                                                     "      t_file.source_se = :source AND t_file.dest_se = :dst AND "
@@ -2498,18 +2518,19 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     else
                         highDefault = mode_2[1];
 
+                    // Active transfers
                     soci::statement stmt7 = (
                                                 sql.prepare << "SELECT count(*) FROM t_file "
                                                 "WHERE source_se = :source AND dest_se = :dest_se and file_state in ('READY','ACTIVE') ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(active));
                     stmt7.execute(true);
 
+                    // Max active transfers
                     soci::statement stmt8 = (
                                                 sql.prepare << "SELECT active FROM t_optimize_active "
                                                 "WHERE source_se = :source AND dest_se = :dest_se ",
                                                 soci::use(source_hostname),soci::use(destin_hostname), soci::into(maxActive));
                     stmt8.execute(true);
-		    		    
 
                     //only apply the logic below if any of these values changes
                     bool changed = getChangedFile (source_hostname, destin_hostname, ratioSuccessFailure, throughput, avgThr);
