@@ -5061,6 +5061,7 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
     soci::session sql(*connectionPool);
 
     message_state ret;
+    soci::indicator ind = soci::i_ok;    
 
     try
         {
@@ -5097,7 +5098,7 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
 
                     if(ret.retry_max == 0)
                         {
-                            sql << " select retry from t_server_config LIMIT 1", soci::into(ret.retry_max);
+                            sql << " select retry from t_server_config LIMIT 1", soci::into(ret.retry_max, ind);
                         }
                 }
 
