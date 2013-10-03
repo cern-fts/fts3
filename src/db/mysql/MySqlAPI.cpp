@@ -5085,12 +5085,12 @@ struct message_state MySqlAPI::getStateOfTransfer(const std::string& jobId, int 
                     ret.job_id = it->get<std::string>("job_id");
                     ret.job_state = it->get<std::string>("job_state");
                     ret.vo_name = it->get<std::string>("vo_name");
-                    ret.job_metadata = it->get<std::string>("job_metadata");
-                    ret.retry_max = it->get<int>("retry_max");
+                    ret.job_metadata = it->get<std::string>("job_metadata","");
+                    ret.retry_max = it->get<int>("retry_max",0);
                     ret.file_id = it->get<int>("file_id");
                     ret.file_state = it->get<std::string>("file_state");
-                    ret.retry_counter = it->get<int>("retry_counter");
-                    ret.file_metadata = it->get<std::string>("file_metadata");
+                    ret.retry_counter = it->get<int>("retry_counter",0);
+                    ret.file_metadata = it->get<std::string>("file_metadata","");
                     ret.source_se = it->get<std::string>("source_se");
                     ret.dest_se = it->get<std::string>("dest_se");
                     ret.timestamp = _getTrTimestampUTC();
