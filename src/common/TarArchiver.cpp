@@ -36,7 +36,7 @@ namespace common
 void TarArchiver::init(PosixTarHeader& header)
 {
     memset(&header,0,sizeof(PosixTarHeader));
-    sprintf(header.magic,"ustar ");
+    sprintf(header.magic,"ustar");
     sprintf(header.mtime,"%011lo",time(NULL));
     sprintf(header.mode,"%07o",0644);
     sprintf(header.gname,"%s","users");
