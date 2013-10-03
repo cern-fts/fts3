@@ -6241,37 +6241,44 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
             sql.begin();
             if(msg.checkSanityState)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=0 where checkSanityState=1"));
+                    soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=0 where (checkSanityState=1 "
+		    					" OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.setToFailOldQueuedJobs)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=0 where setToFailOldQueuedJobs=1"));
+                    soci::statement st((sql.prepare << "update t_server_sanity set setToFailOldQueuedJobs=0 where (setToFailOldQueuedJobs=1 "
+		    					" OR (t_setToFailOldQueuedJobs < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.forceFailTransfers)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=0 where forceFailTransfers=1"));
+                    soci::statement st((sql.prepare << "update t_server_sanity set forceFailTransfers=0 where (forceFailTransfers=1 "
+		    					" OR (t_forceFailTransfers < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.revertToSubmitted)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=0 where revertToSubmitted=1"));
+                    soci::statement st((sql.prepare << "update t_server_sanity set revertToSubmitted=0 where (revertToSubmitted=1  "
+		    					" OR (t_revertToSubmitted < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.cancelWaitingFiles)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=0 where cancelWaitingFiles=1"));
+                    soci::statement st((sql.prepare << "update t_server_sanity set cancelWaitingFiles=0 where (cancelWaitingFiles=1  "
+		    					" OR (t_cancelWaitingFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.revertNotUsedFiles)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=0 where revertNotUsedFiles=1"));
+                    soci::statement st((sql.prepare << "update t_server_sanity set revertNotUsedFiles=0 where (revertNotUsedFiles=1  "
+		    					" OR (t_revertNotUsedFiles < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.cleanUpRecords)
                 {
-                    soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=0 where cleanUpRecords=1"));
+                    soci::statement st((sql.prepare << "update t_server_sanity set cleanUpRecords=0 where (cleanUpRecords=1  "
+		    					" OR (t_cleanUpRecords < (UTC_TIMESTAMP() - INTERVAL '4' day)))  "));
                     st.execute(true);
                 }
             else if(msg.msgCron)
