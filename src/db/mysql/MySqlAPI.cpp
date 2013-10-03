@@ -2458,8 +2458,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                          j != rsSizeAndThroughput.end(); ++j)
                         {
-                            filesize   = j->get<double>("filesize");
-                            throughput = j->get<double>("throughput");
+                            filesize   = j->get<double>("filesize", 0);
+                            throughput = j->get<double>("throughput", 0);
 
                             totalSize += filesize;
                             avgThr    += filesize * throughput;
@@ -2484,8 +2484,8 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     for (soci::rowset<soci::row>::const_iterator j = rsSizeAndThroughput.begin();
                          j != rsSizeAndThroughput.end(); ++j)
                         {
-                            filesize    = j->get<double>("filesize");
-                            throughput += (j->get<double>("throughput") * filesize);
+                            filesize    = j->get<double>("filesize", 0);
+                            throughput += (j->get<double>("throughput", 0) * filesize);
                             totalSize  += filesize;
                         }
                     if (totalSize > 0)
