@@ -1597,7 +1597,7 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                     // Cancel files
                     sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                         "                  reason = :reason "
-                        "WHERE job_id = :jobId AND file_state NOT IN ('ACTIVE','READY','CANCELED','FINISHED','FAILED')",
+                        "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
                 }
 
@@ -1620,7 +1620,7 @@ void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
         {
             soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid, f.job_id FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
                                           "WHERE  "
-                                          "      f.FILE_STATE IN ('ACTIVE','READY') AND "
+                                          "      f.start_time IS NOT NULL AND "
                                           "      f.PID IS NOT NULL AND "
                                           "      j.cancel_job = 'Y' and transferhost=:hostname and j.job_state='CANCELED' ",soci::use(hostname));
 
@@ -2490,7 +2490,6 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                         }
                     if (totalSize > 0)
                         throughput /= totalSize;
-
 
                     // Ratio of success
                     soci::rowset<std::string> rs = (sql.prepare << "SELECT file_state FROM t_file "
@@ -5536,9 +5535,10 @@ void MySqlAPI::checkSanityState()
             sql.begin();
 
             //now check reverse sanity checks, JOB can't be FINISH,  FINISHEDDIRTY, FAILED is at least one tr is in SUBMITTED, READY, ACTIVE
+	    //special case for canceled
             soci::rowset<std::string> rs2 = (
                                                 sql.prepare <<
-                                                " select job_id from t_job where job_state in ('FINISHED','FAILED','FINISHEDDIRTY') AND job_finished > (UTC_TIMESTAMP() - interval '30' minute)"
+                                                " select job_id from t_job where job_finished IS NOT NULL "
                                             );
 
             for (soci::rowset<std::string>::const_iterator i2 = rs2.begin(); i2 != rs2.end(); ++i2)
@@ -6146,7 +6146,7 @@ bool MySqlAPI::assignSanityRuns(soci::session& sql, struct message_sanity &msg)
                     sql.begin();
                     soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=1, t_checkSanityState = UTC_TIMESTAMP() "
                                         "where checkSanityState=0"
-                                        " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '30' minute)) "));
+                                        " AND (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '120' minute)) "));
                     st.execute(true);
                     rows = st.get_affected_rows();
                     msg.checkSanityState = (rows > 0? true: false);
@@ -6263,7 +6263,7 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
             if(msg.checkSanityState)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=0 where (checkSanityState=1 "
-		    					" OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '45' minute)))  "));
+		    					" OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '180' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.setToFailOldQueuedJobs)
