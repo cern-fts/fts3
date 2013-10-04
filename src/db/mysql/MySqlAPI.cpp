@@ -3025,7 +3025,14 @@ void MySqlAPI::backup()
     soci::session sql(*connectionPool);
 
     try
-        {     
+        {    
+            struct message_sanity msg;
+            msg.cleanUpRecords = true;
+            CleanUpSanityChecks temp(this, sql, msg);
+            if(!temp.getCleanUpSanityCheck())
+                return;
+		
+			 
 	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
 	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";	    
 	    sql << "SET FOREIGN_KEY_CHECKS = 0";
