@@ -147,7 +147,6 @@ protected:
                                     }
                             }
 
-
                         /*also get jobs which have been canceled by the client*/
                         counterCanceled++;
                         if (counterCanceled == 5)
