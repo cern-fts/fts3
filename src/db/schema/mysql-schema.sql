@@ -688,7 +688,7 @@ CREATE INDEX job_priority     ON t_job(priority, submit_time);
 CREATE INDEX file_job_id     ON t_file(job_id);
 CREATE INDEX file_jobfinished_id ON t_file(job_finished);
 CREATE INDEX job_reuse  ON t_job(reuse_job);
-CREATE INDEX file_source_dest ON t_file(source_se, dest_se);
+CREATE INDEX file_source_dest ON t_file(source_se, dest_se, file_state);
 CREATE INDEX t_waittimeout ON t_file(wait_timeout);
 CREATE INDEX file_id_hashed ON t_file(hashed_id, file_state);
 CREATE INDEX t_retry_timestamp ON t_file(retry_timestamp);
