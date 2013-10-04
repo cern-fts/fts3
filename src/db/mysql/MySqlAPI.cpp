@@ -580,36 +580,34 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
 
                     if (activityFilesNum.empty())
                         {
-                            soci::rowset<TransferFiles> rs = (
-                                                                 sql.prepare <<
-                                                                 " SELECT "
-                                                                 "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
-                                                                 "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
-                                                                 "       f.checksum, j.checksum_method, j.source_space_token, "
-                                                                 "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
-                                                                 "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
-                                                                 "       f.source_se, f.dest_se, f.selection_strategy  "
-                                                                 " FROM t_job j, t_file f "
-                                                                 " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
-                                                                 "    f.source_se = :source AND f.dest_se = :dest AND "
-                                                                 "    f.vo_name = :vo_name AND "
-                                                                 "    f.wait_timestamp IS NULL AND "
-                                                                 "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                                 "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                                                 "    EXISTS ( "
-                                                                 "        SELECT NULL FROM t_job j1 "
-                                                                 "        WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
-                                                                 "              (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
-                                                                 "        ) ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum",
-                                                                 soci::use(boost::get<0>(triplet)),
-                                                                 soci::use(boost::get<1>(triplet)),
-                                                                 soci::use(boost::get<2>(triplet)),
-                                                                 soci::use(tTime),
-                                                                 soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                                 soci::use(boost::get<2>(triplet)),
-                                                                 soci::use(filesNum)
-                                                             );
-
+                    		soci::rowset<TransferFiles> rs = (
+                                                         sql.prepare <<
+                                                         " SELECT "
+                                                         "       f.file_state, f.source_surl, f.dest_surl, f.job_id, j.vo_name, "
+                                                         "       f.file_id, j.overwrite_flag, j.user_dn, j.cred_id, "
+                                                         "       f.checksum, j.checksum_method, j.source_space_token, "
+                                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
+                                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
+                                                         "       f.source_se, f.dest_se, f.selection_strategy  "
+                                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) AND  "
+                                                         " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
+                                                         "    f.source_se = :source AND f.dest_se = :dest AND "
+                                                         "    f.vo_name = :vo_name AND "
+                                                         "    f.wait_timestamp IS NULL AND "
+                                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
+                                                         "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                                         "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
+                                                         "     ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum ",
+                                                         soci::use(boost::get<0>(triplet)),
+                                                         soci::use(boost::get<1>(triplet)),
+                                                         soci::use(boost::get<2>(triplet)),
+                                                         soci::use(tTime),
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
+                                                         soci::use(boost::get<2>(triplet)),
+                                                         soci::use(filesNum)
+                                                     );
+						     
                             for (soci::rowset<TransferFiles>::const_iterator ti = rs.begin(); ti != rs.end(); ++ti)
                                 {
                                     TransferFiles const& tfile = *ti;
@@ -632,8 +630,8 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                         "       f.source_se, f.dest_se, f.selection_strategy  "
-                                        " FROM t_job j, t_file f "
-                                        " WHERE j.job_id = f.job_id AND j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
+                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) AND "
+                                        " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
                                         "    f.vo_name = :vo_name AND ";
                                     select +=
@@ -645,11 +643,9 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "    f.wait_timestamp IS NULL AND "
                                         "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) AND "
-                                        "    EXISTS ( "
-                                        "        SELECT NULL FROM t_job j1 "
-                                        "        WHERE j.job_id = j1.job_id AND j1.job_state in ('ACTIVE','READY','SUBMITTED') AND "
-                                        "              (j1.reuse_job = 'N' OR j1.reuse_job IS NULL) AND j1.vo_name=:vo_name "
-                                        "        ORDER BY j1.priority DESC, j1.submit_time) LIMIT :filesNum"
+                                        "    j.job_state in ('ACTIVE','READY','SUBMITTED') AND "
+                                        "    (j.reuse_job = 'N' OR j.reuse_job IS NULL) AND j.vo_name=:vo_name "
+                                        "    ORDER BY j.priority DESC, j.submit_time LIMIT :filesNum"
                                         ;
 
 
@@ -3271,8 +3267,7 @@ void MySqlAPI::backup()
             CleanUpSanityChecks temp(this, sql, msg);
             if(!temp.getCleanUpSanityCheck())
                 return;
-		
-			 
+					 
 	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
 	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";	    
 	    sql << "SET FOREIGN_KEY_CHECKS = 0";
