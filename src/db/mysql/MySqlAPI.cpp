@@ -6263,7 +6263,7 @@ void MySqlAPI::resetSanityRuns(soci::session& sql, struct message_sanity &msg)
             if(msg.checkSanityState)
                 {
                     soci::statement st((sql.prepare << "update t_server_sanity set checkSanityState=0 where (checkSanityState=1 "
-		    					" OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '180' minute)))  "));
+		    					" OR (t_checkSanityState < (UTC_TIMESTAMP() - INTERVAL '500' minute)))  "));
                     st.execute(true);
                 }
             else if(msg.setToFailOldQueuedJobs)
