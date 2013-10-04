@@ -561,7 +561,6 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
 
     try
         {
-
             soci::indicator ind = soci::i_ok;
             int fileIndex=0;
 
@@ -572,11 +571,11 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                 soci::use(fileId),
                 soci::into(fileIndex, ind)
                 ;
-
-            sql.begin();
+            
             // make sure it's not NULL
             if (ind == soci::i_ok)
                 {
+		sql.begin();
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'SUBMITTED' "
@@ -585,9 +584,8 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                         "	AND file_state = 'NOT_USED'",
                         soci::use(jobId),
                         soci::use(fileIndex);
+                 sql.commit();			
                 }
-
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -1426,8 +1424,6 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
             std::string currentState("");
 
-            sql.begin();
-
             // prevent multiple updates of the same state for the same job
             sql <<
                 " SELECT job_state from t_job  "
@@ -1490,6 +1486,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
 
+            sql.begin();
             if (jobFinished)
                 {
                     std::string state;
