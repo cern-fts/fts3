@@ -801,10 +801,10 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                 soci::into(fileIndex, ind)
                 ;
 
-            sql.begin();
             // make sure it's not NULL
             if (ind == soci::i_ok)
                 {
+                   sql.begin();
                     sql <<
                         " UPDATE t_file "
                         " SET file_state = 'SUBMITTED' "
@@ -813,9 +813,8 @@ void MySqlAPI::useFileReplica(std::string jobId, int fileId)
                         "	AND file_state = 'NOT_USED'",
                         soci::use(jobId),
                         soci::use(fileIndex);
+                     sql.commit();			
                 }
-
-            sql.commit();
         }
     catch (std::exception& e)
         {
@@ -1664,7 +1663,6 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
             std::string currentState("");
 
-            sql.begin();
 
             // prevent multiple updates of the same state for the same job
             sql <<
@@ -1728,6 +1726,7 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
 
             bool jobFinished = (numberOfFilesInJob == numberOfFilesTerminal);
 
+            sql.begin();
             if (jobFinished)
                 {
                     std::string state;
@@ -1832,10 +1831,26 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
                         "                 ,reason = :reason "
                         "WHERE job_id = :jobId AND job_state NOT IN ('CANCELED','FINISHEDDIRTY', 'FINISHED', 'FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
+
+
+                    soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid FROM t_file f "
+                                                  "WHERE  "
+                                                  "      f.FILE_STATE IN ('ACTIVE','READY') AND "
+                                                  "      f.PID IS NOT NULL AND "
+                                                  "      f.job_id=:job_id ", soci::use(*i, "job_id"));
+
+
+                    for (soci::rowset<soci::row>::const_iterator i2 = rs.begin(); i2 != rs.end(); ++i2)
+                        {
+                            soci::row const& row = *i2;
+                            int pid = row.get<int>("pid");
+                            kill(pid, SIGTERM);
+                        }
+
                     // Cancel files
                     sql << "UPDATE t_file SET file_state = 'CANCELED', job_finished = UTC_TIMESTAMP(), finish_time = UTC_TIMESTAMP(), "
                         "                  reason = :reason "
-                        "WHERE job_id = :jobId AND file_state NOT IN ('ACTIVE','READY','CANCELED','FINISHED','FAILED')",
+                        "WHERE job_id = :jobId AND file_state NOT IN ('CANCELED','FINISHED','FAILED')",
                         soci::use(reason, "reason"), soci::use(*i, "jobId");
                 }
 
@@ -1850,33 +1865,35 @@ void MySqlAPI::cancelJob(std::vector<std::string>& requestIDs)
 
 
 
-void MySqlAPI::getCancelJob(std::vector<int>& requestIDs)
+void MySqlAPI::getCancelJob(std::vector<int>& /*requestIDs*/)
 {
-    soci::session sql(*connectionPool);
+    /*
+        soci::session sql(*connectionPool);
 
-    try
-        {
-            soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid, f.job_id FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
-                                          "WHERE  "
-                                          "      f.FILE_STATE IN ('ACTIVE','READY') AND "
-                                          "      f.PID IS NOT NULL AND "
-                                          "      j.cancel_job = 'Y' and transferhost=:hostname and j.job_state='CANCELED' ",soci::use(hostname));
+        try
+            {
+                soci::rowset<soci::row> rs = (sql.prepare << "SELECT f.pid, f.job_id FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) "
+                                              "WHERE  "
+                                              "      f.start_time IS NOT NULL AND "
+                                              "      f.PID IS NOT NULL AND "
+                                              "      j.cancel_job = 'Y' and transferhost=:hostname and j.job_state='CANCELED' ",soci::use(hostname));
 
-            std::string jobId;
+                std::string jobId;
 
-            for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
-                {
-                    soci::row const& row = *i;
-                    int pid = row.get<int>("pid");
-                    jobId = row.get<std::string>("job_id");
-                    requestIDs.push_back(pid);
-                }
-        }
-    catch (std::exception& e)
-        {
-            requestIDs.clear();
-            throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
-        }
+                for (soci::rowset<soci::row>::const_iterator i = rs.begin(); i != rs.end(); ++i)
+                    {
+                        soci::row const& row = *i;
+                        int pid = row.get<int>("pid");
+                        jobId = row.get<std::string>("job_id");
+                        requestIDs.push_back(pid);
+                    }
+            }
+        catch (std::exception& e)
+            {
+                requestIDs.clear();
+                throw Err_Custom(std::string(__func__) + ": Caught exception " + e.what());
+            }
+    */
 }
 
 
