@@ -3265,20 +3265,16 @@ void MySqlAPI::backup()
     soci::session sql(*connectionPool);
 
     try
-        {
-            struct message_sanity msg;
-            msg.cleanUpRecords = true;
-            CleanUpSanityChecks temp(this, sql, msg);
-            if(!temp.getCleanUpSanityCheck())
-                return;
-
-
-            sql << "SET autocommit=0";
-            sql << "SET tx_isolation = 'READ-UNCOMMITTED'";
+        {     
+	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";
+	    sql << "ALTER TABLE `t_file_backup` DISABLE KEYS";	    
+	    sql << "SET FOREIGN_KEY_CHECKS = 0";
+            sql << "SET UNIQUE_CHECKS = 0";
+            sql << "SET AUTOCOMMIT = 0";	    
 
             sql << "INSERT INTO t_job_backup SELECT * FROM t_job "
-                "WHERE job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
-                "job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY')";
+                " WHERE job_finished < (UTC_TIMESTAMP() - interval '4' DAY ) AND "
+                " job_state IN ('FINISHED', 'FAILED', 'CANCELED', 'FINISHEDDIRTY')";
             sql.commit();
 
 
@@ -3290,6 +3286,11 @@ void MySqlAPI::backup()
 
             sql << "DELETE FROM t_job WHERE job_id IN (SELECT job_id FROM t_job_backup)";
             sql.commit();
+	    
+	    sql << "ALTER TABLE `t_file_backup` ENABLE KEYS";
+	    sql << "ALTER TABLE `t_job_backup` ENABLE KEYS";	    
+            sql << "SET UNIQUE_CHECKS = 1";
+            sql << "SET FOREIGN_KEY_CHECKS = 1";                
 
 
         }
