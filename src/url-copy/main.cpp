@@ -89,6 +89,7 @@ static std::string timeout_to_string("");
 static std::string globalErrorMessage("");
 static double throughput = 0.0;
 static double transferred_bytes = 0;
+time_t globalTimeout;
 
 extern std::string stackTrace;
 gfal_context_t handle = NULL;
@@ -559,7 +560,7 @@ int main(int argc, char **argv)
 
     //cancelation point
     long unsigned int reuseOrNot = (urlsFile.empty() == true) ? 1 : urlsFile.size();
-    time_t globalTimeout = reuseOrNot * 6000;
+    globalTimeout = reuseOrNot * 6000;
 
     try
         {
