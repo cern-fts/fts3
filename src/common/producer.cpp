@@ -43,21 +43,12 @@ using namespace std;
 
 void getUniqueTempFileName(const std::string& basename,
                            std::string& tempname)
-{
-    int iRes;
-    do
-        {
+{   
             std::string uuidGen = UuidGenerator::generateUUID();
             time_t tmCurrent = time(NULL);
             std::stringstream strmName;
             strmName << basename << uuidGen << "_" << tmCurrent;
             tempname = strmName.str();
-
-            struct stat st;
-            iRes = stat(tempname.c_str(),
-                        &st);
-        }
-    while( 0 == iRes );
 }
 
 static std::string getNewMessageFile(const char* BASE_DIR)
@@ -71,7 +62,8 @@ static std::string getNewMessageFile(const char* BASE_DIR)
 static int writeMessage(const void* buffer, size_t bufsize, const char* BASE_DIR)
 {
     std::string tempname = getNewMessageFile(BASE_DIR);
-
+    if(tempname.length() <= 0)
+    	return -1;
     // Open
     FILE* fp = NULL;
     fp = fopen(tempname.c_str(), "w");
