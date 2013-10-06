@@ -33,8 +33,11 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     isTerminalSent(false),reuse(false)
 {
     msg = new struct message();
+    memset(msg, 0, sizeof(message));
     msg_updater = new struct message_updater();
+    memset(msg_updater, 0, sizeof(message_updater));
     msg_log = new struct message_log();
+    memset(msg_log, 0, sizeof(message_log));
 
     char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
