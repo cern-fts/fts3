@@ -36,7 +36,7 @@ Logger::~Logger()
 
 
 Logger& Logger::getInstance()
-{
+{    
     return Logger::instance;
 }
 
@@ -44,6 +44,7 @@ Logger& Logger::getInstance()
 
 std::ostream& Logger::INFO()
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     return (*log << getTimestamp() << " INFO     ");
 }
 
@@ -51,6 +52,7 @@ std::ostream& Logger::INFO()
 
 std::ostream& Logger::WARNING()
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     return (*log << getTimestamp() << " WARNING  ");
 }
 
@@ -58,6 +60,7 @@ std::ostream& Logger::WARNING()
 
 std::ostream& Logger::ERROR()
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     return (*log << getTimestamp() << " ERROR    ");
 }
 
@@ -65,6 +68,7 @@ std::ostream& Logger::ERROR()
 
 std::ostream& Logger::DEBUG()
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     return (*log << getTimestamp() << " DEBUG    ");
 }
 
@@ -72,6 +76,7 @@ std::ostream& Logger::DEBUG()
 
 int Logger::redirectTo(const std::string& path, bool debug)
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     // Regular output
     logHandle.close();
     logHandle.open(path.c_str(), std::ios::app);

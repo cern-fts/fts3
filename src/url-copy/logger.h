@@ -25,6 +25,7 @@
 #include <cerrno>
 #include <fstream>
 #include <iostream>
+#include <boost/thread/recursive_mutex.hpp>
 
 class Logger
 {
@@ -47,6 +48,7 @@ private:
 
     std::ostream *log;
     std::ofstream logHandle;
+    boost::recursive_mutex mutex;
 };
 
 #endif
