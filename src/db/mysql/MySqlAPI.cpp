@@ -2458,7 +2458,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     // Weighted average for the 12 less newest transfers
                     soci::rowset<soci::row> rsSizeAndThroughput = (sql.prepare <<
                             " SELECT filesize, throughput "
-                            " FROM t_file "
+                            " FROM t_file use index(t_file_select) "
                             " WHERE source_se = :source_se AND dest_se = :dest_se AND "
                             "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                             "       filesize > 0 AND (start_time >= date_sub(utc_timestamp(), interval '5' minute) OR "
@@ -2482,7 +2482,7 @@ bool MySqlAPI::isTrAllowed(const std::string & /*source_hostname1*/, const std::
                     // Weighted average for the 5 newest transfers
                     rsSizeAndThroughput = (sql.prepare <<
                                            " SELECT filesize, throughput "
-                                           " FROM t_file "
+                                           " FROM t_file use index(t_file_select)"
                                            " WHERE source_se = :source AND dest_se = :dest AND "
                                            "       file_state IN ('ACTIVE','FINISHED') AND throughput > 0 AND "
                                            "       filesize > 0  AND "
