@@ -61,9 +61,9 @@ public:
     std::string source_se;
     std::string dest_se;
     static std::string ReplaceNonPrintableCharacters(std::string s);
-    void setReuseTransfer(bool state)
+    void setMultipleTransfers(bool state)
     {
-        reuse = state;
+        multiple = state;
     }
 
 private:
@@ -80,5 +80,5 @@ private:
     std::atomic_bool isTerminalSent;
 #endif
 
-    bool reuse;
+    bool multiple;
 };

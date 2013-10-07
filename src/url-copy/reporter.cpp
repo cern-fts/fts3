@@ -30,7 +30,7 @@ using namespace std;
 Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     source_se(""), dest_se(""),
     msg(NULL), msg_updater(NULL), msg_log(NULL),
-    isTerminalSent(false),reuse(false)
+    isTerminalSent(false), multiple(false)
 {
     msg = new struct message();
     memset(msg, 0, sizeof(message));
@@ -136,7 +136,7 @@ void Reporter::sendTerminal(double throughput, bool retry,
 {
     boost::recursive_mutex::scoped_lock lock(mutex);
     // Did we send it already?
-    if(!reuse)
+    if(!multiple)
         {
             if (isTerminalSent)
                 return;

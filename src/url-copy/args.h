@@ -21,7 +21,8 @@ public:
     bool overwrite;
     bool daemonize;
     bool logToStderr;
-    bool reuseFile;
+    bool reuse;
+    bool multihop;
 
     enum CompareChecksum
     {
@@ -53,6 +54,10 @@ public:
     unsigned    tcpBuffersize;
     unsigned    blockSize;
     unsigned    timeout;
+
+    bool areTransfersOnFile() const {
+        return reuse || multihop;
+    }
 
 private:
     static UrlCopyOpts instance;

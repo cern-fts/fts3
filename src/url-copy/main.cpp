@@ -215,6 +215,8 @@ void abnormalTermination(const std::string& classification, const std::string&, 
             errorMessage += " " + globalErrorMessage;
         }
 
+    Logger::getInstance().ERROR() << errorMessage << std::endl;
+
     diff = transferDuration(transfer_start, transfer_complete);
     msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, getDefaultScope());
     msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, getDefaultReasonClass());
@@ -247,7 +249,7 @@ void abnormalTermination(const std::string& classification, const std::string&, 
             Logger::getInstance().ERROR() << "Failed to archive file: " << moveFile
                                           << std::endl;
         }
-    if (UrlCopyOpts::getInstance().reuseFile && readFile.length() > 0)
+    if (UrlCopyOpts::getInstance().areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
 
     cancelTransfer();
@@ -546,7 +548,7 @@ int main(int argc, char **argv)
     std::vector<std::string> urlsFile;
     std::string line("");
     readFile = "/var/lib/fts3/" + opts.jobId;
-    if (opts.reuseFile)
+    if (opts.areTransfersOnFile())
         {
             std::ifstream infile(readFile.c_str(), std::ios_base::in);
             while (getline(infile, line, '\n'))
@@ -577,9 +579,9 @@ int main(int argc, char **argv)
             throw;
         }
 
-    if (opts.reuseFile && urlsFile.empty() == true)
+    if (opts.areTransfersOnFile() && urlsFile.empty() == true)
         {
-            errorMessage = "Transfer " + g_job_id + " containes no urls with session reuse enabled";
+            errorMessage = "Transfer " + g_job_id + " contains no urls with session reuse/multihop enabled";
 
             abnormalTermination("FAILED", errorMessage, "Error");
         }
@@ -594,7 +596,7 @@ int main(int argc, char **argv)
 
 
     //reuse session
-    if (opts.reuseFile)
+    if (opts.areTransfersOnFile())
         {
             gfal2_set_opt_boolean(handle, "GRIDFTP PLUGIN", "SESSION_REUSE", TRUE, NULL);
         }
@@ -620,7 +622,7 @@ int main(int argc, char **argv)
             errorMessage = std::string("");
             throughput = 0.0;
 
-            if (opts.reuseFile)
+            if (opts.areTransfersOnFile())
                 {
                     std::string mid_str(urlsFile[ii]);
                     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
@@ -720,10 +722,10 @@ int main(int argc, char **argv)
                 logger.INFO() << "Bringonline token:" << strArray[6] << std::endl;
 
                 //set to active only for reuse
-                if (opts.reuseFile)
+                if (opts.areTransfersOnFile())
                     {
                         logger.INFO() << "Set the transfer to ACTIVE, report back to the server" << std::endl;
-                        reporter.setReuseTransfer(true);
+                        reporter.setMultipleTransfers(true);
                         reporter.sendMessage(throughput, false, opts.jobId, strArray[0], "ACTIVE", "", diff, source_size);
                     }
 
@@ -1153,7 +1155,7 @@ stop:
             cert = NULL;
         }
 
-    if (opts.reuseFile && readFile.length() > 0)
+    if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
 
 
