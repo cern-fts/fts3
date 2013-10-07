@@ -589,7 +589,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                                          "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                                          "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                                          "       f.source_se, f.dest_se, f.selection_strategy  "
-                                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) AND  "
+                                                         " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE  "
                                                          " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
                                                          "    f.source_se = :source AND f.dest_se = :dest AND "
                                                          "    f.vo_name = :vo_name AND "
@@ -630,7 +630,7 @@ void MySqlAPI::getByJobId(std::map< std::string, std::list<TransferFiles*> >& fi
                                         "       j.space_token, j.copy_pin_lifetime, j.bring_online, "
                                         "       f.user_filesize, f.file_metadata, j.job_metadata, f.file_index, f.bringonline_token, "
                                         "       f.source_se, f.dest_se, f.selection_strategy  "
-                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) AND "
+                                        " FROM t_file f INNER JOIN t_job j ON (f.job_id = j.job_id) WHERE "
                                         " j.vo_name = f.vo_name AND f.file_state = 'SUBMITTED' AND  "
                                         "    f.source_se = :source AND f.dest_se = :dest AND "
                                         "    f.vo_name = :vo_name AND ";

@@ -301,7 +301,10 @@ protected:
                     {
                         std::map< std::string, std::list<TransferFiles*> > voQueues;
 
-                        DBSingleton::instance().getDBObjectInstance()->getByJobId( voQueues);
+                        DBSingleton::instance().getDBObjectInstance()->getByJobId(voQueues);
+
+                        if(voQueues.empty())
+                            return;
 
                         // create transfer-file handler
                         TransferFileHandler tfh(voQueues);
@@ -726,14 +729,14 @@ protected:
                                                                 std::map<int, std::string>::const_iterator iterFileIds;
                                                                 for (iterFileIds = fileIds.begin(); iterFileIds != fileIds.end(); ++iterFileIds)
                                                                     {
-                                                                        struct message_updater msg;
+                                                                        struct message_updater msg2;
                                                                         if(std::string(job_id).length() <= 37)
                                                                             {
-                                                                                strcpy(msg.job_id, std::string(job_id).c_str());
-                                                                                msg.file_id = iterFileIds->first;
-                                                                                msg.process_id = (int) pr->getPid();
-                                                                                msg.timestamp = milliseconds_since_epoch();
-                                                                                ThreadSafeList::get_instance().push_back(msg);
+                                                                                strcpy(msg2.job_id, std::string(job_id).c_str());
+                                                                                msg2.file_id = iterFileIds->first;
+                                                                                msg2.process_id = (int) pr->getPid();
+                                                                                msg2.timestamp = milliseconds_since_epoch();
+                                                                                ThreadSafeList::get_instance().push_back(msg2);
                                                                             }
                                                                         else
                                                                             {

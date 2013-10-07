@@ -26,6 +26,8 @@
 #include <stdatomic.h>
 #endif
 
+#include <boost/thread/recursive_mutex.hpp>
+
 class Reporter
 {
 
@@ -69,6 +71,8 @@ private:
     struct message_updater* msg_updater;
     struct message_log*     msg_log;
     std::string             hostname;
+    boost::recursive_mutex mutex;
+    
 
 #ifdef __STDC_NO_ATOMICS__
     std::atomic<bool> isTerminalSent;

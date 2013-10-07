@@ -104,8 +104,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
 {
     string dir = string(MONITORING_DIR);
     vector<string> files = vector<string>();
-    files.reserve(1000);
-    struct message_monitoring msg;
+    files.reserve(1000);   
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -113,6 +112,7 @@ int runConsumerMonitoring(std::vector<struct message_monitoring>& messages)
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
+            struct message_monitoring msg;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
                     size_t readElements = fread(&msg, sizeof(msg), 1, fp);
@@ -144,7 +144,6 @@ int runConsumerStatus(std::vector<struct message>& messages)
     string dir = string(STATUS_DIR);
     vector<string> files = vector<string>();
     files.reserve(1000);
-    struct message msg;
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -152,11 +151,12 @@ int runConsumerStatus(std::vector<struct message>& messages)
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
+	    struct message msg;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
-                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+                    size_t readElements = fread(&msg, sizeof(message), 1, fp);
                     if(readElements == 0)
-                        readElements = fread(&msg, sizeof(msg), 1, fp);
+                        readElements = fread(&msg, sizeof(message), 1, fp);
 
                     if (readElements == 1)
                         messages.push_back(msg);
@@ -181,7 +181,6 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
     string dir = string(STALLED_DIR);
     vector<string> files = vector<string>();
     files.reserve(1000);
-    struct message_updater msg;
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -189,23 +188,24 @@ int runConsumerStall(std::vector<struct message_updater>& messages)
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
+	    struct message_updater msg_local;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
-                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+                    size_t readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
                     if(readElements == 0)
-                        readElements = fread(&msg, sizeof(msg), 1, fp);
+                        readElements = fread(&msg_local, sizeof(message_updater), 1, fp);
 
                     if (readElements == 1)
-                        messages.push_back(msg);
+                        messages.push_back(msg_local);
                     else
-                        msg.set_error(EBADMSG);
+                        msg_local.set_error(EBADMSG);
 
                     unlink(files[i].c_str());
                     fclose(fp);
                 }
             else
                 {
-                    msg.set_error(errno);
+                    msg_local.set_error(errno);
                 }
         }
     files.clear();
@@ -220,7 +220,6 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
     string dir = string(LOG_DIR);
     vector<string> files = vector<string>();
     files.reserve(1000);
-    struct message_log msg;
 
     if (getDir(dir,files) != 0)
         return errno;
@@ -228,11 +227,12 @@ int runConsumerLog(std::map<int, struct message_log>& messages)
     for (unsigned int i = 0; i < files.size(); i++)
         {
             FILE *fp = NULL;
+	    struct message_log msg;
             if ((fp = fopen(files[i].c_str(), "r")) != NULL)
                 {
-                    size_t readElements = fread(&msg, sizeof(msg), 1, fp);
+                    size_t readElements = fread(&msg, sizeof(message_log), 1, fp);
                     if(readElements == 0)
-                        readElements = fread(&msg, sizeof(msg), 1, fp);
+                        readElements = fread(&msg, sizeof(message_log), 1, fp);
 
                     if (readElements == 1)
                         messages[msg.file_id] = msg;

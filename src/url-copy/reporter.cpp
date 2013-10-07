@@ -33,8 +33,11 @@ Reporter::Reporter(): nostreams(4), timeout(3600), buffersize(0),
     isTerminalSent(false),reuse(false)
 {
     msg = new struct message();
+    memset(msg, 0, sizeof(message));
     msg_updater = new struct message_updater();
+    memset(msg_updater, 0, sizeof(message_updater));
     msg_log = new struct message_log();
+    memset(msg_log, 0, sizeof(message_log));
 
     char chname[MAXHOSTNAMELEN]= {0};
     gethostname(chname, sizeof(chname));
@@ -82,6 +85,7 @@ void Reporter::sendMessage(double throughput, bool retry,
                            const string& transfer_status, const string& transfer_message,
                            double timeInSecs, double filesize)
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     try
         {
             msg->file_id  = boost::lexical_cast<unsigned int>(file_id);
@@ -130,6 +134,7 @@ void Reporter::sendTerminal(double throughput, bool retry,
                             const string& transfer_status, const string& transfer_message,
                             double timeInSecs, double filesize)
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     // Did we send it already?
     if(!reuse)
         {
@@ -147,6 +152,7 @@ void Reporter::sendTerminal(double throughput, bool retry,
 void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
                         double throughput, double transferred)
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     try
         {
             msg_updater->file_id = boost::lexical_cast<unsigned int>(file_id);
@@ -171,6 +177,7 @@ void Reporter::sendPing(const std::string& job_id, const std::string& file_id,
 void Reporter::sendLog(const std::string& job_id, const std::string& file_id,
                        const std::string& logFileName, bool debug)
 {
+    boost::recursive_mutex::scoped_lock lock(mutex);
     try
         {
             msg_log->file_id = boost::lexical_cast<unsigned int>(file_id);
