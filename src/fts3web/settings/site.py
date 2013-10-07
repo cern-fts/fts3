@@ -41,5 +41,6 @@ if FTS3WEB_CONFIG.get('logs', 'port'):
                                              FTS3WEB_CONFIG.getint('logs', 'port'),
                                              FTS3WEB_CONFIG.get('logs', 'base'))
 else:
-    LOG_BASE_URL =  "%s://%%(host)/%s" % (FTS3WEB_CONFIG.get('logs', 'scheme'),
-                                          FTS3WEB_CONFIG.get('logs', 'base'))
+    LOG_BASE_URL =  "%s://%%(host):8449/%s" % (FTS3WEB_CONFIG.get('logs', 'scheme'),
+                                               FTS3WEB_CONFIG.get('logs', 'base'))
+
