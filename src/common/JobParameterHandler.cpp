@@ -41,6 +41,7 @@ const string JobParameterHandler::REUSE = "reuse";
 const string JobParameterHandler::JOB_METADATA = "job_metadata";
 const string JobParameterHandler::RETRY = "retry";
 const string JobParameterHandler::RETRY_DELAY = "retry_delay";
+const string JobParameterHandler::MULTIHOP = "multihop";
 
 JobParameterHandler::JobParameterHandler()
 {

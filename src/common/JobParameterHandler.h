@@ -88,6 +88,7 @@ public:
     static const string JOB_METADATA;
     static const string RETRY;
     static const string RETRY_DELAY;
+    static const string MULTIHOP;
     ///@}
 
     /**
