@@ -984,9 +984,15 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
     const int         retry            = params.get<int>(JobParameterHandler::RETRY);
     const int         retryDelay       = params.get<int>(JobParameterHandler::RETRY_DELAY);
     const std::string reuse            = params.get(JobParameterHandler::REUSE);
+    const std::string hop              = params.get(JobParameterHandler::MULTIHOP);
     const std::string sourceSpaceToken = params.get(JobParameterHandler::SPACETOKEN_SOURCE);
     const std::string spaceToken       = params.get(JobParameterHandler::SPACETOKEN);
 
+    std::string reuseFlag;
+    if (reuse == "Y")
+        reuseFlag = "Y";
+    else if (hop == "Y")
+        reuseFlag = "H";
 
     const std::string initialState = bringOnline > 0 || copyPinLifeTime > 0 ? "STAGING" : "SUBMITTED";
     const int priority = 3;
@@ -997,9 +1003,9 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
     try
         {
             sql.begin();
-            soci::indicator reuseIndicator = soci::i_ok;
-            if (reuse.empty())
-                reuseIndicator = soci::i_null;
+            soci::indicator reuseFlagIndicator = soci::i_ok;
+            if (reuseFlag.empty())
+                reuseFlagIndicator = soci::i_null;
             // Insert job
             sql << "INSERT INTO t_job (job_id, job_state, job_params, user_dn, user_cred, priority,       "
                 "                   vo_name, submit_time, internal_job_params, submit_host, cred_id,   "
@@ -1017,7 +1023,7 @@ void MySqlAPI::submitPhysical(const std::string & jobId, std::vector<job_element
                 soci::use(voName), soci::use(jobParams), soci::use(hostname), soci::use(delegationID),
                 soci::use(myProxyServer), soci::use(spaceToken), soci::use(overwrite), soci::use(sourceSpaceToken),
                 soci::use(copyPinLifeTime), soci::use(failNearLine), soci::use(checksumMethod),
-                soci::use(reuse, reuseIndicator), soci::use(bringOnline),
+                soci::use(reuseFlag, reuseFlagIndicator), soci::use(bringOnline),
                 soci::use(retry), soci::use(retryDelay), soci::use(metadata),
                 soci::use(sourceSe), soci::use(destinationSe);
 
@@ -2207,7 +2213,7 @@ void MySqlAPI::getSubmittedJobsReuse(std::vector<TransferJobs*>& jobs, const std
                     "FROM t_job WHERE "
                     "    job_state = 'SUBMITTED' AND job_finished IS NULL AND "
                     "    cancel_job IS NULL AND "
-                    "    reuse_job='Y'";
+                    "    (reuse_job IS NOT NULL and reuse_job != 'N')";
 
             if (vos != "*")
                 {
