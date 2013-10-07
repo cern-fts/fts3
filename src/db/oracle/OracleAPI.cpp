@@ -551,7 +551,7 @@ unsigned int OracleAPI::updateFileStatus(TransferFiles* file, const std::string 
     return updated;
 }
 
-void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
+void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
 {
     TransferFiles* tr_files = NULL;
     std::vector<TransferJobs*>::const_iterator iter;
@@ -588,30 +588,6 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
 
     try
         {
-            int mode = getOptimizerMode();
-            if(mode==1)
-                {
-                    filesNum = mode_1[3];
-                }
-            else if(mode==2)
-                {
-                    filesNum = mode_2[3];
-                }
-            else if(mode==3)
-                {
-                    filesNum = mode_3[3];
-                }
-            else
-                {
-                    filesNum = mode_1[3];
-                }
-
-            if(reuse)
-                {
-                    filesNum = 10000;
-                }
-
-
             pooledConnection = conn->getPooledConnection();
             if (!pooledConnection)
                 return;
@@ -625,7 +601,7 @@ void OracleAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std:
                     std::string job_id = std::string(temp->JOB_ID);
                     s->setString(1, job_id);
                     s->setTimestamp(2, conv->toTimestamp(timed, conn->getEnv())); //submit_time
-                    s->setInt(3, filesNum);
+                    s->setInt(3, 10000);
                     r = conn->createResultset(s, pooledConnection);
                     while (r->next())
                         {

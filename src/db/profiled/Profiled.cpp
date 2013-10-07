@@ -67,9 +67,9 @@ TransferJobs* ProfiledDB::getTransferJob(std::string jobId, bool archive)
 }
 
 
-void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
+void ProfiledDB::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
 {
-    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files, reuse));
+    PROFILE_PREFIXED("DB::", db->getByJobIdReuse(jobs, files));
 }
 
 void ProfiledDB::getByJobId(std::map< std::string, std::list<TransferFiles*> >& files)

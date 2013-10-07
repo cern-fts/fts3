@@ -54,7 +54,7 @@ public:
 
     TransferJobs* getTransferJob(std::string jobId, bool archive);
 
-    void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse);
+    void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files);
 
     void getByJobId( std::map< std::string, std::list<TransferFiles*> >& files);
 

@@ -113,7 +113,7 @@ public:
 
     virtual TransferJobs* getTransferJob(std::string jobId, bool archive) = 0;
 
-    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse) = 0;
+    virtual void getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 
     virtual void getByJobId(std::map< std::string, std::list<TransferFiles*> >& files) = 0;
 

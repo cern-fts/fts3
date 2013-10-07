@@ -386,7 +386,7 @@ protected:
                                 std::map< std::string, std::list<TransferFiles*> > voQueues;
                                 std::list<TransferFiles*>::const_iterator queueiter;
 
-                                DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues, reuse);
+                                DBSingleton::instance().getDBObjectInstance()->getByJobIdReuse(jobsReuse2, voQueues);
 
                                 if (voQueues.empty())
                                     {

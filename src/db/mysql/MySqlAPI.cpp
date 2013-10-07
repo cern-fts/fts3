@@ -881,37 +881,13 @@ unsigned int MySqlAPI::updateFileStatus(TransferFiles* file, const std::string s
 }
 
 
-void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files, bool reuse)
+void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::string, std::list<TransferFiles*> >& files)
 {
     soci::session sql(*connectionPool);
 
     time_t now = time(NULL);
     struct tm tTime;
     gmtime_r(&now, &tTime);
-
-    int mode = getOptimizerMode(sql);
-    if(mode==1)
-        {
-            filesNum = mode_1[3];
-        }
-    else if(mode==2)
-        {
-            filesNum = mode_2[3];
-        }
-    else if(mode==3)
-        {
-            filesNum = mode_3[3];
-        }
-    else
-        {
-            filesNum = mode_1[3];
-        }
-
-    if(reuse)
-        {
-            filesNum = 10000;
-        }
-
 
     try
         {
@@ -934,11 +910,10 @@ void MySqlAPI::getByJobIdReuse(std::vector<TransferJobs*>& jobs, std::map< std::
                                                          "    f.job_finished IS NULL AND "
                                                          "    f.wait_timestamp IS NULL AND "
                                                          "    (f.retry_timestamp is NULL OR f.retry_timestamp < :tTime) AND "
-                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) "
-                                                         " LIMIT :filesNum ",soci::use(jobId),
+                                                         "    (f.hashed_id >= :hStart AND f.hashed_id <= :hEnd) ",
+                                                         soci::use(jobId),
                                                          soci::use(tTime),
-                                                         soci::use(hashSegment.start), soci::use(hashSegment.end),
-                                                         soci::use(filesNum)
+                                                         soci::use(hashSegment.start), soci::use(hashSegment.end)
                                                      );
 
 
