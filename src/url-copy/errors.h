@@ -20,6 +20,10 @@
 
 #pragma once
 
+#include <algorithm>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <string>
+
 /*ERROR_SCOPE*/
 #define TRANSFER "TRANSFER"
 #define DESTINATION "DESTINATION"

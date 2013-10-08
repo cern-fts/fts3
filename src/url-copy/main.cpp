@@ -13,50 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License. */
 
-#include "args.h"
-#include "heuristics.h"
-#include <iostream>
-#include <algorithm>
-#include <ctype.h>
-#include <cstdlib>
-#include <unistd.h>
-#include <string>
-#include <sys/stat.h>
-#include <vector>
-#include <stdio.h>
-#include <pwd.h>
-#include <transfer/gfal_transfer.h>
-#include <fstream>
-#include "boost/date_time/gregorian/gregorian.hpp"
-#include <vector>
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
+#include <boost/tokenizer.hpp>
+#include <execinfo.h>
 #include <gfal_api.h>
-#include <memory>
+#include <string>
+#include <transfer/gfal_transfer.h>
+
+#include "args.h"
+#include "definitions.h"
+#include "errors.h"
 #include "file_management.h"
-#include "reporter.h"
+#include "heuristics.h"
 #include "logger.h"
 #include "msg-ifce.h"
-#include "errors.h"
-#include "signal_logger.h"
-#include "UserProxyEnv.h"
-#include <sys/param.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <grp.h>
-#include <boost/tokenizer.hpp>
-#include <cstdio>
-#include <ctime>
-#include "definitions.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <exception>
-#include "monitoring/utility_routines.h"
-#include <ctime>
 #include "name_to_uid.h"
-#include <boost/thread.hpp>
+#include "reporter.h"
 #include "StaticSslLocking.h"
-#include <sys/resource.h>
-#include <boost/algorithm/string/replace.hpp>
-#include <execinfo.h>
 #include "transfer.h"
+#include "UserProxyEnv.h"
+
 
 using namespace std;
 using boost::thread;
