@@ -422,6 +422,31 @@ int statWithRetries(gfal_context_t handle, const std::string& category, const st
     return errorCode;
 }
 
+void setRemainingTransfersToFailed(std::vector<Transfer>& transferList, unsigned currentIndex)
+{
+    for (unsigned i = currentIndex + 1; i < transferList.size(); ++i)
+        {
+            Transfer& t = transferList[i];
+            Logger::getInstance().INFO() << "Report FAILED back to the server for " << t.fileId << std::endl;
+
+            msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(t.sourceUrl));
+            msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(t.destUrl));
+            msg_ifce::getInstance()->set_source_url(&tr_completed, t.sourceUrl);
+            msg_ifce::getInstance()->set_dest_url(&tr_completed, t.destUrl);
+            msg_ifce::getInstance()->set_transfer_error_scope(&tr_completed, TRANSFER);
+            msg_ifce::getInstance()->set_transfer_error_category(&tr_completed, GENERAL_FAILURE);
+            msg_ifce::getInstance()->set_failure_phase(&tr_completed, TRANSFER);
+            msg_ifce::getInstance()->set_transfer_error_message(&tr_completed, "Not executed because a previous hop failed");
+            if(UrlCopyOpts::getInstance().monitoringMessages)
+                msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
+
+            reporter.sendTerminal(0, false,
+                                  t.jobId, t.fileId,
+                                  "FAILED", "Not executed because a previous hop failed",
+                                  0, 0);
+        }
+}
+
 
 __attribute__((constructor)) void begin(void)
 {
@@ -502,7 +527,7 @@ int main(int argc, char **argv)
 
     if (opts.areTransfersOnFile()) {
         readFile = "/var/lib/fts3/" + opts.jobId;
-        Transfer::initListFromFile(readFile, &transferList);
+        Transfer::initListFromFile(opts.jobId, readFile, &transferList);
     }
     else {
         transferList.push_back(Transfer::createFromOptions(opts));
@@ -966,6 +991,15 @@ stop:
                                                   "FAILED", errorMessage,
                                                   currentTransfer.getTransferDurationInSeconds(),
                                                   currentTransfer.fileSize);
+                        }
+
+                    // In case of failure, if this is a multihop transfer, set to fail
+                    // all the remaining transfers
+                    if (opts.multihop)
+                        {
+                            logger.ERROR() << "Setting to fail the remaining transfers" << std::endl;
+                            setRemainingTransfersToFailed(transferList, ii);
+                            break; // exit the loop
                         }
                 }
             else

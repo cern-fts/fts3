@@ -52,7 +52,7 @@ public:
     }
 
     // Create a transfer out of a string
-    static Transfer createFromString(const std::string& line)
+    static Transfer createFromString(const std::string& jobId, const std::string& line)
     {
         typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
 
@@ -61,6 +61,7 @@ public:
         std::copy(tokens.begin(), tokens.end(), strArray);
 
         Transfer t;
+        t.jobId = jobId;
         t.fileId = boost::lexical_cast<unsigned>(strArray[0]);
         t.sourceUrl = strArray[1];
         t.destUrl   = strArray[2];
@@ -75,6 +76,7 @@ public:
     static Transfer createFromOptions(const UrlCopyOpts& opts)
     {
         Transfer t;
+        t.jobId = opts.jobId;
         t.fileId = opts.fileId;
         t.sourceUrl = opts.sourceUrl;
         t.destUrl   = opts.destUrl;
@@ -86,13 +88,14 @@ public:
     }
 
     // Initialize a list from a file
-    static void initListFromFile(const std::string& path, std::vector<Transfer>* list)
+    static void initListFromFile(const std::string& jobId, const std::string& path,
+            std::vector<Transfer>* list)
     {
         std::string line;
         std::ifstream infile(path.c_str(), std::ios_base::in);
 
         while (getline(infile, line, '\n')) {
-            Transfer t = Transfer::createFromString(line);
+            Transfer t = Transfer::createFromString(jobId, line);
             list->push_back(t);
         }
 
