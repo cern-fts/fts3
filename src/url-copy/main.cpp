@@ -61,7 +61,7 @@ limitations under the License. */
 using namespace std;
 using boost::thread;
 
-FileManagement* fileManagement = NULL;
+static FileManagement fileManagement;
 static Reporter reporter;
 static transfer_completed tr_completed;
 static bool retry = true;
@@ -72,7 +72,6 @@ static std::string errorMessage("");
 static std::string readFile("");
 static double source_size = 0.0;
 static double dest_size = 0.0;
-static uid_t pw_uid;
 static char hostname[1024] = {0};
 static volatile bool propagated = false;
 static volatile bool canceled = false;
@@ -194,9 +193,9 @@ void abnormalTermination(const std::string& classification, const std::string&, 
                           currentTransfer.getTransferDurationInSeconds(),
                           source_size);
 
-    std::string moveFile = fileManagement->archive();
+    std::string moveFile = fileManagement.archive();
 
-    reporter.sendLog(currentTransfer.jobId, currentTransfer.fileId, fileManagement->_getLogArchivedFileFullPath(),
+    reporter.sendLog(currentTransfer.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
                      UrlCopyOpts::getInstance().debug);
 
     if (moveFile.length() != 0)
@@ -415,11 +414,10 @@ void myterminate()
 __attribute__((constructor)) void begin(void)
 {
     //switch to non-priviledged user to avoid reading the hostcert
-    pw_uid = name_to_uid();
+    uid_t pw_uid = name_to_uid();
     setuid(pw_uid);
     seteuid(pw_uid);
     StaticSslLocking::init_locks();
-    fileManagement = new FileManagement();
 }
 
 int main(int argc, char **argv)
@@ -596,28 +594,28 @@ int main(int argc, char **argv)
                     currentTransfer.tokenBringOnline = opts.tokenBringOnline;
                 }
 
-            fileManagement->setSourceUrl(currentTransfer.sourceUrl);
-            fileManagement->setDestUrl(currentTransfer.destUrl);
-            fileManagement->setFileId(currentTransfer.fileId);
-            fileManagement->setJobId(currentTransfer.jobId);
+            fileManagement.setSourceUrl(currentTransfer.sourceUrl);
+            fileManagement.setDestUrl(currentTransfer.destUrl);
+            fileManagement.setFileId(currentTransfer.fileId);
+            fileManagement.setJobId(currentTransfer.jobId);
 
             reporter.timeout = opts.timeout;
             reporter.nostreams = opts.nStreams;
             reporter.buffersize = opts.tcpBuffersize;
-            reporter.source_se = fileManagement->getSourceHostname();
-            reporter.dest_se = fileManagement->getDestHostname();
-            fileManagement->generateLogFile();
+            reporter.source_se = fileManagement.getSourceHostname();
+            reporter.dest_se = fileManagement.getDestHostname();
+            fileManagement.generateLogFile();
 
             msg_ifce::getInstance()->set_tr_timestamp_start(&tr_completed, msg_ifce::getInstance()->getTimestamp());
             msg_ifce::getInstance()->set_agent_fqdn(&tr_completed, hostname);
-            msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement->getSePair());
-            msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement->getLogFileName());
+            msg_ifce::getInstance()->set_t_channel(&tr_completed, fileManagement.getSePair());
+            msg_ifce::getInstance()->set_transfer_id(&tr_completed, fileManagement.getLogFileName());
             msg_ifce::getInstance()->set_source_srm_version(&tr_completed, srmVersion(currentTransfer.sourceUrl));
             msg_ifce::getInstance()->set_destination_srm_version(&tr_completed, srmVersion(currentTransfer.destUrl));
             msg_ifce::getInstance()->set_source_url(&tr_completed, currentTransfer.sourceUrl);
             msg_ifce::getInstance()->set_dest_url(&tr_completed, currentTransfer.destUrl);
-            msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement->getSourceHostnameFile());
-            msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement->getDestHostnameFile());
+            msg_ifce::getInstance()->set_source_hostname(&tr_completed, fileManagement.getSourceHostnameFile());
+            msg_ifce::getInstance()->set_dest_hostname(&tr_completed, fileManagement.getDestHostnameFile());
             msg_ifce::getInstance()->set_channel_type(&tr_completed, "urlcopy");
             msg_ifce::getInstance()->set_vo(&tr_completed, opts.vo);
             msg_ifce::getInstance()->set_source_site_name(&tr_completed, opts.sourceSiteName);
@@ -633,7 +631,7 @@ int main(int argc, char **argv)
 
             if (!opts.logToStderr)
                 {
-                    int checkError = Logger::getInstance().redirectTo(fileManagement->getLogFilePath(), opts.debug);
+                    int checkError = Logger::getInstance().redirectTo(fileManagement.getLogFilePath(), opts.debug);
                     if (checkError != 0)
                         {
                             std::string message = mapErrnoToString(checkError);
@@ -644,7 +642,7 @@ int main(int argc, char **argv)
 
             // Scope
             {
-                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement->getLogFilePath(),
+                reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement.getLogFilePath(),
                                  opts.debug);
 
                 gfalt_set_user_data(params, NULL, NULL);
@@ -1074,10 +1072,10 @@ stop:
             if(opts.monitoringMessages)
                 msg_ifce::getInstance()->SendTransferFinishMessage(&tr_completed);
 
-            std::string archiveErr = fileManagement->archive();
+            std::string archiveErr = fileManagement.archive();
             if (!archiveErr.empty())
                 logger.ERROR() << "Could not archive: " << archiveErr << std::endl;
-            reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement->_getLogArchivedFileFullPath(),
+            reporter.sendLog(opts.jobId, currentTransfer.fileId, fileManagement._getLogArchivedFileFullPath(),
                              opts.debug);
         }//end for reuse loop
 
@@ -1100,11 +1098,6 @@ stop:
 
     if (opts.areTransfersOnFile() && readFile.length() > 0)
         unlink(readFile.c_str());
-
-
-    if (fileManagement)
-        delete fileManagement;
-
 
     StaticSslLocking::kill_locks();
 
