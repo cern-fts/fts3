@@ -1639,14 +1639,15 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
             int numberOfFilesNotCanceledNorFailed = 0;
 
             std::string currentState("");
-
+            std::string reuseFlag;
 
             // prevent multiple updates of the same state for the same job
             sql <<
-                " SELECT job_state from t_job  "
+                " SELECT job_state, reuse_job from t_job  "
                 " WHERE job_id = :job_id ",
                 soci::use(job_id),
-                soci::into(currentState)
+                soci::into(currentState),
+                soci::into(reuseFlag)
                 ;
 
             if(currentState == status)
@@ -1710,7 +1711,10 @@ bool MySqlAPI::updateJobTransferStatus(int /*fileId*/, std::string job_id, const
                     std::string reason = "One or more files failed. Please have a look at the details for more information";
                     if (numberOfFilesFinished > 0 && numberOfFilesFailed > 0)
                         {
-                            state = "FINISHEDDIRTY";
+                            if (reuseFlag == "H")
+                                state = "FAILED";
+                            else
+                                state = "FINISHEDDIRTY";
                         }
                     else if(numberOfFilesInJob == numberOfFilesFinished)
                         {
